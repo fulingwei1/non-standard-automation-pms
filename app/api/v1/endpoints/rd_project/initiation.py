@@ -6,12 +6,13 @@ from datetime import date, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.project import Project
 from app.models.rd_project import RdProject
 from app.models.user import User
@@ -34,12 +35,11 @@ router = APIRouter()
 @router.get("/rd-projects", response_model=PaginatedResponse)
 def get_rd_projects(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（项目名称/编号）"),
     category_id: Optional[int] = Query(None, description="分类ID筛选"),
     category_type: Optional[str] = Query(None, description="项目类型筛选：SELF/ENTRUST/COOPERATION"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    project_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
     project_manager_id: Optional[int] = Query(None, description="项目负责人ID筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
@@ -50,21 +50,15 @@ def get_rd_projects(
     query = db.query(RdProject)
 
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                RdProject.project_name.contains(keyword),
-                RdProject.project_no.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, RdProject, keyword, ["project_name", "project_no"])
 
     # 筛选条件
     if category_id:
         query = query.filter(RdProject.category_id == category_id)
     if category_type:
         query = query.filter(RdProject.category_type == category_type)
-    if status:
-        query = query.filter(RdProject.status == status)
+    if project_status:
+        query = query.filter(RdProject.status == project_status)
     if approval_status:
         query = query.filter(RdProject.approval_status == approval_status)
     if project_manager_id:
@@ -74,17 +68,16 @@ def get_rd_projects(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    projects = query.order_by(desc(RdProject.created_at)).offset(offset).limit(page_size).all()
+    projects = query.order_by(desc(RdProject.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [RdProjectResponse.model_validate(proj) for proj in projects]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

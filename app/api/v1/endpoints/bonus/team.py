@@ -9,81 +9,32 @@
 奖金激励模块 API 端点
 """
 
-import io
-import os
-import uuid
-from datetime import date, datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import (
     APIRouter,
     Depends,
-    File,
-    Form,
     HTTPException,
     Query,
-    UploadFile,
     status,
 )
-from fastapi.responses import FileResponse
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.bonus import (
-    BonusAllocationSheet,
-    BonusCalculation,
-    BonusDistribution,
-    BonusRule,
     TeamBonusAllocation,
 )
-from app.models.performance import (
-    PerformancePeriod,
-    PerformanceResult,
-    ProjectContribution,
-)
-from app.models.presale import PresaleSupportTicket
-from app.models.project import Project, ProjectMilestone
-from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.bonus import (
-    BonusAllocationRow,
-    BonusAllocationSheetConfirm,
-    BonusAllocationSheetResponse,
-    BonusCalculationApprove,
-    BonusCalculationCreate,
-    BonusCalculationListResponse,
-    BonusCalculationQuery,
-    BonusCalculationResponse,
-    BonusDistributionCreate,
-    BonusDistributionListResponse,
-    BonusDistributionPay,
-    BonusDistributionQuery,
-    BonusDistributionResponse,
-    BonusRuleCreate,
-    BonusRuleListResponse,
-    BonusRuleResponse,
-    BonusRuleUpdate,
-    BonusStatisticsResponse,
-    CalculateMilestoneBonusRequest,
-    CalculatePerformanceBonusRequest,
-    CalculatePresaleBonusRequest,
-    CalculateProjectBonusRequest,
-    CalculateSalesBonusRequest,
-    CalculateSalesDirectorBonusRequest,
-    CalculateTeamBonusRequest,
-    MyBonusResponse,
     TeamBonusAllocationApprove,
-    TeamBonusAllocationCreate,
     TeamBonusAllocationListResponse,
     TeamBonusAllocationResponse,
 )
-from app.schemas.common import PageParams, ResponseModel
-from app.services.bonus import BonusCalculator
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -104,11 +55,10 @@ router = APIRouter(
 def get_team_bonus_allocations(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID"),
     period_id: Optional[int] = Query(None, description="周期ID"),
-    status: Optional[str] = Query(None, description="状态"),
+    allocation_status: Optional[str] = Query(None, alias="status", description="状态"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -120,20 +70,20 @@ def get_team_bonus_allocations(
         query = query.filter(TeamBonusAllocation.project_id == project_id)
     if period_id:
         query = query.filter(TeamBonusAllocation.period_id == period_id)
-    if status:
-        query = query.filter(TeamBonusAllocation.status == status)
+    if allocation_status:
+        query = query.filter(TeamBonusAllocation.status == allocation_status)
 
     total = query.count()
     allocations = query.order_by(desc(TeamBonusAllocation.created_at)).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+        pagination.offset
+    ).limit(pagination.limit).all()
 
     return TeamBonusAllocationListResponse(
         items=allocations,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

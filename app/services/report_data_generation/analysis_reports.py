@@ -205,5 +205,6 @@ class AnalysisReportMixin:
                 "total_actual": round(total_actual, 2),
                 "total_variance": round(total_budget - total_actual, 2)
             },
-            "project_breakdown": project_summaries
+            "project_breakdown": project_summaries,
+            "cost_by_project": project_summaries
         }

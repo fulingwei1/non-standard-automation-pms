@@ -10,6 +10,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.business_support import PaymentReminder
 from app.models.sales import Contract
@@ -17,7 +18,6 @@ from app.models.user import User
 from app.schemas.business_support import (
     PaymentReminderCreate,
     PaymentReminderResponse,
-    PaymentReminderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -90,11 +90,10 @@ async def create_payment_reminder(
 
 @router.get("", response_model=ResponseModel[PaginatedResponse[PaymentReminderResponse]], summary="获取回款催收记录列表")
 async def get_payment_reminders(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    reminder_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:read"))
 ):
@@ -107,8 +106,8 @@ async def get_payment_reminders(
             query = query.filter(PaymentReminder.contract_id == contract_id)
         if project_id:
             query = query.filter(PaymentReminder.project_id == project_id)
-        if status:
-            query = query.filter(PaymentReminder.status == status)
+        if reminder_status:
+            query = query.filter(PaymentReminder.status == reminder_status)
 
         # 总数
         total = query.count()
@@ -116,8 +115,8 @@ async def get_payment_reminders(
         # 分页
         items = (
             query.order_by(desc(PaymentReminder.reminder_date))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -150,9 +149,9 @@ async def get_payment_reminders(
             data=PaginatedResponse(
                 items=reminder_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

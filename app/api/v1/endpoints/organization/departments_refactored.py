@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.organization import Department, Employee
 from app.models.user import User
@@ -23,6 +22,7 @@ from app.schemas.organization import (
 )
 
 from .utils import build_department_tree
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -256,13 +256,13 @@ def get_department_users(
     *,
     db: Session = Depends(deps.get_db),
     dept_id: int,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（用户名/姓名/工号）"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取部门人员列表"""
+
     department = db.query(Department).filter(Department.id == dept_id).first()
     if not department:
         raise HTTPException(status_code=404, detail="部门不存在")
@@ -282,8 +282,7 @@ def get_department_users(
         query = query.filter(User.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
+    users = query.order_by(User.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 转换为UserResponse并处理roles
     from app.schemas.auth import UserResponse
@@ -315,6 +314,6 @@ def get_department_users(
     return paginated_response(
         items=user_responses,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )

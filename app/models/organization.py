@@ -25,6 +25,14 @@ if TYPE_CHECKING:
     pass
 
 
+def __getattr__(name):
+    """兼容导出：部分调用方从 organization 模块导入 Customer"""
+    if name == "Customer":
+        from app.models.project.customer import Customer
+        return Customer
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 class Department(Base, TimestampMixin):
     """部门表"""
 

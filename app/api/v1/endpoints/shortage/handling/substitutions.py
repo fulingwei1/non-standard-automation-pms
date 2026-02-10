@@ -21,12 +21,13 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import MaterialSubstitution
@@ -101,42 +102,34 @@ def _build_substitution_response(sub: MaterialSubstitution, db: Session) -> Mate
 @router.get("", response_model=PaginatedResponse)
 def list_substitutions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（替代单号/物料编码）"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    substitution_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """替代申请列表"""
     query = db.query(MaterialSubstitution)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                MaterialSubstitution.substitution_no.like(f"%{keyword}%"),
-                MaterialSubstitution.original_material_code.like(f"%{keyword}%"),
-                MaterialSubstitution.substitute_material_code.like(f"%{keyword}%"),
-            )
-        )
+    # 应用关键词过滤（替代单号/原物料编码/替代物料编码）
+    query = apply_keyword_filter(query, MaterialSubstitution, keyword, ["substitution_no", "original_material_code", "substitute_material_code"])
 
-    if status:
-        query = query.filter(MaterialSubstitution.status == status)
+    if substitution_status:
+        query = query.filter(MaterialSubstitution.status == substitution_status)
     if project_id:
         query = query.filter(MaterialSubstitution.project_id == project_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    substitutions = query.order_by(desc(MaterialSubstitution.created_at)).offset(offset).limit(page_size).all()
+    substitutions = query.order_by(desc(MaterialSubstitution.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_substitution_response(sub, db) for sub in substitutions]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

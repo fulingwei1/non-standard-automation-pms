@@ -6,14 +6,15 @@
 
 import logging
 import uuid
-from datetime import date, datetime
-from typing import List, Optional
+from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Project, ProjectMember
 from app.models.task_center import (
@@ -149,7 +150,7 @@ def create_task(
                 priority=notification_service.NotificationPriority.NORMAL,
                 link=f"/engineers/tasks/{new_task.id}"
             )
-        except Exception as e:
+        except Exception:
             # 通知失败不影响主流程
             logger.warning("任务创建审批通知发送失败，不影响主流程", exc_info=True)
 
@@ -165,10 +166,9 @@ def create_task(
 
 @router.get("/tasks", response_model=schemas.TaskListResponse)
 def get_my_tasks(
-    page: int = 1,
-    page_size: int = 20,
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = None,
-    status: Optional[str] = None,
+    task_status: Optional[str] = None,
     priority: Optional[str] = None,
     is_delayed: Optional[bool] = None,
     is_overdue: Optional[bool] = None,
@@ -187,8 +187,8 @@ def get_my_tasks(
     if project_id:
         query = query.filter(TaskUnified.project_id == project_id)
 
-    if status:
-        query = query.filter(TaskUnified.status == status)
+    if task_status:
+        query = query.filter(TaskUnified.status == task_status)
 
     if priority:
         query = query.filter(TaskUnified.priority == priority)
@@ -226,7 +226,7 @@ def get_my_tasks(
         total = int(count_result) if count_result is not None else 0
     except Exception:
         total = 0
-    tasks = query.offset((page - 1) * page_size).limit(page_size).all()
+    tasks = query.offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = []
@@ -240,14 +240,13 @@ def get_my_tasks(
         items.append(task_response)
 
     total = int(total) if total is not None else 0
-    pages = (total + page_size - 1) // page_size if total > 0 else 0
 
     return schemas.TaskListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=pages
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

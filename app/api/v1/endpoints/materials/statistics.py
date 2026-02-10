@@ -7,11 +7,13 @@ from datetime import date, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.material import Material, MaterialCategory
 from app.models.vendor import Vendor
@@ -189,8 +191,7 @@ def search_materials(
     keyword: str = Query(..., description="搜索关键词（物料编码/名称/规格）"),
     has_stock: Optional[bool] = Query(None, description="是否有库存"),
     category: Optional[str] = Query(None, description="物料类别"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """物料查找（支持编码/名称/规格搜索）"""
@@ -198,15 +199,8 @@ def search_materials(
 
     query = db.query(Material)
 
-    # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                Material.material_code.like(f"%{keyword}%"),
-                Material.material_name.like(f"%{keyword}%"),
-                Material.specification.like(f"%{keyword}%")
-            )
-        )
+    # 应用关键词过滤（物料编码/名称/规格）
+    query = apply_keyword_filter(query, Material, keyword, ["material_code", "material_name", "specification"])
 
     # 库存筛选
     if has_stock is not None:
@@ -223,7 +217,7 @@ def search_materials(
 
     # 分页
     total = query.count()
-    materials = query.offset((page - 1) * page_size).limit(page_size).all()
+    materials = query.offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for material in materials:
@@ -264,7 +258,7 @@ def search_materials(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )

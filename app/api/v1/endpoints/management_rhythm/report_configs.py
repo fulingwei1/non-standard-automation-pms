@@ -9,61 +9,25 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.enums import (
-    ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
-)
 from app.models.management_rhythm import (
-    ManagementRhythmConfig,
-    MeetingActionItem,
-    MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
-    StrategicMeeting,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
-    MeetingCalendarResponse,
-    MeetingMapItem,
-    MeetingMapResponse,
     MeetingReportConfigCreate,
     MeetingReportConfigResponse,
     MeetingReportConfigUpdate,
-    MeetingReportGenerateRequest,
-    MeetingReportResponse,
-    MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
-    RhythmConfigCreate,
-    RhythmConfigResponse,
-    RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
-    StrategicMeetingCreate,
-    StrategicMeetingMinutesRequest,
-    StrategicMeetingResponse,
-    StrategicMeetingUpdate,
-    StrategicStructureTemplate,
 )
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -83,8 +47,7 @@ router = APIRouter(
 @router.get("/meeting-reports/configs", response_model=PaginatedResponse)
 def read_report_configs(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     report_type: Optional[str] = Query(None, description="报告类型筛选"),
     is_default: Optional[bool] = Query(None, description="是否默认配置"),
     current_user: User = Depends(security.get_current_active_user),
@@ -92,6 +55,7 @@ def read_report_configs(
     """
     获取报告配置列表
     """
+
     query = db.query(MeetingReportConfig)
 
     if report_type:
@@ -101,8 +65,7 @@ def read_report_configs(
         query = query.filter(MeetingReportConfig.is_default == is_default)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    configs = query.order_by(desc(MeetingReportConfig.is_default), desc(MeetingReportConfig.created_at)).offset(offset).limit(page_size).all()
+    configs = query.order_by(desc(MeetingReportConfig.is_default), desc(MeetingReportConfig.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for config in configs:
@@ -124,9 +87,9 @@ def read_report_configs(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

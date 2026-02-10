@@ -20,6 +20,7 @@ from app.schemas.culture_wall_config import (
     CultureWallConfigResponse,
     CultureWallConfigUpdate,
 )
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -83,13 +84,13 @@ def get_culture_wall_config(
 @router.get("/culture-wall/config/list", response_model=PaginatedResponse)
 def list_culture_wall_configs(
     db: Session = Depends(deps.get_db),
-    page: int = 1,
-    page_size: int = 20,
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取文化墙配置列表（管理员功能）
     """
+
     # 检查权限
     admin_roles = {"admin", "super_admin", "管理员", "系统管理员"}
     user_roles = set(current_user.role_codes)
@@ -103,15 +104,14 @@ def list_culture_wall_configs(
     )
 
     total = len(configs)
-    start = (page - 1) * page_size
-    end = start + page_size
-    items = configs[start:end]
+    items = configs[pagination.offset:pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=[CultureWallConfigResponse.model_validate(c) for c in items],
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

@@ -7,10 +7,12 @@ from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.business_support import CustomerSupplierRegistration
 from app.models.project import Customer
 from app.models.user import User
@@ -36,10 +38,9 @@ router = APIRouter()
 
 @router.get("/customer-registrations", response_model=ResponseModel[PaginatedResponse[CustomerSupplierRegistrationResponse]], summary="获取客户供应商入驻列表")
 async def get_customer_registrations(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    registration_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     platform_name: Optional[str] = Query(None, description="平台名称筛选"),
     keyword: Optional[str] = Query(None, description="搜索入驻编号/客户"),
     db: Session = Depends(deps.get_db),
@@ -50,23 +51,19 @@ async def get_customer_registrations(
         query = db.query(CustomerSupplierRegistration)
         if customer_id:
             query = query.filter(CustomerSupplierRegistration.customer_id == customer_id)
-        if status:
-            query = query.filter(CustomerSupplierRegistration.registration_status == status)
+        if registration_status:
+            query = query.filter(CustomerSupplierRegistration.registration_status == registration_status)
         if platform_name:
             query = query.filter(CustomerSupplierRegistration.platform_name == platform_name)
-        if keyword:
-            query = query.filter(
-                or_(
-                    CustomerSupplierRegistration.registration_no.like(f"%{keyword}%"),
-                    CustomerSupplierRegistration.customer_name.like(f"%{keyword}%")
-                )
-            )
+
+        # 应用关键词过滤（入驻编号/客户名称）
+        query = apply_keyword_filter(query, CustomerSupplierRegistration, keyword, ["registration_no", "customer_name"])
 
         total = query.count()
         items = (
             query.order_by(desc(CustomerSupplierRegistration.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -78,9 +75,9 @@ async def get_customer_registrations(
             data=PaginatedResponse(
                 items=responses,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except HTTPException:

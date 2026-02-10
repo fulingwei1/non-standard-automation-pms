@@ -16,6 +16,11 @@ from .core import ApprovalEngineCore
 class ApprovalSubmitMixin:
     """审批发起功能混入类"""
 
+    def __init__(self, db=None):
+        """允许独立实例化（兼容测试）"""
+        if db is not None:
+            self.db = db
+
     def submit(
         self: ApprovalEngineCore,
         template_code: str,

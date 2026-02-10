@@ -3,7 +3,7 @@
 人工成本计算模块
 
 工具函数从 labor_cost.utils 导入。
-LaborCostExpenseService 和 PresaleExpense 从 labor_cost_service 导入。
+LaborCostCalculationService、LaborCostExpenseService 和 PresaleExpense 从 labor_cost_service 导入。
 """
 
 from app.services.labor_cost.utils import (
@@ -15,9 +15,9 @@ from app.services.labor_cost.utils import (
     create_new_cost,
     check_budget_alert,
     process_user_costs,
-    LaborCostCalculationService,
 )
-from app.services.labor_cost_service import ( # noqa: F401
+from app.services.labor_cost_service import (  # noqa: F401
+    LaborCostCalculationService,
     LaborCostExpenseService,
     PresaleExpense,
 )

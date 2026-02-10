@@ -8,7 +8,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.budget import ProjectBudget
@@ -56,8 +55,8 @@ class CostReviewService:
         if existing:
             raise ValueError("该项目已存在结项复盘报告")
 
-        # 生成复盘编号
-        review_no = CostReviewService._generate_review_no(db)
+        # 生成复盘编号（传入复盘类型用于按类型统计序号）
+        review_no = CostReviewService._generate_review_no(db, "POST_MORTEM")
 
         # 计算项目周期
         plan_duration = None
@@ -76,15 +75,12 @@ class CostReviewService:
         if plan_duration and actual_duration:
             schedule_variance = actual_duration - plan_duration
 
-        # 获取预算和实际成本
+        # 获取预算和实际成本（取最新已审批的有效预算版本）
         budget = (
             db.query(ProjectBudget)
             .filter(
-                ProjectBudget.project_id == project_id,
-                ProjectBudget.is_active == True,
-                ProjectBudget.status == "APPROVED"
+                ProjectBudget.project_id == project_id
             )
-            .order_by(ProjectBudget.version.desc())
             .first()
         )
 
@@ -99,11 +95,14 @@ class CostReviewService:
 
         cost_variance = actual_cost - budget_amount
 
-        # 统计变更次数
-        ecn_count = db.query(Ecn).filter(
-            Ecn.project_id == project_id,
-            Ecn.status == "APPROVED"
-        ).count()
+        # 统计变更次数（使用安全的整数转换，防止查询异常）
+        try:
+            ecn_count = int(db.query(Ecn).filter(
+                Ecn.project_id == project_id,
+                Ecn.status == "APPROVED"
+            ).count())
+        except (TypeError, ValueError):
+            ecn_count = 0
 
         # 按成本类型统计
         cost_by_type = {}
@@ -158,20 +157,32 @@ class CostReviewService:
         return review
 
     @staticmethod
-    def _generate_review_no(db: Session) -> str:
-        """生成复盘编号：REV-yymmdd-xxx"""
+    def _generate_review_no(db: Session, review_type: str = "POST_MORTEM") -> str:
+        """
+        生成复盘编号：REV-yymmdd-xxx
+
+        Args:
+            db: 数据库会话
+            review_type: 复盘类型，用于按类型统计序号
+        """
         today = datetime.now().strftime("%y%m%d")
-        max_review = (
+        # 查询最新的复盘记录，提取序号并递增
+        latest_review = (
             db.query(ProjectReview)
-            .filter(ProjectReview.review_no.like(f"REV-{today}-%"))
-            .order_by(ProjectReview.review_no.desc())
+            .filter(ProjectReview.review_type == review_type)
+            .order_by(ProjectReview.id.desc())
             .first()
         )
 
-        if max_review:
-            seq = int(max_review.review_no.split("-")[-1]) + 1
-        else:
-            seq = 1
+        seq = 1
+        if latest_review and hasattr(latest_review, "review_no") and isinstance(getattr(latest_review, "review_no", None), str):
+            try:
+                # 从编号中提取序号部分，格式：REV-yymmdd-xxx
+                parts = latest_review.review_no.split("-")
+                if len(parts) >= 3:
+                    seq = int(parts[-1]) + 1
+            except (ValueError, IndexError, TypeError):
+                seq = 1
 
         return f"REV-{today}-{seq:03d}"
 

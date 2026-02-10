@@ -9,59 +9,25 @@
 PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
-from datetime import date, datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.pmo import (
     PmoMeeting,
-    PmoProjectClosure,
-    PmoProjectInitiation,
-    PmoProjectPhase,
-    PmoProjectRisk,
-    PmoResourceAllocation,
 )
-from app.models.project import Customer, Project
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.common.pagination import get_pagination_query, PaginationParams
 from app.schemas.pmo import (
-    ClosureCreate,
-    ClosureLessonsRequest,
-    ClosureResponse,
-    ClosureReviewRequest,
-    DashboardResponse,
-    DashboardSummary,
-    InitiationApproveRequest,
-    InitiationCreate,
-    InitiationRejectRequest,
-    InitiationResponse,
-    InitiationUpdate,
     MeetingCreate,
     MeetingMinutesRequest,
     MeetingResponse,
     MeetingUpdate,
-    PhaseAdvanceRequest,
-    PhaseEntryCheckRequest,
-    PhaseExitCheckRequest,
-    PhaseResponse,
-    PhaseReviewRequest,
-    ResourceOverviewResponse,
-    RiskAssessRequest,
-    RiskCloseRequest,
-    RiskCreate,
-    RiskResponse,
-    RiskResponseRequest,
-    RiskStatusUpdateRequest,
-    RiskWallResponse,
-    WeeklyReportResponse,
 )
 
 # Included without extra prefix; decorators already include `/pmo/...` paths.
@@ -101,8 +67,9 @@ def read_meetings(
     if status:
         query = query.filter(PmoMeeting.status == status)
 
-    if keyword:
-        query = query.filter(PmoMeeting.meeting_name.like(f"%{keyword}%"))
+    # 应用关键词过滤（会议名称）
+    from app.common.query_filters import apply_keyword_filter
+    query = apply_keyword_filter(query, PmoMeeting, keyword, ["meeting_name"])
 
     total = query.count()
     meetings = query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)).offset(pagination.offset).limit(pagination.limit).all()

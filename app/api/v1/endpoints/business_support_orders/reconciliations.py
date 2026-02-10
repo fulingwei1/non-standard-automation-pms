@@ -8,10 +8,12 @@ from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_, text
+from sqlalchemy import desc, text
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.business_support import Reconciliation
 from app.models.project import Customer
 from app.models.user import User
@@ -153,10 +155,9 @@ async def create_reconciliation(
 
 @router.get("/reconciliations", response_model=ResponseModel[PaginatedResponse[ReconciliationResponse]], summary="获取客户对账单列表")
 async def get_reconciliations(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    reconciliation_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
@@ -168,15 +169,11 @@ async def get_reconciliations(
         # 筛选条件
         if customer_id:
             query = query.filter(Reconciliation.customer_id == customer_id)
-        if status:
-            query = query.filter(Reconciliation.status == status)
-        if search:
-            query = query.filter(
-                or_(
-                    Reconciliation.reconciliation_no.like(f"%{search}%"),
-                    Reconciliation.customer_name.like(f"%{search}%")
-                )
-            )
+        if reconciliation_status:
+            query = query.filter(Reconciliation.status == reconciliation_status)
+
+        # 应用关键词过滤（对账单号/客户名称）
+        query = apply_keyword_filter(query, Reconciliation, search, ["reconciliation_no", "customer_name"])
 
         # 总数
         total = query.count()
@@ -184,8 +181,8 @@ async def get_reconciliations(
         # 分页
         items = (
             query.order_by(desc(Reconciliation.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -224,9 +221,9 @@ async def get_reconciliations(
             data=PaginatedResponse(
                 items=reconciliation_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

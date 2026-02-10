@@ -10,11 +10,10 @@
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -23,39 +22,15 @@ from app.common.query_filters import apply_keyword_filter
 from app.common.date_range import get_month_range
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.presale import (
-    PresaleSolution,
-    PresaleSolutionCost,
-    PresaleSolutionTemplate,
-    PresaleSupportTicket,
     PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
 )
-from app.models.project import Project
 from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    DeliverableCreate,
-    DeliverableResponse,
-    SolutionCostResponse,
-    SolutionCreate,
-    SolutionResponse,
-    SolutionReviewRequest,
-    SolutionUpdate,
-    TemplateCreate,
-    TemplateResponse,
     TenderCreate,
     TenderResponse,
     TenderResultUpdate,
-    TicketAcceptRequest,
-    TicketBoardResponse,
-    TicketCreate,
-    TicketProgressUpdate,
-    TicketRatingRequest,
-    TicketResponse,
-    TicketUpdate,
 )
 
 # 使用统一的编码生成工具
@@ -92,8 +67,8 @@ def read_tenders(
     if result:
         query = query.filter(PresaleTenderRecord.result == result)
 
-    if customer_name:
-        query = query.filter(PresaleTenderRecord.customer_name.like(f"%{customer_name}%"))
+    # 应用关键词过滤（招标单位）
+    query = apply_keyword_filter(query, PresaleTenderRecord, customer_name, ["customer_name"])
 
     total = query.count()
     tenders = query.order_by(desc(PresaleTenderRecord.created_at)).offset(pagination.offset).limit(pagination.limit).all()
@@ -279,7 +254,6 @@ def get_tender_analysis(
     """
     投标分析报表
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()

@@ -5,12 +5,13 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.service import KnowledgeBase
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -28,11 +29,10 @@ router = APIRouter()
 @router.get("", response_model=PaginatedResponse[KnowledgeBaseResponse], status_code=status.HTTP_200_OK)
 def read_knowledge_base(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     category: Optional[str] = Query(None, description="分类筛选"),
     is_faq: Optional[bool] = Query(None, description="是否FAQ筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    article_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -45,23 +45,18 @@ def read_knowledge_base(
         query = query.filter(KnowledgeBase.category == category)
     if is_faq is not None:
         query = query.filter(KnowledgeBase.is_faq == is_faq)
-    if status:
-        query = query.filter(KnowledgeBase.status == status)
-    if keyword:
-        query = query.filter(
-            or_(
-                KnowledgeBase.article_no.like(f"%{keyword}%"),
-                KnowledgeBase.title.like(f"%{keyword}%"),
-                KnowledgeBase.content.like(f"%{keyword}%"),
-            )
-        )
+    if article_status:
+        query = query.filter(KnowledgeBase.status == article_status)
+
+    # 应用关键词过滤（文章编号/标题/内容）
+    query = apply_keyword_filter(query, KnowledgeBase, keyword, ["article_no", "title", "content"])
 
     # 精选优先，然后按浏览量排序
     total = query.count()
     items = query.order_by(
         desc(KnowledgeBase.is_featured),
         desc(KnowledgeBase.view_count)
-    ).offset((page - 1) * page_size).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取作者姓名
     for item in items:
@@ -73,9 +68,9 @@ def read_knowledge_base(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

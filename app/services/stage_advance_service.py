@@ -126,13 +126,20 @@ def update_project_stage_and_status(
     """
     project.stage = target_stage
 
-    stage_status_map = get_stage_status_mapping()
-    new_status = stage_status_map.get(target_stage, old_status)
-
-    if new_status != old_status:
-        project.status = new_status
+    # 仅在阶段实际变化时，通过映射更新状态
+    if target_stage != old_stage:
+        stage_status_map = get_stage_status_mapping()
+        new_status = stage_status_map.get(target_stage, old_status)
+        if new_status != old_status:
+            project.status = new_status
+    else:
+        # 阶段未变化时，使用传入的 old_status 作为目标状态
+        new_status = old_status
+        if project.status != old_status:
+            project.status = old_status
 
     db.add(project)
+    db.flush()
 
     return new_status
 
@@ -144,27 +151,46 @@ def create_status_log(
     new_stage: str,
     old_status: str,
     new_status: str,
-    project_health: str,
-    reason: Optional[str],
-    changed_by: int
+    old_health: str,
+    new_health: Optional[str] = None,
+    reason: Optional[str] = None,
+    changed_by: int = 0
 ) -> None:
     """
     创建状态变更历史记录
+
+    支持两种调用方式：
+    - 10参数：(db, project_id, old_stage, new_stage, old_status, new_status, old_health, new_health, reason, changed_by)
+    - 9参数（旧兼容）：(db, project_id, old_stage, new_stage, old_status, new_status, project_health, reason, changed_by)
     """
+    # 兼容旧调用方式：如果 new_health 看起来不像健康度值，则为旧的9参数模式
+    if new_health is not None and new_health not in ("H1", "H2", "H3", "H4"):
+        # 旧模式：new_health 实际上是 reason，reason 实际上是 changed_by
+        actual_old_health = old_health
+        actual_new_health = old_health
+        actual_reason = new_health
+        actual_changed_by = int(reason) if reason is not None else 0
+    else:
+        actual_old_health = old_health
+        actual_new_health = new_health if new_health is not None else old_health
+        actual_reason = reason
+        actual_changed_by = changed_by
+
     status_log = ProjectStatusLog(
         project_id=project_id,
         old_stage=old_stage,
         new_stage=new_stage,
         old_status=old_status,
         new_status=new_status,
-        old_health=project_health,
-        new_health=project_health,
-        change_type="STAGE_ADVANCE",
-        change_reason=reason,
-        changed_by=changed_by,
+        old_health=actual_old_health,
+        new_health=actual_new_health,
+        change_type="STAGE_ADVANCEMENT",
+        change_reason=actual_reason,
+        changed_by=actual_changed_by,
         changed_at=datetime.now()
     )
     db.add(status_log)
+    db.flush()
 
 
 def create_installation_dispatch_orders(

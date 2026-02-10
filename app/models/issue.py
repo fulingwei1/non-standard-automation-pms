@@ -3,12 +3,11 @@
 支持项目问题、任务问题、验收问题等统一管理
 """
 from sqlalchemy import JSON, Boolean, Column, Date, DateTime
-from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import IssueStatusEnum, IssueTypeEnum, SeverityEnum
+from app.models.enums.acceptance import IssueTypeEnum  # noqa: F401 — 供外部 import
 
 
 class IssueCategoryEnum(str):
@@ -29,10 +28,10 @@ class Issue(Base, TimestampMixin):
     __tablename__ = 'issues'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    issue_no = Column(String(50), unique=True, nullable=False, comment='问题编号')
+    issue_no = Column(String(50), unique=True, nullable=True, comment='问题编号')
 
     # 关联信息
-    category = Column(String(20), nullable=False, comment='问题分类')
+    category = Column(String(20), nullable=True, comment='问题分类')
     project_id = Column(Integer, ForeignKey('projects.id'), comment='关联项目ID')
     machine_id = Column(Integer, ForeignKey('machines.id'), comment='关联机台ID')
     task_id = Column(Integer, comment='关联任务ID')
@@ -41,8 +40,8 @@ class Issue(Base, TimestampMixin):
     service_ticket_id = Column(Integer, ForeignKey('service_tickets.id'), comment='关联服务工单ID')
 
     # 问题基本信息
-    issue_type = Column(String(20), nullable=False, comment='问题类型')
-    severity = Column(String(20), nullable=False, comment='严重程度')
+    issue_type = Column(String(20), nullable=True, comment='问题类型')
+    severity = Column(String(20), nullable=True, comment='严重程度')
     priority = Column(String(20), default='MEDIUM', comment='优先级：LOW/MEDIUM/HIGH/URGENT')
     title = Column(String(200), nullable=False, comment='问题标题')
     description = Column(Text, nullable=False, comment='问题描述')

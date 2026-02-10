@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
 from app.models.culture_wall import CultureWallContent, CultureWallReadRecord
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -28,8 +28,7 @@ router = APIRouter()
 @router.get("/culture-wall/contents", response_model=PaginatedResponse)
 def read_culture_wall_contents(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     content_type: Optional[str] = Query(None, description="内容类型筛选"),
     is_published: Optional[bool] = Query(None, description="是否发布筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
@@ -49,8 +48,7 @@ def read_culture_wall_contents(
     query = apply_keyword_filter(query, CultureWallContent, keyword, ["title", "content", "summary"])
 
     total = query.count()
-    offset = (page - 1) * page_size
-    contents = query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)).offset(offset).limit(page_size).all()
+    contents = query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for content in contents:
@@ -82,9 +80,9 @@ def read_culture_wall_contents(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

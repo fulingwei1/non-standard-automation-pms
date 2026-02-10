@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.pagination import get_pagination_query
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.acceptance import AcceptanceOrder
 from app.models.user import User
@@ -496,8 +496,7 @@ def withdraw_approval(
 def get_approval_history(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     acceptance_type: Optional[str] = Query(None, description="验收类型筛选"),
     status_filter: Optional[str] = Query(None, description="状态筛选"),
     current_user: User = Depends(security.require_permission("acceptance:read")),
@@ -523,11 +522,10 @@ def get_approval_history(
         query = query.filter(ApprovalTask.status == status_filter)
 
     total = query.count()
-    offset = (page - 1) * page_size
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -579,8 +577,8 @@ def get_approval_history(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total),
         },
     )

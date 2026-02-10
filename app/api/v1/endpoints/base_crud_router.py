@@ -5,7 +5,7 @@
 自动生成标准的CRUD端点，减少重复代码。
 """
 
-from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
+from typing import TypeVar, Type, Optional, List
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -18,6 +18,7 @@ from app.core.schemas.response import (
     paginated_response,
 )
 from app.common.crud import BaseService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -116,8 +117,7 @@ def create_crud_router(
         description=f"分页查询{resource_name_plural}，支持筛选、搜索、排序"
     )
     async def list_items(
-        page: int = Query(1, ge=1, description="页码"),
-        page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+        pagination: PaginationParams = Depends(get_pagination_query),
         keyword: Optional[str] = Query(None, description="关键词搜索"),
         status: Optional[str] = Query(None, description="状态筛选"),
         order_by: Optional[str] = Query(None, description="排序字段"),
@@ -125,29 +125,30 @@ def create_crud_router(
         db: AsyncSession = Depends(get_db),
     ) -> PaginatedResponse[response_schema]:
         """列表查询"""
+
         service = service_class(db)
-        
+
         # 构建筛选条件
         filters = {}
         if status:
             filters["status"] = status
-        
+
         # 查询
         result = await service.list(
-            skip=(page - 1) * page_size,
-            limit=page_size,
+            skip=pagination.offset,
+            limit=pagination.limit,
             keyword=keyword,
             keyword_fields=keyword_fields,
             filters=filters if filters else None,
             order_by=order_by or "created_at",
             order_direction=order_direction
         )
-        
+
         return paginated_response(
             items=result["items"],
             total=result["total"],
-            page=page,
-            page_size=page_size
+            page=pagination.page,
+            page_size=pagination.page_size
         )
     
     # 更新端点

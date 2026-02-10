@@ -9,60 +9,25 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
-from app.models.enums import (
-    ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
-)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    MeetingActionItem,
-    MeetingReport,
-    MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
-    StrategicMeeting,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
-    MeetingCalendarResponse,
-    MeetingMapItem,
-    MeetingMapResponse,
-    MeetingReportConfigCreate,
-    MeetingReportConfigResponse,
-    MeetingReportConfigUpdate,
-    MeetingReportGenerateRequest,
-    MeetingReportResponse,
-    MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
     RhythmConfigCreate,
     RhythmConfigResponse,
     RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
-    StrategicMeetingCreate,
-    StrategicMeetingMinutesRequest,
-    StrategicMeetingResponse,
-    StrategicMeetingUpdate,
     StrategicStructureTemplate,
 )
 
@@ -84,8 +49,7 @@ router = APIRouter(
 @router.get("/management-rhythm/configs", response_model=PaginatedResponse)
 def read_rhythm_configs(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     rhythm_level: Optional[str] = Query(None, description="节律层级筛选"),
     cycle_type: Optional[str] = Query(None, description="周期类型筛选"),
     is_active: Optional[str] = Query(None, description="是否启用筛选"),
@@ -109,8 +73,7 @@ def read_rhythm_configs(
     query = apply_keyword_filter(query, ManagementRhythmConfig, keyword, ["config_name"])
 
     total = query.count()
-    offset = (page - 1) * page_size
-    configs = query.order_by(desc(ManagementRhythmConfig.created_at)).offset(offset).limit(page_size).all()
+    configs = query.order_by(desc(ManagementRhythmConfig.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for config in configs:
@@ -132,9 +95,9 @@ def read_rhythm_configs(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

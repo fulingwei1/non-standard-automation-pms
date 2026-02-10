@@ -10,8 +10,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.hourly_rate import HourlyRateConfig
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -27,8 +27,7 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse[HourlyRateConfigResponse])
 def list_hourly_rate_configs(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     config_type: Optional[str] = Query(None, description="配置类型筛选"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     role_id: Optional[int] = Query(None, description="角色ID筛选"),
@@ -53,8 +52,7 @@ def list_hourly_rate_configs(
         query = query.filter(HourlyRateConfig.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    configs = query.order_by(desc(HourlyRateConfig.created_at)).offset(offset).limit(page_size).all()
+    configs = query.order_by(desc(HourlyRateConfig.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for config in configs:
@@ -69,9 +67,9 @@ def list_hourly_rate_configs(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

@@ -11,8 +11,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.rd_project import RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
@@ -36,12 +36,11 @@ def get_rd_project_worklogs(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    worklog_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
@@ -51,7 +50,6 @@ def get_rd_project_worklogs(
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
 
-    offset = (page - 1) * page_size
     query = db.query(Timesheet).filter(Timesheet.rd_project_id == project_id)
 
     if user_id:
@@ -60,11 +58,11 @@ def get_rd_project_worklogs(
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
         query = query.filter(Timesheet.work_date <= end_date)
-    if status:
-        query = query.filter(Timesheet.status == status)
+    if worklog_status:
+        query = query.filter(Timesheet.status == worklog_status)
 
     total = query.count()
-    timesheets = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)).offset(offset).limit(page_size).all()
+    timesheets = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for ts in timesheets:
@@ -94,9 +92,9 @@ def get_rd_project_worklogs(
         data=TimesheetListResponse(
             items=items,
             total=total,
-            page=page,
-            page_size=page_size,
-            pages=(total + page_size - 1) // page_size
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total)
         )
     )
 

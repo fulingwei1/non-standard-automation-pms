@@ -27,22 +27,22 @@ class Ecn(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ecn_no = Column(String(50), unique=True, nullable=False, comment="ECN编号")
     ecn_title = Column(String(200), nullable=False, comment="ECN标题")
-    ecn_type = Column(String(20), nullable=False, comment="变更类型")
+    ecn_type = Column(String(20), nullable=True, comment="变更类型")
 
     # 来源
-    source_type = Column(String(20), nullable=False, comment="来源类型")
+    source_type = Column(String(20), nullable=True, comment="来源类型")
     source_no = Column(String(100), comment="来源单号")
     source_id = Column(Integer, comment="来源ID")
 
     # 关联
     project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
+        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
 
     # 变更内容
-    change_reason = Column(Text, nullable=False, comment="变更原因")
-    change_description = Column(Text, nullable=False, comment="变更内容描述")
+    change_reason = Column(Text, nullable=True, comment="变更原因")
+    change_description = Column(Text, nullable=True, comment="变更内容描述")
     change_scope = Column(String(20), default="PARTIAL", comment="变更范围")
 
     # 优先级

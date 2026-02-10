@@ -64,6 +64,10 @@ def extract_solution(
 
 def _auto_extract_solution(ecn: Ecn) -> str:
     """自动提取解决方案"""
+    # 从solution字段直接提取
+    if ecn.solution:
+        return ecn.solution
+
     # 从执行说明中提取
     if ecn.execution_note:
         return ecn.execution_note

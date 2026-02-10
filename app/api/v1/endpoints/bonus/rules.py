@@ -9,81 +9,33 @@
 奖金激励模块 API 端点
 """
 
-import io
-import os
-import uuid
-from datetime import date, datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional
 
 from fastapi import (
     APIRouter,
     Depends,
-    File,
-    Form,
     HTTPException,
     Query,
-    UploadFile,
     status,
 )
-from fastapi.responses import FileResponse
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.bonus import (
-    BonusAllocationSheet,
     BonusCalculation,
-    BonusDistribution,
     BonusRule,
-    TeamBonusAllocation,
 )
-from app.models.performance import (
-    PerformancePeriod,
-    PerformanceResult,
-    ProjectContribution,
-)
-from app.models.presale import PresaleSupportTicket
-from app.models.project import Project, ProjectMilestone
-from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.bonus import (
-    BonusAllocationRow,
-    BonusAllocationSheetConfirm,
-    BonusAllocationSheetResponse,
-    BonusCalculationApprove,
-    BonusCalculationCreate,
-    BonusCalculationListResponse,
-    BonusCalculationQuery,
-    BonusCalculationResponse,
-    BonusDistributionCreate,
-    BonusDistributionListResponse,
-    BonusDistributionPay,
-    BonusDistributionQuery,
-    BonusDistributionResponse,
     BonusRuleCreate,
     BonusRuleListResponse,
     BonusRuleResponse,
     BonusRuleUpdate,
-    BonusStatisticsResponse,
-    CalculateMilestoneBonusRequest,
-    CalculatePerformanceBonusRequest,
-    CalculatePresaleBonusRequest,
-    CalculateProjectBonusRequest,
-    CalculateSalesBonusRequest,
-    CalculateSalesDirectorBonusRequest,
-    CalculateTeamBonusRequest,
-    MyBonusResponse,
-    TeamBonusAllocationApprove,
-    TeamBonusAllocationCreate,
-    TeamBonusAllocationListResponse,
-    TeamBonusAllocationResponse,
 )
-from app.schemas.common import PageParams, ResponseModel
-from app.services.bonus import BonusCalculator
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -99,14 +51,6 @@ router = APIRouter(
 # 共 7 个路由
 
 # ==================== 奖金规则管理 ====================
-def paginate_items(items: List[Any], page: int, page_size: int) -> Tuple[List[Any], int, int]:
-    """
-    简单的列表分页工具，返回分页后的数据、总数以及总页数
-    """
-    total = len(items)
-    start = (page - 1) * page_size
-    end = start + page_size
-    return items[start:end], total, (total + page_size - 1) // page_size
 
 @router.post("/rules", response_model=ResponseModel[BonusRuleResponse], status_code=status.HTTP_201_CREATED)
 def create_bonus_rule(
@@ -138,8 +82,7 @@ def create_bonus_rule(
 def get_bonus_rules(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     bonus_type: Optional[str] = Query(None, description="奖金类型"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -156,15 +99,15 @@ def get_bonus_rules(
 
     total = query.count()
     rules = query.order_by(desc(BonusRule.priority), desc(BonusRule.created_at)).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+        pagination.offset
+    ).limit(pagination.limit).all()
 
     return BonusRuleListResponse(
         items=rules,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 
@@ -278,4 +221,16 @@ def deactivate_bonus_rule(
     return ResponseModel(code=200, message="停用成功")
 
 
+import math
+from typing import List, Tuple
 
+
+def paginate_items(items: list, page: int, page_size: int) -> Tuple[list, int, int]:
+    """
+    对内存列表做分页，返回 (当前页数据, 总条数, 总页数)
+    """
+    total = len(items)
+    pages = math.ceil(total / page_size) if page_size > 0 else 0
+    start = (page - 1) * page_size
+    end = start + page_size
+    return items[start:end], total, pages

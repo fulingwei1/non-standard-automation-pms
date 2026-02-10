@@ -36,7 +36,7 @@ class User(Base, TimestampMixin):
     is_tenant_admin = Column(Boolean, default=False, comment="是否租户管理员")
 
     employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
+        Integer, ForeignKey("employees.id"), nullable=True, comment="员工ID"
     )
     username = Column(String(50), unique=True, nullable=False, comment="用户名")
     password_hash = Column(String(255), nullable=False, comment="密码哈希")

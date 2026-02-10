@@ -12,7 +12,21 @@ from .core import ApprovalEngineCore
 
 
 class ApprovalQueryMixin:
-    """审批查询功能混入类"""
+    """审批查询功能混入类
+
+    可独立实例化使用（传入 core 对象），也可作为 mixin 与 ApprovalEngineCore 混合使用。
+    """
+
+    def __init__(self, core: ApprovalEngineCore):
+        """初始化查询混入类
+
+        Args:
+            core: 审批引擎核心实例，提供 db 会话和内部方法
+        """
+        self.db = core.db
+        self._core = core
+        # 代理核心类的内部方法，确保独立实例化时 _log_action 等方法可用
+        self._log_action = core._log_action
 
     def get_pending_tasks(
         self: ApprovalEngineCore,

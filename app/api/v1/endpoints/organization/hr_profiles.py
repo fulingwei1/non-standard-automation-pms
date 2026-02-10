@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.organization import Employee, EmployeeHrProfile
 from app.models.user import User
 from app.schemas.organization import (
@@ -21,6 +20,7 @@ from app.schemas.organization import (
     EmployeeHrProfileUpdate,
     EmployeeWithHrProfileResponse,
 )
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -28,14 +28,14 @@ router = APIRouter()
 @router.get("/hr-profiles")
 def get_hr_profiles(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="搜索关键词（姓名/工号/部门）"),
     dept_level1: Optional[str] = Query(None, description="一级部门筛选"),
     employment_status: Optional[str] = Query(None, description="在职状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Dict[str, Any]:
     """获取人事档案列表（分页）"""
+
     query = db.query(Employee).outerjoin(EmployeeHrProfile)
 
     if keyword:
@@ -54,8 +54,7 @@ def get_hr_profiles(
         query = query.filter(Employee.employment_status == employment_status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    employees = query.order_by(Employee.created_at.desc()).offset(offset).limit(page_size).all()
+    employees = query.order_by(Employee.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for emp in employees:
@@ -95,9 +94,9 @@ def get_hr_profiles(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total)
     }
 
 

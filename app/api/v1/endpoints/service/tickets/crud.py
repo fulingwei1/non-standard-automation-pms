@@ -4,20 +4,19 @@
 """
 from typing import Any, Optional
 
-from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.project import Customer, Project
 from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
-
-from fastapi import APIRouter
 
 from ..number_utils import generate_ticket_no
 
@@ -27,9 +26,8 @@ router = APIRouter()
 @router.get("", response_model=PaginatedResponse[ServiceTicketResponse], status_code=status.HTTP_200_OK)
 def read_service_tickets(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    ticket_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     urgency: Optional[str] = Query(None, description="紧急程度筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -41,24 +39,20 @@ def read_service_tickets(
     """
     query = db.query(ServiceTicket)
 
-    if status:
-        query = query.filter(ServiceTicket.status == status)
+    if ticket_status:
+        query = query.filter(ServiceTicket.status == ticket_status)
     if urgency:
         query = query.filter(ServiceTicket.urgency == urgency)
     if project_id:
         query = query.filter(ServiceTicket.project_id == project_id)
     if customer_id:
         query = query.filter(ServiceTicket.customer_id == customer_id)
-    if keyword:
-        query = query.filter(
-            or_(
-                ServiceTicket.ticket_no.like(f"%{keyword}%"),
-                ServiceTicket.problem_desc.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（工单号/问题描述）
+    query = apply_keyword_filter(query, ServiceTicket, keyword, ["ticket_no", "problem_desc"])
 
     total = query.count()
-    items = query.order_by(desc(ServiceTicket.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(ServiceTicket.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取项目名称和客户名称
     for item in items:
@@ -74,9 +68,9 @@ def read_service_tickets(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

@@ -11,8 +11,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
@@ -34,13 +34,12 @@ router = APIRouter()
 @router.get("/rd-costs", response_model=PaginatedResponse)
 def get_rd_costs(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     rd_project_id: Optional[int] = Query(None, description="研发项目ID筛选"),
     cost_type_id: Optional[int] = Query(None, description="费用类型ID筛选"),
     start_date: Optional[date] = Query(None, description="开始日期筛选"),
     end_date: Optional[date] = Query(None, description="结束日期筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    cost_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
@@ -56,24 +55,23 @@ def get_rd_costs(
         query = query.filter(RdCost.cost_date >= start_date)
     if end_date:
         query = query.filter(RdCost.cost_date <= end_date)
-    if status:
-        query = query.filter(RdCost.status == status)
+    if cost_status:
+        query = query.filter(RdCost.status == cost_status)
 
     # 总数
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    costs = query.order_by(desc(RdCost.cost_date), desc(RdCost.created_at)).offset(offset).limit(page_size).all()
+    costs = query.order_by(desc(RdCost.cost_date), desc(RdCost.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [RdCostResponse.model_validate(cost) for cost in costs]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

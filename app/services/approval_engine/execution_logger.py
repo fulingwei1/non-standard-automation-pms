@@ -294,12 +294,41 @@ class ApprovalExecutionLogger:
 
     def log_node_transition(
         self,
-        instance: ApprovalInstance,
-        from_node: Optional[ApprovalNodeDefinition],
-        to_node: ApprovalNodeDefinition,
+        instance=None,
+        from_node=None,
+        to_node=None,
         reason: Optional[str] = None,
+        *,
+        instance_id: Optional[int] = None,
+        from_node_id: Optional[int] = None,
+        to_node_id: Optional[int] = None,
+        trigger: Optional[str] = None,
     ):
-        """记录节点流转"""
+        """记录节点流转
+
+        支持两种调用方式:
+        1. ORM 对象方式: log_node_transition(instance, from_node, to_node, reason)
+        2. ID 方式: log_node_transition(instance_id=1, from_node_id=1, to_node_id=2, trigger="AUTO")
+        """
+        # 简化接口：使用 ID 调用
+        if instance_id is not None or (instance is not None and isinstance(instance, int)):
+            actual_instance_id = instance_id if instance_id is not None else instance
+            actual_from_node_id = from_node_id if from_node_id is not None else from_node
+            actual_to_node_id = to_node_id if to_node_id is not None else to_node
+            actual_trigger = trigger if trigger is not None else reason
+
+            self._create_action_log(
+                instance_id=actual_instance_id,
+                operator_id=0,
+                operator_name="System_Router",
+                action="ADVANCE",
+                comment=f"节点流转, trigger={actual_trigger}",
+                before_node_id=actual_from_node_id,
+                after_node_id=actual_to_node_id,
+            )
+            return
+
+        # ORM 对象方式（原有逻辑）
         log_context = {
             "instance_id": instance.id,
             "instance_no": instance.instance_no,
@@ -500,6 +529,108 @@ class ApprovalExecutionLogger:
         except Exception as e:
             logger.error(f"创建审批操作日志失败: {e}", exc_info=True)
             # 不要因为日志失败影响主流程
+
+    # ============================================================
+    # 简化接口（兼容综合测试，接受 ID 而非 ORM 对象）
+    # ============================================================
+
+    def log_execution(
+        self,
+        instance_id: int,
+        action: str,
+        actor_id: int,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        """记录通用执行日志（简化接口，使用 ID 而非 ORM 对象）
+
+        Args:
+            instance_id: 审批实例ID
+            action: 操作类型（SUBMIT, APPROVE, REJECT 等）
+            actor_id: 操作人ID
+            details: 操作详情
+        """
+        self._create_action_log(
+            instance_id=instance_id,
+            operator_id=actor_id,
+            operator_name=f"User_{actor_id}",
+            action=action,
+            action_detail=details,
+        )
+
+    def log_approval_action(
+        self,
+        instance_id: int,
+        node_id: int,
+        approver_id: int,
+        action: str,
+        comment: Optional[str] = None,
+        delegate_to: Optional[int] = None,
+    ):
+        """记录审批动作（简化接口，使用 ID 而非 ORM 对象）
+
+        Args:
+            instance_id: 审批实例ID
+            node_id: 审批节点ID
+            approver_id: 审批人ID
+            action: 审批动作（APPROVE, REJECT, DELEGATE 等）
+            comment: 审批意见
+            delegate_to: 委托目标用户ID（仅 DELEGATE 时使用）
+        """
+        action_detail = {}
+        if delegate_to is not None:
+            action_detail["delegate_to"] = delegate_to
+
+        self._create_action_log(
+            instance_id=instance_id,
+            node_id=node_id,
+            operator_id=approver_id,
+            operator_name=f"User_{approver_id}",
+            action=action,
+            comment=comment,
+            action_detail=action_detail if action_detail else None,
+        )
+
+    def get_execution_history(
+        self,
+        instance_id: int,
+    ) -> List:
+        """获取执行历史记录
+
+        Args:
+            instance_id: 审批实例ID
+
+        Returns:
+            按创建时间排序的日志记录列表
+        """
+        query = self.db.query(ApprovalActionLog)
+        query = query.filter(ApprovalActionLog.instance_id == instance_id)
+        query = query.order_by(ApprovalActionLog.created_at)
+        return query.all()
+
+    def get_approval_logs(
+        self,
+        instance_id: int,
+        node_id: Optional[int] = None,
+        approver_id: Optional[int] = None,
+    ) -> List:
+        """获取审批日志
+
+        Args:
+            instance_id: 审批实例ID
+            node_id: 可选，按节点ID过滤
+            approver_id: 可选，按审批人ID过滤
+
+        Returns:
+            按创建时间排序的审批日志列表
+        """
+        query = self.db.query(ApprovalActionLog)
+        query = query.filter(ApprovalActionLog.instance_id == instance_id)
+        if node_id is not None:
+            query = query.filter(ApprovalActionLog.node_id == node_id)
+        if approver_id is not None:
+            query = query.filter(ApprovalActionLog.operator_id == approver_id)
+        query = query.order_by(ApprovalActionLog.created_at)
+        return query.all()
 
     # ============================================================
     # 批量操作日志

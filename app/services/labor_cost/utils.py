@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-人工成本计算工具函数与批量计算服务
+人工成本计算工具函数
 
-合并了原 labor_cost_calculation_service.py 的功能。
-旧模块已改为重导出兼容层。
+提供工时成本计算的共用工具函数。
+LaborCostCalculationService 类现位于 labor_cost_service.py 中。
 """
 
 from datetime import date
@@ -16,6 +16,8 @@ from app.models.project import Project, ProjectCost
 from app.models.timesheet import Timesheet
 
 # LaborCostService 延迟导入，避免循环依赖
+
+
 
 
 def query_approved_timesheets(
@@ -59,7 +61,7 @@ def delete_existing_costs(
 
     for cost in existing_costs:
         # 更新项目实际成本
-        project.actual_cost = max(0, (project.actual_cost or 0) - float(cost.amount))
+        project.actual_cost = max(Decimal("0"), Decimal(str(project.actual_cost or 0)) - Decimal(str(cost.amount or 0)))
         db.delete(cost)
 
 
@@ -131,7 +133,7 @@ def update_existing_cost(
     existing_cost.description = f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时"
 
     # 更新项目实际成本
-    project.actual_cost = (project.actual_cost or 0) - float(old_amount) + float(cost_amount)
+    project.actual_cost = Decimal(str(project.actual_cost or 0)) - Decimal(str(old_amount or 0)) + Decimal(str(cost_amount or 0))
 
     db.add(existing_cost)
 
@@ -244,83 +246,12 @@ def process_user_costs(
     return created_costs, total_cost
 
 
-class LaborCostCalculationService:
-    """
-    人工成本批量计算服务
-    用于定时任务批量计算所有项目的人工成本
-    """
+# 向后兼容：从主服务重导出 LaborCostCalculationService
+# 避免循环导入，使用函数延迟导入
+def __getattr__(name):
+    """支持从本模块导入 LaborCostCalculationService（向后兼容）"""
+    if name == "LaborCostCalculationService":
+        from app.services.labor_cost_service import LaborCostCalculationService
+        return LaborCostCalculationService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-    def __init__(self, db: Session):
-        self.db = db
-
-    def calculate_monthly_costs(self, year: int, month: int) -> Dict:
-        """
-        计算指定月份所有项目的人工成本
-
-        Args:
-            year: 年份
-            month: 月份
-
-        Returns:
-            Dict: 计算结果统计
-        """
-        import logging
-        from datetime import date
-        from calendar import monthrange
-
-        logger = logging.getLogger(__name__)
-
-        # 计算月份的开始和结束日期
-        _, last_day = monthrange(year, month)
-        start_date = date(year, month, 1)
-        end_date = date(year, month, last_day)
-
-        # 查询有工时记录的项目
-        project_ids = self.db.query(Timesheet.project_id).filter(
-            Timesheet.work_date >= start_date,
-            Timesheet.work_date <= end_date,
-            Timesheet.status == "APPROVED"
-        ).distinct().all()
-
-        projects_processed = 0
-        total_cost = Decimal("0")
-        errors = []
-
-        for (project_id,) in project_ids:
-            if not project_id:
-                continue
-
-            try:
-                project = self.db.query(Project).filter(Project.id == project_id).first()
-                if not project:
-                    continue
-
-                # 查询该项目的工时
-                timesheets = query_approved_timesheets(self.db, project_id, start_date, end_date)
-                if not timesheets:
-                    continue
-
-                # 按用户分组
-                user_costs = group_timesheets_by_user(timesheets)
-
-                # 处理用户成本
-                _, project_cost = process_user_costs(
-                    self.db, project, project_id, user_costs, end_date, recalculate=False
-                )
-
-                total_cost += project_cost
-                projects_processed += 1
-
-            except Exception as e:
-                errors.append({"project_id": project_id, "error": str(e)})
-                logger.error(f"计算项目 {project_id} 人工成本失败: {str(e)}")
-
-        self.db.commit()
-
-        return {
-            "year": year,
-            "month": month,
-            "projects_processed": projects_processed,
-            "total_cost": float(total_cost),
-            "errors": errors
-        }

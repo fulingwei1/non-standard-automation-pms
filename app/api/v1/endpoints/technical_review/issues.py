@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.technical_review import ReviewIssue, TechnicalReview
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -23,6 +22,7 @@ from app.schemas.technical_review import (
 )
 
 from .utils import generate_issue_no, update_review_issue_counts
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -120,15 +120,15 @@ def update_review_issue(
 @router.get("/technical-reviews/issues", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_review_issues(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     review_id: Optional[int] = Query(None, description="评审ID筛选"),
     issue_level: Optional[str] = Query(None, description="问题等级筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    issue_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     assignee_id: Optional[int] = Query(None, description="责任人ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取评审问题列表"""
+
     query = db.query(ReviewIssue)
 
     if review_id:
@@ -137,22 +137,21 @@ def read_review_issues(
     if issue_level:
         query = query.filter(ReviewIssue.issue_level == issue_level)
 
-    if status:
-        query = query.filter(ReviewIssue.status == status)
+    if issue_status:
+        query = query.filter(ReviewIssue.status == issue_status)
 
     if assignee_id:
         query = query.filter(ReviewIssue.assignee_id == assignee_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    issues = query.order_by(desc(ReviewIssue.created_at)).offset(offset).limit(page_size).all()
+    issues = query.order_by(desc(ReviewIssue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_issue_response(issue) for issue in issues]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )

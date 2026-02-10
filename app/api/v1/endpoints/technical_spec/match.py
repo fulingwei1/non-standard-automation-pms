@@ -22,6 +22,7 @@ from app.schemas.technical_spec import (
     TechnicalSpecRequirementResponse,
 )
 from app.utils.spec_matcher import SpecMatcher
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -137,10 +138,10 @@ def list_match_records(
     project_id: Optional[int] = Query(None, description="项目ID"),
     match_type: Optional[str] = Query(None, description="匹配类型"),
     match_status: Optional[str] = Query(None, description="匹配状态"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取规格匹配记录列表"""
+
     query = db.query(SpecMatchRecord)
 
     if project_id:
@@ -151,7 +152,7 @@ def list_match_records(
         query = query.filter(SpecMatchRecord.match_status == match_status)
 
     total = query.count()
-    records = query.order_by(desc(SpecMatchRecord.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    records = query.order_by(desc(SpecMatchRecord.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for record in records:
@@ -190,7 +191,7 @@ def list_match_records(
     return SpecMatchRecordListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )

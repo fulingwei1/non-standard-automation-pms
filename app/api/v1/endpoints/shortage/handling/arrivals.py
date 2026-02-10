@@ -23,10 +23,12 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.core.config import settings
 from app.models.material import Material
@@ -99,10 +101,9 @@ def _build_arrival_response(arrival: MaterialArrival) -> MaterialArrivalResponse
 @router.get("", response_model=PaginatedResponse)
 def list_arrivals(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（到货单号/物料编码）"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    arrival_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     supplier_id: Optional[int] = Query(None, description="供应商ID筛选"),
     is_delayed: Optional[bool] = Query(None, description="是否延迟筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -110,33 +111,27 @@ def list_arrivals(
     """到货跟踪列表"""
     query = db.query(MaterialArrival)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                MaterialArrival.arrival_no.like(f"%{keyword}%"),
-                MaterialArrival.material_code.like(f"%{keyword}%")
-            )
-        )
+    # 应用关键词过滤（到货单号/物料编码）
+    query = apply_keyword_filter(query, MaterialArrival, keyword, ["arrival_no", "material_code"])
 
-    if status:
-        query = query.filter(MaterialArrival.status == status)
+    if arrival_status:
+        query = query.filter(MaterialArrival.status == arrival_status)
     if supplier_id:
         query = query.filter(MaterialArrival.supplier_id == supplier_id)
     if is_delayed is not None:
         query = query.filter(MaterialArrival.is_delayed == is_delayed)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    arrivals = query.order_by(desc(MaterialArrival.created_at)).offset(offset).limit(page_size).all()
+    arrivals = query.order_by(desc(MaterialArrival.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 
@@ -198,8 +193,7 @@ def create_arrival(
 @router.get("/delayed", response_model=PaginatedResponse)
 def get_delayed_arrivals(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     supplier_id: Optional[int] = Query(None, description="供应商ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -213,20 +207,19 @@ def get_delayed_arrivals(
         query = query.filter(MaterialArrival.supplier_id == supplier_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
     arrivals = query.order_by(
         MaterialArrival.delay_days.desc(),
         MaterialArrival.expected_date
-    ).offset(offset).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 
@@ -322,8 +315,7 @@ def list_arrival_follow_ups(
     *,
     db: Session = Depends(deps.get_db),
     arrival_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """到货跟踪的跟催记录列表"""
@@ -334,8 +326,7 @@ def list_arrival_follow_ups(
     query = db.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id == arrival_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    follow_ups = query.order_by(desc(ArrivalFollowUp.followed_at)).offset(offset).limit(page_size).all()
+    follow_ups = query.order_by(desc(ArrivalFollowUp.followed_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for follow_up in follow_ups:
@@ -357,9 +348,9 @@ def list_arrival_follow_ups(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

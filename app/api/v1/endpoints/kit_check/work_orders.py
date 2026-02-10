@@ -17,6 +17,7 @@ from app.models.project import Machine, Project
 from app.models.purchase import PurchaseOrderItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import calculate_work_order_kit_rate
 
@@ -30,14 +31,14 @@ def get_work_orders_for_check(
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     plan_date: Optional[date] = Query(None, description="计划开工日期"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     待检查工单列表
     获取未来7天内计划开工的工单，用于齐套检查
     """
+
     # 默认查询未来7天的工单
     today = date.today()
     end_date = today + timedelta(days=7)
@@ -62,7 +63,7 @@ def get_work_orders_for_check(
     total = query.count()
 
     # 分页
-    work_orders = query.order_by(WorkOrder.plan_start_date, WorkOrder.priority).offset((page - 1) * page_size).limit(page_size).all()
+    work_orders = query.order_by(WorkOrder.plan_start_date, WorkOrder.priority).offset(pagination.offset).limit(pagination.limit).all()
 
     # 计算每个工单的齐套率
     work_order_list = []
@@ -124,10 +125,10 @@ def get_work_orders_for_check(
             "work_orders": work_order_list,
             "summary": summary,
             "pagination": {
-                "page": page,
-                "page_size": page_size,
+                "page": pagination.page,
+                "page_size": pagination.page_size,
                 "total": total,
-                "pages": (total + page_size - 1) // page_size,
+                "pages": pagination.pages_for_total(total),
             }
         }
     )

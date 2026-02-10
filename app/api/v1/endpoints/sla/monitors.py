@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.sla import SLAMonitor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sla import SLAMonitorResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -26,13 +26,7 @@ router = APIRouter()
 def get_sla_monitors(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
     policy_id: Optional[int] = Query(None, description="策略ID筛选"),
     response_status: Optional[str] = Query(None, description="响应状态筛选"),
@@ -43,6 +37,7 @@ def get_sla_monitors(
     """
     获取SLA监控记录列表
     """
+
     query = db.query(SLAMonitor)
 
     if ticket_id:
@@ -62,11 +57,10 @@ def get_sla_monitors(
         )
 
     total = query.count()
-    offset = (page - 1) * page_size
     monitors = (
         query.order_by(desc(SLAMonitor.created_at))
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -84,9 +78,9 @@ def get_sla_monitors(
     return PaginatedResponse(
         items=monitor_list,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
     )
 
 

@@ -8,7 +8,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -69,13 +69,9 @@ def list_failure_cases(
     if industry:
         query = query.filter(FailureCase.industry == industry)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                FailureCase.project_name.like(f"%{keyword}%"),
-                FailureCase.core_failure_reason.like(f"%{keyword}%")
-            )
-        )
+    # 应用关键词过滤（项目名称/核心失败原因）
+    from app.common.query_filters import apply_keyword_filter
+    query = apply_keyword_filter(query, FailureCase, keyword, ["project_name", "core_failure_reason"])
 
     total = query.count()
     cases = query.order_by(desc(FailureCase.created_at)).offset(pagination.offset).limit(pagination.limit).all()

@@ -3,19 +3,21 @@
 客户沟通管理 API endpoints
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.core.config import settings
 from app.models.service import CustomerCommunication
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.service import (
     CustomerCommunicationCreate,
     CustomerCommunicationResponse,
@@ -71,8 +73,7 @@ def get_customer_communication_statistics(
 @router.get("", response_model=PaginatedResponse[CustomerCommunicationResponse], status_code=status.HTTP_200_OK)
 def read_customer_communications(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     communication_type: Optional[str] = Query(None, description="沟通方式筛选"),
     topic: Optional[str] = Query(None, description="沟通主题筛选"),
     importance: Optional[str] = Query(None, description="重要性筛选"),
@@ -99,18 +100,12 @@ def read_customer_communications(
         query = query.filter(CustomerCommunication.communication_date >= date_from)
     if date_to:
         query = query.filter(CustomerCommunication.communication_date <= date_to)
-    if keyword:
-        query = query.filter(
-            or_(
-                CustomerCommunication.communication_no.like(f"%{keyword}%"),
-                CustomerCommunication.customer_name.like(f"%{keyword}%"),
-                CustomerCommunication.subject.like(f"%{keyword}%"),
-                CustomerCommunication.content.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（沟通编号/客户名称/主题/内容）
+    query = apply_keyword_filter(query, CustomerCommunication, keyword, ["communication_no", "customer_name", "subject", "content"])
 
     total = query.count()
-    items = query.order_by(desc(CustomerCommunication.communication_date)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(CustomerCommunication.communication_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取创建人姓名
     for item in items:
@@ -122,9 +117,9 @@ def read_customer_communications(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

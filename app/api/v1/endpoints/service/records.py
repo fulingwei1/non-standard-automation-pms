@@ -3,10 +3,8 @@
 现场服务记录管理 API endpoints
 """
 
-import os
 import uuid
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Optional
 
@@ -20,12 +18,13 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.project import Customer, Project
 from app.models.service import ServiceRecord
 from app.models.user import User
@@ -33,7 +32,6 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.service import (
     ServiceRecordCreate,
     ServiceRecordResponse,
-    ServiceRecordUpdate,
 )
 
 from .number_utils import generate_record_no
@@ -75,10 +73,9 @@ def get_service_record_statistics(
 @router.get("", response_model=PaginatedResponse[ServiceRecordResponse], status_code=status.HTTP_200_OK)
 def read_service_records(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     service_type: Optional[str] = Query(None, description="服务类型筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    record_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     date_from: Optional[date] = Query(None, description="开始日期"),
@@ -93,8 +90,8 @@ def read_service_records(
 
     if service_type:
         query = query.filter(ServiceRecord.service_type == service_type)
-    if status:
-        query = query.filter(ServiceRecord.status == status)
+    if record_status:
+        query = query.filter(ServiceRecord.status == record_status)
     if project_id:
         query = query.filter(ServiceRecord.project_id == project_id)
     if customer_id:
@@ -103,17 +100,12 @@ def read_service_records(
         query = query.filter(ServiceRecord.service_date >= date_from)
     if date_to:
         query = query.filter(ServiceRecord.service_date <= date_to)
-    if keyword:
-        query = query.filter(
-            or_(
-                ServiceRecord.record_no.like(f"%{keyword}%"),
-                ServiceRecord.service_content.like(f"%{keyword}%"),
-                ServiceRecord.location.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（记录编号/服务内容/位置）
+    query = apply_keyword_filter(query, ServiceRecord, keyword, ["record_no", "service_content", "location"])
 
     total = query.count()
-    items = query.order_by(desc(ServiceRecord.service_date)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(ServiceRecord.service_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取项目名称和客户名称
     for item in items:
@@ -134,9 +126,9 @@ def read_service_records(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

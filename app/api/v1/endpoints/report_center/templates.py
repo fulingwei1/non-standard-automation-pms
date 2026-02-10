@@ -10,50 +10,27 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-import json
-import os
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import FileResponse
-from sqlalchemy import and_, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.outsourcing import OutsourcingOrder
-from app.models.vendor import Vendor
-from app.models.project import Machine, Project, ProjectPaymentPlan
-from app.models.rd_project import RdCost, RdCostType, RdProject
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.report_center import (
-    ReportDefinition,
     ReportGeneration,
-    ReportSubscription,
     ReportTemplate,
 )
-from app.models.sales import Contract
-from app.models.timesheet import Timesheet
-from app.models.user import Role, User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.models.user import User
 from app.schemas.report_center import (
     ApplyTemplateRequest,
-    ReportCompareRequest,
-    ReportCompareResponse,
-    ReportExportRequest,
-    ReportGenerateRequest,
     ReportGenerateResponse,
-    ReportPreviewResponse,
-    ReportRoleResponse,
     ReportTemplateListResponse,
     ReportTemplateResponse,
-    ReportTypeResponse,
-    RoleReportMatrixResponse,
 )
-from app.services.report_framework import ConfigError, ReportEngine
-from app.services.report_framework.engine import ParameterError, PermissionError
 
 router = APIRouter()
 
@@ -74,8 +51,7 @@ router = APIRouter(
 def get_report_templates(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     report_type: Optional[str] = Query(None, description="报表类型筛选"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
@@ -88,8 +64,7 @@ def get_report_templates(
         query = query.filter(ReportTemplate.report_type == report_type)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    templates = query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)).offset(offset).limit(page_size).all()
+    templates = query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for template in templates:
@@ -109,9 +84,9 @@ def get_report_templates(
     return ReportTemplateListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

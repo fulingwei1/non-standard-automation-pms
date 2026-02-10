@@ -19,6 +19,20 @@ from sqlalchemy.orm import relationship
 from ..base import Base, TimestampMixin
 
 
+class _StageValue:
+    """模拟枚举值，提供 .value 属性"""
+    def __init__(self, v: str):
+        self.value = v
+    def __str__(self):
+        return self.value
+    def __eq__(self, other):
+        if isinstance(other, _StageValue):
+            return self.value == other.value
+        return self.value == other
+    def __hash__(self):
+        return hash(self.value)
+
+
 class ProjectStage(Base, TimestampMixin):
     """
     项目阶段表（项目相关）
@@ -42,6 +56,17 @@ class ProjectStage(Base, TimestampMixin):
     """
 
     __tablename__ = "project_stages"
+
+    # 阶段常量（向后兼容，供测试和业务代码使用 ProjectStage.S2.value 等）
+    S1 = _StageValue("S1")
+    S2 = _StageValue("S2")
+    S3 = _StageValue("S3")
+    S4 = _StageValue("S4")
+    S5 = _StageValue("S5")
+    S6 = _StageValue("S6")
+    S7 = _StageValue("S7")
+    S8 = _StageValue("S8")
+    S9 = _StageValue("S9")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(

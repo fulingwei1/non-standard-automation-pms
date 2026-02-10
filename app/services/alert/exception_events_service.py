@@ -3,52 +3,28 @@
 异常事件管理服务
 """
 
-from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, List, Optional
+from datetime import date, datetime, timezone
+from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, func, or_
-from sqlalchemy.orm import Session, joinedload, selectinload
+from fastapi import HTTPException, status
+from sqlalchemy import or_
+from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
-from app.core import security
-from app.core.config import settings
 from app.models.alert import (
-    AlertNotification,
-    AlertRecord,
-    AlertRule,
-    AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
     ExceptionAction,
     ExceptionEscalation,
     ExceptionEvent,
-    ProjectHealthSnapshot,
 )
 from app.models.issue import Issue
-from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.alert import (
-    AlertRecordHandle,
-    AlertRecordListResponse,
-    AlertRecordResponse,
-    AlertRuleCreate,
-    AlertRuleResponse,
-    AlertRuleUpdate,
-    AlertStatisticsResponse,
-    AlertSubscriptionCreate,
-    AlertSubscriptionResponse,
-    AlertSubscriptionUpdate,
     ExceptionEventCreate,
-    ExceptionEventListResponse,
     ExceptionEventResolve,
     ExceptionEventResponse,
     ExceptionEventUpdate,
     ExceptionEventVerify,
-    ProjectHealthResponse,
 )
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 
 
 class ExceptionEventsService:
@@ -372,3 +348,22 @@ class ExceptionEventsService:
         """发送升级通知"""
         # 集成通知系统
         pass
+
+    # ------------------------------------------------------------------
+    # 简化别名方法（向后兼容）
+    # ------------------------------------------------------------------
+
+    def create_event(self, event_data, current_user=None):
+        """create_exception_event 的别名"""
+        if current_user is not None:
+            return self.create_exception_event(event_data, current_user)
+        # 简化模式：event_data 包含所有信息
+        return self.create_exception_event(event_data, event_data)
+
+    def get_event(self, event_id: int):
+        """get_exception_event 的别名"""
+        return self.get_exception_event(event_id)
+
+    def list_events(self, page: int = 1, page_size: int = 20, **kwargs):
+        """get_exception_events 的别名"""
+        return self.get_exception_events(page=page, page_size=page_size, **kwargs)

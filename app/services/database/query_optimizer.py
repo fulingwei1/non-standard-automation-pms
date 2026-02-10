@@ -5,19 +5,17 @@
 优化常见的慢查询，提升数据库性能
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, asc, desc, func, or_, text
+from sqlalchemy import desc, func, or_, text
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy.sql import Select
 
 from app.models.alert import AlertRecord
-from app.models.issue import Issue, IssueTypeEnum
-from app.models.project import Customer, Project, ProjectMilestone, ProjectStatusLog
+from app.models.issue import Issue
+from app.models.project import Project, ProjectMilestone, ProjectStatusLog
 from app.models.sales import Contract
 from app.models.shortage import ShortageReport
-from app.models.user import User
 
 
 class QueryOptimizer:
@@ -334,4 +332,91 @@ class QueryOptimizer:
         return {
             'slow_queries': slow_queries,
             'optimization_suggestions': self.create_optimized_indexes_suggestions()
+        }
+
+    # ------------------------------------------------------------------
+    # 通用查询优化方法（向后兼容）
+    # ------------------------------------------------------------------
+
+    def optimize_query(self, query, eager_load=None, filters=None):
+        """
+        通用查询优化：应用预加载和过滤条件
+
+        Args:
+            query: SQLAlchemy 查询对象
+            eager_load: 需要预加载的关系列表
+            filters: 过滤条件字典
+        Returns:
+            优化后的查询对象
+        """
+        if eager_load:
+            for relation in eager_load:
+                query = query.options(joinedload(relation))
+        if filters:
+            for field, value in filters.items():
+                query = query.filter(text(f"{field} = :val").params(val=value))
+        return query
+
+    def analyze_query(self, query) -> Dict[str, Any]:
+        """
+        分析单个查询的执行计划
+
+        Args:
+            query: SQLAlchemy 查询对象
+        Returns:
+            包含分析结果的字典
+        """
+        try:
+            compiled = query.statement.compile(
+                dialect=self.db.bind.dialect if self.db.bind else None,
+                compile_kwargs={"literal_binds": True}
+            )
+            sql_str = str(compiled)
+        except Exception:
+            sql_str = str(query)
+
+        result = {
+            'query': sql_str,
+            'suggestions': [],
+            'execution_plan': None
+        }
+
+        try:
+            explain_result = self.db.execute(
+                text(f"EXPLAIN QUERY PLAN {sql_str}")
+            ).fetchall()
+            result['execution_plan'] = [str(row) for row in explain_result]
+        except Exception:
+            result['execution_plan'] = []
+
+        return result
+
+    def paginate(self, query, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+        """
+        通用分页方法
+
+        Args:
+            query: SQLAlchemy 查询对象
+            page: 页码（从1开始）
+            page_size: 每页大小
+        Returns:
+            包含 items, total, page, page_size, total_pages 的字典
+        """
+        if page < 1:
+            page = 1
+        if page_size < 1:
+            page_size = 20
+        if page_size > 500:
+            page_size = 500
+
+        total = query.count()
+        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+
+        return {
+            'items': items,
+            'total': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': total_pages
         }

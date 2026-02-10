@@ -7,10 +7,12 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.business_support import BiddingProject
 from app.models.user import User
@@ -50,9 +52,8 @@ def generate_bidding_no(db: Session) -> str:
 
 @router.get("", response_model=ResponseModel[PaginatedResponse[BiddingProjectResponse]], summary="获取投标项目列表")
 async def get_bidding_projects(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    bidding_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     bid_result: Optional[str] = Query(None, description="投标结果筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
@@ -64,20 +65,15 @@ async def get_bidding_projects(
         query = db.query(BiddingProject)
 
         # 筛选条件
-        if status:
-            query = query.filter(BiddingProject.status == status)
+        if bidding_status:
+            query = query.filter(BiddingProject.status == bidding_status)
         if bid_result:
             query = query.filter(BiddingProject.bid_result == bid_result)
         if customer_id:
             query = query.filter(BiddingProject.customer_id == customer_id)
-        if search:
-            query = query.filter(
-                or_(
-                    BiddingProject.project_name.like(f"%{search}%"),
-                    BiddingProject.bidding_no.like(f"%{search}%"),
-                    BiddingProject.customer_name.like(f"%{search}%")
-                )
-            )
+
+        # 应用关键词过滤（项目名称/投标编号/客户名称）
+        query = apply_keyword_filter(query, BiddingProject, search, ["project_name", "bidding_no", "customer_name"])
 
         # 总数
         total = query.count()
@@ -85,8 +81,8 @@ async def get_bidding_projects(
         # 分页
         items = (
             query.order_by(desc(BiddingProject.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -137,9 +133,9 @@ async def get_bidding_projects(
             data=PaginatedResponse(
                 items=bidding_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

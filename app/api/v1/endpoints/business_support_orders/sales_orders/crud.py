@@ -5,15 +5,17 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.business_support import SalesOrder, SalesOrderItem
-from app.models.project import Customer, Project
+from app.models.project import Customer
 from app.models.sales import Contract
 from app.models.user import User
-from app.schemas.business_support import SalesOrderCreate, SalesOrderItemResponse, SalesOrderResponse, SalesOrderUpdate
+from app.schemas.business_support import SalesOrderCreate, SalesOrderResponse, SalesOrderUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 from ..utils import generate_order_no
@@ -24,8 +26,7 @@ router = APIRouter()
 
 @router.get("/sales-orders", response_model=ResponseModel[PaginatedResponse[SalesOrderResponse]], summary="获取销售订单列表")
 async def get_sales_orders(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -47,14 +48,9 @@ async def get_sales_orders(
             query = query.filter(SalesOrder.project_id == project_id)
         if order_status:
             query = query.filter(SalesOrder.order_status == order_status)
-        if search:
-            query = query.filter(
-                or_(
-                    SalesOrder.order_no.like(f"%{search}%"),
-                    SalesOrder.customer_name.like(f"%{search}%"),
-                    SalesOrder.contract_no.like(f"%{search}%")
-                )
-            )
+
+        # 使用统一的关键词过滤
+        query = apply_keyword_filter(query, SalesOrder, search, ["order_no", "customer_name", "contract_no"])
 
         # 总数
         total = query.count()
@@ -62,8 +58,8 @@ async def get_sales_orders(
         # 分页
         items = (
             query.order_by(desc(SalesOrder.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -76,9 +72,9 @@ async def get_sales_orders(
             data=PaginatedResponse(
                 items=order_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

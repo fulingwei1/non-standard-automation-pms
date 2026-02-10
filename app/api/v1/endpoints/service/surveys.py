@@ -3,19 +3,20 @@
 满意度调查管理 API endpoints
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
-from app.models.service import CustomerSatisfaction, SatisfactionSurveyTemplate
+from app.models.service import CustomerSatisfaction
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.service import (
     CustomerSatisfactionCreate,
     CustomerSatisfactionResponse,
@@ -68,9 +69,8 @@ def get_customer_satisfaction_statistics(
 @router.get("", response_model=PaginatedResponse[CustomerSatisfactionResponse], status_code=status.HTTP_200_OK)
 def read_customer_satisfactions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    survey_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     survey_type: Optional[str] = Query(None, description="调查类型筛选"),
     date_from: Optional[date] = Query(None, description="开始日期"),
     date_to: Optional[date] = Query(None, description="结束日期"),
@@ -82,25 +82,20 @@ def read_customer_satisfactions(
     """
     query = db.query(CustomerSatisfaction)
 
-    if status:
-        query = query.filter(CustomerSatisfaction.status == status)
+    if survey_status:
+        query = query.filter(CustomerSatisfaction.status == survey_status)
     if survey_type:
         query = query.filter(CustomerSatisfaction.survey_type == survey_type)
     if date_from:
         query = query.filter(CustomerSatisfaction.survey_date >= date_from)
     if date_to:
         query = query.filter(CustomerSatisfaction.survey_date <= date_to)
-    if keyword:
-        query = query.filter(
-            or_(
-                CustomerSatisfaction.survey_no.like(f"%{keyword}%"),
-                CustomerSatisfaction.customer_name.like(f"%{keyword}%"),
-                CustomerSatisfaction.project_name.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（调查编号/客户名称/项目名称）
+    query = apply_keyword_filter(query, CustomerSatisfaction, keyword, ["survey_no", "customer_name", "project_name"])
 
     total = query.count()
-    items = query.order_by(desc(CustomerSatisfaction.survey_date)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(CustomerSatisfaction.survey_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取创建人姓名
     for item in items:
@@ -112,9 +107,9 @@ def read_customer_satisfactions(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

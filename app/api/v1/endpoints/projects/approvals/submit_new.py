@@ -2,6 +2,9 @@
 """
 项目审批 - submit (统一审批系统)
 
+[DEPRECATED] 此端点已废弃，请使用: POST /api/v1/approvals/instances/submit
+传入 entity_type="PROJECT", entity_id=project_id
+
 提供submit相关的审批功能，使用统一审批引擎
 """
 
@@ -30,12 +33,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
     "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+    deprecated=True,
+    description="[已废弃] 请使用 POST /api/v1/approvals/instances/submit",
 )
 @router.post(
     "/submit",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
+    deprecated=True,
 )
 def submit_project_approval(
     *,

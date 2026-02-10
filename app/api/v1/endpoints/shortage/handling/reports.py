@@ -21,12 +21,13 @@ from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.machine import Machine
 from app.models.material import Material
 from app.models.project import Project
@@ -100,10 +101,9 @@ def _build_report_response(report: ShortageReport, db: Session) -> ShortageRepor
 @router.get("", response_model=PaginatedResponse)
 def list_shortage_reports(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（上报单号/物料编码/物料名称）"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    report_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
     urgent_level: Optional[str] = Query(None, description="紧急程度筛选"),
@@ -112,17 +112,11 @@ def list_shortage_reports(
     """缺料上报列表"""
     query = db.query(ShortageReport)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                ShortageReport.report_no.like(f"%{keyword}%"),
-                ShortageReport.material_code.like(f"%{keyword}%"),
-                ShortageReport.material_name.like(f"%{keyword}%"),
-            )
-        )
+    # 应用关键词过滤（上报单号/物料编码/物料名称）
+    query = apply_keyword_filter(query, ShortageReport, keyword, ["report_no", "material_code", "material_name"])
 
-    if status:
-        query = query.filter(ShortageReport.status == status)
+    if report_status:
+        query = query.filter(ShortageReport.status == report_status)
     if project_id:
         query = query.filter(ShortageReport.project_id == project_id)
     if material_id:
@@ -131,17 +125,16 @@ def list_shortage_reports(
         query = query.filter(ShortageReport.urgent_level == urgent_level)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reports = query.order_by(desc(ShortageReport.created_at)).offset(offset).limit(page_size).all()
+    reports = query.order_by(desc(ShortageReport.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_report_response(report, db) for report in reports]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

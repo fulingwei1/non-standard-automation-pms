@@ -16,7 +16,7 @@
     )
 """
 
-from typing import Type, TypeVar, Generic, List, Optional, Any, Dict, Callable
+from typing import Type, TypeVar, List, Optional, Any, Dict, Callable
 from fastapi import APIRouter, Path, Depends, Query, HTTPException, status, Body, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -25,6 +25,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.permission_helpers import check_project_access_or_raise
 
 ModelType = TypeVar("ModelType")
@@ -95,27 +96,27 @@ def create_project_crud_router(
         request: Request,  # FastAPI自动注入，必须放在最前面
         project_id: int = Path(..., description="项目ID"),
         db: Session = Depends(deps.get_db),
-        page: int = Query(1, ge=1, description="页码"),
-        page_size: int = Query(100, ge=1, le=100, description="每页数量"),
+        pagination: PaginationParams = Depends(get_pagination_query),
         keyword: Optional[str] = Query(None, description="关键词搜索"),
         order_by: Optional[str] = Query(None, description="排序字段"),
         order_direction: Optional[str] = Query("desc", description="排序方向 (asc/desc)"),
         current_user: User = Depends(security.require_permission(f"{permission_prefix}:read")),
     ) -> Any:
         """获取项目子资源列表"""
+
         # 检查项目访问权限
         check_project_access_or_raise(db, current_user, project_id)
-        
+
         # 构建基础查询
         query = db.query(model).filter(project_id_attr == project_id)
-        
+
         # 应用自定义筛选（从request.query_params获取）
         if custom_filters:
             for field_name, filter_func in custom_filters.items():
                 filter_value = request.query_params.get(field_name)
                 if filter_value is not None:
                     query = filter_func(query, filter_value)
-        
+
         # 关键词搜索
         if keyword:
             from sqlalchemy import or_
@@ -126,7 +127,7 @@ def create_project_crud_router(
                     conditions.append(field.ilike(f"%{keyword}%"))
             if conditions:
                 query = query.filter(or_(*conditions))
-        
+
         # 排序
         order_field_name = order_by or default_order_by
         order_field = getattr(model, order_field_name, None)
@@ -140,23 +141,22 @@ def create_project_crud_router(
             # 如果没有找到排序字段，使用默认排序
             if hasattr(model, "created_at"):
                 query = query.order_by(model.created_at.desc())
-        
+
         # 总数
         total = query.count()
-        
+
         # 分页
-        skip = (page - 1) * page_size
-        items = query.offset(skip).limit(page_size).all()
-        
+        items = query.offset(pagination.offset).limit(pagination.limit).all()
+
         # 转换为响应Schema
         response_items = [response_schema.model_validate(item) for item in items]
-        
+
         return PaginatedResponse(
             items=response_items,
             total=total,
-            page=page,
-            page_size=page_size,
-            pages=(total + page_size - 1) // page_size if page_size > 0 else 0
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total)
         )
     
     @router.post("/", response_model=response_schema, status_code=status.HTTP_201_CREATED)

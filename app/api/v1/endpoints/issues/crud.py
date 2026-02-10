@@ -8,7 +8,7 @@ from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -182,14 +182,10 @@ def list_issues(
         )
     if service_ticket_id:
         query = query.filter(Issue.service_ticket_id == service_ticket_id)
-    if keyword:
-        query = query.filter(
-            or_(
-                Issue.title.like(f'%{keyword}%'),
-                Issue.description.like(f'%{keyword}%'),
-                Issue.issue_no.like(f'%{keyword}%')
-            )
-        )
+
+    # 应用关键词过滤（标题/描述/问题编号）
+    from app.common.query_filters import apply_keyword_filter
+    query = apply_keyword_filter(query, Issue, keyword, ["title", "description", "issue_no"])
 
     # 总数
     total = query.count()

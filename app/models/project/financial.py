@@ -27,7 +27,7 @@ class ProjectMilestone(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
+        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID（可选）")
     milestone_code = Column(String(50), nullable=True, comment="里程碑编码")
@@ -144,8 +144,8 @@ class ProjectCost(Base, TimestampMixin):
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
-    cost_type = Column(String(50), nullable=False, comment="成本类型")
-    cost_category = Column(String(50), nullable=False, comment="成本分类")
+    cost_type = Column(String(50), nullable=True, comment="成本类型")
+    cost_category = Column(String(50), nullable=True, comment="成本分类")
 
     # 来源追溯
     source_module = Column(String(50), comment="来源模块 (purchase/outsourcing/bom)")

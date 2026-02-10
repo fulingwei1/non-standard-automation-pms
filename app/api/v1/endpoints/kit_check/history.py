@@ -10,6 +10,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.production import WorkOrder
 from app.models.project import Project
@@ -27,8 +28,7 @@ def get_kit_check_history(
     project_id: Optional[int] = Query(None, description="项目ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -51,8 +51,7 @@ def get_kit_check_history(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    checks = query.order_by(desc(KitCheck.check_time)).offset(offset).limit(page_size).all()
+    checks = query.order_by(desc(KitCheck.check_time)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建返回数据
     history = []
@@ -96,10 +95,10 @@ def get_kit_check_history(
         data={
             "history": history,
             "pagination": {
-                "page": page,
-                "page_size": page_size,
+                "page": pagination.page,
+                "page_size": pagination.page_size,
                 "total": total,
-                "pages": (total + page_size - 1) // page_size,
+                "pages": pagination.pages_for_total(total),
             }
         }
     )

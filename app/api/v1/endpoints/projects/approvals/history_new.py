@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 项目审批 - history (统一审批系统)
+
+[DEPRECATED] 此端点已废弃，请使用:
+GET /api/v1/approvals/instances/{instance_id}
+响应中包含 logs 字段，即审批历史
 """
 
 import logging
@@ -31,12 +35,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
     "/",
     response_model=ResponseModel[List[Dict[str, Any]]],
     status_code=status.HTTP_200_OK,
+    deprecated=True,
+    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
 )
 @router.get(
     "/history",
     response_model=ResponseModel[List[Dict[str, Any]]],
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
+    deprecated=True,
 )
 def get_project_approval_history(
     *,

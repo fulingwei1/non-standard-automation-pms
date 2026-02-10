@@ -24,8 +24,6 @@ from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
     PresaleSolutionTemplate,
-    PresaleSupportTicket,
-    PresaleTenderRecord,
 )
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -71,8 +69,9 @@ def read_templates(
     """
     query = db.query(PresaleSolutionTemplate)
 
-    if keyword:
-        query = query.filter(PresaleSolutionTemplate.name.like(f"%{keyword}%"))
+    # 应用关键词过滤（模板名称）
+    from app.common.query_filters import apply_keyword_filter
+    query = apply_keyword_filter(query, PresaleSolutionTemplate, keyword, ["name"])
 
     if industry:
         query = query.filter(PresaleSolutionTemplate.industry == industry)
@@ -292,7 +291,6 @@ def get_template_stats(
     """
     模板使用统计
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()

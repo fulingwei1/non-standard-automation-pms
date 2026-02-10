@@ -6,10 +6,12 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.project import Project
 from app.models.technical_spec import TechnicalSpecRequirement
@@ -34,8 +36,7 @@ def list_requirements(
     document_id: Optional[int] = Query(None, description="文档ID"),
     material_code: Optional[str] = Query(None, description="物料编码"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取技术规格要求列表"""
     query = db.query(TechnicalSpecRequirement)
@@ -47,20 +48,15 @@ def list_requirements(
         query = query.filter(TechnicalSpecRequirement.document_id == document_id)
     if material_code:
         query = query.filter(TechnicalSpecRequirement.material_code == material_code)
-    if keyword:
-        query = query.filter(
-            or_(
-                TechnicalSpecRequirement.material_name.like(f'%{keyword}%'),
-                TechnicalSpecRequirement.specification.like(f'%{keyword}%'),
-                TechnicalSpecRequirement.material_code.like(f'%{keyword}%')
-            )
-        )
+
+    # 应用关键词过滤（物料名称/规格/物料编码）
+    query = apply_keyword_filter(query, TechnicalSpecRequirement, keyword, ["material_name", "specification", "material_code"])
 
     # 总数
     total = query.count()
 
     # 分页
-    requirements = query.order_by(desc(TechnicalSpecRequirement.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    requirements = query.order_by(desc(TechnicalSpecRequirement.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = []
@@ -87,9 +83,9 @@ def list_requirements(
     return TechnicalSpecRequirementListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

@@ -7,10 +7,12 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.business_support import DeliveryOrder, SalesOrder
 from app.models.user import User
 from app.schemas.business_support import (
@@ -27,8 +29,7 @@ router = APIRouter()
 
 @router.get("/delivery-orders", response_model=ResponseModel[PaginatedResponse[DeliveryOrderResponse]], summary="获取发货单列表")
 async def get_delivery_orders(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     order_id: Optional[int] = Query(None, description="销售订单ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
@@ -50,14 +51,9 @@ async def get_delivery_orders(
             query = query.filter(DeliveryOrder.approval_status == approval_status)
         if delivery_status:
             query = query.filter(DeliveryOrder.delivery_status == delivery_status)
-        if search:
-            query = query.filter(
-                or_(
-                    DeliveryOrder.delivery_no.like(f"%{search}%"),
-                    DeliveryOrder.customer_name.like(f"%{search}%"),
-                    DeliveryOrder.tracking_no.like(f"%{search}%")
-                )
-            )
+
+        # 应用关键词过滤（发货单号/客户名称/物流单号）
+        query = apply_keyword_filter(query, DeliveryOrder, search, ["delivery_no", "customer_name", "tracking_no"])
 
         # 总数
         total = query.count()
@@ -65,8 +61,8 @@ async def get_delivery_orders(
         # 分页
         items = (
             query.order_by(desc(DeliveryOrder.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -115,9 +111,9 @@ async def get_delivery_orders(
             data=PaginatedResponse(
                 items=delivery_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

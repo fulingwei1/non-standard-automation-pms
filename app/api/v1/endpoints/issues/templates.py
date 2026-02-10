@@ -11,7 +11,7 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -127,14 +127,9 @@ def list_issue_templates(
     """获取问题模板列表"""
     query = db.query(IssueTemplate)
 
-    # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                IssueTemplate.template_code.like(f'%{keyword}%'),
-                IssueTemplate.template_name.like(f'%{keyword}%')
-            )
-        )
+    # 应用关键词过滤（模板编码/名称）
+    from app.common.query_filters import apply_keyword_filter
+    query = apply_keyword_filter(query, IssueTemplate, keyword, ["template_code", "template_name"])
 
     # 分类筛选
     if category:

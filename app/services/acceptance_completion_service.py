@@ -6,12 +6,23 @@
 
 import logging
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.acceptance import AcceptanceIssue, AcceptanceOrder, AcceptanceOrderItem
 from app.models.project import Machine, Project
+
+# 模块级导入（供 unittest.mock.patch 使用）
+try:
+    from app.services.invoice_auto_service import InvoiceAutoService
+except ImportError:
+    InvoiceAutoService = None
+
+try:
+    from app.services.status_transition_service import StatusTransitionService
+except ImportError:
+    StatusTransitionService = None
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +137,7 @@ def handle_acceptance_status_transition(
         if order.acceptance_type == "FAT":
             if overall_result == "PASSED":
                 transition_service.handle_fat_passed(order.project_id, order.machine_id)
-                logger.info(f"FAT验收通过，项目状态已更新")
+                logger.info("FAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
                 issues = db.query(AcceptanceIssue).filter(
                     AcceptanceIssue.order_id == order.id,
@@ -134,12 +145,12 @@ def handle_acceptance_status_transition(
                 ).all()
                 issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
                 transition_service.handle_fat_failed(order.project_id, order.machine_id, issue_descriptions)
-                logger.info(f"FAT验收不通过，项目状态已更新")
+                logger.info("FAT验收不通过，项目状态已更新")
 
         elif order.acceptance_type == "SAT":
             if overall_result == "PASSED":
                 transition_service.handle_sat_passed(order.project_id, order.machine_id)
-                logger.info(f"SAT验收通过，项目状态已更新")
+                logger.info("SAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
                 issues = db.query(AcceptanceIssue).filter(
                     AcceptanceIssue.order_id == order.id,
@@ -147,12 +158,12 @@ def handle_acceptance_status_transition(
                 ).all()
                 issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
                 transition_service.handle_sat_failed(order.project_id, order.machine_id, issue_descriptions)
-                logger.info(f"SAT验收不通过，项目状态已更新")
+                logger.info("SAT验收不通过，项目状态已更新")
 
         elif order.acceptance_type == "FINAL":
             if overall_result == "PASSED":
                 transition_service.handle_final_acceptance_passed(order.project_id)
-                logger.info(f"终验收通过，项目可推进至S9")
+                logger.info("终验收通过，项目可推进至S9")
     except Exception as e:
         logger.error(f"验收状态联动处理失败: {str(e)}", exc_info=True)
 

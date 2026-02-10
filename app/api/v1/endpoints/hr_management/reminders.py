@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.organization import (
     ContractReminder,
     Employee,
@@ -25,20 +25,18 @@ router = APIRouter()
 @router.get("/contract-reminders")
 def get_contract_reminders(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    reminder_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取合同到期提醒列表"""
     query = db.query(ContractReminder).join(Employee)
 
-    if status:
-        query = query.filter(ContractReminder.status == status)
+    if reminder_status:
+        query = query.filter(ContractReminder.status == reminder_status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reminders = query.order_by(ContractReminder.contract_end_date.asc()).offset(offset).limit(page_size).all()
+    reminders = query.order_by(ContractReminder.contract_end_date.asc()).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for r in reminders:
@@ -58,9 +56,9 @@ def get_contract_reminders(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total)
     }
 
 

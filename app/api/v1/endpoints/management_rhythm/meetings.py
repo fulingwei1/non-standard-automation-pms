@@ -9,61 +9,30 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
 from app.models.enums import (
     ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
 )
 from app.models.management_rhythm import (
-    ManagementRhythmConfig,
     MeetingActionItem,
-    MeetingReport,
-    MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
     StrategicMeeting,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
-    MeetingCalendarResponse,
-    MeetingMapItem,
-    MeetingMapResponse,
-    MeetingReportConfigCreate,
-    MeetingReportConfigResponse,
-    MeetingReportConfigUpdate,
-    MeetingReportGenerateRequest,
-    MeetingReportResponse,
-    MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
-    RhythmConfigCreate,
-    RhythmConfigResponse,
-    RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
     StrategicMeetingCreate,
     StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
     StrategicMeetingUpdate,
-    StrategicStructureTemplate,
 )
 
 from .permission_utils import (
@@ -89,12 +58,11 @@ router = APIRouter(
 @router.get("/strategic-meetings", response_model=PaginatedResponse)
 def read_strategic_meetings(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     rhythm_level: Optional[str] = Query(None, description="会议层级筛选"),
     cycle_type: Optional[str] = Query(None, description="周期类型筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    meeting_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索（会议名称）"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -119,16 +87,15 @@ def read_strategic_meetings(
     if project_id:
         query = query.filter(StrategicMeeting.project_id == project_id)
 
-    if status:
-        query = query.filter(StrategicMeeting.status == status)
+    if meeting_status:
+        query = query.filter(StrategicMeeting.status == meeting_status)
 
     query = apply_keyword_filter(query, StrategicMeeting, keyword, ["meeting_name"])
 
     total = query.count()
-    offset = (page - 1) * page_size
 
     # 统计行动项数量
-    meetings = query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)).offset(offset).limit(page_size).all()
+    meetings = query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for meeting in meetings:
@@ -176,9 +143,9 @@ def read_strategic_meetings(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

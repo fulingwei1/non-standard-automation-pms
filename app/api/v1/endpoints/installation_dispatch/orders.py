@@ -6,12 +6,13 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.installation_dispatch import InstallationDispatchOrder
 from app.models.project import Customer, Machine, Project
 from app.models.user import User
@@ -48,9 +49,8 @@ def _enrich_order_with_relations(order: InstallationDispatchOrder, db: Session) 
 @router.get("/orders", response_model=PaginatedResponse[InstallationDispatchOrderResponse], status_code=status.HTTP_200_OK)
 def read_installation_dispatch_orders(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    order_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
@@ -65,8 +65,8 @@ def read_installation_dispatch_orders(
     """
     query = db.query(InstallationDispatchOrder)
 
-    if status:
-        query = query.filter(InstallationDispatchOrder.status == status)
+    if order_status:
+        query = query.filter(InstallationDispatchOrder.status == order_status)
     if priority:
         query = query.filter(InstallationDispatchOrder.priority == priority)
     if project_id:
@@ -79,16 +79,12 @@ def read_installation_dispatch_orders(
         query = query.filter(InstallationDispatchOrder.assigned_to_id == assigned_to_id)
     if task_type:
         query = query.filter(InstallationDispatchOrder.task_type == task_type)
-    if keyword:
-        query = query.filter(
-            or_(
-                InstallationDispatchOrder.order_no.like(f"%{keyword}%"),
-                InstallationDispatchOrder.task_title.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（派工单号/任务标题）
+    query = apply_keyword_filter(query, InstallationDispatchOrder, keyword, ["order_no", "task_title"])
 
     total = query.count()
-    items = query.order_by(desc(InstallationDispatchOrder.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(InstallationDispatchOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 获取关联信息
     for item in items:
@@ -97,9 +93,9 @@ def read_installation_dispatch_orders(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

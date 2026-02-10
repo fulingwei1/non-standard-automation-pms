@@ -9,6 +9,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.bonus import BonusAllocationSheet
 from app.models.user import User
@@ -22,9 +23,8 @@ router = APIRouter()
 def get_allocation_sheets(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    sheet_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -32,11 +32,11 @@ def get_allocation_sheets(
     """
     query = db.query(BonusAllocationSheet)
 
-    if status:
-        query = query.filter(BonusAllocationSheet.status == status)
+    if sheet_status:
+        query = query.filter(BonusAllocationSheet.status == sheet_status)
 
     total = query.count()
-    sheets = query.order_by(desc(BonusAllocationSheet.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    sheets = query.order_by(desc(BonusAllocationSheet.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [BonusAllocationSheetResponse.model_validate(sheet) for sheet in sheets]
 
@@ -45,9 +45,9 @@ def get_allocation_sheets(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total)
         }
     )
 

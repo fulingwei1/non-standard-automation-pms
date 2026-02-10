@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
 from app.models.project import Machine, Project
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
@@ -111,12 +111,11 @@ def create_technical_review(
 @router.get("/technical-reviews", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_technical_reviews(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（编号/名称）"),
     review_type: Optional[str] = Query(None, description="评审类型筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    review_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取技术评审列表"""
@@ -130,21 +129,20 @@ def read_technical_reviews(
     if project_id:
         query = query.filter(TechnicalReview.project_id == project_id)
 
-    if status:
-        query = query.filter(TechnicalReview.status == status)
+    if review_status:
+        query = query.filter(TechnicalReview.status == review_status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reviews = query.order_by(desc(TechnicalReview.created_at)).offset(offset).limit(page_size).all()
+    reviews = query.order_by(desc(TechnicalReview.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_review_response(review) for review in reviews]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

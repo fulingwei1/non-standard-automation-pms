@@ -10,6 +10,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.qualification import EmployeeQualification
 from app.models.user import User
@@ -72,12 +73,11 @@ def get_employee_qualification(
 def get_employee_qualifications(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     employee_id: Optional[int] = Query(None, description="员工ID"),
     position_type: Optional[str] = Query(None, description="岗位类型"),
     level_id: Optional[int] = Query(None, description="等级ID"),
-    status: Optional[str] = Query(None, description="认证状态"),
+    cert_status: Optional[str] = Query(None, alias="status", description="认证状态"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取员工任职资格列表"""
@@ -89,20 +89,20 @@ def get_employee_qualifications(
         query = query.filter(EmployeeQualification.position_type == position_type)
     if level_id:
         query = query.filter(EmployeeQualification.current_level_id == level_id)
-    if status:
-        query = query.filter(EmployeeQualification.status == status)
+    if cert_status:
+        query = query.filter(EmployeeQualification.status == cert_status)
 
     total = query.count()
     qualifications = query.order_by(desc(EmployeeQualification.created_at)).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+        pagination.offset
+    ).limit(pagination.limit).all()
 
     return EmployeeQualificationListResponse(
         items=qualifications,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

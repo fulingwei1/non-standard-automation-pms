@@ -11,78 +11,30 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-import json
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models import (
     AssemblyStage,
-    AssemblyTemplate,
-    BomHeader,
-    BomItem,
-    BomItemAssemblyAttrs,
-    CategoryStageMapping,
     Machine,
-    Material,
-    MaterialCategory,
     MaterialReadiness,
     Project,
-    SchedulingSuggestion,
     ShortageAlertRule,
     ShortageDetail,
-    User,
-)
-from app.models.enums import (
-    AssemblyStageEnum,
-    ImportanceLevelEnum,
-    ShortageAlertLevelEnum,
-    SuggestionStatusEnum,
-    SuggestionTypeEnum,
 )
 from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
-    AssemblyDashboardResponse,
-    AssemblyDashboardStageStats,
-    AssemblyDashboardStats,
-    AssemblyStageCreate,
-    AssemblyStageResponse,
-    AssemblyStageUpdate,
-    AssemblyTemplateCreate,
-    AssemblyTemplateResponse,
-    AssemblyTemplateUpdate,
-    BomAssemblyAttrsAutoRequest,
-    BomAssemblyAttrsTemplateRequest,
-    BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsCreate,
-    BomItemAssemblyAttrsResponse,
-    BomItemAssemblyAttrsUpdate,
-    CategoryStageMappingCreate,
-    CategoryStageMappingResponse,
-    CategoryStageMappingUpdate,
-    MaterialReadinessCreate,
-    MaterialReadinessDetailResponse,
-    MaterialReadinessResponse,
-    SchedulingSuggestionAccept,
-    SchedulingSuggestionReject,
-    SchedulingSuggestionResponse,
     ShortageAlertItem,
     ShortageAlertListResponse,
-    ShortageAlertRuleCreate,
-    ShortageAlertRuleResponse,
-    ShortageAlertRuleUpdate,
-    ShortageDetailResponse,
-    StageKitRate,
 )
-from app.schemas.common import MessageResponse, ResponseModel
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -105,8 +57,7 @@ async def get_shortage_alerts(
     alert_level: Optional[str] = Query(None, description="预警级别(L1/L2/L3/L4)"),
     is_blocking: Optional[bool] = Query(None, description="是否阻塞性物料"),
     project_id: Optional[int] = Query(None, description="项目ID"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100)
+    pagination: PaginationParams = Depends(get_pagination_query)
 ):
     """获取缺料预警列表"""
     query = db.query(ShortageDetail).filter(ShortageDetail.shortage_qty > 0)
@@ -134,7 +85,7 @@ async def get_shortage_alerts(
         ShortageDetail.alert_level,
         ShortageDetail.is_blocking.desc(),
         ShortageDetail.shortage_rate.desc()
-    ).offset((page - 1) * page_size).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建预警项
     alert_items = []

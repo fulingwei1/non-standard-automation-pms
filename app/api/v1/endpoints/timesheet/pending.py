@@ -18,7 +18,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.timesheet import (
     Timesheet,
 )
@@ -28,6 +27,7 @@ from app.schemas.timesheet import (
     TimesheetListResponse,
     TimesheetResponse,
 )
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -49,13 +49,7 @@ router = APIRouter(prefix="/timesheet/pending", tags=["pending"])
 def get_pending_approval_timesheets(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     current_user: User = Depends(security.require_permission("timesheet:read")),
@@ -77,9 +71,8 @@ def get_pending_approval_timesheets(
         query = query.filter(Timesheet.project_id == project_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
     timesheets = (
-        query.order_by(Timesheet.work_date.desc()).offset(offset).limit(page_size).all()
+        query.order_by(Timesheet.work_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
     )
 
     items = []
@@ -114,7 +107,7 @@ def get_pending_approval_timesheets(
     return TimesheetListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
     )

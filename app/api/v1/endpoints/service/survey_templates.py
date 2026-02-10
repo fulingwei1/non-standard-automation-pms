@@ -5,13 +5,14 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
-from app.core.config import settings
 from app.models.service import SatisfactionSurveyTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -22,8 +23,7 @@ router = APIRouter()
 @router.get("", response_model=PaginatedResponse, status_code=200)
 def list_satisfaction_templates(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     survey_type: Optional[str] = Query(None, description="调查类型筛选"),
     is_active: Optional[bool] = Query(True, description="是否启用"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
@@ -38,23 +38,19 @@ def list_satisfaction_templates(
         query = query.filter(SatisfactionSurveyTemplate.survey_type == survey_type)
     if is_active is not None:
         query = query.filter(SatisfactionSurveyTemplate.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            or_(
-                SatisfactionSurveyTemplate.template_name.like(f"%{keyword}%"),
-                SatisfactionSurveyTemplate.template_code.like(f"%{keyword}%"),
-            )
-        )
+
+    # 应用关键词过滤（模板名称/模板编码）
+    query = apply_keyword_filter(query, SatisfactionSurveyTemplate, keyword, ["template_name", "template_code"])
 
     total = query.count()
-    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total),
     }
 
 

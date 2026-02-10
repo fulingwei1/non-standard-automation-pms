@@ -5,15 +5,15 @@ ECN分析 - 知识库集成
 包含解决方案提取、相似ECN查找、解决方案推荐和模板管理
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.ecn import Ecn, EcnSolutionTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -181,8 +181,7 @@ def list_solution_templates(
     ecn_type: Optional[str] = Query(None, description="ECN类型筛选"),
     category: Optional[str] = Query(None, description="分类筛选"),
     is_active: bool = Query(True, description="是否启用"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -200,7 +199,7 @@ def list_solution_templates(
         query = query.filter(EcnSolutionTemplate.template_category == category)
 
     total = query.count()
-    templates = query.order_by(desc(EcnSolutionTemplate.usage_count)).offset((page - 1) * page_size).limit(page_size).all()
+    templates = query.order_by(desc(EcnSolutionTemplate.usage_count)).offset(pagination.offset).limit(pagination.limit).all()
 
     return ResponseModel(
         code=200,
@@ -222,8 +221,8 @@ def list_solution_templates(
                 for t in templates
             ],
             "total": total,
-            "page": page,
-            "page_size": page_size
+            "page": pagination.page,
+            "page_size": pagination.page_size
         }
     )
 

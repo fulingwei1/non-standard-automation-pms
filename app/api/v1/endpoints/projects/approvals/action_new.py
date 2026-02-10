@@ -2,6 +2,10 @@
 """
 项目审批 - action (统一审批系统)
 
+[DEPRECATED] 此端点已废弃，请使用:
+- 审批通过: POST /api/v1/approvals/tasks/{task_id}/approve
+- 审批驳回: POST /api/v1/approvals/tasks/{task_id}/reject
+
 提供action相关的审批功能，使用统一审批引擎
 """
 
@@ -30,12 +34,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
     "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+    deprecated=True,
+    description="[已废弃] 请使用 POST /api/v1/approvals/tasks/{task_id}/approve 或 /reject",
 )
 @router.post(
     "/action",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
+    deprecated=True,
 )
 def perform_project_approval_action(
     *,

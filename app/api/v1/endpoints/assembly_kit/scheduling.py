@@ -11,78 +11,30 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-import json
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models import (
-    AssemblyStage,
-    AssemblyTemplate,
-    BomHeader,
-    BomItem,
-    BomItemAssemblyAttrs,
-    CategoryStageMapping,
     Machine,
-    Material,
-    MaterialCategory,
-    MaterialReadiness,
     Project,
     SchedulingSuggestion,
-    ShortageAlertRule,
-    ShortageDetail,
     User,
 )
-from app.models.enums import (
-    AssemblyStageEnum,
-    ImportanceLevelEnum,
-    ShortageAlertLevelEnum,
-    SuggestionStatusEnum,
-    SuggestionTypeEnum,
-)
 from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
-    AssemblyDashboardResponse,
-    AssemblyDashboardStageStats,
-    AssemblyDashboardStats,
-    AssemblyStageCreate,
-    AssemblyStageResponse,
-    AssemblyStageUpdate,
-    AssemblyTemplateCreate,
-    AssemblyTemplateResponse,
-    AssemblyTemplateUpdate,
-    BomAssemblyAttrsAutoRequest,
-    BomAssemblyAttrsTemplateRequest,
-    BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsCreate,
-    BomItemAssemblyAttrsResponse,
-    BomItemAssemblyAttrsUpdate,
-    CategoryStageMappingCreate,
-    CategoryStageMappingResponse,
-    CategoryStageMappingUpdate,
-    MaterialReadinessCreate,
-    MaterialReadinessDetailResponse,
-    MaterialReadinessResponse,
     SchedulingSuggestionAccept,
     SchedulingSuggestionReject,
     SchedulingSuggestionResponse,
-    ShortageAlertItem,
-    ShortageAlertListResponse,
-    ShortageAlertRuleCreate,
-    ShortageAlertRuleResponse,
-    ShortageAlertRuleUpdate,
-    ShortageDetailResponse,
-    StageKitRate,
 )
-from app.schemas.common import MessageResponse, ResponseModel
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -126,16 +78,15 @@ async def generate_scheduling_suggestions(
 @router.get("/suggestions", response_model=ResponseModel)
 async def get_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    suggestion_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100)
+    pagination: PaginationParams = Depends(get_pagination_query)
 ):
     """获取排产建议列表"""
     query = db.query(SchedulingSuggestion)
 
-    if status:
-        query = query.filter(SchedulingSuggestion.status == status)
+    if suggestion_status:
+        query = query.filter(SchedulingSuggestion.status == suggestion_status)
     if project_id:
         query = query.filter(SchedulingSuggestion.project_id == project_id)
 
@@ -143,7 +94,7 @@ async def get_scheduling_suggestions(
     suggestions = query.order_by(
         SchedulingSuggestion.priority_score.desc(),
         SchedulingSuggestion.created_at.desc()
-    ).offset((page - 1) * page_size).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for s in suggestions:
@@ -159,7 +110,7 @@ async def get_scheduling_suggestions(
     return ResponseModel(
         code=200,
         message="success",
-        data={"total": total, "items": result, "page": page, "page_size": page_size}
+        data={"total": total, "items": result, "page": pagination.page, "page_size": pagination.page_size}
     )
 
 

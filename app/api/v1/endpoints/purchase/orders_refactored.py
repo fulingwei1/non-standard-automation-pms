@@ -10,13 +10,11 @@ from typing import Any, Dict, Optional
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_, and_
+from sqlalchemy import desc, and_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
-from app.core.config import settings
 from app.core.schemas import list_response, paginated_response, success_response
-from app.models.material import BomHeader
 from app.models.vendor import Vendor
 from app.models.purchase import (
     PurchaseOrder,
@@ -63,13 +61,10 @@ def list_purchase_orders(
             db, query, PurchaseOrder, current_user, PO_DATA_SCOPE_CONFIG
         )
 
-        if keyword:
-            query = query.filter(
-                or_(
-                    PurchaseOrder.order_no.like(f"%{keyword}%"),
-                    PurchaseOrder.order_title.like(f"%{keyword}%"),
-                )
-            )
+        # 应用关键词过滤（订单号/标题）
+        from app.common.query_filters import apply_keyword_filter
+        query = apply_keyword_filter(query, PurchaseOrder, keyword, ["order_no", "order_title"])
+
         if supplier_id:
             query = query.filter(PurchaseOrder.supplier_id == supplier_id)
         if status:

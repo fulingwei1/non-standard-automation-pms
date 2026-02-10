@@ -23,7 +23,7 @@ class EcnTask(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     ecn_id = Column(Integer, ForeignKey('ecn.id'), nullable=False, comment='ECN ID')
-    task_no = Column(Integer, nullable=False, comment='任务序号')
+    task_no = Column(Integer, nullable=True, comment='任务序号')
     task_name = Column(String(200), nullable=False, comment='任务名称')
     task_type = Column(String(50), comment='任务类型')
     task_dept = Column(String(50), comment='责任部门')

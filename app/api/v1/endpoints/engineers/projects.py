@@ -6,13 +6,13 @@
 
 import logging
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Project, ProjectMember
 from app.models.task_center import TaskUnified
@@ -26,8 +26,7 @@ router = APIRouter()
 
 @router.get("/my-projects", response_model=schemas.MyProjectListResponse)
 def get_my_projects(
-    page: int = 1,
-    page_size: int = 20,
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("engineer:read"))
 ):
@@ -52,7 +51,7 @@ def get_my_projects(
     except Exception:
         total = 0
 
-    projects = query.offset((page - 1) * page_size).limit(page_size).all()
+    projects = query.offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = []
@@ -100,12 +99,10 @@ def get_my_projects(
             last_activity_at=project.updated_at
         ))
 
-    pages = (total + page_size - 1) // page_size
-
     return schemas.MyProjectListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=pages
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )

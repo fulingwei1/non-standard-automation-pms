@@ -3,12 +3,12 @@
 齐套分析 - 项目相关
 """
 from datetime import date
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models import BomHeader, Machine, MaterialReadiness, Project
 from app.schemas.assembly_kit import MaterialReadinessResponse
 from app.schemas.common import ResponseModel
@@ -20,8 +20,7 @@ router = APIRouter()
 async def get_project_readiness_list(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100)
+    pagination: PaginationParams = Depends(get_pagination_query)
 ):
     """获取项目齐套分析列表"""
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -32,8 +31,8 @@ async def get_project_readiness_list(
     total = query.count()
 
     readiness_list = query.order_by(MaterialReadiness.analysis_time.desc()).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+        pagination.offset
+    ).limit(pagination.limit).all()
 
     result = []
     for r in readiness_list:
@@ -65,5 +64,5 @@ async def get_project_readiness_list(
     return ResponseModel(
         code=200,
         message="success",
-        data={"total": total, "items": result, "page": page, "page_size": page_size}
+        data={"total": total, "items": result, "page": pagination.page, "page_size": pagination.page_size}
     )

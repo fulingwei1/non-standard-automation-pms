@@ -24,8 +24,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.material import MaterialShortage
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -158,11 +158,10 @@ def _handle_shortage_integration(
 @router.get("/alerts", response_model=PaginatedResponse)
 def list_alerts(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    alert_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     alert_level: Optional[str] = Query(None, description="预警级别筛选"),
     handler_id: Optional[int] = Query(None, description="处理人ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -176,25 +175,24 @@ def list_alerts(
         query = query.filter(MaterialShortage.project_id == project_id)
     if material_id:
         query = query.filter(MaterialShortage.material_id == material_id)
-    if status:
-        query = query.filter(MaterialShortage.status == status)
+    if alert_status:
+        query = query.filter(MaterialShortage.status == alert_status)
     if alert_level:
         query = query.filter(MaterialShortage.alert_level == alert_level)
     if handler_id:
         query = query.filter(MaterialShortage.handler_id == handler_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    alerts = query.order_by(desc(MaterialShortage.created_at)).offset(offset).limit(page_size).all()
+    alerts = query.order_by(desc(MaterialShortage.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_build_alert_response(alert) for alert in alerts]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

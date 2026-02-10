@@ -9,60 +9,25 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.config import settings
-from app.models.enums import (
-    ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
-)
 from app.models.management_rhythm import (
-    ManagementRhythmConfig,
-    MeetingActionItem,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
-    StrategicMeeting,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
-    MeetingCalendarResponse,
-    MeetingMapItem,
-    MeetingMapResponse,
-    MeetingReportConfigCreate,
-    MeetingReportConfigResponse,
-    MeetingReportConfigUpdate,
     MeetingReportGenerateRequest,
     MeetingReportResponse,
-    MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
-    RhythmConfigCreate,
-    RhythmConfigResponse,
-    RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
-    StrategicMeetingCreate,
-    StrategicMeetingMinutesRequest,
-    StrategicMeetingResponse,
-    StrategicMeetingUpdate,
-    StrategicStructureTemplate,
 )
 
 router = APIRouter()
@@ -118,11 +83,11 @@ def generate_meeting_report(
     try:
         # 使用统一报表框架生成报告
         engine = ReportEngine(db)
-        
+
         if report_request.report_type == "ANNUAL":
             if report_request.period_month:
                 raise HTTPException(status_code=400, detail="年度报告不需要指定月份")
-            
+
             # 年度报告使用统一报表框架（如果YAML配置不存在，使用适配器）
             try:
                 result = engine.generate(
@@ -161,9 +126,9 @@ def generate_meeting_report(
             # 使用统一报表框架生成月度报告
             from datetime import date
             period_start = date(report_request.period_year, report_request.period_month, 1)
-            period_end = date(report_request.period_year, report_request.period_month, 
+            period_end = date(report_request.period_year, report_request.period_month,
                             monthrange(report_request.period_year, report_request.period_month)[1])
-            
+
             try:
                 result = engine.generate(
                     report_code="MEETING_MONTHLY",
@@ -226,8 +191,7 @@ def generate_meeting_report(
 @router.get("/meeting-reports", response_model=PaginatedResponse)
 def read_meeting_reports(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     report_type: Optional[str] = Query(None, description="报告类型筛选:ANNUAL/MONTHLY"),
     period_year: Optional[int] = Query(None, description="年份筛选"),
     rhythm_level: Optional[str] = Query(None, description="节律层级筛选"),
@@ -248,8 +212,7 @@ def read_meeting_reports(
         query = query.filter(MeetingReport.rhythm_level == rhythm_level)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reports = query.order_by(desc(MeetingReport.period_start), desc(MeetingReport.created_at)).offset(offset).limit(page_size).all()
+    reports = query.order_by(desc(MeetingReport.period_start), desc(MeetingReport.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for report in reports:
@@ -278,9 +241,9 @@ def read_meeting_reports(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 
@@ -333,7 +296,6 @@ def export_meeting_report_docx(
 
     from fastapi.responses import StreamingResponse
 
-    from app.core.config import settings
     from app.services.meeting_report_docx_service import MeetingReportDocxService
 
     report = db.query(MeetingReport).filter(MeetingReport.id == report_id).first()
@@ -389,7 +351,7 @@ def export_meeting_report_docx(
             }
         )
 
-    except ImportError as e:
+    except ImportError:
         raise HTTPException(status_code=500, detail="Word文档生成功能不可用，请安装python-docx库")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成Word文档失败: {str(e)}")

@@ -5,7 +5,6 @@
 
 from sqlalchemy import (
     JSON,
-    BigInteger,
     Boolean,
     Column,
     Date,
@@ -76,6 +75,9 @@ class AlertRule(Base, TimestampMixin):
     is_enabled = Column(Boolean, default=True, comment='是否启用')
     is_system = Column(Boolean, default=False, comment='是否系统预置')
 
+    # 软删除/激活标记（项目统一使用 is_active 进行软删除）
+    is_active = Column(Boolean, default=True, comment='是否激活')
+
     # 描述
     description = Column(Text, comment='规则说明')
     solution_guide = Column(Text, comment='处理指南')
@@ -115,6 +117,7 @@ class AlertRecord(Base, TimestampMixin):
 
     # 预警信息
     alert_level = Column(String(20), nullable=False, comment='预警级别')
+    severity = Column(String(20), comment='严重程度')
     alert_title = Column(String(200), nullable=False, comment='预警标题')
     alert_content = Column(Text, nullable=False, comment='预警内容')
     alert_data = Column(JSON, comment='预警数据')

@@ -39,6 +39,7 @@ class Project(Base, TimestampMixin):
     customer_name = Column(String(200), comment="客户名称（冗余，建议使用 customer.name）")
     customer_contact = Column(String(100), comment="客户联系人（冗余，建议使用 customer.contact_person）")
     customer_phone = Column(String(50), comment="联系电话（冗余，建议使用 customer.contact_phone）")
+    customer_address = Column(String(500), comment="客户地址（现场安装地址）")
     contract_no = Column(String(100), comment="合同编号（内部编号）")
     customer_contract_no = Column(String(100), comment="客户合同编号（外部编号）")
 

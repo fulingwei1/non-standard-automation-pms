@@ -3,8 +3,6 @@
 研发项目文档管理
 """
 import uuid
-from datetime import date
-from decimal import Decimal
 from pathlib import Path
 from typing import Any, Optional
 
@@ -24,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.config import settings
 from app.models.project import ProjectDocument
 from app.models.rd_project import RdProject
@@ -48,11 +47,10 @@ def get_rd_project_documents(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     doc_category: Optional[str] = Query(None, description="文档分类筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    doc_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
@@ -62,18 +60,17 @@ def get_rd_project_documents(
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
 
-    offset = (page - 1) * page_size
     query = db.query(ProjectDocument).filter(ProjectDocument.rd_project_id == project_id)
 
     if doc_type:
         query = query.filter(ProjectDocument.doc_type == doc_type)
     if doc_category:
         query = query.filter(ProjectDocument.doc_category == doc_category)
-    if status:
-        query = query.filter(ProjectDocument.status == status)
+    if doc_status:
+        query = query.filter(ProjectDocument.status == doc_status)
 
     total = query.count()
-    documents = query.order_by(desc(ProjectDocument.created_at)).offset(offset).limit(page_size).all()
+    documents = query.order_by(desc(ProjectDocument.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return ResponseModel(
         code=200,
@@ -81,9 +78,9 @@ def get_rd_project_documents(
         data=PaginatedResponse(
             items=[ProjectDocumentResponse.model_validate(doc) for doc in documents],
             total=total,
-            page=page,
-            page_size=page_size,
-            pages=(total + page_size - 1) // page_size
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total)
         )
     )
 

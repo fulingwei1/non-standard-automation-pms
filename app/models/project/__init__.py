@@ -46,6 +46,9 @@ from .resource_plan import (
 # 风险历史
 from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 
+# 项目复盘（兼容导出）
+from app.models.project_review import ProjectReview  # noqa: F401
+
 # 枚举兼容导出
 from app.models.enums.project import ProjectHealthEnum as ProjectHealth  # noqa: F401
 from app.models.enums.project import ProjectHealthEnum  # noqa: F401
@@ -86,6 +89,8 @@ __all__ = [
     # 风险历史
     "ProjectRiskHistory",
     "ProjectRiskSnapshot",
+    # 项目复盘
+    "ProjectReview",
     # 枚举兼容
     "ProjectHealth",
     "ProjectHealthEnum",

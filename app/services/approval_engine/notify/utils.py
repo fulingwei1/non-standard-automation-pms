@@ -12,7 +12,7 @@ from typing import Dict
 
 from app.models.notification import NotificationSettings
 
-from .base import _DEDUP_WINDOW_MINUTES, _notification_dedup_cache
+from .base import _notification_dedup_cache
 
 logger = logging.getLogger(__name__)
 
@@ -32,26 +32,47 @@ class NotificationUtilsMixin:
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def _is_duplicate(self, dedup_key: str) -> bool:
-        """检查是否为重复通知（在去重窗口内）"""
+        """检查是否为重复通知（基于用户偏好的去重窗口）
+
+        通过解析 dedup_key 获取 recipient_id 和通知类型，
+        然后查询用户偏好中的 dedup_window_hours 决定是否启用去重。
+        - dedup_window_hours > 0：去重启用，在窗口内视为重复
+        - dedup_window_hours == 0：去重禁用，始终不视为重复
+        """
         global _notification_dedup_cache
+
+        # 从 dedup_key 中解析 recipient_id 和通知类型
+        # key 格式: "instance_id:node_id:task_id:type:recipient_id"
+        parts = dedup_key.split(":")
+        recipient_id = int(parts[-1]) if len(parts) >= 5 else 0
+        notification_type = parts[-2] if len(parts) >= 5 else ""
+
+        # 查询用户偏好，获取去重窗口配置
+        prefs = self._check_user_preferences(recipient_id, notification_type)
+        dedup_window_hours = prefs.get("dedup_window_hours", 0)
+
+        # 去重窗口为 0 表示禁用去重，直接返回 False
+        if dedup_window_hours <= 0:
+            return False
 
         now = datetime.now()
 
-        # 清理过期的缓存项
+        # 清理过期的缓存项（基于用户配置的去重窗口）
         expired_keys = [
             k for k, v in _notification_dedup_cache.items()
-            if now - v > timedelta(minutes=_DEDUP_WINDOW_MINUTES)
+            if now - v > timedelta(hours=dedup_window_hours)
         ]
         for k in expired_keys:
             del _notification_dedup_cache[k]
 
-        # 检查是否存在
+        # 检查是否存在于缓存中
         if dedup_key in _notification_dedup_cache:
+            # 缓存中已有该 key，视为重复
             return True
 
-        # 添加到缓存
+        # 添加到缓存，标记为已发送
         _notification_dedup_cache[dedup_key] = now
-        return False
+        return True
 
     def _check_user_preferences(self, user_id: int, notification_type: str) -> Dict[str, bool]:
         """

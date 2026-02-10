@@ -10,49 +10,30 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy import case, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
 from app.models.task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
     TaskUnified,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
-    TaskCommentCreate,
-    TaskCommentResponse,
-    TaskOverviewResponse,
-    TaskProgressUpdate,
-    TaskTransferRequest,
-    TaskUnifiedCreate,
     TaskUnifiedListResponse,
     TaskUnifiedResponse,
-    TaskUnifiedUpdate,
 )
-from app.services.sales_reminder import create_notification
 
 router = APIRouter()
 
 # 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
 
 
 from fastapi import APIRouter
@@ -70,9 +51,8 @@ router = APIRouter(
 def get_my_tasks(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    task_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     task_type: Optional[str] = Query(None, description="任务类型筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
     is_urgent: Optional[bool] = Query(None, description="是否紧急"),
@@ -90,8 +70,8 @@ def get_my_tasks(
     query = db.query(TaskUnified).filter(TaskUnified.assignee_id == user_id)
 
     # 状态筛选
-    if status:
-        query = query.filter(TaskUnified.status == status)
+    if task_status:
+        query = query.filter(TaskUnified.status == task_status)
 
     # 任务类型筛选
     if task_type:
@@ -155,8 +135,7 @@ def get_my_tasks(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    tasks = query.offset(offset).limit(page_size).all()
+    tasks = query.offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = []
@@ -206,9 +185,9 @@ def get_my_tasks(
     return TaskUnifiedListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

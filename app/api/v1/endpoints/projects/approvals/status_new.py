@@ -2,6 +2,10 @@
 """
 项目审批 - status (统一审批系统)
 
+[DEPRECATED] 此端点已废弃，请使用:
+GET /api/v1/approvals/instances/{instance_id}
+或 GET /api/v1/approvals/instances/by-entity/PROJECT/{project_id}
+
 重构说明：
 - 从直接数据库操作改为使用 ApprovalEngineService
 - 利用审批引擎的查询、权限检查、通知等功能
@@ -32,12 +36,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
     "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+    deprecated=True,
+    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
 )
 @router.get(
     "/status",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
+    deprecated=True,
 )
 def get_project_approval_status(
     *,

@@ -12,8 +12,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine
 from app.models.purchase import PurchaseOrderItem
@@ -26,8 +26,7 @@ router = APIRouter()
 @router.get("/material-demands", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_material_demands(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
     material_code: Optional[str] = Query(None, description="物料编码筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -117,15 +116,14 @@ def read_material_demands(
     items.sort(key=lambda x: x['shortage_qty'], reverse=True)
 
     total = len(items)
-    offset = (page - 1) * page_size
-    paginated_items = items[offset:offset + page_size]
+    paginated_items = items[pagination.offset:pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=paginated_items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

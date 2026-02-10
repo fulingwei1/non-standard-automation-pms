@@ -4,7 +4,8 @@
 负责从采购订单、外协订单、ECN变更等自动归集成本到项目成本
 """
 
-from datetime import date, datetime
+import logging
+from datetime import date
 from decimal import Decimal
 from typing import Optional
 
@@ -14,6 +15,7 @@ from app.models.ecn import Ecn
 from app.models.outsourcing import OutsourcingOrder
 from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder
+from app.services.cost_alert_service import CostAlertService
 
 
 class CostCollectionService:
@@ -100,13 +102,11 @@ class CostCollectionService:
 
         # 检查预算执行情况并生成预警
         try:
-            from app.services.cost_alert_service import CostAlertService
             CostAlertService.check_budget_execution(
                 db, order.project_id, trigger_source="PURCHASE", source_id=order_id
             )
         except Exception as e:
             # 预警失败不影响成本归集
-            import logging
             logging.warning(f"成本预警检查失败：{str(e)}")
 
         return cost
@@ -193,13 +193,11 @@ class CostCollectionService:
 
         # 检查预算执行情况并生成预警
         try:
-            from app.services.cost_alert_service import CostAlertService
             CostAlertService.check_budget_execution(
                 db, order.project_id, trigger_source="PURCHASE", source_id=order_id
             )
         except Exception as e:
             # 预警失败不影响成本归集
-            import logging
             logging.warning(f"成本预警检查失败：{str(e)}")
 
         return cost
@@ -290,13 +288,11 @@ class CostCollectionService:
 
         # 检查预算执行情况并生成预警
         try:
-            from app.services.cost_alert_service import CostAlertService
             CostAlertService.check_budget_execution(
                 db, ecn.project_id, trigger_source="ECN", source_id=ecn_id
             )
         except Exception as e:
             # 预警失败不影响成本归集
-            import logging
             logging.warning(f"成本预警检查失败：{str(e)}")
 
         return cost
@@ -446,15 +442,12 @@ class CostCollectionService:
 
             # 检查预算执行情况并生成预警
             try:
-                from app.services.cost_alert_service import CostAlertService
                 CostAlertService.check_budget_execution(
                     db, bom.project_id, trigger_source="BOM", source_id=bom_id
                 )
             except Exception as e:
                 # 预警失败不影响成本归集
-                import logging
                 logging.warning(f"成本预警检查失败：{str(e)}")
 
             db.flush()
             return cost
-

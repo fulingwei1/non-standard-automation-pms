@@ -3,15 +3,15 @@
 合同管理端点
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.organization import (
     Employee,
     EmployeeContract,
@@ -29,10 +29,9 @@ router = APIRouter()
 @router.get("/contracts")
 def get_contracts(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     employee_id: Optional[int] = Query(None, description="员工ID"),
-    status: Optional[str] = Query(None, description="合同状态"),
+    contract_status: Optional[str] = Query(None, alias="status", description="合同状态"),
     expiring_in_days: Optional[int] = Query(None, description="即将到期天数内"),
     current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
@@ -41,8 +40,8 @@ def get_contracts(
 
     if employee_id:
         query = query.filter(EmployeeContract.employee_id == employee_id)
-    if status:
-        query = query.filter(EmployeeContract.status == status)
+    if contract_status:
+        query = query.filter(EmployeeContract.status == contract_status)
     if expiring_in_days:
         expiry_date = date.today() + timedelta(days=expiring_in_days)
         query = query.filter(
@@ -52,8 +51,7 @@ def get_contracts(
         )
 
     total = query.count()
-    offset = (page - 1) * page_size
-    contracts = query.order_by(EmployeeContract.end_date.asc()).offset(offset).limit(page_size).all()
+    contracts = query.order_by(EmployeeContract.end_date.asc()).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for c in contracts:
@@ -84,9 +82,9 @@ def get_contracts(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total)
     }
 
 

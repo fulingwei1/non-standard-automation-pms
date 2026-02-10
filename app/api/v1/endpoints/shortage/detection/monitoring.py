@@ -19,8 +19,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.material import Material
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -37,8 +37,7 @@ router = APIRouter()
 @router.get("/inventory-warnings", response_model=PaginatedResponse)
 def list_inventory_warnings(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     category_id: Optional[int] = Query(None, description="物料分类ID筛选"),
     warning_type: Optional[str] = Query(None, description="预警类型: LOW_STOCK/OVERSTOCK/EXPIRING"),
     current_user: User = Depends(security.get_current_active_user),
@@ -101,15 +100,14 @@ def list_inventory_warnings(
 
     # 分页
     total = len(warnings)
-    offset = (page - 1) * page_size
-    items = warnings[offset:offset + page_size]
+    items = warnings[pagination.offset:pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size if page_size > 0 else 0
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

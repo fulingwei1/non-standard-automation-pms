@@ -5,13 +5,13 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -24,8 +24,7 @@ def get_customer_projects(
     *,
     db: Session = Depends(deps.get_db),
     customer_id: int,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.require_permission("customer:read")),
 ) -> Any:
     """
@@ -37,13 +36,12 @@ def get_customer_projects(
 
     query = db.query(Project).filter(Project.customer_id == customer_id)
     total = query.count()
-    offset = (page - 1) * page_size
-    projects = query.order_by(desc(Project.created_at)).offset(offset).limit(page_size).all()
+    projects = query.order_by(desc(Project.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return PaginatedResponse(
         items=projects,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )

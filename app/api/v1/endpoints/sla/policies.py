@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.core.config import settings
 from app.models.sla import SLAMonitor, SLAPolicy
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -32,13 +32,7 @@ router = APIRouter()
 def get_sla_policies(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     problem_type: Optional[str] = Query(None, description="问题类型筛选"),
     urgency: Optional[str] = Query(None, description="紧急程度筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
@@ -65,11 +59,10 @@ def get_sla_policies(
     query = apply_keyword_filter(query, SLAPolicy, keyword, ["policy_name", "policy_code"])
 
     total = query.count()
-    offset = (page - 1) * page_size
     policies = (
         query.order_by(SLAPolicy.priority, desc(SLAPolicy.created_at))
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -80,9 +73,9 @@ def get_sla_policies(
     return PaginatedResponse(
         items=policy_list,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
     )
 
 

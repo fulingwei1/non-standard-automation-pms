@@ -7,17 +7,18 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.business_support import DocumentArchive
 from app.models.user import User
 from app.schemas.business_support import (
     DocumentArchiveCreate,
     DocumentArchiveResponse,
-    DocumentArchiveUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -107,8 +108,7 @@ async def create_document_archive(
 
 @router.get("", response_model=ResponseModel[PaginatedResponse[DocumentArchiveResponse]], summary="获取文件归档列表")
 async def get_document_archives(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     document_type: Optional[str] = Query(None, description="文件类型筛选"),
     related_type: Optional[str] = Query(None, description="关联类型筛选"),
     related_id: Optional[int] = Query(None, description="关联ID筛选"),
@@ -127,13 +127,9 @@ async def get_document_archives(
             query = query.filter(DocumentArchive.related_type == related_type)
         if related_id:
             query = query.filter(DocumentArchive.related_id == related_id)
-        if search:
-            query = query.filter(
-                or_(
-                    DocumentArchive.document_name.like(f"%{search}%"),
-                    DocumentArchive.archive_no.like(f"%{search}%")
-                )
-            )
+
+        # 应用关键词过滤（文件名称/归档编号）
+        query = apply_keyword_filter(query, DocumentArchive, search, ["document_name", "archive_no"])
 
         # 总数
         total = query.count()
@@ -141,8 +137,8 @@ async def get_document_archives(
         # 分页
         items = (
             query.order_by(desc(DocumentArchive.archive_date))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -174,9 +170,9 @@ async def get_document_archives(
             data=PaginatedResponse(
                 items=archive_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

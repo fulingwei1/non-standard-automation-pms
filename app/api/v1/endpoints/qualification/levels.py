@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.qualification import (
     EmployeeQualification,
@@ -57,8 +58,7 @@ def create_qualification_level(
 def get_qualification_levels(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     role_type: Optional[str] = Query(None, description="角色类型"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -73,15 +73,15 @@ def get_qualification_levels(
 
     total = query.count()
     levels = query.order_by(QualificationLevel.level_order).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+        pagination.offset
+    ).limit(pagination.limit).all()
 
     return QualificationLevelListResponse(
         items=levels,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
     )
 
 

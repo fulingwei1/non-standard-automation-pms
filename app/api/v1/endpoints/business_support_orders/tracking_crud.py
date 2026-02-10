@@ -3,13 +3,15 @@
 验收单跟踪 - 基础CRUD操作
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.acceptance import AcceptanceOrder
 from app.models.business_support import AcceptanceTracking
 from app.models.project import Project
@@ -29,8 +31,7 @@ router = APIRouter()
 
 @router.get("/acceptance-tracking", response_model=ResponseModel[PaginatedResponse[AcceptanceTrackingResponse]], summary="获取验收单跟踪列表")
 async def get_acceptance_tracking(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     tracking_status: Optional[str] = Query(None, description="跟踪状态筛选"),
@@ -52,14 +53,9 @@ async def get_acceptance_tracking(
             query = query.filter(AcceptanceTracking.tracking_status == tracking_status)
         if condition_check_status:
             query = query.filter(AcceptanceTracking.condition_check_status == condition_check_status)
-        if search:
-            query = query.filter(
-                or_(
-                    AcceptanceTracking.acceptance_order_no.like(f"%{search}%"),
-                    AcceptanceTracking.customer_name.like(f"%{search}%"),
-                    AcceptanceTracking.project_code.like(f"%{search}%")
-                )
-            )
+
+        # 应用关键词过滤（验收单号/客户名称/项目编码）
+        query = apply_keyword_filter(query, AcceptanceTracking, search, ["acceptance_order_no", "customer_name", "project_code"])
 
         # 总数
         total = query.count()
@@ -67,8 +63,8 @@ async def get_acceptance_tracking(
         # 分页
         items = (
             query.order_by(desc(AcceptanceTracking.created_at))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
             .all()
         )
 
@@ -81,9 +77,9 @@ async def get_acceptance_tracking(
             data=PaginatedResponse(
                 items=tracking_list,
                 total=total,
-                page=page,
-                page_size=page_size,
-                pages=(total + page_size - 1) // page_size
+                page=pagination.page,
+                page_size=pagination.page_size,
+                pages=pagination.pages_for_total(total)
             )
         )
     except Exception as e:

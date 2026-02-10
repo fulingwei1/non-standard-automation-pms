@@ -31,6 +31,14 @@ class LaborCostService:
     # 默认时薪配置（可以后续从用户配置或系统配置中读取）
     DEFAULT_HOURLY_RATE = Decimal("100")  # 默认100元/小时
 
+    def __init__(self, db: Session):
+        """初始化工时成本服务
+
+        Args:
+            db: 数据库会话
+        """
+        self.db = db
+
     @staticmethod
     def get_user_hourly_rate(db: Session, user_id: int, work_date: Optional[date] = None) -> Decimal:
         """

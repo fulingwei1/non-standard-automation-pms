@@ -82,6 +82,7 @@ class Task(Base, TimestampMixin):
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="机台ID")
     milestone_id = Column(Integer, ForeignKey("project_milestones.id"), comment="里程碑ID")
+    task_code = Column(String(50), comment="任务编码")
     task_name = Column(String(200), nullable=True, comment="任务名称")
     stage = Column(String(20), comment="阶段（S1-S9）")
     status = Column(String(20), default="TODO", comment="状态：TODO/IN_PROGRESS/BLOCKED/DONE/CANCELLED")

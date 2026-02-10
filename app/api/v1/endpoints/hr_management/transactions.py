@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.common.date_range import get_month_range_by_ym
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.organization import (
     Employee,
     EmployeeHrProfile,
@@ -31,10 +31,9 @@ router = APIRouter()
 @router.get("/transactions")
 def get_hr_transactions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     transaction_type: Optional[str] = Query(None, description="事务类型筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    transaction_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     employee_id: Optional[int] = Query(None, description="员工ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
@@ -45,8 +44,8 @@ def get_hr_transactions(
 
     if transaction_type:
         query = query.filter(HrTransaction.transaction_type == transaction_type)
-    if status:
-        query = query.filter(HrTransaction.status == status)
+    if transaction_status:
+        query = query.filter(HrTransaction.status == transaction_status)
     if employee_id:
         query = query.filter(HrTransaction.employee_id == employee_id)
     if start_date:
@@ -55,8 +54,7 @@ def get_hr_transactions(
         query = query.filter(HrTransaction.transaction_date <= end_date)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    transactions = query.order_by(HrTransaction.created_at.desc()).offset(offset).limit(page_size).all()
+    transactions = query.order_by(HrTransaction.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for t in transactions:
@@ -108,9 +106,9 @@ def get_hr_transactions(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
+        "page": pagination.page,
+        "page_size": pagination.page_size,
+        "pages": pagination.pages_for_total(total)
     }
 
 
