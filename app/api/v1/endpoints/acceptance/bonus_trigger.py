@@ -27,7 +27,7 @@ def trigger_bonus_calculation_endpoint(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:trigger")),
 ) -> Any:
     """
     手动触发验收单关联的奖金计算

@@ -297,7 +297,16 @@ def _load_user_permissions_from_db(
 
     # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
     # 权限过滤：系统级权限(tenant_id IS NULL) + 当前租户权限
-    sql = """
+    # 根据 tenant_id 是否为 None 使用不同的 SQL 条件
+    # 避免 SQL 中 column = NULL 的问题（NULL 比较需要用 IS NULL）
+    if tenant_id is not None:
+        tenant_filter = "AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)"
+        params = {"user_id": user_id, "tenant_id": tenant_id}
+    else:
+        tenant_filter = "AND ap.tenant_id IS NULL"
+        params = {"user_id": user_id}
+
+    sql = f"""
         WITH RECURSIVE role_tree AS (
             -- 用户直接拥有的角色
             SELECT r.id, r.parent_id, r.inherit_permissions
@@ -318,9 +327,9 @@ def _load_user_permissions_from_db(
         JOIN role_api_permissions rap ON rt.id = rap.role_id
         JOIN api_permissions ap ON rap.permission_id = ap.id
         WHERE ap.is_active = 1
-        AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
+        {tenant_filter}
     """
-    result = db.execute(text(sql), {"user_id": user_id, "tenant_id": tenant_id})
+    result = db.execute(text(sql), params)
     return {row[0] for row in result.fetchall()}
 
 

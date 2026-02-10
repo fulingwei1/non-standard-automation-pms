@@ -32,18 +32,31 @@ class ApprovalEngineCore:
         self.delegate_service = ApprovalDelegateService(db)
 
     def _generate_instance_no(self, template_code: str) -> str:
-        """生成审批单号"""
+        """生成审批单号（使用 SELECT FOR UPDATE 防止竞态条件）"""
+        from sqlalchemy import func, text
+
         now = datetime.now()
         prefix = f"AP{now.strftime('%y%m%d')}"
 
-        # 查询今天的最大序号
-        max_no = (
-            self.db.query(ApprovalInstance)
+        # 使用 SELECT FOR UPDATE 加锁查询当日最大序号，避免并发生成重复单号
+        max_instance = (
+            self.db.query(func.max(ApprovalInstance.instance_no))
             .filter(ApprovalInstance.instance_no.like(f"{prefix}%"))
-            .count()
+            .with_for_update()
+            .scalar()
         )
 
-        return f"{prefix}{max_no + 1:04d}"
+        if max_instance:
+            # 从已有最大单号提取序号并递增
+            try:
+                current_seq = int(max_instance[len(prefix):])
+                next_seq = current_seq + 1
+            except (ValueError, IndexError):
+                next_seq = 1
+        else:
+            next_seq = 1
+
+        return f"{prefix}{next_seq:04d}"
 
     def _get_first_node(self, flow_id: int) -> Optional[ApprovalNodeDefinition]:
         """获取流程的第一个节点"""
