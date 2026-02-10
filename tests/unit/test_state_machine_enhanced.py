@@ -25,7 +25,24 @@ class TestStateTransitionLog:
         from app.models.user import User
 
         # 创建测试用户
-        user = User(username="test_user", email="test@example.com")
+        from app.models.organization import Employee
+        emp = Employee(
+            employee_code="EMP-SM-001",
+            name="test_user",
+            department="测试部",
+            role="ENGINEER",
+            phone="18800000000",
+        )
+        db_session.add(emp)
+        db_session.flush()
+
+        user = User(
+            employee_id=emp.id,
+            username="test_user",
+            email="test@example.com",
+            password_hash="hashed_pass",
+            real_name="test_user",
+        )
         db_session.add(user)
         db_session.commit()
 

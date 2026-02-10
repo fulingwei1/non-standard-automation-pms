@@ -18,8 +18,6 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.user import User
 from app.models.organization import Employee
-from app.models.project import Project
-from app.models.timesheet import Timesheet
 
 
 @pytest.fixture(scope="function")
@@ -36,7 +34,7 @@ def authenticated_client(db_session: Session):
 
     user = User(
         username="testuser",
-        hashed_password="hashed_test_password",
+        password_hash="hashed_test_password",
         employee_id=employee.id,
         is_active=True,
         is_superuser=False,

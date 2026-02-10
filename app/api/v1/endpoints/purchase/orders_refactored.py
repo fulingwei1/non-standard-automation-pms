@@ -24,6 +24,7 @@ from app.models.purchase import (
 )
 from app.models.user import User
 from app.services.data_scope_service import DataScopeConfig, DataScopeService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import (
     decimal_value,
@@ -45,8 +46,7 @@ PO_DATA_SCOPE_CONFIG = DataScopeConfig(
 @router.get("/")
 def list_purchase_orders(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None),
     supplier_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
@@ -100,9 +100,8 @@ def list_purchase_orders(
                 raise HTTPException(status_code=400, detail="end_date 格式错误，应为 YYYY-MM-DD")
 
         total = query.count()
-        offset = (page - 1) * page_size
         orders = (
-            query.order_by(desc(PurchaseOrder.created_at)).offset(offset).limit(page_size).all()
+            query.order_by(desc(PurchaseOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
         )
 
         items = [serialize_purchase_order(o, include_items=False) for o in orders]
@@ -111,8 +110,8 @@ def list_purchase_orders(
         return paginated_response(
             items=items,
             total=total,
-            page=page,
-            page_size=page_size
+            page=pagination.page,
+            page_size=pagination.page_size
         )
     except HTTPException:
         # 重新抛出 HTTP 异常（如参数验证错误）

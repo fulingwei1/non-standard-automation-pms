@@ -3,16 +3,16 @@
 PMO管理模块 API 集成测试
 
 测试范围：
-- 项目组合管理 (Portfolio)
-- 项目看板 (Dashboard)
-- 项目健康度监控 (Health Monitor)
-- 资源分析 (Resource Analysis)
+- PMO仪表板 (Dashboard/Cockpit)
+- PMO会议 (Meetings)
+- PMO风险墙 (Risk Wall)
+- PMO资源概览 (Resource Overview)
 """
 
 import pytest
 from datetime import date, timedelta
 
-from tests.integration.api_test_helper import APITestHelper, Colors
+from tests.integration.api_test_helper import APITestHelper
 
 
 @pytest.mark.integration
@@ -35,7 +35,7 @@ class TestPMODashboardAPI:
         }
 
         response = self.helper.get(
-            "/dashboard", params=params, resource_type="pmo_dashboard"
+            "/pmo/dashboard", params=params, resource_type="pmo_dashboard"
         )
 
         if self.helper.assert_success(response):
@@ -43,32 +43,32 @@ class TestPMODashboardAPI:
         else:
             self.helper.print_warning("获取PMO仪表板响应不符合预期")
 
-    def test_get_key_metrics(self):
-        """测试获取关键指标"""
-        self.helper.print_info("测试获取关键指标...")
+    def test_get_risk_wall(self):
+        """测试获取风险墙"""
+        self.helper.print_info("测试获取风险墙...")
 
-        response = self.helper.get("/dashboard/metrics", resource_type="key_metrics")
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("关键指标获取成功")
-        else:
-            self.helper.print_warning("获取关键指标响应不符合预期")
-
-    def test_get_alert_summary(self):
-        """测试获取预警汇总"""
-        self.helper.print_info("测试获取预警汇总...")
-
-        response = self.helper.get("/dashboard/alerts", resource_type="alert_summary")
+        response = self.helper.get("/pmo/risk-wall", resource_type="risk_wall")
 
         if self.helper.assert_success(response):
-            self.helper.print_success("预警汇总获取成功")
+            self.helper.print_success("风险墙获取成功")
         else:
-            self.helper.print_warning("获取预警汇总响应不符合预期")
+            self.helper.print_warning("获取风险墙响应不符合预期")
+
+    def test_get_resource_overview(self):
+        """测试获取资源概览"""
+        self.helper.print_info("测试获取资源概览...")
+
+        response = self.helper.get("/pmo/resource-overview", resource_type="resource_overview")
+
+        if self.helper.assert_success(response):
+            self.helper.print_success("资源概览获取成功")
+        else:
+            self.helper.print_warning("获取资源概览响应不符合预期")
 
 
 @pytest.mark.integration
-class TestPMOPortfolioAPI:
-    """项目组合管理 API 测试"""
+class TestPMOMeetingsAPI:
+    """PMO会议管理 API 测试"""
 
     @pytest.fixture(autouse=True)
     def setup(self, client, admin_token, db_session):
@@ -76,224 +76,167 @@ class TestPMOPortfolioAPI:
         self.helper = APITestHelper(client, admin_token)
         self.db = db_session
         self.tracked_resources = []
-        self.helper.print_info("项目组合管理 API 测试")
+        self.helper.print_info("PMO会议管理 API 测试")
 
-    def test_get_portfolio_overview(self):
-        """测试获取项目组合概览"""
-        self.helper.print_info("测试获取项目组合概览...")
-
-        params = {
-            "period": "current_quarter",
-        }
-
-        response = self.helper.get(
-            "/portfolio/overview", params=params, resource_type="portfolio_overview"
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("项目组合概览获取成功")
-        else:
-            self.helper.print_warning("获取项目组合概览响应不符合预期")
-
-    def test_get_project_distribution(self):
-        """测试获取项目分布"""
-        self.helper.print_info("测试获取项目分布...")
-
-        params = {
-            "group_by": "stage",
-        }
-
-        response = self.helper.get(
-            "/portfolio/distribution",
-            params=params,
-            resource_type="project_distribution",
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("项目分布获取成功")
-        else:
-            self.helper.print_warning("获取项目分布响应不符合预期")
-
-    def test_get_resource_utilization(self):
-        """测试获取资源利用率"""
-        self.helper.print_info("测试获取资源利用率...")
-
-        params = {
-            "period": "month",
-        }
-
-        response = self.helper.get(
-            "/portfolio/resource-utilization",
-            params=params,
-            resource_type="resource_utilization",
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("资源利用率获取成功")
-        else:
-            self.helper.print_warning("获取资源利用率响应不符合预期")
-
-
-@pytest.mark.integration
-class TestPMOHealthMonitorAPI:
-    """项目健康度监控 API 测试"""
-
-    @pytest.fixture(autouse=True)
-    def setup(self, client, admin_token, db_session):
-        """测试前置设置"""
-        self.helper = APITestHelper(client, admin_token)
-        self.db = db_session
-        self.helper.print_info("项目健康度监控 API 测试")
-
-    def test_get_health_matrix(self):
-        """测试获取健康度矩阵"""
-        self.helper.print_info("测试获取健康度矩阵...")
-
-        params = {
-            "page": 1,
-            "page_size": 50,
-        }
-
-        response = self.helper.get(
-            "/health/matrix", params=params, resource_type="health_matrix"
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("健康度矩阵获取成功")
-        else:
-            self.helper.print_warning("获取健康度矩阵响应不符合预期")
-
-    def test_get_health_trend(self):
-        """测试获取健康度趋势"""
-        self.helper.print_info("测试获取健康度趋势...")
-
-        params = {
-            "period": "monthly",
-            "months": 6,
-        }
-
-        response = self.helper.get(
-            "/health/trend", params=params, resource_type="health_trend"
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("健康度趋势获取成功")
-        else:
-            self.helper.print_warning("获取健康度趋势响应不符合预期")
-
-    def test_get_risk_projects(self):
-        """测试获取风险项目"""
-        self.helper.print_info("测试获取风险项目...")
-
-        params = {
-            "health_level": ["H2", "H3"],
-        }
-
-        response = self.helper.get(
-            "/health/risk-projects", params=params, resource_type="risk_projects"
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("风险项目获取成功")
-        else:
-            self.helper.print_warning("获取风险项目响应不符合预期")
-
-
-@pytest.mark.integration
-class TestPMOReportsAPI:
-    """PMO报表 API 测试"""
-
-    @pytest.fixture(autouse=True)
-    def setup(self, client, admin_token, db_session):
-        """测试前置设置"""
-        self.helper = APITestHelper(client, admin_token)
-        self.db = db_session
-        self.tracked_resources = []
-        self.helper.print_info("PMO报表 API 测试")
-
-    def test_generate_executive_report(self):
-        """测试生成高管报告"""
-        self.helper.print_info("测试生成高管报告...")
-
-        report_data = {
-            "report_type": "EXECUTIVE",
-            "period_start": (date.today() - timedelta(days=30)).isoformat(),
-            "period_end": date.today().isoformat(),
-            "include_sections": ["summary", "projects", "risks", "metrics"],
-        }
-
-        response = self.helper.post(
-            "/reports/generate", report_data, resource_type="executive_report"
-        )
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("高管报告生成成功")
-        else:
-            self.helper.print_warning("生成高管报告响应不符合预期，继续测试")
-
-    def test_get_reports_list(self):
-        """测试获取报表列表"""
-        self.helper.print_info("测试获取报表列表...")
+    def test_get_meetings_list(self):
+        """测试获取会议列表"""
+        self.helper.print_info("测试获取会议列表...")
 
         params = {
             "page": 1,
             "page_size": 20,
-            "report_type": "EXECUTIVE",
         }
 
         response = self.helper.get(
-            "/reports", params=params, resource_type="pmo_reports_list"
+            "/pmo/meetings", params=params, resource_type="pmo_meetings_list"
         )
 
         result = self.helper.assert_success(response)
         if result:
             items = result.get("items", [])
-            self.helper.print_success(f"获取到 {len(items)} 份PMO报表")
+            self.helper.print_success(f"获取到 {len(items)} 条会议记录")
         else:
-            self.helper.print_warning("获取报表列表响应不符合预期")
+            self.helper.print_warning("获取会议列表响应不符合预期")
+
+    def test_create_meeting(self):
+        """测试创建会议"""
+        self.helper.print_info("测试创建会议...")
+
+        meeting_data = {
+            "meeting_type": "PROJECT_REVIEW",
+            "meeting_name": "项目进度评审会",
+            "meeting_date": (date.today() + timedelta(days=3)).isoformat(),
+            "location": "会议室A",
+            "agenda": "1. 项目进度汇报\n2. 风险评估\n3. 下一步计划",
+        }
+
+        response = self.helper.post(
+            "/pmo/meetings", meeting_data, resource_type="pmo_meeting"
+        )
+
+        result = self.helper.assert_success(response)
+        if result:
+            meeting_id = result.get("id")
+            if meeting_id:
+                self.tracked_resources.append(("meeting", meeting_id))
+                self.helper.print_success(f"会议创建成功，ID: {meeting_id}")
+            else:
+                self.helper.print_warning("会议创建成功，但未返回ID")
+        else:
+            self.helper.print_warning("创建会议响应不符合预期，继续测试")
 
 
 @pytest.mark.integration
-class TestPMOKPIsAPI:
-    """PMO KPI API 测试"""
+class TestPMOInitiationsAPI:
+    """PMO项目立项 API 测试"""
 
     @pytest.fixture(autouse=True)
     def setup(self, client, admin_token, db_session):
         """测试前置设置"""
         self.helper = APITestHelper(client, admin_token)
         self.db = db_session
-        self.helper.print_info("PMO KPI API 测试")
+        self.tracked_resources = []
+        self.helper.print_info("PMO项目立项 API 测试")
 
-    def test_get_project_kpis(self):
-        """测试获取项目KPI"""
-        self.helper.print_info("测试获取项目KPI...")
-
-        params = {
-            "kpi_type": "all",
-            "period": "quarter",
-        }
-
-        response = self.helper.get("/kpis", params=params, resource_type="project_kpis")
-
-        if self.helper.assert_success(response):
-            self.helper.print_success("项目KPI获取成功")
-        else:
-            self.helper.print_warning("获取项目KPI响应不符合预期")
-
-    def test_get_team_performance(self):
-        """测试获取团队绩效"""
-        self.helper.print_info("测试获取团队绩效...")
+    def test_get_initiations_list(self):
+        """测试获取项目立项列表"""
+        self.helper.print_info("测试获取项目立项列表...")
 
         params = {
-            "period": "month",
-            "metric": "project_completion_rate",
+            "page": 1,
+            "page_size": 20,
         }
 
         response = self.helper.get(
-            "/kpis/team-performance", params=params, resource_type="team_performance"
+            "/pmo/initiations", params=params, resource_type="pmo_initiations_list"
+        )
+
+        result = self.helper.assert_success(response)
+        if result:
+            items = result.get("items", [])
+            self.helper.print_success(f"获取到 {len(items)} 条项目立项记录")
+        else:
+            self.helper.print_warning("获取项目立项列表响应不符合预期")
+
+
+@pytest.mark.integration
+class TestPMOWeeklyReportAPI:
+    """PMO周报 API 测试"""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client, admin_token, db_session):
+        """测试前置设置"""
+        self.helper = APITestHelper(client, admin_token)
+        self.db = db_session
+        self.helper.print_info("PMO周报 API 测试")
+
+    def test_get_weekly_report(self):
+        """测试获取周报"""
+        self.helper.print_info("测试获取周报...")
+
+        response = self.helper.get(
+            "/pmo/weekly-report", resource_type="pmo_weekly_report"
         )
 
         if self.helper.assert_success(response):
-            self.helper.print_success("团队绩效获取成功")
+            self.helper.print_success("周报数据获取成功")
         else:
-            self.helper.print_warning("获取团队绩效响应不符合预期")
+            self.helper.print_warning("获取周报响应不符合预期")
+
+
+@pytest.mark.integration
+class TestPMORisksAPI:
+    """PMO项目风险 API 测试"""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client, admin_token, test_project, db_session):
+        """测试前置设置"""
+        self.helper = APITestHelper(client, admin_token)
+        self.db = db_session
+        self.test_project_id = test_project.id if test_project else 1
+        self.tracked_resources = []
+        self.helper.print_info("PMO项目风险 API 测试")
+
+    def test_get_project_risks(self):
+        """测试获取项目风险列表"""
+        self.helper.print_info("测试获取项目风险列表...")
+
+        response = self.helper.get(
+            f"/pmo/projects/{self.test_project_id}/risks",
+            resource_type="pmo_project_risks",
+        )
+
+        if self.helper.assert_success(response):
+            self.helper.print_success("项目风险列表获取成功")
+        else:
+            self.helper.print_warning("获取项目风险列表响应不符合预期")
+
+    def test_create_project_risk(self):
+        """测试创建项目风险"""
+        self.helper.print_info("测试创建项目风险...")
+
+        risk_data = {
+            "risk_name": "供应商交付延迟",
+            "risk_category": "SUPPLY_CHAIN",
+            "probability": "HIGH",
+            "impact": "HIGH",
+            "description": "关键物料供应商可能无法按时交付",
+            "mitigation_plan": "提前备货，寻找备选供应商",
+        }
+
+        response = self.helper.post(
+            f"/pmo/projects/{self.test_project_id}/risks",
+            risk_data,
+            resource_type="pmo_project_risk",
+        )
+
+        result = self.helper.assert_success(response)
+        if result:
+            risk_id = result.get("id")
+            if risk_id:
+                self.tracked_resources.append(("risk", risk_id))
+                self.helper.print_success(f"项目风险创建成功，ID: {risk_id}")
+            else:
+                self.helper.print_warning("项目风险创建成功，但未返回ID")
+        else:
+            self.helper.print_warning("创建项目风险响应不符合预期，继续测试")

@@ -3,6 +3,19 @@
 统一通知服务（兼容层）
 支持邮件、短信、企业微信等多种通知渠道
 
+通知系统架构：
+- app.services.unified_notification_service: 主通知服务，提供 NotificationService 和 get_notification_service()
+- app.services.notification_service (本模块): 兼容层，re-export 统一服务并提供旧接口的枚举和 AlertNotificationService
+- app.services.notification_dispatcher: 预警通知调度协调器，内部使用统一服务
+- app.services.notification_queue: Redis 通知队列（异步分发）
+- app.services.notification_utils: 通知工具函数（渠道解析、接收者解析、免打扰判断等）
+- app.services.channel_handlers/: 渠道处理器（System/Email/WeChat/SMS/Webhook）
+
+新代码推荐直接使用：
+ from app.services.unified_notification_service import get_notification_service
+ 或
+ from app.services.unified_notification_service import NotificationService
+
 DEPRECATED: 此文件作为向后兼容层，内部使用 unified_notification_service。
 新代码应直接使用 unified_notification_service。
 """
@@ -15,11 +28,11 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.notification import Notification as WebNotification  # noqa: F401
 from app.services.unified_notification_service import get_notification_service
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel as UnifiedNotificationChannel,
-    NotificationPriority as UnifiedNotificationPriority,
 )
 
 logger = logging.getLogger(__name__)
@@ -185,23 +198,31 @@ class NotificationService:
         due_date: Optional[datetime] = None,
     ):
         """发送任务分配通知（兼容方法）"""
-        unified_service = get_notification_service(db)
-        return unified_service.send_task_assigned(
+        title = f"新任务分配：{task_name}"
+        content = f"您有新的任务「{task_name}」（项目：{project_name}）"
+        if due_date:
+            content += f"，截止日期：{due_date.strftime('%Y-%m-%d')}"
+        return self.send_notification(
+            db=db,
             recipient_id=assignee_id,
-            task_id=task_id,
-            task_name=task_name,
-            assigner_name="系统",
+            notification_type=NotificationType.TASK_ASSIGNED,
+            title=title,
+            content=content,
+            data={"task_id": task_id, "project_name": project_name},
         )
 
     def send_task_completed_notification(
         self, db: Session, task_owner_id: int, task_name: str, project_name: str
     ):
         """发送任务完成通知（兼容方法）"""
-        unified_service = get_notification_service(db)
-        return unified_service.send_task_completed(
+        title = f"任务已完成：{task_name}"
+        content = f"任务「{task_name}」（项目：{project_name}）已完成"
+        return self.send_notification(
+            db=db,
             recipient_id=task_owner_id,
-            task_id=0,  # 兼容方法，task_id 可能不可用
-            task_name=task_name,
+            notification_type=NotificationType.TASK_COMPLETED,
+            title=title,
+            content=content,
         )
 
     def send_deadline_reminder(
@@ -213,12 +234,18 @@ class NotificationService:
         days_remaining: int,
     ):
         """发送截止日期提醒（兼容方法）"""
-        unified_service = get_notification_service(db)
-        return unified_service.send_deadline_reminder(
+        if days_remaining <= 1:
+            title = f"紧急：任务「{task_name}」即将到期"
+            content = f"紧急提醒：任务「{task_name}」将于 {due_date.strftime('%Y-%m-%d')} 到期，仅剩 {days_remaining} 天"
+        else:
+            title = f"提醒：任务「{task_name}」即将到期"
+            content = f"任务「{task_name}」将于 {due_date.strftime('%Y-%m-%d')} 到期，剩余 {days_remaining} 天"
+        return self.send_notification(
+            db=db,
             recipient_id=recipient_id,
-            deadline_type="task",
-            deadline_name=task_name,
-            deadline_date=due_date.strftime('%Y-%m-%d'),
+            notification_type=NotificationType.DEADLINE_REMINDER,
+            title=title,
+            content=content,
         )
 
 
@@ -266,37 +293,107 @@ class AlertNotificationService:
         return notification
 
     def send_alert_notification(
-        self, alert: "Alert", user: Optional["User"] = None
+        self,
+        alert: "Alert",
+        user: Optional["User"] = None,
+        user_ids: Optional[List[int]] = None,
+        channels: Optional[List[str]] = None,
+        force_send: bool = False,
     ) -> bool:
         """发送预警通知"""
         try:
             from app.models.alert import AlertRecord
-            
+
             # 确定接收者
-            recipient_id = None
-            if user:
-                recipient_id = user.id
+            recipients: List[int] = []
+            if user_ids:
+                recipients.extend([uid for uid in user_ids if uid])
+            elif user and getattr(user, "id", None):
+                recipients.append(user.id)
             elif isinstance(alert, AlertRecord):
-                recipient_id = alert.assignee_id
-            elif hasattr(alert, 'assignee_id'):
-                recipient_id = alert.assignee_id
-            
-            if not recipient_id:
+                if getattr(alert, "assignee_id", None):
+                    recipients.append(alert.assignee_id)
+                elif getattr(alert, "handler_id", None):
+                    recipients.append(alert.handler_id)
+            elif hasattr(alert, "assignee_id") and getattr(alert, "assignee_id", None):
+                recipients.append(alert.assignee_id)
+
+            if not recipients:
                 logger.warning("无法确定预警通知接收者")
                 return False
-            
+
             # 获取预警信息
-            alert_id = alert.id if hasattr(alert, 'id') else 0
-            alert_title = getattr(alert, 'alert_title', None) or getattr(alert, 'title', None) or "预警通知"
-            alert_level = getattr(alert, 'alert_level', None) or getattr(alert, 'severity', None) or "NORMAL"
-            
-            result = self.unified_service.send_alert(
-                recipient_id=recipient_id,
-                alert_id=alert_id,
-                alert_title=alert_title,
-                alert_level=alert_level,
+            alert_id = alert.id if hasattr(alert, "id") else 0
+            alert_title = (
+                getattr(alert, "alert_title", None)
+                or getattr(alert, "title", None)
+                or "预警通知"
             )
-            return result.get("success", False)
+            alert_content = (
+                getattr(alert, "alert_content", None)
+                or getattr(alert, "description", None)
+                or f"预警：{alert_title}"
+            )
+            alert_level = (
+                getattr(alert, "alert_level", None)
+                or getattr(alert, "severity", None)
+                or "NORMAL"
+            )
+
+            priority = NotificationPriority.NORMAL
+            level_upper = str(alert_level).upper() if alert_level else "NORMAL"
+            if level_upper in ["URGENT", "CRITICAL"]:
+                priority = NotificationPriority.URGENT
+            elif level_upper in ["WARNING", "WARN", "HIGH"]:
+                priority = NotificationPriority.HIGH
+
+            normalized_channels = None
+            if channels:
+                channel_mapping = {
+                    "SYSTEM": UnifiedNotificationChannel.SYSTEM,
+                    "WEB": UnifiedNotificationChannel.SYSTEM,
+                    "EMAIL": UnifiedNotificationChannel.EMAIL,
+                    "WECHAT": UnifiedNotificationChannel.WECHAT,
+                    "SMS": UnifiedNotificationChannel.SMS,
+                    "WEBHOOK": UnifiedNotificationChannel.WEBHOOK,
+                }
+                normalized_channels = []
+                for channel in channels:
+                    if not channel:
+                        continue
+                    mapped = channel_mapping.get(str(channel).upper())
+                    if mapped:
+                        normalized_channels.append(mapped)
+                if normalized_channels:
+                    normalized_channels = list(dict.fromkeys(normalized_channels))
+                else:
+                    normalized_channels = None
+
+            success = False
+            for recipient_id in recipients:
+                request = NotificationRequest(
+                    recipient_id=recipient_id,
+                    notification_type="ALERT_NOTIFICATION",
+                    category="alert",
+                    title=alert_title,
+                    content=alert_content,
+                    priority=priority,
+                    channels=normalized_channels,
+                    source_type="alert",
+                    source_id=alert_id,
+                    link_url=f"/alerts/{alert_id}" if alert_id else None,
+                    extra_data={
+                        "alert_no": getattr(alert, "alert_no", None),
+                        "alert_level": getattr(alert, "alert_level", None),
+                        "target_type": getattr(alert, "target_type", None),
+                        "target_name": getattr(alert, "target_name", None),
+                    },
+                    force_send=force_send,
+                )
+                result = self.unified_service.send_notification(request)
+                success = success or result.get("success", False)
+
+            return success
         except Exception as e:
             logger.error(f"发送预警通知失败: {e}")
             return False
@@ -311,7 +408,6 @@ class AlertNotificationService:
         """获取用户的通知列表"""
         from app.models.alert import AlertNotification
         from app.models.alert import AlertRecord
-        from sqlalchemy import and_
         
         try:
             query = self.db.query(AlertNotification).filter(

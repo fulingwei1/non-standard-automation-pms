@@ -19,6 +19,7 @@ from app.models.sales import Lead, OpenItem, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import OpenItemCreate, OpenItemResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -31,8 +32,7 @@ def list_open_items(
     source_id: Optional[int] = Query(None, description="来源ID"),
     status: Optional[str] = Query(None, description="状态"),
     blocks_quotation: Optional[bool] = Query(None, description="是否阻塞报价"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取未决事项列表"""
@@ -48,7 +48,7 @@ def list_open_items(
         query = query.filter(OpenItem.blocks_quotation == blocks_quotation)
 
     total = query.count()
-    items = query.order_by(desc(OpenItem.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(desc(OpenItem.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for item in items:
@@ -79,8 +79,8 @@ def list_open_items(
     return PaginatedResponse(
         items=result,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

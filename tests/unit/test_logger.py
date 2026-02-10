@@ -13,7 +13,7 @@ class TestGetLogLevel:
     def test_debug_level(self):
         """测试 DEBUG 级别"""
         os.environ["LOG_LEVEL"] = "DEBUG"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.DEBUG
@@ -21,7 +21,7 @@ class TestGetLogLevel:
     def test_info_level(self):
         """测试 INFO 级别"""
         os.environ["LOG_LEVEL"] = "INFO"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.INFO
@@ -29,7 +29,7 @@ class TestGetLogLevel:
     def test_warning_level(self):
         """测试 WARNING 级别"""
         os.environ["LOG_LEVEL"] = "WARNING"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.WARNING
@@ -37,7 +37,7 @@ class TestGetLogLevel:
     def test_error_level(self):
         """测试 ERROR 级别"""
         os.environ["LOG_LEVEL"] = "ERROR"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.ERROR
@@ -45,7 +45,7 @@ class TestGetLogLevel:
     def test_critical_level(self):
         """测试 CRITICAL 级别"""
         os.environ["LOG_LEVEL"] = "CRITICAL"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.CRITICAL
@@ -53,7 +53,7 @@ class TestGetLogLevel:
     def test_lowercase_level(self):
         """测试小写环境变量"""
         os.environ["LOG_LEVEL"] = "info"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.INFO
@@ -61,7 +61,7 @@ class TestGetLogLevel:
     def test_invalid_level_defaults_to_info(self):
         """测试无效级别默认为 INFO"""
         os.environ["LOG_LEVEL"] = "INVALID"
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
 
         level = _get_log_level()
         assert level == logging.INFO
@@ -70,7 +70,7 @@ class TestGetLogLevel:
         """测试没有环境变量时默认为 INFO"""
         if "LOG_LEVEL" in os.environ:
             del os.environ["LOG_LEVEL"]
-            from app.utils.logger import _get_log_level
+            from app.core.logging_config import _get_log_level
 
             level = _get_log_level()
             assert level == logging.INFO
@@ -81,14 +81,14 @@ class TestGetLogger:
 
     def test_get_logger_returns_logger(self):
         """测试返回 logger 对象"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
 
         logger = get_logger("test_module")
         assert isinstance(logger, logging.Logger)
 
     def test_get_logger_with_name(self):
         """测试指定 logger 名称"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
 
         logger1 = get_logger("module1")
         logger2 = get_logger("module2")
@@ -97,16 +97,16 @@ class TestGetLogger:
 
     def test_get_logger_without_name_uses_default(self):
         """测试不指定名称时使用模块默认名称"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
 
         logger = get_logger()
         # logger 应该使用调用模块的 __name__
         # 当在模块级别调用时，name 为 None，会使用调用模块的 __name__
-        assert logger.name == "app.utils.logger"
+        assert logger.name == "app"
 
     def test_get_logger_same_name_returns_same_instance(self):
         """测试相同名称返回相同实例（避免重复配置）"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
 
         logger1 = get_logger("test")
         logger2 = get_logger("test")
@@ -114,7 +114,7 @@ class TestGetLogger:
 
     def test_get_logger_has_handlers(self):
         """测试 logger 配置了 handlers"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
 
         logger = get_logger("test_handlers")
         assert len(logger.handlers) > 0
@@ -125,7 +125,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_with_context(self):
         """测试记录带上下文的错误"""
-        from app.utils.logger import log_error_with_context, get_logger
+        from app.core.logging_config import log_error_with_context, get_logger
 
         logger = get_logger("test")
 
@@ -142,7 +142,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_without_context(self):
         """测试记录不带上下文的错误"""
-        from app.utils.logger import log_error_with_context, get_logger
+        from app.core.logging_config import log_error_with_context, get_logger
 
         logger = get_logger("test")
 
@@ -156,7 +156,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_with_none_error(self):
         """测试错误为 None 时不抛出异常"""
-        from app.utils.logger import log_error_with_context, get_logger
+        from app.core.logging_config import log_error_with_context, get_logger
 
         logger = get_logger("test")
         log_error_with_context(logger, "Test message", None)
@@ -164,7 +164,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_sets_extra_fields(self):
         """测试设置 extra 字段"""
-        from app.utils.logger import log_error_with_context, get_logger
+        from app.core.logging_config import log_error_with_context, get_logger
 
         logger = get_logger("test")
 
@@ -185,7 +185,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_with_context(self):
         """测试记录带上下文的警告"""
-        from app.utils.logger import log_warning_with_context, get_logger
+        from app.core.logging_config import log_warning_with_context, get_logger
 
         logger = get_logger("test")
         context = {"user_id": 123, "item_id": 456}
@@ -194,7 +194,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_without_context(self):
         """测试记录不带上下文的警告"""
-        from app.utils.logger import log_warning_with_context, get_logger
+        from app.core.logging_config import log_warning_with_context, get_logger
 
         logger = get_logger("test")
         log_warning_with_context(logger, "Test warning")
@@ -202,7 +202,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_with_none_context(self):
         """测试上下文为 None 时不抛出异常"""
-        from app.utils.logger import log_warning_with_context, get_logger
+        from app.core.logging_config import log_warning_with_context, get_logger
 
         logger = get_logger("test")
         log_warning_with_context(logger, "Test warning", None)
@@ -214,7 +214,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_with_context(self):
         """测试记录带上下文的信息"""
-        from app.utils.logger import log_info_with_context, get_logger
+        from app.core.logging_config import log_info_with_context, get_logger
 
         logger = get_logger("test")
         context = {"user_id": 123, "item_id": 456}
@@ -223,7 +223,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_without_context(self):
         """测试记录不带上下文的信息"""
-        from app.utils.logger import log_info_with_context, get_logger
+        from app.core.logging_config import log_info_with_context, get_logger
 
         logger = get_logger("test")
         log_info_with_context(logger, "Test info")
@@ -231,7 +231,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_with_none_context(self):
         """测试上下文为 None 时不抛出异常"""
-        from app.utils.logger import log_info_with_context, get_logger
+        from app.core.logging_config import log_info_with_context, get_logger
 
         logger = get_logger("test")
         log_info_with_context(logger, "Test info", None)
@@ -243,7 +243,7 @@ class TestLogConstants:
 
     def test_log_format_exists(self):
         """测试 LOG_FORMAT 常量存在"""
-        from app.utils.logger import LOG_FORMAT
+        from app.core.logging_config import LOG_FORMAT
 
         assert isinstance(LOG_FORMAT, str)
         assert "%(asctime)s" in LOG_FORMAT
@@ -253,7 +253,7 @@ class TestLogConstants:
 
     def test_detailed_log_format_exists(self):
         """测试 DETAILED_LOG_FORMAT 常量存在"""
-        from app.utils.logger import DETAILED_LOG_FORMAT
+        from app.core.logging_config import DETAILED_LOG_FORMAT
 
         assert isinstance(DETAILED_LOG_FORMAT, str)
         assert "%(pathname)s" in DETAILED_LOG_FORMAT
@@ -261,7 +261,7 @@ class TestLogConstants:
 
     def test_log_level_map_exists(self):
         """测试 LOG_LEVEL_MAP 常量存在"""
-        from app.utils.logger import LOG_LEVEL_MAP
+        from app.core.logging_config import LOG_LEVEL_MAP
 
         assert isinstance(LOG_LEVEL_MAP, dict)
         assert "DEBUG" in LOG_LEVEL_MAP

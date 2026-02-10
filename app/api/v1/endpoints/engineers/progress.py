@@ -17,21 +17,14 @@ from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
 from app.services.progress_aggregation_service import aggregate_task_progress
-from app.services.task_progress_service import update_task_progress as update_task_progress_service
+from app.services.task_progress_service import (
+ progress_error_to_http,
+ update_task_progress as update_task_progress_service,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def _progress_error_to_http(exc: ValueError) -> HTTPException:
-    """将服务层 ValueError 映射为 HTTP 异常"""
-    msg = str(exc)
-    if "任务不存在" in msg:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
-    if "只能更新" in msg or "无权" in msg:
-        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
-    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.put("/tasks/{task_id}/progress", response_model=schemas.ProgressUpdateResponse)
@@ -57,7 +50,7 @@ def update_task_progress(
             run_aggregation=True,
         )
     except ValueError as e:
-        raise _progress_error_to_http(e)
+        raise progress_error_to_http(e)
 
     actual_hours_value = float(task.actual_hours) if task.actual_hours is not None else None
     return schemas.ProgressUpdateResponse(

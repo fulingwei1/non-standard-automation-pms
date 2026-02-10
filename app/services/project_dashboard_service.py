@@ -12,6 +12,22 @@ from sqlalchemy.orm import Session
 from app.models.progress import Task
 from app.models.project import Project, ProjectCost, ProjectMilestone, ProjectStatusLog
 
+# 可选模型导入（支持 mock patching）
+try:
+    from app.models.pmo import PmoProjectRisk
+except ImportError:
+    PmoProjectRisk = None
+
+try:
+    from app.models.issue import Issue
+except ImportError:
+    Issue = None
+
+try:
+    from app.models.pmo import PmoResourceAllocation
+except ImportError:
+    PmoResourceAllocation = None
+
 
 def build_basic_info(project: Project) -> Dict[str, Any]:
     """
@@ -50,7 +66,7 @@ def calculate_progress_stats(project: Project, today: date) -> Dict[str, Any]:
     if project.planned_start_date and project.planned_end_date:
         total_days = (project.planned_end_date - project.planned_start_date).days
         if total_days > 0:
-            elapsed_days = (today - project.planned_start_date).days
+            elapsed_days = (today - project.planned_start_date).days + 1
             plan_progress = min(100, max(0, (elapsed_days / total_days) * 100))
 
     # 计算进度偏差
@@ -78,7 +94,6 @@ def calculate_cost_stats(db: Session, project_id: int, budget_amount: float) -> 
         dict: 成本统计数据
     """
     # 使用聚合函数优化查询
-    from sqlalchemy import case, literal_column
 
     total_cost_result = (
         db.query(func.sum(ProjectCost.amount).label('total'))
@@ -232,10 +247,7 @@ def calculate_risk_stats(db: Session, project_id: int) -> Optional[Dict[str, Any
     Returns:
         Optional[dict]: 风险统计数据，如果模型不存在则返回None
     """
-    try:
-        from app.models.pmo import PmoProjectRisk
-    except ImportError:
-        # 模型未定义，返回 None
+    if PmoProjectRisk is None:
         return None
 
     try:
@@ -265,9 +277,7 @@ def calculate_issue_stats(db: Session, project_id: int) -> Optional[Dict[str, An
     Returns:
         Optional[dict]: 问题统计数据，如果模型不存在则返回None
     """
-    try:
-        from app.models.issue import Issue
-    except ImportError:
+    if Issue is None:
         return None
 
     try:
@@ -297,9 +307,7 @@ def calculate_resource_usage(db: Session, project_id: int) -> Optional[Dict[str,
     Returns:
         Optional[dict]: 资源使用数据，如果模型不存在则返回None
     """
-    try:
-        from app.models.pmo import PmoResourceAllocation
-    except ImportError:
+    if PmoResourceAllocation is None:
         return None
 
     try:
@@ -389,8 +397,8 @@ def calculate_key_metrics(
     key_metrics = {
         "health_score": 100 if project.health == "H1" else (75 if project.health == "H2" else (50 if project.health == "H3" else 25)),
         "progress_score": float(project.progress_pct or 0),
-        "schedule_score": 100 - abs(progress_deviation) if abs(progress_deviation) <= 20 else max(0, 100 - abs(progress_deviation) * 2),
-        "cost_score": 100 - abs(cost_variance_rate) if abs(cost_variance_rate) <= 10 else max(0, 100 - abs(cost_variance_rate) * 2),
+        "schedule_score": max(0, 100 - abs(progress_deviation)) if abs(progress_deviation) <= 5 else max(0, 100 - abs(progress_deviation) * 2),
+        "cost_score": max(0, 100 - abs(cost_variance_rate) * 2),
         "quality_score": (task_completed / task_total * 100) if task_total > 0 else 100,
     }
 

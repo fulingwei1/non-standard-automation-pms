@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
@@ -33,8 +33,7 @@ DOCUMENT_DATA_SCOPE_CONFIG = DataScopeConfig(
 @router.get("/")
 def read_documents(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
@@ -64,8 +63,7 @@ def read_documents(
         query = query.filter(ProjectDocument.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    documents = query.order_by(desc(ProjectDocument.created_at)).offset(offset).limit(page_size).all()
+    documents = query.order_by(desc(ProjectDocument.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     pages = (total + page_size - 1) // page_size
     
@@ -73,8 +71,8 @@ def read_documents(
     return paginated_response(
         items=documents,
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=pages,
         message="获取文档列表成功"
     )

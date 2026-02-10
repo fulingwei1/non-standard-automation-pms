@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.material import BomItem
 from app.models.project import Project
 from app.services.kit_rate import KitRateService
+from app.common.date_range import get_month_range
 
 
 def calculate_date_range(today: date) -> Tuple[date, date]:
@@ -20,12 +21,7 @@ def calculate_date_range(today: date) -> Tuple[date, date]:
     Returns:
         Tuple[date, date]: (开始日期, 结束日期)
     """
-    start_date = date(today.year, today.month, 1)
-
-    if today.month == 12:
-        end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range(today)
 
     return start_date, end_date
 

@@ -411,3 +411,71 @@ def get_strategy_map_data(db: Session, strategy_id: int) -> Optional[StrategyMap
         overall_health_score=overall_health,
         dimensions=dimensions,
     )
+
+
+class StrategyService:
+    """兼容包装类：测试中使用 StrategyService(db) 形式调用"""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create(self, data: StrategyCreate, created_by: int) -> Strategy:
+        return create_strategy(self.db, data, created_by)
+
+    def get(self, strategy_id: int) -> Optional[Strategy]:
+        return get_strategy(self.db, strategy_id)
+
+    def list(
+        self,
+        year: Optional[int] = None,
+        status: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 20,
+    ) -> tuple[List[Strategy], int]:
+        return list_strategies(self.db, year=year, status=status, skip=skip, limit=limit)
+
+    def update(self, strategy_id: int, data: StrategyUpdate) -> Optional[Strategy]:
+        return update_strategy(self.db, strategy_id, data)
+
+    def delete(self, strategy_id: int) -> bool:
+        return delete_strategy(self.db, strategy_id)
+
+    def get_detail(self, strategy_id: int) -> Optional[StrategyDetailResponse]:
+        return get_strategy_detail(self.db, strategy_id)
+
+    def get_metrics(self, strategy_id: int) -> dict:
+        """获取战略指标统计"""
+        detail = get_strategy_detail(self.db, strategy_id)
+        if not detail:
+            return {}
+        return {
+            "csf_count": detail.csf_count,
+            "kpi_count": detail.kpi_count,
+            "annual_work_count": detail.annual_work_count,
+            "health_score": detail.health_score,
+        }
+
+    # 兼容别名方法
+    def get_strategies(self, **kwargs):
+        # 将 page/page_size 转换为 skip/limit
+        if 'page' in kwargs or 'page_size' in kwargs:
+            page = kwargs.pop('page', 1)
+            page_size = kwargs.pop('page_size', 20)
+            kwargs['skip'] = (page - 1) * page_size
+            kwargs['limit'] = page_size
+        return self.list(**kwargs)
+
+    def get_strategy(self, strategy_id: int):
+        return self.get(strategy_id)
+
+    def create_strategy(self, data, created_by: int = 0):
+        return self.create(data, created_by)
+
+    def update_strategy(self, strategy_id: int, data):
+        return self.update(strategy_id, data)
+
+    def delete_strategy(self, strategy_id: int) -> bool:
+        return self.delete(strategy_id)
+
+    def get_strategy_metrics(self, strategy_id: int) -> dict:
+        return self.get_metrics(strategy_id)

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.date_range import get_month_range_by_ym
 from app.core import security
 from app.models.sales import Quote
 from app.models.user import User
@@ -216,11 +217,7 @@ def get_delivery_calendar(
         ResponseModel: 日历数据
     """
     # 计算月份的起止日期
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(year, month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range_by_ym(year, month)
 
     quotes = db.query(Quote).filter(
         Quote.delivery_date != None,

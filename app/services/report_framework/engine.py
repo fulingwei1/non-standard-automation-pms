@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.services.report_framework.cache_manager import CacheManager
+from app.services.report_framework.cache_manager import ReportCacheManager
 from app.services.report_framework.config_loader import ConfigLoader, ConfigError
 from app.services.report_framework.data_resolver import DataResolver
 from app.services.report_framework.expressions import ExpressionParser
@@ -51,7 +51,7 @@ class ReportEngine:
         self,
         db: Session,
         config_dir: str = "app/report_configs",
-        cache_manager: Optional[CacheManager] = None,
+        cache_manager: Optional[ReportCacheManager] = None,
     ):
         """
         初始化报告引擎
@@ -64,7 +64,7 @@ class ReportEngine:
         self.db = db
         self.config_loader = ConfigLoader(config_dir)
         self.data_resolver = DataResolver(db)
-        self.cache = cache_manager or CacheManager()
+        self.cache = cache_manager or ReportCacheManager()
         self.expression_parser = ExpressionParser()
 
         # 注册渲染器

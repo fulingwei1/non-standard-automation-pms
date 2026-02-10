@@ -20,6 +20,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import StageAdvanceRequest
 
 from ..utils import _serialize_project_status_log, check_gate_detailed
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -67,8 +68,7 @@ def get_project_status_history(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     change_type: Optional[str] = Query(None, description="变更类型筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -86,17 +86,16 @@ def get_project_status_history(
         query = query.filter(ProjectStatusLog.change_type == change_type)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    logs = query.order_by(desc(ProjectStatusLog.changed_at)).offset(offset).limit(page_size).all()
+    logs = query.order_by(desc(ProjectStatusLog.changed_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_serialize_project_status_log(log) for log in logs]
 
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

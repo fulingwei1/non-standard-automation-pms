@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""邮件通知处理器"""
+"""
+邮件通知处理器（完整 SMTP 实现）
+
+此模块包含完整的邮件发送实现，包括 SMTP 连接、HTML 模板和纯文本支持。
+统一渠道系统中的轻量级适配器在 channel_handlers/email_handler.py 中。
+"""
 
 import logging
 import smtplib
@@ -13,6 +18,10 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.user import User
+from app.services.notification_handlers.unified_adapter import (
+    NotificationChannel,
+    send_alert_via_unified,
+)
 
 if TYPE_CHECKING:
     from app.services.notification_dispatcher import NotificationDispatcher
@@ -45,69 +54,23 @@ class EmailNotificationHandler:
         """
         if not settings.EMAIL_ENABLED:
             raise ValueError("Email channel disabled")
-        recipient = notification.notify_target or (user.email if user else None)
-        if not recipient:
+        recipient = (
+            getattr(notification, "notify_target", None)
+            or getattr(notification, "notify_email", None)
+            or (user.email if user else None)
+        )
+        if not recipient and not getattr(notification, "notify_user_id", None):
             raise ValueError("Email channel requires recipient email")
-        if not all(
-            [
-                settings.EMAIL_SMTP_SERVER,
-                settings.EMAIL_USERNAME,
-                settings.EMAIL_PASSWORD,
-            ]
-        ):
-            raise ValueError("Email SMTP settings not configured")
 
-        # 根据预警级别选择颜色
-        from app.models.enums import AlertLevelEnum
-
-        level_colors = {
-            AlertLevelEnum.URGENT.value: "#dc2626",
-            AlertLevelEnum.CRITICAL.value: "#ea580c",
-            AlertLevelEnum.WARNING.value: "#f59e0b",
-            AlertLevelEnum.INFO.value: "#3b82f6",
-        }
-        level_color = level_colors.get(alert.alert_level, "#6b7280")
-
-        title = notification.notify_title or alert.alert_title
-        content = notification.notify_content or alert.alert_content
-
-        frontend_url = (
-            settings.CORS_ORIGINS[0]
-            if settings.CORS_ORIGINS
-            else "http://localhost:3000"
+        send_alert_via_unified(
+            db=self.db,
+            notification=notification,
+            alert=alert,
+            user=user,
+            channel=NotificationChannel.EMAIL,
+            target_field="email",
+            target_value=recipient,
         )
-        alert_url = f"{frontend_url}/alerts/{alert.id}"
-
-        template_path = (
-            Path(__file__).parent.parent.parent
-            / "templates"
-            / "email"
-            / "alert_notification.html"
-        )
-        if not template_path.exists():
-            html_content = self._build_simple_html(
-                alert, title, content, level_color, alert_url
-            )
-        else:
-            html_content = self._build_html_from_template(
-                alert, title, content, level_color, alert_url, template_path
-            )
-
-        msg = MIMEMultipart("alternative")
-        msg["From"] = settings.EMAIL_FROM or settings.EMAIL_USERNAME
-        msg["To"] = recipient
-        msg["Subject"] = f"[{alert.alert_level}] {title}"
-
-        text_content = self._build_plain_text(alert, title, content, alert_url)
-        msg.attach(MIMEText(text_content, "plain", "utf-8"))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-        with smtplib.SMTP(
-            settings.EMAIL_SMTP_SERVER, settings.EMAIL_SMTP_PORT
-        ) as server:
-            server.starttls()
-            server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
-            server.send_message(msg)
 
     def _build_simple_html(
         self,

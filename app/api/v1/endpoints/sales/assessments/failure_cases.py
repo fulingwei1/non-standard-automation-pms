@@ -17,6 +17,7 @@ from app.models.sales import FailureCase
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import FailureCaseCreate, FailureCaseResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -59,8 +60,7 @@ def list_failure_cases(
     db: Session = Depends(deps.get_db),
     industry: Optional[str] = Query(None, description="行业"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取失败案例列表"""
@@ -78,7 +78,7 @@ def list_failure_cases(
         )
 
     total = query.count()
-    cases = query.order_by(desc(FailureCase.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    cases = query.order_by(desc(FailureCase.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for case in cases:
@@ -95,8 +95,8 @@ def list_failure_cases(
     return PaginatedResponse(
         items=result,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

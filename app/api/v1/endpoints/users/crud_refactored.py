@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import paginated_response, success_response
 from app.models.organization import Employee
 from app.models.user import User
@@ -30,8 +31,7 @@ router = APIRouter()
 @router.get("/", status_code=status.HTTP_200_OK)
 def read_users(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（用户名/姓名/工号/邮箱）"),
     department: Optional[str] = Query(None, description="部门筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -43,15 +43,7 @@ def read_users(
 
         query = db.query(User)
 
-        if keyword:
-            query = query.filter(
-                or_(
-                    User.username.like(f"%{keyword}%"),
-                    User.real_name.like(f"%{keyword}%"),
-                    User.employee_no.like(f"%{keyword}%"),
-                    User.email.like(f"%{keyword}%"),
-                )
-            )
+        query = apply_keyword_filter(query, User, keyword, ["username", "real_name", "employee_no", "email"])
 
         if department:
             query = query.filter(User.department == department)
@@ -60,8 +52,7 @@ def read_users(
             query = query.filter(User.is_active == is_active)
 
         total = query.count()
-        offset = (page - 1) * page_size
-        users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
+        users = query.order_by(User.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
         # 批量查询所有用户的角色（避免N+1查询）
         user_ids = [u.id for u in users]
@@ -120,8 +111,8 @@ def read_users(
         return paginated_response(
             items=user_responses,
             total=total,
-            page=page,
-            page_size=page_size
+            page=pagination.page,
+            page_size=pagination.page_size
         )
     except Exception as e:
         logger.error(f"获取用户列表失败: {e}", exc_info=True)

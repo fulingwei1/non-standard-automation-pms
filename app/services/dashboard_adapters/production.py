@@ -8,6 +8,7 @@ from typing import List
 
 from sqlalchemy import case, func
 
+from app.common.date_range import month_start
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.schemas.dashboard import (
     DashboardStatCard,
@@ -36,7 +37,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
     def get_stats(self) -> List[DashboardStatCard]:
         """获取统计卡片"""
         today = date.today()
-        month_start = today.replace(day=1)
+        month_start_date = month_start(today)
 
         # 统计车间数量
         workshop_count = (
@@ -57,7 +58,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
                     "in_progress"
                 ),
             )
-            .filter(WorkOrder.created_at >= month_start)
+            .filter(WorkOrder.created_at >= month_start_date)
             .first()
         )
 
@@ -145,7 +146,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
     def get_detailed_data(self) -> DetailedDashboardResponse:
         """获取详细数据"""
         today = date.today()
-        month_start = today.replace(day=1)
+        month_start_date = month_start(today)
 
         # 统计数据（复用get_stats的逻辑）
         stats_cards = self.get_stats()

@@ -155,7 +155,7 @@ interface DashboardData {
 
 ```jsx
 import { BaseDashboard } from '../../components/dashboard';
-import { StatCard } from '../../components/ui/stat-card';
+import { DashboardStatCard } from '../../components/ui/card';
 import { api } from '../../services/api';
 
 export default function StatsDashboard() {
@@ -166,20 +166,20 @@ export default function StatsDashboard() {
       queryFn={() => api.getStats()}
       renderContent={(data) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="总数"
+          <DashboardStatCard
+            label="总数"
             value={data.overview?.total || 0}
           />
-          <StatCard
-            title="进行中"
+          <DashboardStatCard
+            label="进行中"
             value={data.overview?.active || 0}
           />
-          <StatCard
-            title="待处理"
+          <DashboardStatCard
+            label="待处理"
             value={data.overview?.pending || 0}
           />
-          <StatCard
-            title="已完成"
+          <DashboardStatCard
+            label="已完成"
             value={data.overview?.completed || 0}
           />
         </div>

@@ -15,7 +15,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.acceptance import (
     AcceptanceIssue,
     AcceptanceOrder,
@@ -54,8 +55,7 @@ ACCEPTANCE_DATA_SCOPE_CONFIG = DataScopeConfig(
 @router.get("/acceptance-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_acceptance_orders(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（验收单号）"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
@@ -73,8 +73,7 @@ def read_acceptance_orders(
         db, query, AcceptanceOrder, current_user, ACCEPTANCE_DATA_SCOPE_CONFIG
     )
 
-    if keyword:
-        query = query.filter(AcceptanceOrder.order_no.like(f"%{keyword}%"))
+    query = apply_keyword_filter(query, AcceptanceOrder, keyword, ["order_no"])
 
     if project_id:
         query = query.filter(AcceptanceOrder.project_id == project_id)
@@ -89,8 +88,7 @@ def read_acceptance_orders(
         query = query.filter(AcceptanceOrder.status == order_status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    orders = query.order_by(desc(AcceptanceOrder.created_at)).offset(offset).limit(page_size).all()
+    orders = query.order_by(desc(AcceptanceOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for order in orders:
@@ -120,13 +118,7 @@ def read_acceptance_orders(
             created_at=order.created_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/acceptance-orders/{order_id}", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)

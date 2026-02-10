@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,8 @@ from app.core import security
 from app.models.presale_expense import PresaleExpense
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.labor_cost_expense_service import LaborCostExpenseService
+from app.services.labor_cost_service import LaborCostExpenseService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -98,8 +99,7 @@ def get_lost_project_expenses(
     salesperson_id: Optional[int] = Query(None, description="销售人员ID"),
     department_id: Optional[int] = Query(None, description="部门ID"),
     project_id: Optional[int] = Query(None, description="项目ID"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -161,7 +161,6 @@ def get_lost_project_expenses(
 
     # 分页
     total = len(result['expenses'])
-    offset = (page - 1) * page_size
     paginated_expenses = result['expenses'][offset:offset + page_size]
 
     return ResponseModel(

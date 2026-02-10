@@ -4,18 +4,17 @@
 """
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.core.config import settings
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -23,8 +22,7 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse)
 def read_project_extensions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
     current_user: User = Depends(deps.get_current_active_user)
@@ -33,8 +31,8 @@ def read_project_extensions(
     # 简化实现
     return PaginatedResponse(
         total=0,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         items=[]
     )
 

@@ -7,24 +7,19 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Users,
   Target,
   Briefcase,
   BarChart3,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
   Activity,
-  Zap,
   CheckCircle2,
-  Clock,
   AlertTriangle } from
 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { Badge } from '../../components/ui';
 import { Progress } from '../../components/ui';
+import StatCard from "../common/StatCard";
 import { cn } from '../../lib/utils';
 import {
   DEFAULT_STATS,
@@ -161,25 +156,16 @@ export default function SalesDirectorStatsOverview({
   }];
 
 
-  // 渲染趋势指示器
-  const renderTrendIndicator = (trend, value) => {
-    if (trend === 'stable' || !value) {return null;}
-
-    const isPositive = trend === 'upward';
-    const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
-    const colorClass = isPositive ? 'text-green-400' : 'text-red-400';
-
-    return (
-      <div className={cn('flex items-center gap-1 text-sm', colorClass)}>
-        <Icon className="w-4 h-4" />
-        <span>{formatPercentage(value)}</span>
-      </div>);
-
-  };
-
   // 渲染统计卡片
   const renderStatCard = (stat, index) => {
-    const Icon = stat.icon;
+    const trendValue =
+      stat.trend && typeof stat.trend === "object"
+        ? stat.trend.trend === "upward"
+          ? stat.trend.value
+          : stat.trend.trend === "downward"
+            ? -stat.trend.value
+            : undefined
+        : undefined;
 
     return (
       <motion.div
@@ -188,44 +174,41 @@ export default function SalesDirectorStatsOverview({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.1 }}>
 
-        <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className={cn('p-3 rounded-lg', stat.bgColor)}>
-                  <Icon className={cn('w-6 h-6', stat.color)} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-400">{stat.title}</p>
-                  <p className="text-2xl font-bold text-slate-100">{stat.value}</p>
-                  {stat.subtitle &&
-                  <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
-                  }
-                </div>
-              </div>
-
-              {renderTrendIndicator(stat.trend, stat.trend?.value)}
-            </div>
-
-            {/* 进度条 */}
-            {stat.showProgress &&
+        <StatCard
+          title={stat.title}
+          value={stat.value}
+          subtitle={stat.subtitle}
+          icon={stat.icon}
+          color={stat.color}
+          iconColor={stat.color}
+          valueColor="text-slate-100"
+          bg={stat.bgColor}
+          trend={trendValue}
+          trendLabel=""
+          trendShowSign={false}
+          trendSuffix="%"
+          showDecoration={false}
+          cardClassName="h-full p-6"
+          iconWrapperClassName="bg-opacity-10"
+        >
+          {stat.showProgress && (
             <div className="space-y-2">
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>完成进度</span>
-                  <span>{formatPercentage(stat.progress || 0)}</span>
-                </div>
-                <Progress
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>完成进度</span>
+                <span>{formatPercentage(stat.progress || 0)}</span>
+              </div>
+              <Progress
                 value={stat.progress || 0}
-                className="h-2" />
+                className="h-2"
+              />
 
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>0</span>
-                  <span>{formatPercentage(100)}</span>
-                </div>
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>0</span>
+                <span>{formatPercentage(100)}</span>
+              </div>
             </div>
-            }
-          </CardContent>
-        </Card>
+          )}
+        </StatCard>
       </motion.div>);
 
   };

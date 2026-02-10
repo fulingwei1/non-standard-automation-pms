@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.date_range import get_month_range_by_ym
 from app.core.config import settings
 from app.models.organization import (
     Employee,
@@ -211,11 +212,7 @@ def get_transaction_statistics(
     if not month:
         month = now.month
 
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(year, month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range_by_ym(year, month)
 
     # 按类型统计本月事务
     type_stats = db.query(

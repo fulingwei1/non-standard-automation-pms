@@ -8,6 +8,10 @@ from sqlalchemy.orm import Session
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.notification import Notification
 from app.models.user import User
+from app.services.notification_handlers.unified_adapter import (
+    NotificationChannel,
+    send_alert_via_unified,
+)
 
 if TYPE_CHECKING:
     from app.services.notification_dispatcher import NotificationDispatcher
@@ -55,21 +59,10 @@ class SystemNotificationHandler:
         if existing:
             return
 
-        self.db.add(
-            Notification(
-                user_id=user_id,
-                notification_type="ALERT_NOTIFICATION",
-                title=notification.notify_title or alert.alert_title,
-                content=notification.notify_content or alert.alert_content,
-                source_type="alert",
-                source_id=alert.id,
-                link_url=f"/alerts/{alert.id}",
-                priority=alert.alert_level,
-                extra_data={
-                    "alert_no": alert.alert_no,
-                    "alert_level": alert.alert_level,
-                    "target_type": alert.target_type,
-                    "target_name": alert.target_name,
-                },
-            )
+        send_alert_via_unified(
+            db=self.db,
+            notification=notification,
+            alert=alert,
+            user=user,
+            channel=NotificationChannel.SYSTEM,
         )

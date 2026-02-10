@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-邮件通知处理器
+邮件通知处理器（统一渠道接口）
+
+EmailChannelHandler: 统一渠道系统的邮件处理器（ChannelHandler 接口）
+EmailNotificationHandler: 完整 SMTP 邮件处理器（预警通知系统使用）
+
+完整的 SMTP 邮件发送实现在 notification_handlers/email_handler.py 中。
 """
 
 from datetime import datetime
@@ -12,6 +17,11 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
+
+
+from app.services.notification_handlers.email_handler import EmailNotificationHandler
+
+__all__ = ["EmailChannelHandler", "EmailNotificationHandler"]
 
 
 class EmailChannelHandler(ChannelHandler):

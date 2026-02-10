@@ -17,6 +17,7 @@ from app.models.rd_project import RdProject
 from app.models.timesheet import Timesheet, TimesheetSummary
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
+from app.common.date_range import get_month_range_by_ym
 
 
 class TimesheetAggregationService:
@@ -115,11 +116,7 @@ class TimesheetAggregationService:
         Returns:
             HR报表数据列表
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         query = self.db.query(Timesheet).filter(
             Timesheet.status == 'APPROVED',
@@ -190,11 +187,7 @@ class TimesheetAggregationService:
         Returns:
             财务报表数据列表
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         query = self.db.query(Timesheet).filter(
             Timesheet.status == 'APPROVED',
@@ -261,11 +254,7 @@ class TimesheetAggregationService:
         Returns:
             研发报表数据列表
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         query = self.db.query(Timesheet).filter(
             Timesheet.status == 'APPROVED',

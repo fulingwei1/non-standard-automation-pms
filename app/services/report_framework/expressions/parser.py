@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover - 可选依赖
     TemplateSyntaxError = Exception
     UndefinedError = Exception
 
+from app.common.date_range import get_last_month_range, get_month_range, month_start, month_end
 from app.services.report_framework.expressions.filters import register_filters
 
 
@@ -234,27 +235,21 @@ class ExpressionParser:
     @staticmethod
     def _this_month_start() -> date:
         """本月第一天"""
-        today = date.today()
-        return today.replace(day=1)
+        return month_start(date.today())
 
     @staticmethod
     def _this_month_end() -> date:
         """本月最后一天"""
-        today = date.today()
-        if today.month == 12:
-            return today.replace(month=12, day=31)
-        return today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+        return month_end(date.today())
 
     @staticmethod
     def _last_month_start() -> date:
         """上月第一天"""
-        today = date.today()
-        if today.month == 1:
-            return today.replace(year=today.year - 1, month=12, day=1)
-        return today.replace(month=today.month - 1, day=1)
+        start, _ = get_last_month_range(date.today())
+        return start
 
     @staticmethod
     def _last_month_end() -> date:
         """上月最后一天"""
-        today = date.today()
-        return today.replace(day=1) - timedelta(days=1)
+        _, end = get_last_month_range(date.today())
+        return end

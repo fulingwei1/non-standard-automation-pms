@@ -4,6 +4,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
+import { formatDate } from "../../lib/formatters";
 import { fadeIn, scaleIn } from "../../lib/animations";
 import {
   FileText,
@@ -78,13 +79,6 @@ export default function ArticleCard({
   const priorityConfig = getPriorityConfig(priority);
   const statusConfig = getStatusConfig(status);
   const _typeConfig = articleTypeConfigs[type];
-
-  // 格式化日期
-  const formatDate = (date) => {
-    if (!date) {return "无日期";}
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
 
   // 计算阅读时间
   const calculatedReadTime = readTime || Math.ceil(content.length / 500);

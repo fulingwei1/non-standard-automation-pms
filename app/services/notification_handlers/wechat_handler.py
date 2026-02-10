@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-"""企业微信通知处理器"""
+"""
+企业微信通知处理器（完整 API/Webhook 实现）
+
+此模块包含完整的企业微信消息发送实现，包括 API 和 Webhook 双通道支持。
+使用 app.utils.wechat_client.WeChatClient 作为底层 API 客户端。
+
+相关模块:
+- channel_handlers/wechat_handler.py: 统一渠道系统的轻量级适配器
+- wechat_alert_service.py: 缺料预警专用的企业微信推送服务
+- utils/wechat_client.py: 底层 API 客户端
+"""
 
 import logging
 from typing import Optional, TYPE_CHECKING
@@ -16,6 +26,10 @@ from app.models.enums import AlertLevelEnum
 from app.models.organization import Employee
 from app.models.user import User
 from app.utils.wechat_client import WeChatClient
+from app.services.notification_handlers.unified_adapter import (
+    NotificationChannel,
+    send_alert_via_unified,
+)
 
 if TYPE_CHECKING:
     from app.services.notification_dispatcher import NotificationDispatcher
@@ -48,18 +62,22 @@ class WeChatNotificationHandler:
         """
         if not settings.WECHAT_ENABLED:
             raise ValueError("WeChat channel disabled")
+        target = (
+            getattr(notification, "notify_target", None)
+            or (user.wechat_userid if user else None)
+        )
+        if not target and not getattr(notification, "notify_user_id", None):
+            raise ValueError("WeChat channel requires recipient")
 
-        if not all(
-            [settings.WECHAT_CORP_ID, settings.WECHAT_AGENT_ID, settings.WECHAT_SECRET]
-        ):
-            webhook = settings.WECHAT_WEBHOOK_URL
-            if webhook:
-                self._send_via_webhook(notification, alert, webhook)
-                return
-            else:
-                raise ValueError("WeChat API or webhook not configured")
-
-        self._send_via_api(notification, alert, user)
+        send_alert_via_unified(
+            db=self.db,
+            notification=notification,
+            alert=alert,
+            user=user,
+            channel=NotificationChannel.WECHAT,
+            target_field="wechat_userid",
+            target_value=target,
+        )
 
     def _send_via_webhook(
         self,

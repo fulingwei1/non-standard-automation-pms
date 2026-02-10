@@ -17,6 +17,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.core import security
 from app.common.pagination import get_pagination_query, PaginationParams
 from app.models.presale import (
@@ -298,10 +299,7 @@ def get_template_stats(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取所有模板
     templates = db.query(PresaleSolutionTemplate).all()

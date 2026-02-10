@@ -9,8 +9,8 @@ Batch: 2
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from unittest.mock import patch
+from datetime import date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
@@ -248,7 +248,7 @@ class TestLaborCostCalculationService:
 
     def test_check_budget_alert_success(self, db_session, test_project, test_user):
         """测试检查预算预警 - 成功场景"""
-        with patch('app.services.labor_cost_calculation_service.CostAlertService') as mock_service:
+        with patch('app.services.cost_alert_service.CostAlertService') as mock_service:
             check_budget_alert(db_session, test_project.id, test_user.id)
             
             # 验证调用了预警服务
@@ -256,7 +256,7 @@ class TestLaborCostCalculationService:
 
     def test_check_budget_alert_exception(self, db_session, test_project, test_user):
         """测试检查预算预警 - 异常处理"""
-        with patch('app.services.labor_cost_calculation_service.CostAlertService') as mock_service:
+        with patch('app.services.cost_alert_service.CostAlertService') as mock_service:
             mock_service.check_budget_execution.side_effect = Exception("Test error")
             
             # 应该不抛出异常
@@ -264,7 +264,7 @@ class TestLaborCostCalculationService:
 
     def test_process_user_costs_new_cost(self, db_session, test_project, test_user):
         """测试处理用户成本 - 创建新成本"""
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_service:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             user_costs = {
@@ -302,7 +302,7 @@ class TestLaborCostCalculationService:
         db_session.add(existing_cost)
         db_session.commit()
         
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_service:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             user_costs = {

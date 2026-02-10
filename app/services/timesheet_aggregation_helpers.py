@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.timesheet import Timesheet, TimesheetSummary
+from app.common.date_range import get_month_range_by_ym
 
 
 def calculate_month_range(year: int, month: int) -> Tuple[date, date]:
@@ -19,11 +20,7 @@ def calculate_month_range(year: int, month: int) -> Tuple[date, date]:
     Returns:
         Tuple[date, date]: (开始日期, 结束日期)
     """
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(year, month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range_by_ym(year, month)
 
     return start_date, end_date
 

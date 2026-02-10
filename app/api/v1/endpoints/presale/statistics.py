@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.date_range import get_month_range
 from app.core.config import settings
 from app.models.presale import (
     PresaleSolution,
@@ -137,10 +138,7 @@ def get_workload_stats(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     query = db.query(PresaleWorkload).filter(
         PresaleWorkload.stat_date >= start_date,
@@ -207,10 +205,7 @@ def get_response_time_stats(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 统计接单响应时间（从申请到接单的时间差）
     tickets = db.query(PresaleSupportTicket).filter(
@@ -275,10 +270,7 @@ def get_conversion_stats(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 统计方案数量
     total_solutions = db.query(PresaleSolution).filter(
@@ -345,10 +337,7 @@ def get_performance_stats(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取人员列表
     query_users = db.query(User).filter(User.is_active == True)

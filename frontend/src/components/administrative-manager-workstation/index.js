@@ -1,4 +1,3 @@
-export { default as StatCard } from './StatCard';
 export { default as StatCardsGrid } from './StatCardsGrid';
 export { default as BudgetProgress } from './BudgetProgress';
 export { default as OfficeSuppliesStatus } from './OfficeSuppliesStatus';

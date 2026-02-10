@@ -16,21 +16,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.project import Project
-from app.models.enums import ProjectHealthEnum as ProjectHealth
-from app.models.enums import EcnStatusEnum, EcnTypeEnum
 from app.models.user import User
 from app.models.organization import Employee
-from app.models.material import Material, MaterialCategory, Supplier
-from app.models.purchase import PurchaseOrder
-from app.models.acceptance import (
-    AcceptanceOrder,
-    AcceptanceTemplate,
-)
-from app.models.ecn import (
-    Ecn,
-    EcnEvaluation,
-    EcnTask,
-)
 
 
 @pytest.mark.e2e
@@ -52,7 +39,7 @@ class TestProjectLifecycle:
 
         user = User(
             username="testuser",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -100,7 +87,7 @@ class TestProjectLifecycle:
 
         user = User(
             username="pmuser",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -158,7 +145,7 @@ class TestECNFlow:
 
         user = User(
             username="designer",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -216,7 +203,7 @@ class TestPurchaseToFATWorkflow:
 
         user = User(
             username="procurement",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )

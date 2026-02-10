@@ -2,7 +2,7 @@
 """
 统一报告框架单元测试
 
-覆盖核心组件: ConfigLoader, ExpressionParser, CacheManager, DataResolver, JsonRenderer, ReportEngine
+覆盖核心组件: ConfigLoader, ExpressionParser, ReportCacheManager, DataResolver, JsonRenderer, ReportEngine
 """
 
 import pytest
@@ -18,7 +18,7 @@ from app.services.report_framework.models import (
 )
 from app.services.report_framework.config_loader import ConfigLoader, ConfigError
 from app.services.report_framework.expressions import ExpressionParser
-from app.services.report_framework.cache_manager import CacheManager
+from app.services.report_framework.cache_manager import ReportCacheManager
 from app.services.report_framework.data_sources import QueryDataSource, DataSourceError
 from app.services.report_framework.renderers import JsonRenderer, ReportResult
 
@@ -152,12 +152,12 @@ class TestExpressionParser:
         assert result == "85.5%"
 
 
-class TestCacheManager:
+class TestReportCacheManager:
     """测试缓存管理器"""
 
     def test_memory_cache_set_get(self):
         """测试内存缓存设置和获取"""
-        cache = CacheManager()
+        cache = ReportCacheManager()
         config = ReportConfig(
         meta={"name": "Test", "code": "CACHE_TEST"},
         cache={"enabled": True, "ttl": 60}
@@ -168,7 +168,7 @@ class TestCacheManager:
 
     def test_cache_disabled(self):
         """测试缓存禁用"""
-        cache = CacheManager()
+        cache = ReportCacheManager()
         config = ReportConfig(
         meta={"name": "Test", "code": "NO_CACHE"},
         cache={"enabled": False}
@@ -179,7 +179,7 @@ class TestCacheManager:
 
     def test_cache_key_generation(self):
         """测试缓存键生成"""
-        cache = CacheManager()
+        cache = ReportCacheManager()
         config = ReportConfig(
         meta={"name": "Test", "code": "KEY_TEST"},
         cache={"enabled": True, "key_pattern": "report:{code}:{id}"}
@@ -189,7 +189,7 @@ class TestCacheManager:
 
     def test_cache_invalidate(self):
         """测试缓存失效"""
-        cache = CacheManager()
+        cache = ReportCacheManager()
         config = ReportConfig(
         meta={"name": "Test", "code": "INVALIDATE_TEST"},
         cache={"enabled": True, "ttl": 60}

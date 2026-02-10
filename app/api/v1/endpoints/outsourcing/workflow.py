@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.outsourcing import OutsourcingOrder
 from app.models.user import User
@@ -136,8 +137,7 @@ def submit_orders_for_approval(
 def get_pending_approval_tasks(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.require_permission("outsourcing:read")),
 ) -> Any:
     """
@@ -151,7 +151,6 @@ def get_pending_approval_tasks(
     )
 
     total = len(tasks)
-    offset = (page - 1) * page_size
     paginated_tasks = tasks[offset : offset + page_size]
 
     items = []
@@ -470,8 +469,7 @@ def withdraw_approval(
 def get_approval_history(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status_filter: Optional[str] = Query(None, description="状态筛选"),
     current_user: User = Depends(security.require_permission("outsourcing:read")),
 ) -> Any:
@@ -496,7 +494,6 @@ def get_approval_history(
         query = query.filter(ApprovalTask.status == status_filter)
 
     total = query.count()
-    offset = (page - 1) * page_size
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
         .offset(offset)

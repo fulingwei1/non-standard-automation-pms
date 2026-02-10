@@ -1,4 +1,3 @@
-export * from "./StatCard";
 export * from "./KeyStatisticsGrid";
 export * from "./TeamInsightsCard";
 export * from "./SalesFunnelCard";

@@ -16,7 +16,8 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from app.core.config import settings
+from app.core.config import settings  # noqa: F401
+from app.models.base import get_db_session  # noqa: F401
 from app.utils.scheduler_config import SCHEDULER_TASKS
 from app.utils.scheduler_metrics import (
     record_job_failure,

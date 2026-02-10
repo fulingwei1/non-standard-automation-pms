@@ -46,6 +46,10 @@ from .resource_plan import (
 # 风险历史
 from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 
+# 枚举兼容导出
+from app.models.enums.project import ProjectHealthEnum as ProjectHealth  # noqa: F401
+from app.models.enums.project import ProjectHealthEnum  # noqa: F401
+
 __all__ = [
     # 客户相关
     "Customer",
@@ -82,4 +86,7 @@ __all__ = [
     # 风险历史
     "ProjectRiskHistory",
     "ProjectRiskSnapshot",
+    # 枚举兼容
+    "ProjectHealth",
+    "ProjectHealthEnum",
 ]

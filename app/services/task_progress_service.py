@@ -12,9 +12,24 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.task_center import TaskUnified
+
+
+def progress_error_to_http(exc: ValueError) -> HTTPException:
+    """将服务层 ValueError 映射为 HTTP 异常
+
+    供 engineers/progress 与 task_center/update 共用，
+    避免两处重复实现相同的错误映射逻辑。
+    """
+    msg = str(exc)
+    if "任务不存在" in msg:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+    if "只能更新" in msg or "无权" in msg:
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 def apply_task_progress_update(
@@ -76,16 +91,16 @@ def update_task_progress(
     Args:
         db: 数据库会话
         task_id: 任务 ID
-        progress: 进度百分比 0–100
-        updater_id: 更新人用户 ID（用于权限与日志）
+        progress: 进度百分比 0-100
+        updater_id: 更新人用户 ID
         actual_hours: 实际工时，可选
-        progress_note: 进度说明，可选；当 create_progress_log 为 True 时会写入进度日志
-        reject_completed: 若 True，任务状态为 COMPLETED/REJECTED/CANCELLED 时抛出 ValueError
-        create_progress_log: 若 True 且 progress_note 有值，则调用 create_progress_log 写进度日志
-        run_aggregation: 若 True，则调用 aggregate_task_progress 聚合到项目/阶段
+        progress_note: 进度说明，可选
+        reject_completed: 若 True，已完成任务抛出 ValueError
+        create_progress_log: 若 True 且 progress_note 有值，写入进度日志
+        run_aggregation: 若 True，聚合到项目/阶段
 
     Returns:
-        (更新后的 TaskUnified, 聚合结果 dict；未聚合时 dict 为空)
+        (更新后的 TaskUnified, 聚合结果 dict)
 
     Raises:
         ValueError: 任务不存在、无权限、状态不可更新、进度非法

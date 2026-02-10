@@ -14,12 +14,14 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.date_range import get_month_range
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
@@ -74,8 +76,7 @@ router = APIRouter(
 @router.get("/tenders", response_model=PaginatedResponse)
 def read_tenders(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（招标编号/项目名称）"),
     result: Optional[str] = Query(None, description="结果筛选"),
     customer_name: Optional[str] = Query(None, description="招标单位筛选"),
@@ -86,13 +87,7 @@ def read_tenders(
     """
     query = db.query(PresaleTenderRecord)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                PresaleTenderRecord.tender_no.like(f"%{keyword}%"),
-                PresaleTenderRecord.tender_name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, PresaleTenderRecord, keyword, ["tender_no", "tender_name"])
 
     if result:
         query = query.filter(PresaleTenderRecord.result == result)
@@ -101,8 +96,7 @@ def read_tenders(
         query = query.filter(PresaleTenderRecord.customer_name.like(f"%{customer_name}%"))
 
     total = query.count()
-    offset = (page - 1) * page_size
-    tenders = query.order_by(desc(PresaleTenderRecord.created_at)).offset(offset).limit(page_size).all()
+    tenders = query.order_by(desc(PresaleTenderRecord.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for tender in tenders:
@@ -128,13 +122,7 @@ def read_tenders(
             updated_at=tender.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/tenders", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
@@ -298,10 +286,7 @@ def get_tender_analysis(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取时间段内的投标记录
     tenders = db.query(PresaleTenderRecord).filter(

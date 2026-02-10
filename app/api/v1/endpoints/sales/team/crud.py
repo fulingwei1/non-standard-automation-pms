@@ -14,6 +14,7 @@ from app.models.sales import SalesTeam, SalesTeamMember
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import SalesTeamCreate, SalesTeamUpdate
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import build_team_response
 
@@ -28,8 +29,7 @@ def list_sales_teams(
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     keyword: Optional[str] = Query(None, description="团队名称/编码关键字"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取销售团队列表"""
@@ -48,7 +48,7 @@ def list_sales_teams(
         )
 
     total = query.count()
-    teams = query.order_by(SalesTeam.sort_order, SalesTeam.id).offset((page - 1) * page_size).limit(page_size).all()
+    teams = query.order_by(SalesTeam.sort_order, SalesTeam.id).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for team in teams:
@@ -79,8 +79,8 @@ def list_sales_teams(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
         }
     )
 

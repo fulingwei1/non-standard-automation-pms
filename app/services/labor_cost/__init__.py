@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 人工成本计算模块
+
+工具函数从 labor_cost.utils 导入。
+LaborCostExpenseService 和 PresaleExpense 从 labor_cost_service 导入。
 """
 
 from app.services.labor_cost.utils import (
@@ -11,6 +14,12 @@ from app.services.labor_cost.utils import (
     update_existing_cost,
     create_new_cost,
     check_budget_alert,
+    process_user_costs,
+    LaborCostCalculationService,
+)
+from app.services.labor_cost_service import ( # noqa: F401
+    LaborCostExpenseService,
+    PresaleExpense,
 )
 
 __all__ = [
@@ -21,4 +30,8 @@ __all__ = [
     "update_existing_cost",
     "create_new_cost",
     "check_budget_alert",
+    "process_user_costs",
+    "LaborCostCalculationService",
+    "LaborCostExpenseService",
+    "PresaleExpense",
 ]

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-缓存管理器
+报表缓存管理器
 
-支持内存缓存和 Redis 缓存
+支持内存缓存和 Redis 缓存。
+专用于报表框架的缓存管理。
 """
 
 import hashlib
@@ -202,7 +203,7 @@ class RedisCacheBackend(CacheBackend):
             pass
 
 
-class CacheManager:
+class ReportCacheManager:
     """
     缓存管理器
 
@@ -211,7 +212,7 @@ class CacheManager:
 
     def __init__(self, backend: Optional[CacheBackend] = None):
         """
-        初始化缓存管理器
+        初始化报表缓存管理器
 
         Args:
             backend: 缓存后端，默认使用内存缓存
@@ -288,3 +289,8 @@ class CacheManager:
         ).hexdigest()[:8]
 
         return f"report:{config.meta.code}:{params_hash}"
+
+
+# 向后兼容别名，保留 CacheManager 名称以减少破坏性变更
+# DEPRECATED: 请使用 ReportCacheManager，CacheManager 别名仅用于向后兼容
+CacheManager = ReportCacheManager

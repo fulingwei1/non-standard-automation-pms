@@ -5,10 +5,11 @@
  */
 
 import { BaseDashboard } from './BaseDashboard';
-import { StatCard } from '../ui/stat-card';
+import { DashboardStatCard } from '../ui/card';
 import { LineChart } from '../ui/charts';
 import { DataTable } from '../ui/data-table';
 import { api } from '../../services/api';
+import { Activity, BarChart3, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
 
 // ========== 示例1：简单统计Dashboard ==========
 
@@ -21,25 +22,25 @@ export function SimpleStatsDashboard() {
       queryFn={() => api.getStats()}
       renderContent={(data) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="总数"
+          <DashboardStatCard
+            label="总数"
             value={data.overview?.total || 0}
-            icon="📊"
+            icon={BarChart3}
           />
-          <StatCard
-            title="进行中"
+          <DashboardStatCard
+            label="进行中"
             value={data.overview?.active || 0}
-            icon="🔄"
+            icon={RefreshCw}
           />
-          <StatCard
-            title="待处理"
+          <DashboardStatCard
+            label="待处理"
             value={data.overview?.pending || 0}
-            icon="⏳"
+            icon={Clock}
           />
-          <StatCard
-            title="已完成"
+          <DashboardStatCard
+            label="已完成"
             value={data.overview?.completed || 0}
-            icon="✅"
+            icon={CheckCircle2}
           />
         </div>
       )}
@@ -62,10 +63,11 @@ export function AnalyticsDashboard() {
           {/* 统计卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {Object.entries(data.overview || {}).map(([key, value]) => (
-              <StatCard
+              <DashboardStatCard
                 key={key}
-                title={key}
+                label={key}
                 value={value}
+                icon={Activity}
               />
             ))}
           </div>
@@ -100,21 +102,25 @@ export function ListDashboard() {
         <div className="space-y-6">
           {/* 统计卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StatCard
-              title="总项目数"
+            <DashboardStatCard
+              label="总项目数"
               value={data.overview?.total || 0}
+              icon={BarChart3}
             />
-            <StatCard
-              title="进行中"
+            <DashboardStatCard
+              label="进行中"
               value={data.overview?.active || 0}
+              icon={RefreshCw}
             />
-            <StatCard
-              title="待处理"
+            <DashboardStatCard
+              label="待处理"
               value={data.overview?.pending || 0}
+              icon={Clock}
             />
-            <StatCard
-              title="已完成"
+            <DashboardStatCard
+              label="已完成"
               value={data.overview?.completed || 0}
+              icon={CheckCircle2}
             />
           </div>
 

@@ -20,6 +20,7 @@ from app.schemas.approval.instance import (
     ApprovalTaskBrief,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -82,8 +83,7 @@ def save_draft(
 
 @router.get("", response_model=ApprovalInstanceListResponse)
 def list_instances(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = None,
     template_id: Optional[int] = None,
     entity_type: Optional[str] = None,
@@ -111,15 +111,15 @@ def list_instances(
     total = query.count()
     items = (
         query.order_by(ApprovalInstance.id.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
     return ApprovalInstanceListResponse(
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         items=[ApprovalInstanceResponse.model_validate(i) for i in items],
     )
 
@@ -250,8 +250,7 @@ def terminate_instance(
 def get_instances_by_entity(
     entity_type: str,
     entity_id: int,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """根据业务实体获取审批实例列表"""
@@ -263,14 +262,14 @@ def get_instances_by_entity(
     total = query.count()
     items = (
         query.order_by(ApprovalInstance.id.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
     return ApprovalInstanceListResponse(
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         items=[ApprovalInstanceResponse.model_validate(i) for i in items],
     )

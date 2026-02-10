@@ -8,7 +8,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
-  StatCard,
+  DashboardStatCard,
   Progress,
   Badge,
   SkeletonCard,
@@ -224,7 +224,7 @@ export default function PMODashboard() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       >
         {statCards.map((stat, i) => (
-          <StatCard key={i} {...stat} />
+          <DashboardStatCard key={i} {...stat} />
         ))}
       </motion.div>
 

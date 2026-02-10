@@ -139,7 +139,7 @@ catch (error) {
 ### 标准模式
 
 ```python
-from app.utils.logger import get_logger
+from app.core.logging_config import get_logger
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -188,7 +188,7 @@ async def get_item(
 ### 服务层错误处理
 
 ```python
-from app.utils.logger import get_logger
+from app.core.logging_config import get_logger
 from typing import Optional
 
 logger = get_logger(__name__)

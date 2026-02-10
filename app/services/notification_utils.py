@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""通知工具函数"""
+"""
+通知工具函数
+
+提供通知系统的辅助函数：渠道解析、接收者解析、免打扰判断等。
+
+通知系统架构：
+- app.services.unified_notification_service: 主通知服务，提供 NotificationService 和 get_notification_service()
+- app.services.notification_service: 兼容层，re-export 统一服务并提供旧接口的枚举和 AlertNotificationService
+- app.services.notification_dispatcher: 预警通知调度协调器，内部使用统一服务
+- app.services.notification_queue: Redis 通知队列（异步分发）
+- app.services.notification_utils (本模块): 通知工具函数（渠道解析、接收者解析、免打扰判断等）
+- app.services.channel_handlers/: 渠道处理器（System/Email/WeChat/SMS/Webhook）
+"""
 
 from datetime import datetime, time, timedelta
 from typing import Dict, Optional

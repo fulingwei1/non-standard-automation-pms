@@ -12,6 +12,10 @@ from app.core.config import settings
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.enums import AlertLevelEnum
 from app.models.user import User
+from app.services.notification_handlers.unified_adapter import (
+    NotificationChannel,
+    send_alert_via_unified,
+)
 
 if TYPE_CHECKING:
     from app.services.notification_dispatcher import NotificationDispatcher
@@ -52,7 +56,7 @@ class SMSNotificationHandler:
             raise ValueError("SMS channel disabled")
 
         recipient = notification.notify_target or (user.phone if user else None)
-        if not recipient:
+        if not recipient and not getattr(notification, "notify_user_id", None):
             raise ValueError("SMS channel requires recipient phone number")
 
         today = date.today().isoformat()
@@ -78,12 +82,15 @@ class SMSNotificationHandler:
         if len(sms_content) > 70:
             sms_content = f"【预警】{title[:20]} {alert_url}"
 
-        if settings.SMS_PROVIDER == "aliyun":
-            self._send_aliyun(recipient, sms_content)
-        elif settings.SMS_PROVIDER == "tencent":
-            self._send_tencent(recipient, sms_content)
-        else:
-            raise ValueError(f"Unsupported SMS provider: {settings.SMS_PROVIDER}")
+        send_alert_via_unified(
+            db=self.db,
+            notification=notification,
+            alert=alert,
+            user=user,
+            channel=NotificationChannel.SMS,
+            target_field="phone",
+            target_value=recipient,
+        )
 
         self._sms_count["today"][today] = daily_count + 1
         self._sms_count["hour"][current_hour] = hourly_count + 1

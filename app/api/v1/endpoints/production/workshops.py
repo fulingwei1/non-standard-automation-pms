@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -30,8 +30,7 @@ router = APIRouter()
 @router.get("/workshops", response_model=PaginatedResponse)
 def read_workshops(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     workshop_type: Optional[str] = Query(None, description="车间类型筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -48,8 +47,7 @@ def read_workshops(
         query = query.filter(Workshop.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    workshops = query.order_by(Workshop.created_at).offset(offset).limit(page_size).all()
+    workshops = query.order_by(Workshop.created_at).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for workshop in workshops:
@@ -73,13 +71,7 @@ def read_workshops(
             updated_at=workshop.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/workshops", response_model=WorkshopResponse)

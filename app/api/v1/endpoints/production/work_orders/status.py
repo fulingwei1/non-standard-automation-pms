@@ -15,6 +15,7 @@ from app.core import security
 from app.models.production import WorkOrder, Workstation
 from app.models.user import User
 from app.schemas.production import WorkOrderResponse
+from app.services.status_update_service import StatusUpdateService
 
 from fastapi import APIRouter
 

@@ -23,8 +23,6 @@ import {
   getProgressColor,
   canEditOrder,
   canDeleteOrder,
-  canSubmitOrder,
-  canApproveOrder,
 } from "./purchaseOrderConstants";
 
 export default function OrderCard({
@@ -35,18 +33,21 @@ export default function OrderCard({
   onSubmit,
   onApprove,
 }) {
-  const status = ORDER_STATUS[order.status] || ORDER_STATUS.draft;
-  const urgency = ORDER_URGENCY[order.urgency] || ORDER_URGENCY.normal;
+  const statusKey = (order.status || "").toString().toLowerCase();
+  const urgencyKey = (order.urgency || "").toString().toLowerCase();
+  const status = ORDER_STATUS[statusKey] || ORDER_STATUS.draft;
+  const urgency = ORDER_URGENCY[urgencyKey] || ORDER_URGENCY.normal;
   const StatusIcon = status.icon;
+  const expectedDate = order.expected_date || order.expectedDate;
 
   // 计算进度
   const progress = calculateProgress(order.receivedCount, order.itemCount);
-  const progressColor = getProgressColor(order.status, progress);
+  const progressColor = getProgressColor(statusKey, progress);
 
   // 判断是否延期
-  const isOrderDelayed = order.status === "delayed" ||
-    (order.expected_date && new Date(order.expected_date) < new Date() &&
-     !["completed", "cancelled"].includes(order.status));
+  const isOrderDelayed = statusKey === "delayed" ||
+    (expectedDate && new Date(expectedDate) < new Date() &&
+     !["completed", "cancelled"].includes(statusKey));
 
   return (
     <motion.div
@@ -116,7 +117,7 @@ export default function OrderCard({
               isOrderDelayed ? "text-red-400" : "text-white",
             )}
           >
-            {order.delayedDate || formatOrderDate(order.expected_date)}
+            {order.delayedDate || formatOrderDate(expectedDate)}
           </p>
         </div>
       </div>
@@ -145,7 +146,7 @@ export default function OrderCard({
             <Eye className="w-3.5 h-3.5" />
           </Button>
 
-          {canEditOrder(order.status) && onEdit && (
+          {canEditOrder(statusKey) && onEdit && (
             <Button
               variant="ghost"
               size="sm"
@@ -157,7 +158,7 @@ export default function OrderCard({
             </Button>
           )}
 
-          {canDeleteOrder(order.status) && onDelete && (
+          {canDeleteOrder(statusKey) && onDelete && (
             <Button
               variant="ghost"
               size="sm"
@@ -169,7 +170,7 @@ export default function OrderCard({
             </Button>
           )}
 
-          {canSubmitOrder(order.status) && onSubmit && (
+          {["pending", "partial_received"].includes(statusKey) && onSubmit && (
             <Button
               variant="ghost"
               size="sm"
@@ -181,7 +182,7 @@ export default function OrderCard({
             </Button>
           )}
 
-          {canApproveOrder(order.status) && onApprove && (
+          {["pending", "partial_received"].includes(statusKey) && onApprove && (
             <Button
               variant="ghost"
               size="sm"

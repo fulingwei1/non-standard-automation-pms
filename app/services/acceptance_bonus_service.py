@@ -4,11 +4,10 @@
 """
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.acceptance import AcceptanceOrder
 from app.models.bonus import BonusRule, TeamBonusAllocation
 from app.models.enums import TeamBonusAllocationMethodEnum
 from app.models.presale import PresaleSupportTicket
@@ -46,7 +45,7 @@ def calculate_sales_bonus(
     """
     try:
         contract = db.query(Contract).filter(
-            Contract.contract_no == project.contract_no
+           Contract.contract_code == project.contract_no
         ).first()
 
         if not contract:

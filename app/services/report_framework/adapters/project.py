@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.date_range import month_start
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 from app.services.report_framework.generators import ProjectReportGenerator
@@ -65,7 +66,7 @@ class ProjectReportAdapter(BaseReportAdapter):
 
         if not start_date:
             if self.report_type == "monthly":
-                start_date = end_date.replace(day=1)
+                start_date = month_start(end_date)
             else:
                 start_date = end_date - timedelta(days=6)
         elif isinstance(start_date, str):

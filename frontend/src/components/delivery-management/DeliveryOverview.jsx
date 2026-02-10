@@ -19,7 +19,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
 const countBy = (items, predicate) => items.reduce((acc, item) => acc + (predicate(item) ? 1 : 0), 0);
 
 const DeliveryOverview = ({ data, loading }) => {
-  const deliveries = data?.deliveries || [];
+  const deliveries = Array.isArray(data) ? data : data?.deliveries || [];
 
   const total = deliveries.length;
   const preparingCount = countBy(deliveries, (d) => d.status === DELIVERY_STATUS.PREPARING.value);
@@ -129,4 +129,3 @@ const DeliveryOverview = ({ data, loading }) => {
 };
 
 export default DeliveryOverview;
-

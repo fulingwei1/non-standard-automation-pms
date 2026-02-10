@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Tests for resource_planning_service service
-Covers: app/services/resource_planning_service.py
+Tests for ResourcePlanningService
+Covers: app/services/resource_plan_service.py (ResourcePlanningService)
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
-File Size: 93 lines
 Batch: 3
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 from sqlalchemy.orm import Session
-from app.services.resource_planning_service import ResourcePlanningService
+from app.services.resource_plan_service import ResourcePlanningService
 
 
 

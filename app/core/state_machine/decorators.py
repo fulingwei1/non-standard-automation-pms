@@ -59,7 +59,21 @@ def transition(
         @wraps(method)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if args and hasattr(args[0], "_transitions"):
-                args = args[1:]
+                sm_instance = args[0]
+                # transition_to 调用 bound method 时传入 (self, from_state, to_state)
+                # 由于是 bound method，wrapper 实际收到 (self_bound, self_explicit, from_state, to_state)
+                # 即 len(args) >= 4；此时去掉多余的 self，调用原方法
+                if len(args) >= 4:
+                    # args = (self_bound, self_explicit, from_state, to_state)
+                    # 调用原方法: method(self, from_state, to_state, **kwargs)
+                    return method(args[0], args[2], args[3], **kwargs)
+                if len(args) >= 3:
+                    # 兼容非 bound method 调用: (self, from_state, to_state)
+                    return method(*args, **kwargs)
+                # 当通过实例直接调用（如 sm.approve()）时，
+                # 只有 args[0]=self，委托给 transition_to
+                target = wrapper._to_state
+                return sm_instance.transition_to(target, **kwargs)
             return method(*args, **kwargs)
 
         wrapper._is_transition = True

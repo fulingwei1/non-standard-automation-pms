@@ -25,7 +25,7 @@ from sqlalchemy import (
 
 FK = ForeignKey  # 别名，简化代码
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 # 创建基类
 Base = declarative_base()
@@ -313,13 +313,23 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
 
     # SQLite特殊配置
     if url.startswith("sqlite"):
-        _engine = create_engine(
-            url,
-            echo=echo,
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-            pool_pre_ping=True,  # 在使用连接前检查连接是否有效
-        )
+        if ":memory:" in url or "mode=memory" in url:
+            # 内存数据库必须用 StaticPool，确保所有连接共享同一个数据库实例
+            # NullPool + :memory: 会导致每次连接都创建新的空数据库，表会丢失
+            _engine = create_engine(
+                url,
+                echo=echo,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool,
+            )
+        else:
+            _engine = create_engine(
+                url,
+                echo=echo,
+                connect_args={"check_same_thread": False},
+                poolclass=NullPool,
+                pool_pre_ping=True,  # 在使用连接前检查连接是否有效
+            )
 
         # SQLite启用外键约束
         @event.listens_for(_engine, "connect")
@@ -328,6 +338,7 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
             cursor.execute("PRAGMA foreign_keys=ON")
             # 使用 WAL 模式，更好的并发性能和权限兼容性
             cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=5000")
             # 设置临时文件目录为数据库所在目录，避免 macOS 权限问题
             cursor.execute("PRAGMA temp_store_directory = ''")  # 空字符串表示使用默认位置
             cursor.execute("PRAGMA temp_store = MEMORY")  # 使用内存存储临时数据

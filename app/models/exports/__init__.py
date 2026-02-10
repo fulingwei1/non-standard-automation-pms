@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-模型导出聚合
+模型导出包
 
-注意：此文件已不再使用，所有模型导出已迁移到 complete.py
-保留此文件以避免破坏现有代码的导入路径
+所有模型导出已迁移到 exports/complete/ 子目录。
+此包作为保留路径，不直接导出任何模型。
+
+使用方式:
+ - 推荐: from app.models import Project, Material, User
+ - 按域: from app.models.exports.complete.project_related import Project
 """
-
-# 不再导入其他模块，避免循环导入和模型不匹配问题
-# 所有模型导出请使用 complete.py 或直接从 app.models 导入
 
 __all__ = []

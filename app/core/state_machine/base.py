@@ -83,6 +83,15 @@ class StateMachine:
         """
         from_state = self.current_state
 
+        # 支持枚举类型
+        from enum import Enum as _Enum
+        if isinstance(target_state, _Enum):
+            target_state = target_state.value
+        else:
+            target_state = str(target_state)
+            if "." in target_state:
+                target_state = target_state.rsplit(".", 1)[-1]
+
         if from_state == target_state:
             return False, "已经是目标状态"
 
@@ -131,7 +140,15 @@ class StateMachine:
             PermissionDeniedError: 权限不足
         """
         from_state = self.current_state
-        target_state = str(target_state)
+        # 支持枚举类型作为 target_state 参数
+        from enum import Enum as _Enum
+        if isinstance(target_state, _Enum):
+            target_state = target_state.value
+        else:
+            target_state = str(target_state)
+            # 处理 str(SomeEnum.VALUE) 产生的 "SomeEnum.VALUE" 格式
+            if "." in target_state:
+                target_state = target_state.rsplit(".", 1)[-1]
         to_state = target_state
 
         # 1. 获取转换函数和元数据

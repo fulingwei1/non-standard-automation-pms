@@ -28,6 +28,7 @@ from app.schemas.issue import (
 )
 from app.services.data_scope import DataScopeService
 from app.services.issue_cost_service import IssueCostService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -325,8 +326,7 @@ def get_issue_cause_analysis(
 def get_issue_statistics_snapshots(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取问题统计快照列表"""
     query = db.query(IssueStatisticsSnapshot)
@@ -337,8 +337,8 @@ def get_issue_statistics_snapshots(
             desc(IssueStatisticsSnapshot.snapshot_date),
             desc(IssueStatisticsSnapshot.id),
         )
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -410,11 +410,11 @@ def get_issue_statistics_snapshots(
         )
         items.append(item)
 
-    pages = (total + page_size - 1) // page_size if page_size else 0
+    pages = pagination.pages_for_total(total)
     return IssueStatisticsSnapshotListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=pages,
     )

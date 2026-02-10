@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.date_range import month_start
 from app.models.organization import Department
 from app.models.project import Project
 from app.models.timesheet import Timesheet
@@ -151,7 +152,7 @@ class AnalysisReportMixin:
             报表数据
         """
         if not start_date:
-            start_date = date.today().replace(day=1)  # 本月初
+            start_date = month_start(date.today()) # 本月初
         if not end_date:
             end_date = date.today()
 

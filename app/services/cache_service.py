@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-项目数据缓存服务
+项目数据缓存服务（通用缓存层）
+
+提供 Redis + 内存降级的通用缓存服务。当 Redis 不可用时自动降级到内存缓存。
+
+缓存系统架构说明：
+- 本模块 (CacheService): 通用缓存服务，支持 Redis + 内存降级。
+ 被 permission_cache_service 等上层服务使用。
+- app.services.cache.redis_cache (RedisCache): 纯 Redis 缓存操作封装，
+ 被 business_cache 使用。
+- app.services.cache.business_cache (BusinessCacheService): 业务层缓存封装。
+- app.services.report_framework.cache_manager (ReportCacheManager): 报表框架专用缓存。
+- app.services.permission_cache_service (PermissionCacheService): 权限专用缓存。
 
 Issue 5.3: 实现项目数据的缓存机制，提升系统响应速度
 """

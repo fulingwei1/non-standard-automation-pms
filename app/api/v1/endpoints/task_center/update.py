@@ -13,7 +13,10 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.task_center import TaskProgressUpdate, TaskUnifiedResponse
-from app.services.task_progress_service import update_task_progress as update_task_progress_service
+from app.services.task_progress_service import (
+ progress_error_to_http,
+  update_task_progress as update_task_progress_service,
+)
 
 from .detail import get_task_detail
 from .batch_helpers import log_task_operation
@@ -22,16 +25,6 @@ router = APIRouter(
     prefix="/task-center/update",
     tags=["update"],
 )
-
-
-def _progress_error_to_http(exc: ValueError) -> HTTPException:
-    """将服务层 ValueError 映射为 HTTP 异常"""
-    msg = str(exc)
-    if "任务不存在" in msg:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
-    if "只能更新" in msg or "无权" in msg:
-        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
-    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.put("/tasks/{task_id}/progress", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
@@ -58,7 +51,7 @@ def update_task_progress(
             run_aggregation=True,
         )
     except ValueError as e:
-        raise _progress_error_to_http(e)
+        raise progress_error_to_http(e)
 
     log_task_operation(
         db,

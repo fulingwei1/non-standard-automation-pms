@@ -1,27 +1,47 @@
-/**
- * 普通任务卡片组件
- */
-
 import { useState } from "react";
-
-
-
-
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Flag,
+  Folder,
+  MoreHorizontal,
+  Timer,
+  AlertTriangle,
+  ArrowRight
+} from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
 import { statusConfigs, priorityConfigs } from "./taskConfig";
 
+/**
+ * 普通任务卡片组件
+ * 显示任务的基本信息、进度和子任务
+ */
 export default function TaskCard({ task, onStatusChange }) {
   const [expanded, setExpanded] = useState(false);
-  const status = statusConfigs[task.status];
-  const priority = priorityConfigs[task.priority];
+  const status = statusConfigs[task.status] || statusConfigs.pending;
+  const priority = priorityConfigs[task.priority] || priorityConfigs.medium;
   const StatusIcon = status.icon;
 
+  const dueDateValue = task.dueDate ? new Date(task.dueDate) : null;
   const isOverdue =
-    task.status !== "completed" && new Date(task.dueDate) < new Date();
+    dueDateValue ? task.status !== "completed" && dueDateValue < new Date() : false;
+  const daysUntilDue = dueDateValue
+    ? Math.ceil((dueDateValue - new Date()) / (1000 * 60 * 60 * 24))
+    : null;
 
-  const daysUntilDue = Math.ceil(
-    (new Date(task.dueDate) - new Date()) / (1000 * 60 * 60 * 24)
-  );
+  const handleStatusClick = () => {
+    if (!onStatusChange) return;
+    if (task.status === "pending") {
+      onStatusChange(task.id, "in_progress");
+    } else if (task.status === "in_progress") {
+      onStatusChange(task.id, "completed");
+    }
+  };
 
   return (
     <motion.div
@@ -40,12 +60,7 @@ export default function TaskCard({ task, onStatusChange }) {
         {/* Header */}
         <div className="flex items-start gap-3">
           <button
-            onClick={() => {
-              if (task.status === "pending")
-                {onStatusChange(task.id, "in_progress");}
-              else if (task.status === "in_progress")
-                {onStatusChange(task.id, "completed");}
-            }}
+            onClick={handleStatusClick}
             className={cn(
               "mt-0.5 p-1 rounded-lg transition-colors",
               status.bgColor,
@@ -58,16 +73,18 @@ export default function TaskCard({ task, onStatusChange }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Flag className={cn("w-3.5 h-3.5", priority.flagColor)} />
-              <span className="font-mono text-xs text-slate-500">
-                {task.id}
-              </span>
+              <span className="font-mono text-xs text-slate-500">{task.id}</span>
             </div>
             <h3 className="font-medium text-white mb-1">{task.title}</h3>
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <Folder className="w-3 h-3" />
-              <span className="text-accent">{task.projectId}</span>
-              <span>·</span>
-              <span className="truncate">{task.projectName}</span>
+              {task.projectId && <span className="text-accent">{task.projectId}</span>}
+              {task.projectName && (
+                <>
+                  <span>·</span>
+                  <span className="truncate">{task.projectName}</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -85,7 +102,7 @@ export default function TaskCard({ task, onStatusChange }) {
         )}
 
         {/* Progress */}
-        {task.status === "in_progress" && (
+        {task.status === "in_progress" && task.progress !== undefined && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-slate-400">进度</span>
@@ -104,12 +121,16 @@ export default function TaskCard({ task, onStatusChange }) {
             )}
           >
             <Calendar className="w-3 h-3" />
-            {isOverdue ? (
-              <>已逾期 {Math.abs(daysUntilDue)} 天</>
-            ) : daysUntilDue <= 3 ? (
-              <span className="text-amber-400">剩余 {daysUntilDue} 天</span>
+            {dueDateValue ? (
+              isOverdue ? (
+                <>已逾期 {Math.abs(daysUntilDue)} 天</>
+              ) : daysUntilDue !== null && daysUntilDue <= 3 ? (
+                <span className="text-amber-400">剩余 {daysUntilDue} 天</span>
+              ) : (
+                task.dueDate
+              )
             ) : (
-              task.dueDate
+              "-"
             )}
           </span>
           <span className="flex items-center gap-1 text-slate-400">
@@ -122,11 +143,7 @@ export default function TaskCard({ task, onStatusChange }) {
         {task.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {task.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="text-[10px] px-1.5"
-              >
+              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5">
                 {tag}
               </Badge>
             ))}
@@ -141,8 +158,7 @@ export default function TaskCard({ task, onStatusChange }) {
               className="w-full flex items-center justify-between text-xs text-slate-400 hover:text-white transition-colors"
             >
               <span>
-                子任务 ({task.subTasks.filter((st) => st.completed).length}/
-                {task.subTasks.length})
+                子任务 ({task.subTasks.filter((st) => st.completed).length}/{task.subTasks.length})
               </span>
               <motion.span animate={{ rotate: expanded ? 90 : 0 }}>
                 <ChevronRight className="w-4 h-4" />
@@ -159,10 +175,7 @@ export default function TaskCard({ task, onStatusChange }) {
                 >
                   <div className="space-y-1 mt-2">
                     {task.subTasks.map((subTask) => (
-                      <div
-                        key={subTask.id}
-                        className="flex items-center gap-2 text-xs"
-                      >
+                      <div key={subTask.id} className="flex items-center gap-2 text-xs">
                         <div
                           className={cn(
                             "w-3.5 h-3.5 rounded-full border flex items-center justify-center",

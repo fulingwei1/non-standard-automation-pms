@@ -17,7 +17,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 class TestQueryApprovedTimesheets:
@@ -341,7 +340,7 @@ class TestCheckBudgetAlert:
 
         mock_db = MagicMock()
 
-        with patch('app.services.labor_cost_calculation_service.CostAlertService') as mock_alert_service:
+        with patch('app.services.cost_alert_service.CostAlertService') as mock_alert_service:
             check_budget_alert(mock_db, 100, 10)
 
             mock_alert_service.check_budget_execution.assert_called_once_with(
@@ -354,7 +353,7 @@ class TestCheckBudgetAlert:
 
         mock_db = MagicMock()
 
-        with patch('app.services.labor_cost_calculation_service.CostAlertService') as mock_alert_service:
+        with patch('app.services.cost_alert_service.CostAlertService') as mock_alert_service:
             mock_alert_service.check_budget_execution.side_effect = Exception("测试异常")
 
             # 不应该抛出异常
@@ -383,13 +382,13 @@ class TestProcessUserCosts:
             }
         }
 
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_labor_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_labor_service:
             mock_labor_service.get_user_hourly_rate.return_value = Decimal("100")
 
-            with patch('app.services.labor_cost_calculation_service.find_existing_cost') as mock_find:
+            with patch('app.services.labor_cost.utils.find_existing_cost') as mock_find:
                 mock_find.return_value = None
 
-                with patch('app.services.labor_cost_calculation_service.check_budget_alert'):
+                with patch('app.services.labor_cost.utils.check_budget_alert'):
                     created_costs, total_cost = process_user_costs(
                         mock_db, mock_project, 100,
                         user_costs, date.today(), False
@@ -420,14 +419,14 @@ class TestProcessUserCosts:
             }
         }
 
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_labor_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_labor_service:
             mock_labor_service.get_user_hourly_rate.return_value = Decimal("100")
 
-            with patch('app.services.labor_cost_calculation_service.find_existing_cost') as mock_find:
+            with patch('app.services.labor_cost.utils.find_existing_cost') as mock_find:
                 mock_find.return_value = mock_existing_cost
 
-                with patch('app.services.labor_cost_calculation_service.update_existing_cost') as mock_update:
-                    with patch('app.services.labor_cost_calculation_service.check_budget_alert'):
+                with patch('app.services.labor_cost.utils.update_existing_cost') as mock_update:
+                    with patch('app.services.labor_cost.utils.check_budget_alert'):
                         created_costs, total_cost = process_user_costs(
                             mock_db, mock_project, 100,
                             user_costs, date.today(), False
@@ -454,11 +453,11 @@ class TestProcessUserCosts:
             }
         }
 
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_labor_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_labor_service:
             mock_labor_service.get_user_hourly_rate.return_value = Decimal("100")
 
-            with patch('app.services.labor_cost_calculation_service.find_existing_cost') as mock_find:
-                with patch('app.services.labor_cost_calculation_service.check_budget_alert'):
+            with patch('app.services.labor_cost.utils.find_existing_cost') as mock_find:
+                with patch('app.services.labor_cost.utils.check_budget_alert'):
                     process_user_costs(
                         mock_db, mock_project, 100,
                         user_costs, date.today(), True  # recalculate=True
@@ -475,7 +474,7 @@ class TestProcessUserCosts:
         mock_project = MagicMock()
         mock_project.actual_cost = 0
 
-        with patch('app.services.labor_cost_calculation_service.LaborCostService'):
+        with patch('app.services.labor_cost_service.LaborCostService'):
             created_costs, total_cost = process_user_costs(
                 mock_db, mock_project, 100,
                 {}, date.today(), False
@@ -504,13 +503,13 @@ class TestProcessUserCosts:
             }
         }
 
-        with patch('app.services.labor_cost_calculation_service.LaborCostService') as mock_labor_service:
+        with patch('app.services.labor_cost_service.LaborCostService') as mock_labor_service:
             mock_labor_service.get_user_hourly_rate.return_value = Decimal("100")
 
-            with patch('app.services.labor_cost_calculation_service.find_existing_cost') as mock_find:
+            with patch('app.services.labor_cost.utils.find_existing_cost') as mock_find:
                 mock_find.return_value = None
 
-                with patch('app.services.labor_cost_calculation_service.check_budget_alert'):
+                with patch('app.services.labor_cost.utils.check_budget_alert'):
                     process_user_costs(
                         mock_db, mock_project, 100,
                         user_costs, None, False

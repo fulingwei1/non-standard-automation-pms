@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.notification import Notification
 from app.models.user import User
@@ -27,8 +27,7 @@ router = APIRouter()
 @router.get("/")
 def read_notifications(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     is_read: Optional[bool] = Query(None, description="是否已读筛选"),
     notification_type: Optional[str] = Query(None, description="通知类型筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
@@ -55,8 +54,7 @@ def read_notifications(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    notifications = query.order_by(desc(Notification.created_at)).offset(offset).limit(page_size).all()
+    notifications = query.order_by(desc(Notification.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应数据
     items = []
@@ -83,8 +81,8 @@ def read_notifications(
     return paginated_response(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

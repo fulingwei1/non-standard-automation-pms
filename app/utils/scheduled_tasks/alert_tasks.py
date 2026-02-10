@@ -13,13 +13,11 @@ from app.models.base import get_db_session
 from app.services.notification_dispatcher import (
     NotificationDispatcher,
     channel_allowed,
-    is_quiet_hours,
-    next_quiet_resume,
     resolve_channel_target,
     resolve_channels,
     resolve_recipients,
 )
-from app.services.notification_queue import enqueue_notification
+from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +55,6 @@ def retry_failed_notifications():
     """
     try:
         with get_db_session() as db:
-            from app.models.notification import NotificationSettings
             from app.models.user import User
 
             current_time = datetime.now()
@@ -81,18 +78,6 @@ def retry_failed_notifications():
             dispatcher = NotificationDispatcher(db)
 
             for notification in failed_notifications:
-                # 检查是否在免打扰时段
-                settings = None
-                if notification.notify_user_id:
-                    settings = db.query(NotificationSettings).filter(
-                        NotificationSettings.user_id == notification.notify_user_id
-                    ).first()
-
-                if is_quiet_hours(settings, current_time):
-                    notification.next_retry_at = next_quiet_resume(settings, current_time)
-                    notification.error_message = "Delayed due to quiet hours"
-                    continue
-
                 # 获取预警和用户信息
                 alert = notification.alert
                 user = None
@@ -155,7 +140,6 @@ def send_alert_notifications():
     try:
         with get_db_session() as db:
             dispatcher = NotificationDispatcher(db)
-            from app.models.notification import NotificationSettings
             from app.models.user import User
 
             # 1) 生成通知队列
@@ -204,10 +188,6 @@ def send_alert_notifications():
                             status='PENDING'
                         )
 
-                        if is_quiet_hours(settings, current_time):
-                            new_notification.next_retry_at = next_quiet_resume(settings, current_time)
-                            new_notification.error_message = "Delayed due to quiet hours"
-
                         db.add(new_notification)
                         queue_created += 1
 
@@ -229,33 +209,17 @@ def send_alert_notifications():
                 if notification.notify_user_id:
                     user = db.query(User).filter(User.id == notification.notify_user_id).first()
 
-                settings_obj = None
-                if notification.notify_user_id:
-                    settings_obj = db.query(NotificationSettings).filter(
-                        NotificationSettings.user_id == notification.notify_user_id
-                    ).first()
-
-                if is_quiet_hours(settings_obj, now):
-                    notification.status = 'PENDING'
-                    notification.next_retry_at = next_quiet_resume(settings_obj, now)
-                    notification.error_message = "Delayed due to quiet hours"
-                    continue
-
-                enqueued = enqueue_notification({
-                    "notification_id": notification.id,
-                    "alert_id": notification.alert_id,
-                    "notify_channel": notification.notify_channel,
-                })
-
-                if enqueued:
-                    notification.status = 'QUEUED'
-                    notification.next_retry_at = None
+                result = enqueue_or_dispatch_notification(
+                    dispatcher,
+                    notification,
+                    alert,
+                    user,
+                    logger_instance=logger,
+                )
+                if result.get("queued"):
                     queued_notifications += 1
-                else:
-                    # fallback: try immediate dispatch synchronously
-                    success = dispatcher.dispatch(notification, alert, user)
-                    if success:
-                        sent_count += 1
+                elif result.get("sent"):
+                    sent_count += 1
 
             db.commit()
 

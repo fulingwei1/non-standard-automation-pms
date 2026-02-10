@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.outsourcing import OutsourcingOrder, OutsourcingPayment
 from app.models.vendor import Vendor
 from app.models.user import User
@@ -30,8 +30,7 @@ router = APIRouter()
 @router.get("/outsourcing-payments", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_payments(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     vendor_id: Optional[int] = Query(None, description="外协商ID筛选"),
     order_id: Optional[int] = Query(None, description="外协订单ID筛选"),
     payment_type: Optional[str] = Query(None, description="付款类型筛选"),
@@ -64,8 +63,7 @@ def read_outsourcing_payments(
         query = query.filter(OutsourcingPayment.payment_date <= end_date)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    payments = query.order_by(desc(OutsourcingPayment.payment_date)).offset(offset).limit(page_size).all()
+    payments = query.order_by(desc(OutsourcingPayment.payment_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for payment in payments:
@@ -110,13 +108,7 @@ def read_outsourcing_payments(
             updated_at=payment.updated_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/outsourcing-payments", response_model=OutsourcingPaymentResponse, status_code=status.HTTP_201_CREATED)

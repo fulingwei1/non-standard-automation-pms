@@ -8,9 +8,7 @@ import { motion } from "framer-motion";
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
-  ArrowDownRight,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -26,96 +24,7 @@ import {
   getHealthLevel,
   getBudgetStatus
 } from "./financeDashboardConstants";
-
-// 统计卡片组件
-const StatCard = ({
-  title,
-  value,
-  subtitle,
-  trend,
-  icon: Icon,
-  color,
-  bg,
-  loading = false,
-  target = null,
-  targetProgress = null,
-  showBadge = false,
-  badgeText = "",
-  badgeColor = ""
-}) => {
-  if (loading) {
-    return (
-      <Card className="bg-surface-50 border-white/10">
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-3">
-            <div className="w-8 h-8 bg-slate-700 rounded" />
-            <div className="h-6 bg-slate-700 rounded w-3/4" />
-            <div className="h-4 bg-slate-700 rounded w-1/2" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300 }}
-    >
-      <Card className="bg-surface-50 border-white/10 hover:bg-surface-100 transition-colors">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", bg)}>
-              <Icon className={cn("w-6 h-6", color)} />
-            </div>
-            {showBadge && (
-              <Badge variant="outline" className={cn("text-xs", badgeColor)}>
-                {badgeText}
-              </Badge>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">{value}</div>
-              {trend !== undefined && (
-                <div className={cn(
-                  "flex items-center gap-1 text-sm font-medium",
-                  trend >= 0 ? "text-green-400" : "text-red-400"
-                )}>
-                  {trend >= 0 ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
-                  {Math.abs(trend)}%
-                </div>
-              )}
-            </div>
-
-            <div className="text-sm text-slate-400">{title}</div>
-            {subtitle && (
-              <div className="text-xs text-slate-500">{subtitle}</div>
-            )}
-
-            {target !== null && targetProgress !== null && (
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                  <span>目标完成度</span>
-                  <span>{formatPercentage(targetProgress)}</span>
-                </div>
-                <Progress
-                  value={Math.min(targetProgress, 100)}
-                  className="h-1.5"
-                />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
+import StatCard from "../common/StatCard";
 
 // 指标状态指示器
 const MetricStatusIndicator = ({ status, size = "sm" }) => {
@@ -160,10 +69,28 @@ const MetricStatusIndicator = ({ status, size = "sm" }) => {
 
 // 关键指标行组件
 const KeyMetricsRow = ({ metrics, loading }) => {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="bg-surface-50 border-white/10">
+            <CardContent className="p-6">
+              <div className="animate-pulse space-y-3">
+                <div className="w-8 h-8 bg-slate-700 rounded" />
+                <div className="h-6 bg-slate-700 rounded w-3/4" />
+                <div className="h-4 bg-slate-700 rounded w-1/2" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   const keyMetrics = [
     {
       title: "营业收入",
-      value: loading ? "-" : formatCurrency(metrics?.totalRevenue || 0),
+      value: formatCurrency(metrics?.totalRevenue || 0),
       trend: metrics?.revenueGrowth,
       icon: DollarSign,
       color: "text-green-400",
@@ -174,7 +101,7 @@ const KeyMetricsRow = ({ metrics, loading }) => {
     },
     {
       title: "净利润",
-      value: loading ? "-" : formatCurrency(metrics?.totalProfit || 0),
+      value: formatCurrency(metrics?.totalProfit || 0),
       trend: metrics?.profitGrowth,
       icon: TrendingUp,
       color: "text-emerald-400",
@@ -185,7 +112,7 @@ const KeyMetricsRow = ({ metrics, loading }) => {
     },
     {
       title: "毛利率",
-      value: loading ? "-" : formatPercentage(metrics?.grossMargin || 0),
+      value: formatPercentage(metrics?.grossMargin || 0),
       trend: metrics?.marginGrowth,
       icon: Target,
       color: "text-blue-400",
@@ -196,7 +123,7 @@ const KeyMetricsRow = ({ metrics, loading }) => {
     },
     {
       title: "现金流",
-      value: loading ? "-" : formatCurrency(metrics?.cashFlow || 0),
+      value: formatCurrency(metrics?.cashFlow || 0),
       trend: metrics?.cashFlowGrowth,
       icon: ArrowUpRight,
       color: "text-purple-400",
@@ -209,23 +136,53 @@ const KeyMetricsRow = ({ metrics, loading }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {keyMetrics.map((metric, index) => (
-        <StatCard
-          key={index}
-          title={metric.title}
-          value={metric.value}
-          trend={metric.trend}
-          icon={metric.icon}
-          color={metric.color}
-          bg={metric.bg}
-          target={metric.target}
-          targetProgress={metric.targetProgress}
-          showBadge={metric.status}
-          badgeText={metric.status === "excellent" && "优秀"}
-          badgeColor="border-green-400 text-green-400"
-          loading={loading}
-        />
-      ))}
+      {keyMetrics.map((metric, index) => {
+        const Icon = metric.icon;
+        const badgeText = metric.status === "excellent" ? "优秀" : "";
+
+        return (
+          <StatCard
+            key={index}
+            title={metric.title}
+            value={metric.value}
+            trend={metric.trend}
+            icon={null}
+            color="text-white"
+            valueColor="text-white"
+            bg="bg-transparent"
+            trendLabel=""
+            trendShowSign={false}
+            showDecoration={false}
+            hoverScale={1.02}
+            cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 transition-colors bg-none hover:shadow-none p-6"
+            headerSlot={
+              <div className="flex items-center justify-between mb-4">
+                <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", metric.bg)}>
+                  <Icon className={cn("w-6 h-6", metric.color)} />
+                </div>
+                {badgeText ? (
+                  <Badge variant="outline" className="text-xs border-green-400 text-green-400">
+                    {badgeText}
+                  </Badge>
+                ) : null}
+              </div>
+            }
+          >
+            {metric.target !== null && metric.targetProgress !== null && (
+              <div>
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                  <span>目标完成度</span>
+                  <span>{formatPercentage(metric.targetProgress)}</span>
+                </div>
+                <Progress
+                  value={Math.min(metric.targetProgress, 100)}
+                  className="h-1.5"
+                />
+              </div>
+            )}
+          </StatCard>
+        );
+      })}
     </div>
   );
 };

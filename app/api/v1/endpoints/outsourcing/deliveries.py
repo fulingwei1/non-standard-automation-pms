@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.outsourcing import (
     OutsourcingDelivery,
     OutsourcingDeliveryItem,
@@ -77,8 +77,7 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 @router.get("/outsourcing-deliveries", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_deliveries(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     order_id: Optional[int] = Query(None, description="订单ID筛选"),
     vendor_id: Optional[int] = Query(None, description="外协商ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -99,8 +98,7 @@ def read_outsourcing_deliveries(
         query = query.filter(OutsourcingDelivery.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    deliveries = query.order_by(desc(OutsourcingDelivery.delivery_date)).offset(offset).limit(page_size).all()
+    deliveries = query.order_by(desc(OutsourcingDelivery.delivery_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for delivery in deliveries:
@@ -124,13 +122,7 @@ def read_outsourcing_deliveries(
             updated_at=delivery.updated_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/outsourcing-deliveries", response_model=OutsourcingDeliveryResponse, status_code=status.HTTP_201_CREATED)

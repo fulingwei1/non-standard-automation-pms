@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.sla import SLAMonitor, SLAPolicy
 from app.models.user import User
@@ -61,13 +62,7 @@ def get_sla_policies(
         )
     if is_active is not None:
         query = query.filter(SLAPolicy.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            or_(
-                SLAPolicy.policy_name.like(f"%{keyword}%"),
-                SLAPolicy.policy_code.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, SLAPolicy, keyword, ["policy_name", "policy_code"])
 
     total = query.count()
     offset = (page - 1) * page_size

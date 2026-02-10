@@ -10,7 +10,8 @@ import { projectApi } from '../../services/api';
 import { useTaskData, useTaskFilters } from './hooks';
 
 // Components
-import { AssemblyTaskCard, TaskCard, TaskStats, TaskFilters } from './components';
+import { TaskStats, TaskFilters } from './components';
+import { AssemblyTaskCard, TaskCard } from '../../components/task-center';
 
 /**
  * 任务中心主页面（重构版本）

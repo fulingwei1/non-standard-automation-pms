@@ -25,6 +25,7 @@ from app.schemas.project_evaluation import (
 )
 from app.services.project_evaluation_service import ProjectEvaluationService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.common.pagination import PaginationParams, get_pagination_query
 
 
 def filter_by_status(query, status: str):
@@ -177,8 +178,7 @@ def update_project_evaluation(
 def list_project_evaluations(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
-    page: int = 1,
-    page_size: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: str = None,
     order_by: str = None,
     order_direction: str = "desc",
@@ -216,16 +216,15 @@ def list_project_evaluations(
     
     # 分页
     total = query.count()
-    offset = (page - 1) * page_size
-    evaluations = query.offset(offset).limit(page_size).all()
+    evaluations = query.offset(pagination.offset).limit(pagination.limit).all()
     
     # 使用正确的响应格式（ProjectEvaluationListResponse是PaginatedResponse的别名）
     return ProjectEvaluationListResponse(
         items=evaluations,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

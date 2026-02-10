@@ -6,7 +6,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
-  StatCard,
+  DashboardStatCard,
   Badge,
   SkeletonCard,
 } from "../components/ui";
@@ -190,25 +190,25 @@ export default function ManagementRhythmDashboard() {
 
                 {/* Statistics Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  <StatCard
+                  <DashboardStatCard
                     label="会议总数"
                     value={data.meetings_count || 0}
                     icon={Activity}
                     className="bg-gray-50"
                   />
-                  <StatCard
+                  <DashboardStatCard
                     label="已完成"
                     value={data.completed_meetings_count || 0}
                     icon={CheckCircle2}
                     className="bg-green-50"
                   />
-                  <StatCard
+                  <DashboardStatCard
                     label="行动项总数"
                     value={data.total_action_items || 0}
                     icon={Target}
                     className="bg-blue-50"
                   />
-                  <StatCard
+                  <DashboardStatCard
                     label="已完成"
                     value={data.completed_action_items || 0}
                     icon={CheckCircle2}

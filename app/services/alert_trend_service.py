@@ -5,12 +5,12 @@
 提取预警趋势统计和分析逻辑
 """
 
-from calendar import monthrange
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range, month_start
 from app.models.alert import AlertRecord
 
 
@@ -33,7 +33,7 @@ def get_period_key(dt: datetime, period: str) -> str:
         monday = dt.date() - timedelta(days=days_since_monday)
         return monday.isoformat()
     elif period == "MONTHLY":
-        return dt.date().replace(day=1).isoformat()
+        return month_start(dt.date()).isoformat()
     else:
         return dt.date().isoformat()
 
@@ -67,14 +67,12 @@ def generate_date_range(start: date, end: date, period: str) -> List[str]:
             current += timedelta(days=7 - days_since_monday)
         elif period == "MONTHLY":
             # 获取该月的第一天
-            first_day = current.replace(day=1)
+            first_day = month_start(current)
             if first_day.isoformat() not in dates:
                 dates.append(first_day.isoformat())
             # 跳到下个月
-            if current.month == 12:
-                current = current.replace(year=current.year + 1, month=1, day=1)
-            else:
-                current = current.replace(month=current.month + 1, day=1)
+            _, m_end = get_month_range(current)
+            current = m_end + timedelta(days=1)
 
     return sorted(dates)
 

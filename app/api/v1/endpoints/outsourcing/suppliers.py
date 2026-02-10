@@ -18,12 +18,13 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.outsourcing import (
     OutsourcingDelivery,
     OutsourcingDeliveryItem,
@@ -77,8 +78,7 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 @router.get("/outsourcing-vendors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_vendors(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（编码/名称）"),
     vendor_type: Optional[str] = Query(None, description="外协商类型筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -89,13 +89,7 @@ def read_vendors(
     """
     query = db.query(Vendor).filter(Vendor.vendor_type == 'OUTSOURCING')
 
-    if keyword:
-        query = query.filter(
-            or_(
-                Vendor.supplier_code.like(f"%{keyword}%"),
-                Vendor.supplier_name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, Vendor, keyword, ["supplier_code", "supplier_name"])
 
     if vendor_type:
         query = query.filter(Vendor.supplier_type == vendor_type)
@@ -104,8 +98,7 @@ def read_vendors(
         query = query.filter(Vendor.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    vendors = query.order_by(Vendor.created_at).offset(offset).limit(page_size).all()
+    vendors = query.order_by(Vendor.created_at).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for vendor in vendors:
@@ -128,13 +121,7 @@ def read_vendors(
             updated_at=vendor.updated_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/outsourcing-vendors/{vendor_id}", response_model=VendorResponse, status_code=status.HTTP_200_OK)

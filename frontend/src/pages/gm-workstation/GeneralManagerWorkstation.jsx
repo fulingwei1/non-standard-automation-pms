@@ -14,7 +14,7 @@ import { fadeIn, staggerContainer } from "../../lib/animations";
 import { ApiIntegrationError } from "../../components/ui";
 import CultureWallCarousel from "../../components/culture/CultureWallCarousel";
 
-import StatCard from "./StatCard";
+import StatCard from "../../components/common/StatCard";
 import YearProgressCard from "./YearProgressCard";
 import KeyMetricsCard from "./KeyMetricsCard";
 import ProjectHealthCard from "./ProjectHealthCard";

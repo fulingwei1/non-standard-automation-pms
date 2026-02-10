@@ -27,18 +27,25 @@ class Colors:
 
 
 class APITestHelper:
-    """API测试辅助工具类"""
+    """API测试辅助工具类
 
-    def __init__(self, client: TestClient, base_url: str = "/api/v1"):
+    支持两种使用方式：
+    1. 旧风格：APITestHelper(client)，每次请求传 username/password
+    2. 新风格：APITestHelper(client, token)，自动携带认证头
+    """
+
+    def __init__(self, client: TestClient, token: Optional[str] = None, base_url: str = "/api/v1"):
         """
         初始化API测试辅助工具
 
         Args:
             client: FastAPI TestClient实例
+            token: 可选的JWT令牌，提供后请求自动携带认证头
             base_url: API基础路径
         """
         self.client = client
         self.base_url = base_url
+        self.token = token
         self.tokens: Dict[str, str] = {}
         self.created_resources: Dict[str, list] = {}
 
@@ -103,6 +110,29 @@ class APITestHelper:
     # HTTP请求封装
     # -----------------------------------------------------------------------
 
+    def _build_headers(
+        self,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        headers: Optional[Dict] = None,
+    ) -> Dict[str, str]:
+        """
+        构建请求头：优先使用 username/password，其次使用预存 token
+
+        Args:
+            username: 用户名（用于认证）
+            password: 密码
+            headers: 额外的请求头
+        """
+        request_headers: Dict[str, str] = {}
+        if username and password:
+            request_headers.update(self.get_headers(username, password))
+        elif self.token:
+            request_headers["Authorization"] = f"Bearer {self.token}"
+        if headers:
+            request_headers.update(headers)
+        return request_headers
+
     def get(
         self,
         endpoint: str,
@@ -110,6 +140,7 @@ class APITestHelper:
         password: Optional[str] = None,
         params: Optional[Dict] = None,
         headers: Optional[Dict] = None,
+        resource_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         执行GET请求
@@ -120,15 +151,12 @@ class APITestHelper:
             password: 密码
             params: 查询参数
             headers: 额外的请求头
+            resource_type: 资源类型标识（用于日志追踪）
 
         Returns:
             响应数据字典，包含status_code, data, message等
         """
-        request_headers = {}
-        if username and password:
-            request_headers.update(self.get_headers(username, password))
-        if headers:
-            request_headers.update(headers)
+        request_headers = self._build_headers(username, password, headers)
 
         url = f"{self.base_url}{endpoint}"
         response = self.client.get(url, params=params, headers=request_headers)
@@ -148,6 +176,7 @@ class APITestHelper:
         password: Optional[str] = None,
         headers: Optional[Dict] = None,
         json_data: bool = True,
+        resource_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         执行POST请求
@@ -159,15 +188,12 @@ class APITestHelper:
             password: 密码
             headers: 额外的请求头
             json_data: 是否使用JSON格式
+            resource_type: 资源类型标识（用于日志追踪）
 
         Returns:
             响应数据字典
         """
-        request_headers = {}
-        if username and password:
-            request_headers.update(self.get_headers(username, password))
-        if headers:
-            request_headers.update(headers)
+        request_headers = self._build_headers(username, password, headers)
 
         url = f"{self.base_url}{endpoint}"
         if json_data:
@@ -189,6 +215,7 @@ class APITestHelper:
         username: Optional[str] = None,
         password: Optional[str] = None,
         headers: Optional[Dict] = None,
+        resource_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         执行PUT请求
@@ -199,15 +226,12 @@ class APITestHelper:
             username: 用户名
             password: 密码
             headers: 额外的请求头
+            resource_type: 资源类型标识（用于日志追踪）
 
         Returns:
             响应数据字典
         """
-        request_headers = {}
-        if username and password:
-            request_headers.update(self.get_headers(username, password))
-        if headers:
-            request_headers.update(headers)
+        request_headers = self._build_headers(username, password, headers)
 
         url = f"{self.base_url}{endpoint}"
         response = self.client.put(url, json=data, headers=request_headers)
@@ -226,6 +250,7 @@ class APITestHelper:
         username: Optional[str] = None,
         password: Optional[str] = None,
         headers: Optional[Dict] = None,
+        resource_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         执行PATCH请求
@@ -236,15 +261,12 @@ class APITestHelper:
             username: 用户名
             password: 密码
             headers: 额外的请求头
+            resource_type: 资源类型标识（用于日志追踪）
 
         Returns:
             响应数据字典
         """
-        request_headers = {}
-        if username and password:
-            request_headers.update(self.get_headers(username, password))
-        if headers:
-            request_headers.update(headers)
+        request_headers = self._build_headers(username, password, headers)
 
         url = f"{self.base_url}{endpoint}"
         response = self.client.patch(url, json=data, headers=request_headers)
@@ -262,6 +284,7 @@ class APITestHelper:
         username: Optional[str] = None,
         password: Optional[str] = None,
         headers: Optional[Dict] = None,
+        resource_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         执行DELETE请求
@@ -271,15 +294,12 @@ class APITestHelper:
             username: 用户名
             password: 密码
             headers: 额外的请求头
+            resource_type: 资源类型标识（用于日志追踪）
 
         Returns:
             响应数据字典
         """
-        request_headers = {}
-        if username and password:
-            request_headers.update(self.get_headers(username, password))
-        if headers:
-            request_headers.update(headers)
+        request_headers = self._build_headers(username, password, headers)
 
         url = f"{self.base_url}{endpoint}"
         response = self.client.delete(url, headers=request_headers)
@@ -296,7 +316,7 @@ class APITestHelper:
     # -----------------------------------------------------------------------
 
     @staticmethod
-    def assert_success(response: Dict[str, Any], message: str = "") -> None:
+    def assert_success(response: Dict[str, Any], message: str = "") -> Optional[Dict]:
         """
         断言响应成功
 
@@ -313,6 +333,7 @@ class APITestHelper:
                 f"{message} - 期望2xx状态码，实际: {status}\n"
                 f"响应: {response.get('text', '无响应数据')}"
             )
+        return response.get("data")
 
     @staticmethod
     def assert_status(
@@ -337,32 +358,48 @@ class APITestHelper:
             )
 
     @staticmethod
-    def assert_data_not_empty(response: Dict[str, Any], message: str = "") -> None:
+    def assert_data_not_empty(data_or_response: Any, message: str = "") -> None:
         """
-        断言响应数据不为空
+        断言数据不为空
+
+        兼容两种调用方式：
+        - 传 response dict（含 status_code 键）：从中取 data
+        - 传 data dict（assert_success 的返回值）：直接判断
 
         Args:
-            response: API响应字典
+            data_or_response: API响应字典 或 数据字典
             message: 自定义断言消息
 
         Raises:
-            AssertionError: 如果响应数据为空
+            AssertionError: 如果数据为空
         """
-        data = response.get("data")
+        # 判断是 response dict 还是 data dict
+        if isinstance(data_or_response, dict) and "status_code" in data_or_response:
+            data = data_or_response.get("data")
+        else:
+            data = data_or_response
+
         if not data:
+            text = ""
+            if isinstance(data_or_response, dict):
+                text = data_or_response.get("text", "无响应数据")
             raise AssertionError(
-                f"{message} - 响应数据为空\n响应: {response.get('text', '无响应数据')}"
+                f"{message} - 响应数据为空\n响应: {text}"
             )
 
     @staticmethod
     def assert_field_equals(
-        response: Dict[str, Any], field: str, expected_value: Any, message: str = ""
+        data_or_response: Dict[str, Any], field: str, expected_value: Any, message: str = ""
     ) -> None:
         """
-        断言响应字段等于期望值
+        断言字段等于期望值
+
+        兼容两种调用方式：
+        - 传 response dict（含 status_code 键）：从中取 data 后遍历字段
+        - 传 data dict（assert_success 的返回值）：直接遍历字段
 
         Args:
-            response: API响应字典
+            data_or_response: API响应字典 或 数据字典
             field: 字段名（支持嵌套，如 "data.items.0.id"）
             expected_value: 期望值
             message: 自定义断言消息
@@ -370,7 +407,11 @@ class APITestHelper:
         Raises:
             AssertionError: 如果字段值不匹配
         """
-        value = response.get("data")
+        # 判断是 response dict 还是 data dict
+        if isinstance(data_or_response, dict) and "status_code" in data_or_response:
+            value = data_or_response.get("data")
+        else:
+            value = data_or_response
 
         # 处理嵌套字段
         for key in field.split("."):

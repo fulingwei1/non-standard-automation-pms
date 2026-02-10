@@ -231,7 +231,7 @@ def calculate_monthly_labor_cost_task():
     计算月度人工成本任务
     每月5号凌晨执行，计算上月的人工成本分摊
     """
-    from app.services.labor_cost_calculation_service import LaborCostCalculationService
+    from app.services.labor_cost_service import LaborCostCalculationService
 
     try:
         with get_db_session() as db:

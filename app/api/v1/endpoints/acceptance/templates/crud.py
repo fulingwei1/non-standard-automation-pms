@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceTemplate,
@@ -30,8 +31,7 @@ router = APIRouter()
 @router.get("/acceptance-templates", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_acceptance_templates(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（编码/名称）"),
     acceptance_type: Optional[str] = Query(None, description="验收类型筛选"),
     equipment_type: Optional[str] = Query(None, description="设备类型筛选"),
@@ -43,13 +43,7 @@ def read_acceptance_templates(
     """
     query = db.query(AcceptanceTemplate)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                AcceptanceTemplate.template_code.like(f"%{keyword}%"),
-                AcceptanceTemplate.template_name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, AcceptanceTemplate, keyword, ["template_code", "template_name"])
 
     if acceptance_type:
         query = query.filter(AcceptanceTemplate.acceptance_type == acceptance_type)
@@ -61,8 +55,7 @@ def read_acceptance_templates(
         query = query.filter(AcceptanceTemplate.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    templates = query.order_by(AcceptanceTemplate.created_at).offset(offset).limit(page_size).all()
+    templates = query.order_by(AcceptanceTemplate.created_at).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for template in templates:
@@ -79,13 +72,7 @@ def read_acceptance_templates(
             updated_at=template.updated_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/acceptance-templates/{template_id}", response_model=dict, status_code=status.HTTP_200_OK)

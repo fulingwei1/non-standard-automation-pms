@@ -19,6 +19,7 @@ from app.models.sales.contracts import Contract
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 logger = logging.getLogger(__name__)
 
@@ -155,8 +156,7 @@ def submit_for_approval(
 def get_pending_approval_tasks(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     min_amount: Optional[float] = Query(None, description="最小金额筛选"),
     current_user: User = Depends(security.require_permission("contract:read")),
@@ -187,7 +187,6 @@ def get_pending_approval_tasks(
 
     tasks = filtered_tasks
     total = len(tasks)
-    offset = (page - 1) * page_size
     paginated_tasks = tasks[offset : offset + page_size]
 
     items = []
@@ -220,8 +219,8 @@ def get_pending_approval_tasks(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": (total + page_size - 1) // page_size,
         },
     )
@@ -471,8 +470,7 @@ def withdraw_approval(
 def get_approval_history(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status_filter: Optional[str] = Query(None, description="状态筛选: APPROVED/REJECTED"),
     current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
@@ -497,11 +495,10 @@ def get_approval_history(
         query = query.filter(ApprovalTask.status == status_filter)
 
     total = query.count()
-    offset = (page - 1) * page_size
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -536,8 +533,8 @@ def get_approval_history(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": (total + page_size - 1) // page_size,
         },
     )

@@ -13,11 +13,12 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.enums import (
     ActionItemStatus,
@@ -121,8 +122,7 @@ def read_strategic_meetings(
     if status:
         query = query.filter(StrategicMeeting.status == status)
 
-    if keyword:
-        query = query.filter(StrategicMeeting.meeting_name.like(f"%{keyword}%"))
+    query = apply_keyword_filter(query, StrategicMeeting, keyword, ["meeting_name"])
 
     total = query.count()
     offset = (page - 1) * page_size

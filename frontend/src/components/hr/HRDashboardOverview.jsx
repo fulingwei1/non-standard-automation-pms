@@ -6,7 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, UserPlus, Award, Building2 } from 'lucide-react';
 import { staggerContainer } from '../../lib/animations';
-import StatCard from './StatCard';
+import StatCard from '../common/StatCard';
 
 export const HRDashboardOverview = ({ statistics }) => {
   const stats = [

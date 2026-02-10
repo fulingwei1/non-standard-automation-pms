@@ -12,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.models.user import User
 from app.schemas.business_support import PaymentReportResponse
 from app.schemas.common import ResponseModel
@@ -38,11 +39,7 @@ async def get_payment_report(
         else:
             # 默认本月
             today = date.today()
-            start_dt = date(today.year, today.month, 1)
-            if today.month == 12:
-                end_dt = date(today.year + 1, 1, 1) - timedelta(days=1)
-            else:
-                end_dt = date(today.year, today.month + 1, 1) - timedelta(days=1)
+            start_dt, end_dt = get_month_range(today)
 
         report_date_str = f"{start_dt.strftime('%Y-%m-%d')} ~ {end_dt.strftime('%Y-%m-%d')}"
 

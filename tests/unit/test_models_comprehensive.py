@@ -9,7 +9,6 @@
 - ProjectStage 和 ProjectStatus 枚举测试
 """
 
-import pytest
 from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
@@ -28,10 +27,24 @@ from app.models.project import (
     ProjectStage,
     ProjectStatus,
 )
-from app.models.user import User, UserRole
-from app.models.material import Material, MaterialCategory
+from app.models.user import User
+from app.models.organization import Employee
+from app.models.material import Material
 from app.models.vendor import Vendor as Supplier
-from app.models.base import get_db_session
+
+
+def _create_employee_for_user(db_session, code, name="测试用户"):
+    """创建 Employee 以满足 User.employee_id NOT NULL 约束"""
+    emp = Employee(
+        employee_code=code,
+        name=name,
+        department="测试部",
+        role="ENGINEER",
+        phone="18800000000",
+    )
+    db_session.add(emp)
+    db_session.flush()
+    return emp
 
 
 class TestProjectModel:
@@ -136,13 +149,14 @@ class TestUserModel:
 
     def test_user_creation_basic(self, db_session):
         """测试基本的 User 创建"""
+        emp = _create_employee_for_user(db_session, "EMP-BASIC", "Test User")
         user = User(
-        username="testuser",
-        email="test@example.com",
-        password_hash="password_hash_here",
-        full_name="Test User",
-        role=UserRole.MEMBER.value,
-        is_active=True,
+            employee_id=emp.id,
+            username="testuser",
+            email="test@example.com",
+            password_hash="password_hash_here",
+            real_name="Test User",
+            is_active=True,
         )
 
         db_session.add(user)
@@ -152,15 +166,7 @@ class TestUserModel:
         assert user.id is not None
         assert user.username == "testuser"
         assert user.email == "test@example.com"
-        assert user.role == UserRole.MEMBER.value
         assert user.is_active is True
-
-    def test_user_roles(self):
-        """测试 UserRole 枚举"""
-        assert UserRole.ADMIN.value == "admin"
-        assert UserRole.MEMBER.value == "member"
-        assert UserRole.MANAGER.value == "manager"
-        assert UserRole.SUPERUSER.value == "superuser"
 
     def test_user_password_hashing(self, db_session):
         """测试密码哈希字段"""
@@ -169,13 +175,14 @@ class TestUserModel:
         plain_password = "test_password"
         hashed = get_password_hash(plain_password)
 
+        emp = _create_employee_for_user(db_session, "EMP-HASH", "User With Hash")
         user = User(
-        username="user_with_hash",
-        email="user@example.com",
-        password_hash=hashed,
-        full_name="User With Hash",
-        role=UserRole.MEMBER.value,
-        is_active=True,
+            employee_id=emp.id,
+            username="user_with_hash",
+            email="user@example.com",
+            password_hash=hashed,
+            real_name="User With Hash",
+            is_active=True,
         )
 
         db_session.add(user)
@@ -188,12 +195,13 @@ class TestUserModel:
 
     def test_user_default_values(self, db_session):
         """测试 User 默认值"""
+        emp = _create_employee_for_user(db_session, "EMP-DEFAULT", "Default User")
         user = User(
-        username="defaultuser",
-        email="default@example.com",
-        password_hash="hash",
-        full_name="Default User",
-        role=UserRole.MEMBER.value,
+            employee_id=emp.id,
+            username="defaultuser",
+            email="default@example.com",
+            password_hash="hash",
+            real_name="Default User",
         )
 
         db_session.add(user)
@@ -201,7 +209,7 @@ class TestUserModel:
         db_session.refresh(user)
 
         # 验证默认值
-        assert user.is_active is True  # 假设默认值为 True
+        assert user.is_active is True
         assert user.created_at is not None
         assert user.updated_at is not None
 
@@ -329,12 +337,13 @@ class TestModelTimestamps:
 
     def test_user_timestamps(self, db_session):
         """测试 User 时间戳"""
+        emp = _create_employee_for_user(db_session, "EMP-TIME", "Time Test User")
         user = User(
-        username="timetestuser",
-        email="timetest@example.com",
-        password_hash="hash",
-        full_name="Time Test User",
-        role=UserRole.MEMBER.value,
+            employee_id=emp.id,
+            username="timetestuser",
+            email="timetest@example.com",
+            password_hash="hash",
+            real_name="Time Test User",
         )
 
         db_session.add(user)
@@ -365,13 +374,13 @@ class TestModelValidators:
 
     def test_user_email_validation(self, db_session):
         """测试 User 邮箱字段"""
-        # 测试有效邮箱格式
+        emp = _create_employee_for_user(db_session, "EMP-EMAIL", "Email Test User")
         user = User(
-        username="emailtestuser",
-        email="user@example.com",
-        password_hash="hash",
-        full_name="Email Test User",
-        role=UserRole.MEMBER.value,
+            employee_id=emp.id,
+            username="emailtestuser",
+            email="user@example.com",
+            password_hash="hash",
+            real_name="Email Test User",
         )
 
         db_session.add(user)
@@ -434,23 +443,25 @@ class TestModelQueryMethods:
 
     def test_filter_by_active_status(self, db_session):
         """测试按 is_active 字段过滤"""
-        # 创建活跃和禁用用户
+        emp1 = _create_employee_for_user(db_session, "EMP-ACTIVE", "Active User")
+        emp2 = _create_employee_for_user(db_session, "EMP-INACTIVE", "Inactive User")
+
         active_user = User(
-        username="activeuser",
-        email="active@example.com",
-        password_hash="hash",
-        full_name="Active User",
-        role=UserRole.MEMBER.value,
-        is_active=True,
+            employee_id=emp1.id,
+            username="activeuser",
+            email="active@example.com",
+            password_hash="hash",
+            real_name="Active User",
+            is_active=True,
         )
 
         inactive_user = User(
-        username="inactiveuser",
-        email="inactive@example.com",
-        password_hash="hash",
-        full_name="Inactive User",
-        role=UserRole.MEMBER.value,
-        is_active=False,
+            employee_id=emp2.id,
+            username="inactiveuser",
+            email="inactive@example.com",
+            password_hash="hash",
+            real_name="Inactive User",
+            is_active=False,
         )
 
         db_session.add(active_user)

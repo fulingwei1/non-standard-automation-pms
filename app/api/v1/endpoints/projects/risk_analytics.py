@@ -21,6 +21,7 @@ from app.models.project.risk_history import ProjectRiskHistory, ProjectRiskSnaps
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project.project_risk_service import ProjectRiskService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +81,7 @@ def get_project_risk_trend(
 )
 def get_project_risk_history(
     project_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
@@ -108,13 +108,12 @@ def get_project_risk_history(
     )
 
     # 分页查询
-    offset = (page - 1) * page_size
     histories = (
         db.query(ProjectRiskHistory)
         .filter(ProjectRiskHistory.project_id == project_id)
         .order_by(ProjectRiskHistory.triggered_at.desc())
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -144,8 +143,8 @@ def get_project_risk_history(
             "project_code": project.project_code,
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": (total + page_size - 1) // page_size if total > 0 else 0,
         },
     )

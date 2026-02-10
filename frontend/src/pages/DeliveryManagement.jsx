@@ -48,6 +48,9 @@ import {
   message } from
 "antd";
 
+import { businessSupportApi } from "../services/api";
+import { getItemsCompat } from "../utils/apiResponse";
+
 // 导入拆分后的组件
 import {
   DeliveryOverview,
@@ -65,6 +68,99 @@ import {
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
+
+const normalizeEnumValue = (value, fallbackMap = {}) => {
+  if (!value) {return value;}
+  const normalized = String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  return fallbackMap[normalized] || normalized;
+};
+
+const normalizeStatus = (value) =>
+normalizeEnumValue(value, {
+  intransit: "in_transit",
+  in_transit: "in_transit",
+  on_the_way: "in_transit",
+  delivered: "delivered",
+  shipped: "shipped",
+  pending: "pending",
+  preparing: "preparing",
+  cancelled: "cancelled"
+});
+
+const normalizePriority = (value) =>
+normalizeEnumValue(value, {
+  urgent: "urgent",
+  high: "high",
+  normal: "normal",
+  low: "low"
+});
+
+const normalizeMethod = (value) =>
+normalizeEnumValue(value, {
+  standard_delivery: "standard",
+  express_delivery: "express",
+  freight_delivery: "freight",
+  selfpickup: "self_pickup",
+  pickup: "self_pickup",
+  self_pickup: "self_pickup"
+});
+
+const normalizePackageType = (value) =>
+normalizeEnumValue(value, {
+  standard_package: "standard",
+  fragile_package: "fragile",
+  liquid_package: "liquid",
+  oversize_package: "oversize"
+});
+
+const normalizeDelivery = (item = {}) => {
+  const orderNumber =
+    item.orderNumber ||
+    item.order_no ||
+    item.order_number ||
+    item.delivery_no ||
+    item.deliveryNo ||
+    item.delivery_code ||
+    item.code;
+
+  const customerName =
+    item.customerName ||
+    item.customer_name ||
+    item.customer?.name ||
+    item.customer ||
+    item.recipient_name ||
+    "";
+
+  return {
+    id: item.id || item.delivery_id || item.order_id || orderNumber,
+    orderNumber: orderNumber || "",
+    customerName,
+    status: normalizeStatus(item.status || item.delivery_status),
+    priority: normalizePriority(item.priority || item.delivery_priority),
+    shippingMethod: normalizeMethod(
+      item.shippingMethod || item.shipping_method || item.delivery_method
+    ),
+    packageType: normalizePackageType(item.packageType || item.package_type),
+    scheduledDate:
+      item.scheduledDate ||
+      item.scheduled_date ||
+      item.planned_delivery_time ||
+      item.planned_delivery_date ||
+      item.plan_delivery_date,
+    actualDate:
+      item.actualDate || item.actual_date || item.actual_delivery_time,
+    trackingNumber:
+      item.trackingNumber || item.tracking_no || item.tracking_number,
+    deliveryAddress:
+      item.deliveryAddress || item.delivery_address || item.recipient_address,
+    itemCount: item.itemCount ?? item.item_count ?? item.total_items,
+    totalWeight: item.totalWeight ?? item.total_weight ?? item.weight,
+    notes: item.notes || item.remark || item.remarks
+  };
+};
 
 const DeliveryManagement = () => {
   const [_searchParams] = useSearchParams();
@@ -85,13 +181,16 @@ const DeliveryManagement = () => {
   const loadData = async () => {
      setLoading(true);
     try {
-      // 调用真实 API
-      setTimeout(() => {
-        setDeliveries(deliveries);
-        setLoading(false);
-      }, 1000);
+      const response = await businessSupportApi.deliveryOrders.list({
+        page: 1,
+        page_size: 200
+      });
+      const items = getItemsCompat(response);
+      setDeliveries(Array.isArray(items) ? items.map(normalizeDelivery) : []);
     } catch (_error) {
       message.error('加载交付数据失败');
+      setDeliveries([]);
+    } finally {
       setLoading(false);
     }
   };

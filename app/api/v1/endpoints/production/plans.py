@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.production import ProductionPlan, Workshop
 from app.models.project import Project
 from app.models.user import User
@@ -34,8 +34,7 @@ router = APIRouter()
 @router.get("/production-plans", response_model=PaginatedResponse)
 def read_production_plans(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     plan_type: Optional[str] = Query(None, description="计划类型筛选：MASTER/WORKSHOP"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
@@ -60,8 +59,7 @@ def read_production_plans(
         query = query.filter(ProductionPlan.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    plans = query.order_by(desc(ProductionPlan.created_at)).offset(offset).limit(page_size).all()
+    plans = query.order_by(desc(ProductionPlan.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for plan in plans:
@@ -97,13 +95,7 @@ def read_production_plans(
             updated_at=plan.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/production-plans", response_model=ProductionPlanResponse)

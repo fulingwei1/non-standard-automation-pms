@@ -1,7 +1,12 @@
 /**
- * 趋势图表组件 (Trend Chart)
+ * 趋势图表组件 (Trend Chart) - Dashboard Widget
  *
  * 显示关键指标的趋势变化
+ *
+ * NOTE: An assessment-oriented TrendChart exists at:
+ * components/assessment/TrendChart.jsx
+ * That component is a raw SVG chart for assessment score trends.
+ * This component is a dashboard card widget with KPI indicators.
  */
 
 import { useEffect, useState } from 'react';

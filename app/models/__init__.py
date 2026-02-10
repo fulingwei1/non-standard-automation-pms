@@ -17,6 +17,9 @@
 # Import models from complete directory instead of deprecated main
 from .exports.complete import *
 
+# 枚举补充导出（向后兼容）
+from .enums import ApprovalRecordStatusEnum  # noqa: F401
+
 __all__ = [
     # Base
     "Base",
@@ -259,6 +262,7 @@ __all__ = [
     "ApprovalWorkflowStep",
     "ApprovalRecord",
     "ApprovalHistory",
+    "ApprovalRecordStatusEnum",
     # Business Support
     "BiddingProject",
     "BiddingDocument",

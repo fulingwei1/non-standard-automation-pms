@@ -14,19 +14,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from app.models.alert import AlertNotification
 from app.models.base import get_db_session
-from app.models.notification import NotificationSettings
 from app.models.user import User
 from app.services.notification_dispatcher import (
     NotificationDispatcher,
-    is_quiet_hours,
-    next_quiet_resume,
 )
+from app.services.channel_handlers.base import NotificationRequest
 from app.services.notification_queue import dequeue_notification
 from app.utils.redis_client import get_redis_client
-from app.utils.scheduler_metrics import (
-    record_notification_failure,
-    record_notification_success,
-)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("notification_worker")
@@ -54,27 +48,20 @@ async def main():
                 continue
             alert = notification.alert
             user = None
-            settings = None
             if notification.notify_user_id:
                 user = db.query(User).filter(User.id == notification.notify_user_id).first()
-                settings = db.query(NotificationSettings).filter(
-                    NotificationSettings.user_id == notification.notify_user_id
-                ).first()
-            if is_quiet_hours(settings, alert.triggered_at or alert.created_at or alert.updated_at or alert.created_at):
-                notification.status = 'PENDING'
-                notification.next_retry_at = next_quiet_resume(settings, alert.triggered_at or alert.created_at or notification.created_at)
-                notification.error_message = "Delayed due to quiet hours (worker)"
-                db.commit()
-                continue
+
+            request = None
+            request_payload = payload.get("request")
+            if isinstance(request_payload, dict):
+                try:
+                    request = NotificationRequest(**request_payload)
+                except Exception as exc:
+                    logger.warning(f"通知请求数据无效，回退为即时构建: {exc}")
 
             dispatcher = NotificationDispatcher(db)
-            success = dispatcher.dispatch(notification, alert, user)
+            dispatcher.dispatch(notification, alert, user, request=request)
             db.commit()
-            channel = notification.notify_channel.upper()
-            if success:
-                record_notification_success(channel)
-            else:
-                record_notification_failure(channel)
 
 
 if __name__ == "__main__":

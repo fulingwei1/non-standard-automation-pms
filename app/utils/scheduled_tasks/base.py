@@ -22,7 +22,7 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
     通知发送失败不影响预警记录创建
 
     注意：实际通知发送由 send_alert_notifications 定时任务批量处理
-    此函数仅用于即时尝试发送，失败时会在下次定时任务中重试
+    此函数用于创建通知并尝试入队，队列不可用时直接发送
 
     Args:
         db: 数据库会话
@@ -52,6 +52,9 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
 
         channels = resolve_channels(alert)
         notifications_created = 0
+        created_notifications = []
+        queued_count = 0
+        sent_count = 0
 
         for user_id, recipient_info in recipients.items():
             user = recipient_info.get("user")
@@ -90,11 +93,26 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
                 )
                 db.add(notification)
                 notifications_created += 1
+                created_notifications.append((notification, user))
 
         if notifications_created > 0:
             db.flush()
+            for notification, user in created_notifications:
+                result = enqueue_or_dispatch_notification(
+                    dispatcher,
+                    notification,
+                    alert,
+                    user,
+                    logger_instance=logger_instance,
+                )
+                if result.get("queued"):
+                    queued_count += 1
+                elif result.get("sent"):
+                    sent_count += 1
+
             logger_instance.debug(
-                f"Created {notifications_created} notifications for alert {alert.alert_no}"
+                f"Created {notifications_created} notifications for alert {alert.alert_no} "
+                f"(queued={queued_count}, sent={sent_count})"
             )
 
     except Exception as notif_err:
@@ -104,6 +122,47 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
             exc_info=True
         )
 
+
+def enqueue_or_dispatch_notification(
+    dispatcher,
+    notification,
+    alert: AlertRecord,
+    user: Optional[object],
+    logger_instance=None,
+    request=None,
+) -> dict:
+    """Build request, enqueue notification, and fallback to synchronous dispatch."""
+    if logger_instance is None:
+        logger_instance = logger
+
+    from app.services.notification_queue import enqueue_notification
+
+    try:
+        if request is None:
+            request = dispatcher.build_notification_request(
+                notification, alert, user
+            )
+        request_payload = request.__dict__
+    except Exception as exc:
+        notification.status = "FAILED"
+        notification.error_message = str(exc)
+        logger_instance.debug(f"Failed to build notification request: {exc}")
+        return {"queued": False, "sent": False, "error": str(exc)}
+
+    enqueued = enqueue_notification({
+        "notification_id": notification.id,
+        "alert_id": notification.alert_id,
+        "notify_channel": notification.notify_channel,
+        "request": request_payload,
+    })
+
+    if enqueued:
+        notification.status = 'QUEUED'
+        notification.next_retry_at = None
+        return {"queued": True, "sent": False}
+
+    success = dispatcher.dispatch(notification, alert, user, request=request)
+    return {"queued": False, "sent": success}
 
 def log_task_result(task_name: str, result: dict, logger_instance=None):
     """

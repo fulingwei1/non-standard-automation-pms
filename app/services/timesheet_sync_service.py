@@ -17,6 +17,7 @@ from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
 from app.services.labor_cost_service import LaborCostService
+from app.common.date_range import get_month_range_by_ym
 
 
 class TimesheetSyncService:
@@ -61,11 +62,7 @@ class TimesheetSyncService:
 
         elif project_id and year and month:
             # 批量同步某个项目的月度数据
-            start_date = date(year, month, 1)
-            if month == 12:
-                end_date = date(year + 1, 1, 1) - timedelta(days=1)
-            else:
-                end_date = date(year, month + 1, 1) - timedelta(days=1)
+            start_date, end_date = get_month_range_by_ym(year, month)
 
             timesheets = self.db.query(Timesheet).filter(
                 Timesheet.project_id == project_id,
@@ -196,11 +193,7 @@ class TimesheetSyncService:
 
         elif rd_project_id and year and month:
             # 批量同步某个研发项目的月度数据
-            start_date = date(year, month, 1)
-            if month == 12:
-                end_date = date(year + 1, 1, 1) - timedelta(days=1)
-            else:
-                end_date = date(year, month + 1, 1) - timedelta(days=1)
+            start_date, end_date = get_month_range_by_ym(year, month)
 
             timesheets = self.db.query(Timesheet).filter(
                 Timesheet.rd_project_id == rd_project_id,

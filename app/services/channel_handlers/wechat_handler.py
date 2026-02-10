@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-企业微信通知处理器
+企业微信通知处理器（统一渠道接口）
+
+WeChatChannelHandler: 统一渠道系统的企业微信处理器（ChannelHandler 接口）
+WeChatNotificationHandler: 完整企业微信处理器（预警通知系统使用）
+
+完整的 API/Webhook 实现在 notification_handlers/wechat_handler.py 中。
 """
 
 
@@ -12,6 +17,11 @@ from app.services.channel_handlers.base import (
     NotificationResult,
 )
 from app.utils.wechat_client import WeChatClient
+
+
+from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+
+__all__ = ["WeChatChannelHandler", "WeChatNotificationHandler"]
 
 
 class WeChatChannelHandler(ChannelHandler):

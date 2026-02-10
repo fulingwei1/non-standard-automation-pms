@@ -3,8 +3,8 @@
 知识贡献自动识别服务单元测试
 """
 
-from datetime import date, datetime
-from unittest.mock import MagicMock, patch
+from datetime import date
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -228,8 +228,24 @@ class TestContributionTypeMapping:
         from app.models.service import KnowledgeBase
         from app.models.user import User
 
-            # 创建用户
-        user = User(username="test_user")
+            # 创建用户（需要 employee_id 和 password_hash）
+        from app.models.organization import Employee
+        emp = Employee(
+            employee_code="EMP-KAI-001",
+            name="test_user",
+            department="测试部",
+            role="ENGINEER",
+            phone="18800000000",
+        )
+        db_session.add(emp)
+        db_session.flush()
+
+        user = User(
+            employee_id=emp.id,
+            username="test_user",
+            password_hash="hashed_pass",
+            real_name="test_user",
+        )
         db_session.add(user)
         db_session.flush()
 

@@ -24,6 +24,7 @@ from app.schemas.issue import (
 from app.services.data_scope import DataScopeService
 
 from .utils import create_blocking_issue_alert, close_blocking_issue_alerts, generate_issue_no
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -114,8 +115,7 @@ def list_issues(
     service_ticket_id: Optional[int] = Query(None, description="关联服务工单ID"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     search: Optional[str] = Query(None, description="关键词搜索（兼容search参数）"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取问题列表"""
     def _normalize_str_filter(value: Optional[str]) -> Optional[str]:
@@ -195,7 +195,7 @@ def list_issues(
     total = query.count()
 
     # 分页
-    issues = query.order_by(desc(Issue.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = []
@@ -206,9 +206,9 @@ def list_issues(
     return IssueListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

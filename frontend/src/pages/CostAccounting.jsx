@@ -55,9 +55,8 @@ import {
 "../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
+import { useCostAccounting } from "./CostAccounting/hooks";
 
-// Mock cost data
-// Mock data - 已移除，使用真实API
 // Cost type configuration
 const costTypeConfig = {
   MATERIAL: {
@@ -95,8 +94,51 @@ const _costCategoryConfig = {
   OTHER: "其他"
 };
 
+const normalizeCostType = (value) => {
+  if (!value) {return "";}
+  const upper = String(value).trim().toUpperCase();
+  if (upper === "MATERIALS") {return "MATERIAL";}
+  if (upper === "LABOUR") {return "LABOR";}
+  if (upper === "OUTSOURCE") {return "OUTSOURCING";}
+  if (upper === "EXPENSES") {return "EXPENSE";}
+  return upper;
+};
+
+const normalizeCostCategory = (value) => {
+  if (!value) {return "";}
+  return String(value).trim().toUpperCase();
+};
+
+const normalizeCost = (cost = {}) => {
+  const costType = normalizeCostType(cost.costType || cost.cost_type);
+  const costCategory = normalizeCostCategory(cost.costCategory || cost.cost_category);
+
+  return {
+    id: cost.id || cost.cost_id,
+    projectId: cost.projectId || cost.project_id,
+    projectName: cost.projectName || cost.project_name,
+    costType,
+    costTypeLabel:
+      cost.costTypeLabel ||
+      cost.cost_type_label ||
+      costTypeConfig[costType]?.label ||
+      costType,
+    costCategoryLabel:
+      cost.costCategoryLabel ||
+      cost.cost_category_label ||
+      _costCategoryConfig[costCategory] ||
+      costCategory,
+    description: cost.description || cost.cost_description || cost.remark,
+    sourceNo: cost.sourceNo || cost.source_no || cost.cost_no,
+    createdBy: cost.createdBy || cost.created_by || cost.creator || cost.owner_name,
+    costDate: cost.costDate || cost.cost_date || cost.date,
+    amount: cost.amount ?? cost.cost_amount ?? 0,
+    taxAmount: cost.taxAmount ?? cost.tax_amount ?? 0
+  };
+};
+
 export default function CostAccounting() {
-  const mockCosts = [];
+  const { costs: rawCosts, setFilters } = useCostAccounting();
   const [searchParams, _setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState("all");
@@ -115,13 +157,26 @@ export default function CostAccounting() {
     }
 
     if (costType) {
-      setSelectedCostType(costType);
+      setSelectedCostType(normalizeCostType(costType));
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      project_id: selectedProject === "all" ? "" : selectedProject,
+      range: selectedDateRange
+    }));
+  }, [selectedProject, selectedDateRange, setFilters]);
+
+  const normalizedCosts = useMemo(() => {
+    if (!Array.isArray(rawCosts)) {return [];}
+    return rawCosts.map(normalizeCost);
+  }, [rawCosts]);
+
   // Filter costs
   const filteredCosts = useMemo(() => {
-    return mockCosts.filter((cost) => {
+    return normalizedCosts.filter((cost) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
       !searchTerm ||
@@ -130,13 +185,14 @@ export default function CostAccounting() {
       (cost.description || "").toLowerCase().includes(searchLower);
 
       const matchesProject =
-      selectedProject === "all" || cost.projectId === selectedProject;
+      selectedProject === "all" ||
+      String(cost.projectId) === String(selectedProject);
       const matchesType =
       selectedCostType === "all" || cost.costType === selectedCostType;
 
       return matchesSearch && matchesProject && matchesType;
     });
-  }, [searchTerm, selectedProject, selectedCostType]);
+  }, [normalizedCosts, searchTerm, selectedProject, selectedCostType]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -157,13 +213,14 @@ export default function CostAccounting() {
   // Projects list
   const projects = useMemo(() => {
     const projectSet = new Set();
-    mockCosts.forEach((cost) => {
+    normalizedCosts.forEach((cost) => {
+      if (!cost.projectId || !cost.projectName) {return;}
       projectSet.add(
         JSON.stringify({ id: cost.projectId, name: cost.projectName })
       );
     });
     return Array.from(projectSet).map((p) => JSON.parse(p));
-  }, []);
+  }, [normalizedCosts]);
 
   return (
     <motion.div

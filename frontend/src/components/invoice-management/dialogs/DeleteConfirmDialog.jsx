@@ -1,46 +1,27 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button
-} from "../../ui";
+/**
+ * DeleteConfirmDialog - 发票删除确认对话框
+ * 基于通用 DeleteConfirmDialog 的发票适配
+ */
 
-const DeleteConfirmDialog = ({
-  open,
-  onOpenChange,
-  selectedInvoice,
-  onConfirm
+import React from "react";
+import DeleteConfirmDialog from "../../common/DeleteConfirmDialog";
+
+const InvoiceDeleteConfirmDialog = ({
+ open,
+ onOpenChange,
+ selectedInvoice,
+ onConfirm
 }) => {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>确认删除</DialogTitle>
-          <DialogDescription>
-            确定要删除发票 {selectedInvoice?.id} 吗？
-            <br />
-            此操作不可撤销。
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={onConfirm}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            删除
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+ return (
+ <DeleteConfirmDialog
+ open={open}
+ onOpenChange={onOpenChange}
+  title="确认删除"
+ description={`确定要删除发票 ${selectedInvoice?.id} 吗？此操作不可撤销。`}
+   onConfirm={onConfirm}
+  confirmText="删除"
+ />
   );
 };
 
-export default DeleteConfirmDialog;
+export default InvoiceDeleteConfirmDialog;

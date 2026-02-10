@@ -152,7 +152,7 @@ def read_outsourcing_order(
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
 
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+    vendor = db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
@@ -187,7 +187,7 @@ def read_outsourcing_order(
         id=order.id,
         order_no=order.order_no,
         vendor_id=order.vendor_id,
-        vendor_name=vendor.vendor_name if vendor else None,
+        vendor_name=vendor.supplier_name if vendor else None,
         project_id=order.project_id,
         project_name=project.project_name if project else None,
         machine_id=order.machine_id,
@@ -354,7 +354,7 @@ def approve_outsourcing_order(
     order.status = "APPROVED"
 
     # 更新外协商的最后订单日期
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+    vendor = db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
     if vendor:
         vendor.last_order_date = datetime.now().date()
         db.add(vendor)

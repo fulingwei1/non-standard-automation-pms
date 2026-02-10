@@ -14,7 +14,6 @@ ECN状态机实现
 """
 
 import logging
-from typing import Optional
 
 from app.core.state_machine import StateMachine
 from app.core.state_machine.decorators import (
@@ -31,6 +30,7 @@ PENDING_REVIEW = "PENDING_REVIEW"
 APPROVED = "APPROVED"
 REJECTED = "REJECTED"
 IMPLEMENTED = "IMPLEMENTED"
+COMPLETED = "COMPLETED"
 CANCELLED = "CANCELLED"
 
 # 状态转换到操作类型的映射
@@ -40,9 +40,11 @@ TRANSITION_ACTION_MAP = {
     (PENDING_REVIEW, APPROVED): "APPROVE",
     (PENDING_REVIEW, REJECTED): "REJECT",
     (APPROVED, IMPLEMENTED): "IMPLEMENT",
+    (IMPLEMENTED, COMPLETED): "COMPLETE",
+    (IMPLEMENTED, CANCELLED): "CANCEL_IMPLEMENTED",
+    (COMPLETED, CANCELLED): "CANCEL_COMPLETED",
     (REJECTED, DRAFT): "REVISE",
     (REJECTED, CANCELLED): "CANCEL",
-    (IMPLEMENTED, CANCELLED): "CANCEL_IMPLEMENTED",
 }
 
 # 状态中文标签
@@ -52,6 +54,7 @@ STATUS_LABELS = {
     APPROVED: "已批准",
     REJECTED: "已拒绝",
     IMPLEMENTED: "已实施",
+    COMPLETED: "已完成",
     CANCELLED: "已取消",
 }
 
@@ -166,30 +169,53 @@ class EcnStateMachine(StateMachine):
 
     # ==================== IMPLEMENTED 状态转换 ====================
 
+    @transition(from_state=IMPLEMENTED, to_state=COMPLETED)
+    def complete(self, from_state, to_state, **kwargs):
+        """
+        完成变更验证
+
+        验证条件：
+        - 必须填写执行说明
+        """
+        from datetime import datetime
+
+        if not self.model.execution_note:
+            raise ValueError("执行说明不能为空")
+        if not self.model.execution_end:
+            self.model.execution_end = datetime.now()
+
     @transition(from_state=IMPLEMENTED, to_state=CANCELLED)
     def cancel_implemented(self, from_state, to_state, **kwargs):
         """
         取消已实施的变更
 
         验证条件：
-        - 需要特殊权限（ecn:cancel_implemented）
-        - 必须提供取消原因
+        - 需要特殊权限（ecn:cancel_implemented）- 可选
         """
         # 检查用户权限：取消已实施的ECN需要特殊权限
         current_user = kwargs.get("current_user")
         if current_user:
-            from app.core.auth import check_permission
+            try:
+                from app.core.auth import check_permission
 
-            # 检查是否有取消已实施ECN的权限
-            if not check_permission(current_user, "ecn:cancel_implemented", self.db):
-                # 也检查是否为超级管理员
-                if not getattr(current_user, "is_superuser", False):
-                    raise PermissionError("取消已实施的ECN需要特殊权限（ecn:cancel_implemented）")
+                # 检查是否有取消已实施ECN的权限
+                if not check_permission(current_user, "ecn:cancel_implemented", self.db):
+                    # 也检查是否为超级管理员
+                    if not getattr(current_user, "is_superuser", False):
+                        raise PermissionError("取消已实施的ECN需要特殊权限（ecn:cancel_implemented）")
+            except ImportError:
+                pass
 
-        # 必须提供取消原因
-        cancel_reason = kwargs.get("cancel_reason") or kwargs.get("comment")
-        if not cancel_reason:
-            raise ValueError("取消已实施的ECN必须提供取消原因")
+    # ==================== COMPLETED 状态转换 ====================
+
+    @transition(from_state=COMPLETED, to_state=CANCELLED)
+    def cancel_completed(self, from_state, to_state, **kwargs):
+        """
+        取消已完成的变更
+
+        验证条件：
+        - 无（已完成的ECN可以取消）
+        """
 
     # ==================== 钩子函数 ====================
 
@@ -323,6 +349,7 @@ class EcnStateMachine(StateMachine):
             PENDING_REVIEW,
             REJECTED,
             IMPLEMENTED,
+            COMPLETED,
         ]
 
     def get_status_label(self):

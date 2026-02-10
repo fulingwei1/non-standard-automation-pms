@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
 import { formatCurrency } from "../../lib/utils";
-import { StatCard } from "./StatCard";
+import StatCard from "../common/StatCard";
 
 export function KeyStatisticsGrid({ deptStats }) {
   if (!deptStats) return null;
@@ -27,6 +27,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={DollarSign}
         color="text-amber-400"
         bg="bg-amber-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
 
       <StatCard
@@ -36,6 +43,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={Target}
         color="text-emerald-400"
         bg="bg-emerald-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
 
       <StatCard
@@ -45,6 +59,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={Users}
         color="text-blue-400"
         bg="bg-blue-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
 
       <StatCard
@@ -55,6 +76,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={Building2}
         color="text-purple-400"
         bg="bg-purple-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
 
       <StatCard
@@ -64,6 +92,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={CreditCard}
         color="text-red-400"
         bg="bg-red-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
 
       <StatCard
@@ -73,6 +108,13 @@ export function KeyStatisticsGrid({ deptStats }) {
         icon={AlertTriangle}
         color="text-amber-400"
         bg="bg-amber-500/10"
+        size="small"
+        trendShowSign={false}
+        trendLabel=""
+        showDecoration={false}
+        hoverScale={1.05}
+        cardClassName="transition-all duration-300 border-slate-700/50 bg-none"
+        iconWrapperClassName="p-2 bg-opacity-10"
       />
     </motion.div>
   );

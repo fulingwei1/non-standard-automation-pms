@@ -4,9 +4,8 @@
 包含：WBS模板、模板任务、项目任务、任务依赖、进度日志、计划基线
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -20,7 +19,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 
 from app.models.base import Base, TimestampMixin
 
@@ -83,7 +82,7 @@ class Task(Base, TimestampMixin):
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="机台ID")
     milestone_id = Column(Integer, ForeignKey("project_milestones.id"), comment="里程碑ID")
-    task_name = Column(String(200), nullable=False, comment="任务名称")
+    task_name = Column(String(200), nullable=True, comment="任务名称")
     stage = Column(String(20), comment="阶段（S1-S9）")
     status = Column(String(20), default="TODO", comment="状态：TODO/IN_PROGRESS/BLOCKED/DONE/CANCELLED")
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
@@ -92,6 +91,7 @@ class Task(Base, TimestampMixin):
     actual_start = Column(Date, comment="实际开始日期")
     actual_end = Column(Date, comment="实际结束日期")
     progress_percent = Column(Integer, default=0, comment="进度百分比（0-100）")
+    progress_pct = synonym("progress_percent")
     weight = Column(Numeric(5, 2), default=Decimal("1.00"), comment="权重")
     block_reason = Column(Text, comment="阻塞原因")
 

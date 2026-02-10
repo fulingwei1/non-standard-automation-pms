@@ -19,6 +19,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
 from app.services.sales_team_service import SalesTeamService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import get_user_role_code
 
@@ -32,8 +33,7 @@ router = APIRouter()
 def get_sales_targets(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     target_scope: Optional[str] = Query(None, description="目标范围筛选：PERSONAL/TEAM/DEPARTMENT"),
     target_type: Optional[str] = Query(None, description="目标类型筛选"),
     target_period: Optional[str] = Query(None, description="目标周期筛选：MONTHLY/QUARTERLY/YEARLY"),
@@ -94,8 +94,7 @@ def get_sales_targets(
         query = query.filter(SalesTarget.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    targets = query.order_by(desc(SalesTarget.created_at)).offset(offset).limit(page_size).all()
+    targets = query.order_by(desc(SalesTarget.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     team_service = SalesTeamService(db)
 
@@ -139,9 +138,9 @@ def get_sales_targets(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

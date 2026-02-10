@@ -5,27 +5,14 @@ import { Button } from "../../components/ui/button";
 import { fadeIn } from "../../lib/animations";
 import { ApiIntegrationError } from "../../components/ui";
 import { PurchaseOrdersOverview, PAYMENT_TERMS, SHIPPING_METHODS } from "../../components/purchase-orders";
+import {
+    CreateEditOrderDialog,
+    OrderDetailDialog,
+    ReceiveGoodsDialog,
+    DeleteConfirmDialog as PurchaseOrderDeleteConfirmDialog
+} from "../../components/purchase/orders";
 import { usePurchaseOrders } from "./hooks";
 import { OrderCard, OrdersControls } from "./components";
-
-// Import dialogs from original location (can be extracted later)
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter
-} from "../../components/ui/dialog";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "../../components/ui/select";
-import { PAYMENT_TERMS_CONFIGS } from "../../components/purchase-orders";
 
 export default function PurchaseOrders() {
     const {
@@ -134,11 +121,17 @@ export default function PurchaseOrders() {
                                         setShowDetailModal(true);
                                     }}
                                     onEdit={(order) => {
+                                        const original = order?._original || {};
                                         setSelectedOrder(order);
                                         setEditOrder({
-                                            ...order,
-                                            payment_terms: order.paymentTerms || PAYMENT_TERMS.NET30,
-                                            shipping_method: order.shippingMethod || SHIPPING_METHODS.STANDARD
+                                            id: order.id,
+                                            supplier_id: order.supplierId || original.supplier_id || "",
+                                            project_id: order.projectId || original.project_id || "",
+                                            items: order.items || original.items || [],
+                                            payment_terms: order.paymentTerms || original.payment_terms || PAYMENT_TERMS.NET30,
+                                            shipping_method: order.shippingMethod || original.shipping_method || SHIPPING_METHODS.STANDARD,
+                                            notes: order.notes || original.notes || original.remark || "",
+                                            urgency: order.urgency || original.urgency || "normal"
                                         });
                                         setShowEditModal(true);
                                     }}
@@ -169,113 +162,71 @@ export default function PurchaseOrders() {
                     </div>
                 )}
 
-                {/* Create Order Modal */}
-                <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-                    <DialogContent className="sm:max-w-[700px] bg-surface-1 border-border">
-                        <DialogHeader>
-                            <DialogTitle className="text-white">创建采购订单</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-text-secondary">供应商</Label>
-                                    <Select
-                                        value={newOrder.supplier_id}
-                                        onValueChange={(value) => setNewOrder({ ...newOrder, supplier_id: value })}
-                                    >
-                                        <SelectTrigger className="bg-surface-2 border-border">
-                                            <SelectValue placeholder="选择供应商" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-surface-2 border-border">
-                                            {suppliers.map((supplier) => (
-                                                <SelectItem key={supplier.id} value={supplier.id}>
-                                                    {supplier.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label className="text-text-secondary">项目</Label>
-                                    <Select
-                                        value={newOrder.project_id}
-                                        onValueChange={(value) => setNewOrder({ ...newOrder, project_id: value })}
-                                    >
-                                        <SelectTrigger className="bg-surface-2 border-border">
-                                            <SelectValue placeholder="选择项目" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-surface-2 border-border">
-                                            {projects.map((project) => (
-                                                <SelectItem key={project.id} value={project.id}>
-                                                    {project.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                {/* Create / Edit / Detail / Receive / Delete Dialogs */}
+                <CreateEditOrderDialog
+                    open={showCreateModal}
+                    onOpenChange={setShowCreateModal}
+                    mode="create"
+                    orderData={newOrder}
+                    suppliers={suppliers}
+                    projects={projects}
+                    onChange={setNewOrder}
+                    onSubmit={handleCreateOrder}
+                />
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-text-secondary">支付条款</Label>
-                                    <Select
-                                        value={newOrder.payment_terms}
-                                        onValueChange={(value) => setNewOrder({ ...newOrder, payment_terms: value })}
-                                    >
-                                        <SelectTrigger className="bg-surface-2 border-border">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-surface-2 border-border">
-                                            {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) => (
-                                                <SelectItem key={key} value={key}>
-                                                    {config.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                <CreateEditOrderDialog
+                    open={showEditModal}
+                    onOpenChange={(open) => {
+                        setShowEditModal(open);
+                        if (!open) {
+                            setSelectedOrder(null);
+                        }
+                    }}
+                    mode="edit"
+                    orderData={editOrder}
+                    suppliers={suppliers}
+                    projects={projects}
+                    onChange={setEditOrder}
+                    onSubmit={handleEditOrder}
+                />
 
-                            <div>
-                                <Label className="text-text-secondary">备注</Label>
-                                <Textarea
-                                    value={newOrder.notes}
-                                    onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
-                                    className="bg-surface-2 border-border"
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                                取消
-                            </Button>
-                            <Button onClick={handleCreateOrder} className="bg-accent hover:bg-accent/90">
-                                创建订单
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <OrderDetailDialog
+                    open={showDetailModal}
+                    onOpenChange={(open) => {
+                        setShowDetailModal(open);
+                        if (!open) {
+                            setSelectedOrder(null);
+                        }
+                    }}
+                    order={selectedOrder}
+                    onSubmitApproval={handleSubmitApproval}
+                />
 
-                {/* Delete Confirmation Modal */}
-                <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-                    <DialogContent className="sm:max-w-[400px] bg-surface-1 border-border">
-                        <DialogHeader>
-                            <DialogTitle className="text-white">确认删除</DialogTitle>
-                        </DialogHeader>
-                        <p className="text-text-secondary">
-                            确定要删除订单 {selectedOrder?.id} 吗？此操作不可恢复。
-                        </p>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
-                                取消
-                            </Button>
-                            <Button variant="destructive" onClick={handleDeleteOrder}>
-                                删除
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <ReceiveGoodsDialog
+                    open={showReceiveModal}
+                    onOpenChange={(open) => {
+                        setShowReceiveModal(open);
+                        if (!open) {
+                            setSelectedOrder(null);
+                        }
+                    }}
+                    order={selectedOrder}
+                    receiveData={receiveData}
+                    onChangeReceiveData={setReceiveData}
+                    onConfirm={handleReceiveGoods}
+                />
+
+                <PurchaseOrderDeleteConfirmDialog
+                    open={showDeleteModal}
+                    onOpenChange={(open) => {
+                        setShowDeleteModal(open);
+                        if (!open) {
+                            setSelectedOrder(null);
+                        }
+                    }}
+                    order={selectedOrder}
+                    onConfirm={handleDeleteOrder}
+                />
             </div>
         </div>
     );

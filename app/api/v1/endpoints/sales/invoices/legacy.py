@@ -17,6 +17,7 @@ from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import InvoiceResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,7 @@ router = APIRouter()
 @router.get("/invoices_old", response_model=PaginatedResponse[InvoiceResponse])
 def read_invoices_old(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
@@ -57,8 +57,7 @@ def read_invoices_old(
         query = query.filter(Invoice.contract_id == contract_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    invoices = query.order_by(desc(Invoice.created_at)).offset(offset).limit(page_size).all()
+    invoices = query.order_by(desc(Invoice.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     invoice_responses = []
     for invoice in invoices:
@@ -77,7 +76,7 @@ def read_invoices_old(
     return PaginatedResponse(
         items=invoice_responses,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )

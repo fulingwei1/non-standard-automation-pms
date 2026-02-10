@@ -1023,6 +1023,26 @@ def test_project_with_customer() -> Project:
 
 
 @pytest.fixture(scope="function")
+def test_machine(test_project: Project) -> Machine:
+    """创建测试机台，关联到 test_project"""
+    from tests.factories import MachineFactory
+    return MachineFactory(project_id=test_project.id)
+
+
+@pytest.fixture(scope="function")
+def normal_user(db_session: Session) -> User:
+    """创建普通用户，用于需要非管理员用户的测试（如添加项目成员）"""
+    return _get_or_create_user(
+        db_session,
+        username="normal_test_user",
+        password="normal123",
+        real_name="普通测试用户",
+        department="综合管理部",
+        employee_role="BUSINESS_USER",
+    )
+
+
+@pytest.fixture(scope="function")
 def test_supplier():
     """Create test supplier"""
     return SupplierFactory()

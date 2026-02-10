@@ -8,7 +8,7 @@ Redis缓存服务
 import json
 import logging
 from datetime import timedelta
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 try:
     import redis
@@ -318,7 +318,8 @@ def cache_result(key_prefix: str, expire: Union[int, timedelta] = 300):
 
 
 # 缓存管理工具
-class CacheManager:
+# 注意: 主类名为 RedisCacheManager，避免与 report_framework.cache_manager.ReportCacheManager 冲突
+class RedisCacheManager:
     """缓存管理工具"""
 
     @staticmethod
@@ -398,3 +399,10 @@ class CacheManager:
         if cache.is_available():
             cache.client.flushdb()
             logger.info("所有缓存已清除")
+
+
+# 向后兼容别名
+# DEPRECATED: 请使用 RedisCacheManager，CacheManager 别名仅用于向后兼容。
+# 注意：report_framework 的 CacheManager 已重命名为 ReportCacheManager (#47)，
+# 命名冲突已解决，但此别名仍保留以兼容旧代码。
+CacheManager = RedisCacheManager

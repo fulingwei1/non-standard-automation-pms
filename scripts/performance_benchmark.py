@@ -14,9 +14,8 @@ import statistics
 import sys
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,6 +23,7 @@ from app.models.alert import AlertRecord
 from app.models.base import get_db_session
 from app.models.project import Project
 from app.services.cache.business_cache import get_business_cache
+from app.services.cache.redis_cache import RedisCacheManager
 from app.services.database.query_optimizer import QueryOptimizer
 
 
@@ -92,8 +92,7 @@ class PerformanceBenchmark:
             def cached_query():
                 # 先清除缓存确保第一次查询从数据库获取
                 if i == 0:
-                    from app.services.cache.redis_cache import CacheManager
-                    CacheManager.clear_project_cache()
+                    RedisCacheManager.clear_project_cache()
 
                 cached_projects = business_cache.get_project_list(0, 100)
                 if cached_projects is None:
@@ -137,7 +136,7 @@ class PerformanceBenchmark:
         improvement_optimized = ((original_avg - optimized_avg) / original_avg) * 100
         improvement_cached = ((original_avg - cached_avg) / original_avg) * 100
 
-        print(f"\n📈 性能提升统计:")
+        print("\n📈 性能提升统计:")
         print(f"  原始查询平均时间: {original_avg:.3f}s")
         print(f"  优化查询平均时间: {optimized_avg:.3f}s (提升 {improvement_optimized:.1f}%)")
         print(f"  缓存查询平均时间: {cached_avg:.3f}s (提升 {improvement_cached:.1f}%)")
@@ -215,7 +214,7 @@ class PerformanceBenchmark:
         improvement_optimized = ((original_avg - optimized_avg) / original_avg) * 100
         improvement_cached = ((original_avg - cached_avg) / original_avg) * 100
 
-        print(f"\n📈 告警统计性能提升:")
+        print("\n📈 告警统计性能提升:")
         print(f"  原始统计平均时间: {original_avg:.3f}s")
         print(f"  优化统计平均时间: {optimized_avg:.3f}s (提升 {improvement_optimized:.1f}%)")
         print(f"  缓存统计平均时间: {cached_avg:.3f}s (提升 {improvement_cached:.1f}%)")
@@ -239,7 +238,7 @@ class PerformanceBenchmark:
             print(f"  连接测试 {i+1}: {exec_time:.3f}s - {'成功' if success else '失败'}")
 
         avg_time = statistics.mean(connection_times)
-        print(f"\n📈 连接性能统计:")
+        print("\n📈 连接性能统计:")
         print(f"  平均连接时间: {avg_time:.3f}s")
         print(f"  最快连接时间: {min(connection_times):.3f}s")
         print(f"  最慢连接时间: {max(connection_times):.3f}s")

@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-统一通知服务
+统一通知服务（主通知服务入口）
 整合所有通知渠道，提供统一接口
+
+通知系统架构：
+- app.services.unified_notification_service (本模块): 主通知服务，提供 NotificationService 和 get_notification_service()
+- app.services.notification_service: 兼容层，re-export 统一服务并提供旧接口的枚举和 AlertNotificationService
+- app.services.notification_dispatcher: 预警通知调度协调器，内部使用统一服务
+- app.services.notification_queue: Redis 通知队列（异步分发）
+- app.services.notification_utils: 通知工具函数（渠道解析、接收者解析、免打扰判断等）
+- app.services.channel_handlers/: 渠道处理器（System/Email/WeChat/SMS/Webhook）
+
+新代码推荐直接使用：
+ from app.services.unified_notification_service import get_notification_service
 """
 
 from __future__ import annotations
@@ -212,7 +223,7 @@ class NotificationService:
                 "message": "已进入免打扰队列",
             }
 
-        if not self._should_send_by_category(user_settings, request.category):
+        if not self._should_send_by_category(request, user_settings):
             self.logger.info(f"用户{request.recipient_id}禁用{request.category}通知")
             return {
                 "success": True,

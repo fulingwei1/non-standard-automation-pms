@@ -1,28 +1,43 @@
-/**
- * 装配技工专用任务卡片组件
- */
-
 import { useState } from "react";
-
-
-
-
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronRight,
+  Timer,
+  Wrench,
+  Package
+} from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
 import { statusConfigs, priorityConfigs } from "./taskConfig";
 
+/**
+ * 装配任务卡片组件（技工专用）
+ * 显示物料准备、作业步骤等装配相关信息
+ */
 export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
   const [expanded, setExpanded] = useState(true);
   const status = statusConfigs[task.status];
   const priority = priorityConfigs[task.priority];
   const StatusIcon = status.icon;
 
-  const isOverdue =
-    task.status !== "completed" && new Date(task.dueDate) < new Date();
-
+  const isOverdue = task.status !== "completed" && new Date(task.dueDate) < new Date();
   const partsReady = task.parts?.filter((p) => p.ready).length || 0;
   const partsTotal = task.parts?.length || 0;
   const stepsCompleted = task.instructions?.filter((s) => s.done).length || 0;
   const stepsTotal = task.instructions?.length || 0;
+
+  const handleStatusClick = () => {
+    if (task.status === "pending") {
+      onStatusChange(task.id, "in_progress");
+    } else if (task.status === "in_progress" && stepsCompleted === stepsTotal) {
+      onStatusChange(task.id, "completed");
+    }
+  };
 
   return (
     <motion.div
@@ -42,15 +57,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
       <div className="p-5 pb-3">
         <div className="flex items-start gap-4">
           <button
-            onClick={() => {
-              if (task.status === "pending")
-                {onStatusChange(task.id, "in_progress");}
-              else if (
-                task.status === "in_progress" &&
-                stepsCompleted === stepsTotal
-              )
-                {onStatusChange(task.id, "completed");}
-            }}
+            onClick={handleStatusClick}
             className={cn(
               "p-3 rounded-xl transition-colors",
               status.bgColor,
@@ -62,19 +69,19 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Badge
-                variant="outline"
-                className={cn("text-xs", priority.color, "border-current")}
-              >
+              <Badge variant="outline" className={cn("text-xs", priority.color, "border-current")}>
                 {priority.label}优先级
               </Badge>
-              <Badge variant="secondary" className="text-xs">
-                {task.machine}
-              </Badge>
+              {task.machine && (
+                <Badge variant="secondary" className="text-xs">
+                  {task.machine}
+                </Badge>
+              )}
             </div>
             <h2 className="text-xl font-bold text-white mb-1">{task.title}</h2>
             <p className="text-sm text-slate-400">
-              {task.projectName} · {task.location}
+              {task.projectName}
+              {task.location && ` · ${task.location}`}
             </p>
           </div>
         </div>
@@ -88,7 +95,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
         )}
 
         {/* Progress */}
-        {task.status === "in_progress" && (
+        {task.status === "in_progress" && stepsTotal > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-slate-400">进度</span>
@@ -96,21 +103,13 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
                 {stepsCompleted}/{stepsTotal} 步骤
               </span>
             </div>
-            <Progress
-              value={stepsCompleted / stepsTotal * 100 || 0}
-              className="h-2"
-            />
+            <Progress value={(stepsCompleted / stepsTotal) * 100 || 0} className="h-2" />
           </div>
         )}
 
         {/* Time info */}
         <div className="flex items-center gap-6 mt-4 text-sm">
-          <span
-            className={cn(
-              "flex items-center gap-2",
-              isOverdue ? "text-red-400" : "text-slate-400"
-            )}
-          >
+          <span className={cn("flex items-center gap-2", isOverdue ? "text-red-400" : "text-slate-400")}>
             <Calendar className="w-4 h-4" />
             截止: {task.dueDate}
           </span>
@@ -166,11 +165,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
                           <Clock className="w-3 h-3 text-white" />
                         )}
                       </div>
-                      <span
-                        className={
-                          part.ready ? "text-emerald-300" : "text-amber-300"
-                        }
-                      >
+                      <span className={part.ready ? "text-emerald-300" : "text-amber-300"}>
                         {part.name} x{part.qty}
                       </span>
                     </div>
@@ -196,17 +191,13 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
                 onClick={() => onStepToggle(task.id, step.step)}
                 className={cn(
                   "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors",
-                  step.done
-                    ? "bg-emerald-500/10"
-                    : "bg-surface-2/50 hover:bg-surface-2"
+                  step.done ? "bg-emerald-500/10" : "bg-surface-2/50 hover:bg-surface-2"
                 )}
               >
                 <div
                   className={cn(
                     "w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                    step.done
-                      ? "bg-emerald-500 border-emerald-500"
-                      : "border-slate-500"
+                    step.done ? "bg-emerald-500 border-emerald-500" : "border-slate-500"
                   )}
                 >
                   {step.done ? (

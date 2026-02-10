@@ -5,33 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   UserPlus, UserCheck, Target, FileText, 
-  BarChart3, ChevronRight, TrendingUp, TrendingDown 
+  BarChart3, ChevronRight 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import StatCard from '../common/StatCard';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
-
-/**
- * 招聘统计卡片
- */
-const RecruitmentStatCard = ({ title, value, icon: Icon, color, bgColor }) => (
-  <Card className="bg-surface-50 border-white/10">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-400 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-white">{value}</p>
-        </div>
-        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", bgColor)}>
-          <Icon className={cn("w-6 h-6", color)} />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 /**
  * 招聘趋势项
@@ -115,33 +97,53 @@ export const HRRecruitmentTab = ({
     >
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <RecruitmentStatCard
+        <StatCard
           title="进行中招聘"
           value={stats.inProgressRecruitments}
           icon={UserPlus}
           color="text-blue-400"
-          bgColor="bg-blue-500/20"
+          bg="bg-blue-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <RecruitmentStatCard
+        <StatCard
           title="已完成招聘"
           value={stats.completedRecruitments}
           icon={UserCheck}
           color="text-emerald-400"
-          bgColor="bg-emerald-500/20"
+          bg="bg-emerald-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <RecruitmentStatCard
+        <StatCard
           title="招聘成功率"
           value={`${stats.recruitmentSuccessRate}%`}
           icon={Target}
           color="text-purple-400"
-          bgColor="bg-purple-500/20"
+          bg="bg-purple-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <RecruitmentStatCard
+        <StatCard
           title="待审批"
           value={stats.pendingRecruitments}
           icon={FileText}
           color="text-amber-400"
-          bgColor="bg-amber-500/20"
+          bg="bg-amber-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
       </div>
 

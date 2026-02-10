@@ -16,6 +16,7 @@ from app.models.sales import ReceivableDispute
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import ReceivableDisputeCreate, ReceivableDisputeResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -23,8 +24,7 @@ router = APIRouter()
 @router.get("/disputes", response_model=PaginatedResponse[ReceivableDisputeResponse])
 def read_disputes(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -37,8 +37,7 @@ def read_disputes(
         query = query.filter(ReceivableDispute.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    disputes = query.order_by(desc(ReceivableDispute.created_at)).offset(offset).limit(page_size).all()
+    disputes = query.order_by(desc(ReceivableDispute.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     dispute_responses = []
     for dispute in disputes:
@@ -51,9 +50,9 @@ def read_disputes(
     return PaginatedResponse(
         items=dispute_responses,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

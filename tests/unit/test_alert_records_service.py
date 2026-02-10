@@ -10,7 +10,7 @@ from unittest.mock import Mock, MagicMock, patch
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
-from app.models.alert import AlertRecord, AlertRule, AlertNotification
+from app.models.alert import AlertRecord, AlertRule
 from app.models.user import User
 from app.schemas.alert import AlertRecordHandle
 from app.schemas.common import PaginatedResponse
@@ -469,7 +469,7 @@ class TestCreateAlertFromRule:
 
             # The alert should have assigned_to set
             call_args = db_session.add.call_args[0][0]
-            assert call_args.assigned_to == 5
+            assert call_args.handler_id == 5
 
 
 class TestSendAlertNotification:
@@ -487,15 +487,15 @@ class TestSendAlertNotification:
         mock_alert = Mock(spec=AlertRecord)
         mock_alert.id = 1
         mock_alert.title = "Test Alert"
+        mock_alert.assigned_to = 10
 
-        service._send_alert_notification(mock_alert, "created")
+        with patch(
+            "app.services.notification_service.AlertNotificationService"
+        ) as mock_service:
+            mock_instance = mock_service.return_value
+            mock_instance.send_alert_notification.return_value = True
 
-        # Verify notification was added
-        db_session.add.assert_called_once()
-        db_session.commit.assert_called_once()
+            result = service._send_alert_notification(mock_alert, "created")
 
-        # Check the notification object
-        notification = db_session.add.call_args[0][0]
-        assert notification.alert_id == 1
-        assert notification.notification_type == "system"
-        assert "created" in notification.content
+            assert result is True
+            mock_instance.send_alert_notification.assert_called_once()

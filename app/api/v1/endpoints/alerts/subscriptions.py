@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -60,8 +60,7 @@ router = APIRouter(tags=["subscriptions"])
 @router.get("/alerts/subscriptions", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_subscriptions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     alert_type: Optional[str] = Query(None, description="预警类型筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -88,8 +87,7 @@ def read_alert_subscriptions(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    subscriptions = query.order_by(AlertSubscription.created_at.desc()).offset(offset).limit(page_size).all()
+    subscriptions = query.order_by(AlertSubscription.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 转换为响应格式
     items = []
@@ -110,13 +108,7 @@ def read_alert_subscriptions(
         }
         items.append(item)
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/alerts/subscriptions/{subscription_id}", response_model=AlertSubscriptionResponse, status_code=status.HTTP_200_OK)

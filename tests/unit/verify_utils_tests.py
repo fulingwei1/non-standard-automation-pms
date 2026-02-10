@@ -61,7 +61,7 @@ def test_logger():
     print("测试 logger.py")
     print("=" * 60)
     
-    from app.utils.logger import get_logger, log_error_with_context, log_warning_with_context
+    from app.core.logging_config import get_logger, log_error_with_context, log_warning_with_context
     import logging
     
     # Test get_logger

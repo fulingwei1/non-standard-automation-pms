@@ -5,6 +5,14 @@ Provides simple retry and logging helpers.
 
 This module acts as a coordinator, delegating to the unified NotificationService.
 
+通知系统架构：
+- app.services.unified_notification_service: 主通知服务，提供 NotificationService 和 get_notification_service()
+- app.services.notification_service: 兼容层，re-export 统一服务并提供旧接口的枚举和 AlertNotificationService
+- app.services.notification_dispatcher (本模块): 预警通知调度协调器，内部使用统一服务
+- app.services.notification_queue: Redis 通知队列（异步分发）
+- app.services.notification_utils: 通知工具函数（渠道解析、接收者解析、免打扰判断等）
+- app.services.channel_handlers/: 渠道处理器（System/Email/WeChat/SMS/Webhook）
+
 BACKWARD COMPATIBILITY: This module maintains the same interface while using the new unified service.
 """
 
@@ -15,6 +23,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification, AlertRecord
+from app.models.notification import NotificationSettings
 from app.models.user import User
 from app.services.unified_notification_service import get_notification_service
 from app.services.channel_handlers.base import (
@@ -76,8 +85,64 @@ class NotificationDispatcher:
         }
         return mapping.get(level_upper, NotificationPriority.NORMAL)
 
+    def _resolve_recipient_id(
+        self, notification: AlertNotification, user: Optional[User]
+    ) -> int:
+        recipient_id = notification.notify_user_id
+        if not recipient_id and user:
+            recipient_id = user.id
+        if not recipient_id:
+            raise ValueError("Notification requires recipient_id or user")
+        return recipient_id
+
+    def _build_request(
+        self,
+        notification: AlertNotification,
+        alert: AlertRecord,
+        recipient_id: int,
+        unified_channel: str,
+    ) -> NotificationRequest:
+        return NotificationRequest(
+            recipient_id=recipient_id,
+            notification_type="ALERT",
+            category="alert",
+            title=notification.notify_title or alert.alert_title or "预警通知",
+            content=notification.notify_content or alert.alert_content or "",
+            priority=self._map_alert_level_to_priority(alert.alert_level),
+            channels=[unified_channel],
+            source_type="alert",
+            source_id=alert.id,
+            link_url=f"/alerts/{alert.id}",
+            extra_data={
+                "alert_no": alert.alert_no,
+                "alert_level": alert.alert_level,
+                "target_type": alert.target_type,
+                "target_name": alert.target_name,
+            },
+        )
+
+    def build_notification_request(
+        self,
+        notification: AlertNotification,
+        alert: AlertRecord,
+        user: Optional[User],
+    ) -> NotificationRequest:
+        channel = (notification.notify_channel or "SYSTEM").upper()
+        unified_channel = self._map_channel_to_unified(channel)
+        recipient_id = self._resolve_recipient_id(notification, user)
+        return self._build_request(
+            notification=notification,
+            alert=alert,
+            recipient_id=recipient_id,
+            unified_channel=unified_channel,
+        )
+
     def dispatch(
-        self, notification: AlertNotification, alert: AlertRecord, user: Optional[User]
+        self,
+        notification: AlertNotification,
+        alert: AlertRecord,
+        user: Optional[User],
+        request: Optional[NotificationRequest] = None,
     ) -> bool:
         """Send notification based on channel using unified service."""
         channel = (notification.notify_channel or "SYSTEM").upper()
@@ -85,31 +150,36 @@ class NotificationDispatcher:
         
         try:
             # 确定接收者
-            recipient_id = notification.notify_user_id
-            if not recipient_id and user:
-                recipient_id = user.id
-            if not recipient_id:
-                raise ValueError("Notification requires recipient_id or user")
+            if request is not None:
+                recipient_id = request.recipient_id
+            else:
+                recipient_id = self._resolve_recipient_id(notification, user)
+
+            # 免打扰处理（与统一服务一致）
+            settings = None
+            if isinstance(recipient_id, int):
+                settings = (
+                    self.db.query(NotificationSettings)
+                    .filter(NotificationSettings.user_id == recipient_id)
+                    .first()
+                )
+            if settings and is_quiet_hours(settings, datetime.now()):
+                notification.status = "PENDING"
+                notification.error_message = "Delayed due to quiet hours"
+                notification.next_retry_at = next_quiet_resume(
+                    settings, datetime.now()
+                )
+                notification.retry_count = notification.retry_count or 0
+                return True
 
             # 构建通知请求
-            request = NotificationRequest(
-                recipient_id=recipient_id,
-                notification_type="ALERT",
-                category="alert",
-                title=notification.notify_title or alert.alert_title or "预警通知",
-                content=notification.notify_content or alert.alert_content or "",
-                priority=self._map_alert_level_to_priority(alert.alert_level),
-                channels=[unified_channel],
-                source_type="alert",
-                source_id=alert.id,
-                link_url=f"/alerts/{alert.id}",
-                extra_data={
-                    "alert_no": alert.alert_no,
-                    "alert_level": alert.alert_level,
-                    "target_type": alert.target_type,
-                    "target_name": alert.target_name,
-                },
-            )
+            if request is None:
+                request = self._build_request(
+                    notification=notification,
+                    alert=alert,
+                    recipient_id=recipient_id,
+                    unified_channel=unified_channel,
+                )
 
             # 使用统一服务发送
             result = self.unified_service.send_notification(request)

@@ -13,12 +13,13 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.ecn import Ecn, EcnEvaluation, EcnLog, EcnType
 from app.models.project import Machine, Project
 from app.models.user import User
@@ -42,13 +43,7 @@ router = APIRouter()
 @router.get("/ecns", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_ecns(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（ECN编号/标题）"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
@@ -63,13 +58,7 @@ def read_ecns(
     query = db.query(Ecn)
 
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                Ecn.ecn_no.like(f"%{keyword}%"),
-                Ecn.ecn_title.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, Ecn, keyword, ["ecn_no", "ecn_title"])
 
     # 项目筛选
     if project_id:
@@ -92,18 +81,11 @@ def read_ecns(
         query = query.filter(Ecn.priority == priority)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    ecns = query.order_by(desc(Ecn.created_at)).offset(offset).limit(page_size).all()
+    ecns = query.order_by(desc(Ecn.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [build_ecn_list_response(db, ecn) for ecn in ecns]
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get(

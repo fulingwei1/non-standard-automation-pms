@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import PermissionAudit, User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -45,8 +45,7 @@ class PermissionAuditListResponse(PaginatedResponse):
 @router.get("/", response_model=PermissionAuditListResponse, status_code=status.HTTP_200_OK)
 def read_audits(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     operator_id: Optional[int] = Query(None, description="操作人ID筛选"),
     target_type: Optional[str] = Query(None, description="目标类型筛选（user/role/permission）"),
     target_id: Optional[int] = Query(None, description="目标ID筛选"),
@@ -95,8 +94,7 @@ def read_audits(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    audits = query.order_by(PermissionAudit.created_at.desc()).offset(offset).limit(page_size).all()
+    audits = query.order_by(PermissionAudit.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应数据
     items = []
@@ -121,8 +119,8 @@ def read_audits(
     return PermissionAuditListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=(total + page_size - 1) // page_size
     )
 

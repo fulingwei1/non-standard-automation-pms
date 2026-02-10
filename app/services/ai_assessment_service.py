@@ -6,14 +6,12 @@ AI分析服务（可选）
 如果未配置API密钥，服务将跳过AI分析
 """
 
-import json
 import logging
 import os
 from typing import Any, Dict, Optional
 
 import httpx
 
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +25,9 @@ class AIAssessmentService:
     """AI分析服务"""
 
     def __init__(self):
-        self.api_key = ALIBABA_API_KEY
-        self.model = ALIBABA_MODEL
+        # 运行时读取环境变量，以支持测试中动态设置
+        self.api_key = os.getenv("ALIBABA_API_KEY", "") or ALIBABA_API_KEY
+        self.model = os.getenv("ALIBABA_MODEL", "") or ALIBABA_MODEL
         self.enabled = bool(self.api_key)
 
     def is_available(self) -> bool:

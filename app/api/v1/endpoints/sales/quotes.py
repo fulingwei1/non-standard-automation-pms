@@ -23,6 +23,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 
 # 导入重构后的服务
 from app.services.sales.quotes_service import QuotesService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -30,8 +31,7 @@ router = APIRouter()
 @router.get("/quotes", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_quotes(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户筛选"),
@@ -42,8 +42,8 @@ def read_quotes(
     """获取报价列表（已集成数据权限过滤）"""
     service = QuotesService(db)
     return service.get_quotes(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         keyword=keyword,
         status=status,
         customer_id=customer_id,

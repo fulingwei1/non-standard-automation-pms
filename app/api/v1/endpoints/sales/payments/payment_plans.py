@@ -12,6 +12,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -20,8 +21,7 @@ router = APIRouter()
 def get_payment_plans(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -44,8 +44,7 @@ def get_payment_plans(
         query = query.filter(ProjectPaymentPlan.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(offset).limit(page_size).all()
+    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for plan in plans:
@@ -73,9 +72,9 @@ def get_payment_plans(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

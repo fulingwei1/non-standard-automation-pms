@@ -13,11 +13,12 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.enums import (
     ActionItemStatus,
@@ -105,8 +106,7 @@ def read_rhythm_configs(
     if is_active:
         query = query.filter(ManagementRhythmConfig.is_active == is_active)
 
-    if keyword:
-        query = query.filter(ManagementRhythmConfig.config_name.like(f"%{keyword}%"))
+    query = apply_keyword_filter(query, ManagementRhythmConfig, keyword, ["config_name"])
 
     total = query.count()
     offset = (page - 1) * page_size

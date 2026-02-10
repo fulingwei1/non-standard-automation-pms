@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-人员匹配和齐套率 Dashboard 适配器
+人员匹配和齐套率 Dashboard 适配器 + 其他综合仪表盘适配器
 """
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import func
 
@@ -15,6 +15,132 @@ from app.schemas.dashboard import (
     DetailedDashboardResponse,
 )
 from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
+
+
+class OthersDashboardAdapter:
+    """其他综合仪表盘适配器 —— 提供快速统计、活动、健康、任务、通知等"""
+
+    def __init__(self, db):
+        self.db = db
+
+    def get_quick_stats(self) -> dict:
+        """获取快速统计数据"""
+        try:
+            from app.models.project import Project
+            from app.models.user import User
+            from app.models.alert import AlertRecord
+
+            project_count = self.db.query(Project).count()
+            user_count = self.db.query(User).count()
+            alert_count = self.db.query(AlertRecord).filter(
+                AlertRecord.status == "ACTIVE"
+            ).count()
+        except Exception:
+            project_count = 0
+            user_count = 0
+            alert_count = 0
+
+        return {
+            "project_count": project_count,
+            "user_count": user_count,
+            "alert_count": alert_count,
+        }
+
+    def get_recent_activities(
+        self, limit: int = 10, user_id: Optional[int] = None
+    ) -> list:
+        """获取最近活动"""
+        try:
+            from app.models.approval import ApprovalRecord
+
+            query = self.db.query(ApprovalRecord)
+            if user_id is not None:
+                query = query.filter(ApprovalRecord.user_id == user_id)
+            query = query.order_by(ApprovalRecord.created_at.desc())
+            query = query.limit(limit)
+            return query.all()
+        except Exception:
+            return []
+
+    def get_system_health(self) -> dict:
+        """获取系统健康状态"""
+        result = {
+            "database": "unknown",
+            "cache": "unknown",
+            "status": "healthy",
+        }
+        try:
+            from sqlalchemy import text
+            self.db.execute(text("SELECT 1"))
+            result["database"] = "healthy"
+        except Exception:
+            result["database"] = "unhealthy"
+            result["status"] = "degraded"
+
+        try:
+            from app.utils.redis_client import redis_client
+            if redis_client:
+                result["cache"] = "healthy"
+            else:
+                result["cache"] = "not_configured"
+        except Exception:
+            result["cache"] = "unavailable"
+
+        return result
+
+    def get_user_tasks(
+        self,
+        user_id: int,
+        status: Optional[str] = None,
+        include_approvals: bool = False,
+    ) -> list:
+        """获取用户任务"""
+        try:
+            from app.models.task_center import TaskItem
+
+            query = self.db.query(TaskItem)
+            query = query.filter(TaskItem.assignee_id == user_id)
+            if status:
+                query = query.filter(TaskItem.status == status)
+            query = query.order_by(TaskItem.created_at.desc())
+            query = query.limit(20)
+            tasks = query.all()
+        except Exception:
+            tasks = []
+
+        if include_approvals:
+            try:
+                from app.models.approval import ApprovalTask
+
+                approval_query = self.db.query(ApprovalTask)
+                approval_query = approval_query.filter(
+                    ApprovalTask.assignee_id == user_id,
+                    ApprovalTask.status == "PENDING",
+                )
+                approval_query = approval_query.limit(10)
+                approval_tasks = approval_query.all()
+                tasks.extend(approval_tasks)
+            except Exception:
+                pass
+
+        return tasks
+
+    def get_notifications(
+        self, user_id: int, unread_only: bool = False
+    ) -> list:
+        """获取用户通知"""
+        try:
+            from app.models.notification import Notification
+
+            query = self.db.query(Notification)
+            query = query.filter(Notification.user_id == user_id)
+            if unread_only:
+                query = query.filter(Notification.is_read == False)
+            query = query.order_by(Notification.created_at.desc())
+            query = query.limit(20)
+            return query.all()
+        except Exception:
+            return []
 
 
 @register_dashboard

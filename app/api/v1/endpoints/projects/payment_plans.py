@@ -26,6 +26,7 @@ from app.schemas.project import (
 )
 
 from .utils import _sync_invoice_request_receipt_status
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -35,8 +36,7 @@ def get_project_payment_plans(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status_filter: Optional[str] = Query(None, alias="status", description="状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -54,8 +54,7 @@ def get_project_payment_plans(
         query = query.filter(ProjectPaymentPlan.status == status_filter)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(offset).limit(page_size).all()
+    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for plan in plans:
@@ -78,9 +77,9 @@ def get_project_payment_plans(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

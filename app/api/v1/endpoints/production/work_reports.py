@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.production import Worker, WorkOrder, WorkReport, Workstation
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -260,8 +260,7 @@ def get_work_report_detail(
 @router.get("/work-reports", response_model=PaginatedResponse)
 def read_work_reports(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     work_order_id: Optional[int] = Query(None, description="工单ID筛选"),
     worker_id: Optional[int] = Query(None, description="工人ID筛选"),
     report_type: Optional[str] = Query(None, description="报工类型筛选"),
@@ -286,18 +285,11 @@ def read_work_reports(
         query = query.filter(WorkReport.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reports = query.order_by(desc(WorkReport.report_time)).offset(offset).limit(page_size).all()
+    reports = query.order_by(desc(WorkReport.report_time)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [_get_work_report_response(db, report) for report in reports]
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.put("/work-reports/{report_id}/approve", response_model=ResponseModel)
@@ -343,8 +335,7 @@ def approve_work_report(
 @router.get("/work-reports/my", response_model=PaginatedResponse)
 def get_my_work_reports(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -358,8 +349,7 @@ def get_my_work_reports(
     query = db.query(WorkReport).filter(WorkReport.worker_id == worker.id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    reports = query.order_by(desc(WorkReport.report_time)).offset(offset).limit(page_size).all()
+    reports = query.order_by(desc(WorkReport.report_time)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for report in reports:
@@ -387,10 +377,4 @@ def get_my_work_reports(
             updated_at=report.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)

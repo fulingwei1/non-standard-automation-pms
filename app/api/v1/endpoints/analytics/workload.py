@@ -13,6 +13,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.organization import Department
 from app.models.project import ProjectStageResourcePlan
@@ -37,12 +38,7 @@ def get_department_workload_summary(
     """
     # 默认当月
     if not start_date:
-        today = date.today()
-        start_date = today.replace(day=1)
-    if not end_date:
-        # 下月1号减1天
-        next_month = start_date.replace(day=28) + timedelta(days=4)
-        end_date = next_month.replace(day=1) - timedelta(days=1)
+        start_date, end_date = get_month_range(date.today())
 
     # 获取部门成员
     members = db.query(User).filter(
@@ -140,10 +136,7 @@ def get_department_workload_distribution(
     部门工作负载分布（用于可视化）
     """
     if not start_date:
-        start_date = date.today().replace(day=1)
-    if not end_date:
-        next_month = start_date.replace(day=28) + timedelta(days=4)
-        end_date = next_month.replace(day=1) - timedelta(days=1)
+        start_date, end_date = get_month_range(date.today())
 
     members = db.query(User).filter(
         User.department_id == dept_id,
@@ -212,10 +205,7 @@ def get_global_workload_overview(
     全局工作量概览
     """
     if not start_date:
-        start_date = date.today().replace(day=1)
-    if not end_date:
-        next_month = start_date.replace(day=28) + timedelta(days=4)
-        end_date = next_month.replace(day=1) - timedelta(days=1)
+        start_date, end_date = get_month_range(date.today())
 
     # 按部门统计
     departments = db.query(Department).filter(Department.is_active == True).all()
@@ -274,10 +264,7 @@ def get_workload_bottlenecks(
     资源瓶颈分析
     """
     if not start_date:
-        start_date = date.today().replace(day=1)
-    if not end_date:
-        next_month = start_date.replace(day=28) + timedelta(days=4)
-        end_date = next_month.replace(day=1) - timedelta(days=1)
+        start_date, end_date = get_month_range(date.today())
 
     bottlenecks = []
 

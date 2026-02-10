@@ -13,6 +13,7 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.config import settings
 from app.models.project import Customer, Project
@@ -33,8 +34,7 @@ logger = logging.getLogger(__name__)
 @router.get("/", response_model=PaginatedResponse[ProjectListResponse])
 def read_projects(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（项目名称/编码/合同编号）"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     stage: Optional[str] = Query(None, description="阶段筛选（S1-S9）"),
@@ -114,8 +114,8 @@ def read_projects(
             from app.services.cache_service import CacheService
             cache_service = CacheService()
             cache_key_params = {
-                "page": page,
-                "page_size": page_size,
+                "page": pagination.page,
+                "page_size": pagination.page_size,
                 "is_active": is_active,
             }
             cached_data = cache_service.get_project_list(**cache_key_params)
@@ -133,8 +133,7 @@ def read_projects(
         total = 0
 
     # 分页
-    offset = (page - 1) * page_size
-    projects = query.order_by(desc(Project.created_at)).offset(offset).limit(page_size).all()
+    projects = query.order_by(desc(Project.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 补充冗余字段
     for project in projects:
@@ -144,7 +143,7 @@ def read_projects(
             project.pm_name = project.manager.real_name or project.manager.username
 
     total = int(total) if total is not None else 0
-    pages = (total + page_size - 1) // page_size if total > 0 else 0
+    pages = pagination.pages_for_total(total)
 
     # 转换为响应对象，映射字段
     project_items = []
@@ -167,8 +166,8 @@ def read_projects(
     result = PaginatedResponse(
         items=project_items,
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=pages
     )
 

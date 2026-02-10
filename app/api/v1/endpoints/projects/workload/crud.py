@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.pmo import PmoResourceAllocation
 from app.models.progress import Task
@@ -58,10 +59,7 @@ def get_project_team_workload(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取项目相关的任务负责人
     task_owners = (
@@ -190,10 +188,7 @@ def get_project_workload_gantt(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取项目任务
     tasks = (
@@ -280,10 +275,7 @@ def get_project_workload_summary(
     if not start_date:
         start_date = date(today.year, today.month, 1)
     if not end_date:
-        if today.month == 12:
-            end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        _, end_date = get_month_range(today)
 
     # 获取团队负荷数据
     team_response = get_project_team_workload(

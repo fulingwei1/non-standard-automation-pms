@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project import Project
 from app.models.user import User
@@ -33,8 +33,7 @@ router = APIRouter()
 @router.get("/", response_model=PaginatedResponse[ProjectBudgetResponse])
 def list_budgets(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     budget_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     budget_type: Optional[str] = Query(None, description="预算类型筛选"),
@@ -53,8 +52,7 @@ def list_budgets(
         query = query.filter(ProjectBudget.budget_type == budget_type)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    budgets = query.order_by(desc(ProjectBudget.created_at)).offset(offset).limit(page_size).all()
+    budgets = query.order_by(desc(ProjectBudget.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应数据
     items = []
@@ -70,13 +68,7 @@ def list_budgets(
         }
         items.append(ProjectBudgetResponse(**budget_dict))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/projects/{project_id}/budgets", response_model=List[ProjectBudgetResponse])

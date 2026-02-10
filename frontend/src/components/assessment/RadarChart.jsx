@@ -1,6 +1,11 @@
 /**
  * Radar Chart Component - 雷达图组件
  * 用于展示技术评估的五维评分
+ *
+ * NOTE: A general-purpose RadarChart exists at:
+ * components/charts/RadarChart.jsx
+ * That component wraps @ant-design/plots for flexible multi-series radar charts.
+ * This component is a custom SVG implementation specialized for 5-dimension assessments.
  */
 
 import { useMemo } from "react";

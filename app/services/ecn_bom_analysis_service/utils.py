@@ -20,10 +20,10 @@ def get_impact_description(affected_mat: EcnAffectedMaterial) -> str:
 
     desc = change_type_map.get(affected_mat.change_type, affected_mat.change_type)
 
-    if affected_mat.old_quantity and affected_mat.new_quantity:
+    if affected_mat.old_quantity is not None and affected_mat.new_quantity is not None:
         desc += f"（数量：{affected_mat.old_quantity} → {affected_mat.new_quantity}）"
-    elif affected_mat.old_specification and affected_mat.new_specification:
-        desc += f"（规格变更）"
+    elif getattr(affected_mat, 'old_specification', None) and getattr(affected_mat, 'new_specification', None):
+        desc += "（规格变更）"
 
     return desc
 

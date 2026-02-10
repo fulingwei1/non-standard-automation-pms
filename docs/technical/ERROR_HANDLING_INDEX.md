@@ -111,7 +111,7 @@ import { handleApiError, getErrorMessage } from '@/utils/errorHandler'
 
 **使用**:
 ```python
-from app.utils.logger import get_logger
+from app.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 ```

@@ -2,7 +2,7 @@
  * Customer List Page - CRM customer management for sales
  */
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Building2,
@@ -56,156 +56,8 @@ import {
 import { cn } from "../lib/utils"
 import { fadeIn, staggerContainer } from "../lib/animations"
 import { CustomerCard } from "../components/sales"
+import { useCustomerList } from "./CustomerList/hooks"
 
-// Mock customer data
-const mockCustomers = [
-  {
-    id: 1,
-    name: "比亚迪新能源科技有限公司",
-    shortName: "比亚迪新能源",
-    grade: "A",
-    status: "active",
-    industry: "新能源电池",
-    location: "深圳市龙华区",
-    contactPerson: "王明",
-    phone: "0755-1234567",
-    email: "wang.ming@byd.com",
-    totalAmount: 5000000,
-    pendingAmount: 0,
-    projectCount: 3,
-    lastContact: "2025-01-10",
-    isWarning: false,
-    tags: ["核心客户", "长期合作"],
-  },
-  {
-    id: 2,
-    name: "宁德时代新能源科技股份有限公司",
-    shortName: "宁德时代",
-    grade: "A",
-    status: "active",
-    industry: "新能源电池",
-    location: "宁德市蕉城区",
-    contactPerson: "李红",
-    phone: "0593-1234568",
-    email: "li.hong@catl.com",
-    totalAmount: 4500000,
-    pendingAmount: 500000,
-    projectCount: 2,
-    lastContact: "2025-01-08",
-    isWarning: true,
-    tags: ["战略合作"],
-  },
-  {
-    id: 3,
-    name: "华为消费者业务集团",
-    shortName: "华为",
-    grade: "A",
-    status: "active",
-    industry: "消费电子",
-    location: "深圳市龙岗区",
-    contactPerson: "张强",
-    phone: "0755-2345678",
-    email: "zhang.qiang@huawei.com",
-    totalAmount: 3800000,
-    pendingAmount: 0,
-    projectCount: 5,
-    lastContact: "2025-01-12",
-    isWarning: false,
-    tags: ["大客户"],
-  },
-  {
-    id: 4,
-    name: "吉利汽车集团",
-    shortName: "吉利汽车",
-    grade: "B",
-    status: "potential",
-    industry: "汽车零部件",
-    location: "杭州市余杭区",
-    contactPerson: "周军",
-    phone: "0571-3456789",
-    email: "zhou.jun@geely.com",
-    totalAmount: 2000000,
-    pendingAmount: 200000,
-    projectCount: 1,
-    lastContact: "2025-01-05",
-    isWarning: false,
-    tags: ["潜在客户"],
-  },
-  {
-    id: 5,
-    name: "上汽集团",
-    shortName: "上汽",
-    grade: "A",
-    status: "active",
-    industry: "汽车零部件",
-    location: "上海市嘉定区",
-    contactPerson: "陈燕",
-    phone: "021-4567890",
-    email: "chen.yan@saic.com.cn",
-    totalAmount: 5500000,
-    pendingAmount: 1000000,
-    projectCount: 4,
-    lastContact: "2025-01-09",
-    isWarning: true,
-    tags: ["重点客户"],
-  },
-  {
-    id: 6,
-    name: "格力电器股份有限公司",
-    shortName: "格力电器",
-    grade: "B",
-    status: "dormant",
-    industry: "智能制造",
-    location: "珠海市香洲区",
-    contactPerson: "林娟",
-    phone: "0756-5678901",
-    email: "lin.juan@gree.com",
-    totalAmount: 1500000,
-    pendingAmount: 0,
-    projectCount: 1,
-    lastContact: "2024-12-15",
-    isWarning: false,
-    tags: ["沉睡客户"],
-  },
-  {
-    id: 7,
-    name: "美的集团",
-    shortName: "美的",
-    grade: "B",
-    status: "active",
-    industry: "智能制造",
-    location: "佛山市顺德区",
-    contactPerson: "吴坤",
-    phone: "0757-6789012",
-    email: "wu.kun@midea.com",
-    totalAmount: 2500000,
-    pendingAmount: 300000,
-    projectCount: 2,
-    lastContact: "2025-01-07",
-    isWarning: false,
-    tags: [],
-  },
-  {
-    id: 8,
-    name: "中兴通讯股份有限公司",
-    shortName: "中兴通讯",
-    grade: "C",
-    status: "lost",
-    industry: "消费电子",
-    location: "深圳市南山区",
-    contactPerson: "何志",
-    phone: "0755-7890123",
-    email: "he.zhi@zte.com.cn",
-    totalAmount: 800000,
-    pendingAmount: 0,
-    projectCount: 1,
-    lastContact: "2024-11-20",
-    isWarning: false,
-    tags: ["流失客户"],
-  },
-];
-
-// Mock data - 已迁移至上面的 mockCustomers 数组，后续应连接真实 API
 const gradeOptions = [
   { value: "all", label: "全部等级" },
   { value: "A", label: "A级客户" },
@@ -258,7 +110,102 @@ const statusConfig = {
   lost: { label: "流失", color: "bg-red-500", textColor: "text-red-400" },
 };
 
+const normalizeGrade = (value) => {
+  if (!value) {return "B";}
+  const upper = String(value).trim().toUpperCase();
+  if (upper === "VIP") {return "A";}
+  return gradeColors[upper] ? upper : "B";
+};
+
+const normalizeStatus = (value, isActive) => {
+  if (value) {
+    const raw = String(value).trim().toLowerCase();
+    if (["active", "enabled", "enable"].includes(raw)) {return "active";}
+    if (["potential", "prospect", "lead"].includes(raw)) {return "potential";}
+    if (["dormant", "inactive", "disabled"].includes(raw)) {return "dormant";}
+    if (["lost"].includes(raw)) {return "lost";}
+  }
+  if (isActive === false) {return "dormant";}
+  return "active";
+};
+
+const normalizeTags = (value) => {
+  if (Array.isArray(value)) {return value;}
+  if (typeof value === "string") {
+    return value
+      .split(/[,，]/)
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const normalizeCustomer = (customer = {}) => {
+  const name =
+    customer.name || customer.customer_name || customer.customerName || "";
+  const shortName =
+    customer.shortName ||
+    customer.customer_short_name ||
+    customer.short_name ||
+    customer.customerShortName ||
+    name;
+
+  const grade = normalizeGrade(
+    customer.grade || customer.level || customer.customer_level
+  );
+  const status = normalizeStatus(customer.status, customer.is_active);
+
+  return {
+    id: customer.id || customer.customer_id,
+    name,
+    shortName,
+    grade,
+    status,
+    industry: customer.industry || customer.industry_name || "",
+    location:
+      customer.location ||
+      customer.address ||
+      customer.company_address ||
+      "",
+    contactPerson:
+      customer.contactPerson ||
+      customer.contact_person ||
+      customer.contact_name ||
+      "",
+    phone: customer.phone || customer.contact_phone || customer.mobile || "",
+    email: customer.email || customer.contact_email || "",
+    totalAmount:
+      customer.totalAmount ??
+      customer.total_amount ??
+      customer.lifetime_value ??
+      0,
+    pendingAmount:
+      customer.pendingAmount ??
+      customer.pending_amount ??
+      customer.receivable_amount ??
+      0,
+    projectCount:
+      customer.projectCount ??
+      customer.project_count ??
+      (Array.isArray(customer.projects) ? customer.projects.length : 0),
+    lastContact:
+      customer.lastContact ||
+      customer.last_contact ||
+      customer.last_contact_date ||
+      "",
+    isWarning:
+      Boolean(
+        customer.isWarning ??
+        customer.is_warning ??
+        customer.warning ??
+        customer.is_risk
+      ),
+    tags: normalizeTags(customer.tags)
+  };
+};
+
 export default function CustomerList() {
+  const { customers: rawCustomers, setPagination } = useCustomerList()
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -267,9 +214,20 @@ export default function CustomerList() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
+  useEffect(() => {
+    setPagination((prev) =>
+      prev.pageSize === 1000 ? prev : { ...prev, pageSize: 1000 }
+    )
+  }, [setPagination])
+
+  const normalizedCustomers = useMemo(() => {
+    if (!Array.isArray(rawCustomers)) {return []}
+    return rawCustomers.map(normalizeCustomer)
+  }, [rawCustomers])
+
   // Filter customers
   const filteredCustomers = useMemo(() => {
-    return mockCustomers.filter((customer) => {
+    return normalizedCustomers.filter((customer) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
         !searchTerm ||
@@ -286,17 +244,23 @@ export default function CustomerList() {
 
       return matchesSearch && matchesGrade && matchesStatus && matchesIndustry;
     });
-  }, [searchTerm, selectedGrade, selectedStatus, selectedIndustry]);
+  }, [
+    normalizedCustomers,
+    searchTerm,
+    selectedGrade,
+    selectedStatus,
+    selectedIndustry,
+  ]);
 
   // Stats
   const stats = useMemo(() => {
     return {
-      total: mockCustomers.length,
-      active: mockCustomers.filter((c) => c.status === "active").length,
-      gradeA: mockCustomers.filter((c) => c.grade === "A").length,
-      warning: mockCustomers.filter((c) => c.isWarning).length,
+      total: normalizedCustomers.length,
+      active: normalizedCustomers.filter((c) => c.status === "active").length,
+      gradeA: normalizedCustomers.filter((c) => c.grade === "A").length,
+      warning: normalizedCustomers.filter((c) => c.isWarning).length,
     };
-  }, []);
+  }, [normalizedCustomers]);
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
@@ -506,7 +470,8 @@ export default function CustomerList() {
                 </thead>
                 <tbody>
                   {filteredCustomers.map((customer) => {
-                    const statusConf = statusConfig[customer.status];
+                    const statusConf =
+                      statusConfig[customer.status] || statusConfig.active;
                     return (
                       <tr
                         key={customer.id}
@@ -534,7 +499,7 @@ export default function CustomerList() {
                         <td className="p-4">
                           <Badge
                             variant="outline"
-                            className={gradeColors[customer.grade]}
+                            className={gradeColors[customer.grade] || gradeColors.B}
                           >
                             {customer.grade}级
                           </Badge>
@@ -723,7 +688,7 @@ export default function CustomerList() {
 
 // Customer Detail Side Panel
 function CustomerDetailPanel({ customer, onClose }) {
-  const statusConf = statusConfig[customer.status];
+  const statusConf = statusConfig[customer.status] || statusConfig.active;
 
   return (
     <motion.div
@@ -747,7 +712,7 @@ function CustomerDetailPanel({ customer, onClose }) {
                 </h2>
                 <Badge
                   variant="outline"
-                  className={gradeColors[customer.grade]}
+                  className={gradeColors[customer.grade] || gradeColors.B}
                 >
                   {customer.grade}级
                 </Badge>

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.budget import ProjectCostAllocationRule
 from app.models.user import User
 from app.schemas.budget import (
@@ -27,8 +27,7 @@ router = APIRouter()
 @router.get("/allocation-rules", response_model=PaginatedResponse[ProjectCostAllocationRuleResponse])
 def list_allocation_rules(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
     current_user: User = Depends(security.require_permission("budget:read")),
 ) -> Any:
@@ -41,19 +40,12 @@ def list_allocation_rules(
         query = query.filter(ProjectCostAllocationRule.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    rules = query.order_by(desc(ProjectCostAllocationRule.created_at)).offset(offset).limit(page_size).all()
+    rules = query.order_by(desc(ProjectCostAllocationRule.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = [ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
              for rule in rules]
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/allocation-rules", response_model=ProjectCostAllocationRuleResponse, status_code=status.HTTP_201_CREATED)

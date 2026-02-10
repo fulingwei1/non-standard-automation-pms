@@ -99,7 +99,7 @@ class AlertRecord(Base, TimestampMixin):
     """预警记录表"""
     __tablename__ = 'alert_records'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     alert_no = Column(String(50), unique=True, nullable=False, comment='预警编号')
     rule_id = Column(Integer, ForeignKey('alert_rules.id'), nullable=False, comment='触发的规则ID')
 
@@ -166,8 +166,8 @@ class AlertNotification(Base, TimestampMixin):
     """预警通知记录表"""
     __tablename__ = 'alert_notifications'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    alert_id = Column(BigInteger, ForeignKey('alert_records.id'), nullable=False, comment='预警记录ID')
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    alert_id = Column(Integer, ForeignKey('alert_records.id'), nullable=False, comment='预警记录ID')
 
     # 通知信息
     notify_channel = Column(String(20), nullable=False, comment='通知渠道')
@@ -208,7 +208,7 @@ class ExceptionEvent(Base, TimestampMixin):
     # 异常来源
     source_type = Column(String(30), nullable=False, comment='来源类型')
     source_id = Column(Integer, comment='来源ID')
-    alert_id = Column(BigInteger, ForeignKey('alert_records.id'), comment='关联预警ID')
+    alert_id = Column(Integer, ForeignKey('alert_records.id'), comment='关联预警ID')
 
     # 关联对象
     project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
@@ -288,7 +288,7 @@ class ExceptionAction(Base, TimestampMixin):
     """异常处理记录表"""
     __tablename__ = 'exception_actions'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey('exception_events.id'), nullable=False, comment='异常事件ID')
 
     # 操作信息

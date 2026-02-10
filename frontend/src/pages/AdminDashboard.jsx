@@ -25,8 +25,6 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
   FileText,
   Lock,
   Unlock,
@@ -57,9 +55,9 @@ import {
   Badge,
   Progress } from
 "../components/ui";
-import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { ApiIntegrationError } from "../components/ui";
+import StatCard from "../components/common/StatCard";
 
 // 默认统计数据（加载前显示）
 const defaultStats = {
@@ -110,56 +108,6 @@ const cloneRolePermissions = (roles) => {
     ...role,
     permissions: Array.isArray(role.permissions) ? [...role.permissions] : []
   }));
-};
-
-const StatCard = ({
-  title,
-  value,
-  subtitle,
-  trend,
-  icon: Icon,
-  color,
-  bg,
-  onClick
-}) => {
-  return (
-    <motion.div
-      variants={fadeIn}
-      onClick={onClick}
-      className={cn(
-        "relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg",
-        onClick && "cursor-pointer"
-      )}>
-
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
-          {trend !== undefined &&
-          <div className="flex items-center gap-1 mt-2">
-              {trend > 0 ?
-            <>
-                  <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                  <span className="text-xs text-emerald-400">+{trend}</span>
-            </> :
-            trend < 0 ?
-            <>
-                  <ArrowDownRight className="w-3 h-3 text-red-400" />
-                  <span className="text-xs text-red-400">{trend}</span>
-            </> :
-            null}
-          </div>
-          }
-        </div>
-        {Icon &&
-        <div className={cn("p-3 rounded-lg", bg)}>
-            <Icon className={cn("w-5 h-5", color)} />
-        </div>
-        }
-      </div>
-    </motion.div>);
-
 };
 
 export default function AdminDashboard() {
@@ -366,6 +314,9 @@ export default function AdminDashboard() {
           value={stats.totalUsers}
           subtitle={`活跃: ${stats.activeUsers} | 未激活: ${stats.inactiveUsers}`}
           trend={stats.newUsersThisMonth}
+          trendSuffix=""
+          trendLabel=""
+          showDecoration={false}
           icon={Users}
           color="text-blue-400"
           bg="bg-blue-500/10"
@@ -376,6 +327,9 @@ export default function AdminDashboard() {
           value={stats.totalRoles}
           subtitle={`系统角色: ${stats.systemRoles} | 自定义: ${stats.customRoles}`}
           trend={stats.activeRoles}
+          trendSuffix=""
+          trendLabel=""
+          showDecoration={false}
           icon={Shield}
           color="text-purple-400"
           bg="bg-purple-500/10"
@@ -385,6 +339,9 @@ export default function AdminDashboard() {
           title="权限总数"
           value={stats.totalPermissions}
           subtitle={`已分配: ${stats.assignedPermissions} | 未分配: ${stats.unassignedPermissions}`}
+          trendSuffix=""
+          trendLabel=""
+          showDecoration={false}
           icon={Key}
           color="text-amber-400"
           bg="bg-amber-500/10"
@@ -394,6 +351,9 @@ export default function AdminDashboard() {
           title="系统可用性"
           value={`${stats.systemUptime}%`}
           subtitle={`API响应: ${stats.apiResponseTime}ms | 错误率: ${stats.errorRate}%`}
+          trendSuffix=""
+          trendLabel=""
+          showDecoration={false}
           icon={Activity}
           color="text-emerald-400"
           bg="bg-emerald-500/10"

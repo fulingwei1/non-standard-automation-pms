@@ -15,7 +15,7 @@ from sqlalchemy import desc
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas.response import (
     SuccessResponse,
     PaginatedResponse,
@@ -68,13 +68,7 @@ router.include_router(crud_router)
 )
 def list_suppliers(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（供应商名称/编码）"),
     supplier_type: Optional[str] = Query(None, description="供应商类型筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -91,8 +85,8 @@ def list_suppliers(
     """
     service = VendorService(db)
     result = service.list_suppliers(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         keyword=keyword,
         supplier_type=supplier_type,
         status=status,
@@ -191,13 +185,7 @@ def get_supplier_materials(
     *,
     db: Session = Depends(deps.get_db),
     supplier_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量"
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.require_permission("supplier:read")),
 ) -> PaginatedResponse[Any]:
     """
@@ -214,14 +202,13 @@ def get_supplier_materials(
     )
 
     total = query.count()
-    offset = (page - 1) * page_size
     materials = (
-        query.order_by(desc(Material.created_at)).offset(offset).limit(page_size).all()
+        query.order_by(desc(Material.created_at)).offset(pagination.offset).limit(pagination.limit).all()
     )
 
     return paginated_response(
         items=materials,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )

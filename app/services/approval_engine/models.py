@@ -58,6 +58,10 @@ class ApprovalDecision(str, Enum):
     RETURNED = "RETURNED"  # 退回上一级
     COMMENT_ONLY = "COMMENT_ONLY"  # 仅评论
 
+    # 兼容别名
+    APPROVE = "APPROVED"
+    REJECT = "REJECTED"
+
 
 class LegacyApprovalFlow(Base, TimestampMixin):
     """审批流程定义"""
@@ -112,6 +116,7 @@ class LegacyApprovalInstance(Base, TimestampMixin):
     __tablename__ = "legacy_approval_instances"
 
     id = Column(Integer, primary_key=True, index=True)
+    instance_no = Column(String(50), comment="实例编号")
     flow_id = Column(
         Integer,
         ForeignKey("legacy_approval_flows.id"),
@@ -143,6 +148,18 @@ class LegacyApprovalInstance(Base, TimestampMixin):
 
     # 到期时间
     due_date = Column(DateTime, comment="到期时间")
+
+    # 兼容属性：测试使用 instance.status 而非 current_status
+    @property
+    def status(self):
+        return self.current_status
+
+    @status.setter
+    def status(self, value):
+        if hasattr(value, 'value'):
+            self.current_status = value.value
+        else:
+            self.current_status = value
 
     # 关系
     flow = relationship("LegacyApprovalFlow")

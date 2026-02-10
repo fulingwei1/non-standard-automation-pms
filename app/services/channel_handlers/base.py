@@ -54,6 +54,7 @@ class NotificationRequest:
     link_url: Optional[str] = None
     extra_data: Optional[Dict[str, Any]] = None
     wechat_template: Optional[Dict[str, Any]] = None
+    force_send: bool = False # 跳过去重和用户偏好检查，强制发送
 
 
 class ChannelHandler(ABC):

@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.outsourcing import (
     OutsourcingDelivery,
     OutsourcingDeliveryItem,
@@ -76,8 +76,7 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 @router.get("/outsourcing-inspections", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_inspections(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     delivery_id: Optional[int] = Query(None, description="交付单ID筛选"),
     inspect_result: Optional[str] = Query(None, description="质检结果筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -94,8 +93,7 @@ def read_outsourcing_inspections(
         query = query.filter(OutsourcingInspection.inspect_result == inspect_result)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    inspections = query.order_by(desc(OutsourcingInspection.inspect_date)).offset(offset).limit(page_size).all()
+    inspections = query.order_by(desc(OutsourcingInspection.inspect_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for inspection in inspections:
@@ -120,13 +118,7 @@ def read_outsourcing_inspections(
             updated_at=inspection.updated_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/outsourcing-inspections", response_model=OutsourcingInspectionResponse, status_code=status.HTTP_201_CREATED)

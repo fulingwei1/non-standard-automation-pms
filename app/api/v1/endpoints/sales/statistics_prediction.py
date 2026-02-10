@@ -6,12 +6,14 @@
 """
 
 from datetime import date
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.sales import Opportunity
 from app.models.user import User
@@ -30,7 +32,6 @@ def get_revenue_forecast(
     """
     收入预测（基于已签订合同和进行中的商机）
     """
-    from calendar import monthrange
     from datetime import timedelta
 
     today = date.today()
@@ -38,9 +39,7 @@ def get_revenue_forecast(
 
     for i in range(months):
         forecast_date = today + timedelta(days=30 * (i + 1))
-        month_start = forecast_date.replace(day=1)
-        _, last_day = monthrange(forecast_date.year, forecast_date.month)
-        month_end = forecast_date.replace(day=last_day)
+        month_start_date, month_end_date = get_month_range(forecast_date)
 
         # 统计该月预计签约的合同金额（基于商机预计金额）
         opps_in_month = (

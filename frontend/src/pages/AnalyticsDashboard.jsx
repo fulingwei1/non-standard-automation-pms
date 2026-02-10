@@ -23,7 +23,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle, StatCard } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, DashboardStatCard } from '@/components/ui/card';
 import LineChart from '@/components/charts/LineChart';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
@@ -149,7 +149,7 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {kpis.map((kpi, index) => (
             <motion.div key={kpi.id || index} variants={itemVariants}>
-              <StatCard
+              <DashboardStatCard
                 label={kpi.label}
                 value={kpi.value}
                 change={kpi.change}

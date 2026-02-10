@@ -14,12 +14,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.pmo import (
     PmoMeeting,
     PmoProjectClosure,
@@ -82,8 +83,7 @@ generate_risk_no = pmo_codes.generate_risk_no
 @router.get("/pmo/initiations", response_model=PaginatedResponse[InitiationResponse])
 def read_initiations(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（申请编号/项目名称）"),
     status: Optional[str] = Query(None, description="状态筛选"),
     applicant_id: Optional[int] = Query(None, description="申请人ID筛选"),
@@ -95,13 +95,7 @@ def read_initiations(
     try:
         query = db.query(PmoProjectInitiation)
 
-        if keyword:
-            query = query.filter(
-                or_(
-                    PmoProjectInitiation.application_no.like(f"%{keyword}%"),
-                    PmoProjectInitiation.project_name.like(f"%{keyword}%"),
-                )
-            )
+        query = apply_keyword_filter(query, PmoProjectInitiation, keyword, ["application_no", "project_name"])
 
         if status:
             query = query.filter(PmoProjectInitiation.status == status)
@@ -113,8 +107,7 @@ def read_initiations(
         total = query.count()
         
         # 再执行分页查询
-        offset = (page - 1) * page_size
-        initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(offset).limit(page_size).all()
+        initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
         items = []
         for init in initiations:
@@ -151,13 +144,7 @@ def read_initiations(
             }
             items.append(InitiationResponse(**item_dict))
 
-        return PaginatedResponse(
-            items=items,
-            total=total,
-            page=page,
-            page_size=page_size,
-            pages=(total + page_size - 1) // page_size
-        )
+        return pagination.to_response(items, total)
     except Exception as e:
         import traceback
         error_detail = f"查询立项申请列表失败: {str(e)}\n{traceback.format_exc()}"

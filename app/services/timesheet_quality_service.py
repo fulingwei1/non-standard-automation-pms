@@ -15,6 +15,7 @@ from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.models.work_log import WorkLog
+from app.common.date_range import get_month_range_by_ym
 
 
 class TimesheetQualityService:
@@ -298,11 +299,7 @@ class TimesheetQualityService:
         Returns:
             合规性检查结果
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         # 查询加班工时（非正常工时）
         timesheets = self.db.query(Timesheet).filter(

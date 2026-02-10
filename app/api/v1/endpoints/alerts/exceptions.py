@@ -10,12 +10,13 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -62,8 +63,7 @@ router = APIRouter(tags=["exceptions"])
 @router.get("/exceptions", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_exception_events(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（异常编号/标题）"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     event_type: Optional[str] = Query(None, description="异常类型筛选"),
@@ -78,13 +78,7 @@ def read_exception_events(
     query = db.query(ExceptionEvent)
 
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                ExceptionEvent.event_no.like(f"%{keyword}%"),
-                ExceptionEvent.event_title.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, ExceptionEvent, keyword, ["event_no", "event_title"])
 
     # 项目筛选
     if project_id:
@@ -110,8 +104,7 @@ def read_exception_events(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    events = query.order_by(ExceptionEvent.created_at.desc()).offset(offset).limit(page_size).all()
+    events = query.order_by(ExceptionEvent.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应数据
     items = []
@@ -143,13 +136,7 @@ def read_exception_events(
             "created_at": event.created_at.isoformat() if event.created_at else None,
         })
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/exceptions", response_model=ExceptionEventResponse, status_code=status.HTTP_201_CREATED)

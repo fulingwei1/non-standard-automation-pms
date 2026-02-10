@@ -10,12 +10,14 @@
 - issue_scheduled_tasks: 问题相关任务
 """
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.orm import Session
 
 from app.utils.scheduled_tasks.base import (
+    enqueue_or_dispatch_notification,
     log_task_result,
     safe_task_execution,
     send_notification_for_alert,
@@ -156,6 +158,44 @@ class TestSendNotificationForAlert:
         except Exception:
             pass  # 函数应该捕获所有异常
             # 如果到这里没有崩溃，测试就通过了
+
+
+@pytest.mark.unit
+class TestEnqueueOrDispatchNotification:
+    """测试通知入队/直发辅助函数"""
+
+    def test_fallback_dispatch_when_enqueue_fails(self):
+        """入队失败时回退为同步派发"""
+        dispatcher = MagicMock()
+        dispatcher.dispatch.return_value = True
+
+        notification = MagicMock()
+        notification.id = 123
+        notification.alert_id = 456
+        notification.notify_channel = "SYSTEM"
+
+        alert = MagicMock()
+        user = MagicMock()
+        request = SimpleNamespace(
+            recipient_id=1,
+            notification_type="ALERT",
+            category="alert",
+            title="t",
+            content="c",
+        )
+
+        with patch(
+            "app.services.notification_queue.enqueue_notification", return_value=False
+        ):
+            result = enqueue_or_dispatch_notification(
+                dispatcher, notification, alert, user, request=request
+            )
+
+        assert result["queued"] is False
+        assert result["sent"] is True
+        dispatcher.dispatch.assert_called_once_with(
+            notification, alert, user, request=request
+        )
 
 
             # ============================================================================

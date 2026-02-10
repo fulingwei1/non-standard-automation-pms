@@ -9,6 +9,10 @@ from .extraction import auto_extract_from_file, extract_from_document
 from .formats import extract_from_excel, extract_from_pdf, extract_from_word
 from .utils import create_requirement, extract_key_parameters
 
+# 模块级导入，支持 unittest.mock.patch 在测试中替换
+from app.models.project import ProjectDocument
+from app.models.technical_spec import TechnicalSpecRequirement
+
 __all__ = ["SpecExtractor"]
 
 # 将方法添加到类中，保持向后兼容

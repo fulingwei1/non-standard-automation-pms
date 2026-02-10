@@ -36,6 +36,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import StatCard from "../components/common/StatCard";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -214,53 +215,57 @@ const ApprovalCenter = () => {
    */
   const renderStatCards = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">待我审批</p>
-              <p className="text-2xl font-bold text-amber-400">{counts.pending}</p>
-            </div>
-            <Clock className="h-8 w-8 text-amber-400/30" />
-          </div>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="待我审批"
+        value={counts.pending}
+        icon={Clock}
+        color="text-amber-400"
+        iconColor="text-amber-400/30"
+        bg="bg-transparent"
+        showDecoration={false}
+        cardClassName="bg-slate-800/50 border-slate-700 hover:border-slate-600 bg-none hover:shadow-none p-4"
+        iconWrapperClassName="p-0 bg-transparent rounded-none"
+        iconClassName="h-8 w-8"
+      />
 
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">我发起的</p>
-              <p className="text-2xl font-bold text-blue-400">{counts.initiated_pending}</p>
-            </div>
-            <Send className="h-8 w-8 text-blue-400/30" />
-          </div>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="我发起的"
+        value={counts.initiated_pending}
+        icon={Send}
+        color="text-blue-400"
+        iconColor="text-blue-400/30"
+        bg="bg-transparent"
+        showDecoration={false}
+        cardClassName="bg-slate-800/50 border-slate-700 hover:border-slate-600 bg-none hover:shadow-none p-4"
+        iconWrapperClassName="p-0 bg-transparent rounded-none"
+        iconClassName="h-8 w-8"
+      />
 
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">未读抄送</p>
-              <p className="text-2xl font-bold text-purple-400">{counts.unread_cc}</p>
-            </div>
-            <Mail className="h-8 w-8 text-purple-400/30" />
-          </div>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="未读抄送"
+        value={counts.unread_cc}
+        icon={Mail}
+        color="text-purple-400"
+        iconColor="text-purple-400/30"
+        bg="bg-transparent"
+        showDecoration={false}
+        cardClassName="bg-slate-800/50 border-slate-700 hover:border-slate-600 bg-none hover:shadow-none p-4"
+        iconWrapperClassName="p-0 bg-transparent rounded-none"
+        iconClassName="h-8 w-8"
+      />
 
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">紧急待办</p>
-              <p className="text-2xl font-bold text-red-400">{counts.urgent}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-400/30" />
-          </div>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="紧急待办"
+        value={counts.urgent}
+        icon={AlertTriangle}
+        color="text-red-400"
+        iconColor="text-red-400/30"
+        bg="bg-transparent"
+        showDecoration={false}
+        cardClassName="bg-slate-800/50 border-slate-700 hover:border-slate-600 bg-none hover:shadow-none p-4"
+        iconWrapperClassName="p-0 bg-transparent rounded-none"
+        iconClassName="h-8 w-8"
+      />
     </div>
   );
 

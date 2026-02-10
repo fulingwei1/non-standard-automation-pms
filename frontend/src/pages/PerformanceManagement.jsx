@@ -25,6 +25,7 @@ import {
   Loader2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
+import StatCard from "../components/common/StatCard";
 import {
   Card,
   CardContent,
@@ -145,42 +146,6 @@ export default function PerformanceManagement() {
     fetchData();
   }, []);
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, color, trend }) =>
-  <motion.div
-    variants={fadeIn}
-    className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg">
-
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn("text-3xl font-bold mb-1", color)}>{value}</p>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
-          {trend !== undefined &&
-        <div className="flex items-center gap-1 mt-2">
-              {trend > 0 ?
-          <>
-                  <TrendingUp className="w-3 h-3 text-emerald-400" />
-                  <span className="text-xs text-emerald-400">+{trend}%</span>
-          </> :
-          trend < 0 ?
-          <>
-                  <TrendingDown className="w-3 h-3 text-red-400" />
-                  <span className="text-xs text-red-400">{trend}%</span>
-          </> :
-          null}
-              {trend !== 0 &&
-          <span className="text-xs text-slate-500 ml-1">vs 上期</span>
-          }
-        </div>
-        }
-        </div>
-        <div className={cn("rounded-lg p-3 bg-opacity-20", `bg-${color}`)}>
-          <Icon className={cn("h-6 w-6", color)} />
-        </div>
-      </div>
-  </motion.div>;
-
-
   return (
     <motion.div
       variants={staggerContainer}
@@ -285,7 +250,11 @@ export default function PerformanceManagement() {
           subtitle="全员平均绩效分数"
           icon={BarChart3}
           color="text-cyan-400"
-          trend={2.3} />
+          bg="bg-cyan-500/20"
+          trend={2.3}
+          trendLabel="vs 上期"
+          size="large"
+          showDecoration={false} />
 
         <StatCard
           title="优秀人数"
@@ -293,21 +262,31 @@ export default function PerformanceManagement() {
           subtitle={`占比 ${(stats.excellent / stats.total_employees * 100).toFixed(1)}%`}
           icon={Award}
           color="text-emerald-400"
-          trend={5} />
+          bg="bg-emerald-500/20"
+          trend={5}
+          trendLabel="vs 上期"
+          size="large"
+          showDecoration={false} />
 
         <StatCard
           title="良好人数"
           value={stats.good}
           subtitle={`占比 ${(stats.good / stats.total_employees * 100).toFixed(1)}%`}
           icon={CheckCircle2}
-          color="text-blue-400" />
+          color="text-blue-400"
+          bg="bg-blue-500/20"
+          size="large"
+          showDecoration={false} />
 
         <StatCard
           title="完成率"
           value={`${stats.completion_rate}%`}
           subtitle={`${stats.evaluated} / ${stats.total_employees} 人已评价`}
           icon={Target}
-          color="text-purple-400" />
+          color="text-purple-400"
+          bg="bg-purple-500/20"
+          size="large"
+          showDecoration={false} />
 
       </motion.div>
 

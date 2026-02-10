@@ -15,6 +15,7 @@ from app.api.deps import get_db
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -92,8 +93,7 @@ class BestPracticeApply(BaseModel):
 )
 def get_popular_best_practices(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     category: Optional[str] = Query(None, description="分类筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -127,8 +127,8 @@ def get_popular_best_practices(
         query += " ORDER BY bp.reuse_count DESC, bp.created_at DESC"
         # 使用参数绑定防止 SQL 注入
         query += " LIMIT :page_size OFFSET :offset"
-        params["page_size"] = page_size
-        params["offset"] = (page - 1) * page_size
+        params["page_size"] = pagination.limit
+        params["offset"] = pagination.offset
 
         result = db.execute(text(query), params)
         rows = result.fetchall()
@@ -165,7 +165,7 @@ def get_popular_best_practices(
             code=200,
             message="获取热门最佳实践成功",
             data=BestPracticeListResponse(
-                items=items, total=total, page=page, page_size=page_size
+                items=items, total=total, page=pagination.page, page_size=pagination.page_size
             ),
         )
     except Exception as e:
@@ -175,8 +175,7 @@ def get_popular_best_practices(
 @router.get("/best-practices", response_model=ResponseModel[BestPracticeListResponse])
 def get_best_practices(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     category: Optional[str] = Query(None, description="分类筛选"),
     validation_status: Optional[str] = Query(None, description="验证状态筛选"),
@@ -224,8 +223,8 @@ def get_best_practices(
         query += " ORDER BY bp.created_at DESC"
         # 使用参数绑定防止 SQL 注入
         query += " LIMIT :page_size OFFSET :offset"
-        params["page_size"] = page_size
-        params["offset"] = (page - 1) * page_size
+        params["page_size"] = pagination.limit
+        params["offset"] = pagination.offset
 
         result = db.execute(text(query), params)
         rows = result.fetchall()
@@ -261,7 +260,7 @@ def get_best_practices(
             code=200,
             message="获取最佳实践列表成功",
             data=BestPracticeListResponse(
-                items=items, total=total, page=page, page_size=page_size
+                items=items, total=total, page=pagination.page, page_size=pagination.page_size
             ),
         )
     except Exception as e:

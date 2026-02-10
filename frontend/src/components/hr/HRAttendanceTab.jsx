@@ -4,32 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  Clock, CalendarCheck, UserCheck, AlertCircle,
+  Clock, UserCheck, AlertCircle,
   BarChart3, Download, Calendar } from
 'lucide-react';
-import { cn as _cn } from '@/lib/utils';
+import StatCard from '../common/StatCard';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
-
-/**
- * 考勤统计卡片
- */
-const AttendanceStatCard = ({ title, value, icon: Icon, progress }) =>
-<Card className="bg-surface-50 border-white/10">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-slate-400">{title}</p>
-        <p className="text-lg font-bold text-white">{value}</p>
-      </div>
-      {progress !== undefined &&
-    <Progress value={progress} className="h-2" />
-    }
-    </CardContent>
-</Card>;
-
 
 /**
  * 考勤趋势项
@@ -86,27 +69,45 @@ export const HRAttendanceTab = ({
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AttendanceStatCard
+        <StatCard
           title="今日出勤率"
           value={`${stats.todayAttendanceRate}%`}
-          icon={UserCheck}
-          progress={stats.todayAttendanceRate} />
+          layout="row"
+          valueClassName="text-lg"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:border-white/20 hover:shadow-none bg-none p-6"
+        >
+          <Progress value={stats.todayAttendanceRate} className="h-2" />
+        </StatCard>
 
-        <AttendanceStatCard
+        <StatCard
           title="本月出勤率"
           value={`${stats.monthlyAttendanceRate}%`}
-          icon={CalendarCheck}
-          progress={stats.monthlyAttendanceRate} />
+          layout="row"
+          valueClassName="text-lg"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:border-white/20 hover:shadow-none bg-none p-6"
+        >
+          <Progress value={stats.monthlyAttendanceRate} className="h-2" />
+        </StatCard>
 
-        <AttendanceStatCard
+        <StatCard
           title="今日迟到"
           value={`${stats.lateCount}人`}
-          icon={Clock} />
+          layout="row"
+          valueClassName="text-lg"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:border-white/20 hover:shadow-none bg-none p-6"
+        />
 
-        <AttendanceStatCard
+        <StatCard
           title="今日缺勤"
           value={`${stats.absentCount}人`}
-          icon={AlertCircle} />
+          layout="row"
+          valueClassName="text-lg"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:border-white/20 hover:shadow-none bg-none p-6"
+        />
 
       </div>
 

@@ -6,7 +6,7 @@
 - ReportEngine: 报表引擎
 - ConfigLoader: 配置加载器
 - DataResolver: 数据解析器
-- CacheManager: 缓存管理器
+- ReportCacheManager: 报表缓存管理器
 - ExpressionParser: 表达式解析器
 - Renderers: 渲染器（JSON/PDF/Excel/Word）
 - Formatters: 格式化器
@@ -205,19 +205,19 @@ class TestExpressionParser:
         assert result is not None or result == 6
 
 
-class TestCacheManager:
+class TestReportCacheManager:
     """测试缓存管理器"""
 
     def test_import_class(self):
         """测试导入类"""
-        from app.services.report_framework.cache_manager import CacheManager
-        assert CacheManager is not None
+        from app.services.report_framework.cache_manager import ReportCacheManager
+        assert ReportCacheManager is not None
 
     def test_get_cache_miss(self):
         """测试缓存未命中"""
-        from app.services.report_framework.cache_manager import CacheManager
+        from app.services.report_framework.cache_manager import ReportCacheManager
 
-        manager = CacheManager()
+        manager = ReportCacheManager()
 
         result = manager.get("nonexistent_key")
 
@@ -225,9 +225,9 @@ class TestCacheManager:
 
     def test_set_and_get_cache(self):
         """测试设置和获取缓存"""
-        from app.services.report_framework.cache_manager import CacheManager
+        from app.services.report_framework.cache_manager import ReportCacheManager
 
-        manager = CacheManager()
+        manager = ReportCacheManager()
 
         manager.set("test_key", {"data": "test"})
         result = manager.get("test_key")

@@ -39,19 +39,10 @@ import {
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";
+import { formatCurrencyCompact as formatCurrency } from "../lib/formatters";
 
 // Mock data removed - using real API only
 
-const formatCurrency = (value) => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`;
-  }
-  return new Intl.NumberFormat("zh-CN", {
-    style: "currency",
-    currency: "CNY",
-    minimumFractionDigits: 0
-  }).format(value);
-};
 
 export default function SalesReports() {
   const [selectedPeriod, _setSelectedPeriod] = useState("month");

@@ -10,53 +10,10 @@ import {
   Clock,
   AlertTriangle,
   XCircle,
-  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent } from "../../../components/ui";
-import { cn } from "../../../lib/utils";
-import { STAGE_STATUS, HEALTH_STATUS } from "../constants";
-
-/**
- * 单个统计卡片
- */
-function StatCard({ title, value, icon: Icon, color, trend, trendLabel, className }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className={cn("bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors", className)}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: `${color}20` }}
-              >
-                <Icon className="h-5 w-5" style={{ color }} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">{title}</p>
-                <p className="text-2xl font-bold text-white">{value}</p>
-              </div>
-            </div>
-            {trend !== undefined && (
-              <div className={cn(
-                "flex items-center gap-1 text-xs",
-                trend >= 0 ? "text-green-400" : "text-red-400"
-              )}>
-                <TrendingUp className={cn("h-3 w-3", trend < 0 && "rotate-180")} />
-                <span>{Math.abs(trend)}%</span>
-                {trendLabel && <span className="text-gray-500">{trendLabel}</span>}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
+import StatCard from "../../../components/common/StatCard";
+import { STAGE_STATUS } from "../constants";
 
 /**
  * 统计卡片组
@@ -69,38 +26,65 @@ export function StatisticsCards({ statistics }) {
       title: "总项目数",
       value: statistics.total_projects || 0,
       icon: Activity,
-      color: "#3B82F6",
+      color: "text-blue-400",
+      bg: "bg-blue-500/20",
     },
     {
       title: "进行中",
       value: statistics.in_progress_count || 0,
       icon: Clock,
-      color: STAGE_STATUS.IN_PROGRESS.color,
+      color: STAGE_STATUS.IN_PROGRESS.textColor,
+      bg: STAGE_STATUS.IN_PROGRESS.bgColor,
     },
     {
       title: "已完成",
       value: statistics.completed_count || 0,
       icon: CheckCircle2,
-      color: STAGE_STATUS.COMPLETED.color,
+      color: STAGE_STATUS.COMPLETED.textColor,
+      bg: STAGE_STATUS.COMPLETED.bgColor,
     },
     {
       title: "已延期",
       value: statistics.delayed_count || 0,
       icon: AlertTriangle,
-      color: STAGE_STATUS.DELAYED.color,
+      color: STAGE_STATUS.DELAYED.textColor,
+      bg: STAGE_STATUS.DELAYED.bgColor,
     },
     {
       title: "受阻",
       value: statistics.blocked_count || 0,
       icon: XCircle,
-      color: STAGE_STATUS.BLOCKED.color,
+      color: STAGE_STATUS.BLOCKED.textColor,
+      bg: STAGE_STATUS.BLOCKED.bgColor,
     },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       {cards.map((card, index) => (
-        <StatCard key={index} {...card} />
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <StatCard
+            title={<span className="text-xs text-gray-400">{card.title}</span>}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            bg={card.bg}
+            valueColor="text-white"
+            layout="compact"
+            showDecoration={false}
+            trend={card.trend}
+            trendLabel={card.trendLabel || ""}
+            trendShowSign={false}
+            cardClassName="bg-gray-800/50 border-gray-700 hover:border-gray-600 bg-none hover:shadow-none p-4"
+            iconWrapperClassName="p-2"
+            iconClassName="h-5 w-5"
+          />
+        </motion.div>
       ))}
     </div>
   );

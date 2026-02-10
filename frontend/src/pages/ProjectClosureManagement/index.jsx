@@ -7,12 +7,14 @@ import { staggerContainer } from "../../lib/animations";
 import { useProjectClosureManagement } from "./hooks";
 import {
     ProjectSelectionView,
-    ProjectClosureContent,
+    ProjectClosureContent
+} from "./components";
+import {
     CreateClosureDialog,
     ReviewClosureDialog,
     LessonsClosureDialog,
     ClosureDetailDialog
-} from "./components";
+} from "../../components/project-closure";
 
 export default function ProjectClosureManagement() {
     const {

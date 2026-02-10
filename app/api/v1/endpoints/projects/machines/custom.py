@@ -26,6 +26,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.project import MachineResponse, ProjectDocumentResponse
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -456,8 +457,7 @@ def get_machine_document_versions(
 def get_machine_service_history(
     project_id: int = Path(..., description="项目ID"),
     machine_id: int = Path(..., description="机台ID"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
@@ -474,8 +474,7 @@ def get_machine_service_history(
     query = db.query(ServiceRecord).filter(ServiceRecord.machine_no == machine.machine_no)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    records = query.order_by(desc(ServiceRecord.service_date)).offset(offset).limit(page_size).all()
+    records = query.order_by(desc(ServiceRecord.service_date)).offset(pagination.offset).limit(pagination.limit).all()
 
     history_items = []
     for record in records:
@@ -514,8 +513,8 @@ def get_machine_service_history(
             },
             "items": history_items,
             "pagination": {
-                "page": page,
-                "page_size": page_size,
+                "page": pagination.page,
+                "page_size": pagination.page_size,
                 "total": total,
                 "pages": (total + page_size - 1) // page_size
             }

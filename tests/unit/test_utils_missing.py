@@ -27,7 +27,7 @@ class TestLogger:
 
     def test_get_logger_with_name(self):
         """Test get_logger with custom name"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
         
         logger = get_logger("test_module")
         assert isinstance(logger, logging.Logger)
@@ -35,14 +35,14 @@ class TestLogger:
 
     def test_get_logger_without_name(self):
         """Test get_logger without name (uses __name__)"""
-        from app.utils.logger import get_logger
+        from app.core.logging_config import get_logger
         
         logger = get_logger()
         assert isinstance(logger, logging.Logger)
 
     def test_get_log_level_from_env(self):
         """Test _get_log_level reads from environment"""
-        from app.utils.logger import _get_log_level
+        from app.core.logging_config import _get_log_level
         
         with patch.dict(os.environ, {"LOG_LEVEL": "DEBUG"}):
             level = _get_log_level()
@@ -58,7 +58,7 @@ class TestLogger:
 
     def test_log_error_with_context(self):
         """Test log_error_with_context"""
-        from app.utils.logger import log_error_with_context
+        from app.core.logging_config import log_error_with_context
         
         logger = logging.getLogger("test")
         error = ValueError("Test error")
@@ -79,7 +79,7 @@ class TestLogger:
 
     def test_log_warning_with_context(self):
         """Test log_warning_with_context"""
-        from app.utils.logger import log_warning_with_context
+        from app.core.logging_config import log_warning_with_context
         
         logger = logging.getLogger("test")
         
@@ -97,7 +97,7 @@ class TestLogger:
 
     def test_log_info_with_context(self):
         """Test log_info_with_context"""
-        from app.utils.logger import log_info_with_context
+        from app.core.logging_config import log_info_with_context
         
         logger = logging.getLogger("test")
         

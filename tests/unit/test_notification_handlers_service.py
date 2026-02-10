@@ -77,10 +77,12 @@ class TestSystemNotificationHandler:
             mock_filter.first.return_value = None
             mock_query.return_value = mock_filter
 
-            handler.send(mock_notification, mock_alert)
+            with patch(
+                "app.services.notification_handlers.system_handler.send_alert_via_unified"
+            ) as mock_send:
+                handler.send(mock_notification, mock_alert)
 
-            # 验证调用了 add
-            assert db_session.add.called or mock_query.called
+                mock_send.assert_called_once()
 
     def test_send_skips_duplicate(self, handler, mock_notification, mock_alert, db_session):
         """测试发送通知跳过重复"""
@@ -95,10 +97,12 @@ class TestSystemNotificationHandler:
             mock_filter.first.return_value = existing_notification
             mock_query.return_value = mock_filter
 
-            handler.send(mock_notification, mock_alert)
+            with patch(
+                "app.services.notification_handlers.system_handler.send_alert_via_unified"
+            ) as mock_send:
+                handler.send(mock_notification, mock_alert)
 
-            # 不应该调用 add
-            # (因为跳过了重复)
+                mock_send.assert_not_called()
 
     def test_send_uses_notification_title(self, handler, mock_notification, mock_alert):
         """测试使用通知标题"""

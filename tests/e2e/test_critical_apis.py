@@ -12,7 +12,6 @@ pytestmark = pytest.mark.skip(reason="E2E tests need endpoint verification")
 
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
@@ -20,9 +19,7 @@ from app.main import app
 from app.models.user import User
 from app.models.organization import Employee
 from app.models.project import Project
-from app.models.timesheet import Timesheet
 from app.models.vendor import Vendor as Supplier
-from app.models.budget import ProjectBudget
 
 
 class TestTimesheetAPI:
@@ -43,7 +40,7 @@ class TestTimesheetAPI:
 
         user = User(
             username="worker",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -98,7 +95,7 @@ class TestTimesheetAPI:
 
         user = User(
             username="worker2",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -135,7 +132,7 @@ class TestPurchaseAPI:
 
         user = User(
             username="procurement",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -195,7 +192,7 @@ class TestPurchaseAPI:
 
         user = User(
             username="procurement2",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -232,7 +229,7 @@ class TestBudgetAPI:
 
         user = User(
             username="pm",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )
@@ -285,7 +282,7 @@ class TestBudgetAPI:
 
         user = User(
             username="pm2",
-            hashed_password="hashed_pass",
+            password_hash="hashed_pass",
             employee_id=employee.id,
             is_active=True,
         )

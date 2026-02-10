@@ -166,7 +166,7 @@ class ProjectStatusLog(Base):
 
     # 变更信息
     change_type = Column(
-        String(20), nullable=False, comment="变更类型：STAGE_CHANGE/STATUS_CHANGE/HEALTH_CHANGE"
+        String(20), nullable=True, comment="变更类型：STAGE_CHANGE/STATUS_CHANGE/HEALTH_CHANGE"
     )
     change_reason = Column(Text, comment="变更原因")
     change_note = Column(Text, comment="变更备注")

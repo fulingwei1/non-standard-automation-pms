@@ -4,53 +4,24 @@ RECORDS - 自动生成
 从 alerts.py 拆分
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, List, Optional
+from datetime import date, datetime
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, case, func, or_
-from sqlalchemy.orm import Session, joinedload, selectinload
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.alert import (
-    AlertNotification,
     AlertRecord,
-    AlertRule,
-    AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
-    ExceptionAction,
-    ExceptionEscalation,
-    ExceptionEvent,
-    ProjectHealthSnapshot,
 )
-from app.models.issue import Issue
-from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.alert import (
     AlertRecordHandle,
-    AlertRecordListResponse,
     AlertRecordResponse,
-    AlertRuleCreate,
-    AlertRuleResponse,
-    AlertRuleUpdate,
-    AlertStatisticsResponse,
-    AlertSubscriptionCreate,
-    AlertSubscriptionResponse,
-    AlertSubscriptionUpdate,
-    ExceptionEventCreate,
-    ExceptionEventListResponse,
-    ExceptionEventResolve,
-    ExceptionEventResponse,
-    ExceptionEventUpdate,
-    ExceptionEventVerify,
-    ProjectHealthResponse,
 )
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 
 router = APIRouter(tags=["records"])
 
@@ -60,8 +31,7 @@ router = APIRouter(tags=["records"])
 @router.get("/alerts", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_records(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
     alert_level: Optional[str] = Query(None, description="预警级别筛选"),
@@ -110,12 +80,11 @@ def read_alert_records(
     total = query.count()
 
     # 分页 - 使用 eager loading 避免 N+1 查询
-    offset = (page - 1) * page_size
     alerts = query.options(
         joinedload(AlertRecord.rule),
         joinedload(AlertRecord.project),
         joinedload(AlertRecord.machine)
-    ).order_by(AlertRecord.triggered_at.desc()).offset(offset).limit(page_size).all()
+    ).order_by(AlertRecord.triggered_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 批量获取处理人信息（避免循环查询）
     handler_ids = [alert.handler_id for alert in alerts if alert.handler_id]
@@ -148,13 +117,7 @@ def read_alert_records(
             "handler_name": handler_name
         })
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.get("/alerts/{alert_id}", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)

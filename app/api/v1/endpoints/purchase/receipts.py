@@ -21,6 +21,7 @@ from app.models.purchase import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import decimal_value, generate_receipt_no
 
@@ -30,15 +31,13 @@ router = APIRouter()
 @router.get("/goods-receipts/")
 def list_goods_receipts(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(get_current_active_user),
 ):
     """获取收货单列表"""
     query = db.query(GoodsReceipt)
     total = query.count()
-    offset = (page - 1) * page_size
-    receipts = query.order_by(desc(GoodsReceipt.created_at)).offset(offset).limit(page_size).all()
+    receipts = query.order_by(desc(GoodsReceipt.created_at)).offset(pagination.offset).limit(pagination.limit).all()
     return {
         "items": [
             {
@@ -52,8 +51,8 @@ def list_goods_receipts(
             for receipt in receipts
         ],
         "total": total,
-        "page": page,
-        "page_size": page_size,
+        "page": pagination.page,
+        "page_size": pagination.page_size,
         "pages": (total + page_size - 1) // page_size,
     }
 

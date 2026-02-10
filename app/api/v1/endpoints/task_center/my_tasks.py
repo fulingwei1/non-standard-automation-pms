@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.notification import Notification
 from app.models.project import Project
@@ -128,13 +129,7 @@ def get_my_tasks(
         query = query.filter(TaskUnified.project_id == project_id)
 
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                TaskUnified.title.like(f"%{keyword}%"),
-                TaskUnified.description.like(f"%{keyword}%")
-            )
-        )
+    query = apply_keyword_filter(query, TaskUnified, keyword, ["title", "description"])
 
     # 排序
     if sort_by == "deadline":

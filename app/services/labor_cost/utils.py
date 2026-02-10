@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-人工成本计算工具函数
-提取纯工具函数，避免循环依赖
+人工成本计算工具函数与批量计算服务
+
+合并了原 labor_cost_calculation_service.py 的功能。
+旧模块已改为重导出兼容层。
 """
 
 from datetime import date
@@ -13,6 +15,8 @@ from sqlalchemy.orm import Session
 from app.models.project import Project, ProjectCost
 from app.models.timesheet import Timesheet
 
+# LaborCostService 延迟导入，避免循环依赖
+
 
 def query_approved_timesheets(
     db: Session,
@@ -22,12 +26,6 @@ def query_approved_timesheets(
 ) -> List[Timesheet]:
     """
     查询已审批的工时记录
-
-    Args:
-        db: 数据库会话
-        project_id: 项目ID
-        start_date: 开始日期（可选）
-        end_date: 结束日期（可选）
 
     Returns:
         List[Timesheet]: 工时记录列表
@@ -52,11 +50,6 @@ def delete_existing_costs(
 ) -> None:
     """
     删除现有的工时成本记录
-
-    Args:
-        db: 数据库会话
-        project: 项目对象
-        project_id: 项目ID
     """
     existing_costs = db.query(ProjectCost).filter(
         ProjectCost.project_id == project_id,
@@ -73,9 +66,6 @@ def delete_existing_costs(
 def group_timesheets_by_user(timesheets: List[Timesheet]) -> Dict[int, Dict]:
     """
     按用户分组工时记录
-
-    Args:
-        timesheets: 工时记录列表
 
     Returns:
         Dict[int, Dict]: 用户ID到用户数据的映射
@@ -113,11 +103,6 @@ def find_existing_cost(
     """
     查找现有的成本记录
 
-    Args:
-        db: 数据库会话
-        project_id: 项目ID
-        user_id: 用户ID
-
     Returns:
         Optional[ProjectCost]: 现有成本记录
     """
@@ -139,14 +124,6 @@ def update_existing_cost(
 ) -> None:
     """
     更新现有成本记录
-
-    Args:
-        db: 数据库会话
-        project: 项目对象
-        existing_cost: 现有成本记录
-        cost_amount: 成本金额
-        user_data: 用户数据
-        end_date: 结束日期（可选）
     """
     old_amount = existing_cost.amount
     existing_cost.amount = cost_amount
@@ -170,15 +147,6 @@ def create_new_cost(
 ) -> ProjectCost:
     """
     创建新的成本记录
-
-    Args:
-        db: 数据库会话
-        project: 项目对象
-        project_id: 项目ID
-        user_id: 用户ID
-        cost_amount: 成本金额
-        user_data: 用户数据
-        end_date: 结束日期（可选）
 
     Returns:
         ProjectCost: 新创建的成本记录
@@ -212,11 +180,6 @@ def check_budget_alert(
 ) -> None:
     """
     检查预算执行情况并生成预警
-
-    Args:
-        db: 数据库会话
-        project_id: 项目ID
-        user_id: 用户ID
     """
     try:
         from app.services.cost_alert_service import CostAlertService
@@ -226,3 +189,138 @@ def check_budget_alert(
     except Exception as e:
         import logging
         logging.warning(f"成本预警检查失败：{str(e)}")
+
+
+def process_user_costs(
+    db: Session,
+    project: Project,
+    project_id: int,
+    user_costs: Dict[int, Dict],
+    end_date: Optional[date],
+    recalculate: bool
+) -> tuple[List[ProjectCost], Decimal]:
+    """
+    处理用户成本
+
+    Returns:
+        Tuple[List[ProjectCost], Decimal]: (创建的成本记录列表, 总成本)
+    """
+    # 延迟导入，避免循环依赖
+    from app.services.labor_cost_service import LaborCostService
+
+    created_costs = []
+    total_cost = Decimal("0")
+
+    for user_id, user_data in user_costs.items():
+        # 获取用户时���
+        work_date = user_data.get("work_date") or end_date or date.today()
+        hourly_rate = LaborCostService.get_user_hourly_rate(db, user_id, work_date)
+
+        # 计算成本金额
+        cost_amount = user_data["total_hours"] * hourly_rate
+
+        # 检查是否已存在该用户的成本记录
+        existing_cost = None
+        if not recalculate:
+            existing_cost = find_existing_cost(db, project_id, user_id)
+
+        if existing_cost:
+            # 更新现有成本记录
+            update_existing_cost(db, project, existing_cost, cost_amount, user_data, end_date)
+            created_costs.append(existing_cost)
+
+            # 检查预算预警
+            check_budget_alert(db, project_id, user_id)
+        else:
+            # 创建新的成本记录
+            cost = create_new_cost(db, project, project_id, user_id, cost_amount, user_data, end_date)
+            created_costs.append(cost)
+
+            # 检查预算预警
+            check_budget_alert(db, project_id, user_id)
+
+        total_cost += cost_amount
+
+    return created_costs, total_cost
+
+
+class LaborCostCalculationService:
+    """
+    人工成本批量计算服务
+    用于定时任务批量计算所有项目的人工成本
+    """
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def calculate_monthly_costs(self, year: int, month: int) -> Dict:
+        """
+        计算指定月份所有项目的人工成本
+
+        Args:
+            year: 年份
+            month: 月份
+
+        Returns:
+            Dict: 计算结果统计
+        """
+        import logging
+        from datetime import date
+        from calendar import monthrange
+
+        logger = logging.getLogger(__name__)
+
+        # 计算月份的开始和结束日期
+        _, last_day = monthrange(year, month)
+        start_date = date(year, month, 1)
+        end_date = date(year, month, last_day)
+
+        # 查询有工时记录的项目
+        project_ids = self.db.query(Timesheet.project_id).filter(
+            Timesheet.work_date >= start_date,
+            Timesheet.work_date <= end_date,
+            Timesheet.status == "APPROVED"
+        ).distinct().all()
+
+        projects_processed = 0
+        total_cost = Decimal("0")
+        errors = []
+
+        for (project_id,) in project_ids:
+            if not project_id:
+                continue
+
+            try:
+                project = self.db.query(Project).filter(Project.id == project_id).first()
+                if not project:
+                    continue
+
+                # 查询该项目的工时
+                timesheets = query_approved_timesheets(self.db, project_id, start_date, end_date)
+                if not timesheets:
+                    continue
+
+                # 按用户分组
+                user_costs = group_timesheets_by_user(timesheets)
+
+                # 处理用户成本
+                _, project_cost = process_user_costs(
+                    self.db, project, project_id, user_costs, end_date, recalculate=False
+                )
+
+                total_cost += project_cost
+                projects_processed += 1
+
+            except Exception as e:
+                errors.append({"project_id": project_id, "error": str(e)})
+                logger.error(f"计算项目 {project_id} 人工成本失败: {str(e)}")
+
+        self.db.commit()
+
+        return {
+            "year": year,
+            "month": month,
+            "projects_processed": projects_processed,
+            "total_cost": float(total_cost),
+            "errors": errors
+        }

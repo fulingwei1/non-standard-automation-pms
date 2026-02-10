@@ -24,6 +24,7 @@ import {
   Minus } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import StatCard from "../common/StatCard";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
@@ -402,41 +403,49 @@ export const ScoringMatrix = ({
 
   };
 
-  // 渲染统计卡片
-  const renderStatCard = (title, value, change, icon, color, unit = "") =>
-  <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-slate-600 mb-1">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold" style={{ color }}>
-                {value}
-                {unit && <span className="text-lg font-normal text-slate-600">{unit}</span>}
-              </p>
-              {change !== null &&
-            <div className={cn(
-              "flex items-center gap-1 text-xs",
-              change > 0 ? "text-green-600" : change < 0 ? "text-red-600" : "text-slate-600"
-            )}>
-                  {change > 0 ?
-              <ArrowUpRight className="h-3 w-3" /> :
-              change < 0 ?
-              <ArrowDownRight className="h-3 w-3" /> :
+  const renderStatValue = (value, change, unit = "") => (
+    <span className="inline-flex items-baseline gap-2">
+      <span>
+        {value}
+        {unit && <span className="text-lg font-normal text-slate-600">{unit}</span>}
+      </span>
+      {change !== null && (
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-xs font-normal",
+            change > 0 ? "text-green-600" : change < 0 ? "text-red-600" : "text-slate-600"
+          )}
+        >
+          {change > 0 ? (
+            <ArrowUpRight className="h-3 w-3" />
+          ) : change < 0 ? (
+            <ArrowDownRight className="h-3 w-3" />
+          ) : (
+            <Minus className="h-3 w-3" />
+          )}
+          <span>{Math.abs(change)}%</span>
+        </span>
+      )}
+    </span>
+  );
 
-              <Minus className="h-3 w-3" />
-              }
-                  <span>{Math.abs(change)}%</span>
-            </div>
-            }
-            </div>
-          </div>
-          <div className={cn("p-2 rounded-lg", color)}>
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-  </Card>;
+  // 渲染统计卡片
+  const renderStatCard = ({ title, value, change, icon: Icon, color, bg, unit = "" }) => (
+    <StatCard
+      title={title}
+      value={renderStatValue(value, change, unit)}
+      icon={Icon}
+      color={color}
+      iconColor={color}
+      valueColor={color}
+      bg={bg}
+      showDecoration={false}
+      titleClassName="text-sm text-slate-600"
+      cardClassName="bg-white bg-none border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md p-4"
+      iconWrapperClassName="p-2 rounded-lg bg-opacity-10"
+      iconClassName="h-6 w-6"
+    />
+  );
 
 
   return (
@@ -469,34 +478,38 @@ export const ScoringMatrix = ({
 
       {/* 统计概览 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {renderStatCard(
-          "总线索数",
-          stats.total,
-          null,
-          <Target className="h-6 w-6 text-blue-500" />,
-          "#1890ff"
-        )}
-        {renderStatCard(
-          "已评估",
-          stats.assessed,
-          null,
-          <CheckCircle className="h-6 w-6 text-green-500" />,
-          "#52c41a"
-        )}
-        {renderStatCard(
-          "平均分",
-          stats.averageScore,
-          5.2,
-          <TrendingUp className="h-6 w-6 text-orange-500" />,
-          "#fa8c16"
-        )}
-        {renderStatCard(
-          "转化率",
-          `${stats.conversionRate}%`,
-          12.5,
-          <Zap className="h-6 w-6 text-purple-500" />,
-          "#722ed1"
-        )}
+        {renderStatCard({
+          title: "总线索数",
+          value: stats.total,
+          change: null,
+          icon: Target,
+          color: "text-blue-500",
+          bg: "bg-blue-500"
+        })}
+        {renderStatCard({
+          title: "已评估",
+          value: stats.assessed,
+          change: null,
+          icon: CheckCircle,
+          color: "text-green-500",
+          bg: "bg-green-500"
+        })}
+        {renderStatCard({
+          title: "平均分",
+          value: stats.averageScore,
+          change: 5.2,
+          icon: TrendingUp,
+          color: "text-orange-500",
+          bg: "bg-orange-500"
+        })}
+        {renderStatCard({
+          title: "转化率",
+          value: `${stats.conversionRate}%`,
+          change: 12.5,
+          icon: Zap,
+          color: "text-purple-500",
+          bg: "bg-purple-500"
+        })}
       </div>
 
       {/* 快速筛选 */}

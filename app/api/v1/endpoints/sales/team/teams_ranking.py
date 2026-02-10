@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range_by_ym
 from app.core import security
 from app.models.sales import Contract, Invoice, Lead, Opportunity, SalesTeam, SalesTeamMember
 from app.models.user import User
@@ -42,11 +43,7 @@ def get_sales_teams_ranking(
     # 计算时间范围
     if period_type == "MONTHLY":
         year, month = map(int, period_value.split("-"))
-        start_date_value = date(year, month, 1)
-        if month == 12:
-            end_date_value = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date_value = date(year, month + 1, 1) - timedelta(days=1)
+        start_date_value, end_date_value = get_month_range_by_ym(year, month)
     elif period_type == "QUARTERLY":
         year, quarter = period_value.split("-Q")
         quarter = int(quarter)

@@ -60,50 +60,87 @@ const CardFooter = React.forwardRef(({ className, ...props }, ref) => (
 ));
 CardFooter.displayName = "CardFooter";
 
-// Stat Card for dashboard
-const StatCard = React.forwardRef(
-  ({ icon: Icon, label, value, change, trend, className, ...props }, ref) => (
-    <Card
-      ref={ref}
-      className={cn("p-5 group cursor-pointer", className)}
-      {...props}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div
-          className={cn(
-            "p-2.5 rounded-xl",
-            "bg-gradient-to-br from-primary/20 to-indigo-500/10",
-            "ring-1 ring-primary/20",
-          )}
-        >
-          {Icon && <Icon className="h-5 w-5 text-primary" />}
-        </div>
+// Dashboard Stat Card
+const DashboardStatCard = React.forwardRef(
+  (
+    {
+      icon: Icon,
+      label,
+      value,
+      change,
+      trend,
+      description,
+      loading = false,
+      iconColor = "text-primary",
+      iconBg = "bg-gradient-to-br from-primary/20 to-indigo-500/10",
+      className,
+      onClick,
+      ...props
+    },
+    ref,
+  ) => {
+    if (loading) {
+      return (
+        <Card ref={ref} className={cn("p-5", className)} {...props}>
+          <div className="animate-pulse">
+            <div className="h-10 w-10 rounded-xl bg-white/10 mb-4" />
+            <div className="h-3 w-20 rounded bg-white/10 mb-3" />
+            <div className="h-6 w-16 rounded bg-white/10" />
+          </div>
+        </Card>
+      );
+    }
 
-        {change && (
+    const resolvedTrend = trend || "neutral";
+
+    return (
+      <Card
+        ref={ref}
+        className={cn("p-5 group", onClick && "cursor-pointer", className)}
+        onClick={onClick}
+        {...props}
+      >
+        <div className="flex items-center justify-between mb-4">
           <div
             className={cn(
-              "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-              trend === "up"
-                ? "text-emerald-400 bg-emerald-500/10"
-                : trend === "down"
-                  ? "text-red-400 bg-red-500/10"
-                  : "text-slate-400 bg-slate-500/10",
+              "p-2.5 rounded-xl",
+              iconBg,
+              "ring-1 ring-primary/20",
             )}
           >
-            {trend === "up" ? "↑" : trend === "down" ? "↓" : ""}
-            {change}
+            {Icon && <Icon className={cn("h-5 w-5", iconColor)} />}
           </div>
-        )}
-      </div>
 
-      <p className="text-sm text-slate-400 mb-1">{label}</p>
-      <p className="text-2xl font-semibold text-white tracking-tight">
-        {value}
-      </p>
-    </Card>
-  ),
+          {change && (
+            <div
+              className={cn(
+                "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
+                resolvedTrend === "up"
+                  ? "text-emerald-400 bg-emerald-500/10"
+                  : resolvedTrend === "down"
+                    ? "text-red-400 bg-red-500/10"
+                    : "text-slate-400 bg-slate-500/10",
+              )}
+            >
+              {resolvedTrend === "up" ? "↑" : resolvedTrend === "down" ? "↓" : ""}
+              {change}
+            </div>
+          )}
+        </div>
+
+        <p className="text-sm text-slate-400 mb-1">{label}</p>
+        <p className="text-2xl font-semibold text-white tracking-tight">
+          {value}
+        </p>
+        {description && (
+          <p className="text-xs text-slate-500 mt-1">{description}</p>
+        )}
+      </Card>
+    );
+  },
 );
-StatCard.displayName = "StatCard";
+DashboardStatCard.displayName = "DashboardStatCard";
+
 
 export {
   Card,
@@ -112,5 +149,5 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-  StatCard,
+  DashboardStatCard,
 };

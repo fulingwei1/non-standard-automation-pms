@@ -7,11 +7,12 @@ from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.culture_wall import CultureWallContent, CultureWallReadRecord
 from app.models.user import User
@@ -45,14 +46,7 @@ def read_culture_wall_contents(
     if is_published is not None:
         query = query.filter(CultureWallContent.is_published == is_published)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                CultureWallContent.title.like(f"%{keyword}%"),
-                CultureWallContent.content.like(f"%{keyword}%"),
-                CultureWallContent.summary.like(f"%{keyword}%")
-            )
-        )
+    query = apply_keyword_filter(query, CultureWallContent, keyword, ["title", "content", "summary"])
 
     total = query.count()
     offset = (page - 1) * page_size

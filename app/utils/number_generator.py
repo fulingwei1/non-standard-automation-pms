@@ -5,19 +5,22 @@
 提供统一的业务编号生成功能，消除重复代码
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional, Type
 
-from sqlalchemy import desc
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session
 
 from app.utils.code_config import (
     CODE_PREFIX,
     SEQ_LENGTH,
     get_material_category_code,
-    validate_material_category_code,
 )
+
+# 模块级导入，支持 unittest.mock.patch 在测试中替换
+from app.models.organization import Employee
+from app.models.project import Customer, Machine
+from app.models.material import Material
+from app.models.bonus import BonusCalculation
 
 
 def generate_sequential_no(
@@ -80,7 +83,7 @@ def generate_sequential_no(
     max_record = (
         db.query(model_class)
         .filter(getattr(model_class, no_field).like(pattern))
-        .order_by(desc(getattr(model_class, no_field)))
+        .order_by(getattr(model_class, no_field).desc())
         .first()
     )
 
@@ -160,7 +163,7 @@ def generate_monthly_no(
     max_record = (
         db.query(model_class)
         .filter(getattr(model_class, no_field).like(pattern))
-        .order_by(desc(getattr(model_class, no_field)))
+        .order_by(getattr(model_class, no_field).desc())
         .first()
     )
 
@@ -191,7 +194,6 @@ def generate_employee_code(db: Session) -> str:
     Returns:
         生成的员工编号字符串
     """
-    from app.models.organization import Employee
 
     prefix = CODE_PREFIX["EMPLOYEE"]
     seq_length = SEQ_LENGTH["EMPLOYEE"]
@@ -202,7 +204,7 @@ def generate_employee_code(db: Session) -> str:
     max_record = (
         db.query(Employee)
         .filter(Employee.employee_code.like(pattern))
-        .order_by(desc(Employee.employee_code))
+        .order_by(Employee.employee_code.desc())
         .first()
     )
 
@@ -239,7 +241,6 @@ def generate_customer_code(db: Session) -> str:
     Returns:
         生成的客户编号字符串
     """
-    from app.models.project import Customer
 
     prefix = CODE_PREFIX["CUSTOMER"]
     seq_length = SEQ_LENGTH["CUSTOMER"]
@@ -250,7 +251,7 @@ def generate_customer_code(db: Session) -> str:
     max_record = (
         db.query(Customer)
         .filter(Customer.customer_code.like(pattern))
-        .order_by(desc(Customer.customer_code))
+        .order_by(Customer.customer_code.desc())
         .first()
     )
 
@@ -288,7 +289,6 @@ def generate_material_code(db: Session, category_code: Optional[str] = None) -> 
     Returns:
         生成的物料编号字符串
     """
-    from app.models.material import Material
 
     prefix = CODE_PREFIX["MATERIAL"]
     seq_length = SEQ_LENGTH["MATERIAL"]
@@ -307,7 +307,7 @@ def generate_material_code(db: Session, category_code: Optional[str] = None) -> 
     max_record = (
         db.query(Material)
         .filter(Material.material_code.like(pattern))
-        .order_by(desc(Material.material_code))
+        .order_by(Material.material_code.desc())
         .first()
     )
 
@@ -356,14 +356,13 @@ def generate_machine_code(db: Session, project_code: str) -> str:
         # 返回: PJ250708001-PN002 (如果该项目下已有1台设备)
         ```
     """
-    from app.models.project import Machine
 
     # 查询该项目下已有的设备编码，格式：PJxxx-PNxxx
     pattern = f"{project_code}-PN%"
     max_record = (
         db.query(Machine)
         .filter(Machine.machine_code.like(pattern))
-        .order_by(desc(Machine.machine_code))
+        .order_by(Machine.machine_code.desc())
         .first()
     )
 
@@ -407,7 +406,6 @@ def generate_calculation_code(db: Session) -> str:
         # 返回: BC-250716-002 (如果当天已有1条)
         ```
     """
-    from app.models.bonus import BonusCalculation
 
     prefix = "BC"
     today = datetime.now()
@@ -421,7 +419,7 @@ def generate_calculation_code(db: Session) -> str:
     max_record = (
         db.query(BonusCalculation)
         .filter(BonusCalculation.calculation_code.like(pattern))
-        .order_by(desc(BonusCalculation.calculation_code))
+        .order_by(BonusCalculation.calculation_code.desc())
         .first()
     )
 

@@ -3,6 +3,7 @@
 拼音工具函数
 用于生成用户名和密码
 """
+import secrets
 from typing import Optional
 
 try:
@@ -18,6 +19,10 @@ except ImportError:  # pragma: no cover - 可选依赖
             return [str(ch)[0].lower() for ch in text]
         return [str(ch).lower() for ch in text]
 from sqlalchemy.orm import Session
+
+# 模块级导入，支持 unittest.mock.patch 在测试中替换
+from app.models.user import User
+from app.models.organization import Employee
 
 
 def name_to_pinyin(name: str) -> str:
@@ -66,7 +71,6 @@ def generate_unique_username(name: str, db: Session, existing_usernames: Optiona
     Returns:
         唯一的用户名，如 "yaohong" 或 "yaohong2"
     """
-    from app.models.user import User
 
     base_username = name_to_pinyin(name)
     if not base_username:
@@ -107,7 +111,6 @@ def generate_initial_password(username: str = None, id_card: str = None, employe
     Returns:
         16字符的安全随机密码，如 "Xa3b_cD5eF2gH7jK"
     """
-    import secrets
 
     # 生成 12 字节的随机数据，base64url 编码后为 16 字符
     return secrets.token_urlsafe(12)
@@ -123,7 +126,6 @@ def batch_generate_pinyin_for_employees(db: Session) -> int:
     Returns:
         更新的记录数
     """
-    from app.models.organization import Employee
 
     employees = db.query(Employee).filter(
         Employee.pinyin_name.is_(None) | (Employee.pinyin_name == '')

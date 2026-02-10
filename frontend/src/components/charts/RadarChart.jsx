@@ -1,6 +1,11 @@
 /**
  * 雷达图组件 - 基于 @ant-design/plots
  * 用于多维度数据对比、能力评估
+ *
+ * NOTE: A specialized assessment RadarChart exists at:
+ * components/assessment/RadarChart.jsx
+ * That component is a custom SVG implementation for 5-dimension technical assessments.
+ * This component is a general-purpose radar chart wrapper around @ant-design/plots.
  */
 
 import { Radar } from "@ant-design/plots";

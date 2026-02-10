@@ -21,30 +21,10 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { formatDate, formatDateTime } from "../../lib/formatters";
 import { fadeIn } from "../../lib/animations";
 import { sourceOptions } from "./leadManagementConstants";
 
-// 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-  });
-};
-
-// 格式化日期时间
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 // 获取来源标签
 const getSourceLabel = (sourceValue) => {

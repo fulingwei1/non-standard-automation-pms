@@ -24,6 +24,10 @@ class ServiceTicket(Base, TimestampMixin):
     problem_desc = Column(Text, nullable=False, comment='问题描述')
     urgency = Column(String(20), nullable=False, comment='紧急程度')
 
+    # 兼容别名字段
+    priority = Column(String(20), comment='优先级(兼容字段)')
+    ticket_type = Column(String(20), comment='工单类型(兼容字段)')
+
     # 报告人信息
     reported_by = Column(String(50), nullable=False, comment='报告人')
     reported_time = Column(DateTime, nullable=False, comment='报告时间')

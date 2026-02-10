@@ -30,14 +30,14 @@ class ProjectMilestone(Base, TimestampMixin):
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID（可选）")
-    milestone_code = Column(String(50), nullable=False, comment="里程碑编码")
-    milestone_name = Column(String(200), nullable=False, comment="里程碑名称")
+    milestone_code = Column(String(50), nullable=True, comment="里程碑编码")
+    milestone_name = Column(String(200), nullable=True, comment="里程碑名称")
     milestone_type = Column(
         String(20), default="CUSTOM", comment="GATE/DELIVERY/PAYMENT/CUSTOM"
     )
 
     # 时间
-    planned_date = Column(Date, nullable=False, comment="计划日期")
+    planned_date = Column(Date, nullable=True, comment="计划日期")
     actual_date = Column(Date, comment="实际完成日期")
     reminder_days = Column(Integer, default=7, comment="提前提醒天数")
 
@@ -158,7 +158,7 @@ class ProjectCost(Base, TimestampMixin):
     tax_amount = Column(Numeric(12, 2), default=0, comment="税额")
 
     # 时间
-    cost_date = Column(Date, nullable=False, comment="发生日期")
+    cost_date = Column(Date, nullable=True, comment="发生日期")
 
     description = Column(Text, comment="描述")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")

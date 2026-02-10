@@ -19,6 +19,7 @@ from app.models.progress import Task
 from app.models.user import User
 from app.schemas.issue import IssueListResponse, IssueResponse
 from app.services.data_scope import DataScopeService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -81,9 +82,9 @@ def _build_issue_list_response(
     return IssueListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 
@@ -92,8 +93,7 @@ def get_project_issues(
     project_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取项目下的所有问题"""
@@ -109,7 +109,7 @@ def get_project_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -119,8 +119,7 @@ def get_machine_issues(
     machine_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取机台下的所有问题"""
@@ -136,7 +135,7 @@ def get_machine_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -146,8 +145,7 @@ def get_task_issues(
     task_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取任务下的所有问题"""
@@ -168,7 +166,7 @@ def get_task_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -178,8 +176,7 @@ def get_acceptance_order_issues(
     order_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取验收单下的所有问题"""
@@ -198,6 +195,6 @@ def get_acceptance_order_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)

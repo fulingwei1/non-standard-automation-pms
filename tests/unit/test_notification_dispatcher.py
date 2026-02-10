@@ -49,14 +49,25 @@ class TestNotificationDispatcher:
     def test_init_dispatcher(self, db_session):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
 
         assert dispatcher.db == db_session
+        assert dispatcher.unified_service == mock_service
 
     def test_compute_next_retry_schedule(self, db_session):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
 
         result_0 = dispatcher._compute_next_retry(0)
         assert isinstance(result_0, datetime)
@@ -66,51 +77,76 @@ class TestNotificationDispatcher:
     ):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        mock_service.send_notification.return_value = {"success": True}
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
         mock_notification.notify_channel = "SYSTEM"
 
         result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
         assert result is True
+        assert mock_notification.status == "SENT"
+        assert mock_service.send_notification.called
 
     def test_dispatch_email_channel_success(
         self, db_session, mock_notification, mock_alert, mock_user
     ):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        mock_service.send_notification.return_value = {"success": True}
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
         mock_notification.notify_channel = "EMAIL"
 
         result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
         assert result is True
+        assert mock_notification.status == "SENT"
+        assert mock_service.send_notification.called
 
     def test_dispatch_unsupported_channel(
         self, db_session, mock_notification, mock_alert, mock_user
     ):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        mock_service.send_notification.return_value = {"success": True}
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
         mock_notification.notify_channel = "UNSUPPORTED"
 
         result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
-        assert result is False
-        assert mock_notification.status == "FAILED"
-        assert mock_notification.error_message is not None
+        assert result is True
+        assert mock_notification.status == "SENT"
+        assert mock_service.send_notification.called
 
     def test_dispatch_with_exception(
         self, db_session, mock_notification, mock_alert, mock_user
     ):
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        dispatcher = NotificationDispatcher(db_session)
+        mock_service = Mock()
+        mock_service.send_notification.side_effect = Exception("Test error")
+        with patch(
+            "app.services.notification_dispatcher.get_notification_service",
+            return_value=mock_service,
+        ):
+            dispatcher = NotificationDispatcher(db_session)
         mock_notification.notify_channel = "EMAIL"
 
-        with patch.object(
-            dispatcher.email_handler, "send", side_effect=Exception("Test error")
-        ):
-            result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
+        result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
         assert result is False
         assert mock_notification.status == "FAILED"

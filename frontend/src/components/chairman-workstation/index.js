@@ -1,4 +1,3 @@
-export { default as StatCard } from "./StatCard";
 export { default as FinancialMetricsGrid } from "./FinancialMetricsGrid";
 export { default as StrategicTargetCard } from "./StrategicTargetCard";
 export { default as OperatingTargetCard } from "./OperatingTargetCard";

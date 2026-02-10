@@ -27,6 +27,7 @@ from app.schemas.project import (
     ProjectMemberResponse
 )
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.common.pagination import PaginationParams, get_pagination_query
 
 
 def filter_by_role(query, role: str):
@@ -70,8 +71,7 @@ router = APIRouter()
 def list_project_members(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(100, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: str = Query(None, description="关键词搜索"),
     order_by: str = Query(None, description="排序字段"),
     order_direction: str = Query("desc", description="排序方向 (asc/desc)"),
@@ -107,8 +107,7 @@ def list_project_members(
     
     # 分页
     total = query.count()
-    offset = (page - 1) * page_size
-    members = query.offset(offset).limit(page_size).all()
+    members = query.offset(pagination.offset).limit(pagination.limit).all()
     
     # 填充用户信息
     for member in members:
@@ -117,9 +116,9 @@ def list_project_members(
     return PaginatedResponse(
         items=members,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

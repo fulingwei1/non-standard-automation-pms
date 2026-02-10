@@ -15,6 +15,7 @@ from app.models.organization import Department
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
+from app.common.date_range import get_month_range_by_ym
 
 
 class OvertimeCalculationService:
@@ -83,11 +84,7 @@ class OvertimeCalculationService:
         Returns:
             月度加班工资统计
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         # 查询已审批的工时记录
         timesheets = self.db.query(Timesheet).filter(
@@ -193,11 +190,7 @@ class OvertimeCalculationService:
         Returns:
             加班统计数据
         """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        start_date, end_date = get_month_range_by_ym(year, month)
 
         query = self.db.query(Timesheet).filter(
             Timesheet.status == 'APPROVED',

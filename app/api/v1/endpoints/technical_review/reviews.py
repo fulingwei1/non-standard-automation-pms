@@ -7,11 +7,12 @@ from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_keyword_filter
 from app.core.config import settings
 from app.models.project import Machine, Project
 from app.models.technical_review import TechnicalReview
@@ -121,13 +122,7 @@ def read_technical_reviews(
     """获取技术评审列表"""
     query = db.query(TechnicalReview)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                TechnicalReview.review_no.like(f"%{keyword}%"),
-                TechnicalReview.review_name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, TechnicalReview, keyword, ["review_no", "review_name"])
 
     if review_type:
         query = query.filter(TechnicalReview.review_type == review_type)

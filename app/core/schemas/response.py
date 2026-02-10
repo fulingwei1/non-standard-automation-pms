@@ -5,7 +5,7 @@
 所有API响应都应该使用这些格式，确保前后端交互的一致性。
 """
 
-from typing import Generic, TypeVar, Optional, List, Dict, Any
+from typing import Generic, TypeVar, Optional, List
 from pydantic import BaseModel, Field
 
 T = TypeVar('T')
@@ -123,7 +123,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     items: List[T] = Field(..., description="数据列表")
     total: int = Field(..., description="总记录数")
     page: int = Field(..., ge=1, description="当前页码")
-    page_size: int = Field(..., ge=1, le=100, description="每页记录数")
+    page_size: int = Field(..., ge=1, le=10000, description="每页记录数")
     pages: int = Field(..., ge=0, description="总页数")
 
     class Config:

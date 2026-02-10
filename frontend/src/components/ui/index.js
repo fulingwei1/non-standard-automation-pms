@@ -11,7 +11,7 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-  StatCard,
+  DashboardStatCard,
 } from "./card";
 export { Badge, badgeVariants, HealthBadge, StageBadge } from "./badge";
 export {

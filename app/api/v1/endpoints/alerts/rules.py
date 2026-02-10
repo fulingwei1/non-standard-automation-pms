@@ -10,12 +10,13 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -88,8 +89,7 @@ def read_alert_rule_templates(
 @router.get("/alert-rules", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_rules(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（规则编码/名称）"),
     rule_type: Optional[str] = Query(None, description="规则类型筛选"),
     target_type: Optional[str] = Query(None, description="监控对象类型筛选"),
@@ -102,13 +102,7 @@ def read_alert_rules(
     query = db.query(AlertRule)
 
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                AlertRule.rule_code.like(f"%{keyword}%"),
-                AlertRule.rule_name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, AlertRule, keyword, ["rule_code", "rule_name"])
 
     # 规则类型筛选
     if rule_type:
@@ -126,16 +120,9 @@ def read_alert_rules(
     total = query.count()
 
     # 分页
-    offset = (page - 1) * page_size
-    rules = query.order_by(AlertRule.created_at.desc()).offset(offset).limit(page_size).all()
+    rules = query.order_by(AlertRule.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
-    return PaginatedResponse(
-        items=rules,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(rules, total)
 
 
 @router.get("/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)

@@ -233,29 +233,46 @@ class MaterialShortage(Base, TimestampMixin):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     bom_item_id = Column(Integer, ForeignKey('bom_items.id'), comment='BOM行ID')
     material_id = Column(Integer, ForeignKey('materials.id'), nullable=False, comment='物料ID')
+    machine_id = Column(Integer, ForeignKey('machines.id'), comment='机台ID')
 
     # 短缺信息
     material_code = Column(String(50), nullable=False, comment='物料编码')
     material_name = Column(String(200), nullable=False, comment='物料名称')
     required_qty = Column(Numeric(10, 4), nullable=False, comment='需求数量')
+    shortage_quantity = Column(Numeric(10, 4), comment='短缺数量(兼容字段)')
     available_qty = Column(Numeric(10, 4), default=0, comment='可用数量')
     shortage_qty = Column(Numeric(10, 4), nullable=False, comment='短缺数量')
     required_date = Column(Date, comment='需求日期')
+    shortage_reason = Column(Text, comment='短缺原因')
 
     # 状态
     status = Column(String(20), default='OPEN', comment='状态')
     alert_level = Column(String(20), default='WARNING', comment='预警级别')
+    severity = Column(String(20), default='WARNING', comment='严重程度')
 
     # 处理
     solution = Column(Text, comment='解决方案')
     handler_id = Column(Integer, ForeignKey('users.id'), comment='处理人')
+    assigned_to_id = Column(Integer, ForeignKey('users.id'), comment='指派人')
+    acknowledged_by = Column(Integer, ForeignKey('users.id'), comment='确认人')
+    acknowledged_at = Column(DateTime, comment='确认时间')
+    acknowledgment_note = Column(Text, comment='确认备注')
+    resolved_by = Column(Integer, ForeignKey('users.id'), comment='解决人')
     resolved_at = Column(DateTime, comment='解决时间')
+    resolution_method = Column(String(50), comment='解决方法')
+    resolution_note = Column(Text, comment='解决备注')
+    actual_arrival_date = Column(Date, comment='实际到货日期')
+    updated_by = Column(Integer, comment='更新人')
 
     remark = Column(Text, comment='备注')
 
     # 关系
     project = relationship('Project')
     material = relationship('Material')
+    machine = relationship('Machine', foreign_keys=[machine_id])
+    assigned_user = relationship('User', foreign_keys=[assigned_to_id])
+    acknowledged_by_user = relationship('User', foreign_keys=[acknowledged_by])
+    resolved_by_user = relationship('User', foreign_keys=[resolved_by])
 
     __table_args__ = (
         Index('idx_shortage_project', 'project_id'),

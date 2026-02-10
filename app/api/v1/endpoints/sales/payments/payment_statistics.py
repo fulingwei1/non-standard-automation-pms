@@ -14,6 +14,7 @@ from app.core import security
 from app.core.config import settings
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -101,8 +102,7 @@ def get_payment_statistics(
 def get_payment_reminders(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     days_before: int = Query(7, ge=0, description="提前提醒天数"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -124,8 +124,7 @@ def get_payment_reminders(
     )
 
     total = query.count()
-    offset = (page - 1) * page_size
-    invoices = query.order_by(Invoice.due_date).offset(offset).limit(page_size).all()
+    invoices = query.order_by(Invoice.due_date).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for invoice in invoices:
@@ -155,7 +154,7 @@ def get_payment_reminders(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )

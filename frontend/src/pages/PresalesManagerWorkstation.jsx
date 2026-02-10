@@ -21,8 +21,6 @@ import {
   Award,
   FileCheck,
   ClipboardList,
-  ArrowUpRight,
-  ArrowDownRight,
   Building2,
   Briefcase,
   DollarSign,
@@ -45,68 +43,9 @@ import { Progress } from "../components/ui/progress";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi, opportunityApi as _opportunityApi, orgApi as _orgApi, userApi } from "../services/api";
+import { formatCurrencyCompact as formatCurrency } from "../lib/formatters";
+import StatCard from "../components/common/StatCard";
 
-// Mock 数据 - 总体统计
-// Mock data - 已移除，使用真实API
-// Mock 数据 - 团队绩效
-// Mock data - 已移除，使用真实API
-// Mock 数据 - 待审核方案
-// Mock data - 已移除，使用真实API
-// Mock 数据 - 投标项目
-// Mock data - 已移除，使用真实API
-// Mock 数据 - 进行中方案
-// Mock data - 已移除，使用真实API
-// 格式化金额
-const formatCurrency = (value) => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`;
-  }
-  return new Intl.NumberFormat("zh-CN", {
-    style: "currency",
-    currency: "CNY",
-    minimumFractionDigits: 0
-  }).format(value);
-};
-
-// 统计卡片组件
-const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
-  return (
-    <motion.div
-      variants={fadeIn}
-      className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg">
-
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-slate-400 mb-2">{title}</p>
-          <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
-          {trend !== undefined &&
-          <div className="flex items-center gap-1 mt-2">
-              {trend > 0 ?
-            <>
-                  <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                  <span className="text-xs text-emerald-400">+{trend}%</span>
-            </> :
-            trend < 0 ?
-            <>
-                  <ArrowDownRight className="w-3 h-3 text-red-400" />
-                  <span className="text-xs text-red-400">{trend}%</span>
-            </> :
-            null}
-              {trend !== 0 &&
-            <span className="text-xs text-slate-500 ml-1">vs 上月</span>
-            }
-          </div>
-          }
-        </div>
-        <div className={cn("rounded-lg p-3 bg-opacity-20", bg)}>
-          <Icon className={cn("h-6 w-6", color)} />
-        </div>
-      </div>
-      <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
-    </motion.div>);
-
-};
 
 export default function PresalesManagerWorkstation() {
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,11 @@
 /**
  * Trend Chart Component - 趋势图组件
  * 用于展示评估分数随时间的变化趋势
+ *
+ * NOTE: A dashboard-oriented TrendChart widget exists at:
+ * pages/UnifiedDashboard/widgets/TrendChart.jsx
+ * That component is designed for dashboard cards with KPI indicators.
+ * This component is a raw SVG chart for assessment score visualization.
  */
 
 import { useMemo } from "react";

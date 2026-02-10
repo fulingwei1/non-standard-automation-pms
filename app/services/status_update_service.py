@@ -94,32 +94,7 @@ class StatusUpdateService:
         # 1. 获取当前状态
         old_status = getattr(entity, status_field, None)
 
-        # 2. 如果状态没有变化，直接返回
-        if old_status == new_status:
-            return StatusUpdateResult(
-                success=True,
-                entity=entity,
-                old_status=old_status,
-                new_status=new_status,
-                message="状态未发生变化",
-            )
-
-        # 3. 执行更新前回调
-        if before_update_callback:
-            try:
-                before_update_callback(entity, old_status, new_status, operator)
-            except Exception as e:
-                errors.append(f"更新前回调执行失败: {str(e)}")
-                logger.error(f"before_update_callback failed: {e}", exc_info=True)
-                return StatusUpdateResult(
-                    success=False,
-                    entity=entity,
-                    old_status=old_status,
-                    new_status=new_status,
-                    errors=errors,
-                )
-
-        # 4. 验证状态值
+        # 2. 验证状态值
         if valid_statuses and new_status not in valid_statuses:
             errors.append(f"无效的状态值: {new_status}。有效状态: {', '.join(valid_statuses)}")
             return StatusUpdateResult(
@@ -130,14 +105,53 @@ class StatusUpdateService:
                 errors=errors,
             )
 
-        # 5. 验证状态转换规则
+        # 3. 验证状态转换规则
         if transition_rules and old_status:
-            allowed_statuses = transition_rules.get(old_status, [])
-            if allowed_statuses and new_status not in allowed_statuses:
+            # 如果当前状态在转换规则中，检查目标状态是否允许
+            if old_status in transition_rules:
+                allowed_statuses = transition_rules.get(old_status, [])
+                if new_status not in allowed_statuses:
+                    errors.append(
+                        f"不允许的状态转换: {old_status} → {new_status}。"
+                        f"允许的转换: {', '.join(allowed_statuses) if allowed_statuses else '无'}"
+                    )
+                    return StatusUpdateResult(
+                        success=False,
+                        entity=entity,
+                        old_status=old_status,
+                        new_status=new_status,
+                        errors=errors,
+                    )
+            # 如果当前状态不在规则中，说明该状态不允许任何转换（包括到自己）
+            else:
                 errors.append(
-                    f"不允许的状态转换: {old_status} → {new_status}。"
-                    f"允许的转换: {', '.join(allowed_statuses)}"
+                    f"状态 {old_status} 不允许转换到任何状态"
                 )
+                return StatusUpdateResult(
+                    success=False,
+                    entity=entity,
+                    old_status=old_status,
+                    new_status=new_status,
+                    errors=errors,
+                )
+
+        # 4. 如果状态没有变化，直接返回
+        if old_status == new_status:
+            return StatusUpdateResult(
+                success=True,
+                entity=entity,
+                old_status=old_status,
+                new_status=new_status,
+                message="状态未发生变化",
+            )
+
+        # 5. 执行更新前回调
+        if before_update_callback:
+            try:
+                before_update_callback(entity, old_status, new_status, operator)
+            except Exception as e:
+                errors.append(f"更新前回调执行失败: {str(e)}")
+                logger.error(f"before_update_callback failed: {e}", exc_info=True)
                 return StatusUpdateResult(
                     success=False,
                     entity=entity,

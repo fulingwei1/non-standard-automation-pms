@@ -16,7 +16,7 @@ from app.models.approval import (
     ApprovalNodeDefinition,
 )
 from app.models.user import User
-from app.utils.logger import (
+from app.core.logging_config import (
     get_logger,
     log_info_with_context,
     log_error_with_context,
@@ -571,3 +571,7 @@ class ApprovalExecutionLogger:
                 f"工作流摘要: {instance.instance_no} 完成",
                 context=log_context,
             )
+
+
+# 兼容别名：重构前类名为 ExecutionLogger
+ExecutionLogger = ApprovalExecutionLogger

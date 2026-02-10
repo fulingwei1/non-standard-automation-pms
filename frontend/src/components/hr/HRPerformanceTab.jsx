@@ -2,37 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Clock, CheckCircle2, Target, Award, 
   BarChart3, TrendingUp, Star 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import StatCard from '../common/StatCard';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
-
-/**
- * 绩效统计卡片
- */
-const PerformanceStatCard = ({ title, value, icon: Icon, color, bgColor }) => (
-  <Card className="bg-surface-50 border-white/10">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-400 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-white">{value}</p>
-        </div>
-        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", bgColor)}>
-          <Icon className={cn("w-6 h-6", color)} />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 /**
  * 绩效分布项
@@ -90,33 +71,53 @@ export const HRPerformanceTab = ({
     >
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <PerformanceStatCard
+        <StatCard
           title="待评审"
           value={stats.pendingPerformanceReviews}
           icon={Clock}
           color="text-amber-400"
-          bgColor="bg-amber-500/20"
+          bg="bg-amber-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <PerformanceStatCard
+        <StatCard
           title="已完成"
           value={stats.completedPerformanceReviews}
           icon={CheckCircle2}
           color="text-emerald-400"
-          bgColor="bg-emerald-500/20"
+          bg="bg-emerald-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <PerformanceStatCard
+        <StatCard
           title="完成率"
           value={`${stats.performanceCompletionRate}%`}
           icon={Target}
           color="text-blue-400"
-          bgColor="bg-blue-500/20"
+          bg="bg-blue-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
-        <PerformanceStatCard
+        <StatCard
           title="平均分"
           value={stats.avgPerformanceScore}
           icon={Award}
           color="text-purple-400"
-          bgColor="bg-purple-500/20"
+          bg="bg-purple-500/20"
+          size="large"
+          showDecoration={false}
+          cardClassName="bg-surface-50 border-white/10 hover:bg-surface-100 hover:border-white/20 bg-none hover:shadow-none"
+          iconWrapperClassName="w-12 h-12 p-0 rounded-full flex items-center justify-center"
+          iconClassName="w-6 h-6"
         />
       </div>
 

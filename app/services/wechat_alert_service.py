@@ -2,6 +2,12 @@
 """
 企业微信预警消息推送服务
 实现缺料预警的企业微信卡片消息推送
+
+此模块专注于缺料预警场景的企业微信推送。
+通用的企业微信通知请使用:
+- notification_handlers/wechat_handler.py (WeChatNotificationHandler)
+- channel_handlers/wechat_handler.py (WeChatChannelHandler)
+底层 API 客户端: utils/wechat_client.py (WeChatClient)
 """
 
 import json
@@ -9,7 +15,6 @@ import logging
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
-from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -95,7 +100,7 @@ class WeChatAlertService:
         # 发送消息
         success_count = 0
         for user in notify_users:
-            if cls._send_wechat_message(user, message):
+            if cls._send_wechat_message(db, user, message):
                 success_count += 1
 
         return success_count > 0
@@ -277,57 +282,50 @@ class WeChatAlertService:
         return users
 
     @classmethod
-    def _send_wechat_message(cls, user: User, message: Dict) -> bool:
+    def _send_wechat_message(cls, db: Session, user: User, message: Dict) -> bool:
         """
         发送企业微信消息
 
-        使用WeChatClient发送消息
+        通过统一通知服务发送，避免重复实现发送逻辑。
         """
-        from app.core.config import settings
-        from app.utils.wechat_client import WeChatClient
+        from app.services.unified_notification_service import get_notification_service
+        from app.services.channel_handlers.base import (
+            NotificationChannel,
+            NotificationRequest,
+            NotificationPriority,
+        )
 
-        # 检查企业微信是否启用
-        if not settings.WECHAT_ENABLED:
-            logger.debug("企业微信功能未启用，跳过发送")
-            return False
+        title = ""
+        content = ""
+        template_card = message.get("template_card") if isinstance(message, dict) else None
+        if template_card:
+            main_title = template_card.get("main_title", {})
+            title = main_title.get("title", "")
+            content = main_title.get("desc", "")
+        if not title:
+            title = "缺料预警通知"
+        if not content:
+            content = "缺料预警通知，请查看详情。"
 
-        # 获取用户的企业微信ID
-        wechat_userid = getattr(user, "wechat_userid", None)
-        if not wechat_userid:
-            # 尝试从其他字段获取（如username、real_name等）
-            wechat_userid = getattr(user, "username", None)
-            if not wechat_userid:
-                logger.debug(f"用户 {user.id} 未绑定企业微信ID，跳过发送")
-                return False
+        request = NotificationRequest(
+            recipient_id=user.id,
+            notification_type="shortage_alert",
+            category="alert",
+            title=title,
+            content=content,
+            priority=NotificationPriority.URGENT,
+            channels=[NotificationChannel.WECHAT],
+            wechat_template=message if template_card else None,
+            force_send=True,
+        )
 
-        try:
-            # 创建企业微信客户端
-            client = WeChatClient()
-
-            # 发送消息
-            if message.get("msgtype") == "template_card":
-                success = client.send_template_card(
-                    [wechat_userid], message["template_card"]
-                )
-            else:
-                success = client.send_message([wechat_userid], message)
-
-            if success:
-                logger.info(
-                    f"企业微信消息发送成功: {user.username} (wechat_userid: {wechat_userid})"
-                )
-            else:
-                logger.warning(f"企业微信消息发送失败: {user.username}")
-
-            return success
-
-        except ValueError as e:
-            # 配置不完整
-            logger.warning(f"企业微信配置不完整: {e}")
-            return False
-        except Exception as e:
-            logger.error(f"企业微信发送消息失败: {user.username}, 错误: {e}")
-            return False
+        result = get_notification_service(db).send_notification(request)
+        success = result.get("success", False)
+        if success:
+            logger.info("企业微信消息发送成功: %s", user.username)
+        else:
+            logger.warning("企业微信消息发送失败: %s", user.username)
+        return success
 
     @classmethod
     def batch_send_alerts(cls, db: Session, alert_level: Optional[str] = None) -> Dict:

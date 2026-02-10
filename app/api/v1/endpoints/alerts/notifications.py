@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -60,8 +60,7 @@ router = APIRouter(tags=["notifications"])
 @router.get("/alert-notifications", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_notifications(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     is_read: Optional[bool] = Query(None, description="是否已读"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -71,7 +70,6 @@ def read_alert_notifications(
     from app.services.notification_service import AlertNotificationService
 
     service = AlertNotificationService(db)
-    offset = (page - 1) * page_size
     result = service.get_user_notifications(
         user_id=current_user.id,
         is_read=is_read,
@@ -85,8 +83,8 @@ def read_alert_notifications(
     return PaginatedResponse(
         items=result.get('items', []),
         total=result.get('total', 0),
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=(result.get('total', 0) + page_size - 1) // page_size
     )
 

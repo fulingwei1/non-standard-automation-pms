@@ -14,12 +14,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.common.query_filters import apply_keyword_filter
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
@@ -80,8 +81,7 @@ router = APIRouter(
 @router.get("/presale/solutions", response_model=PaginatedResponse)
 def read_solutions(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（方案编号/名称）"),
     status: Optional[str] = Query(None, description="状态筛选"),
     solution_type: Optional[str] = Query(None, description="方案类型筛选"),
@@ -94,13 +94,7 @@ def read_solutions(
     """
     query = db.query(PresaleSolution)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                PresaleSolution.solution_no.like(f"%{keyword}%"),
-                PresaleSolution.name.like(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, PresaleSolution, keyword, ["solution_no", "name"])
 
     if status:
         query = query.filter(PresaleSolution.status == status)
@@ -115,8 +109,7 @@ def read_solutions(
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    solutions = query.order_by(desc(PresaleSolution.created_at)).offset(offset).limit(page_size).all()
+    solutions = query.order_by(desc(PresaleSolution.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for solution in solutions:
@@ -149,13 +142,7 @@ def read_solutions(
             updated_at=solution.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return pagination.to_response(items, total)
 
 
 @router.post("/presale/solutions", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)

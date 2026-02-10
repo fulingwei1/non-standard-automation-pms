@@ -26,6 +26,7 @@ from app.schemas.sales import (
     CpqRuleSetUpdate,
 )
 from app.services.cpq_pricing_service import CpqPricingService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 from .common import _serialize_rule_set
 
@@ -36,8 +37,7 @@ router = APIRouter()
 def list_cpq_rule_sets(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: str = Query(None),
     status: str = Query(None),
     current_user: User = Depends(security.get_current_active_user),
@@ -55,19 +55,18 @@ def list_cpq_rule_sets(
         query = query.filter(CpqRuleSet.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
     rule_sets = (
         query.order_by(desc(CpqRuleSet.created_at))
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
     return PaginatedResponse(
         items=[_serialize_rule_set(r) for r in rule_sets],
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

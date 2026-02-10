@@ -23,6 +23,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.material import MaterialShortage
 from app.models.project import Project
@@ -39,11 +40,7 @@ router = APIRouter()
 
 def _calculate_default_date_range(today: date) -> tuple[date, date]:
     """计算默认日期范围（当前月）"""
-    start_date = date(today.year, today.month, 1)
-    if today.month == 12:
-        end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range(today)
     return start_date, end_date
 
 

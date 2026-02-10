@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import PaginatedResponse  # noqa: F401 - re-exported
 
 # ==================== 服务工单 ====================
 
@@ -280,6 +280,28 @@ class CustomerSatisfactionResponse(BaseModel):
         from_attributes = True
 
 
+# ==================== 满意度调查模板 ====================
+
+class SatisfactionSurveyTemplateCreate(BaseModel):
+    """创建满意度调查模板"""
+    template_name: str = Field(..., description="模板名称")
+    template_code: str = Field(..., description="模板编码")
+    survey_type: str = Field(..., description="调查类型")
+    questions: List[Dict[str, Any]] = Field(..., description="问题列表")
+    default_send_method: Optional[str] = Field(None, description="默认发送方式")
+    default_deadline_days: Optional[int] = Field(7, description="默认截止天数")
+
+
+class SatisfactionSurveyTemplateUpdate(BaseModel):
+    """更新满意度调查模板"""
+    template_name: Optional[str] = None
+    survey_type: Optional[str] = None
+    questions: Optional[List[Dict[str, Any]]] = None
+    default_send_method: Optional[str] = None
+    default_deadline_days: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
 # ==================== 仪表板统计 ====================
 
 class ServiceDashboardStatistics(BaseModel):
@@ -292,6 +314,14 @@ class ServiceDashboardStatistics(BaseModel):
     on_site_services: int = Field(0, description="现场服务次数")
     total_engineers: int = Field(0, description="服务工程师总数")
     active_engineers: int = Field(0, description="在岗工程师数")
+
+    # 兼容别名字段
+    today_new_tickets: Optional[int] = Field(None, description="今日新增工单(兼容)")
+    pending_tickets: Optional[int] = Field(None, description="待处理工单(兼容)")
+    in_progress_tickets: Optional[int] = Field(None, description="进行中工单(兼容)")
+    today_completed_tickets: Optional[int] = Field(None, description="今日完成工单(兼容)")
+    average_response_time_minutes: Optional[float] = Field(None, description="平均响应时间分钟(兼容)")
+    customer_satisfaction_rate: Optional[float] = Field(None, description="满意度率(兼容)")
 
 
 # ==================== 知识库 ====================
