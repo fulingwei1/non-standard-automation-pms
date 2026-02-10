@@ -19,8 +19,36 @@ from app.models.sales import Contract, Lead, Opportunity, Quote
 class SalesPredictionService:
     """销售预测服务"""
 
-    def __init__(self, db: Session):
+    # 可配置的预测参数（可通过构造函数覆盖或后续迁移到数据库/配置文件）
+    DEFAULT_STAGE_WEIGHTS = {
+        "PROPOSAL": 0.6,
+        "NEGOTIATION": 0.8,
+    }
+    DEFAULT_STAGE_WIN_RATES = {
+        "DISCOVERY": 0.1,
+        "QUALIFIED": 0.3,
+        "PROPOSAL": 0.5,
+        "NEGOTIATION": 0.7,
+        "WON": 1.0,
+        "LOST": 0.0,
+    }
+    DEFAULT_AMOUNT_FACTORS = {
+        "large": {"threshold": 1000000, "factor": 0.9},      # >100万
+        "medium": {"threshold": 500000, "factor": 0.95},      # >50万
+        "small": {"threshold": 100000, "factor": 1.1},        # <10万（反向）
+    }
+    DEFAULT_SMOOTHING_ALPHA = 0.3
+    DEFAULT_WIN_RATE_FALLBACK = 0.5
+    DEFAULT_PROBABILITY_BOUNDS = (0.1, 0.95)
+
+    def __init__(self, db: Session, **config):
         self.db = db
+        self.stage_weights = config.get("stage_weights", self.DEFAULT_STAGE_WEIGHTS)
+        self.stage_win_rates = config.get("stage_win_rates", self.DEFAULT_STAGE_WIN_RATES)
+        self.amount_factors = config.get("amount_factors", self.DEFAULT_AMOUNT_FACTORS)
+        self.smoothing_alpha = config.get("smoothing_alpha", self.DEFAULT_SMOOTHING_ALPHA)
+        self.win_rate_fallback = config.get("win_rate_fallback", self.DEFAULT_WIN_RATE_FALLBACK)
+        self.probability_bounds = config.get("probability_bounds", self.DEFAULT_PROBABILITY_BOUNDS)
 
     def predict_revenue(
         self,
@@ -129,17 +157,20 @@ class SalesPredictionService:
         customer_win_rate = self._get_customer_win_rate(customer_id) if customer_id else None
 
         # 计算基础赢单概率
-        base_probability = historical_win_rate.get(stage, 0.5)
+        base_probability = historical_win_rate.get(stage, self.win_rate_fallback)
 
         # 根据金额调整（大单通常赢单率较低）
         amount_factor = 1.0
         if amount:
-            if amount > Decimal("1000000"):  # 大于100万
-                amount_factor = 0.9
-            elif amount > Decimal("500000"):  # 大于50万
-                amount_factor = 0.95
-            elif amount < Decimal("100000"):  # 小于10万
-                amount_factor = 1.1
+            large = self.amount_factors["large"]
+            medium = self.amount_factors["medium"]
+            small = self.amount_factors["small"]
+            if amount > Decimal(str(large["threshold"])):
+                amount_factor = large["factor"]
+            elif amount > Decimal(str(medium["threshold"])):
+                amount_factor = medium["factor"]
+            elif amount < Decimal(str(small["threshold"])):
+                amount_factor = small["factor"]
 
         # 根据客户历史赢单率调整
         customer_factor = 1.0
@@ -148,7 +179,8 @@ class SalesPredictionService:
 
         # 计算最终概率
         final_probability = base_probability * amount_factor * customer_factor
-        final_probability = max(0.1, min(0.95, final_probability))  # 限制在 10%-95% 之间
+        lo, hi = self.probability_bounds
+        final_probability = max(lo, min(hi, final_probability))
 
         # 计算置信度
         confidence = "HIGH" if len(historical_win_rate) > 10 else "MEDIUM" if len(historical_win_rate) > 5 else "LOW"
@@ -203,10 +235,13 @@ class SalesPredictionService:
         months = days / 30.0
         return Decimal(str(avg_revenue * months))
 
-    def _exponential_smoothing_forecast(self, monthly_data: List[Dict[str, Any]], days: int, alpha: float = 0.3) -> Decimal:
+    def _exponential_smoothing_forecast(self, monthly_data: List[Dict[str, Any]], days: int, alpha: float = None) -> Decimal:
         """指数平滑法预测"""
         if not monthly_data:
             return Decimal("0")
+
+        if alpha is None:
+            alpha = self.smoothing_alpha
 
         # 简单指数平滑
         revenues = [m["revenue"] for m in monthly_data]
@@ -232,12 +267,8 @@ class SalesPredictionService:
         for opp in opportunities:
             est_amount = opp.est_amount or Decimal("0")
 
-            # 根据阶段调整概率
-            stage_weights = {
-                "PROPOSAL": 0.6,  # 提案阶段 60% 概率
-                "NEGOTIATION": 0.8,  # 谈判阶段 80% 概率
-            }
-            weight = stage_weights.get(opp.stage, 0.5)
+            # 根据阶段调整概率（使用可配置权重）
+            weight = self.stage_weights.get(opp.stage, self.win_rate_fallback)
 
             total_amount += est_amount * Decimal(str(weight))
 
@@ -270,19 +301,10 @@ class SalesPredictionService:
         if total_closed > 0:
             overall_win_rate = total_won / total_closed
         else:
-            overall_win_rate = 0.5
+            overall_win_rate = self.win_rate_fallback
 
-        # 为各阶段分配赢单率（基于阶段顺序）
-        stage_weights = {
-            "DISCOVERY": 0.1,
-            "QUALIFIED": 0.3,
-            "PROPOSAL": 0.5,
-            "NEGOTIATION": 0.7,
-            "WON": 1.0,
-            "LOST": 0.0,
-        }
-
-        for stage, weight in stage_weights.items():
+        # 为各阶段分配赢单率（基于可配置的阶段权重）
+        for stage, weight in self.stage_win_rates.items():
             if stage in ["WON", "LOST"]:
                 win_rates[stage] = weight
             else:
@@ -292,7 +314,7 @@ class SalesPredictionService:
                     # 使用阶段权重和历史转化率结合
                     win_rates[stage] = weight * overall_win_rate
                 else:
-                    win_rates[stage] = weight * 0.5  # 默认值
+                    win_rates[stage] = weight * self.win_rate_fallback
 
         return win_rates
 

@@ -34,6 +34,10 @@ def auto_extract_knowledge_from_ticket(
     if ticket.status != "CLOSED" or not ticket.solution:
         return None
 
+    # 必须有处理人才能提取知识（避免使用硬编码用户ID）
+    if not ticket.assigned_to_id:
+        return None
+
     # 检查是否已经提取过知识（通过标题或内容匹配）
     existing = db.query(KnowledgeBase).filter(
         KnowledgeBase.title.like(f"%{ticket.ticket_no}%")
@@ -103,7 +107,7 @@ def auto_extract_knowledge_from_ticket(
         is_faq=False,
         is_featured=False,
         status="PUBLISHED" if auto_publish else "DRAFT",
-        author_id=ticket.assigned_to_id or 1,  # 使用处理人ID，如果没有则使用默认值
+        author_id=ticket.assigned_to_id,
         author_name=ticket.assigned_to_name or "系统",
     )
 
@@ -167,7 +171,7 @@ def create_solution_template_from_ticket(
         tags=[ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else [],
         keywords=[ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else [],
         source_issue_id=None,  # 如果有关联问题可以设置
-        created_by=ticket.assigned_to_id or 1,
+        created_by=ticket.assigned_to_id,
         created_by_name=ticket.assigned_to_name or "系统",
         is_active=True,
         is_public=True,

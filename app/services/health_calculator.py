@@ -272,7 +272,7 @@ class HealthCalculator:
         Returns:
             bool: 如果进度偏差超过阈值返回True
         """
-        if not project.planned_end_date or not project.actual_start_date:
+        if not project.planned_end_date or not project.planned_start_date:
             return False
 
         # 计算计划进度

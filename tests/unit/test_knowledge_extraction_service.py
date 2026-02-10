@@ -289,7 +289,7 @@ class TestCreateSolutionTemplate:
         result = create_solution_template_from_ticket(db, ticket)
 
         created_template = db.add.call_args[0][0]
-        assert created_template.created_by == 1
+        assert created_template.created_by is None  # 无处理人时不硬编码user_id
         assert created_template.created_by_name == "系统"
         assert "预防措施" in created_template.precautions
 

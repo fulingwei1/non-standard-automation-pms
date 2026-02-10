@@ -22,28 +22,11 @@ from app.services.channel_handlers.base import (
     NotificationPriority as UnifiedNotificationPriority,
 )
 
-# 为了向后兼容，重新导出枚举
-# 注意：旧的 NotificationChannel 使用 WEB，新的使用 SYSTEM
-class NotificationChannel(Enum):
-    """通知渠道（向后兼容）"""
-    EMAIL = "email"
-    SMS = "sms"
-    WECHAT = "wechat"
-    WEB = "web"  # 站内通知（映射到 SYSTEM）
-    WEBHOOK = "webhook"
-
-class NotificationPriority(Enum):
-    """通知优先级（向后兼容）"""
-    LOW = "low"
-    NORMAL = "normal"
-    HIGH = "high"
-    URGENT = "urgent"
-
 logger = logging.getLogger(__name__)
 
 
 class NotificationChannel(str, Enum):
-    """通知渠道"""
+    """通知渠道（向后兼容）"""
 
     SYSTEM = "system"  # 站内通知
     EMAIL = "email"
@@ -54,7 +37,7 @@ class NotificationChannel(str, Enum):
 
 
 class NotificationPriority(str, Enum):
-    """通知优先级"""
+    """通知优先级（向后兼容）"""
 
     LOW = "low"
     NORMAL = "normal"

@@ -238,7 +238,9 @@ class StateMachine:
             return True
 
         except Exception as e:
-            logger.error(f"状态转换失败: {e}", exc_info=True)
+            # 回滚内存中的状态变更，保持与数据库一致
+            setattr(self.model, self.state_field, from_state)
+            logger.error(f"状态转换失败，已回滚内存状态: {e}", exc_info=True)
             raise
 
     def get_allowed_transitions(self) -> List[str]:

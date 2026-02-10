@@ -177,9 +177,11 @@ class ConditionEvaluator(AlertRuleEngineBase):
                 return False
 
         if isinstance(due_date, datetime):
-            now = datetime.now()
             if due_date.tzinfo:
-                now = now.replace(tzinfo=due_date.tzinfo)
+                # 使用正确的时区感知方式获取当前时间，而非 replace()
+                now = datetime.now(tz=due_date.tzinfo)
+            else:
+                now = datetime.now()
 
             advance_days = rule.advance_days or 0
             check_date = due_date - timedelta(days=advance_days)

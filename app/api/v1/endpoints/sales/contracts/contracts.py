@@ -59,7 +59,7 @@ async def create_project_from_contract(
 
             try:
                 payment_nodes = json.loads(payment_nodes)
-            except:
+            except (json.JSONDecodeError, TypeError, ValueError):
                 payment_nodes = []
 
     # 3. 创建项目
@@ -179,7 +179,7 @@ async def _generate_project_code(db: AsyncSession) -> str:
         # 提取序号数字部分
         try:
             seq_num = int(last_project_code[5:9])  # 格式：PJyymmddxxx，提取后3位数字
-        except:
+        except (ValueError, IndexError, TypeError):
             seq_num = 1
 
     # 计算填充序号
