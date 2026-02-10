@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.utils.pagination import PaginationParams, create_paginated_response
+from app.common.pagination import get_pagination_query, PaginationParams
 from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
@@ -37,7 +37,7 @@ router = APIRouter()
 @router.get("/opportunities", response_model=PaginatedResponse[OpportunityResponse])
 def read_opportunities(
     db: Session = Depends(deps.get_db),
-    pagination: PaginationParams = Depends(),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     stage: Optional[str] = Query(None, description="阶段筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -81,7 +81,7 @@ def read_opportunities(
     ).order_by(
         desc(Opportunity.priority_score).nullslast(),
         desc(Opportunity.created_at)
-    ).offset(pagination.offset).limit(pagination.page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     opp_responses = []
     for opp in opportunities:
@@ -98,7 +98,7 @@ def read_opportunities(
             opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
         opp_responses.append(OpportunityResponse(**opp_dict))
 
-    return create_paginated_response(opp_responses, total, pagination)
+    return pagination.to_response(opp_responses, total)
 
 
 @router.post("/opportunities", response_model=OpportunityResponse, status_code=201)

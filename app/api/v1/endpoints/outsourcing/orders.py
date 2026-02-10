@@ -38,7 +38,7 @@ from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.utils.pagination import PaginationParams, create_paginated_response
+from app.common.pagination import get_pagination_query, PaginationParams
 from app.schemas.outsourcing import (
     OutsourcingDeliveryCreate,
     OutsourcingDeliveryResponse,
@@ -78,7 +78,7 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 @router.get("/outsourcing-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_orders(
     db: Session = Depends(deps.get_db),
-    pagination: PaginationParams = Depends(),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（订单号/标题）"),
     vendor_id: Optional[int] = Query(None, description="外协商ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -112,7 +112,7 @@ def read_outsourcing_orders(
         query = query.filter(OutsourcingOrder.status == status)
 
     total = query.count()
-    orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
+    orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for order in orders:
@@ -136,7 +136,7 @@ def read_outsourcing_orders(
             created_at=order.created_at
         ))
 
-    return create_paginated_response(items, total, pagination)
+    return pagination.to_response(items, total)
 
 
 @router.get("/outsourcing-orders/{order_id}", response_model=OutsourcingOrderResponse, status_code=status.HTTP_200_OK)
