@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.schemas import list_response, success_response
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models.organization import JobLevel
 from app.models.user import User
 from app.schemas.organization import (
@@ -26,8 +28,7 @@ router = APIRouter()
 @router.get("/")
 def list_job_levels(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
     category: Optional[str] = Query(None, description="职级序列"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -39,12 +40,10 @@ def list_job_levels(
     if is_active is not None:
         query = query.filter(JobLevel.is_active == is_active)
 
-    levels = (
-        query.order_by(JobLevel.level_rank, JobLevel.sort_order, JobLevel.level_code)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    levels = apply_pagination(
+        query.order_by(JobLevel.level_rank, JobLevel.sort_order, JobLevel.level_code),
+        pagination.offset, pagination.limit
+    ).all()
 
     # 转换为Pydantic模型
     level_responses = [JobLevelResponse.model_validate(level) for level in levels]

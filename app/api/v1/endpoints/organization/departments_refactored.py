@@ -23,7 +23,7 @@ from app.schemas.organization import (
 
 from .utils import build_department_tree
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 router = APIRouter()
 
@@ -31,8 +31,7 @@ router = APIRouter()
 @router.get("/departments")
 def read_departments(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -40,7 +39,7 @@ def read_departments(
     query = db.query(Department)
     if is_active is not None:
         query = query.filter(Department.is_active == is_active)
-    departments = query.order_by(Department.sort_order, Department.dept_code).offset(skip).limit(limit).all()
+    departments = apply_pagination(query.order_by(Department.sort_order, Department.dept_code), pagination.offset, pagination.limit).all()
 
     # 转换为Pydantic模型
     dept_responses = [DepartmentResponse.model_validate(dept) for dept in departments]
@@ -276,7 +275,7 @@ def get_department_users(
         query = query.filter(User.is_active == is_active)
 
     total = query.count()
-    users = query.order_by(User.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    users = apply_pagination(query.order_by(User.created_at.desc()), pagination.offset, pagination.limit).all()
 
     # 转换为UserResponse并处理roles
     from app.schemas.auth import UserResponse

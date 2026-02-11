@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import (
     CSF,
     KPI,
@@ -126,7 +127,7 @@ def list_personal_kpis(
         query = query.filter(PersonalKPI.period == period)
 
     total = query.count()
-    items = query.order_by(PersonalKPI.code).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(PersonalKPI.code), skip, limit).all()
 
     return items, total
 

@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import CSF, KPI, Strategy, StrategyComparison
 from app.schemas.strategy import (
     CSFComparisonItem,
@@ -94,7 +95,7 @@ def list_strategy_comparisons(
         query = query.filter(StrategyComparison.base_strategy_id == base_strategy_id)
 
     total = query.count()
-    items = query.order_by(StrategyComparison.created_at.desc()).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(StrategyComparison.created_at.desc()), skip, limit).all()
 
     return items, total
 

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.query_filters import apply_pagination
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -44,7 +45,7 @@ class PurchaseService:
         if status:
             query = query.filter(PurchaseOrder.status == status)
 
-        return query.order_by(PurchaseOrder.created_at.desc()).offset(skip).limit(limit).all()
+        return apply_pagination(query.order_by(PurchaseOrder.created_at.desc()), skip, limit).all()
 
     def get_purchase_order_by_id(self, order_id: int) -> Optional[PurchaseOrder]:
         """根据ID获取采购订单"""
@@ -132,7 +133,7 @@ class PurchaseService:
         if status:
             query = query.filter(GoodsReceipt.status == status)
 
-        return query.order_by(GoodsReceipt.receipt_date.desc()).offset(skip).limit(limit).all()
+        return apply_pagination(query.order_by(GoodsReceipt.receipt_date.desc()), skip, limit).all()
 
     def create_goods_receipt(self, receipt_data: Dict[str, Any]) -> GoodsReceipt:
         """创建收货记录"""
@@ -175,7 +176,7 @@ class PurchaseService:
         if status:
             query = query.filter(PurchaseRequest.status == status)
 
-        return query.order_by(PurchaseRequest.created_at.desc()).offset(skip).limit(limit).all()
+        return apply_pagination(query.order_by(PurchaseRequest.created_at.desc()), skip, limit).all()
 
     def create_purchase_request(self, request_data: Dict[str, Any]) -> PurchaseRequest:
         """创建采购申请"""

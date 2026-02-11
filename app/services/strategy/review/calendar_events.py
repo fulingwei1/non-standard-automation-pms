@@ -15,6 +15,7 @@ from typing import Dict, List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import StrategyCalendarEvent, StrategyReview
 from app.common.date_range import get_month_range_by_ym
 from app.schemas.strategy import (
@@ -126,7 +127,7 @@ def list_calendar_events(
         query = query.filter(StrategyCalendarEvent.event_type == event_type)
 
     total = query.count()
-    items = query.order_by(StrategyCalendarEvent.event_date).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(StrategyCalendarEvent.event_date), skip, limit).all()
 
     return items, total
 

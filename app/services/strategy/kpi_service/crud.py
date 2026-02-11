@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import CSF, KPI
 from app.schemas.strategy import KPICreate, KPIUpdate
 
@@ -106,7 +107,7 @@ def list_kpis(
         query = query.filter(KPI.data_source_type == data_source_type)
 
     total = query.count()
-    items = query.order_by(KPI.csf_id, KPI.code).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(KPI.csf_id, KPI.code), skip, limit).all()
 
     return items, total
 

@@ -10,6 +10,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_pagination
 from app.models.strategy import Strategy
 from app.schemas.strategy import (
     StrategyCreate,
@@ -149,7 +150,7 @@ def list_strategies(
         query = query.filter(Strategy.status == status)
 
     total = query.count()
-    items = query.order_by(desc(Strategy.year), desc(Strategy.created_at)).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(desc(Strategy.year), desc(Strategy.created_at)), skip, limit).all()
 
     return items, total
 

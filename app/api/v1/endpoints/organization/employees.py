@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core.schemas import list_response, success_response
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models.organization import Employee
 from app.schemas.organization import (
     EmployeeCreate,
@@ -24,11 +26,10 @@ router = APIRouter()
 @router.get("/employees")
 def read_employees(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取员工列表"""
-    employees = db.query(Employee).offset(skip).limit(limit).all()
+    employees = apply_pagination(db.query(Employee), pagination.offset, pagination.limit).all()
 
     # 转换为Pydantic模型
     emp_responses = [EmployeeResponse.model_validate(emp) for emp in employees]

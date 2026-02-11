@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import (
     CSF,
     KPI,
@@ -126,10 +127,10 @@ def list_department_objectives(
         query = query.filter(DepartmentObjective.year == year)
 
     total = query.count()
-    items = query.order_by(
+    items = apply_pagination(query.order_by(
         DepartmentObjective.department_id,
         DepartmentObjective.csf_id
-    ).offset(skip).limit(limit).all()
+    ), skip, limit).all()
 
     return items, total
 

@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.pitfall import Pitfall
 
 
@@ -168,7 +168,7 @@ class PitfallService:
 
         total = query.count()
         pitfalls = (
-            query.order_by(desc(Pitfall.created_at)).offset(skip).limit(limit).all()
+            apply_pagination(query.order_by(desc(Pitfall.created_at)), skip, limit).all()
         )
 
         return pitfalls, total

@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import CSF, KPI, AnnualKeyWork
 from app.schemas.strategy import (
     CSFByDimensionItem,
@@ -92,7 +93,7 @@ def list_csfs(
         query = query.filter(CSF.dimension == dimension)
 
     total = query.count()
-    items = query.order_by(CSF.dimension, CSF.sort_order).offset(skip).limit(limit).all()
+    items = apply_pagination(query.order_by(CSF.dimension, CSF.sort_order), skip, limit).all()
 
     return items, total
 

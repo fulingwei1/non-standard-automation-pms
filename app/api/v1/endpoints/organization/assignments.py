@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.schemas import list_response, success_response
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models.organization import EmployeeOrgAssignment
 from app.models.user import User
 from app.schemas.organization import (
@@ -25,8 +27,7 @@ router = APIRouter()
 @router.get("/")
 def list_assignments(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
     employee_id: Optional[int] = Query(None, description="员工ID"),
     org_unit_id: Optional[int] = Query(None, description="组织单元ID"),
     is_active: Optional[bool] = Query(None, description="是否有效"),
@@ -41,7 +42,7 @@ def list_assignments(
     if is_active is not None:
         query = query.filter(EmployeeOrgAssignment.is_active.is_(is_active))
 
-    assignments = query.offset(skip).limit(limit).all()
+    assignments = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     # 手动构建响应数据（包含关联名称）
     result = []

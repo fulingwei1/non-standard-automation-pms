@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.strategy import AnnualKeyWork, CSF
 from app.schemas.strategy import (
     AnnualKeyWorkCreate,
@@ -104,10 +105,10 @@ def list_annual_works(
         query = query.filter(AnnualKeyWork.status == status)
 
     total = query.count()
-    items = query.order_by(
+    items = apply_pagination(query.order_by(
         AnnualKeyWork.priority,
         AnnualKeyWork.code
-    ).offset(skip).limit(limit).all()
+    ), skip, limit).all()
 
     return items, total
 

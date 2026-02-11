@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.schemas import list_response, success_response
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models.organization import OrganizationUnit, Employee
 from app.models.user import User
 from app.schemas.organization import (
@@ -26,8 +28,7 @@ router = APIRouter()
 @router.get("/")
 def list_org_units(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
+    pagination: PaginationParams = Depends(get_pagination_query),
     unit_type: Optional[str] = Query(None, description="组织类型"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.get_current_active_user),
@@ -39,12 +40,10 @@ def list_org_units(
     if is_active is not None:
         query = query.filter(OrganizationUnit.is_active == is_active)
 
-    units = (
-        query.order_by(OrganizationUnit.sort_order, OrganizationUnit.unit_code)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    units = apply_pagination(
+        query.order_by(OrganizationUnit.sort_order, OrganizationUnit.unit_code),
+        pagination.offset, pagination.limit
+    ).all()
 
     # 转换为Pydantic模型
     unit_responses = [OrganizationUnitResponse.model_validate(unit) for unit in units]
