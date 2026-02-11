@@ -143,8 +143,8 @@ from app.api.v1.endpoints.business_support_orders import (
 
 api_router.include_router(
     business_support_orders_router,
-    prefix="/business-support",
-    tags=["business-support"],
+    prefix="/business-support/orders",
+    tags=["business-support-orders"],
 )
 api_router.include_router(
     installation_dispatch.router,
