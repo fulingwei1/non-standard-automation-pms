@@ -78,7 +78,7 @@ class TestSyncToProject:
 
 
 class TestSyncToHr:
-    @patch('app.services.timesheet_sync_service.OvertimeCalculationService')
+    @patch('app.services.overtime_calculation_service.OvertimeCalculationService')
     def test_sync_hr(self, mock_ot, service, db):
         mock_instance = MagicMock()
         mock_ot.return_value = mock_instance

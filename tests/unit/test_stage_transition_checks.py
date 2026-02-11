@@ -68,10 +68,20 @@ class TestStageTransitionChecks:
         ok, target, missing = check_s4_to_s5_transition(db, 1)
         assert ok is False
 
-    @patch("app.api.v1.endpoints.projects.check_gate_s5_to_s6")
-    def test_s5_to_s6_passed(self, mock_gate):
+    def test_s5_to_s6_passed(self):
+        import sys
+        import importlib
+        mock_gate_fn = MagicMock(return_value=(True, []))
+        # Ensure the projects module has check_gate_s5_to_s6
+        projects_mod = sys.modules.get('app.api.v1.endpoints.projects')
+        if projects_mod is None:
+            projects_mod = MagicMock()
+            sys.modules['app.api.v1.endpoints.projects'] = projects_mod
+        projects_mod.check_gate_s5_to_s6 = mock_gate_fn
+        # Force reimport
+        if 'app.services.stage_transition_checks' in sys.modules:
+            importlib.reload(sys.modules['app.services.stage_transition_checks'])
         from app.services.stage_transition_checks import check_s5_to_s6_transition
-        mock_gate.return_value = (True, [])
         db = MagicMock()
         project = MagicMock()
         ok, target, missing = check_s5_to_s6_transition(db, project)
