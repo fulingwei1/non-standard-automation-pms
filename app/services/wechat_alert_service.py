@@ -288,7 +288,7 @@ class WeChatAlertService:
 
         通过统一通知服务发送，避免重复实现发送逻辑。
         """
-        from app.services.unified_notification_service import get_notification_service
+        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import (
             NotificationChannel,
             NotificationRequest,
@@ -319,7 +319,8 @@ class WeChatAlertService:
             force_send=True,
         )
 
-        result = get_notification_service(db).send_notification(request)
+        dispatcher = NotificationDispatcher(db)
+        result = dispatcher.send_notification_request(request)
         success = result.get("success", False)
         if success:
             logger.info("企业微信消息发送成功: %s", user.username)

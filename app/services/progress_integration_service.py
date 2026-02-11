@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.acceptance import AcceptanceOrder
 from app.models.alert import AlertRecord
 from app.models.ecn import Ecn
@@ -60,14 +61,30 @@ class ProgressIntegrationService:
         affected_keywords = ['装配', '调试', '组装', '安装', '联调']
 
         # 查找项目中的相关任务
-        tasks = self.db.query(Task).filter(
+        tasks_query = self.db.query(Task).filter(
             Task.project_id == alert.project_id,
             Task.status.in_(['TODO', 'IN_PROGRESS']),
+        )
+        keyword_conditions = []
+        for kw in affected_keywords:
+            if not kw:
+                continue
+            keyword_query = apply_keyword_filter(
+                self.db.query(Task.id),
+                Task,
+                kw,
+                "task_name",
+                use_ilike=False,
+            )
+            keyword_conditions.append(Task.id.in_(keyword_query))
+
+        tasks_query = tasks_query.filter(
             or_(
                 Task.stage.in_(affected_stages),
-                *[Task.task_name.like(f'%{kw}%') for kw in affected_keywords]
+                *keyword_conditions
             )
-        ).all()
+        )
+        tasks = tasks_query.all()
 
         # 如果缺料预警级别较高（CRITICAL/URGENT）或影响类型为stop/delivery，阻塞任务
         high_levels = ['level3', 'level4', 'CRITICAL', 'URGENT']
@@ -110,14 +127,34 @@ class ProgressIntegrationService:
         target_no = alert.target_no or ''
 
         # 查找因该缺料预警而阻塞的任务
-        tasks = self.db.query(Task).filter(
+        tasks_query = self.db.query(Task).filter(
             Task.project_id == alert.project_id,
             Task.status == 'BLOCKED',
-            or_(
-                Task.block_reason.like(f'%{alert_no}%'),
-                Task.block_reason.like(f'%{target_no}%')
+        )
+        reason_conditions = []
+        if alert_no:
+            alert_query = apply_keyword_filter(
+                self.db.query(Task.id),
+                Task,
+                alert_no,
+                "block_reason",
+                use_ilike=False,
             )
-        ).all()
+            reason_conditions.append(Task.id.in_(alert_query))
+        if target_no:
+            target_query = apply_keyword_filter(
+                self.db.query(Task.id),
+                Task,
+                target_no,
+                "block_reason",
+                use_ilike=False,
+            )
+            reason_conditions.append(Task.id.in_(target_query))
+        else:
+            reason_conditions.append(Task.block_reason.isnot(None))
+
+        tasks_query = tasks_query.filter(or_(*reason_conditions))
+        tasks = tasks_query.all()
 
         for task in tasks:
             # 检查是否还有其他阻塞原因（使用统一的 AlertRecord 表）
@@ -216,11 +253,23 @@ class ProgressIntegrationService:
         if ecn.tasks:
             for ecn_task in ecn.tasks:
                 # 查找是否已有对应的进度任务
-                existing_task = self.db.query(Task).filter(
+                existing_query = self.db.query(Task).filter(
                     Task.project_id == ecn.project_id,
-                    Task.task_name.like(f'%{ecn_task.task_name}%'),
                     Task.stage == 'S4'  # 变更通常在S4阶段
-                ).first()
+                )
+                if ecn_task.task_name:
+                    name_query = apply_keyword_filter(
+                        self.db.query(Task.id),
+                        Task,
+                        ecn_task.task_name,
+                        "task_name",
+                        use_ilike=False,
+                    )
+                    existing_query = existing_query.filter(Task.id.in_(name_query))
+                else:
+                    existing_query = existing_query.filter(Task.task_name.isnot(None))
+
+                existing_task = existing_query.first()
 
                 if existing_task:
                     # 更新现有任务
@@ -353,7 +402,7 @@ class ProgressIntegrationService:
                 project_id=acceptance_order.project_id,
                 category='ACCEPTANCE',
                 issue_type=IssueTypeEnum.BLOCKER.value,
-                severity=SeverityEnum.HIGH.value,
+                severity=SeverityEnum.MAJOR.value,
                 title=f"验收失败：{acceptance_order.order_no}",
                 description=f"验收单 {acceptance_order.order_no} 验收失败，阻塞里程碑 {milestone.milestone_name}",
                 status=IssueStatusEnum.OPEN.value,
@@ -415,4 +464,3 @@ class ProgressIntegrationService:
 
         self.db.commit()
         return unblocked_milestones
-

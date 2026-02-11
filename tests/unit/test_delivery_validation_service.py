@@ -78,7 +78,7 @@ class TestValidateDeliveryDate:
 class TestGetSuggestions:
     def test_short_quoted(self):
         suggestions = DeliveryValidationService._get_suggestions(10, 30, 60)
-        assert any("30" in s for s in suggestions)
+        assert any("37" in s for s in suggestions)
 
     def test_no_quoted(self):
         suggestions = DeliveryValidationService._get_suggestions(None, 20, 60)

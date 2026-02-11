@@ -26,6 +26,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.utils.permission_helpers import check_project_access_or_raise
 
 ModelType = TypeVar("ModelType")
@@ -119,14 +120,7 @@ def create_project_crud_router(
 
         # 关键词搜索
         if keyword:
-            from sqlalchemy import or_
-            conditions = []
-            for field_name in keyword_fields:
-                field = getattr(model, field_name, None)
-                if field:
-                    conditions.append(field.ilike(f"%{keyword}%"))
-            if conditions:
-                query = query.filter(or_(*conditions))
+            query = apply_keyword_filter(query, model, keyword, keyword_fields)
 
         # 排序
         order_field_name = order_by or default_order_by

@@ -108,7 +108,7 @@ def calculate_action_item_statistics(
     completed = db.query(MeetingActionItem).filter(
         and_(
             MeetingActionItem.meeting_id.in_(meeting_ids),
-            MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+            MeetingActionItem.status == ActionItemStatus.DONE.value
         )
     ).count()
 

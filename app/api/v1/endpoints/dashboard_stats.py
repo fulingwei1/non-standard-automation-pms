@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range, get_last_month_range, get_week_range
+from app.common.query_filters import apply_keyword_filter
 from app.common.statistics import (
     calculate_trend,
     create_stat_card,
@@ -322,11 +323,18 @@ def get_admin_stats(db: Session, current_user: User) -> dict:
 
     # TODO: 需要添加系统错误日志表来统计错误数
     # 当前从审计表中查询今日失败操作作为替代
-    error_count = db.query(func.count(PermissionAudit.id)).filter(
-        PermissionAudit.action.like('%fail%'),
+    error_query = db.query(func.count(PermissionAudit.id)).filter(
         PermissionAudit.created_at >= today_start,
         PermissionAudit.created_at <= today_end
-    ).scalar() or 0
+    )
+    error_query = apply_keyword_filter(
+        error_query,
+        PermissionAudit,
+        "fail",
+        "action",
+        use_ilike=False,
+    )
+    error_count = error_query.scalar() or 0
 
     return create_stats_response([
         create_stat_card('users', '用户数', total_users),

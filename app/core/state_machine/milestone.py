@@ -9,6 +9,7 @@
 from datetime import date
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.core.state_machine.base import StateMachine
 from app.core.state_machine.decorators import transition
 from app.models.project import ProjectMilestone
@@ -167,12 +168,14 @@ class MilestoneStateMachine(StateMachine):
         today = datetime.now()
         prefix = f"INV-{today.strftime('%y%m%d')}-"
 
-        max_invoice = (
-            self.db.query(Invoice)
-            .filter(Invoice.invoice_code.like(f"{prefix}%"))
-            .order_by(desc(Invoice.invoice_code))
-            .first()
+        max_invoice_query = apply_like_filter(
+            self.db.query(Invoice),
+            Invoice,
+            f"{prefix}%",
+            "invoice_code",
+            use_ilike=False,
         )
+        max_invoice = max_invoice_query.order_by(desc(Invoice.invoice_code)).first()
 
         if max_invoice:
             try:

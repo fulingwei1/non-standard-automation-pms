@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -44,7 +44,7 @@ def create_ecn_notification(
     
     向后兼容：返回结果字典，包含 success 字段
     """
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     
     request = NotificationRequest(
         recipient_id=user_id,
@@ -59,7 +59,7 @@ def create_ecn_notification(
         extra_data=extra_data or {},
     )
     
-    result = unified_service.send_notification(request)
+    result = dispatcher.send_notification_request(request)
     
     # 为了向后兼容，返回包含 success 的结果
     # 如果调用方需要 Notification 对象，可以从数据库查询

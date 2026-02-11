@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.notification import Notification
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas.common import BatchOperationResponse
 from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.task_progress_service import apply_task_progress_update
 
 from .batch_helpers import log_task_operation
@@ -268,12 +268,13 @@ def batch_urge_tasks(
         db=db,
         current_user=current_user
     )
+    dispatcher = NotificationDispatcher(db)
     
     def urge_task(task: TaskUnified):
         """催办任务的操作函数"""
         # 创建催办通知
-        notification = Notification(
-            user_id=task.assignee_id,
+        dispatcher.create_system_notification(
+            recipient_id=task.assignee_id,
             notification_type="TASK_URGE",
             title=f"任务催办：{task.title}",
             content=urge_message or f"任务【{task.title}】需要尽快处理，请及时关注。",
@@ -285,10 +286,9 @@ def batch_urge_tasks(
                 "task_id": task.id,
                 "task_title": task.title,
                 "urge_by": current_user.real_name or current_user.username,
-                "urge_by_id": current_user.id
-            }
+                "urge_by_id": current_user.id,
+            },
         )
-        db.add(notification)
     
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_like_filter
 from app.core import security
 from app.models.business_support import DocumentArchive
 from app.models.user import User
@@ -31,12 +31,14 @@ def generate_archive_no(db: Session) -> str:
     month_str = today.strftime("%y%m%d")
     prefix = f"ARC{month_str}-"
 
-    max_archive = (
-        db.query(DocumentArchive)
-        .filter(DocumentArchive.archive_no.like(f"{prefix}%"))
-        .order_by(desc(DocumentArchive.archive_no))
-        .first()
+    max_archive_query = apply_like_filter(
+        db.query(DocumentArchive),
+        DocumentArchive,
+        f"{prefix}%",
+        "archive_no",
+        use_ilike=False,
     )
+    max_archive = max_archive_query.order_by(desc(DocumentArchive.archive_no)).first()
 
     if max_archive:
         try:

@@ -11,6 +11,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.service import CustomerSatisfaction, ServiceRecord, ServiceTicket
 from app.models.user import Role, User, UserRole
@@ -77,11 +78,18 @@ def get_service_dashboard_statistics(
     ).count()
 
     # 在岗工程师（简化处理：查询有客服工程师角色的用户）
+    role_name_query = apply_keyword_filter(
+        db.query(Role.id),
+        Role,
+        "客服",
+        "role_name",
+        use_ilike=False,
+    )
     engineer_role = db.query(Role).filter(
         or_(
             Role.role_code == "customer_service_engineer",
             Role.role_code == "客服工程师",
-            Role.role_name.like("%客服%")
+            Role.id.in_(role_name_query),
         )
     ).first()
 

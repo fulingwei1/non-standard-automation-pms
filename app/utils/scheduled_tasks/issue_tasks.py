@@ -6,6 +6,7 @@
 import logging
 from datetime import date, datetime, timedelta
 
+from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.base import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
@@ -149,9 +150,15 @@ def check_blocking_issues():
                     if not existing_alert:
                         # 生成预警编号
                         today = datetime.now().strftime('%Y%m%d')
-                        count = db.query(AlertRecord).filter(
-                            AlertRecord.alert_no.like(f'AL{today}%')
-                        ).count()
+                        count_query = db.query(AlertRecord)
+                        count_query = apply_like_filter(
+                            count_query,
+                            AlertRecord,
+                            f'AL{today}%',
+                            "alert_no",
+                            use_ilike=False,
+                        )
+                        count = count_query.count()
                         alert_no = f'AL{today}{str(count + 1).zfill(4)}'
 
                         alert = AlertRecord(

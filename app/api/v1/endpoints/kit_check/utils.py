@@ -9,6 +9,7 @@ from typing import Any, Dict
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.material import BomHeader, BomItem
 from app.models.production import WorkOrder
 from app.models.project import Machine
@@ -19,12 +20,15 @@ from app.models.shortage import KitCheck
 def generate_check_no(db: Session) -> str:
     """生成齐套检查编号：KC-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
-    max_check = (
-        db.query(KitCheck)
-        .filter(KitCheck.check_no.like(f"KC-{today}-%"))
-        .order_by(desc(KitCheck.check_no))
-        .first()
+    max_check_query = db.query(KitCheck)
+    max_check_query = apply_like_filter(
+        max_check_query,
+        KitCheck,
+        f"KC-{today}-%",
+        "check_no",
+        use_ilike=False,
     )
+    max_check = max_check_query.order_by(desc(KitCheck.check_no)).first()
     if max_check:
         seq = int(max_check.check_no.split("-")[-1]) + 1
     else:

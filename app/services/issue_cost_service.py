@@ -5,9 +5,9 @@
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.project import ProjectCost
 from app.models.timesheet import Timesheet
 
@@ -30,9 +30,15 @@ class IssueCostService:
             dict: 包含库存损失、总成本和成本记录列表
         """
         # 从ProjectCost的description中查找问题编号
-        costs = db.query(ProjectCost).filter(
-            ProjectCost.description.like(f'%{issue_no}%')
-        ).all()
+        costs_query = db.query(ProjectCost)
+        costs_query = apply_keyword_filter(
+            costs_query,
+            ProjectCost,
+            issue_no,
+            "description",
+            use_ilike=False,
+        )
+        costs = costs_query.all()
 
         # 计算库存损失（description中包含"库存"的成本）
         inventory_loss = Decimal(0)
@@ -64,12 +70,15 @@ class IssueCostService:
             dict: 包含总工时和工时记录列表
         """
         # 从Timesheet的work_content或work_result中查找问题编号
-        timesheets = db.query(Timesheet).filter(
-            or_(
-                Timesheet.work_content.like(f'%{issue_no}%'),
-                Timesheet.work_result.like(f'%{issue_no}%')
-            )
-        ).all()
+        timesheets_query = db.query(Timesheet)
+        timesheets_query = apply_keyword_filter(
+            timesheets_query,
+            Timesheet,
+            issue_no,
+            ["work_content", "work_result"],
+            use_ilike=False,
+        )
+        timesheets = timesheets_query.all()
 
         # 只计算已审批的工时
         total_hours = Decimal(0)
@@ -107,7 +116,6 @@ class IssueCostService:
             'cost_count': len(costs_info['costs']),
             'timesheet_count': len(hours_info['timesheets'])
         }
-
 
 
 

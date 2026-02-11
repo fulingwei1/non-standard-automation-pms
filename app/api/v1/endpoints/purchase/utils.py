@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.purchase import (
     GoodsReceipt,
     PurchaseOrder,
@@ -33,12 +34,15 @@ def generate_order_no(db: Session, prefix: str = "PO") -> str:
     """生成采购订单编号"""
     today = datetime.now().strftime("%Y%m%d")
     like_pattern = f"{prefix}-{today}-%"
-    max_no = (
-        db.query(PurchaseOrder.order_no)
-        .filter(PurchaseOrder.order_no.like(like_pattern))
-        .order_by(desc(PurchaseOrder.order_no))
-        .first()
+    max_no_query = db.query(PurchaseOrder.order_no)
+    max_no_query = apply_like_filter(
+        max_no_query,
+        PurchaseOrder,
+        like_pattern,
+        "order_no",
+        use_ilike=False,
     )
+    max_no = max_no_query.order_by(desc(PurchaseOrder.order_no)).first()
     if max_no and max_no[0]:
         try:
             seq = int(max_no[0].split("-")[-1]) + 1
@@ -53,12 +57,15 @@ def generate_request_no(db: Session) -> str:
     """生成采购申请编号"""
     today = datetime.now().strftime("%Y%m%d")
     like_pattern = f"PR-{today}-%"
-    max_no = (
-        db.query(PurchaseRequest.request_no)
-        .filter(PurchaseRequest.request_no.like(like_pattern))
-        .order_by(desc(PurchaseRequest.request_no))
-        .first()
+    max_no_query = db.query(PurchaseRequest.request_no)
+    max_no_query = apply_like_filter(
+        max_no_query,
+        PurchaseRequest,
+        like_pattern,
+        "request_no",
+        use_ilike=False,
     )
+    max_no = max_no_query.order_by(desc(PurchaseRequest.request_no)).first()
     if max_no and max_no[0]:
         try:
             seq = int(max_no[0].split("-")[-1]) + 1
@@ -73,12 +80,15 @@ def generate_receipt_no(db: Session) -> str:
     """生成收货单编号"""
     today = datetime.now().strftime("%Y%m%d")
     like_pattern = f"GR-{today}-%"
-    max_no = (
-        db.query(GoodsReceipt.receipt_no)
-        .filter(GoodsReceipt.receipt_no.like(like_pattern))
-        .order_by(desc(GoodsReceipt.receipt_no))
-        .first()
+    max_no_query = db.query(GoodsReceipt.receipt_no)
+    max_no_query = apply_like_filter(
+        max_no_query,
+        GoodsReceipt,
+        like_pattern,
+        "receipt_no",
+        use_ilike=False,
     )
+    max_no = max_no_query.order_by(desc(GoodsReceipt.receipt_no)).first()
     if max_no and max_no[0]:
         try:
             seq = int(max_no[0].split("-")[-1]) + 1

@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_like_filter
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -158,12 +159,15 @@ def batch_mark_notifications_read(
 def generate_exception_no(db: Session) -> str:
     """生成异常事件编号：EXC-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
-    max_event = (
-        db.query(ExceptionEvent)
-        .filter(ExceptionEvent.event_no.like(f"EXC-{today}-%"))
-        .order_by(ExceptionEvent.event_no.desc())
-        .first()
+    max_event_query = db.query(ExceptionEvent)
+    max_event_query = apply_like_filter(
+        max_event_query,
+        ExceptionEvent,
+        f"EXC-{today}-%",
+        "event_no",
+        use_ilike=False,
     )
+    max_event = max_event_query.order_by(ExceptionEvent.event_no.desc()).first()
 
     if max_event:
         seq = int(max_event.event_no.split("-")[-1]) + 1

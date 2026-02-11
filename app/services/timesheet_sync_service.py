@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.project import FinancialProjectCost, Project, ProjectCost
 from app.models.rd_project import RdCost, RdProject
 from app.models.timesheet import Timesheet
@@ -294,9 +295,15 @@ class TimesheetSyncService:
             prefix = f"RDCOST{date_str}"
 
             # 查询当天最大序号
-            max_cost = self.db.query(RdCost).filter(
-                RdCost.cost_no.like(f"{prefix}%")
-            ).order_by(desc(RdCost.cost_no)).first()
+            max_cost_query = self.db.query(RdCost)
+            max_cost_query = apply_like_filter(
+                max_cost_query,
+                RdCost,
+                f"{prefix}%",
+                "cost_no",
+                use_ilike=False,
+            )
+            max_cost = max_cost_query.order_by(desc(RdCost.cost_no)).first()
 
             if max_cost:
                 try:

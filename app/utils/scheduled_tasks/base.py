@@ -34,85 +34,14 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
 
     try:
         # 延迟导入避免循环依赖
-        from app.models.alert import AlertNotification
-        from app.services.notification_dispatcher import (
-            NotificationDispatcher,
-            channel_allowed,
-            resolve_channel_target,
-            resolve_channels,
-            resolve_recipients,
-        )
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         dispatcher = NotificationDispatcher(db)
-        recipients = resolve_recipients(db, alert)
-
-        if not recipients:
-            logger_instance.debug(f"No recipients found for alert {alert.alert_no}")
-            return
-
-        channels = resolve_channels(alert)
-        notifications_created = 0
-        created_notifications = []
-        queued_count = 0
-        sent_count = 0
-
-        for user_id, recipient_info in recipients.items():
-            user = recipient_info.get("user")
-            settings = recipient_info.get("settings")
-
-            if not user:
-                continue
-
-            for channel in channels:
-                if not channel_allowed(channel, settings):
-                    continue
-
-                target = resolve_channel_target(channel, user)
-                if not target:
-                    continue
-
-                # 检查是否已存在相同通知
-                existing = db.query(AlertNotification).filter(
-                    AlertNotification.alert_id == alert.id,
-                    AlertNotification.notify_channel == channel,
-                    AlertNotification.notify_target == target
-                ).first()
-
-                if existing:
-                    continue
-
-                # 创建通知记录
-                notification = AlertNotification(
-                    alert_id=alert.id,
-                    notify_channel=channel,
-                    notify_target=target,
-                    notify_user_id=user.id,
-                    notify_title=alert.alert_title,
-                    notify_content=alert.alert_content,
-                    status='PENDING'
-                )
-                db.add(notification)
-                notifications_created += 1
-                created_notifications.append((notification, user))
-
-        if notifications_created > 0:
-            db.flush()
-            for notification, user in created_notifications:
-                result = enqueue_or_dispatch_notification(
-                    dispatcher,
-                    notification,
-                    alert,
-                    user,
-                    logger_instance=logger_instance,
-                )
-                if result.get("queued"):
-                    queued_count += 1
-                elif result.get("sent"):
-                    sent_count += 1
-
+        result = dispatcher.dispatch_alert_notifications(alert=alert)
+        if result.get("created", 0) > 0:
             logger_instance.debug(
-                f"Created {notifications_created} notifications for alert {alert.alert_no} "
-                f"(queued={queued_count}, sent={sent_count})"
+                f"Created {result.get('created', 0)} notifications for alert {alert.alert_no} "
+                f"(queued={result.get('queued', 0)}, sent={result.get('sent', 0)}, failed={result.get('failed', 0)})"
             )
 
     except Exception as notif_err:

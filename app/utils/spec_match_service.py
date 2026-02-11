@@ -10,6 +10,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
@@ -218,9 +219,15 @@ class SpecMatchService:
 
         # 生成预警编号
         today = datetime.now().strftime('%Y%m%d')
-        count = db.query(AlertRecord).filter(
-            AlertRecord.alert_no.like(f'AL{today}%')
-        ).count()
+        count_query = db.query(AlertRecord)
+        count_query = apply_like_filter(
+            count_query,
+            AlertRecord,
+            f'AL{today}%',
+            "alert_no",
+            use_ilike=False,
+        )
+        count = count_query.count()
         alert_no = f'AL{today}{str(count + 1).zfill(4)}'
 
         # 创建预警记录
@@ -254,7 +261,6 @@ class SpecMatchService:
         ).first()
         if match_record:
             match_record.alert_id = alert.id
-
 
 
 

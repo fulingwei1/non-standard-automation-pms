@@ -4,6 +4,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+try:
+    from reportlab.lib.styles import ParagraphStyle
+    def _make_styles(*names):
+        return {n: ParagraphStyle(name=n, fontName='Helvetica', fontSize=10) for n in names}
+except ImportError:
+    def _make_styles(*names):
+        return {n: MagicMock() for n in names}
+
 
 class TestPdfNotAvailable:
     @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
@@ -50,7 +58,7 @@ class TestPdfAvailable:
         order = MagicMock(acceptance_type='FAT', order_no='AC-001', actual_end_date=None, location='Lab')
         project = MagicMock(project_name='Test Project')
         machine = MagicMock(machine_name='Machine 1')
-        styles = {'title': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('title', 'normal')
         with patch('app.services.pdf_content_builders.get_info_table_style'):
             result = build_basic_info_section(order, project, machine, "R001", 1, styles)
             assert len(result) > 0
@@ -59,7 +67,7 @@ class TestPdfAvailable:
     def test_build_conclusion_section(self):
         from app.services.pdf_content_builders import build_conclusion_section
         order = MagicMock(overall_result='PASSED', conclusion='Good', conditions=None)
-        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('heading', 'normal')
         result = build_conclusion_section(order, styles)
         assert len(result) > 0
 
@@ -70,7 +78,7 @@ class TestPdfAvailable:
         db = MagicMock()
         item = MagicMock(category_code='C1', category_name='Cat1', result_status='PASSED', sort_order=1)
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [item]
-        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('heading', 'normal')
         with patch('app.services.pdf_content_builders.get_stats_table_style'):
             result = build_statistics_section(order, db, styles)
             assert len(result) > 0
@@ -81,7 +89,7 @@ class TestPdfAvailable:
         order = MagicMock(id=1)
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
-        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('heading', 'normal')
         result = build_issues_section(order, db, styles)
         assert result == []
 
@@ -95,7 +103,7 @@ class TestPdfAvailable:
             status='OPEN', is_blocking=True
         )
         db.query.return_value.filter.return_value.all.return_value = [issue]
-        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('heading', 'normal')
         with patch('app.services.pdf_content_builders.get_issue_table_style'):
             result = build_issues_section(order, db, styles)
             assert len(result) > 0
@@ -107,7 +115,7 @@ class TestPdfAvailable:
         db = MagicMock()
         sig = MagicMock(signer_type='QA', signer_name='Alice', signer_role='QA', signer_company='Co', signed_at=None)
         db.query.return_value.filter.return_value.all.return_value = [sig]
-        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        styles = _make_styles('heading', 'normal')
         with patch('app.services.pdf_content_builders.get_signature_table_style'):
             result = build_signatures_section(order, db, styles)
             assert len(result) > 0
@@ -116,6 +124,6 @@ class TestPdfAvailable:
     def test_build_footer(self):
         from app.services.pdf_content_builders import build_footer_section
         user = MagicMock(real_name='Admin', username='admin')
-        styles = {'footer': MagicMock()}
+        styles = _make_styles('footer')
         result = build_footer_section(user, styles)
         assert len(result) > 0

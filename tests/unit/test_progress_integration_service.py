@@ -40,7 +40,12 @@ class TestHandleShortageAlertCreated:
             alert_data=json.dumps({'impact_type': 'stop', 'estimated_delay_days': 5})
         )
         task = MagicMock(status='IN_PROGRESS', plan_end=datetime.now())
-        db.query.return_value.filter.return_value.all.return_value = [task]
+        # The function chains multiple .filter() and .query() calls; make all return [task]
+        mock_q = MagicMock()
+        mock_q.all.return_value = [task]
+        mock_q.filter.return_value = mock_q
+        db.query.return_value = mock_q
+        db.query.return_value.filter.return_value = mock_q
         result = service.handle_shortage_alert_created(alert)
         assert len(result) == 1
         assert task.status == 'BLOCKED'
@@ -52,11 +57,22 @@ class TestHandleShortageAlertResolved:
         result = service.handle_shortage_alert_resolved(alert)
         assert result == []
 
-    def test_unblock_tasks(self, service, db):
+    @patch('app.services.progress_integration_service.apply_keyword_filter')
+    @patch('app.services.progress_integration_service.or_')
+    def test_unblock_tasks(self, mock_or, mock_akf, service, db):
         alert = MagicMock(project_id=1, id=1, alert_no='ALERT-001', target_no='MAT-001')
         task = MagicMock(status='BLOCKED', block_reason='ALERT-001')
-        db.query.return_value.filter.return_value.all.return_value = [task]
-        db.query.return_value.filter.return_value.count.return_value = 0
+        # First query chain: Task query -> filter(project_id, status) -> filter(or_) -> all
+        task_query_mock = MagicMock()
+        task_query_mock.filter.return_value = task_query_mock
+        task_query_mock.all.return_value = [task]
+        # Second query chain: AlertRecord count
+        alert_query_mock = MagicMock()
+        alert_query_mock.filter.return_value = alert_query_mock
+        alert_query_mock.count.return_value = 0
+        # apply_keyword_filter returns a subquery
+        mock_akf.return_value = MagicMock()
+        db.query.side_effect = [task_query_mock, MagicMock(), MagicMock(), alert_query_mock]
         result = service.handle_shortage_alert_resolved(alert)
         assert len(result) == 1
         assert task.status == 'IN_PROGRESS'
@@ -86,12 +102,9 @@ class TestHandleEcnApproved:
 
 class TestCheckMilestoneCompletionRequirements:
     def test_no_requirements(self, service):
-        milestone = MagicMock(
-            milestone_type='REGULAR', deliverables=None,
-            spec=MagicMock(return_value=False)
-        )
-        # Set acceptance_required via hasattr mock
-        type(milestone).acceptance_required = False
+        milestone = MagicMock(milestone_type='REGULAR', deliverables=None)
+        # Remove acceptance_required so hasattr returns False
+        del milestone.acceptance_required
         ok, missing = service.check_milestone_completion_requirements(milestone)
         assert ok is True
 

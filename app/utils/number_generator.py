@@ -10,6 +10,7 @@ from typing import Optional, Type
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.utils.code_config import (
     CODE_PREFIX,
     SEQ_LENGTH,
@@ -80,12 +81,15 @@ def generate_sequential_no(
 
     # 查询当天最大编号
     pattern = f"{pattern_prefix}%"
-    max_record = (
-        db.query(model_class)
-        .filter(getattr(model_class, no_field).like(pattern))
-        .order_by(getattr(model_class, no_field).desc())
-        .first()
+    max_record_query = db.query(model_class)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        model_class,
+        pattern,
+        no_field,
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(getattr(model_class, no_field).desc()).first()
 
     if max_record:
         try:
@@ -160,12 +164,15 @@ def generate_monthly_no(
 
     # 查询当月最大编号
     pattern = f"{pattern_prefix}%"
-    max_record = (
-        db.query(model_class)
-        .filter(getattr(model_class, no_field).like(pattern))
-        .order_by(getattr(model_class, no_field).desc())
-        .first()
+    max_record_query = db.query(model_class)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        model_class,
+        pattern,
+        no_field,
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(getattr(model_class, no_field).desc()).first()
 
     if max_record:
         try:
@@ -201,12 +208,15 @@ def generate_employee_code(db: Session) -> str:
 
     # 查询所有符合格式的编号
     pattern = f"{prefix}{separator}%"
-    max_record = (
-        db.query(Employee)
-        .filter(Employee.employee_code.like(pattern))
-        .order_by(Employee.employee_code.desc())
-        .first()
+    max_record_query = db.query(Employee)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        Employee,
+        pattern,
+        "employee_code",
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(Employee.employee_code.desc()).first()
 
     if max_record:
         try:
@@ -248,12 +258,15 @@ def generate_customer_code(db: Session) -> str:
 
     # 查询所有符合格式的编号
     pattern = f"{prefix}{separator}%"
-    max_record = (
-        db.query(Customer)
-        .filter(Customer.customer_code.like(pattern))
-        .order_by(Customer.customer_code.desc())
-        .first()
+    max_record_query = db.query(Customer)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        Customer,
+        pattern,
+        "customer_code",
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(Customer.customer_code.desc()).first()
 
     if max_record:
         try:
@@ -304,12 +317,15 @@ def generate_material_code(db: Session, category_code: Optional[str] = None) -> 
     pattern = f"{prefix}{separator}{material_category_code}{separator}%"
 
     # 查询该类别下的最大编号
-    max_record = (
-        db.query(Material)
-        .filter(Material.material_code.like(pattern))
-        .order_by(Material.material_code.desc())
-        .first()
+    max_record_query = db.query(Material)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        Material,
+        pattern,
+        "material_code",
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(Material.material_code.desc()).first()
 
     if max_record:
         try:
@@ -359,12 +375,15 @@ def generate_machine_code(db: Session, project_code: str) -> str:
 
     # 查询该项目下已有的设备编码，格式：PJxxx-PNxxx
     pattern = f"{project_code}-PN%"
-    max_record = (
-        db.query(Machine)
-        .filter(Machine.machine_code.like(pattern))
-        .order_by(Machine.machine_code.desc())
-        .first()
+    max_record_query = db.query(Machine)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        Machine,
+        pattern,
+        "machine_code",
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(Machine.machine_code.desc()).first()
 
     if max_record:
         try:
@@ -416,12 +435,15 @@ def generate_calculation_code(db: Session) -> str:
     pattern_prefix = f"{prefix}{separator}{date_str}{separator}"
     pattern = f"{pattern_prefix}%"
 
-    max_record = (
-        db.query(BonusCalculation)
-        .filter(BonusCalculation.calculation_code.like(pattern))
-        .order_by(BonusCalculation.calculation_code.desc())
-        .first()
+    max_record_query = db.query(BonusCalculation)
+    max_record_query = apply_like_filter(
+        max_record_query,
+        BonusCalculation,
+        pattern,
+        "calculation_code",
+        use_ilike=False,
     )
+    max_record = max_record_query.order_by(BonusCalculation.calculation_code.desc()).first()
 
     if max_record:
         try:

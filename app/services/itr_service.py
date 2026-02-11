@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, desc, or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.acceptance import AcceptanceOrder
 from app.models.issue import Issue
 from app.models.service import ServiceTicket
@@ -43,12 +44,23 @@ def get_ticket_timeline(
             })
 
     # 2. 关联问题
-    issues = db.query(Issue).filter(
-        or_(
-            and_(Issue.project_id == ticket.project_id, Issue.category == "CUSTOMER"),
-            Issue.description.like(f"%{ticket.ticket_no}%")
+    issue_filters = [and_(Issue.project_id == ticket.project_id, Issue.category == "CUSTOMER")]
+    if ticket.ticket_no:
+        description_query = apply_keyword_filter(
+            db.query(Issue.id),
+            Issue,
+            ticket.ticket_no,
+            "description",
+            use_ilike=False,
         )
-    ).order_by(Issue.report_date).all()
+        issue_filters.append(Issue.id.in_(description_query))
+
+    issues = (
+        db.query(Issue)
+        .filter(or_(*issue_filters))
+        .order_by(Issue.report_date)
+        .all()
+    )
 
     for issue in issues:
         timeline.append({

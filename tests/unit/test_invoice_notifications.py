@@ -22,10 +22,10 @@ class TestSendInvoiceNotifications:
 
         items = [{"invoice_code": "INV001", "amount": 1000}]
 
-        with patch("app.services.invoice_auto_service.notifications.get_notification_service") as mock_ns:
-            ns = MagicMock()
-            mock_ns.return_value = ns
-            ns.send_notification.return_value = {"success": True}
+        with patch("app.services.invoice_auto_service.notifications.NotificationDispatcher") as mock_nd:
+            nd = MagicMock()
+            mock_nd.return_value = nd
+            nd.send_notification_request.return_value = {"success": True}
             send_invoice_notifications(service, order, items, True)
 
     def test_exception_caught(self):

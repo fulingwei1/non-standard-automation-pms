@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.technical_review import ReviewIssue, TechnicalReview
 
 
@@ -15,12 +16,15 @@ def generate_review_no(db: Session, review_type: str) -> str:
     """生成评审编号：RV-{TYPE}-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
     prefix = f"RV-{review_type}-{today}-"
-    max_review = (
-        db.query(TechnicalReview)
-        .filter(TechnicalReview.review_no.like(f"{prefix}%"))
-        .order_by(desc(TechnicalReview.review_no))
-        .first()
+    max_review_query = db.query(TechnicalReview)
+    max_review_query = apply_like_filter(
+        max_review_query,
+        TechnicalReview,
+        f"{prefix}%",
+        "review_no",
+        use_ilike=False,
     )
+    max_review = max_review_query.order_by(desc(TechnicalReview.review_no)).first()
     if max_review:
         seq = int(max_review.review_no.split("-")[-1]) + 1
     else:
@@ -32,12 +36,15 @@ def generate_issue_no(db: Session) -> str:
     """生成问题编号：RV-ISSUE-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
     prefix = f"RV-ISSUE-{today}-"
-    max_issue = (
-        db.query(ReviewIssue)
-        .filter(ReviewIssue.issue_no.like(f"{prefix}%"))
-        .order_by(desc(ReviewIssue.issue_no))
-        .first()
+    max_issue_query = db.query(ReviewIssue)
+    max_issue_query = apply_like_filter(
+        max_issue_query,
+        ReviewIssue,
+        f"{prefix}%",
+        "issue_no",
+        use_ilike=False,
     )
+    max_issue = max_issue_query.order_by(desc(ReviewIssue.issue_no)).first()
     if max_issue:
         seq = int(max_issue.issue_no.split("-")[-1]) + 1
     else:

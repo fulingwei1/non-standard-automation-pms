@@ -11,6 +11,7 @@ from typing import Any, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 
 # 标记 reportlab 是否可用
 try:
@@ -39,9 +40,15 @@ def generate_report_no(db: Session, report_type: str) -> str:
 
     # 查询当天该类型的报告数量
     from app.models.acceptance import AcceptanceReport
-    count = db.query(AcceptanceReport).filter(
-        AcceptanceReport.report_no.like(f"{prefix}%")
-    ).scalar() or 0
+    count_query = db.query(AcceptanceReport)
+    count_query = apply_like_filter(
+        count_query,
+        AcceptanceReport,
+        f"{prefix}%",
+        "report_no",
+        use_ilike=False,
+    )
+    count = count_query.scalar() or 0
 
     if isinstance(count, int):
         seq = count + 1

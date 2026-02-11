@@ -97,13 +97,13 @@ def report_task_delay(
         notifications_count = 5
 
     # 发送异常通知
-    from app.services.unified_notification_service import get_notification_service
+    from app.services.notification_dispatcher import NotificationDispatcher
     from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
     try:
         # 通知项目经理
         project = db.query(Project).filter(Project.id == task.project_id).first()
         if project and project.pm_id:
-            unified_service = get_notification_service(db)
+            dispatcher = NotificationDispatcher(db)
             request = NotificationRequest(
                 recipient_id=project.pm_id,
                 notification_type="PROJECT_UPDATE",
@@ -115,7 +115,7 @@ def report_task_delay(
                 source_id=task.id,
                 link_url=f"/engineers/tasks/{task.id}",
             )
-            unified_service.send_notification(request)
+            dispatcher.send_notification_request(request)
     except Exception as e:
         # 通知失败不影响主流程
         logger.warning("任务延期报告通知发送失败，不影响主流程", exc_info=True)

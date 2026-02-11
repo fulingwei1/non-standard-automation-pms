@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Contract
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ def send_invoice_notifications(
         )
 
         # 使用统一通知服务发送通知
-        unified_service = get_notification_service(service.db)
+        dispatcher = NotificationDispatcher(service.db)
         sent_count = 0
         for user_id in recipient_ids:
             request = NotificationRequest(
@@ -91,7 +91,7 @@ def send_invoice_notifications(
                 source_id=order.id,
                 link_url=f"/acceptance/{order.id}",
             )
-            result = unified_service.send_notification(request)
+            result = dispatcher.send_notification_request(request)
             if result.get("success"):
                 sent_count += 1
 

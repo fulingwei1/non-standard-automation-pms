@@ -17,9 +17,9 @@ from typing import Dict, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.notification import Notification
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.timesheet_quality_service import TimesheetQualityService
 
 logger = logging.getLogger(__name__)
@@ -37,12 +37,13 @@ def create_timesheet_notification(
     link_url: Optional[str] = None,
     priority: str = "NORMAL",
     extra_data: Optional[dict] = None,
-) -> Notification:
+) -> object:
     """
     创建工时相关通知
     """
-    notification = Notification(
-        user_id=user_id,
+    dispatcher = NotificationDispatcher(db)
+    return dispatcher.create_system_notification(
+        recipient_id=user_id,
         notification_type=notification_type,
         title=title,
         content=content,
@@ -52,7 +53,4 @@ def create_timesheet_notification(
         priority=priority,
         extra_data=extra_data or {},
     )
-    db.add(notification)
-    return notification
-
 

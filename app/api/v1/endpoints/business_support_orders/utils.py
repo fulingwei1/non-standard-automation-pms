@@ -14,6 +14,8 @@ from typing import List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter, apply_like_filter
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.models.business_support import (
     CustomerSupplierRegistration,
     DeliveryOrder,
@@ -62,10 +64,9 @@ def _send_department_notification(
         extra_data: 额外数据
     """
     try:
-        from app.models.notification import Notification
-
-        notification = Notification(
-            user_id=user_id,
+        dispatcher = NotificationDispatcher(db)
+        dispatcher.create_system_notification(
+            recipient_id=user_id,
             notification_type=notification_type,
             title=title,
             content=content,
@@ -73,9 +74,8 @@ def _send_department_notification(
             source_id=source_id,
             link_url=f"/{source_type.lower()}?id={source_id}",
             priority=priority,
-            extra_data=extra_data or {}
+            extra_data=extra_data or {},
         )
-        db.add(notification)
         db.commit()
     except Exception as e:
         logger.warning(f"发送通知失败: {str(e)}")
@@ -145,9 +145,9 @@ def _send_project_department_notifications(
 
     # 通知相关部门的其他成员
     for dept_type, role_codes in dept_mapping.items():
-        dept = db.query(Department).filter(
-            Department.name.ilike(f'%{role_codes[0]}%')
-        ).first()
+        dept_query = db.query(Department)
+        dept_query = apply_keyword_filter(dept_query, Department, role_codes[0], "name")
+        dept = dept_query.first()
 
         if dept:
             dept_users = db.query(User).filter(
@@ -182,12 +182,15 @@ def generate_order_no(db: Session) -> str:
     month_str = today.strftime("%y%m%d")
     prefix = f"SO{month_str}-"
 
-    max_order = (
-        db.query(SalesOrder)
-        .filter(SalesOrder.order_no.like(f"{prefix}%"))
-        .order_by(desc(SalesOrder.order_no))
-        .first()
+    max_order_query = db.query(SalesOrder)
+    max_order_query = apply_like_filter(
+        max_order_query,
+        SalesOrder,
+        f"{prefix}%",
+        "order_no",
+        use_ilike=False,
     )
+    max_order = max_order_query.order_by(desc(SalesOrder.order_no)).first()
 
     if max_order:
         try:
@@ -206,12 +209,15 @@ def generate_delivery_no(db: Session) -> str:
     month_str = today.strftime("%y%m%d")
     prefix = f"DO{month_str}-"
 
-    max_delivery = (
-        db.query(DeliveryOrder)
-        .filter(DeliveryOrder.delivery_no.like(f"{prefix}%"))
-        .order_by(desc(DeliveryOrder.delivery_no))
-        .first()
+    max_delivery_query = db.query(DeliveryOrder)
+    max_delivery_query = apply_like_filter(
+        max_delivery_query,
+        DeliveryOrder,
+        f"{prefix}%",
+        "delivery_no",
+        use_ilike=False,
     )
+    max_delivery = max_delivery_query.order_by(desc(DeliveryOrder.delivery_no)).first()
 
     if max_delivery:
         try:
@@ -229,12 +235,15 @@ def generate_invoice_request_no(db: Session) -> str:
     today = datetime.now()
     prefix = f"IR{today.strftime('%y%m%d')}-"
 
-    latest = (
-        db.query(InvoiceRequest)
-        .filter(InvoiceRequest.request_no.like(f"{prefix}%"))
-        .order_by(desc(InvoiceRequest.request_no))
-        .first()
+    latest_query = db.query(InvoiceRequest)
+    latest_query = apply_like_filter(
+        latest_query,
+        InvoiceRequest,
+        f"{prefix}%",
+        "request_no",
+        use_ilike=False,
     )
+    latest = latest_query.order_by(desc(InvoiceRequest.request_no)).first()
     if latest:
         try:
             seq = int(latest.request_no.split("-")[-1]) + 1
@@ -250,12 +259,15 @@ def generate_registration_no(db: Session) -> str:
     today = datetime.now()
     prefix = f"CR{today.strftime('%y%m%d')}-"
 
-    latest = (
-        db.query(CustomerSupplierRegistration)
-        .filter(CustomerSupplierRegistration.registration_no.like(f"{prefix}%"))
-        .order_by(desc(CustomerSupplierRegistration.registration_no))
-        .first()
+    latest_query = db.query(CustomerSupplierRegistration)
+    latest_query = apply_like_filter(
+        latest_query,
+        CustomerSupplierRegistration,
+        f"{prefix}%",
+        "registration_no",
+        use_ilike=False,
     )
+    latest = latest_query.order_by(desc(CustomerSupplierRegistration.registration_no)).first()
     if latest:
         try:
             seq = int(latest.registration_no.split("-")[-1]) + 1
@@ -271,12 +283,15 @@ def generate_invoice_code(db: Session) -> str:
     today = datetime.now().strftime("%y%m%d")
     prefix = f"INV-{today}-"
 
-    latest = (
-        db.query(Invoice)
-        .filter(Invoice.invoice_code.like(f"{prefix}%"))
-        .order_by(desc(Invoice.invoice_code))
-        .first()
+    latest_query = db.query(Invoice)
+    latest_query = apply_like_filter(
+        latest_query,
+        Invoice,
+        f"{prefix}%",
+        "invoice_code",
+        use_ilike=False,
     )
+    latest = latest_query.order_by(desc(Invoice.invoice_code)).first()
     if latest:
         try:
             seq = int(latest.invoice_code.split("-")[-1]) + 1
@@ -293,12 +308,15 @@ def generate_reconciliation_no(db: Session) -> str:
     month_str = today.strftime("%y%m%d")
     prefix = f"RC{month_str}-"
 
-    max_reconciliation = (
-        db.query(Reconciliation)
-        .filter(Reconciliation.reconciliation_no.like(f"{prefix}%"))
-        .order_by(desc(Reconciliation.reconciliation_no))
-        .first()
+    max_reconciliation_query = db.query(Reconciliation)
+    max_reconciliation_query = apply_like_filter(
+        max_reconciliation_query,
+        Reconciliation,
+        f"{prefix}%",
+        "reconciliation_no",
+        use_ilike=False,
     )
+    max_reconciliation = max_reconciliation_query.order_by(desc(Reconciliation.reconciliation_no)).first()
 
     if max_reconciliation:
         try:

@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
@@ -176,9 +177,8 @@ async def get_salesperson_ranking(
     from app.models.user import Role, UserRole
 
     # 获取所有属于销售类角色的用户
-    salesp_query = (
-        db.query(User).join(UserRole).join(Role).filter(Role.role_code.ilike("%sales%"))
-    )
+    salesp_query = db.query(User).join(UserRole).join(Role)
+    salesp_query = apply_keyword_filter(salesp_query, Role, "sales", "role_code")
     salespeople = salesp_query.all()
 
     performances = []

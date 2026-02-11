@@ -333,12 +333,12 @@ def execute_substitution(
 
     # 发送通知
     try:
-        from app.services.unified_notification_service import get_notification_service
+        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
         if sub.project_id:
             project = db.query(Project).filter(Project.id == sub.project_id).first()
             if project and project.pm_id:
-                unified_service = get_notification_service(db)
+                dispatcher = NotificationDispatcher(db)
                 request = NotificationRequest(
                     recipient_id=project.pm_id,
                     notification_type="PROJECT_UPDATE",
@@ -350,7 +350,7 @@ def execute_substitution(
                     source_id=sub.id,
                     link_url=f"/shortage/handling/substitutions/{sub.id}",
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)
     except Exception:
         logger.warning("物料替代通知发送失败，不影响主流程", exc_info=True)
 

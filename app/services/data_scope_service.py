@@ -11,6 +11,7 @@ from typing import Any, List, Optional, Set, TypeVar
 from sqlalchemy import or_
 from sqlalchemy.orm import Query, Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.organization import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission import ScopeType
 from app.models.user import User
@@ -140,14 +141,15 @@ class DataScopeService:
         )
 
         if org_unit and org_unit.path:
-            children = (
-                db.query(OrganizationUnit.id)
-                .filter(
-                    OrganizationUnit.path.like(f"{org_unit.path}%"),
-                    OrganizationUnit.is_active,
-                )
-                .all()
+            children_query = db.query(OrganizationUnit.id).filter(OrganizationUnit.is_active)
+            children_query = apply_like_filter(
+                children_query,
+                OrganizationUnit,
+                f"{org_unit.path}%",
+                "path",
+                use_ilike=False,
             )
+            children = children_query.all()
             ids.update([c.id for c in children])
         else:
             children = (

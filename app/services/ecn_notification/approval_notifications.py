@@ -13,7 +13,7 @@ from app.models.ecn import Ecn, EcnApproval, EcnTask
 from app.models.project import ProjectMember
 from app.models.user import User
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -53,7 +53,7 @@ def notify_approval_assigned(
 
     priority = NotificationPriority.URGENT if approval.due_date and approval.due_date < datetime.now().date() else NotificationPriority.HIGH
 
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     request = NotificationRequest(
         recipient_id=approver_id,
         notification_type="ECN_APPROVAL_ASSIGNED",
@@ -73,7 +73,7 @@ def notify_approval_assigned(
             "due_date": approval.due_date.isoformat() if approval.due_date else None
         }
     )
-    unified_service.send_notification(request)
+    dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目，且审批人员不是项目成员）
     if ecn.project_id:
@@ -116,7 +116,7 @@ def notify_approval_assigned(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)
 
 
 def notify_approval_result(
@@ -132,7 +132,7 @@ def notify_approval_result(
     result_text = "通过" if result == "APPROVED" else "驳回"
     priority = NotificationPriority.HIGH if result == "APPROVED" else NotificationPriority.NORMAL
 
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     # 通知申请人
     if ecn.applicant_id:
         title = f"ECN审批结果：{ecn.ecn_no}"
@@ -155,7 +155,7 @@ def notify_approval_result(
                 "approval_result": result
             }
         )
-        unified_service.send_notification(request)
+        dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
@@ -191,7 +191,7 @@ def notify_approval_result(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)
 
     # 如果审批通过，通知执行人员
     if result == "APPROVED":
@@ -222,4 +222,4 @@ def notify_approval_result(
                         "task_name": task.task_name
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)

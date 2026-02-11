@@ -11,6 +11,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
+from app.common.query_filters import apply_like_filter
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice as InvoiceModel
 from app.models.enums import InvoiceStatusEnum
@@ -62,12 +63,15 @@ class MilestoneStatusHandler:
                 today = datetime.now()
                 month_str = today.strftime("%y%m%d")
                 prefix = f"INV-{month_str}-"
-                max_invoice = (
-                    db.query(InvoiceModel)
-                    .filter(InvoiceModel.invoice_code.like(f"{prefix}%"))
-                    .order_by(desc(InvoiceModel.invoice_code))
-                    .first()
+                max_invoice_query = db.query(InvoiceModel)
+                max_invoice_query = apply_like_filter(
+                    max_invoice_query,
+                    InvoiceModel,
+                    f"{prefix}%",
+                    "invoice_code",
+                    use_ilike=False,
                 )
+                max_invoice = max_invoice_query.order_by(desc(InvoiceModel.invoice_code)).first()
                 if max_invoice:
                     try:
                         seq = int(max_invoice.invoice_code.split("-")[-1]) + 1

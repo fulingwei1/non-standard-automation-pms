@@ -50,7 +50,7 @@ class DeptReportMixin:
 
         # 获取部门人员
         dept_members = db.query(User).filter(
-            User.department_id == department_id,
+            User.department == department.dept_name,
             User.is_active == True
         ).all()
 

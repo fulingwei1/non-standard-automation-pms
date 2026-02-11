@@ -10,13 +10,7 @@ from sqlalchemy import or_
 
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.base import get_db_session
-from app.services.notification_dispatcher import (
-    NotificationDispatcher,
-    channel_allowed,
-    resolve_channel_target,
-    resolve_channels,
-    resolve_recipients,
-)
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 
 logger = logging.getLogger(__name__)
@@ -148,50 +142,16 @@ def send_alert_notifications():
             ).order_by(AlertRecord.triggered_at.desc().nulls_last()).limit(50).all()
 
             queue_created = 0
-            current_time = datetime.now()
+            queued_from_alerts = 0
+            sent_from_alerts = 0
+            failed_from_alerts = 0
 
             for alert in pending_alerts:
-                recipients = resolve_recipients(db, alert)
-                if not recipients:
-                    continue
-                channels = resolve_channels(alert)
-
-                for user_id, recipient in recipients.items():
-                    user = recipient.get("user")
-                    settings = recipient.get("settings")
-                    if not user:
-                        continue
-
-                    for channel in channels:
-                        if not channel_allowed(channel, settings):
-                            continue
-                        target = resolve_channel_target(channel, user)
-                        if not target:
-                            continue
-
-                        exists = db.query(AlertNotification).filter(
-                            AlertNotification.alert_id == alert.id,
-                            AlertNotification.notify_channel == channel,
-                            AlertNotification.notify_target == target
-                        ).first()
-
-                        if exists:
-                            continue
-
-                        new_notification = AlertNotification(
-                            alert_id=alert.id,
-                            notify_channel=channel,
-                            notify_target=target,
-                            notify_user_id=user.id,
-                            notify_title=alert.alert_title,
-                            notify_content=alert.alert_content,
-                            status='PENDING'
-                        )
-
-                        db.add(new_notification)
-                        queue_created += 1
-
-            db.flush()
+                result = dispatcher.dispatch_alert_notifications(alert=alert)
+                queue_created += result.get("created", 0)
+                queued_from_alerts += result.get("queued", 0)
+                sent_from_alerts += result.get("sent", 0)
+                failed_from_alerts += result.get("failed", 0)
 
             # 2) 发送通知（包含失败重试）
             now = datetime.now()
@@ -224,7 +184,8 @@ def send_alert_notifications():
             db.commit()
 
             logger.info(
-                f"[{datetime.now()}] 消息推送服务完成: 准备 {queue_created} 条队列, "
+                f"[{datetime.now()}] 消息推送服务完成: "
+                f"新建 {queue_created} 条通知(入队 {queued_from_alerts}，直发 {sent_from_alerts}，失败 {failed_from_alerts}), "
                 f"处理 {len(pending_notifications)} 条通知, "
                 f"入队 {queued_notifications} 条, 直接发送 {sent_count} 条"
             )
@@ -232,6 +193,9 @@ def send_alert_notifications():
             return {
                 'queued_alerts': len(pending_alerts),
                 'queue_created': queue_created,
+                'queued_from_alerts': queued_from_alerts,
+                'sent_from_alerts': sent_from_alerts,
+                'failed_from_alerts': failed_from_alerts,
                 'processed_notifications': len(pending_notifications),
                 'queued_notifications': queued_notifications,
                 'sent_count': sent_count,

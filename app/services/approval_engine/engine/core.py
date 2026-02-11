@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.approval import (
     ApprovalActionLog,
     ApprovalInstance,
@@ -39,12 +40,15 @@ class ApprovalEngineCore:
         prefix = f"AP{now.strftime('%y%m%d')}"
 
         # 使用 SELECT FOR UPDATE 加锁查询当日最大序号，避免并发生成重复单号
-        max_instance = (
-            self.db.query(func.max(ApprovalInstance.instance_no))
-            .filter(ApprovalInstance.instance_no.like(f"{prefix}%"))
-            .with_for_update()
-            .scalar()
+        max_instance_query = self.db.query(func.max(ApprovalInstance.instance_no))
+        max_instance_query = apply_like_filter(
+            max_instance_query,
+            ApprovalInstance,
+            f"{prefix}%",
+            "instance_no",
+            use_ilike=False,
         )
+        max_instance = max_instance_query.with_for_update().scalar()
 
         if max_instance:
             # 从已有最大单号提取序号并递增

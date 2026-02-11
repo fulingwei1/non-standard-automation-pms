@@ -458,10 +458,10 @@ class ShortageAlertsService:
     def _send_notification(self, shortage: MaterialShortage, action: str):
         """发送通知（使用统一通知服务）"""
         try:
-            from app.services.unified_notification_service import get_notification_service
+            from app.services.notification_dispatcher import NotificationDispatcher
             from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
 
-            unified_service = get_notification_service(self.db)
+            dispatcher = NotificationDispatcher(self.db)
 
             # 确定接收人（负责人或创建人）
             recipient_id = getattr(shortage, 'handler_id', None) or getattr(shortage, 'created_by', None)
@@ -487,7 +487,7 @@ class ShortageAlertsService:
                 source_id=shortage.id,
                 link_url=f"/shortage/{shortage.id}",
             )
-            unified_service.send_notification(request)
+            dispatcher.send_notification_request(request)
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning(f"物料短缺通知发送失败: {e}")

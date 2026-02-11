@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
+from app.common.query_filters import apply_like_filter
 from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine, Project
@@ -107,13 +108,15 @@ def generate_bom_no(db: Session, project_id: int) -> str:
     # 查询该项目下最大的序号
     from sqlalchemy import desc
 
-    max_bom = (
-        db.query(BomHeader)
-        .filter(BomHeader.project_id == project_id)
-        .filter(BomHeader.bom_no.like(f"BOM-{project_prefix}-%"))
-        .order_by(desc(BomHeader.bom_no))
-        .first()
+    max_bom_query = db.query(BomHeader).filter(BomHeader.project_id == project_id)
+    max_bom_query = apply_like_filter(
+        max_bom_query,
+        BomHeader,
+        f"BOM-{project_prefix}-%",
+        "bom_no",
+        use_ilike=False,
     )
+    max_bom = max_bom_query.order_by(desc(BomHeader.bom_no)).first()
 
     if max_bom:
         # 提取序号并加1

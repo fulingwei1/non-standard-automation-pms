@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 
 from .base import AlertRuleEngineBase
@@ -37,9 +38,15 @@ class AlertGenerator(AlertRuleEngineBase):
         rule_code = rule.rule_code[:3].upper()
 
         # 查询今天的预警数量
-        count = db.query(AlertRecord).filter(
-            AlertRecord.alert_no.like(f'{rule_code}{today}%')
-        ).count()
+        count_query = db.query(AlertRecord)
+        count_query = apply_like_filter(
+            count_query,
+            AlertRecord,
+            f'{rule_code}{today}%',
+            "alert_no",
+            use_ilike=False,
+        )
+        count = count_query.count()
 
         return f'{rule_code}{today}{str(count + 1).zfill(4)}'
 

@@ -36,7 +36,6 @@ from . import (
 )
 
 # === 项目模块整合：迁移的子模块路由 ===
-from .approvals import router as approvals_router
 from .costs import router as costs_router
 from .evaluations import router as evaluations_router
 from .machines import router as machines_router
@@ -187,11 +186,4 @@ router.include_router(
     workload_router,
     prefix="/{project_id}/workload",
     tags=["projects-workload"],
-)
-
-# 审批路由（项目内操作）
-router.include_router(
-    approvals_router,
-    prefix="/{project_id}/approvals",
-    tags=["projects-approvals"],
 )

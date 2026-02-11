@@ -9,7 +9,7 @@ BACKWARD COMPATIBILITY: 此模块现在使用unified_notification_service进行�
 import logging
 from typing import Any, Dict
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 class SendNotificationMixin:
     """发送通知 Mixin（使用统一通知服务）"""
 
-    def _get_unified_service(self):
-        """获取统一通知服务实例"""
-        if not hasattr(self, '_unified_service') or self._unified_service is None:
-            self._unified_service = get_notification_service(self.db)
-        return self._unified_service
+    def _get_dispatcher(self):
+        """获取通知调度器实例"""
+        if not hasattr(self, '_notification_dispatcher') or self._notification_dispatcher is None:
+            self._notification_dispatcher = NotificationDispatcher(self.db)
+        return self._notification_dispatcher
 
     def _map_notification_type(self, approval_type: str) -> str:
         """映射审批通知类型到统一服务通知类型"""
@@ -75,8 +75,8 @@ class SendNotificationMixin:
             logger.warning("通知缺少 receiver_id，跳过发送")
             return
 
-        # 获取统一通知服务
-        unified_service = self._get_unified_service()
+        # 获取通知调度器
+        dispatcher = self._get_dispatcher()
 
         # 构建通知请求
         request = NotificationRequest(
@@ -103,7 +103,7 @@ class SendNotificationMixin:
         # - 免打扰时间检查
         # - 多渠道路由
         try:
-            result = unified_service.send_notification(request)
+            result = dispatcher.send_notification_request(request)
             if result.get("success"):
                 logger.info(
                     f"审批通知已发送: type={notification.get('type')}, receiver={receiver_id}, "

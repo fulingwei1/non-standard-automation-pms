@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.endpoints.sales.contracts import Contract
 from app.models.project import Project
+from app.common.query_filters import build_like_conditions
 from app.schemas.sales.contract import (
     ProjectCreateResponse,
 )
@@ -138,8 +139,9 @@ async def create_project_from_contract(
 # 辅助函数
 async def _generate_project_code(db: AsyncSession) -> str:
     """生成项目编码"""
+    pj_conditions = build_like_conditions(Project, "PJ%", "code", use_ilike=False)
     result = await db.execute(
-        select(func.count(Project.id)).where(Project.code.like("PJ%"))
+        select(func.count(Project.id)).where(pj_conditions[0])
     )
     count = result.scalar() + 1
 
@@ -154,10 +156,14 @@ async def _generate_project_code(db: AsyncSession) -> str:
     day = now.day
 
     # 获取序号
+    month_conditions = build_like_conditions(
+        Project,
+        f"PJ{year:04d}{month:02d}%",
+        "code",
+        use_ilike=False,
+    )
     count = await db.execute(
-        select(func.count(Project.id)).where(
-            Project.code.like(f"PJ{year:04d}{month:02d}%")
-        )
+        select(func.count(Project.id)).where(month_conditions[0])
     )
     last_seq = result.scalar()
 
@@ -168,7 +174,7 @@ async def _generate_project_code(db: AsyncSession) -> str:
     # 获取最后创建项目的序号
     result = await db.execute(
         select(Project.code)
-        .where(Project.code.like(f"PJ{year:04d}{month:02d}%"))
+        .where(month_conditions[0])
         .order_by(Project.id.desc())
         .limit(1)
     )

@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
 from app.models.project import Machine, Project
 
@@ -255,8 +256,13 @@ def generate_order_no(
         base_no = f"{prefix}-{project_code}-{machine_seq}"
 
     # 查找同类型、同项目、同设备（如果是FAT/SAT）的最大序号
-    query = db.query(AcceptanceOrder).filter(
-        AcceptanceOrder.order_no.like(f"{base_no}-%")
+    query = db.query(AcceptanceOrder)
+    query = apply_like_filter(
+        query,
+        AcceptanceOrder,
+        f"{base_no}-%",
+        "order_no",
+        use_ilike=False,
     )
 
     max_order = query.order_by(desc(AcceptanceOrder.order_no)).first()
@@ -311,12 +317,15 @@ def generate_issue_no(db: Session, order_no: str) -> str:
 
     # 查找同验收单的最大问题序号
     pattern = f"AI-{suffix}-%"
-    max_issue = (
-        db.query(AcceptanceIssue)
-        .filter(AcceptanceIssue.issue_no.like(pattern))
-        .order_by(desc(AcceptanceIssue.issue_no))
-        .first()
+    max_issue_query = db.query(AcceptanceIssue)
+    max_issue_query = apply_like_filter(
+        max_issue_query,
+        AcceptanceIssue,
+        pattern,
+        "issue_no",
+        use_ilike=False,
     )
+    max_issue = max_issue_query.order_by(desc(AcceptanceIssue.issue_no)).first()
 
     if max_issue:
         try:

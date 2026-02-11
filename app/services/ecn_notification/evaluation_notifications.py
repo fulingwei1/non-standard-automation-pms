@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.ecn import Ecn, EcnApproval, EcnEvaluation
 from app.models.user import User
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -55,7 +55,7 @@ def notify_evaluation_assigned(
     title = f"ECN评估任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN评估任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n评估部门：{evaluation.eval_dept}\n\n请及时完成评估。"
 
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     request = NotificationRequest(
         recipient_id=evaluator_id,
         notification_type="ECN_EVALUATION_ASSIGNED",
@@ -73,7 +73,7 @@ def notify_evaluation_assigned(
             "eval_id": evaluation.id
         }
     )
-    unified_service.send_notification(request)
+    dispatcher.send_notification_request(request)
 
 
 def notify_evaluation_completed(
@@ -85,7 +85,7 @@ def notify_evaluation_completed(
     通知评估完成
     通知ECN申请人、项目相关人员和其他相关人员
     """
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     # 通知申请人
     if ecn.applicant_id:
         title = f"ECN评估完成：{ecn.ecn_no}"
@@ -107,7 +107,7 @@ def notify_evaluation_completed(
                 "eval_result": evaluation.eval_result
             }
         )
-        unified_service.send_notification(request)
+    dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:

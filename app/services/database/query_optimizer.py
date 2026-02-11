@@ -12,7 +12,7 @@ from sqlalchemy import desc, func, or_, text
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.common.pagination import get_pagination_params
-from app.common.query_filters import apply_pagination
+from app.common.query_filters import apply_pagination, build_keyword_conditions
 from app.models.alert import AlertRecord
 from app.models.issue import Issue
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
@@ -123,23 +123,41 @@ class QueryOptimizer:
         if not keyword or len(keyword.strip()) < 2:
             return []
 
-        keyword = f"%{keyword.strip()}%"
+        keyword = keyword.strip()
 
         # 使用更高效的搜索查询
         query = self.db.query(Project).options(
             joinedload(Project.customer),
             joinedload(Project.owner)
-        ).filter(
-            or_(
-                Project.project_name.like(keyword),
-                Project.project_code.like(keyword),
-                Project.description.like(keyword)
-            )
-        ).order_by(
+        )
+
+        keyword_conditions = build_keyword_conditions(
+            Project,
+            keyword,
+            ["project_name", "project_code", "description"],
+            use_ilike=False,
+        )
+        if keyword_conditions:
+            query = query.filter(or_(*keyword_conditions))
+
+        name_condition = build_keyword_conditions(
+            Project,
+            keyword,
+            "project_name",
+            use_ilike=False,
+        )
+        code_condition = build_keyword_conditions(
+            Project,
+            keyword,
+            "project_code",
+            use_ilike=False,
+        )
+
+        query = query.order_by(
             # 优先显示匹配度高的结果
             func.case(
-                (Project.project_name.like(keyword), 1),
-                (Project.project_code.like(keyword), 2),
+                (name_condition[0], 1),
+                (code_condition[0], 2),
                 else_=3
             ),
             desc(Project.created_at)

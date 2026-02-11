@@ -11,6 +11,7 @@ from sqlalchemy import and_, or_, func, asc, desc
 from sqlalchemy.orm import Query, Session
 
 from app.common.crud.types import SortOrder
+from app.common.query_filters import build_keyword_conditions
 
 ModelType = TypeVar("ModelType")
 
@@ -137,7 +138,13 @@ class SyncQueryBuilder:
                 
                 elif "like" in value:
                     # 模糊匹配：{"name": {"like": "test"}}
-                    conditions.append(field.ilike(f"%{value['like']}%"))
+                    like_conditions = build_keyword_conditions(
+                        model,
+                        value.get("like"),
+                        field_name,
+                    )
+                    if like_conditions:
+                        conditions.append(or_(*like_conditions))
                 
                 elif "in" in value:
                     # IN查询：{"id": {"in": [1, 2, 3]}}
@@ -167,14 +174,7 @@ class SyncQueryBuilder:
         fields: List[str]
     ) -> List:
         """构建关键词搜索条件"""
-        conditions = []
-        
-        for field_name in fields:
-            field = getattr(model, field_name, None)
-            if field:
-                conditions.append(field.ilike(f"%{keyword}%"))
-        
-        return conditions
+        return build_keyword_conditions(model, keyword, fields)
     
     @staticmethod
     def execute_list_query(

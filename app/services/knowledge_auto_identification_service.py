@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.engineer_performance import (
     CodeModule,
     KnowledgeContribution,
@@ -53,9 +54,17 @@ class KnowledgeAutoIdentificationService:
             return None
 
         # 检查是否已创建知识贡献
-        existing = self.db.query(KnowledgeContribution).filter(
-            KnowledgeContribution.title.like(f"%{ticket.ticket_no}%")
-        ).first()
+        existing = None
+        if ticket.ticket_no:
+            existing_query = self.db.query(KnowledgeContribution)
+            existing_query = apply_keyword_filter(
+                existing_query,
+                KnowledgeContribution,
+                ticket.ticket_no,
+                "title",
+                use_ilike=False,
+            )
+            existing = existing_query.first()
 
         if existing:
             return existing

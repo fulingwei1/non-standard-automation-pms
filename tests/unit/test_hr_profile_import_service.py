@@ -149,16 +149,16 @@ class TestDetermineEmploymentType:
 
 
 class TestGenerateEmployeeCode:
-    @patch('app.services.hr_profile_import_service.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.services.hr_profile_import_service.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
+    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
     def test_generate_new_code(self):
         existing = set()
         code = generate_employee_code(existing)
         assert code.startswith("EMP-")
         assert code in existing  # should be added
 
-    @patch('app.services.hr_profile_import_service.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.services.hr_profile_import_service.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
+    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
     def test_generate_code_with_existing(self):
         existing = {"EMP-00001"}
         code = generate_employee_code(existing)

@@ -323,7 +323,6 @@ class AlertNotificationService:
                 return False
 
             # 获取预警信息
-            alert_id = alert.id if hasattr(alert, "id") else 0
             alert_title = (
                 getattr(alert, "alert_title", None)
                 or getattr(alert, "title", None)
@@ -334,28 +333,15 @@ class AlertNotificationService:
                 or getattr(alert, "description", None)
                 or f"预警：{alert_title}"
             )
-            alert_level = (
-                getattr(alert, "alert_level", None)
-                or getattr(alert, "severity", None)
-                or "NORMAL"
-            )
-
-            priority = NotificationPriority.NORMAL
-            level_upper = str(alert_level).upper() if alert_level else "NORMAL"
-            if level_upper in ["URGENT", "CRITICAL"]:
-                priority = NotificationPriority.URGENT
-            elif level_upper in ["WARNING", "WARN", "HIGH"]:
-                priority = NotificationPriority.HIGH
-
             normalized_channels = None
             if channels:
                 channel_mapping = {
-                    "SYSTEM": UnifiedNotificationChannel.SYSTEM,
-                    "WEB": UnifiedNotificationChannel.SYSTEM,
-                    "EMAIL": UnifiedNotificationChannel.EMAIL,
-                    "WECHAT": UnifiedNotificationChannel.WECHAT,
-                    "SMS": UnifiedNotificationChannel.SMS,
-                    "WEBHOOK": UnifiedNotificationChannel.WEBHOOK,
+                    "SYSTEM": "SYSTEM",
+                    "WEB": "SYSTEM",
+                    "EMAIL": "EMAIL",
+                    "WECHAT": "WECHAT",
+                    "SMS": "SMS",
+                    "WEBHOOK": "WEBHOOK",
                 }
                 normalized_channels = []
                 for channel in channels:
@@ -369,31 +355,18 @@ class AlertNotificationService:
                 else:
                     normalized_channels = None
 
-            success = False
-            for recipient_id in recipients:
-                request = NotificationRequest(
-                    recipient_id=recipient_id,
-                    notification_type="ALERT_NOTIFICATION",
-                    category="alert",
-                    title=alert_title,
-                    content=alert_content,
-                    priority=priority,
-                    channels=normalized_channels,
-                    source_type="alert",
-                    source_id=alert_id,
-                    link_url=f"/alerts/{alert_id}" if alert_id else None,
-                    extra_data={
-                        "alert_no": getattr(alert, "alert_no", None),
-                        "alert_level": getattr(alert, "alert_level", None),
-                        "target_type": getattr(alert, "target_type", None),
-                        "target_name": getattr(alert, "target_name", None),
-                    },
-                    force_send=force_send,
-                )
-                result = self.unified_service.send_notification(request)
-                success = success or result.get("success", False)
+            from app.services.notification_dispatcher import NotificationDispatcher
 
-            return success
+            dispatcher = NotificationDispatcher(self.db)
+            result = dispatcher.dispatch_alert_notifications(
+                alert=alert,
+                user_ids=recipients,
+                channels=normalized_channels,
+                title=alert_title,
+                content=alert_content,
+                force_send=force_send,
+            )
+            return bool(result.get("queued") or result.get("sent") or result.get("created"))
         except Exception as e:
             logger.error(f"发送预警通知失败: {e}")
             return False

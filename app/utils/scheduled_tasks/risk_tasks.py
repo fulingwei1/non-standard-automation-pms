@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 from app.models.base import get_db_session
+from app.common.query_filters import apply_keyword_filter
 
 logger = logging.getLogger(__name__)
 
@@ -143,12 +144,19 @@ def check_high_risk_projects() -> Dict[str, Any]:
             alert_count = 0
             for history in high_risk_upgrades:
                 # 检查是否已有预警
-                existing = db.query(AlertRecord).filter(
+                existing_query = db.query(AlertRecord).filter(
                     AlertRecord.target_type == "PROJECT",
                     AlertRecord.target_id == history.project_id,
-                    AlertRecord.alert_title.like("%风险升级%"),
                     AlertRecord.status == "PENDING",
-                ).first()
+                )
+                existing_query = apply_keyword_filter(
+                    existing_query,
+                    AlertRecord,
+                    "风险升级",
+                    "alert_title",
+                    use_ilike=False,
+                )
+                existing = existing_query.first()
 
                 if not existing:
                     project = db.query(Project).filter(Project.id == history.project_id).first()

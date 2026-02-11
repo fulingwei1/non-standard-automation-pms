@@ -10,6 +10,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.issue import Issue
@@ -74,9 +75,15 @@ def create_blocking_issue_alert(db: Session, issue: Issue) -> Optional[AlertReco
 
     # 生成预警编号
     today = datetime.now().strftime('%Y%m%d')
-    count = db.query(AlertRecord).filter(
-        AlertRecord.alert_no.like(f'AL{today}%')
-    ).count()
+    count_query = db.query(AlertRecord)
+    count_query = apply_like_filter(
+        count_query,
+        AlertRecord,
+        f'AL{today}%',
+        "alert_no",
+        use_ilike=False,
+    )
+    count = count_query.count()
     alert_no = f'AL{today}{str(count + 1).zfill(4)}'
 
     # 构建预警内容
@@ -147,5 +154,13 @@ def close_blocking_issue_alerts(db: Session, issue: Issue) -> int:
 def generate_issue_no(db: Session) -> str:
     """生成问题编号"""
     today = datetime.now().strftime('%Y%m%d')
-    count = db.query(Issue).filter(Issue.issue_no.like(f'IS{today}%')).count()
+    count_query = db.query(Issue)
+    count_query = apply_like_filter(
+        count_query,
+        Issue,
+        f'IS{today}%',
+        "issue_no",
+        use_ilike=False,
+    )
+    count = count_query.count()
     return f'IS{today}{str(count + 1).zfill(3)}'

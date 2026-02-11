@@ -9,6 +9,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_like_filter
 from app.core import security
 from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
 from app.models.user import User
@@ -18,12 +19,15 @@ from app.schemas.presale import TicketResponse
 def generate_ticket_no(db: Session) -> str:
     """生成工单编号：TICKET-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
-    max_ticket = (
-        db.query(PresaleSupportTicket)
-        .filter(PresaleSupportTicket.ticket_no.like(f"TICKET-{today}-%"))
-        .order_by(desc(PresaleSupportTicket.ticket_no))
-        .first()
+    max_ticket_query = db.query(PresaleSupportTicket)
+    max_ticket_query = apply_like_filter(
+        max_ticket_query,
+        PresaleSupportTicket,
+        f"TICKET-{today}-%",
+        "ticket_no",
+        use_ilike=False,
     )
+    max_ticket = max_ticket_query.order_by(desc(PresaleSupportTicket.ticket_no)).first()
     if max_ticket:
         seq = int(max_ticket.ticket_no.split("-")[-1]) + 1
     else:
@@ -34,12 +38,15 @@ def generate_ticket_no(db: Session) -> str:
 def generate_solution_no(db: Session) -> str:
     """生成方案编号：SOL-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
-    max_solution = (
-        db.query(PresaleSolution)
-        .filter(PresaleSolution.solution_no.like(f"SOL-{today}-%"))
-        .order_by(desc(PresaleSolution.solution_no))
-        .first()
+    max_solution_query = db.query(PresaleSolution)
+    max_solution_query = apply_like_filter(
+        max_solution_query,
+        PresaleSolution,
+        f"SOL-{today}-%",
+        "solution_no",
+        use_ilike=False,
     )
+    max_solution = max_solution_query.order_by(desc(PresaleSolution.solution_no)).first()
     if max_solution:
         seq = int(max_solution.solution_no.split("-")[-1]) + 1
     else:
@@ -50,12 +57,15 @@ def generate_solution_no(db: Session) -> str:
 def generate_tender_no(db: Session) -> str:
     """生成投标编号：TENDER-yymmdd-xxx"""
     today = datetime.now().strftime("%y%m%d")
-    max_tender = (
-        db.query(PresaleTenderRecord)
-        .filter(PresaleTenderRecord.tender_no.like(f"TENDER-{today}-%"))
-        .order_by(desc(PresaleTenderRecord.tender_no))
-        .first()
+    max_tender_query = db.query(PresaleTenderRecord)
+    max_tender_query = apply_like_filter(
+        max_tender_query,
+        PresaleTenderRecord,
+        f"TENDER-{today}-%",
+        "tender_no",
+        use_ilike=False,
     )
+    max_tender = max_tender_query.order_by(desc(PresaleTenderRecord.tender_no)).first()
     if max_tender:
         seq = int(max_tender.tender_no.split("-")[-1]) + 1
     else:

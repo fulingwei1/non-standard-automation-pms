@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.budget import ProjectBudget
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
@@ -163,12 +164,15 @@ def generate_alert_no(db: Session) -> str:
         str: 预警编号
     """
     today = date.today()
-    max_alert = (
-        db.query(AlertRecord)
-        .filter(AlertRecord.alert_no.like(f'CO{today.strftime("%Y%m%d")}%'))
-        .order_by(AlertRecord.alert_no.desc())
-        .first()
+    max_alert_query = db.query(AlertRecord)
+    max_alert_query = apply_like_filter(
+        max_alert_query,
+        AlertRecord,
+        f'CO{today.strftime("%Y%m%d")}%',
+        "alert_no",
+        use_ilike=False,
     )
+    max_alert = max_alert_query.order_by(AlertRecord.alert_no.desc()).first()
 
     if max_alert:
         seq = int(max_alert.alert_no[-4:]) + 1

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract
 
@@ -171,13 +172,18 @@ class PaymentPlanService:
 
     def _find_advance_payment_milestone(self, project_id: int) -> Optional[int]:
         """查找预付款里程碑"""
+        keyword_query = apply_keyword_filter(
+            self.db.query(ProjectMilestone.id),
+            ProjectMilestone,
+            ["合同", "签订", "立项"],
+            "milestone_name",
+            use_ilike=False,
+        )
         milestone = self.db.query(ProjectMilestone).filter(
             and_(
                 ProjectMilestone.project_id == project_id,
                 or_(
-                    ProjectMilestone.milestone_name.like("%合同%"),
-                    ProjectMilestone.milestone_name.like("%签订%"),
-                    ProjectMilestone.milestone_name.like("%立项%"),
+                    ProjectMilestone.id.in_(keyword_query),
                     ProjectMilestone.milestone_type == "GATE"
                 )
             )
@@ -187,13 +193,18 @@ class PaymentPlanService:
 
     def _find_delivery_payment_milestone(self, project_id: int) -> Optional[int]:
         """查找发货款里程碑"""
+        keyword_query = apply_keyword_filter(
+            self.db.query(ProjectMilestone.id),
+            ProjectMilestone,
+            ["发货", "发运", "包装"],
+            "milestone_name",
+            use_ilike=False,
+        )
         milestone = self.db.query(ProjectMilestone).filter(
             and_(
                 ProjectMilestone.project_id == project_id,
                 or_(
-                    ProjectMilestone.milestone_name.like("%发货%"),
-                    ProjectMilestone.milestone_name.like("%发运%"),
-                    ProjectMilestone.milestone_name.like("%包装%"),
+                    ProjectMilestone.id.in_(keyword_query),
                     ProjectMilestone.milestone_type == "DELIVERY"
                 )
             )
@@ -203,14 +214,18 @@ class PaymentPlanService:
 
     def _find_acceptance_payment_milestone(self, project_id: int) -> Optional[int]:
         """查找验收款里程碑"""
+        keyword_query = apply_keyword_filter(
+            self.db.query(ProjectMilestone.id),
+            ProjectMilestone,
+            ["验收", "终验", "FAT", "SAT"],
+            "milestone_name",
+            use_ilike=False,
+        )
         milestone = self.db.query(ProjectMilestone).filter(
             and_(
                 ProjectMilestone.project_id == project_id,
                 or_(
-                    ProjectMilestone.milestone_name.like("%验收%"),
-                    ProjectMilestone.milestone_name.like("%终验%"),
-                    ProjectMilestone.milestone_name.like("%FAT%"),
-                    ProjectMilestone.milestone_name.like("%SAT%"),
+                    ProjectMilestone.id.in_(keyword_query),
                     ProjectMilestone.milestone_type == "GATE"
                 )
             )
@@ -220,13 +235,18 @@ class PaymentPlanService:
 
     def _find_warranty_payment_milestone(self, project_id: int) -> Optional[int]:
         """查找质保款里程碑"""
+        keyword_query = apply_keyword_filter(
+            self.db.query(ProjectMilestone.id),
+            ProjectMilestone,
+            ["质保", "结项", "完成"],
+            "milestone_name",
+            use_ilike=False,
+        )
         milestone = self.db.query(ProjectMilestone).filter(
             and_(
                 ProjectMilestone.project_id == project_id,
                 or_(
-                    ProjectMilestone.milestone_name.like("%质保%"),
-                    ProjectMilestone.milestone_name.like("%结项%"),
-                    ProjectMilestone.milestone_name.like("%完成%")
+                    ProjectMilestone.id.in_(keyword_query)
                 )
             )
         ).order_by(ProjectMilestone.planned_date.desc()).first()

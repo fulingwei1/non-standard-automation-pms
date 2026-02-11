@@ -8,8 +8,8 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
-from app.models.notification import Notification
 from app.models.user import Role, User, UserRole
+from app.services.notification_dispatcher import NotificationDispatcher
 
 
 def find_users_by_role(db: Session, role_name: str) -> List[User]:
@@ -85,12 +85,13 @@ def create_notification(
     link_url: Optional[str] = None,
     priority: str = "NORMAL",
     extra_data: Optional[dict] = None
-) -> Notification:
+) -> object:
     """
     创建系统通知
     """
-    notification = Notification(
-        user_id=user_id,
+    dispatcher = NotificationDispatcher(db)
+    return dispatcher.create_system_notification(
+        recipient_id=user_id,
         notification_type=notification_type,
         title=title,
         content=content,
@@ -98,7 +99,5 @@ def create_notification(
         source_id=source_id,
         link_url=link_url,
         priority=priority,
-        extra_data=extra_data or {}
+        extra_data=extra_data or {},
     )
-    db.add(notification)
-    return notification

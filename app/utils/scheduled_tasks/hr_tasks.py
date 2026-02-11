@@ -117,13 +117,63 @@ def check_employee_confirmation_reminder():
     logger.info(f"[{datetime.now()}] 开始执行员工转正提醒检查...")
 
     try:
-        from app.models.notification import Notification
         from app.models.organization import Employee, EmployeeHrProfile, HrTransaction
+        from app.models.user import Role, User, UserRole
+        from app.common.query_filters import apply_keyword_filter
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         with get_db_session() as db:
             today = date.today()
             reminder_date = today + timedelta(days=7)  # 提前7天
             reminders_created = 0
+            dispatcher = NotificationDispatcher(db)
+
+            def _get_hr_recipient_ids() -> list:
+                role_codes = {
+                    "hr",
+                    "hr_manager",
+                    "HR",
+                    "HR_MANAGER",
+                    "HR_ADMIN",
+                    "HUMAN_RESOURCE",
+                    "HUMAN_RESOURCES",
+                    "HRD",
+                }
+                roles_query = db.query(Role).filter(Role.is_active == True)
+                roles = roles_query.filter(Role.role_code.in_(role_codes)).all()
+                if not roles:
+                    role_names = {"人事", "人事经理", "人力资源", "人力资源经理", "HR", "HR经理"}
+                    roles = roles_query.filter(Role.role_name.in_(role_names)).all()
+                if not roles:
+                    roles = apply_keyword_filter(
+                        roles_query,
+                        Role,
+                        ["人事", "人力", "HR"],
+                        ["role_name", "role_code"],
+                    ).all()
+
+                role_ids = [role.id for role in roles]
+                if role_ids:
+                    user_roles = db.query(UserRole).filter(
+                        UserRole.role_id.in_(role_ids)
+                    ).all()
+                    user_ids = {ur.user_id for ur in user_roles}
+                    if user_ids:
+                        users = db.query(User).filter(
+                            User.id.in_(list(user_ids)),
+                            User.is_active == True,
+                        ).all()
+                        return [user.id for user in users]
+
+                admins = db.query(User).filter(
+                    User.is_superuser == True,
+                    User.is_active == True,
+                ).all()
+                return [user.id for user in admins]
+
+            hr_recipient_ids = _get_hr_recipient_ids()
+            if not hr_recipient_ids:
+                logger.warning("员工转正提醒未找到HR接收人，将跳过通知发送")
 
             # 查询试用期员工
             probation_employees = db.query(Employee).join(
@@ -171,19 +221,23 @@ def check_employee_confirmation_reminder():
                 reminders_created += 1
 
                 # 创建系统通知
-                notification = Notification(
-                    user_id=None,  # 发给HR管理员
-                    title="员工转正提醒",
-                    content=f"员工 {employee.name}（{employee.employee_code}）的试用期将于"
-                            f"{profile.probation_end_date}结束（还有{days_until_confirmation}天），"
-                            f"请安排转正评估。",
-                    notification_type="hr_reminder",
-                    priority="high" if days_until_confirmation <= 3 else "normal",
-                    is_read=False,
-                    source_type="hr_transaction",
-                    source_id=None
-                )
-                db.add(notification)
+                if hr_recipient_ids:
+                    notification_content = (
+                        f"员工 {employee.name}（{employee.employee_code}）的试用期将于"
+                        f"{profile.probation_end_date}结束（还有{days_until_confirmation}天），"
+                        f"请安排转正评估。"
+                    )
+                    priority = "HIGH" if days_until_confirmation <= 3 else "NORMAL"
+                    for recipient_id in hr_recipient_ids:
+                        dispatcher.create_system_notification(
+                            recipient_id=recipient_id,
+                            notification_type="hr_reminder",
+                            title="员工转正提醒",
+                            content=notification_content,
+                            source_type="hr_transaction",
+                            source_id=None,
+                            priority=priority,
+                        )
 
             db.commit()
 

@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 
 def generate_ticket_no(db: Session) -> str:
     """生成服务工单号：SRV-yymmdd-xxx"""
@@ -46,12 +47,15 @@ def generate_communication_no(db: Session) -> str:
     from app.models.service import CustomerCommunication
 
     today = datetime.now().strftime("%y%m%d")
-    max_comm = (
-        db.query(CustomerCommunication)
-        .filter(CustomerCommunication.communication_no.like(f"COM-{today}-%"))
-        .order_by(desc(CustomerCommunication.communication_no))
-        .first()
+    max_comm_query = db.query(CustomerCommunication)
+    max_comm_query = apply_like_filter(
+        max_comm_query,
+        CustomerCommunication,
+        f"COM-{today}-%",
+        "communication_no",
+        use_ilike=False,
     )
+    max_comm = max_comm_query.order_by(desc(CustomerCommunication.communication_no)).first()
     if max_comm:
         seq = int(max_comm.communication_no.split("-")[-1]) + 1
     else:
@@ -64,12 +68,15 @@ def generate_survey_no(db: Session) -> str:
     from app.models.service import CustomerSatisfaction
 
     today = datetime.now().strftime("%y%m%d")
-    max_survey = (
-        db.query(CustomerSatisfaction)
-        .filter(CustomerSatisfaction.survey_no.like(f"SUR-{today}-%"))
-        .order_by(desc(CustomerSatisfaction.survey_no))
-        .first()
+    max_survey_query = db.query(CustomerSatisfaction)
+    max_survey_query = apply_like_filter(
+        max_survey_query,
+        CustomerSatisfaction,
+        f"SUR-{today}-%",
+        "survey_no",
+        use_ilike=False,
     )
+    max_survey = max_survey_query.order_by(desc(CustomerSatisfaction.survey_no)).first()
     if max_survey:
         seq = int(max_survey.survey_no.split("-")[-1]) + 1
     else:
@@ -82,12 +89,15 @@ def generate_article_no(db: Session) -> str:
     from app.models.service import KnowledgeBase
 
     today = datetime.now().strftime("%y%m%d")
-    max_article = (
-        db.query(KnowledgeBase)
-        .filter(KnowledgeBase.article_no.like(f"KB-{today}-%"))
-        .order_by(desc(KnowledgeBase.article_no))
-        .first()
+    max_article_query = db.query(KnowledgeBase)
+    max_article_query = apply_like_filter(
+        max_article_query,
+        KnowledgeBase,
+        f"KB-{today}-%",
+        "article_no",
+        use_ilike=False,
     )
+    max_article = max_article_query.order_by(desc(KnowledgeBase.article_no)).first()
     if max_article:
         seq = int(max_article.article_no.split("-")[-1]) + 1
     else:

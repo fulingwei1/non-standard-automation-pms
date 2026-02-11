@@ -132,13 +132,13 @@ class RemindersMixin:
 
         # 使用统一通知服务发送提醒
         try:
-            from app.services.unified_notification_service import get_notification_service
+            from app.services.notification_dispatcher import NotificationDispatcher
             from app.services.channel_handlers.base import (
                 NotificationRequest,
                 NotificationPriority as UnifiedPriority,
             )
 
-            unified_service = get_notification_service(db)
+            dispatcher = NotificationDispatcher(db)
             for reminder in reminders:
                 try:
                     # 确定通知优先级
@@ -158,7 +158,7 @@ class RemindersMixin:
                         priority=priority,
                         extra_data={'reminder': reminder},
                     )
-                    result = unified_service.send_notification(request)
+                    result = dispatcher.send_notification_request(request)
                     if result.get("success"):
                         sent_count += 1
                     else:

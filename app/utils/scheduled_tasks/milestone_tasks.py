@@ -6,6 +6,7 @@
 import logging
 from datetime import date, datetime, timedelta
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.base import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
@@ -112,12 +113,19 @@ def check_milestone_risk_alerts():
                 # 如果逾期比例超过30%，生成风险预警
                 if risk_ratio >= 0.3:
                     # 检查是否已有预警
-                    existing = db.query(AlertRecord).filter(
+                    existing_query = db.query(AlertRecord).filter(
                         AlertRecord.target_type == 'PROJECT',
                         AlertRecord.target_id == project.id,
-                        AlertRecord.alert_title.like('%里程碑风险%'),
                         AlertRecord.status == 'PENDING'
-                    ).first()
+                    )
+                    existing_query = apply_keyword_filter(
+                        existing_query,
+                        AlertRecord,
+                        "里程碑风险",
+                        "alert_title",
+                        use_ilike=False,
+                    )
+                    existing = existing_query.first()
 
                     if not existing:
                         alert_no = f'MR{today.strftime("%Y%m%d")}{str(risk_count + 1).zfill(4)}'

@@ -14,6 +14,7 @@ from typing import Optional, Tuple
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.core.config import settings
 from app.models.acceptance import AcceptanceOrder, AcceptanceReport
 from app.models.user import User
@@ -35,9 +36,15 @@ def generate_report_no(db: Session, report_type: str) -> str:
     today = datetime.now().strftime("%Y%m%d")
     prefix = "FAT" if report_type == "FAT" else "SAT" if report_type == "SAT" else "AR"
 
-    count = db.query(func.count(AcceptanceReport.id)).filter(
-        AcceptanceReport.report_no.like(f"{prefix}-{today}-%")
-    ).scalar() or 0
+    count_query = db.query(func.count(AcceptanceReport.id))
+    count_query = apply_like_filter(
+        count_query,
+        AcceptanceReport,
+        f"{prefix}-{today}-%",
+        "report_no",
+        use_ilike=False,
+    )
+    count = count_query.scalar() or 0
 
     seq = count + 1
     return f"{prefix}-{today}-{seq:03d}"

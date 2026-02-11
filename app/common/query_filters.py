@@ -16,10 +16,97 @@ from sqlalchemy import or_
 ModelType = TypeVar("ModelType")
 
 
+def _normalize_keywords(keyword: Optional[Union[str, Sequence[str]]]) -> List[str]:
+    keywords: List[str] = []
+    if keyword is None:
+        return keywords
+    if isinstance(keyword, str):
+        if keyword.strip():
+            keywords.append(keyword)
+        return keywords
+    if isinstance(keyword, (list, tuple, set)):
+        for item in keyword:
+            if item is None:
+                continue
+            item_str = str(item)
+            if item_str.strip():
+                keywords.append(item_str)
+        return keywords
+    item_str = str(keyword)
+    if item_str.strip():
+        keywords.append(item_str)
+    return keywords
+
+
+def build_keyword_conditions(
+    model: Type[Any],
+    keyword: Optional[Union[str, Sequence[str]]],
+    field_names: Union[str, Sequence[str]],
+    *,
+    use_ilike: bool = True,
+) -> List[Any]:
+    """
+    构建关键词模糊搜索条件（多字段 OR）。
+
+    Returns:
+        条件列表，调用方可自行组合 OR/AND。
+    """
+    keywords = _normalize_keywords(keyword)
+    if not keywords:
+        return []
+
+    names: List[str] = [field_names] if isinstance(field_names, str) else list(field_names)
+    conditions: List[Any] = []
+
+    for kw in keywords:
+        pattern = f"%{kw.strip()}%"
+        for name in names:
+            col = getattr(model, name, None)
+            if col is not None:
+                if use_ilike:
+                    conditions.append(col.ilike(pattern))
+                else:
+                    conditions.append(col.like(pattern))
+
+    return conditions
+
+
+def build_like_conditions(
+    model: Type[Any],
+    pattern: Optional[Union[str, Sequence[str]]],
+    field_names: Union[str, Sequence[str]],
+    *,
+    use_ilike: bool = True,
+) -> List[Any]:
+    """
+    构建自定义 LIKE 模式条件（pattern 可包含通配符）。
+
+    Returns:
+        条件列表，调用方可自行组合 OR/AND。
+    """
+    patterns = _normalize_keywords(pattern)
+    if not patterns:
+        return []
+
+    names: List[str] = [field_names] if isinstance(field_names, str) else list(field_names)
+    conditions: List[Any] = []
+
+    for pat in patterns:
+        for name in names:
+            col = getattr(model, name, None)
+            if col is not None:
+                if use_ilike:
+                    conditions.append(col.ilike(pat))
+                else:
+                    conditions.append(col.like(pat))
+
+    return conditions
+
+
 def apply_keyword_filter(
     query: Query,
     model: Type[Any],
-    keyword: Optional[str],
+    keyword: Optional[Union[str, Sequence[str]]],
     field_names: Union[str, Sequence[str]],
     *,
     use_ilike: bool = True,
@@ -30,7 +117,7 @@ def apply_keyword_filter(
     Args:
         query: 已有查询（如 db.query(Model).filter(...)）。
         model: 模型类，用于取字段。
-        keyword: 关键词；None 或空字符串时不加条件。
+        keyword: 关键词或关键词列表；None 或空字符串时不加条件。
         field_names: 参与搜索的字段名，单个字符串或字符串列表。
         use_ilike: 是否使用 ilike（不区分大小写），默认 True。
 
@@ -43,21 +130,34 @@ def apply_keyword_filter(
         q = apply_pagination(q, offset, limit)
         items = q.all()
     """
-    if not keyword or not keyword.strip():
+    conditions = build_keyword_conditions(
+        model,
+        keyword,
+        field_names,
+        use_ilike=use_ilike,
+    )
+    if not conditions:
         return query
+    return query.filter(or_(*conditions))
 
-    names: List[str] = [field_names] if isinstance(field_names, str) else list(field_names)
-    conditions = []
-    pattern = f"%{keyword.strip()}%"
 
-    for name in names:
-        col = getattr(model, name, None)
-        if col is not None:
-            if use_ilike:
-                conditions.append(col.ilike(pattern))
-            else:
-                conditions.append(col.like(pattern))
-
+def apply_like_filter(
+    query: Query,
+    model: Type[Any],
+    pattern: Optional[Union[str, Sequence[str]]],
+    field_names: Union[str, Sequence[str]],
+    *,
+    use_ilike: bool = True,
+) -> Query:
+    """
+    在已有 Query 上应用自定义 LIKE 模式过滤（pattern 可包含通配符）。
+    """
+    conditions = build_like_conditions(
+        model,
+        pattern,
+        field_names,
+        use_ilike=use_ilike,
+    )
     if not conditions:
         return query
     return query.filter(or_(*conditions))

@@ -18,6 +18,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.crud import BaseCRUDService, SortOrder
+from app.common.query_filters import apply_like_filter
 from app.common.crud.exceptions import raise_already_exists, raise_not_found
 from app.models.enums import InvoiceStatusEnum
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
@@ -223,12 +224,15 @@ class ProjectMilestoneService(
     def _generate_invoice_code(self) -> str:
         today = datetime.now()
         prefix = f"INV-{today.strftime('%y%m%d')}-"
-        max_invoice = (
-            self.db.query(Invoice)
-            .filter(Invoice.invoice_code.like(f"{prefix}%"))
-            .order_by(desc(Invoice.invoice_code))
-            .first()
+        max_invoice_query = self.db.query(Invoice)
+        max_invoice_query = apply_like_filter(
+            max_invoice_query,
+            Invoice,
+            f"{prefix}%",
+            "invoice_code",
+            use_ilike=False,
         )
+        max_invoice = max_invoice_query.order_by(desc(Invoice.invoice_code)).first()
 
         if max_invoice:
             try:

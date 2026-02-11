@@ -4,6 +4,7 @@
 """
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_like_filter
 from app.models.sales import (
     Contract,
     ContractAmendment,
@@ -73,9 +74,15 @@ def generate_contract_code(db: Session) -> str:
 def generate_amendment_no(db: Session, contract_code: str) -> str:
     """生成合同变更编号：{合同编码}-BG{序号}"""
     prefix = f"{contract_code}-BG"
-    count = db.query(ContractAmendment).filter(
-        ContractAmendment.amendment_no.like(f"{prefix}%")
-    ).count()
+    count_query = db.query(ContractAmendment)
+    count_query = apply_like_filter(
+        count_query,
+        ContractAmendment,
+        f"{prefix}%",
+        "amendment_no",
+        use_ilike=False,
+    )
+    count = count_query.count()
     seq = count + 1
     return f"{prefix}{seq:03d}"
 

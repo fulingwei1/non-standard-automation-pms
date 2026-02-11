@@ -88,7 +88,7 @@ class AssemblyKitOptimizer:
 
         # 查找该物料的采购订单
         po_items = db.query(PurchaseOrderItem).join(
-            PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+            PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id
         ).filter(
             PurchaseOrderItem.material_id == shortage.material_id,
             PurchaseOrder.status.in_(['APPROVED', 'PARTIAL_RECEIVED']),
@@ -159,7 +159,7 @@ class AssemblyKitOptimizer:
 
                 # 检查采购订单
                 po_items = db.query(PurchaseOrderItem).join(
-                    PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+                    PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id
                 ).filter(
                     PurchaseOrderItem.material_id == sub_material_id,
                     PurchaseOrder.status.in_(['APPROVED', 'PARTIAL_RECEIVED']),
@@ -226,7 +226,7 @@ class AssemblyKitOptimizer:
 
         # 查找采购订单
         po_items = db.query(PurchaseOrderItem).join(
-            PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
+            PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id
         ).filter(
             PurchaseOrderItem.material_id == shortage.material_id,
             PurchaseOrder.status == 'APPROVED',

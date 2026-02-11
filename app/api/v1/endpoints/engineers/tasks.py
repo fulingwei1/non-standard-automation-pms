@@ -136,10 +136,10 @@ def create_task(
         db.add(approval_workflow)
 
         # 发送通知给PM
-        from app.services.unified_notification_service import get_notification_service
+        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
         try:
-            unified_service = get_notification_service(db)
+            dispatcher = NotificationDispatcher(db)
             request = NotificationRequest(
                 recipient_id=project.pm_id,
                 notification_type="TASK_ASSIGNED",
@@ -151,7 +151,7 @@ def create_task(
                 source_id=new_task.id,
                 link_url=f"/engineers/tasks/{new_task.id}",
             )
-            unified_service.send_notification(request)
+            dispatcher.send_notification_request(request)
         except Exception:
             # 通知失败不影响主流程
             logger.warning("任务创建审批通知发送失败，不影响主流程", exc_info=True)

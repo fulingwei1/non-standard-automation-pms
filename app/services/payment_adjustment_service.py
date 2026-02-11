@@ -13,10 +13,10 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
-from app.models.notification import Notification
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice
 from app.models.user import User
+from app.services.notification_dispatcher import NotificationDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -328,17 +328,17 @@ class PaymentAdjustmentService:
             )
 
             # 创建通知记录
+            dispatcher = NotificationDispatcher(self.db)
             for user_id in recipient_ids:
-                notification = Notification(
-                    user_id=user_id,
+                dispatcher.create_system_notification(
+                    recipient_id=user_id,
+                    notification_type="PAYMENT_ADJUSTMENT",
                     title="收款计划调整通知",
                     content=notification_content,
-                    notification_type="PAYMENT_ADJUSTMENT",
                     source_type="payment_plan",
                     source_id=adjusted_plans[0]["plan_id"] if adjusted_plans else None,
-                    is_read=False,
+                    priority="NORMAL",
                 )
-                self.db.add(notification)
 
             self.db.commit()
             logger.info(f"已发送收款计划调整通知给 {len(recipient_ids)} 个用户")

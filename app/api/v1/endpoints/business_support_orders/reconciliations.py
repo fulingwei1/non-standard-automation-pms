@@ -362,16 +362,26 @@ async def send_reconciliation(
         # 查找财务部门和销售部门的相关人员发送通知
 
         # 查找财务部门用户
-        finance_users = db.query(User).filter(
-            User.department.like("%财务%"),
-            User.is_active == True
-        ).all()
+        finance_query = db.query(User).filter(User.is_active == True)
+        finance_query = apply_keyword_filter(
+            finance_query,
+            User,
+            "财务",
+            "department",
+            use_ilike=False,
+        )
+        finance_users = finance_query.all()
 
         # 查找销售部门用户
-        sales_users = db.query(User).filter(
-            User.department.like("%销售%"),
-            User.is_active == True
-        ).all()
+        sales_query = db.query(User).filter(User.is_active == True)
+        sales_query = apply_keyword_filter(
+            sales_query,
+            User,
+            "销售",
+            "department",
+            use_ilike=False,
+        )
+        sales_users = sales_query.all()
 
         # 合并去重
         notified_user_ids = set()

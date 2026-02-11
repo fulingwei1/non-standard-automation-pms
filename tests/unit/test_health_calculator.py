@@ -155,8 +155,6 @@ class TestBatchCalculate:
         query.count.return_value = 1
         query.offset.return_value.limit.return_value.all.return_value = [project]
         db.query.return_value.filter.return_value = query
-        db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
         result = calc.batch_calculate()
         assert result['total'] == 1
 

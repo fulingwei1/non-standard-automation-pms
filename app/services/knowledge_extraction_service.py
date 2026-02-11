@@ -9,6 +9,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.issue import SolutionTemplate
 from app.models.service import KnowledgeBase, ServiceTicket
 from app.utils.number_generator import generate_sequential_no
@@ -39,9 +40,17 @@ def auto_extract_knowledge_from_ticket(
         return None
 
     # 检查是否已经提取过知识（通过标题或内容匹配）
-    existing = db.query(KnowledgeBase).filter(
-        KnowledgeBase.title.like(f"%{ticket.ticket_no}%")
-    ).first()
+    existing = None
+    if ticket.ticket_no:
+        existing_query = db.query(KnowledgeBase)
+        existing_query = apply_keyword_filter(
+            existing_query,
+            KnowledgeBase,
+            ticket.ticket_no,
+            "title",
+            use_ilike=False,
+        )
+        existing = existing_query.first()
     if existing:
         return existing
 
@@ -133,9 +142,17 @@ def create_solution_template_from_ticket(
         return None
 
     # 检查是否已存在模板
-    existing = db.query(SolutionTemplate).filter(
-        SolutionTemplate.template_code.like(f"%{ticket.ticket_no}%")
-    ).first()
+    existing = None
+    if ticket.ticket_no:
+        existing_query = db.query(SolutionTemplate)
+        existing_query = apply_keyword_filter(
+            existing_query,
+            SolutionTemplate,
+            ticket.ticket_no,
+            "template_code",
+            use_ilike=False,
+        )
+        existing = existing_query.first()
     if existing:
         return existing
 

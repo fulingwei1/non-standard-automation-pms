@@ -94,8 +94,8 @@ class TestCleanPhone:
 
 
 class TestGenerateEmployeeCode:
-    @patch('app.services.employee_import_service.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.services.employee_import_service.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
+    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
     def test_generate(self):
         existing = set()
         code = generate_employee_code(1, existing)

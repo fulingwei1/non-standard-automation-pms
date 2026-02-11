@@ -11,6 +11,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_like_filter
 from app.core import security
 from app.models.material import BomHeader, BomItem
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem
@@ -26,9 +27,15 @@ def generate_pr_no(db: Session) -> str:
     prefix = f"PR-{today}-"
 
     # 查询当天最大编号
-    last_request = db.query(PurchaseRequest).filter(
-        PurchaseRequest.request_no.like(f"{prefix}%")
-    ).order_by(PurchaseRequest.request_no.desc()).first()
+    last_request_query = db.query(PurchaseRequest)
+    last_request_query = apply_like_filter(
+        last_request_query,
+        PurchaseRequest,
+        f"{prefix}%",
+        "request_no",
+        use_ilike=False,
+    )
+    last_request = last_request_query.order_by(PurchaseRequest.request_no.desc()).first()
 
     if last_request:
         last_no = int(last_request.request_no.split("-")[-1])

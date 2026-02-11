@@ -13,6 +13,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_like_filter
 from app.core import security
 from app.models.task_center import TaskOperationLog
 from app.models.user import User
@@ -34,7 +35,13 @@ def get_batch_operation_statistics(
     """
     query = db.query(TaskOperationLog).filter(
         TaskOperationLog.operator_id == current_user.id,
-        TaskOperationLog.operation_type.like("BATCH_%")
+    )
+    query = apply_like_filter(
+        query,
+        TaskOperationLog,
+        "BATCH_%",
+        "operation_type",
+        use_ilike=False,
     )
 
     if start_date:

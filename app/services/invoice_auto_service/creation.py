@@ -9,6 +9,7 @@ from typing import Any, Dict
 
 from sqlalchemy import desc
 
+from app.common.query_filters import apply_like_filter
 from app.models.acceptance import AcceptanceOrder
 from app.models.business_support import InvoiceRequest
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
@@ -65,12 +66,15 @@ def create_invoice_request(
     today = datetime.now()
     month_str = today.strftime("%y%m")
     prefix = f"IR{month_str}-"
-    max_request = (
-        service.db.query(InvoiceRequest)
-        .filter(InvoiceRequest.request_no.like(f"{prefix}%"))
-        .order_by(desc(InvoiceRequest.request_no))
-        .first()
+    max_request_query = service.db.query(InvoiceRequest)
+    max_request_query = apply_like_filter(
+        max_request_query,
+        InvoiceRequest,
+        f"{prefix}%",
+        "request_no",
+        use_ilike=False,
     )
+    max_request = max_request_query.order_by(desc(InvoiceRequest.request_no)).first()
     if max_request:
         try:
             seq = int(max_request.request_no.split("-")[-1]) + 1
@@ -164,12 +168,15 @@ def create_invoice_directly(
     today = datetime.now()
     month_str = today.strftime("%y%m")
     prefix = f"INV{month_str}-"
-    max_invoice = (
-        service.db.query(Invoice)
-        .filter(Invoice.invoice_code.like(f"{prefix}%"))
-        .order_by(desc(Invoice.invoice_code))
-        .first()
+    max_invoice_query = service.db.query(Invoice)
+    max_invoice_query = apply_like_filter(
+        max_invoice_query,
+        Invoice,
+        f"{prefix}%",
+        "invoice_code",
+        use_ilike=False,
     )
+    max_invoice = max_invoice_query.order_by(desc(Invoice.invoice_code)).first()
     if max_invoice:
         try:
             seq = int(max_invoice.invoice_code.split("-")[-1]) + 1

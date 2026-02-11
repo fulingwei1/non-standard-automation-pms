@@ -13,7 +13,7 @@ from app.models.ecn import Ecn, EcnTask
 from app.models.project import ProjectMember
 from app.models.user import User
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -53,7 +53,7 @@ def notify_task_assigned(
     if task.planned_end and task.planned_end < datetime.now().date():
         priority = NotificationPriority.URGENT
 
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     request = NotificationRequest(
         recipient_id=assignee_id,
         notification_type="ECN_TASK_ASSIGNED",
@@ -74,7 +74,7 @@ def notify_task_assigned(
             "planned_end": task.planned_end.isoformat() if task.planned_end else None,
         },
     )
-    unified_service.send_notification(request)
+    dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目，且执行人员不是项目成员）
     if ecn.project_id:
@@ -99,7 +99,7 @@ def notify_task_assigned(
             title_cc = f"ECN执行任务分配（抄送）：{ecn.ecn_no}"
             content_cc = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已分配给{assignee_names}。\n\nECN标题：{ecn.ecn_title}\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n责任部门：{task.task_dept}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}\n\n请关注项目变更执行情况。"
 
-            unified_service = get_notification_service(db)
+            dispatcher = NotificationDispatcher(db)
             for user_id in project_user_ids:
                 request = NotificationRequest(
                     recipient_id=user_id,
@@ -125,7 +125,7 @@ def notify_task_assigned(
                         "is_cc": True,  # 标记为抄送
                     },
                 )
-                unified_service.send_notification(request)
+            dispatcher.send_notification_request(request)
 
 
 def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
@@ -134,7 +134,7 @@ def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
     通知ECN申请人、项目相关人员和其他相关人员
     """
     # 通知申请人
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     if ecn.applicant_id:
         title = f"ECN执行任务完成：{ecn.ecn_no}"
         content = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已完成。\n\n完成说明：{task.completion_note or '无'}"
@@ -155,7 +155,7 @@ def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
                 "task_name": task.task_name,
             },
         )
-        unified_service.send_notification(request)
+    dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:

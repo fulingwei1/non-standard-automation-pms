@@ -83,8 +83,9 @@ class TestCreateInvoiceDirectly:
         assert result["success"] is False
 
     @patch("app.services.invoice_auto_service.creation.desc")
+    @patch("app.services.invoice_auto_service.creation.apply_like_filter", side_effect=lambda q, *a, **kw: q)
     @patch("app.services.invoice_auto_service.creation.Invoice")
-    def test_happy_path(self, mock_invoice_cls, mock_desc):
+    def test_happy_path(self, mock_invoice_cls, mock_like, mock_desc):
         from app.services.invoice_auto_service.creation import create_invoice_directly
         service = MagicMock()
         plan = MagicMock()

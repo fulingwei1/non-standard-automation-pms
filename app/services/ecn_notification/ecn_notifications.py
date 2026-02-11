@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.ecn import Ecn
 from app.models.project import ProjectMember
 
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel,
@@ -27,7 +27,7 @@ def notify_ecn_submitted(
     通知ECN提交
     通知申请人、项目相关人员和其他相关人员
     """
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     # 通知申请人确认提交
     if ecn.applicant_id:
         title = f"ECN已提交：{ecn.ecn_no}"
@@ -48,7 +48,7 @@ def notify_ecn_submitted(
                 "ecn_title": ecn.ecn_title
             }
         )
-        unified_service.send_notification(request)
+        dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
@@ -82,7 +82,7 @@ def notify_ecn_submitted(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)
 
 
 def notify_overdue_alert(
@@ -93,7 +93,7 @@ def notify_overdue_alert(
     """
     通知超时提醒（使用统一通知服务）
     """
-    unified_service = get_notification_service(db)
+    dispatcher = NotificationDispatcher(db)
     priority = NotificationPriority.URGENT if alert.get('overdue_days', 0) > 7 else NotificationPriority.HIGH
     
     for user_id in user_ids:
@@ -116,4 +116,4 @@ def notify_overdue_alert(
                 "ecn_no": alert.get('ecn_no')
             }
         )
-        unified_service.send_notification(request)
+        dispatcher.send_notification_request(request)

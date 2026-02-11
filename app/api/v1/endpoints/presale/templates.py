@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
+from app.common.query_filters import apply_keyword_filter, apply_like_filter
 from app.core import security
 from app.common.pagination import get_pagination_query, PaginationParams
 from app.models.presale import (
@@ -115,12 +116,15 @@ def create_template(
     """
     # 生成模板编号
     today = datetime.now().strftime("%y%m%d")
-    max_template = (
-        db.query(PresaleSolutionTemplate)
-        .filter(PresaleSolutionTemplate.template_no.like(f"TMP-{today}-%"))
-        .order_by(desc(PresaleSolutionTemplate.template_no))
-        .first()
+    max_template_query = db.query(PresaleSolutionTemplate)
+    max_template_query = apply_like_filter(
+        max_template_query,
+        PresaleSolutionTemplate,
+        f"TMP-{today}-%",
+        "template_no",
+        use_ilike=False,
     )
+    max_template = max_template_query.order_by(desc(PresaleSolutionTemplate.template_no)).first()
     if max_template:
         seq = int(max_template.template_no.split("-")[-1]) + 1
     else:
@@ -305,13 +309,18 @@ def get_template_stats(
     template_stats = []
     for template in templates:
         # 统计该模板在此时间段内创建方案的数量
-        solutions_count = db.query(PresaleSolution).filter(
+        solutions_query = db.query(PresaleSolution).filter(
             PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
             PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-        ).filter(
-            # 通过方案名称或内容匹配模板（简化实现，实际可以通过关联字段）
-            PresaleSolution.solution_overview.like(f"%{template.name}%")
-        ).count()
+        )
+        solutions_query = apply_keyword_filter(
+            solutions_query,
+            PresaleSolution,
+            template.name,
+            "solution_overview",
+            use_ilike=False,
+        )
+        solutions_count = solutions_query.count()
 
         # 计算复用率（使用次数 / 总方案数）
         total_solutions = db.query(PresaleSolution).filter(
@@ -350,6 +359,4 @@ def get_template_stats(
             }
         }
     )
-
-
 

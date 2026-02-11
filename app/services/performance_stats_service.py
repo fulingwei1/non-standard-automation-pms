@@ -135,7 +135,7 @@ class PerformanceStatsService:
             return {'error': '部门不存在'}
 
         # 获取部门成员
-        users = self.db.query(User).filter(User.department_id == department_id).all()
+        users = self.db.query(User).filter(User.department == department.name).all()
         user_ids = [u.id for u in users]
 
         if not user_ids:

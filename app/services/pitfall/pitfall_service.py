@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
-from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.common.query_filters import apply_keyword_filter, apply_pagination, apply_like_filter
 from app.models.pitfall import Pitfall
 
 
@@ -29,12 +29,15 @@ class PitfallService:
         prefix = f"PF{today.strftime('%y%m%d')}"
 
         # 查询今天最后一条记录
-        last_pitfall = (
-            self.db.query(Pitfall)
-            .filter(Pitfall.pitfall_no.like(f"{prefix}%"))
-            .order_by(desc(Pitfall.pitfall_no))
-            .first()
+        last_pitfall_query = self.db.query(Pitfall)
+        last_pitfall_query = apply_like_filter(
+            last_pitfall_query,
+            Pitfall,
+            f"{prefix}%",
+            "pitfall_no",
+            use_ilike=False,
         )
+        last_pitfall = last_pitfall_query.order_by(desc(Pitfall.pitfall_no)).first()
 
         if last_pitfall:
             # 提取序号并+1

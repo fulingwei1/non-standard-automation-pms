@@ -11,9 +11,6 @@ from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord
-from app.models.notification import Notification
-from app.models.user import User
-
 logger = logging.getLogger(__name__)
 
 
@@ -160,18 +157,42 @@ class AlertEscalationService:
             new_level: 新级别
         """
         try:
-            notification = Notification(
-                user_id=None,  # 发给系统管理员
-                title=f'预警已升级: {alert.alert_title}',
-                content=f'预警 "{alert.alert_title}" 因超时未处理，已从 {old_level} 升级至 {new_level}。\n'
-                        f'预警内容: {alert.alert_content[:200]}...',
-                notification_type='alert_escalation',
-                priority='high' if new_level == 'CRITICAL' else 'normal',
-                is_read=False,
-                source_type='alert_record',
-                source_id=alert.id
-            )
-            self.db.add(notification)
+            from types import SimpleNamespace
+            from app.services.notification_service import AlertNotificationService
 
+            recipient_ids = []
+            for attr in ("handler_id", "escalated_to", "acknowledged_by", "created_by", "updated_by"):
+                value = getattr(alert, attr, None)
+                if value:
+                    recipient_ids.append(value)
+            if getattr(alert, "project", None) and getattr(alert.project, "pm_id", None):
+                recipient_ids.append(alert.project.pm_id)
+
+            recipient_ids = list(dict.fromkeys(recipient_ids))
+            if not recipient_ids:
+                return
+
+            title = f"预警已升级: {alert.alert_title}"
+            content = (
+                f'预警 "{alert.alert_title}" 因超时未处理，已从 {old_level} 升级至 {new_level}。\n'
+                f'预警内容: {alert.alert_content[:200]}...'
+            )
+            alert_payload = SimpleNamespace(
+                id=alert.id,
+                alert_title=title,
+                alert_content=content,
+                alert_level=alert.alert_level,
+                alert_no=alert.alert_no,
+                target_type=alert.target_type,
+                target_name=alert.target_name,
+            )
+
+            service = AlertNotificationService(self.db)
+            service.send_alert_notification(
+                alert=alert_payload,
+                user_ids=recipient_ids,
+                channels=["SYSTEM"],
+                force_send=True,
+            )
         except Exception as e:
             logger.error(f"发送升级通知失败: {e}")
