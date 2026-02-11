@@ -13,6 +13,7 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.progress import Task
 from app.models.project import Project
@@ -56,9 +57,7 @@ def export_task_list(
         query = query.filter(Task.status == filters["status"])
     if filters.get("owner_id"):
         query = query.filter(Task.owner_id == filters["owner_id"])
-    if filters.get("keyword"):
-        keyword = filters["keyword"]
-        query = query.filter(Task.task_name.contains(keyword))
+    query = apply_keyword_filter(query, Task, filters.get("keyword"), "task_name")
 
     scoped_project_query = db.query(Project.id)
     if filters.get("project_id"):

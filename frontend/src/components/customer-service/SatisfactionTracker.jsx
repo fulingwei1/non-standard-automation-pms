@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Table, Rate, Typography } from 'antd';
-import { CHART_COLORS } from './customerServiceConstants';
+import { CHART_COLORS } from '../../lib/constants/service';
 
 const { Text } = Typography;
 

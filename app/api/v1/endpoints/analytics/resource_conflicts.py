@@ -22,6 +22,7 @@ from app.models.project import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -128,8 +129,7 @@ def get_all_conflicts(
     db: Session = Depends(get_db),
     severity: Optional[str] = Query(None, description="严重程度筛选"),
     include_resolved: bool = Query(False),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -146,7 +146,7 @@ def get_all_conflicts(
     conflicts = query.order_by(
         ResourceConflict.severity.desc(),
         ResourceConflict.overlap_start,
-    ).offset(skip).limit(limit).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     result = [_format_conflict(db, c) for c in conflicts]
 

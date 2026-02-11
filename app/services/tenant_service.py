@@ -12,6 +12,8 @@ from typing import Any, Dict, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core.security import get_password_hash
 from app.models.tenant import Tenant, TenantStatus, TenantPlan
 from app.models.user import Role, RoleTemplate, User, UserRole
@@ -98,21 +100,20 @@ class TenantService:
         if status:
             query = query.filter(Tenant.status == status)
 
-        if keyword:
-            query = query.filter(
-                (Tenant.tenant_code.ilike(f"%{keyword}%")) |
-                (Tenant.tenant_name.ilike(f"%{keyword}%"))
-            )
+        query = apply_keyword_filter(query, Tenant, keyword, ["tenant_code", "tenant_name"])
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.order_by(Tenant.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+        query = query.order_by(Tenant.created_at.desc())
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return {
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total),
         }
 
     def update_tenant(self, tenant_id: int, tenant_in: TenantUpdate) -> Optional[Tenant]:

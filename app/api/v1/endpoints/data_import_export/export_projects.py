@@ -13,6 +13,7 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.project import Project
 from app.models.user import User
@@ -48,15 +49,7 @@ def export_project_list(
     query = db.query(Project).filter(Project.is_active == True)
 
     filters = export_in.filters or {}
-    if filters.get("keyword"):
-        keyword = filters["keyword"]
-        query = query.filter(
-            or_(
-                Project.project_name.contains(keyword),
-                Project.project_code.contains(keyword),
-                Project.contract_no.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, Project, filters.get("keyword"), ["project_name", "project_code", "contract_no"])
     if filters.get("customer_id"):
         query = query.filter(Project.customer_id == filters["customer_id"])
     if filters.get("stage"):

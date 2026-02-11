@@ -6,6 +6,8 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_pagination
 from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTask
 
 from .core import ApprovalEngineCore
@@ -44,13 +46,15 @@ class ApprovalQueryMixin:
             .order_by(ApprovalTask.created_at.desc())
         )
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        tasks = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        tasks = query.all()
 
         return {
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "items": tasks,
         }
 
@@ -71,13 +75,15 @@ class ApprovalQueryMixin:
 
         query = query.order_by(ApprovalInstance.created_at.desc())
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        instances = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        instances = query.all()
 
         return {
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "items": instances,
         }
 
@@ -98,13 +104,15 @@ class ApprovalQueryMixin:
 
         query = query.order_by(ApprovalCarbonCopy.created_at.desc())
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        records = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        records = query.all()
 
         return {
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "items": records,
         }
 

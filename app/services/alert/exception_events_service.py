@@ -7,9 +7,10 @@ from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.alert import (
     ExceptionAction,
     ExceptionEscalation,
@@ -54,13 +55,12 @@ class ExceptionEventsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    ExceptionEvent.title.ilike(f"%{keyword}%"),
-                    ExceptionEvent.description.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            ExceptionEvent,
+            keyword,
+            ["title", "description"],
+        )
 
         # 筛选条件
         if severity:
@@ -85,13 +85,16 @@ class ExceptionEventsService:
         query = query.order_by(ExceptionEvent.occurred_at.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[ExceptionEventResponse.model_validate(item) for item in items]
         )
 

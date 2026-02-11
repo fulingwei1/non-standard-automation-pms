@@ -21,6 +21,7 @@ from app.schemas.organization import (
     EmployeeWithHrProfileResponse,
 )
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 router = APIRouter()
 
@@ -38,14 +39,7 @@ def get_hr_profiles(
 
     query = db.query(Employee).outerjoin(EmployeeHrProfile)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                Employee.name.contains(keyword),
-                Employee.employee_code.contains(keyword),
-                Employee.department.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, Employee, keyword, ["name", "employee_code", "department"])
 
     if dept_level1:
         query = query.filter(EmployeeHrProfile.dept_level1 == dept_level1)

@@ -19,6 +19,7 @@ from app.schemas.strategy import (
     StrategyUpdate,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -56,21 +57,20 @@ def create_strategy(
 def list_strategies(
     year: Optional[int] = Query(None, description="年度筛选"),
     status_filter: Optional[str] = Query(None, alias="status", description="状态筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
     获取战略列表
     """
     items, total = strategy_service.list_strategies(
-        db, year=year, status=status_filter, skip=skip, limit=limit
+        db, year=year, status=status_filter, skip=pagination.offset, limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

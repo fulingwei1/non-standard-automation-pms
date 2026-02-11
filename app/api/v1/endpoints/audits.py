@@ -121,7 +121,7 @@ def read_audits(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=(total + page_size - 1) // page_size
+        pages=pagination.pages_for_total(total)
     )
 
 

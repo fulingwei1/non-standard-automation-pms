@@ -161,7 +161,7 @@ def get_lost_project_expenses(
 
     # 分页
     total = len(result['expenses'])
-    paginated_expenses = result['expenses'][offset:offset + page_size]
+    paginated_expenses = result['expenses'][pagination.offset:pagination.offset + pagination.limit]
 
     return ResponseModel(
         code=200,
@@ -169,9 +169,9 @@ def get_lost_project_expenses(
         data={
             'items': paginated_expenses,
             'total': total,
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (total + page_size - 1) // page_size,
+            'page': pagination.page,
+            'page_size': pagination.page_size,
+            'total_pages': pagination.pages_for_total(total),
             'summary': {
                 'total_amount': result['total_amount'],
                 'total_hours': result['total_hours']

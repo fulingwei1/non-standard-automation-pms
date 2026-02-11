@@ -25,6 +25,7 @@ from app.schemas.strategy import (
     TraceToStrategyResponse,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -51,8 +52,7 @@ def list_department_objectives(
     strategy_id: Optional[int] = Query(None, description="战略 ID 筛选"),
     department_id: Optional[int] = Query(None, description="部门 ID 筛选"),
     year: Optional[int] = Query(None, description="年度筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -63,14 +63,14 @@ def list_department_objectives(
         strategy_id=strategy_id,
         department_id=department_id,
         year=year,
-        skip=skip,
-        limit=limit
+        skip=pagination.offset,
+        limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 
@@ -164,8 +164,7 @@ def list_personal_kpis(
     dept_objective_id: Optional[int] = Query(None, description="部门目标 ID 筛选"),
     year: Optional[int] = Query(None, description="年度筛选"),
     period: Optional[str] = Query(None, description="周期筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -177,14 +176,14 @@ def list_personal_kpis(
         dept_objective_id=dept_objective_id,
         year=year,
         period=period,
-        skip=skip,
-        limit=limit
+        skip=pagination.offset,
+        limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 
@@ -192,8 +191,7 @@ def list_personal_kpis(
 def list_my_personal_kpis(
     year: Optional[int] = Query(None, description="年度筛选"),
     period: Optional[str] = Query(None, description="周期筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_user),
 ):
@@ -205,14 +203,14 @@ def list_my_personal_kpis(
         user_id=current_user.id,
         year=year,
         period=period,
-        skip=skip,
-        limit=limit
+        skip=pagination.offset,
+        limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

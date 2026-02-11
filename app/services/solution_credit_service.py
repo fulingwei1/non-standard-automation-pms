@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.user import SolutionCreditConfig, SolutionCreditTransaction, User
 
 
@@ -327,10 +329,11 @@ class SolutionCreditService:
         if transaction_type:
             query = query.filter(SolutionCreditTransaction.transaction_type == transaction_type)
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        transactions = query.order_by(
-            desc(SolutionCreditTransaction.created_at)
-        ).offset((page - 1) * page_size).limit(page_size).all()
+        query = query.order_by(desc(SolutionCreditTransaction.created_at))
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        transactions = query.all()
 
         return transactions, total
 
@@ -348,15 +351,12 @@ class SolutionCreditService:
         """
         query = self.db.query(User).filter(User.is_active == True)
 
-        if search:
-            query = query.filter(
-                (User.username.contains(search)) |
-                (User.real_name.contains(search)) |
-                (User.employee_no.contains(search))
-            )
+        query = apply_keyword_filter(query, User, search, ["username", "real_name", "employee_no"])
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        users = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        users = query.all()
 
         generate_cost = self.get_config("GENERATE_COST")
         result = []

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.bonus import BonusAllocationSheet
 from app.models.user import User
@@ -31,8 +32,7 @@ def get_allocation_sheet_rows(
     db: Session = Depends(deps.get_db),
     sheet_id: int,
     row_type: str = Query("valid", description="数据类型：valid 或 error"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(50, ge=1, le=200, description="每页条数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -79,13 +79,13 @@ def get_allocation_sheet_rows(
                     ).model_dump()
                 )
 
-        page_items, total, pages = paginate_items(valid_rows, page, page_size)
+        page_items, total, pages = paginate_items(valid_rows, pagination.page, pagination.page_size)
         data = {
             "sheet_id": sheet_id,
             "row_type": normalized_type,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": pages,
             "items": page_items
         }
@@ -105,13 +105,13 @@ def get_allocation_sheet_rows(
             })
 
         error_rows.sort(key=lambda x: x["row_number"])
-        page_items, total, pages = paginate_items(error_rows, page, page_size)
+        page_items, total, pages = paginate_items(error_rows, pagination.page, pagination.page_size)
         data = {
             "sheet_id": sheet_id,
             "row_type": normalized_type,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": pages,
             "items": page_items
         }

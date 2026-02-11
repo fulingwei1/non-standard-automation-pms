@@ -8,10 +8,12 @@ from decimal import Decimal
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.config import settings
 from app.models.material import BomItem, Material, MaterialShortage
@@ -70,14 +72,12 @@ class ShortageAlertsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    MaterialShortage.material_code.ilike(f"%{keyword}%"),
-                    MaterialShortage.material_name.ilike(f"%{keyword}%"),
-                    MaterialShortage.shortage_reason.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            MaterialShortage,
+            keyword,
+            ["material_code", "material_name", "shortage_reason"],
+        )
 
         # 筛选条件
         if severity:
@@ -102,13 +102,16 @@ class ShortageAlertsService:
         query = query.order_by(MaterialShortage.created_at.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[self._format_shortage_alert(item) for item in items]
         )
 
@@ -453,6 +456,38 @@ class ShortageAlertsService:
         }
 
     def _send_notification(self, shortage: MaterialShortage, action: str):
-        """发送通知"""
-        # 集成通知系统
-        pass
+        """发送通知（使用统一通知服务）"""
+        try:
+            from app.services.unified_notification_service import get_notification_service
+            from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
+
+            unified_service = get_notification_service(self.db)
+
+            # 确定接收人（负责人或创建人）
+            recipient_id = getattr(shortage, 'handler_id', None) or getattr(shortage, 'created_by', None)
+            if not recipient_id:
+                return
+
+            action_titles = {
+                "acknowledged": "物料短缺已确认",
+                "resolved": "物料短缺已解决",
+            }
+            title = action_titles.get(action, f"物料短缺状态更新: {action}")
+            material_name = getattr(shortage, 'material_name', '') or getattr(shortage, 'material_code', '')
+            content = f"物料: {material_name}\n状态: {action}"
+
+            request = NotificationRequest(
+                recipient_id=recipient_id,
+                notification_type="SHORTAGE_UPDATE",
+                category="alert",
+                title=title,
+                content=content,
+                priority=NotificationPriority.HIGH,
+                source_type="shortage",
+                source_id=shortage.id,
+                link_url=f"/shortage/{shortage.id}",
+            )
+            unified_service.send_notification(request)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"物料短缺通知发送失败: {e}")

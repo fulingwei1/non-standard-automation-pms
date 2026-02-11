@@ -15,6 +15,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import SalesTeamCreate, SalesTeamUpdate
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 from .utils import build_team_response
 
@@ -41,11 +42,7 @@ def list_sales_teams(
         query = query.filter(SalesTeam.department_id == department_id)
     if is_active is not None:
         query = query.filter(SalesTeam.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            (SalesTeam.team_name.contains(keyword)) |
-            (SalesTeam.team_code.contains(keyword))
-        )
+    query = apply_keyword_filter(query, SalesTeam, keyword, ["team_name", "team_code"])
 
     total = query.count()
     teams = query.order_by(SalesTeam.sort_order, SalesTeam.id).offset(pagination.offset).limit(pagination.limit).all()

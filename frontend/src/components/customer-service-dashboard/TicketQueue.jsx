@@ -52,7 +52,7 @@ import {
   filterTicketsByCustomer as _filterTicketsByCustomer,
   sortByPriority,
   sortByCreateTime } from
-"./customerServiceConstants";
+"../../lib/constants/service";
 
 export function TicketQueue({
   tickets = [],

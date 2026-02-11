@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.issue import Issue, SolutionTemplate
 from app.models.project import Project
 
@@ -112,13 +113,7 @@ class ProjectSolutionService:
         if is_public is not None:
             query = query.filter(SolutionTemplate.is_public == is_public)
 
-        if keyword:
-            query = query.filter(
-                or_(
-                    SolutionTemplate.template_name.contains(keyword),
-                    SolutionTemplate.solution.contains(keyword)
-                )
-            )
+        query = apply_keyword_filter(query, SolutionTemplate, keyword, ["template_name", "solution"])
 
         return query.order_by(
             SolutionTemplate.usage_count.desc(),

@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import desc, func, or_, text
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_pagination
 from app.models.alert import AlertRecord
 from app.models.issue import Issue
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
@@ -402,21 +404,21 @@ class QueryOptimizer:
         Returns:
             包含 items, total, page, page_size, total_pages 的字典
         """
-        if page < 1:
-            page = 1
-        if page_size < 1:
-            page_size = 20
-        if page_size > 500:
-            page_size = 500
-
+        pagination = get_pagination_params(
+            page=page,
+            page_size=page_size,
+            default_page_size=20,
+            max_page_size=500,
+        )
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
-        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
+        total_pages = pagination.pages_for_total(total)
 
         return {
             'items': items,
             'total': total,
-            'page': page,
-            'page_size': page_size,
+            'page': pagination.page,
+            'page_size': pagination.page_size,
             'total_pages': total_pages
         }

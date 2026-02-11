@@ -26,6 +26,7 @@ from app.schemas.project_evaluation import (
 from app.services.project_evaluation_service import ProjectEvaluationService
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 
 def filter_by_status(query, status: str):
@@ -199,12 +200,7 @@ def list_project_evaluations(
         query = query.filter(ProjectEvaluation.status == status)
     
     # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                ProjectEvaluation.evaluation_note.ilike(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, ProjectEvaluation, keyword, "evaluation_note")
     
     # 排序
     order_field = getattr(ProjectEvaluation, order_by or "evaluation_date", None)

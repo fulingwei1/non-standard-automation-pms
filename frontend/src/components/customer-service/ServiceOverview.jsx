@@ -26,7 +26,7 @@ import {
   SATISFACTION_LEVELS,
   PERFORMANCE_METRICS,
   CHART_COLORS } from
-'./customerServiceConstants';
+'../../lib/constants/service';
 
 const ServiceOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('today');

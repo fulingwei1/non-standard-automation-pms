@@ -17,6 +17,7 @@ from app.models.pmo import PmoProjectRisk
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -39,8 +40,7 @@ RISK_LEVEL_MATRIX = {
 def get_project_risks(
     project_id: int,
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     risk_level: Optional[str] = Query(None, description="风险等级"),
     status: Optional[str] = Query(None, description="状态"),
     risk_category: Optional[str] = Query(None, description="风险类别"),
@@ -72,7 +72,7 @@ def get_project_risks(
         query = query.filter(PmoProjectRisk.risk_category == risk_category)
 
     total = query.count()
-    risks = query.order_by(desc(PmoProjectRisk.created_at)).offset(skip).limit(limit).all()
+    risks = query.order_by(desc(PmoProjectRisk.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     risks_data = [{
         "id": r.id,

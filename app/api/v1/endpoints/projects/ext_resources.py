@@ -17,6 +17,7 @@ from app.models.pmo import PmoResourceAllocation
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -25,8 +26,7 @@ router = APIRouter()
 def get_project_resources(
     project_id: int,
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态"),
     resource_role: Optional[str] = Query(None, description="角色"),
     current_user: User = Depends(security.get_current_active_user),
@@ -54,7 +54,7 @@ def get_project_resources(
         query = query.filter(PmoResourceAllocation.resource_role == resource_role)
 
     total = query.count()
-    resources = query.order_by(PmoResourceAllocation.start_date).offset(skip).limit(limit).all()
+    resources = query.order_by(PmoResourceAllocation.start_date).offset(pagination.offset).limit(pagination.limit).all()
 
     resources_data = [{
         "id": r.id,

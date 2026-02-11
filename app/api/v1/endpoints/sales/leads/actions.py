@@ -13,6 +13,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.enums import LeadStatusEnum
 from app.models.sales import Lead, LeadFollowUp
@@ -162,8 +163,7 @@ def export_leads(
     )
 
     query = db.query(Lead)
-    if keyword:
-        query = query.filter(or_(Lead.lead_code.contains(keyword), Lead.customer_name.contains(keyword), Lead.contact_name.contains(keyword)))
+    query = apply_keyword_filter(query, Lead, keyword, ["lead_code", "customer_name", "contact_name"])
     if status:
         query = query.filter(Lead.status == status)
     if owner_id:

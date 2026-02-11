@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { PurchaseOrderUtils, ORDER_STATUS_CONFIGS } from "./purchaseOrdersConstants";
+import { PurchaseOrderUtils, ORDER_STATUS_CONFIGS } from "../purchase/orders/purchaseOrderConstants";
 
 export default function PurchaseOrdersOverview({ orders = [] }) {
   // 计算统计数据

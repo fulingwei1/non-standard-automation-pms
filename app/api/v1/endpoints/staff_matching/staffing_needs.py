@@ -14,6 +14,7 @@ from app.models.project import Project
 from app.models.staff_matching import MesProjectStaffingNeed
 from app.models.user import User
 from app.schemas import staff_matching as schemas
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -23,8 +24,7 @@ def list_staffing_needs(
     project_id: Optional[int] = Query(None, description="项目ID"),
     status: Optional[str] = Query(None, description="状态筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
@@ -41,7 +41,7 @@ def list_staffing_needs(
     needs = query.order_by(
         MesProjectStaffingNeed.priority,
         MesProjectStaffingNeed.created_at.desc()
-    ).offset(skip).limit(limit).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for need in needs:

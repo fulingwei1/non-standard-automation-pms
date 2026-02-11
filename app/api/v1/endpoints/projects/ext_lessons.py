@@ -12,10 +12,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.project_review import ProjectLesson
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -24,8 +26,7 @@ router = APIRouter()
 def get_project_lessons(
     project_id: int,
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     lesson_type: Optional[str] = Query(None, description="类型：SUCCESS/FAILURE"),
     category: Optional[str] = Query(None, description="分类"),
     status: Optional[str] = Query(None, description="状态"),
@@ -57,7 +58,7 @@ def get_project_lessons(
         query = query.filter(ProjectLesson.status == status)
 
     total = query.count()
-    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(skip).limit(limit).all()
+    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     lessons_data = [{
         "id": l.id,
@@ -252,8 +253,7 @@ def search_lessons(
     keyword: str = Query(..., min_length=1, description="搜索关键词"),
     lesson_type: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -272,11 +272,8 @@ def search_lessons(
     Returns:
         ResponseModel: 搜索结果
     """
-    query = db.query(ProjectLesson).filter(
-        (ProjectLesson.title.contains(keyword)) |
-        (ProjectLesson.description.contains(keyword)) |
-        (ProjectLesson.improvement_action.contains(keyword))
-    )
+    query = db.query(ProjectLesson)
+    query = apply_keyword_filter(query, ProjectLesson, keyword, ["title", "description", "improvement_action"])
 
     if lesson_type:
         query = query.filter(ProjectLesson.lesson_type == lesson_type)
@@ -284,7 +281,7 @@ def search_lessons(
         query = query.filter(ProjectLesson.category == category)
 
     total = query.count()
-    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(skip).limit(limit).all()
+    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     results = [{
         "id": l.id,

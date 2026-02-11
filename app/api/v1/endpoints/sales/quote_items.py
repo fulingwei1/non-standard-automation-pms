@@ -13,6 +13,7 @@ from app.core import security
 from app.models.sales import QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -21,8 +22,7 @@ router = APIRouter()
 def get_quote_items(
     quote_version_id: int,
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_active_user),
 ):
     """
@@ -49,7 +49,7 @@ def get_quote_items(
         # 查询明细列表
         items = db.query(QuoteItem).filter(
             QuoteItem.quote_version_id == quote_version_id
-        ).order_by(QuoteItem.id).offset(skip).limit(limit).all()
+        ).order_by(QuoteItem.id).offset(pagination.offset).limit(pagination.limit).all()
 
         # 转换为字典列表
         items_data = [{

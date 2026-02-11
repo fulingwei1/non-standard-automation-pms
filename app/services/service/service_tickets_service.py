@@ -7,9 +7,11 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.service import (
     CustomerSatisfaction,
     ServiceTicket,
@@ -206,13 +208,12 @@ class ServiceTicketsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    ServiceTicket.ticket_no.ilike(f"%{keyword}%"),
-                    ServiceTicket.problem_desc.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            ServiceTicket,
+            keyword,
+            ["ticket_no", "problem_desc"],
+        )
 
         # 筛选条件
         if status:
@@ -243,13 +244,16 @@ class ServiceTicketsService:
         query = query.order_by(ServiceTicket.created_at.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[ServiceTicketResponse.model_validate(item) for item in items]
         )
 

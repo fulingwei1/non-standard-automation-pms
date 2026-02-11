@@ -8,10 +8,12 @@ from decimal import Decimal
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.config import settings
 from app.models.alert import (
@@ -70,13 +72,12 @@ class AlertRulesService:
         query = self.db.query(AlertRule)
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    AlertRule.rule_code.ilike(f"%{keyword}%"),
-                    AlertRule.rule_name.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            AlertRule,
+            keyword,
+            ["rule_code", "rule_name"],
+        )
 
         # 筛选条件
         if rule_type:
@@ -89,13 +90,16 @@ class AlertRulesService:
             query = query.filter(AlertRule.is_enabled == is_enabled)
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[AlertRuleResponse.model_validate(item) for item in items]
         )
 

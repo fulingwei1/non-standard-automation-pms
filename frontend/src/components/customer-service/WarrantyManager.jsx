@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag, Progress, Typography } from 'antd';
-import { WARRANTY_TYPES, TABLE_CONFIG, CHART_COLORS } from './customerServiceConstants';
+import { WARRANTY_TYPES, TABLE_CONFIG, CHART_COLORS } from '../../lib/constants/service';
 
 const { Text } = Typography;
 

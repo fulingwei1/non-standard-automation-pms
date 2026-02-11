@@ -21,10 +21,12 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.config import settings
 from app.models.project import Customer, Project
@@ -144,14 +146,12 @@ class ServiceRecordsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    ServiceRecord.title.ilike(f"%{keyword}%"),
-                    ServiceRecord.description.ilike(f"%{keyword}%"),
-                    ServiceRecord.location.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            ServiceRecord,
+            keyword,
+            ["title", "description", "location"],
+        )
 
         # 筛选条件
         if service_type:
@@ -176,13 +176,16 @@ class ServiceRecordsService:
         query = query.order_by(ServiceRecord.service_date.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[ServiceRecordResponse.model_validate(item) for item in items]
         )
 

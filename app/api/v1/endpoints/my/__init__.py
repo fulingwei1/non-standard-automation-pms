@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.pagination import get_pagination_query
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.task_center import TaskUnified
@@ -36,14 +36,13 @@ router = APIRouter()
 
 @router.get("/projects", response_model=ResponseModel[MyProjectListResponse])
 def get_my_projects(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """我参与的项目列表"""
     service = ProjectCoreService(db)
-    data = service.list_user_projects(current_user, page=page, page_size=page_size)
+    data = service.list_user_projects(current_user, page=pagination.page, page_size=pagination.page_size)
     return ResponseModel(data=data)
 
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -72,8 +73,7 @@ async def create_collaboration_rating(
 async def get_ratings_received(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -83,8 +83,8 @@ async def get_ratings_received(
     ratings, total = service.get_ratings_received(
         user_id=user_id,
         period_id=period_id,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []
@@ -118,8 +118,7 @@ async def get_ratings_received(
 async def get_ratings_given(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -129,8 +128,8 @@ async def get_ratings_given(
     ratings, total = service.get_ratings_given(
         user_id=user_id,
         period_id=period_id,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []

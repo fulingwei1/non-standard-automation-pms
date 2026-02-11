@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api import deps
 from app.core import security
 from app.common.pagination import get_pagination_query, PaginationParams
+from app.common.query_filters import apply_keyword_filter
 from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
@@ -53,13 +54,7 @@ def read_opportunities(
     # Issue 7.1: 应用数据权限过滤
     query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, 'owner_id')
 
-    if keyword:
-        query = query.filter(
-            or_(
-                Opportunity.opp_code.contains(keyword),
-                Opportunity.opp_name.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, Opportunity, keyword, ["opp_code", "opp_name"])
 
     if stage:
         query = query.filter(Opportunity.stage == stage)

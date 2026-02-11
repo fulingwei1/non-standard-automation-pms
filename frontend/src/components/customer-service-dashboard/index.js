@@ -36,4 +36,4 @@ export {
   sortByPriority,
   sortByCreateTime,
   sortByResolutionTime,
-} from './customerServiceConstants';
+} from '../../lib/constants/service';

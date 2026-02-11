@@ -25,7 +25,7 @@ import {
   servicePriorityConfigs,
   serviceStatusConfigs,
   calculateServiceStats
-} from "./customerServiceConstants";
+} from "../../lib/constants/service";
 
 export function ServiceStatsCard({ tickets = [], stats: externalStats = null }) {
   // 计算统计数据

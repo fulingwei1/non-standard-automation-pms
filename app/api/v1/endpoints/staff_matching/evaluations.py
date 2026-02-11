@@ -15,6 +15,7 @@ from app.models.staff_matching import HrEmployeeTagEvaluation, HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -25,8 +26,7 @@ def list_evaluations(
     tag_id: Optional[int] = Query(None, description="标签ID"),
     tag_type: Optional[str] = Query(None, description="标签类型"),
     is_valid: Optional[bool] = Query(True, description="是否有效"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
@@ -42,7 +42,7 @@ def list_evaluations(
     if is_valid is not None:
         query = query.filter(HrEmployeeTagEvaluation.is_valid == is_valid)
 
-    evaluations = query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()).offset(skip).limit(limit).all()
+    evaluations = query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     # 附加关联信息
     result = []

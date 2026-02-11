@@ -26,6 +26,7 @@ from app.schemas.approval.flow import (
     ApprovalRoutingRuleResponse,
 )
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.approval.template import (
     ApprovalTemplateCreate,
     ApprovalTemplateListResponse,
@@ -53,11 +54,7 @@ def list_templates(
         query = query.filter(ApprovalTemplate.category == category)
     if is_active is not None:
         query = query.filter(ApprovalTemplate.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            (ApprovalTemplate.template_name.contains(keyword)) |
-            (ApprovalTemplate.template_code.contains(keyword))
-        )
+    query = apply_keyword_filter(query, ApprovalTemplate, keyword, ["template_name", "template_code"])
 
     total = query.count()
     items = query.order_by(ApprovalTemplate.id.desc()).offset(pagination.offset).limit(pagination.limit).all()

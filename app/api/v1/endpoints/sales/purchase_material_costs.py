@@ -18,6 +18,7 @@ from app.models.sales import PurchaseMaterialCost
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     PurchaseMaterialCostCreate,
     PurchaseMaterialCostResponse,
@@ -43,8 +44,7 @@ def get_purchase_material_costs(
     """
     query = db.query(PurchaseMaterialCost)
 
-    if material_name:
-        query = query.filter(PurchaseMaterialCost.material_name.like(f"%{material_name}%"))
+    query = apply_keyword_filter(query, PurchaseMaterialCost, material_name, "material_name", use_ilike=False)
     if material_type:
         query = query.filter(PurchaseMaterialCost.material_type == material_type)
     if is_standard_part is not None:

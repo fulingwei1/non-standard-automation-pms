@@ -130,35 +130,36 @@ class RemindersMixin:
         sent_count = 0
         failed_count = 0
 
-        # 使用通知服务发送提醒
+        # 使用统一通知服务发送提醒
         try:
-            from app.services.notification_service import (
-                NotificationService,
-                NotificationPriority,
-                NotificationType,
+            from app.services.unified_notification_service import get_notification_service
+            from app.services.channel_handlers.base import (
+                NotificationRequest,
+                NotificationPriority as UnifiedPriority,
             )
 
-            notification_service = NotificationService(db)
+            unified_service = get_notification_service(db)
             for reminder in reminders:
                 try:
                     # 确定通知优先级
-                    priority = NotificationPriority.NORMAL
+                    priority = UnifiedPriority.NORMAL
                     if reminder.get('priority') == 'high':
-                        priority = NotificationPriority.HIGH
+                        priority = UnifiedPriority.HIGH
                     elif reminder.get('priority') == 'urgent':
-                        priority = NotificationPriority.URGENT
+                        priority = UnifiedPriority.URGENT
 
                     # 发送通知
-                    success = notification_service.send_notification(
-                        db=self.db,
+                    request = NotificationRequest(
                         recipient_id=reminder.get('engineer_id'),
-                        notification_type=NotificationType.DEADLINE_REMINDER,
+                        notification_type="DEADLINE_REMINDER",
+                        category="deadline",
                         title=f"数据填报提醒: {reminder.get('type', '未知类型')}",
                         content=reminder.get('message', '请及时完成数据填报'),
                         priority=priority,
-                        data={'reminder': reminder}
+                        extra_data={'reminder': reminder},
                     )
-                    if success:
+                    result = unified_service.send_notification(request)
+                    if result.get("success"):
                         sent_count += 1
                     else:
                         failed_count += 1

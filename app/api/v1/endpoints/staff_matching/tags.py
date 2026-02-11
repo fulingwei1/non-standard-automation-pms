@@ -10,10 +10,12 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.staff_matching import HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -23,8 +25,7 @@ def list_tags(
     tag_type: Optional[str] = Query(None, description="标签类型筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     keyword: Optional[str] = Query(None, description="搜索关键词"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
@@ -35,15 +36,9 @@ def list_tags(
         query = query.filter(HrTagDict.tag_type == tag_type)
     if is_active is not None:
         query = query.filter(HrTagDict.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            or_(
-                HrTagDict.tag_code.contains(keyword),
-                HrTagDict.tag_name.contains(keyword)
-            )
-        )
+    query = apply_keyword_filter(query, HrTagDict, keyword, ["tag_code", "tag_name"])
 
-    tags = query.order_by(HrTagDict.tag_type, HrTagDict.sort_order).offset(skip).limit(limit).all()
+    tags = query.order_by(HrTagDict.tag_type, HrTagDict.sort_order).offset(pagination.offset).limit(pagination.limit).all()
     return tags
 
 

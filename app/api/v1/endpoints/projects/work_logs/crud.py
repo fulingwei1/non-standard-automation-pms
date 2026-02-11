@@ -19,6 +19,7 @@ from app.models.work_log import WorkLog, WorkLogMention
 from app.schemas.common import ResponseModel
 from app.services.project_statistics_service import WorkLogStatisticsService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -29,8 +30,7 @@ def list_project_work_logs(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
     """
@@ -58,8 +58,8 @@ def list_project_work_logs(
     total = query.count()
     logs = (
         query.order_by(desc(WorkLog.work_date), desc(WorkLog.created_at))
-        .offset(skip)
-        .limit(limit)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 

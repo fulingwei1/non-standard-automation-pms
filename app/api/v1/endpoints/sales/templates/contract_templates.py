@@ -19,6 +19,7 @@ from app.models.sales import ContractTemplate, ContractTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     ContractTemplateApplyResponse,
     ContractTemplateCreate,
@@ -52,13 +53,7 @@ def list_contract_templates(
     query = db.query(ContractTemplate).options(joinedload(ContractTemplate.versions))
     query = _filter_template_visibility(query, ContractTemplate, current_user)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                ContractTemplate.template_name.contains(keyword),
-                ContractTemplate.template_code.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, ContractTemplate, keyword, ["template_name", "template_code"])
     if status:
         query = query.filter(ContractTemplate.status == status)
 

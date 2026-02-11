@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.security import get_current_active_user
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -58,8 +59,7 @@ def create_tenant(
 
 @router.get("/", response_model=ResponseModel)
 def list_tenants(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="状态筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     db: Session = Depends(get_db),
@@ -67,7 +67,7 @@ def list_tenants(
 ):
     """获取租户列表"""
     service = TenantService(db)
-    result = service.list_tenants(page=page, page_size=page_size, status=status, keyword=keyword)
+    result = service.list_tenants(page=pagination.page, page_size=pagination.page_size, status=status, keyword=keyword)
 
     # 转换为响应格式
     items = [TenantResponse.model_validate(t).model_dump() for t in result["items"]]

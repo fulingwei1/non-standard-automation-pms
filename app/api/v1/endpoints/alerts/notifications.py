@@ -73,19 +73,20 @@ def read_alert_notifications(
     result = service.get_user_notifications(
         user_id=current_user.id,
         is_read=is_read,
-        limit=page_size,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     if not result.get('success'):
         raise HTTPException(status_code=500, detail=result.get('message', '获取通知列表失败'))
 
+    total = result.get('total', 0)
     return PaginatedResponse(
         items=result.get('items', []),
-        total=result.get('total', 0),
+        total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=(result.get('total', 0) + page_size - 1) // page_size
+        pages=pagination.pages_for_total(total)
     )
 
 

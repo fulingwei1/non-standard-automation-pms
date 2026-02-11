@@ -32,6 +32,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import get_pagination_params
 from app.core import security
 from app.core.config import settings
 from app.models.bonus import (
@@ -256,16 +257,17 @@ def get_bonus_calculations(
         query = query.filter(BonusCalculation.calculated_at <= datetime.combine(query_params.end_date, datetime.max.time()))
 
     total = query.count()
+    pg = get_pagination_params(page=query_params.page, page_size=query_params.page_size)
     calculations = query.order_by(desc(BonusCalculation.calculated_at)).offset(
-        (query_params.page - 1) * query_params.page_size
-    ).limit(query_params.page_size).all()
+        pg.offset
+    ).limit(pg.limit).all()
 
     return BonusCalculationListResponse(
         items=calculations,
         total=total,
-        page=query_params.page,
-        page_size=query_params.page_size,
-        pages=(total + query_params.page_size - 1) // query_params.page_size
+        page=pg.page,
+        page_size=pg.page_size,
+        pages=pg.pages_for_total(total)
     )
 
 

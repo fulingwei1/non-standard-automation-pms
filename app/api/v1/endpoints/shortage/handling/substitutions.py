@@ -333,23 +333,24 @@ def execute_substitution(
 
     # 发送通知
     try:
-        from app.services.notification_service import (
-            NotificationPriority,
-            NotificationType,
-            notification_service,
-        )
+        from app.services.unified_notification_service import get_notification_service
+        from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
         if sub.project_id:
             project = db.query(Project).filter(Project.id == sub.project_id).first()
             if project and project.pm_id:
-                notification_service.send_notification(
-                    db=db,
+                unified_service = get_notification_service(db)
+                request = NotificationRequest(
                     recipient_id=project.pm_id,
-                    notification_type=NotificationType.PROJECT_UPDATE,
+                    notification_type="PROJECT_UPDATE",
+                    category="project",
                     title=f"物料替代已执行: {sub.original_material_name}",
                     content=f"替代物料: {sub.substitute_material_name}\n替代数量: {sub.substitute_qty}",
                     priority=NotificationPriority.NORMAL,
-                    link=f"/shortage/handling/substitutions/{sub.id}"
+                    source_type="substitution",
+                    source_id=sub.id,
+                    link_url=f"/shortage/handling/substitutions/{sub.id}",
                 )
+                unified_service.send_notification(request)
     except Exception:
         logger.warning("物料替代通知发送失败，不影响主流程", exc_info=True)
 

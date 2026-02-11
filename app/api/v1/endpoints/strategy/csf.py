@@ -19,6 +19,7 @@ from app.schemas.strategy import (
     CSFUpdate,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -69,21 +70,20 @@ def batch_create_csfs(
 def list_csfs(
     strategy_id: int = Query(..., description="战略 ID"),
     dimension: Optional[str] = Query(None, description="BSC 维度筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
     获取 CSF 列表
     """
     items, total = strategy_service.list_csfs(
-        db, strategy_id=strategy_id, dimension=dimension, skip=skip, limit=limit
+        db, strategy_id=strategy_id, dimension=dimension, skip=pagination.offset, limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

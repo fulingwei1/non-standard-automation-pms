@@ -14,6 +14,7 @@ from app.models.stage_instance import ProjectStageInstance
 from app.models.stage_template import StageDefinition, StageTemplate
 from app.models.user import User
 from app.schemas.stage_template import (
+from app.common.pagination import PaginationParams, get_pagination_query
     PipelineStatistics,
     PipelineViewResponse,
     ProjectStageOverview,
@@ -32,8 +33,7 @@ def get_pipeline_view(
     health_status: Optional[str] = Query(None, description="健康状态筛选"),
     template_id: Optional[int] = Query(None, description="模板ID筛选"),
     group_by_template: bool = Query(False, description="是否按模板分组"),
-    skip: int = Query(0, ge=0, description="分页偏移"),
-    limit: int = Query(50, ge=1, le=100, description="分页大小"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.get_current_user),
 ) -> Any:
     """
@@ -61,7 +61,7 @@ def get_pipeline_view(
     if template_id:
         projects_query = projects_query.filter(Project.stage_template_id == template_id)
 
-    projects = projects_query.offset(skip).limit(limit).all()
+    projects = projects_query.offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建统计数据
     total_count = projects_query.count()

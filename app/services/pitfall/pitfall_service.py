@@ -10,6 +10,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.pitfall import Pitfall
 
 
@@ -145,14 +146,7 @@ class PitfallService:
             query = query.filter(Pitfall.status == "PUBLISHED")
 
         # 关键词搜索
-        if keyword:
-            query = query.filter(
-                or_(
-                    Pitfall.title.contains(keyword),
-                    Pitfall.description.contains(keyword),
-                    Pitfall.solution.contains(keyword),
-                )
-            )
+        query = apply_keyword_filter(query, Pitfall, keyword, ["title", "description", "solution"])
 
         # 多维度筛选
         if stage:

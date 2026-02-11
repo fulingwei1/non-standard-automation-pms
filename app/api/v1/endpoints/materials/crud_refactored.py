@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.config import settings
 from app.core.schemas.response import (
@@ -63,13 +64,7 @@ router.include_router(crud_router)
 )
 def list_materials(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（物料编码/名称）"),
     category_id: Optional[int] = Query(None, description="分类ID筛选"),
     material_type: Optional[str] = Query(None, description="物料类型筛选"),
@@ -88,8 +83,8 @@ def list_materials(
     """
     service = MaterialService(db)
     result = service.list_materials(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         keyword=keyword,
         category_id=category_id,
         material_type=material_type,

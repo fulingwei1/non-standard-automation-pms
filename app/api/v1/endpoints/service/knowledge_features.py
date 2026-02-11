@@ -153,13 +153,9 @@ def search_knowledge(
 
     if search_type in ["all", "articles"]:
         # 搜索知识库文章
-        articles = db.query(KnowledgeBase).filter(
-            KnowledgeBase.status == "PUBLISHED",
-            or_(
-                KnowledgeBase.title.like(f"%{keyword}%"),
-                KnowledgeBase.content.like(f"%{keyword}%")
-            )
-        ).limit(20).all()
+        article_query = db.query(KnowledgeBase).filter(KnowledgeBase.status == "PUBLISHED")
+        article_query = apply_keyword_filter(article_query, KnowledgeBase, keyword, ["title", "content"], use_ilike=False)
+        articles = article_query.limit(20).all()
 
         for article in articles:
             results.append({
@@ -173,15 +169,12 @@ def search_knowledge(
 
     if search_type in ["all", "issues"]:
         # 搜索问题库
-        issues = db.query(Issue).filter(
+        issue_query = db.query(Issue).filter(
             Issue.status.in_(["RESOLVED", "CLOSED"]),
             Issue.solution.isnot(None),
-            or_(
-                Issue.title.like(f"%{keyword}%"),
-                Issue.description.like(f"%{keyword}%"),
-                Issue.solution.like(f"%{keyword}%")
-            )
-        ).limit(20).all()
+        )
+        issue_query = apply_keyword_filter(issue_query, Issue, keyword, ["title", "description", "solution"], use_ilike=False)
+        issues = issue_query.limit(20).all()
 
         for issue in issues:
             results.append({
@@ -195,14 +188,12 @@ def search_knowledge(
 
     if search_type in ["all", "solutions"]:
         # 搜索方案库（从知识库中）
-        solutions = db.query(KnowledgeBase).filter(
+        solution_query = db.query(KnowledgeBase).filter(
             KnowledgeBase.status == "PUBLISHED",
             KnowledgeBase.category.in_(["SOLUTION", "TROUBLESHOOTING"]),
-            or_(
-                KnowledgeBase.title.like(f"%{keyword}%"),
-                KnowledgeBase.content.like(f"%{keyword}%")
-            )
-        ).limit(20).all()
+        )
+        solution_query = apply_keyword_filter(solution_query, KnowledgeBase, keyword, ["title", "content"], use_ilike=False)
+        solutions = solution_query.limit(20).all()
 
         for solution in solutions:
             results.append({

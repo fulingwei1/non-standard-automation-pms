@@ -28,6 +28,7 @@ from app.schemas.sales import (
 )
 
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from ..utils import (
     generate_contract_code,
     get_entity_creator_id,
@@ -60,8 +61,7 @@ def read_contracts(
     # Issue 7.1: 应用数据权限过滤
     query = security.filter_sales_data_by_scope(query, current_user, db, Contract, 'owner_id')
 
-    if keyword:
-        query = query.filter(Contract.contract_code.contains(keyword))
+    query = apply_keyword_filter(query, Contract, keyword, "contract_code")
 
     if status:
         query = query.filter(Contract.status == status)

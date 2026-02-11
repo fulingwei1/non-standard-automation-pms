@@ -8,6 +8,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory
 from app.models.user import User
@@ -59,14 +60,9 @@ def check_product_match(
         )
 
     # 模糊匹配 - 查找相似产品
-    search_pattern = f"%{product_name}%"
-    similar_products = db.query(AdvantageProduct).filter(
-        AdvantageProduct.is_active == True,
-        or_(
-            AdvantageProduct.product_name.like(search_pattern),
-            AdvantageProduct.product_code.like(search_pattern)
-        )
-    ).limit(5).all()
+    base_query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active == True)
+    base_query = apply_keyword_filter(base_query, AdvantageProduct, product_name, ["product_name", "product_code"], use_ilike=False)
+    similar_products = base_query.limit(5).all()
 
     categories = {c.id: c.name for c in db.query(AdvantageProductCategory).all()}
 

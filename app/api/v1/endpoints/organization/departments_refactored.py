@@ -23,6 +23,7 @@ from app.schemas.organization import (
 
 from .utils import build_department_tree
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 router = APIRouter()
 
@@ -269,14 +270,7 @@ def get_department_users(
 
     query = db.query(User).filter(User.department == department.dept_name)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                User.username.contains(keyword),
-                User.real_name.contains(keyword),
-                User.employee_no.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, User, keyword, ["username", "real_name", "employee_no"])
 
     if is_active is not None:
         query = query.filter(User.is_active == is_active)

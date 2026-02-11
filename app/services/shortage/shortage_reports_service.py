@@ -11,10 +11,12 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.config import settings
 from app.models.alert import AlertRecord
@@ -57,13 +59,12 @@ class ShortageReportsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    ShortageReport.title.ilike(f"%{keyword}%"),
-                    ShortageReport.description.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            ShortageReport,
+            keyword,
+            ["title", "description"],
+        )
 
         # 筛选条件
         if status:
@@ -82,13 +83,16 @@ class ShortageReportsService:
         query = query.order_by(ShortageReport.created_at.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[ShortageReportResponse.model_validate(item) for item in items]
         )
 

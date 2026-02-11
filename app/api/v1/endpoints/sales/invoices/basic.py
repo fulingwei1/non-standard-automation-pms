@@ -25,6 +25,7 @@ from app.services.approval_engine import ApprovalEngineService as ApprovalWorkfl
 
 from ..utils import generate_invoice_code
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +53,7 @@ def read_invoices(
     # 注意：Invoice 模型没有 owner_id 字段，所以跳过此过滤
     # query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
 
-    if keyword:
-        query = query.filter(Invoice.invoice_code.contains(keyword))
+    query = apply_keyword_filter(query, Invoice, keyword, "invoice_code")
 
     if status:
         query = query.filter(Invoice.status == status)

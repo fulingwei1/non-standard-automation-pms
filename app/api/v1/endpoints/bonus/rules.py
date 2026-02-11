@@ -9,7 +9,7 @@
 奖金激励模块 API 端点
 """
 
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from fastapi import (
     APIRouter,
@@ -22,7 +22,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.pagination import PaginationParams, get_pagination_query, paginate_list
 from app.core import security
 from app.models.bonus import (
     BonusCalculation,
@@ -221,16 +221,10 @@ def deactivate_bonus_rule(
     return ResponseModel(code=200, message="停用成功")
 
 
-import math
-from typing import List, Tuple
-
-
 def paginate_items(items: list, page: int, page_size: int) -> Tuple[list, int, int]:
     """
     对内存列表做分页，返回 (当前页数据, 总条数, 总页数)
     """
-    total = len(items)
-    pages = math.ceil(total / page_size) if page_size > 0 else 0
-    start = (page - 1) * page_size
-    end = start + page_size
-    return items[start:end], total, pages
+    page_items, total, pagination = paginate_list(items, page, page_size)
+    pages = pagination.pages_for_total(total)
+    return page_items, total, pages

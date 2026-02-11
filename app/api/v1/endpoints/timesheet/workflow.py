@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.timesheet import Timesheet
 from app.models.user import User
@@ -164,8 +165,7 @@ def submit_timesheets_for_approval(
 def get_pending_approval_tasks(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(security.require_permission("timesheet:approve")),
 ) -> Any:
     """
@@ -176,8 +176,8 @@ def get_pending_approval_tasks(
     engine = ApprovalEngineService(db)
     result = engine.get_pending_tasks(
         user_id=current_user.id,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
     )
 
     # 过滤出工时类型的任务

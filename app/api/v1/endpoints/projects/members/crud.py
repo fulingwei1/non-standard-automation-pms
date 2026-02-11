@@ -28,6 +28,7 @@ from app.schemas.project import (
 )
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 
 def filter_by_role(query, role: str):
@@ -89,13 +90,7 @@ def list_project_members(
         query = query.filter(ProjectMember.role_code == role)
     
     # 关键词搜索
-    if keyword:
-        from sqlalchemy import or_
-        query = query.filter(
-            or_(
-                ProjectMember.remark.ilike(f"%{keyword}%"),
-            )
-        )
+    query = apply_keyword_filter(query, ProjectMember, keyword, "remark")
     
     # 排序
     order_field = getattr(ProjectMember, order_by or "created_at", None)

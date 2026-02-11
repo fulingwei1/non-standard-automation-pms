@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine
@@ -58,8 +59,7 @@ def read_material_demands(
     if material_id:
         query = query.filter(BomItem.material_id == material_id)
 
-    if material_code:
-        query = query.filter(BomItem.material_code.like(f"%{material_code}%"))
+    query = apply_keyword_filter(query, BomItem, material_code, "material_code", use_ilike=False)
 
     if project_id:
         query = query.filter(Machine.project_id == project_id)

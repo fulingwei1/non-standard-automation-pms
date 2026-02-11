@@ -10,9 +10,10 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.alert import (
     AlertRecord,
     AlertRule,
@@ -51,13 +52,12 @@ class AlertRecordsService:
         )
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                or_(
-                    AlertRecord.alert_title.ilike(f"%{keyword}%"),
-                    AlertRecord.alert_content.ilike(f"%{keyword}%")
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            AlertRecord,
+            keyword,
+            ["alert_title", "alert_content"],
+        )
 
         # 筛选条件
         if severity:
@@ -82,13 +82,16 @@ class AlertRecordsService:
         query = query.order_by(AlertRecord.created_at.desc())
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=[AlertRecordResponse.model_validate(item) for item in items]
         )
 
@@ -369,10 +372,17 @@ class AlertRecordsService:
 
         query = query.order_by(AlertRecord.created_at.desc())
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.offset((page - 1) * page_size).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
-        return {"items": items, "total": total, "page": page, "page_size": page_size}
+        return {
+            "items": items,
+            "total": total,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+        }
 
     def handle_alert(
         self,

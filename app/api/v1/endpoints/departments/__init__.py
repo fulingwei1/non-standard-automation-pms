@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -31,8 +32,7 @@ router = APIRouter()
 )
 def get_department_projects(
     dept_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -42,7 +42,7 @@ def get_department_projects(
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
 
-    data = service.list_department_projects(dept_id, current_user, page=page, page_size=page_size)
+    data = service.list_department_projects(dept_id, current_user, page=pagination.page, page_size=pagination.page_size)
     return ResponseModel(
         data=data,
         message=f"{department.dept_name} 项目列表",

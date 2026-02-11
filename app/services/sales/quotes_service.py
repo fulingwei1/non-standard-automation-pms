@@ -9,6 +9,8 @@ from typing import Optional
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -45,10 +47,7 @@ class QuotesService:
             query = filter_sales_data_by_scope(query, current_user, self.db, Quote, "owner_id")
 
         # 搜索条件
-        if keyword:
-            query = query.filter(
-                Quote.quote_code.ilike(f"%{keyword}%")
-            )
+        query = apply_keyword_filter(query, Quote, keyword, "quote_code")
 
         # 筛选条件
         if status:
@@ -64,8 +63,11 @@ class QuotesService:
             query = query.filter(Quote.created_at <= end_date)
 
         # 分页
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        items = query.order_by(desc(Quote.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+        query = query.order_by(desc(Quote.created_at))
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
 
         # 转换为响应格式
         quote_responses = []
@@ -86,8 +88,9 @@ class QuotesService:
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=quote_responses
         )
 

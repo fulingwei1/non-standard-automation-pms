@@ -13,11 +13,11 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.notification_service import (
-    NotificationService,
+from app.services.unified_notification_service import get_notification_service, NotificationService as UnifiedNotificationService
+from app.services.channel_handlers.base import (
+    NotificationRequest,
     NotificationChannel,
     NotificationPriority,
-    NotificationType,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class StateMachineNotifier:
     """
 
     def __init__(self):
-        self.notification_service = NotificationService()
+        self.notification_service = None  # Lazy init with db session
 
     def resolve_notification_recipients(
         self,
@@ -319,21 +319,24 @@ class StateMachineNotifier:
             if extra_data:
                 notification_data.update(extra_data)
 
-            # 5. 发送通知给每个接收人
+            # 5. 发送通知给每个接收人（使用统一通知服务）
+            unified_service = get_notification_service(db)
             success = True
             for recipient_id in recipient_ids:
                 try:
-                    self.notification_service.send_notification(
-                        db=db,
+                    request = NotificationRequest(
                         recipient_id=recipient_id,
-                        notification_type=NotificationType.TASK_UPDATED,  # 使用通用的TASK_UPDATED类型
+                        notification_type="STATE_TRANSITION",
+                        category=entity_type.lower() if entity_type else "general",
                         title=title,
                         content=content,
-                        priority=priority,
-                        channels=[NotificationChannel.WEB],  # 默认使用站内通知
-                        data=notification_data,
-                        link=link,
+                        priority=priority or NotificationPriority.NORMAL,
+                        source_type=entity_type.lower() if entity_type else None,
+                        source_id=entity_id,
+                        link_url=link,
+                        extra_data=notification_data,
                     )
+                    unified_service.send_notification(request)
                 except Exception as e:
                     logger.error(f"发送通知给用户 {recipient_id} 失败: {e}")
                     success = False

@@ -24,6 +24,7 @@ from app.schemas.strategy import (
     StrategyReviewUpdate,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -57,8 +58,7 @@ def create_strategy_review(
 def list_strategy_reviews(
     strategy_id: int = Query(..., description="战略 ID"),
     review_type: Optional[str] = Query(None, description="审视类型筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -96,8 +96,8 @@ def list_strategy_reviews(
     return PageResponse(
         items=responses,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 
@@ -270,8 +270,7 @@ def list_calendar_events(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     event_type: Optional[str] = Query(None, description="事件类型"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -307,8 +306,8 @@ def list_calendar_events(
     return PageResponse(
         items=responses,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

@@ -19,6 +19,7 @@ from app.models.sales import Lead
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     LeadCreate,
     LeadResponse,
@@ -51,14 +52,7 @@ def read_leads(
     # Issue 7.1: 应用数据权限过滤
     query = security.filter_sales_data_by_scope(query, current_user, db, Lead, 'owner_id')
 
-    if keyword:
-        query = query.filter(
-            or_(
-                Lead.lead_code.contains(keyword),
-                Lead.customer_name.contains(keyword),
-                Lead.contact_name.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, Lead, keyword, ["lead_code", "customer_name", "contact_name"])
 
     if status:
         query = query.filter(Lead.status == status)

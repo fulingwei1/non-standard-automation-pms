@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.engineer_performance import (
@@ -27,8 +28,7 @@ async def list_contributions(
     job_type: Optional[str] = Query(None, description="岗位领域"),
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     status: Optional[str] = Query(None, description="状态"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -40,8 +40,8 @@ async def list_contributions(
         job_type=job_type,
         contribution_type=contribution_type,
         status=status,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []

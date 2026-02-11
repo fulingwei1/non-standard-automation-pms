@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod, PerformanceResult
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -242,8 +243,7 @@ async def list_engineers(
     job_type: Optional[str] = Query(None, description="岗位类型"),
     job_level: Optional[str] = Query(None, description="职级"),
     department_id: Optional[int] = Query(None, description="部门ID"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -254,8 +254,8 @@ async def list_engineers(
         job_type=job_type,
         job_level=job_level,
         department_id=department_id,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []

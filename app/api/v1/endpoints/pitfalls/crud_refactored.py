@@ -18,6 +18,7 @@ from app.schemas.pitfall import (
     PitfallUpdate,
 )
 from app.services.pitfall import PitfallService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -74,8 +75,7 @@ def list_pitfalls(
     problem_type: Optional[str] = Query(None, description="问题类型筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     verified_only: bool = Query(False, description="仅显示已验证"),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(20, ge=1, le=100, description="返回记录数"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -94,8 +94,8 @@ def list_pitfalls(
         problem_type=problem_type,
         status=status,
         verified_only=verified_only,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
     items = [

@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import InvoiceResponse
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,7 @@ def read_invoices_old(
     # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有发票）
     query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
 
-    if keyword:
-        query = query.filter(Invoice.invoice_code.contains(keyword))
+    query = apply_keyword_filter(query, Invoice, keyword, "invoice_code")
 
     if status:
         query = query.filter(Invoice.status == status)

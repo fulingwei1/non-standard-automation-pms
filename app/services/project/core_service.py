@@ -14,6 +14,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from sqlalchemy import or_
 from sqlalchemy.orm import Query, Session
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_pagination
 from app.models.organization import Department
 from app.models.project import Project, ProjectMember
 from app.models.task_center import TaskUnified
@@ -43,11 +45,11 @@ class ProjectCoreService:
 
     @staticmethod
     def _paginate(query: Query, page: int, page_size: int) -> Tuple[int, int, Sequence[Project]]:
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        pages = (total + page_size - 1) // page_size if total else 0
-        offset = (page - 1) * page_size
-        items = query.offset(offset).limit(page_size).all()
-        return total, pages, items
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        items = query.all()
+        return total, pagination.pages_for_total(total), items
 
     # ------------------------------------------------------------------ #
     # 我的项目

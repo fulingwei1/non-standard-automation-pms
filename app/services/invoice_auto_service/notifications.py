@@ -8,8 +8,9 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from app.models.acceptance import AcceptanceOrder
-from app.models.notification import Notification
 from app.models.sales import Contract
+from app.services.unified_notification_service import get_notification_service
+from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
 
 logger = logging.getLogger(__name__)
 
@@ -75,20 +76,26 @@ def send_invoice_notifications(
             f"请及时处理。"
         )
 
-        # 创建通知记录
+        # 使用统一通知服务发送通知
+        unified_service = get_notification_service(service.db)
+        sent_count = 0
         for user_id in recipient_ids:
-            notification = Notification(
-                user_id=user_id,
+            request = NotificationRequest(
+                recipient_id=user_id,
+                notification_type="INVOICE_AUTO",
+                category="invoice",
                 title=f"验收通过自动触发{item_type}",
                 content=notification_content,
-                notification_type="INVOICE_AUTO",
+                priority=NotificationPriority.NORMAL,
                 source_type="acceptance",
                 source_id=order.id,
+                link_url=f"/acceptance/{order.id}",
             )
-            service.db.add(notification)
+            result = unified_service.send_notification(request)
+            if result.get("success"):
+                sent_count += 1
 
-        service.db.commit()
-        logger.info(f"已发送开票通知给 {len(recipient_ids)} 个用户")
+        logger.info(f"已发送开票通知给 {sent_count}/{len(recipient_ids)} 个用户")
 
     except Exception as e:
         logger.error(f"发送开票通知失败: {e}", exc_info=True)

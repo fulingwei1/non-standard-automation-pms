@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -25,8 +26,7 @@ async def get_ranking(
     job_type: Optional[str] = Query(None, description="岗位类型"),
     job_level: Optional[str] = Query(None, description="职级"),
     department_id: Optional[int] = Query(None, description="部门ID"),
-    limit: int = Query(20, ge=1, le=100, description="返回数量"),
-    offset: int = Query(0, ge=0, description="偏移量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -51,12 +51,12 @@ async def get_ranking(
         job_type=job_type,
         job_level=job_level,
         department_id=department_id,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []
-    for i, r in enumerate(results, offset + 1):
+    for i, r in enumerate(results, pagination.offset + 1):
         items.append({
             "rank": i,
             "user_id": r.user_id,
@@ -86,8 +86,7 @@ async def get_ranking(
 async def get_ranking_by_department(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     department_id: int = Query(..., description="部门ID"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -104,12 +103,12 @@ async def get_ranking_by_department(
     results, total = service.get_ranking(
         period_id=period_id,
         department_id=department_id,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []
-    for i, r in enumerate(results, offset + 1):
+    for i, r in enumerate(results, pagination.offset + 1):
         items.append({
             "rank": i,
             "user_id": r.user_id,
@@ -135,8 +134,7 @@ async def get_ranking_by_department(
 async def get_ranking_by_job_type(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     job_type: str = Query(..., description="岗位类型"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -156,12 +154,12 @@ async def get_ranking_by_job_type(
     results, total = service.get_ranking(
         period_id=period_id,
         job_type=job_type,
-        limit=limit,
-        offset=offset
+        limit=pagination.limit,
+        offset=pagination.offset
     )
 
     items = []
-    for i, r in enumerate(results, offset + 1):
+    for i, r in enumerate(results, pagination.offset + 1):
         items.append({
             "rank": i,
             "user_id": r.user_id,

@@ -10,12 +10,14 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.organization import Employee
 from app.models.staff_matching import HrEmployeeProfile
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -28,8 +30,7 @@ def list_profiles(
     min_workload: Optional[float] = Query(None, description="最小工作负载"),
     max_workload: Optional[float] = Query(None, description="最大工作负载"),
     has_skill: Optional[int] = Query(None, description="包含技能ID"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
@@ -51,8 +52,7 @@ def list_profiles(
     if employment_type:
         query = query.filter(Employee.employment_type == employment_type)
 
-    if department:
-        query = query.filter(Employee.department.contains(department))
+    query = apply_keyword_filter(query, Employee, department, "department")
     if min_workload is not None:
         query = query.filter(
             or_(
@@ -68,7 +68,7 @@ def list_profiles(
             )
         )
 
-    results = query.offset(skip).limit(limit).all()
+    results = query.offset(pagination.offset).limit(pagination.limit).all()
 
     profiles = []
     for employee, profile in results:

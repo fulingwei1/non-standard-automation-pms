@@ -24,6 +24,7 @@ from app.schemas.strategy import (
     KPIWithHistoryResponse,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -55,8 +56,7 @@ def list_kpis(
     strategy_id: Optional[int] = Query(None, description="战略 ID 筛选"),
     ipooc_type: Optional[str] = Query(None, description="IPOOC 类型筛选"),
     data_source_type: Optional[str] = Query(None, description="数据源类型筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -68,14 +68,14 @@ def list_kpis(
         strategy_id=strategy_id,
         ipooc_type=ipooc_type,
         data_source_type=data_source_type,
-        skip=skip,
-        limit=limit
+        skip=pagination.offset,
+        limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

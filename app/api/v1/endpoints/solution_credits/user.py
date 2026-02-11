@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.solution_credit_service import SolutionCreditService
 
 from .schemas import (
@@ -42,8 +43,7 @@ async def get_my_credits(
 
 @router.get("/my-transactions", response_model=TransactionListResponse)
 async def get_my_transactions(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     transaction_type: Optional[str] = Query(None, description="交易类型过滤"),
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_user)
@@ -54,16 +54,16 @@ async def get_my_transactions(
     service = SolutionCreditService(db)
     transactions, total = service.get_transaction_history(
         user_id=current_user.id,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         transaction_type=transaction_type
     )
 
     return TransactionListResponse(
         items=[TransactionResponse.model_validate(t) for t in transactions],
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

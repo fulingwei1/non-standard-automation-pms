@@ -16,6 +16,7 @@ from app.models.project import ProjectTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.project import (
     ProjectTemplateCreate,
     ProjectTemplateResponse,
@@ -40,11 +41,7 @@ def get_project_templates(
     """
     query = db.query(ProjectTemplate)
 
-    if keyword:
-        keyword_pattern = f"%{keyword}%"
-        query = query.filter(
-            ProjectTemplate.template_name.like(keyword_pattern)
-        )
+    query = apply_keyword_filter(query, ProjectTemplate, keyword, "template_name", use_ilike=False)
 
     if project_type:
         query = query.filter(ProjectTemplate.project_type == project_type)

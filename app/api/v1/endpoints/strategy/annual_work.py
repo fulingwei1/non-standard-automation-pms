@@ -21,6 +21,7 @@ from app.schemas.strategy import (
     UnlinkProjectRequest,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -52,8 +53,7 @@ def list_annual_works(
     strategy_id: Optional[int] = Query(None, description="战略 ID 筛选"),
     year: Optional[int] = Query(None, description="年度筛选"),
     status_filter: Optional[str] = Query(None, alias="status", description="状态筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -65,14 +65,14 @@ def list_annual_works(
         strategy_id=strategy_id,
         year=year,
         status=status_filter,
-        skip=skip,
-        limit=limit
+        skip=pagination.offset,
+        limit=pagination.limit
     )
     return PageResponse(
         items=items,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

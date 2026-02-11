@@ -7,9 +7,11 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
+from app.common.pagination import get_pagination_params
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import ShortageReport
@@ -49,14 +51,12 @@ class ShortageManagementService:
         query = self.db.query(ShortageReport)
 
         # 关键词搜索
-        if keyword:
-            query = query.filter(
-                or_(
-                    ShortageReport.material_code.ilike(f"%{keyword}%"),
-                    ShortageReport.material_name.ilike(f"%{keyword}%"),
-                    ShortageReport.report_no.ilike(f"%{keyword}%"),
-                )
-            )
+        query = apply_keyword_filter(
+            query,
+            ShortageReport,
+            keyword,
+            ["material_code", "material_name", "report_no"],
+        )
 
         # 状态筛选
         if status:
@@ -71,12 +71,13 @@ class ShortageManagementService:
             query = query.filter(ShortageReport.urgent_level == urgent_level)
 
         # 计算总数
+        pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
 
         # 排序并分页
         query = query.order_by(desc(ShortageReport.created_at))
-        offset = (page - 1) * page_size
-        records = query.offset(offset).limit(page_size).all()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
+        records = query.all()
 
         # 构建响应项
         items = []
@@ -116,8 +117,9 @@ class ShortageManagementService:
 
         return PaginatedResponse(
             total=total,
-            page=page,
-            page_size=page_size,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            pages=pagination.pages_for_total(total),
             items=items
         )
 

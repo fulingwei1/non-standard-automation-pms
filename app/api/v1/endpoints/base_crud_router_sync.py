@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.schemas.response import (
     SuccessResponse,
@@ -166,8 +167,7 @@ def create_crud_router_sync(
             description=f"分页查询{resource_name_plural}，支持筛选、搜索、排序"
         )
         def list_items(
-            page: int = Query(1, ge=1, description="页码"),
-            page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+            pagination: PaginationParams = Depends(get_pagination_query),
             keyword: Optional[str] = Query(None, description="关键词搜索"),
             status: Optional[str] = Query(None, description="状态筛选"),
             order_by: Optional[str] = Query(None, description="排序字段"),
@@ -191,8 +191,8 @@ def create_crud_router_sync(
             
             # 构建查询参数
             params = QueryParams(
-                page=page,
-                page_size=page_size,
+                page=pagination.page,
+                page_size=pagination.page_size,
                 search=keyword,
                 search_fields=keyword_fields or [],
                 filters=filters if filters else None,

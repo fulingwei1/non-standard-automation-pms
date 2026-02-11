@@ -16,6 +16,7 @@ from app.schemas.strategy import (
     YoYReportResponse,
 )
 from app.services import strategy as strategy_service
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -48,8 +49,7 @@ def create_comparison(
 @router.get("", response_model=PageResponse[StrategyComparisonResponse])
 def list_comparisons(
     base_strategy_id: Optional[int] = Query(None, description="基准战略 ID 筛选"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
     """
@@ -79,8 +79,8 @@ def list_comparisons(
     return PageResponse(
         items=responses,
         total=total,
-        skip=skip,
-        limit=limit,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
 
 

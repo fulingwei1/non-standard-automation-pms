@@ -10,6 +10,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory
 from app.models.user import User
@@ -42,14 +43,7 @@ def get_products(
     if category_id:
         query = query.filter(AdvantageProduct.category_id == category_id)
 
-    if search:
-        search_pattern = f"%{search}%"
-        query = query.filter(
-            or_(
-                AdvantageProduct.product_name.like(search_pattern),
-                AdvantageProduct.product_code.like(search_pattern)
-            )
-        )
+    query = apply_keyword_filter(query, AdvantageProduct, search, ["product_name", "product_code"], use_ilike=False)
 
     products = query.order_by(AdvantageProduct.product_code).all()
 

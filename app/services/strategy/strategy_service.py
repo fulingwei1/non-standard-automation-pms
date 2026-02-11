@@ -9,6 +9,7 @@ from typing import List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.pagination import get_pagination_params
 from app.models.strategy import Strategy
 from app.schemas.strategy import (
     StrategyCreate,
@@ -461,8 +462,9 @@ class StrategyService:
         if 'page' in kwargs or 'page_size' in kwargs:
             page = kwargs.pop('page', 1)
             page_size = kwargs.pop('page_size', 20)
-            kwargs['skip'] = (page - 1) * page_size
-            kwargs['limit'] = page_size
+            pagination = get_pagination_params(page=page, page_size=page_size)
+            kwargs['skip'] = pagination.offset
+            kwargs['limit'] = pagination.limit
         return self.list(**kwargs)
 
     def get_strategy(self, strategy_id: int):

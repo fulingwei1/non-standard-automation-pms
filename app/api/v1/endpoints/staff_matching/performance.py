@@ -16,6 +16,7 @@ from app.models.staff_matching import HrProjectPerformance
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -25,8 +26,7 @@ def list_performance(
     employee_id: Optional[int] = Query(None, description="员工ID"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     contribution_level: Optional[str] = Query(None, description="贡献等级"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
@@ -40,7 +40,7 @@ def list_performance(
     if contribution_level:
         query = query.filter(HrProjectPerformance.contribution_level == contribution_level)
 
-    performances = query.order_by(HrProjectPerformance.evaluation_date.desc()).offset(skip).limit(limit).all()
+    performances = query.order_by(HrProjectPerformance.evaluation_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for perf in performances:

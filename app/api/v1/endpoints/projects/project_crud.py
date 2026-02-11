@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.core.config import settings
 from app.models.project import Customer, Project
@@ -53,15 +54,7 @@ def read_projects(
     query = db.query(Project)
 
     # 关键词搜索
-    if keyword:
-        keyword_pattern = f"%{keyword}%"
-        query = query.filter(
-            or_(
-                Project.project_name.like(keyword_pattern),
-                Project.project_code.like(keyword_pattern),
-                Project.contract_no.like(keyword_pattern),
-            )
-        )
+    query = apply_keyword_filter(query, Project, keyword, ["project_name", "project_code", "contract_no"])
 
     # 客户筛选
     if customer_id:

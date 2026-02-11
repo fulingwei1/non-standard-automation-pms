@@ -94,7 +94,7 @@ import {
   TABLE_CONFIG,
   CHART_COLORS,
   DEFAULT_FILTERS } from
-'../components/customer-service/customerServiceConstants';
+'../lib/constants/service';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;

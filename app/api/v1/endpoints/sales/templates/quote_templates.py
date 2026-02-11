@@ -19,6 +19,7 @@ from app.models.sales import QuoteTemplate, QuoteTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     CpqPricePreviewRequest,
     CpqPricePreviewResponse,
@@ -55,13 +56,7 @@ def list_quote_templates(
     query = db.query(QuoteTemplate).options(joinedload(QuoteTemplate.versions))
     query = _filter_template_visibility(query, QuoteTemplate, current_user)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                QuoteTemplate.template_name.contains(keyword),
-                QuoteTemplate.template_code.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, QuoteTemplate, keyword, ["template_name", "template_code"])
     if status:
         query = query.filter(QuoteTemplate.status == status)
 

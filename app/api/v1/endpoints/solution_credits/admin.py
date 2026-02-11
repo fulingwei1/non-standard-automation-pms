@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.solution_credit_service import SolutionCreditService
 
 from .schemas import (
@@ -32,8 +33,7 @@ router = APIRouter()
 
 @router.get("/admin/users", response_model=UserCreditListResponse)
 async def admin_get_all_users_credits(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     search: Optional[str] = Query(None, description="搜索（用户名/姓名/工号）"),
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_active_superuser)
@@ -43,16 +43,16 @@ async def admin_get_all_users_credits(
     """
     service = SolutionCreditService(db)
     users, total = service.get_all_users_credits(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         search=search
     )
 
     return UserCreditListResponse(
         items=[UserCreditItem(**u) for u in users],
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 
@@ -77,8 +77,7 @@ async def admin_get_user_credits(
 @router.get("/admin/user/{user_id}/transactions", response_model=TransactionListResponse)
 async def admin_get_user_transactions(
     user_id: int,
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     transaction_type: Optional[str] = Query(None, description="交易类型过滤"),
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_active_superuser)
@@ -89,16 +88,16 @@ async def admin_get_user_transactions(
     service = SolutionCreditService(db)
     transactions, total = service.get_transaction_history(
         user_id=user_id,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         transaction_type=transaction_type
     )
 
     return TransactionListResponse(
         items=[TransactionResponse.model_validate(t) for t in transactions],
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

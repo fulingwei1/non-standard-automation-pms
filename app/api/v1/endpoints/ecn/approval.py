@@ -197,7 +197,7 @@ def get_pending_approval_tasks(
         filtered_tasks.append((task, ecn))
 
     total = len(filtered_tasks)
-    paginated = filtered_tasks[offset : offset + page_size]
+    paginated = filtered_tasks[pagination.offset : pagination.offset + pagination.limit]
 
     items = []
     for task, ecn in paginated:
@@ -232,9 +232,9 @@ def get_pending_approval_tasks(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total),
         },
     )
 
@@ -532,8 +532,8 @@ def get_approval_history(
     total = query.count()
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -571,8 +571,8 @@ def get_approval_history(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total),
         },
     )

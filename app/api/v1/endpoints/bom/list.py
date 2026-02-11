@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.config import settings
 from app.models.user import User
@@ -23,13 +24,7 @@ router = APIRouter()
 def list_boms(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(
         None, alias="project", description="按项目ID筛选"
     ),
@@ -42,8 +37,8 @@ def list_boms(
     """
     service = BomService(db)
     result = service.list_boms(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         project_id=project_id,
         machine_id=machine_id,
         is_latest=is_latest,

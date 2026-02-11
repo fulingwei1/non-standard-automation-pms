@@ -20,6 +20,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import ProjectArchiveRequest
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 router = APIRouter()
 
@@ -180,15 +181,7 @@ def get_archived_projects(
     from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
-    if keyword:
-        keyword_pattern = f"%{keyword}%"
-        from sqlalchemy import or_
-        query = query.filter(
-            or_(
-                Project.project_name.like(keyword_pattern),
-                Project.project_code.like(keyword_pattern),
-            )
-        )
+    query = apply_keyword_filter(query, Project, keyword, ["project_name", "project_code"])
 
     if customer_id:
         query = query.filter(Project.customer_id == customer_id)

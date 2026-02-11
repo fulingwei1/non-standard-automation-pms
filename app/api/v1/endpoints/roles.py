@@ -15,6 +15,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.security import get_current_active_user, require_permission
 from app.models.user import (
     ApiPermission,
@@ -55,8 +56,7 @@ def get_current_tenant_id(current_user: User) -> Optional[int]:
 
 @router.get("/", response_model=ResponseModel)
 def list_roles(
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     db: Session = Depends(get_db),
@@ -65,8 +65,8 @@ def list_roles(
     """获取角色列表（自动过滤当前租户）"""
     service = RoleService(db)
     result = service.list_roles(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         keyword=keyword,
         is_active=is_active,
     )

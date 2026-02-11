@@ -151,7 +151,7 @@ def get_pending_approval_tasks(
     )
 
     total = len(tasks)
-    paginated_tasks = tasks[offset : offset + page_size]
+    paginated_tasks = tasks[pagination.offset : pagination.offset + pagination.limit]
 
     items = []
     for task in paginated_tasks:
@@ -196,9 +196,9 @@ def get_pending_approval_tasks(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "pages": pagination.pages_for_total(total),
         },
     )
 

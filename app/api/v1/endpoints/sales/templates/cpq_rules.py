@@ -27,6 +27,7 @@ from app.schemas.sales import (
 )
 from app.services.cpq_pricing_service import CpqPricingService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 
 from .common import _serialize_rule_set
 
@@ -44,13 +45,7 @@ def list_cpq_rule_sets(
 ) -> Any:
     """获取CPQ规则集列表"""
     query = db.query(CpqRuleSet)
-    if keyword:
-        query = query.filter(
-            or_(
-                CpqRuleSet.rule_name.contains(keyword),
-                CpqRuleSet.rule_code.contains(keyword),
-            )
-        )
+    query = apply_keyword_filter(query, CpqRuleSet, keyword, ["rule_name", "rule_code"])
     if status:
         query = query.filter(CpqRuleSet.status == status)
 

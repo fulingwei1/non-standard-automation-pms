@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.config import settings
 from app.core.schemas.response import (
@@ -64,13 +65,7 @@ router.include_router(crud_router)
 )
 def list_customers(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（客户名称/编码）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -85,8 +80,8 @@ def list_customers(
     """
     service = CustomerService(db)
     result = service.list_customers(
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         keyword=keyword,
         industry=industry,
         status="ACTIVE" if is_active is True else None,
