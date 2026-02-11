@@ -125,7 +125,7 @@ def list_shortage_reports(
         query = query.filter(ShortageReport.urgent_level == urgent_level)
 
     total = query.count()
-    reports = query.order_by(desc(ShortageReport.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    reports = apply_pagination(query.order_by(desc(ShortageReport.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_report_response(report, db) for report in reports]
 

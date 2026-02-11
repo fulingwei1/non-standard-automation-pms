@@ -40,7 +40,7 @@ def list_performance(
     if contribution_level:
         query = query.filter(HrProjectPerformance.contribution_level == contribution_level)
 
-    performances = query.order_by(HrProjectPerformance.evaluation_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    performances = apply_pagination(query.order_by(HrProjectPerformance.evaluation_date.desc()), pagination.offset, pagination.limit).all()
 
     result = []
     for perf in performances:

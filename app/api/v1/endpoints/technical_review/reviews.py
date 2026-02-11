@@ -133,7 +133,7 @@ def read_technical_reviews(
         query = query.filter(TechnicalReview.status == review_status)
 
     total = query.count()
-    reviews = query.order_by(desc(TechnicalReview.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    reviews = apply_pagination(query.order_by(desc(TechnicalReview.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_review_response(review) for review in reviews]
 

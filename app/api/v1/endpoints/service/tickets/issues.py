@@ -43,7 +43,7 @@ def get_ticket_related_issues(
     )
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     items = [build_issue_response(issue) for issue in issues]
 

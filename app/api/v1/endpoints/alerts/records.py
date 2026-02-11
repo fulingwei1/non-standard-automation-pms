@@ -84,7 +84,7 @@ def read_alert_records(
         joinedload(AlertRecord.rule),
         joinedload(AlertRecord.project),
         joinedload(AlertRecord.machine)
-    ).order_by(AlertRecord.triggered_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    ).apply_pagination(order_by(AlertRecord.triggered_at.desc()), pagination.offset, pagination.limit).all()
 
     # 批量获取处理人信息（避免循环查询）
     handler_ids = [alert.handler_id for alert in alerts if alert.handler_id]

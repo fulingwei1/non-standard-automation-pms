@@ -94,7 +94,7 @@ def get_sales_targets(
         query = query.filter(SalesTarget.status == status)
 
     total = query.count()
-    targets = query.order_by(desc(SalesTarget.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    targets = apply_pagination(query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit).all()
 
     team_service = SalesTeamService(db)
 

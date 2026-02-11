@@ -40,7 +40,7 @@ def list_allocation_rules(
         query = query.filter(ProjectCostAllocationRule.is_active == is_active)
 
     total = query.count()
-    rules = query.order_by(desc(ProjectCostAllocationRule.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    rules = apply_pagination(query.order_by(desc(ProjectCostAllocationRule.created_at)), pagination.offset, pagination.limit).all()
 
     items = [ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
              for rule in rules]

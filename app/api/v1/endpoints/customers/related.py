@@ -36,7 +36,7 @@ def get_customer_projects(
 
     query = db.query(Project).filter(Project.customer_id == customer_id)
     total = query.count()
-    projects = query.order_by(desc(Project.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(query.order_by(desc(Project.created_at)), pagination.offset, pagination.limit).all()
 
     return PaginatedResponse(
         items=projects,

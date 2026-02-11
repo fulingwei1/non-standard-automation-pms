@@ -70,7 +70,7 @@ def get_rd_project_documents(
         query = query.filter(ProjectDocument.status == doc_status)
 
     total = query.count()
-    documents = query.order_by(desc(ProjectDocument.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
 
     return ResponseModel(
         code=200,

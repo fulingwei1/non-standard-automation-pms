@@ -62,7 +62,7 @@ def get_payment_records(
         query = query.filter(Invoice.paid_date <= end_date)
 
     total = query.count()
-    invoices = query.order_by(desc(Invoice.paid_date)).offset(pagination.offset).limit(pagination.limit).all()
+    invoices = apply_pagination(query.order_by(desc(Invoice.paid_date)), pagination.offset, pagination.limit).all()
 
     items = []
     for invoice in invoices:

@@ -98,7 +98,7 @@ def read_vendors(
         query = query.filter(Vendor.status == status)
 
     total = query.count()
-    vendors = query.order_by(Vendor.created_at).offset(pagination.offset).limit(pagination.limit).all()
+    vendors = apply_pagination(query.order_by(Vendor.created_at), pagination.offset, pagination.limit).all()
 
     items = []
     for vendor in vendors:

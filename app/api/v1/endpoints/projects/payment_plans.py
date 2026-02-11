@@ -54,7 +54,7 @@ def get_project_payment_plans(
         query = query.filter(ProjectPaymentPlan.status == status_filter)
 
     total = query.count()
-    plans = query.order_by(ProjectPaymentPlan.planned_date).offset(pagination.offset).limit(pagination.limit).all()
+    plans = apply_pagination(query.order_by(ProjectPaymentPlan.planned_date), pagination.offset, pagination.limit).all()
 
     items = []
     for plan in plans:

@@ -124,7 +124,7 @@ def get_payment_reminders(
     )
 
     total = query.count()
-    invoices = query.order_by(Invoice.due_date).offset(pagination.offset).limit(pagination.limit).all()
+    invoices = apply_pagination(query.order_by(Invoice.due_date), pagination.offset, pagination.limit).all()
 
     items = []
     for invoice in invoices:

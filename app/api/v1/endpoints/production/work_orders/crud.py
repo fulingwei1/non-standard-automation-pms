@@ -57,7 +57,7 @@ def read_work_orders(
         query = query.filter(WorkOrder.assigned_to == assigned_to)
 
     total = query.count()
-    orders = query.order_by(desc(WorkOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    orders = apply_pagination(query.order_by(desc(WorkOrder.created_at)), pagination.offset, pagination.limit).all()
 
     items = [get_work_order_response(db, order) for order in orders]
 

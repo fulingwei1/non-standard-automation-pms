@@ -87,7 +87,7 @@ def read_alert_subscriptions(
     total = query.count()
 
     # 分页
-    subscriptions = query.order_by(AlertSubscription.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    subscriptions = apply_pagination(query.order_by(AlertSubscription.created_at.desc()), pagination.offset, pagination.limit).all()
 
     # 转换为响应格式
     items = []

@@ -48,7 +48,7 @@ def read_culture_wall_contents(
     query = apply_keyword_filter(query, CultureWallContent, keyword, ["title", "content", "summary"])
 
     total = query.count()
-    contents = query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    contents = query.order_by(desc(CultureWallContent.priority), apply_pagination(desc(CultureWallContent.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for content in contents:

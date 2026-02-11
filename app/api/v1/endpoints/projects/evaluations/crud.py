@@ -212,7 +212,7 @@ def list_project_evaluations(
     
     # 分页
     total = query.count()
-    evaluations = query.offset(pagination.offset).limit(pagination.limit).all()
+    evaluations = apply_pagination(query, pagination.offset, pagination.limit).all()
     
     # 使用正确的响应格式（ProjectEvaluationListResponse是PaginatedResponse的别名）
     return ProjectEvaluationListResponse(

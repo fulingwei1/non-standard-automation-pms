@@ -58,7 +58,7 @@ def get_project_lessons(
         query = query.filter(ProjectLesson.status == status)
 
     total = query.count()
-    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    lessons = apply_pagination(query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit).all()
 
     lessons_data = [{
         "id": l.id,
@@ -281,7 +281,7 @@ def search_lessons(
         query = query.filter(ProjectLesson.category == category)
 
     total = query.count()
-    lessons = query.order_by(desc(ProjectLesson.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    lessons = apply_pagination(query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit).all()
 
     results = [{
         "id": l.id,

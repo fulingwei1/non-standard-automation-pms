@@ -143,7 +143,7 @@ def list_issue_templates(
     total = query.count()
 
     # 分页
-    templates = query.order_by(desc(IssueTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(IssueTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建响应
     items = [_build_template_response(t) for t in templates]

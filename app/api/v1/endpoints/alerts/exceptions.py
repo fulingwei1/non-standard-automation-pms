@@ -104,7 +104,7 @@ def read_exception_events(
     total = query.count()
 
     # 分页
-    events = query.order_by(ExceptionEvent.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    events = apply_pagination(query.order_by(ExceptionEvent.created_at.desc()), pagination.offset, pagination.limit).all()
 
     # 构建响应数据
     items = []

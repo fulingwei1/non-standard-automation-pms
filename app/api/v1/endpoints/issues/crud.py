@@ -191,7 +191,7 @@ def list_issues(
     total = query.count()
 
     # 分页
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建响应
     items = []

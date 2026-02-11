@@ -152,7 +152,7 @@ def list_match_records(
         query = query.filter(SpecMatchRecord.match_status == match_status)
 
     total = query.count()
-    records = query.order_by(desc(SpecMatchRecord.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    records = apply_pagination(query.order_by(desc(SpecMatchRecord.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for record in records:

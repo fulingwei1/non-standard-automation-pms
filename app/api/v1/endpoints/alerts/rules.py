@@ -120,7 +120,7 @@ def read_alert_rules(
     total = query.count()
 
     # 分页
-    rules = query.order_by(AlertRule.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    rules = apply_pagination(query.order_by(AlertRule.created_at.desc()), pagination.offset, pagination.limit).all()
 
     return pagination.to_response(rules, total)
 

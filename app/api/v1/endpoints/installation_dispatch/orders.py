@@ -84,7 +84,7 @@ def read_installation_dispatch_orders(
     query = apply_keyword_filter(query, InstallationDispatchOrder, keyword, ["order_no", "task_title"])
 
     total = query.count()
-    items = query.order_by(desc(InstallationDispatchOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(InstallationDispatchOrder.created_at)), pagination.offset, pagination.limit).all()
 
     # 获取关联信息
     for item in items:

@@ -54,7 +54,7 @@ def read_notifications(
     total = query.count()
 
     # 分页
-    notifications = query.order_by(desc(Notification.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    notifications = apply_pagination(query.order_by(desc(Notification.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建响应数据
     items = []

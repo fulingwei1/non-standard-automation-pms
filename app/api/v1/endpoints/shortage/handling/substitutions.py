@@ -120,7 +120,7 @@ def list_substitutions(
         query = query.filter(MaterialSubstitution.project_id == project_id)
 
     total = query.count()
-    substitutions = query.order_by(desc(MaterialSubstitution.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    substitutions = apply_pagination(query.order_by(desc(MaterialSubstitution.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_substitution_response(sub, db) for sub in substitutions]
 

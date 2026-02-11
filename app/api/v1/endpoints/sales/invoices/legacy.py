@@ -57,7 +57,7 @@ def read_invoices_old(
         query = query.filter(Invoice.contract_id == contract_id)
 
     total = query.count()
-    invoices = query.order_by(desc(Invoice.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    invoices = apply_pagination(query.order_by(desc(Invoice.created_at)), pagination.offset, pagination.limit).all()
 
     invoice_responses = []
     for invoice in invoices:

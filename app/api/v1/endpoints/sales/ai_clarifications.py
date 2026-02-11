@@ -17,6 +17,7 @@ from app.models.enums import AssessmentSourceTypeEnum
 from app.models.sales import AIClarification, Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.query_filters import apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     AIClarificationCreate,

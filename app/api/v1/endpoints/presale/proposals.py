@@ -109,7 +109,7 @@ def read_solutions(
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
 
     total = query.count()
-    solutions = query.order_by(desc(PresaleSolution.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    solutions = apply_pagination(query.order_by(desc(PresaleSolution.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for solution in solutions:

@@ -63,7 +63,7 @@ def get_work_orders_for_check(
     total = query.count()
 
     # 分页
-    work_orders = query.order_by(WorkOrder.plan_start_date, WorkOrder.priority).offset(pagination.offset).limit(pagination.limit).all()
+    work_orders = query.order_by(WorkOrder.plan_start_date, apply_pagination(WorkOrder.priority), pagination.offset, pagination.limit).all()
 
     # 计算每个工单的齐套率
     work_order_list = []

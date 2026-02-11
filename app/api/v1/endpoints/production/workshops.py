@@ -47,7 +47,7 @@ def read_workshops(
         query = query.filter(Workshop.is_active == is_active)
 
     total = query.count()
-    workshops = query.order_by(Workshop.created_at).offset(pagination.offset).limit(pagination.limit).all()
+    workshops = apply_pagination(query.order_by(Workshop.created_at), pagination.offset, pagination.limit).all()
 
     items = []
     for workshop in workshops:

@@ -86,7 +86,7 @@ def get_project_status_history(
         query = query.filter(ProjectStatusLog.change_type == change_type)
 
     total = query.count()
-    logs = query.order_by(desc(ProjectStatusLog.changed_at)).offset(pagination.offset).limit(pagination.limit).all()
+    logs = apply_pagination(query.order_by(desc(ProjectStatusLog.changed_at)), pagination.offset, pagination.limit).all()
 
     items = [_serialize_project_status_log(log) for log in logs]
 

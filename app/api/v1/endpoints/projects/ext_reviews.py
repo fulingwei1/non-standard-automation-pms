@@ -54,7 +54,7 @@ def get_project_reviews(
         query = query.filter(ProjectReview.status == status)
 
     total = query.count()
-    reviews = query.order_by(desc(ProjectReview.review_date)).offset(pagination.offset).limit(pagination.limit).all()
+    reviews = apply_pagination(query.order_by(desc(ProjectReview.review_date)), pagination.offset, pagination.limit).all()
 
     reviews_data = [{
         "id": r.id,

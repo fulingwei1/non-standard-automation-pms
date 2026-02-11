@@ -64,7 +64,7 @@ def get_report_templates(
         query = query.filter(ReportTemplate.report_type == report_type)
 
     total = query.count()
-    templates = query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = query.order_by(desc(ReportTemplate.use_count), apply_pagination(desc(ReportTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for template in templates:

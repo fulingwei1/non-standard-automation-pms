@@ -102,7 +102,7 @@ def list_project_members(
     
     # 分页
     total = query.count()
-    members = query.offset(pagination.offset).limit(pagination.limit).all()
+    members = apply_pagination(query, pagination.offset, pagination.limit).all()
     
     # 填充用户信息
     for member in members:

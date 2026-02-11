@@ -37,7 +37,7 @@ def list_goods_receipts(
     """获取收货单列表"""
     query = db.query(GoodsReceipt)
     total = query.count()
-    receipts = query.order_by(desc(GoodsReceipt.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    receipts = apply_pagination(query.order_by(desc(GoodsReceipt.created_at)), pagination.offset, pagination.limit).all()
     return {
         "items": [
             {

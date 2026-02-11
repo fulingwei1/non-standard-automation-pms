@@ -51,7 +51,7 @@ def get_my_projects(
     except Exception:
         total = 0
 
-    projects = query.offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     # 构建响应
     items = []

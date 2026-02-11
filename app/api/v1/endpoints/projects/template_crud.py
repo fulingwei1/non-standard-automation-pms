@@ -50,7 +50,7 @@ def get_project_templates(
         query = query.filter(ProjectTemplate.is_active == is_active)
 
     total = query.count()
-    templates = query.order_by(desc(ProjectTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(ProjectTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for template in templates:

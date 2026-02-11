@@ -95,7 +95,7 @@ def read_customer_satisfactions(
     query = apply_keyword_filter(query, CustomerSatisfaction, keyword, ["survey_no", "customer_name", "project_name"])
 
     total = query.count()
-    items = query.order_by(desc(CustomerSatisfaction.survey_date)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(CustomerSatisfaction.survey_date)), pagination.offset, pagination.limit).all()
 
     # 获取创建人姓名
     for item in items:

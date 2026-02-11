@@ -13,8 +13,8 @@ from app.models.project import Project
 from app.models.stage_instance import ProjectStageInstance
 from app.models.stage_template import StageDefinition, StageTemplate
 from app.models.user import User
+from app.common.query_filters import apply_pagination
 from app.schemas.stage_template import (
-from app.common.pagination import PaginationParams, get_pagination_query
     PipelineStatistics,
     PipelineViewResponse,
     ProjectStageOverview,
@@ -61,7 +61,7 @@ def get_pipeline_view(
     if template_id:
         projects_query = projects_query.filter(Project.stage_template_id == template_id)
 
-    projects = projects_query.offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(projects_query, pagination.offset, pagination.limit).all()
 
     # 构建统计数据
     total_count = projects_query.count()

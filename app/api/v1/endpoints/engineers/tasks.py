@@ -228,7 +228,7 @@ def get_my_tasks(
         total = int(count_result) if count_result is not None else 0
     except Exception:
         total = 0
-    tasks = query.offset(pagination.offset).limit(pagination.limit).all()
+    tasks = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     # 构建响应
     items = []

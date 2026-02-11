@@ -72,7 +72,7 @@ def get_project_risks(
         query = query.filter(PmoProjectRisk.risk_category == risk_category)
 
     total = query.count()
-    risks = query.order_by(desc(PmoProjectRisk.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    risks = apply_pagination(query.order_by(desc(PmoProjectRisk.created_at)), pagination.offset, pagination.limit).all()
 
     risks_data = [{
         "id": r.id,

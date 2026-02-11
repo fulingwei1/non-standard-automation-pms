@@ -36,7 +36,7 @@ def get_contract_reminders(
         query = query.filter(ContractReminder.status == reminder_status)
 
     total = query.count()
-    reminders = query.order_by(ContractReminder.contract_end_date.asc()).offset(pagination.offset).limit(pagination.limit).all()
+    reminders = apply_pagination(query.order_by(ContractReminder.contract_end_date.asc()), pagination.offset, pagination.limit).all()
 
     items = []
     for r in reminders:

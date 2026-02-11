@@ -71,7 +71,7 @@ def read_tenders(
     query = apply_keyword_filter(query, PresaleTenderRecord, customer_name, ["customer_name"])
 
     total = query.count()
-    tenders = query.order_by(desc(PresaleTenderRecord.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    tenders = apply_pagination(query.order_by(desc(PresaleTenderRecord.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for tender in tenders:

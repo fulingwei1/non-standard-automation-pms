@@ -51,7 +51,7 @@ def get_kit_check_history(
     total = query.count()
 
     # 分页
-    checks = query.order_by(desc(KitCheck.check_time)).offset(pagination.offset).limit(pagination.limit).all()
+    checks = apply_pagination(query.order_by(desc(KitCheck.check_time)), pagination.offset, pagination.limit).all()
 
     # 构建返回数据
     history = []

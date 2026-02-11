@@ -70,7 +70,7 @@ def read_contracts(
         query = query.filter(Contract.customer_id == customer_id)
 
     total = query.count()
-    contracts = query.order_by(desc(Contract.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    contracts = apply_pagination(query.order_by(desc(Contract.created_at)), pagination.offset, pagination.limit).all()
 
     contract_responses = []
     for contract in contracts:

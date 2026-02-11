@@ -48,7 +48,7 @@ def get_hr_profiles(
         query = query.filter(Employee.employment_status == employment_status)
 
     total = query.count()
-    employees = query.order_by(Employee.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    employees = apply_pagination(query.order_by(Employee.created_at.desc()), pagination.offset, pagination.limit).all()
 
     items = []
     for emp in employees:

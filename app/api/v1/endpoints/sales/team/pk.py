@@ -36,7 +36,7 @@ def list_team_pks(
         query = query.filter(TeamPKRecord.status == status_filter)
 
     total = query.count()
-    pks = query.order_by(TeamPKRecord.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    pks = apply_pagination(query.order_by(TeamPKRecord.created_at.desc()), pagination.offset, pagination.limit).all()
 
     items = []
     for pk in pks:

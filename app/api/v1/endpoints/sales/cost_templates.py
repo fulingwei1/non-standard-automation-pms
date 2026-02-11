@@ -53,7 +53,7 @@ def get_cost_templates(
         query = query.filter(QuoteCostTemplate.is_active == is_active)
 
     total = query.count()
-    templates = query.order_by(desc(QuoteCostTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(QuoteCostTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for template in templates:

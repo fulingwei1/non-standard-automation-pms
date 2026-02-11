@@ -88,7 +88,7 @@ def read_acceptance_orders(
         query = query.filter(AcceptanceOrder.status == order_status)
 
     total = query.count()
-    orders = query.order_by(desc(AcceptanceOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    orders = apply_pagination(query.order_by(desc(AcceptanceOrder.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for order in orders:

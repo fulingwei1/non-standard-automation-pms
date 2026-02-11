@@ -105,7 +105,7 @@ def read_customer_communications(
     query = apply_keyword_filter(query, CustomerCommunication, keyword, ["communication_no", "customer_name", "subject", "content"])
 
     total = query.count()
-    items = query.order_by(desc(CustomerCommunication.communication_date)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(CustomerCommunication.communication_date)), pagination.offset, pagination.limit).all()
 
     # 获取创建人姓名
     for item in items:

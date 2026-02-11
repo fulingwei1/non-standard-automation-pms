@@ -64,7 +64,7 @@ def read_tickets(
         query = query.filter(PresaleSupportTicket.customer_id == customer_id)
 
     total = query.count()
-    tickets = query.order_by(desc(PresaleSupportTicket.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    tickets = apply_pagination(query.order_by(desc(PresaleSupportTicket.created_at)), pagination.offset, pagination.limit).all()
 
     items = [build_ticket_response(ticket) for ticket in tickets]
 

@@ -199,7 +199,7 @@ def list_solution_templates(
         query = query.filter(EcnSolutionTemplate.template_category == category)
 
     total = query.count()
-    templates = query.order_by(desc(EcnSolutionTemplate.usage_count)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(EcnSolutionTemplate.usage_count)), pagination.offset, pagination.limit).all()
 
     return ResponseModel(
         code=200,

@@ -95,7 +95,7 @@ def read_strategic_meetings(
     total = query.count()
 
     # 统计行动项数量
-    meetings = query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    meetings = query.order_by(desc(StrategicMeeting.meeting_date), apply_pagination(desc(StrategicMeeting.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for meeting in meetings:

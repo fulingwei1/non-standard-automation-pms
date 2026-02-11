@@ -54,7 +54,7 @@ def get_project_resources(
         query = query.filter(PmoResourceAllocation.resource_role == resource_role)
 
     total = query.count()
-    resources = query.order_by(PmoResourceAllocation.start_date).offset(pagination.offset).limit(pagination.limit).all()
+    resources = apply_pagination(query.order_by(PmoResourceAllocation.start_date), pagination.offset, pagination.limit).all()
 
     resources_data = [{
         "id": r.id,

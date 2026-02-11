@@ -109,7 +109,7 @@ def get_project_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -135,7 +135,7 @@ def get_machine_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -166,7 +166,7 @@ def get_task_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)
 
@@ -195,6 +195,6 @@ def get_acceptance_order_issues(
         query = query.filter(Issue.status == status)
 
     total = query.count()
-    issues = query.order_by(desc(Issue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     return _build_issue_list_response(issues, total, page, page_size)

@@ -88,7 +88,7 @@ def read_outsourcing_orders(
         query = query.filter(OutsourcingOrder.status == status)
 
     total = query.count()
-    orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    orders = apply_pagination(query.order_by(desc(OutsourcingOrder.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for order in orders:

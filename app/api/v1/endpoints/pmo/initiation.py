@@ -107,7 +107,7 @@ def read_initiations(
         total = query.count()
         
         # 再执行分页查询
-        initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+        initiations = apply_pagination(query.order_by(desc(PmoProjectInitiation.created_at)), pagination.offset, pagination.limit).all()
 
         items = []
         for init in initiations:

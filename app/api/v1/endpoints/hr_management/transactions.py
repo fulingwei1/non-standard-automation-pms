@@ -54,7 +54,7 @@ def get_hr_transactions(
         query = query.filter(HrTransaction.transaction_date <= end_date)
 
     total = query.count()
-    transactions = query.order_by(HrTransaction.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    transactions = apply_pagination(query.order_by(HrTransaction.created_at.desc()), pagination.offset, pagination.limit).all()
 
     items = []
     for t in transactions:

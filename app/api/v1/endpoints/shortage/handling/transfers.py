@@ -118,7 +118,7 @@ def list_transfers(
         query = query.filter(MaterialTransfer.to_project_id == to_project_id)
 
     total = query.count()
-    transfers = query.order_by(desc(MaterialTransfer.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    transfers = apply_pagination(query.order_by(desc(MaterialTransfer.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_transfer_response(transfer, db) for transfer in transfers]
 

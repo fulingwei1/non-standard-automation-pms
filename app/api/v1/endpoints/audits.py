@@ -94,7 +94,7 @@ def read_audits(
     total = query.count()
 
     # 分页
-    audits = query.order_by(PermissionAudit.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    audits = apply_pagination(query.order_by(PermissionAudit.created_at.desc()), pagination.offset, pagination.limit).all()
 
     # 构建响应数据
     items = []

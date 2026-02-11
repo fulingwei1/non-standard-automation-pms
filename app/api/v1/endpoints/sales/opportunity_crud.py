@@ -12,8 +12,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
+from app.common.query_filters import apply_pagination
 from app.common.pagination import get_pagination_query, PaginationParams
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement

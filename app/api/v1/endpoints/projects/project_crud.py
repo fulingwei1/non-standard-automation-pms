@@ -126,7 +126,7 @@ def read_projects(
         total = 0
 
     # 分页
-    projects = query.order_by(desc(Project.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(query.order_by(desc(Project.created_at)), pagination.offset, pagination.limit).all()
 
     # 补充冗余字段
     for project in projects:

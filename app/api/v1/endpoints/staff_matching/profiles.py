@@ -68,7 +68,7 @@ def list_profiles(
             )
         )
 
-    results = query.offset(pagination.offset).limit(pagination.limit).all()
+    results = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     profiles = []
     for employee, profile in results:

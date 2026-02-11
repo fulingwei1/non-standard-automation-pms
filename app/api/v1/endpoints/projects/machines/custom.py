@@ -474,7 +474,7 @@ def get_machine_service_history(
     query = db.query(ServiceRecord).filter(ServiceRecord.machine_no == machine.machine_no)
 
     total = query.count()
-    records = query.order_by(desc(ServiceRecord.service_date)).offset(pagination.offset).limit(pagination.limit).all()
+    records = apply_pagination(query.order_by(desc(ServiceRecord.service_date)), pagination.offset, pagination.limit).all()
 
     history_items = []
     for record in records:

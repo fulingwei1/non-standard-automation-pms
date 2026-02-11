@@ -36,7 +36,7 @@ def get_allocation_sheets(
         query = query.filter(BonusAllocationSheet.status == sheet_status)
 
     total = query.count()
-    sheets = query.order_by(desc(BonusAllocationSheet.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    sheets = apply_pagination(query.order_by(desc(BonusAllocationSheet.created_at)), pagination.offset, pagination.limit).all()
 
     items = [BonusAllocationSheetResponse.model_validate(sheet) for sheet in sheets]
 

@@ -57,7 +57,7 @@ def list_templates(
     query = apply_keyword_filter(query, ApprovalTemplate, keyword, ["template_name", "template_code"])
 
     total = query.count()
-    items = query.order_by(ApprovalTemplate.id.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(ApprovalTemplate.id.desc()), pagination.offset, pagination.limit).all()
 
     return ApprovalTemplateListResponse(
         total=total,

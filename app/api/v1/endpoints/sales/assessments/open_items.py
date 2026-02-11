@@ -48,7 +48,7 @@ def list_open_items(
         query = query.filter(OpenItem.blocks_quotation == blocks_quotation)
 
     total = query.count()
-    items = query.order_by(desc(OpenItem.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(OpenItem.created_at)), pagination.offset, pagination.limit).all()
 
     result = []
     for item in items:

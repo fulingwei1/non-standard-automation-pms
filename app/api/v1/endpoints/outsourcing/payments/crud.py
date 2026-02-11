@@ -63,7 +63,7 @@ def read_outsourcing_payments(
         query = query.filter(OutsourcingPayment.payment_date <= end_date)
 
     total = query.count()
-    payments = query.order_by(desc(OutsourcingPayment.payment_date)).offset(pagination.offset).limit(pagination.limit).all()
+    payments = apply_pagination(query.order_by(desc(OutsourcingPayment.payment_date)), pagination.offset, pagination.limit).all()
 
     items = []
     for payment in payments:

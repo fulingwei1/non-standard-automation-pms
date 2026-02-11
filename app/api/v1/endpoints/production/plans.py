@@ -59,7 +59,7 @@ def read_production_plans(
         query = query.filter(ProductionPlan.status == status)
 
     total = query.count()
-    plans = query.order_by(desc(ProductionPlan.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    plans = apply_pagination(query.order_by(desc(ProductionPlan.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for plan in plans:

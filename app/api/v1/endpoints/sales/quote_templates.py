@@ -59,7 +59,7 @@ def get_quote_templates(
     )
 
     total = query.count()
-    templates = query.order_by(desc(QuoteTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(QuoteTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     templates_data = [{
         "id": t.id,

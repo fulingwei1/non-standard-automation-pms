@@ -183,7 +183,7 @@ def list_alerts(
         query = query.filter(MaterialShortage.handler_id == handler_id)
 
     total = query.count()
-    alerts = query.order_by(desc(MaterialShortage.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    alerts = apply_pagination(query.order_by(desc(MaterialShortage.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_alert_response(alert) for alert in alerts]
 

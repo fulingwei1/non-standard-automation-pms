@@ -52,7 +52,7 @@ def read_service_tickets(
     query = apply_keyword_filter(query, ServiceTicket, keyword, ["ticket_no", "problem_desc"])
 
     total = query.count()
-    items = query.order_by(desc(ServiceTicket.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(ServiceTicket.created_at)), pagination.offset, pagination.limit).all()
 
     # 获取项目名称和客户名称
     for item in items:

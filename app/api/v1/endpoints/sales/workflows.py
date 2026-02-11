@@ -48,7 +48,7 @@ def list_approval_workflows(
         query = query.filter(ApprovalWorkflow.is_active == is_active)
 
     total = query.count()
-    workflows = query.order_by(ApprovalWorkflow.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    workflows = apply_pagination(query.order_by(ApprovalWorkflow.created_at.desc()), pagination.offset, pagination.limit).all()
 
     result = []
     for workflow in workflows:

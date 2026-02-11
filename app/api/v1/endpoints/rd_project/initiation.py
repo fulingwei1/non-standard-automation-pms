@@ -68,7 +68,7 @@ def get_rd_projects(
     total = query.count()
 
     # 分页
-    projects = query.order_by(desc(RdProject.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(query.order_by(desc(RdProject.created_at)), pagination.offset, pagination.limit).all()
 
     items = [RdProjectResponse.model_validate(proj) for proj in projects]
 

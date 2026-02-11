@@ -217,7 +217,7 @@ def search_materials(
 
     # 分页
     total = query.count()
-    materials = query.offset(pagination.offset).limit(pagination.limit).all()
+    materials = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     items = []
     for material in materials:

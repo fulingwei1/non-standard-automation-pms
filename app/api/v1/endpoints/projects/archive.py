@@ -190,7 +190,7 @@ def get_archived_projects(
         query = query.filter(Project.project_type == project_type)
 
     total = query.count()
-    projects = query.order_by(desc(Project.archived_at)).offset(pagination.offset).limit(pagination.limit).all()
+    projects = apply_pagination(query.order_by(desc(Project.archived_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for project in projects:

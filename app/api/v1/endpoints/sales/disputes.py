@@ -37,7 +37,7 @@ def read_disputes(
         query = query.filter(ReceivableDispute.status == status)
 
     total = query.count()
-    disputes = query.order_by(desc(ReceivableDispute.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    disputes = apply_pagination(query.order_by(desc(ReceivableDispute.created_at)), pagination.offset, pagination.limit).all()
 
     dispute_responses = []
     for dispute in disputes:

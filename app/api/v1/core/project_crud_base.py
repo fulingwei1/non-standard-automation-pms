@@ -146,7 +146,7 @@ def create_project_crud_router(
         total = query.count()
 
         # 分页
-        items = query.offset(pagination.offset).limit(pagination.limit).all()
+        items = apply_pagination(query, pagination.offset, pagination.limit).all()
 
         # 转换为响应Schema
         response_items = [response_schema.model_validate(item) for item in items]

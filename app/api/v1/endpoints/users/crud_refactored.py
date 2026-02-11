@@ -52,7 +52,7 @@ def read_users(
             query = query.filter(User.is_active == is_active)
 
         total = query.count()
-        users = query.order_by(User.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+        users = apply_pagination(query.order_by(User.created_at.desc()), pagination.offset, pagination.limit).all()
 
         # 批量查询所有用户的角色（避免N+1查询）
         user_ids = [u.id for u in users]

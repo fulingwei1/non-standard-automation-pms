@@ -73,7 +73,7 @@ def read_rhythm_configs(
     query = apply_keyword_filter(query, ManagementRhythmConfig, keyword, ["config_name"])
 
     total = query.count()
-    configs = query.order_by(desc(ManagementRhythmConfig.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    configs = apply_pagination(query.order_by(desc(ManagementRhythmConfig.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for config in configs:

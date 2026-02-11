@@ -144,7 +144,7 @@ def read_review_issues(
         query = query.filter(ReviewIssue.assignee_id == assignee_id)
 
     total = query.count()
-    issues = query.order_by(desc(ReviewIssue.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(ReviewIssue.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_issue_response(issue) for issue in issues]
 

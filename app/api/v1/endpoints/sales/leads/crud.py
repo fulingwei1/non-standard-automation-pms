@@ -18,8 +18,9 @@ from app.models.advantage_product import AdvantageProduct
 from app.models.sales import Lead
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.query_filters import apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.schemas.sales import (
     LeadCreate,
     LeadResponse,

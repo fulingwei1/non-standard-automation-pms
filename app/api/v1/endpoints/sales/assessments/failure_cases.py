@@ -74,7 +74,7 @@ def list_failure_cases(
     query = apply_keyword_filter(query, FailureCase, keyword, ["project_name", "core_failure_reason"])
 
     total = query.count()
-    cases = query.order_by(desc(FailureCase.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    cases = apply_pagination(query.order_by(desc(FailureCase.created_at)), pagination.offset, pagination.limit).all()
 
     result = []
     for case in cases:

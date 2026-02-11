@@ -122,7 +122,7 @@ def list_arrivals(
         query = query.filter(MaterialArrival.is_delayed == is_delayed)
 
     total = query.count()
-    arrivals = query.order_by(desc(MaterialArrival.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    arrivals = apply_pagination(query.order_by(desc(MaterialArrival.created_at)), pagination.offset, pagination.limit).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 
@@ -326,7 +326,7 @@ def list_arrival_follow_ups(
     query = db.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id == arrival_id)
 
     total = query.count()
-    follow_ups = query.order_by(desc(ArrivalFollowUp.followed_at)).offset(pagination.offset).limit(pagination.limit).all()
+    follow_ups = apply_pagination(query.order_by(desc(ArrivalFollowUp.followed_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for follow_up in follow_ups:

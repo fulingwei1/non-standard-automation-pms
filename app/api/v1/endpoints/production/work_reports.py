@@ -285,7 +285,7 @@ def read_work_reports(
         query = query.filter(WorkReport.status == status)
 
     total = query.count()
-    reports = query.order_by(desc(WorkReport.report_time)).offset(pagination.offset).limit(pagination.limit).all()
+    reports = apply_pagination(query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit).all()
 
     items = [_get_work_report_response(db, report) for report in reports]
 
@@ -349,7 +349,7 @@ def get_my_work_reports(
     query = db.query(WorkReport).filter(WorkReport.worker_id == worker.id)
 
     total = query.count()
-    reports = query.order_by(desc(WorkReport.report_time)).offset(pagination.offset).limit(pagination.limit).all()
+    reports = apply_pagination(query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit).all()
 
     items = []
     for report in reports:

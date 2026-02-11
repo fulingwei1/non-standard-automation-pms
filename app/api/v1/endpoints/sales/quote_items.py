@@ -49,7 +49,7 @@ def get_quote_items(
         # 查询明细列表
         items = db.query(QuoteItem).filter(
             QuoteItem.quote_version_id == quote_version_id
-        ).order_by(QuoteItem.id).offset(pagination.offset).limit(pagination.limit).all()
+        ).apply_pagination(order_by(QuoteItem.id), pagination.offset, pagination.limit).all()
 
         # 转换为字典列表
         items_data = [{

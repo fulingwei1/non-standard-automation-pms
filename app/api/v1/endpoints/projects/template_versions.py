@@ -48,7 +48,7 @@ def get_template_versions(
     )
 
     total = query.count()
-    versions = query.order_by(desc(ProjectTemplateVersion.version_no)).offset(pagination.offset).limit(pagination.limit).all()
+    versions = apply_pagination(query.order_by(desc(ProjectTemplateVersion.version_no)), pagination.offset, pagination.limit).all()
 
     items = []
     for version in versions:

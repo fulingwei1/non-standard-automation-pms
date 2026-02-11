@@ -46,7 +46,7 @@ def list_purchase_requests(
     if status:
         query = query.filter(PurchaseRequest.status == status)
     total = query.count()
-    requests = query.order_by(desc(PurchaseRequest.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    requests = apply_pagination(query.order_by(desc(PurchaseRequest.created_at)), pagination.offset, pagination.limit).all()
     
     items = [serialize_purchase_request(r, include_items=False) for r in requests]
     pages = pagination.pages_for_total(total)

@@ -52,7 +52,7 @@ def list_hourly_rate_configs(
         query = query.filter(HourlyRateConfig.is_active == is_active)
 
     total = query.count()
-    configs = query.order_by(desc(HourlyRateConfig.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    configs = apply_pagination(query.order_by(desc(HourlyRateConfig.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for config in configs:

@@ -81,7 +81,7 @@ def read_ecns(
         query = query.filter(Ecn.priority == priority)
 
     total = query.count()
-    ecns = query.order_by(desc(Ecn.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    ecns = apply_pagination(query.order_by(desc(Ecn.created_at)), pagination.offset, pagination.limit).all()
 
     items = [build_ecn_list_response(db, ecn) for ecn in ecns]
 

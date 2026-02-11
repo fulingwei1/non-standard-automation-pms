@@ -52,7 +52,7 @@ def list_budgets(
         query = query.filter(ProjectBudget.budget_type == budget_type)
 
     total = query.count()
-    budgets = query.order_by(desc(ProjectBudget.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    budgets = apply_pagination(query.order_by(desc(ProjectBudget.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建响应数据
     items = []

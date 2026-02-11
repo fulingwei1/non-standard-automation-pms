@@ -62,7 +62,7 @@ def get_rd_costs(
     total = query.count()
 
     # 分页
-    costs = query.order_by(desc(RdCost.cost_date), desc(RdCost.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    costs = query.order_by(desc(RdCost.cost_date), apply_pagination(desc(RdCost.created_at)), pagination.offset, pagination.limit).all()
 
     items = [RdCostResponse.model_validate(cost) for cost in costs]
 

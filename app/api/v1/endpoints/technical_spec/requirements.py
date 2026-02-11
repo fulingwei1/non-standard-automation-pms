@@ -56,7 +56,7 @@ def list_requirements(
     total = query.count()
 
     # 分页
-    requirements = query.order_by(desc(TechnicalSpecRequirement.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    requirements = apply_pagination(query.order_by(desc(TechnicalSpecRequirement.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建响应
     items = []

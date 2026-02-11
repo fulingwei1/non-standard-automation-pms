@@ -105,7 +105,7 @@ def read_service_records(
     query = apply_keyword_filter(query, ServiceRecord, keyword, ["record_no", "service_content", "location"])
 
     total = query.count()
-    items = query.order_by(desc(ServiceRecord.service_date)).offset(pagination.offset).limit(pagination.limit).all()
+    items = apply_pagination(query.order_by(desc(ServiceRecord.service_date)), pagination.offset, pagination.limit).all()
 
     # 获取项目名称和客户名称
     for item in items:

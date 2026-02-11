@@ -127,7 +127,7 @@ def get_pagination_query(
             pagination: PaginationParams = Depends(get_pagination_query),
             db: Session = Depends(get_db),
         ):
-            q = db.query(Model).offset(pagination.offset).limit(pagination.limit)
+            q = apply_pagination(db.query(Model), pagination.offset, pagination.limit)
             total = db.query(func.count(Model.id)).scalar() or 0
             return pagination.to_response(q.all(), total)
     """

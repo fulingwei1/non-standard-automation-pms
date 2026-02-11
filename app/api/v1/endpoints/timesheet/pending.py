@@ -72,7 +72,7 @@ def get_pending_approval_timesheets(
 
     total = query.count()
     timesheets = (
-        query.order_by(Timesheet.work_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
+        apply_pagination(query.order_by(Timesheet.work_date.desc()), pagination.offset, pagination.limit).all()
     )
 
     items = []

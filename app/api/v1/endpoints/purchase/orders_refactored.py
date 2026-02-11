@@ -96,7 +96,7 @@ def list_purchase_orders(
 
         total = query.count()
         orders = (
-            query.order_by(desc(PurchaseOrder.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+            apply_pagination(query.order_by(desc(PurchaseOrder.created_at)), pagination.offset, pagination.limit).all()
         )
 
         items = [serialize_purchase_order(o, include_items=False) for o in orders]

@@ -14,6 +14,7 @@ from app.models.project import Project
 from app.models.staff_matching import MesProjectStaffingNeed
 from app.models.user import User
 from app.schemas import staff_matching as schemas
+from app.common.query_filters import apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()

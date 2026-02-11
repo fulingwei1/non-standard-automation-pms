@@ -98,7 +98,7 @@ def read_outsourcing_deliveries(
         query = query.filter(OutsourcingDelivery.status == status)
 
     total = query.count()
-    deliveries = query.order_by(desc(OutsourcingDelivery.delivery_date)).offset(pagination.offset).limit(pagination.limit).all()
+    deliveries = apply_pagination(query.order_by(desc(OutsourcingDelivery.delivery_date)), pagination.offset, pagination.limit).all()
 
     items = []
     for delivery in deliveries:

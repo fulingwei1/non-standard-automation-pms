@@ -51,7 +51,7 @@ def get_contracts(
         )
 
     total = query.count()
-    contracts = query.order_by(EmployeeContract.end_date.asc()).offset(pagination.offset).limit(pagination.limit).all()
+    contracts = apply_pagination(query.order_by(EmployeeContract.end_date.asc()), pagination.offset, pagination.limit).all()
 
     items = []
     for c in contracts:

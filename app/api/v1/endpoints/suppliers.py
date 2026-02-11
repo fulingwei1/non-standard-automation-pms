@@ -203,7 +203,7 @@ def get_supplier_materials(
 
     total = query.count()
     materials = (
-        query.order_by(desc(Material.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+        apply_pagination(query.order_by(desc(Material.created_at)), pagination.offset, pagination.limit).all()
     )
 
     return paginated_response(

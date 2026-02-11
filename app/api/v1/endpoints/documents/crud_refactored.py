@@ -63,7 +63,7 @@ def read_documents(
         query = query.filter(ProjectDocument.status == status)
 
     total = query.count()
-    documents = query.order_by(desc(ProjectDocument.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
 
     pages = (total + page_size - 1) // page_size
     

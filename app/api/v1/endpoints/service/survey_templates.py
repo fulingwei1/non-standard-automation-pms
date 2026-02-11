@@ -43,7 +43,7 @@ def list_satisfaction_templates(
     query = apply_keyword_filter(query, SatisfactionSurveyTemplate, keyword, ["template_name", "template_code"])
 
     total = query.count()
-    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
+    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), apply_pagination(desc(SatisfactionSurveyTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     return {
         "items": items,

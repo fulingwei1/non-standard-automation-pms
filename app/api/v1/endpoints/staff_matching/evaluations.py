@@ -42,7 +42,7 @@ def list_evaluations(
     if is_valid is not None:
         query = query.filter(HrEmployeeTagEvaluation.is_valid == is_valid)
 
-    evaluations = query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    evaluations = apply_pagination(query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()), pagination.offset, pagination.limit).all()
 
     # 附加关联信息
     result = []

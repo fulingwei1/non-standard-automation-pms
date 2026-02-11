@@ -93,7 +93,7 @@ def read_outsourcing_inspections(
         query = query.filter(OutsourcingInspection.inspect_result == inspect_result)
 
     total = query.count()
-    inspections = query.order_by(desc(OutsourcingInspection.inspect_date)).offset(pagination.offset).limit(pagination.limit).all()
+    inspections = apply_pagination(query.order_by(desc(OutsourcingInspection.inspect_date)), pagination.offset, pagination.limit).all()
 
     items = []
     for inspection in inspections:
