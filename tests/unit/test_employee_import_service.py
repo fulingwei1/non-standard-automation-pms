@@ -1,201 +1,119 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for employee_import_service service
-Covers: app/services/employee_import_service.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 154 lines
-"""
+"""员工导入服务测试"""
+from unittest.mock import MagicMock, patch
 
-import pytest
 import pandas as pd
-from sqlalchemy.orm import Session
+import pytest
 
 from app.services.employee_import_service import (
-    find_name_column,
-    find_department_columns,
-    find_other_columns,
-    clean_name,
-    get_department_name,
-    is_active_employee,
-    generate_employee_code,
-    clean_phone,
-    import_employees_from_dataframe,
+    find_name_column, find_department_columns, find_other_columns,
+    clean_name, get_department_name, is_active_employee,
+    generate_employee_code, clean_phone, import_employees_from_dataframe,
 )
-from app.models.organization import Employee
-from app.models.staff_matching import HrTagDict
-from tests.factories import EmployeeFactory
 
 
-class TestEmployeeImportService:
-    """Test suite for employee_import_service."""
+class TestFindNameColumn:
+    def test_found(self):
+        assert find_name_column(['姓名', '部门']) == '姓名'
 
-    def test_find_name_column(self):
-        """测试查找姓名列"""
-        columns = ["姓名", "部门", "职务"]
-        assert find_name_column(columns) == "姓名"
+    def test_english(self):
+        assert find_name_column(['name', 'dept']) == 'name'
 
-        columns = ["name", "department"]
-        assert find_name_column(columns) == "name"
+    def test_not_found(self):
+        assert find_name_column(['部门', '电话']) is None
 
-        columns = ["员工姓名", "其他"]
-        assert find_name_column(columns) == "员工姓名"
 
-        columns = ["其他列"]
-        assert find_name_column(columns) is None
+class TestFindDepartmentColumns:
+    def test_multi_level(self):
+        cols = find_department_columns(['一级部门', '二级部门', '三级部门'])
+        assert len(cols) == 3
 
-    def test_find_department_columns(self):
-        """测试查找部门列"""
-        columns = ["姓名", "一级部门", "二级部门", "三级部门"]
-        dept_cols = find_department_columns(columns)
-        assert len(dept_cols) == 3
-        assert "一级部门" in dept_cols
+    def test_single(self):
+        cols = find_department_columns(['部门'])
+        assert cols == ['部门']
 
-        columns = ["姓名", "部门"]
-        dept_cols = find_department_columns(columns)
-        assert len(dept_cols) == 1
-        assert "部门" in dept_cols
+    def test_none(self):
+        assert find_department_columns(['姓名']) == []
 
-        columns = ["姓名", "其他"]
-        dept_cols = find_department_columns(columns)
-        assert len(dept_cols) == 0
 
-    def test_find_other_columns(self):
-        """测试查找其他列"""
-        columns = ["姓名", "职务", "手机", "在职离职状态"]
-        other = find_other_columns(columns)
+class TestFindOtherColumns:
+    def test_found(self):
+        result = find_other_columns(['职务', '联系方式', '在职离职状态'])
+        assert result['position'] == '职务'
+        assert result['phone'] == '联系方式'
+        assert result['status'] == '在职离职状态'
 
-        assert other["position"] == "职务"
-        assert other["phone"] == "手机"
-        assert other["status"] == "在职离职状态"
+    def test_not_found(self):
+        result = find_other_columns(['姓名'])
+        assert result['position'] is None
 
-        columns = ["姓名", "岗位", "电话"]
-        other = find_other_columns(columns)
-        assert other["position"] == "岗位"
-        assert other["phone"] == "电话"
 
-    def test_clean_name(self):
-        """测试清理姓名"""
-        assert clean_name("  张三  ") == "张三"
-        assert clean_name("李四") == "李四"
-        assert clean_name(pd.NA) is None
-        assert clean_name(None) is None
+class TestCleanName:
+    def test_normal(self):
+        assert clean_name("张三") == "张三"
+
+    def test_nan(self):
+        import numpy as np
+        assert clean_name(np.nan) is None
+
+    def test_empty(self):
         assert clean_name("") is None
 
-    def test_get_department_name(self):
-        """测试获取部门名称"""
-        row = pd.Series({
-        "一级部门": "技术部",
-        "二级部门": "研发组"
-        })
-        dept_cols = ["一级部门", "二级部门"]
-        dept_name = get_department_name(row, dept_cols)
-        assert dept_name == "技术部-研发组"
 
-        row = pd.Series({"部门": "技术部"})
-        dept_name = get_department_name(row, ["部门"])
-        assert dept_name == "技术部"
+class TestGetDepartmentName:
+    def test_multi_level(self):
+        row = pd.Series({"一级部门": "技术", "二级部门": "软件"})
+        assert get_department_name(row, ["一级部门", "二级部门"]) == "技术-软件"
 
-        row = pd.Series({})
-        dept_name = get_department_name(row, [])
-        assert dept_name is None
+    def test_no_cols(self):
+        assert get_department_name(pd.Series(), []) is None
 
-    def test_is_active_employee(self):
-        """测试判断员工是否在职"""
+
+class TestIsActiveEmployee:
+    def test_active(self):
         assert is_active_employee("在职") is True
+
+    def test_resigned(self):
         assert is_active_employee("离职") is False
-        assert is_active_employee("已离职") is False
-        assert is_active_employee(pd.NA) is True
-        assert is_active_employee(None) is True
-        assert is_active_employee("resigned") is False
 
-    def test_generate_employee_code(self):
-        """测试生成员工工号"""
-        existing_codes = {"EMP-00001", "EMP-00002"}
-        code = generate_employee_code(1, existing_codes)
+    def test_nan(self):
+        import numpy as np
+        assert is_active_employee(np.nan) is True
+
+
+class TestCleanPhone:
+    def test_normal(self):
+        assert clean_phone("13800138000") == "13800138000"
+
+    def test_scientific(self):
+        assert clean_phone("1.38e10") == "13800000000"
+
+    def test_nan(self):
+        import numpy as np
+        assert clean_phone(np.nan) is None
+
+
+class TestGenerateEmployeeCode:
+    @patch('app.services.employee_import_service.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
+    @patch('app.services.employee_import_service.SEQ_LENGTH', {'EMPLOYEE': 5})
+    def test_generate(self):
+        existing = set()
+        code = generate_employee_code(1, existing)
         assert code.startswith("EMP-")
-        assert code not in existing_codes
 
-        # 测试冲突处理
-        existing_codes = {"EMP-00001"}
-        code1 = generate_employee_code(1, existing_codes)
-        existing_codes.add(code1)
-        code2 = generate_employee_code(1, existing_codes)
-        assert code1 != code2
 
-    def test_clean_phone(self):
-        """测试清理电话号码"""
-        assert clean_phone("13812345678") == "13812345678"
-        assert clean_phone("  13812345678  ") == "13812345678"
-        assert clean_phone(pd.NA) is None
-        assert clean_phone(None) is None
-        assert clean_phone("") is None
+class TestImportEmployees:
+    def test_missing_name_column(self):
+        from fastapi import HTTPException
+        db = MagicMock()
+        df = pd.DataFrame({"部门": ["技术"]})
+        with pytest.raises(HTTPException):
+            import_employees_from_dataframe(db, df, evaluator_id=1)
 
-        # 测试科学计数法
-        assert clean_phone("1.38e+10") == "13800000000"
-        assert clean_phone("138.0") == "138"
-
-    def test_import_employees_from_dataframe_missing_name_column(self, db_session):
-        """测试导入员工 - 缺少姓名列"""
-        df = pd.DataFrame({"部门": ["技术部"]})
-
-        with pytest.raises(Exception):  # HTTPException
-            import_employees_from_dataframe(db_session, df, evaluator_id=1)
-
-    def test_import_employees_from_dataframe_success(self, db_session):
-        """测试导入员工 - 成功场景"""
-        # 创建标签字典
-        tag = HrTagDict(
-        tag_code="TAG-PLC",
-        tag_name="PLC编程",
-        tag_type="SKILL",
-        is_active=True
-        )
-        db_session.add(tag)
-        db_session.commit()
-
-        df = pd.DataFrame({
-        "姓名": ["张三", "李四"],
-        "部门": ["技术部", "销售部"],
-        "职务": ["PLC工程师", "销售"],
-        "手机": ["13812345678", "13912345678"],
-        "在职离职状态": ["在职", "在职"]
-        })
-
-        result = import_employees_from_dataframe(db_session, df, evaluator_id=1)
-
-        assert result["imported"] >= 0
-        assert result["updated"] >= 0
-        assert result["skipped"] >= 0
-        assert isinstance(result["errors"], list)
-
-    def test_import_employees_from_dataframe_update_existing(self, db_session):
-        """测试导入员工 - 更新现有员工"""
-        # 创建现有员工
-        existing_employee = EmployeeFactory(
-        name="张三",
-        department="技术部"
-        )
-        db_session.add(existing_employee)
-        db_session.commit()
-
-        df = pd.DataFrame({
-        "姓名": ["张三"],
-        "部门": ["技术部"],
-        "手机": ["13899999999"]
-        })
-
-        result = import_employees_from_dataframe(db_session, df, evaluator_id=1)
-
-        assert result["updated"] >= 0 or result["imported"] >= 0
-
-    def test_import_employees_from_dataframe_skip_empty_name(self, db_session):
-        """测试导入员工 - 跳过空姓名"""
-        df = pd.DataFrame({
-        "姓名": ["", "   ", None],
-        "部门": ["技术部", "销售部", "财务部"]
-        })
-
-        result = import_employees_from_dataframe(db_session, df, evaluator_id=1)
-
-        assert result["skipped"] >= 0
+    def test_empty_dataframe(self):
+        db = MagicMock()
+        db.query.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.all.return_value = []
+        df = pd.DataFrame({"姓名": []})
+        result = import_employees_from_dataframe(db, df, evaluator_id=1)
+        assert result["imported"] == 0

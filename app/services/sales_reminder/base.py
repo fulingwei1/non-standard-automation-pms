@@ -5,9 +5,9 @@
 
 from typing import List, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.notification import Notification
 from app.models.user import Role, User, UserRole
 
@@ -21,14 +21,15 @@ def find_users_by_role(db: Session, role_name: str) -> List[User]:
         return []
 
     # 查找匹配的角色
-    roles = db.query(Role).filter(
-        Role.is_active == True,
-        or_(
-            Role.role_name == role_name,
-            Role.role_name.like(f"%{role_name}%"),
-            Role.role_code.like(f"%{role_name}%")
-        )
-    ).all()
+    roles_query = db.query(Role).filter(Role.is_active == True)
+    roles_query = apply_keyword_filter(
+        roles_query,
+        Role,
+        role_name,
+        ["role_name", "role_code"],
+        use_ilike=False,
+    )
+    roles = roles_query.all()
 
     if not roles:
         return []
@@ -61,13 +62,15 @@ def find_users_by_department(db: Session, dept_name: str) -> List[User]:
     if not dept_name:
         return []
 
-    users = db.query(User).filter(
-        User.is_active == True,
-        or_(
-            User.department == dept_name,
-            User.department.like(f"%{dept_name}%")
-        )
-    ).all()
+    users_query = db.query(User).filter(User.is_active == True)
+    users_query = apply_keyword_filter(
+        users_query,
+        User,
+        dept_name,
+        "department",
+        use_ilike=False,
+    )
+    users = users_query.all()
     return users
 
 

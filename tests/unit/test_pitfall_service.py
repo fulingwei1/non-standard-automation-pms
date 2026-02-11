@@ -1,143 +1,136 @@
 # -*- coding: utf-8 -*-
-"""
-坑点服务单元测试
-
-测试覆盖:
-- create_pitfall: 创建坑点记录
-- generate_pitfall_no: 生成坑点编号
-- get_pitfall: 获取坑点详情
-- list_pitfalls: 列表查询
-- publish_pitfall: 发布坑点
-- verify_pitfall: 验证坑点
-"""
-
-from datetime import date
-from unittest.mock import MagicMock, patch
+"""Tests for pitfall/pitfall_service.py"""
+from datetime import datetime
+from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
 
 class TestPitfallService:
-    """测试坑点服务"""
 
-    @pytest.fixture
-    def service(self, db_session):
-        """创建坑点服务"""
+    def _make_service(self):
         from app.services.pitfall.pitfall_service import PitfallService
-        return PitfallService(db_session)
+        db = MagicMock()
+        return PitfallService(db), db
 
-    def test_service_initialization(self, service, db_session):
-        """测试服务初始化"""
-        assert service.db == db_session
+    def test_generate_pitfall_no_first(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        no = svc.generate_pitfall_no()
+        today = datetime.now()
+        prefix = f"PF{today.strftime('%y%m%d')}"
+        assert no == f"{prefix}001"
 
-    def test_generate_pitfall_no(self, service):
-        """测试生成坑点编号"""
-        pitfall_no = service.generate_pitfall_no()
+    def test_generate_pitfall_no_increment(self):
+        svc, db = self._make_service()
+        existing = MagicMock()
+        today = datetime.now()
+        prefix = f"PF{today.strftime('%y%m%d')}"
+        existing.pitfall_no = f"{prefix}005"
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing
+        no = svc.generate_pitfall_no()
+        assert no == f"{prefix}006"
 
-        assert pitfall_no is not None
-        assert pitfall_no.startswith("PF")  # 坑点编号格式 PFyymmddxxx
+    @patch("app.services.pitfall.pitfall_service.PitfallService.generate_pitfall_no", return_value="PF240101001")
+    def test_create_pitfall(self, mock_gen):
+        svc, db = self._make_service()
+        pitfall_mock = MagicMock()
+        db.add = MagicMock()
+        db.commit = MagicMock()
+        db.refresh = MagicMock()
 
-    def test_generate_pitfall_no_unique(self, service):
-        """测试坑点编号唯一性"""
-        no1 = service.generate_pitfall_no()
-        no2 = service.generate_pitfall_no()
-
-        # 连续生成的编号应该不同
-        # 注意：如果在同一秒内生成，可能需要特殊处理
-        assert no1 is not None
-        assert no2 is not None
-
-    def test_create_pitfall_basic(self, service, db_session):
-        """测试创建坑点 - 基本"""
-        result = service.create_pitfall(
+        result = svc.create_pitfall(
             title="测试坑点",
-            description="这是测试坑点的描述",
-            solution="解决方案",
-            created_by=1,
+            description="描述",
+            created_by=1
         )
+        db.add.assert_called_once()
+        db.commit.assert_called_once()
 
-        assert result is not None or result is False
-
-    def test_create_pitfall_full_data(self, service, db_session):
-        """测试创建坑点 - 完整数据"""
-        result = service.create_pitfall(
-            title="完整测试坑点",
-            description="详细的坑点描述",
-            solution="完整的解决方案",
-            stage="S5",
-            equipment_type="ICT",
-            problem_type="设计问题",
-            root_cause="设计评审不充分",
-            impact="导致返工",
-            prevention="加强设计评审",
-            cost_impact=10000,
-            schedule_impact=5,
-            source_type="PROJECT",
-            source_id=1,
-            is_sensitive=False,
-            tags=["测试", "设计"],
-            created_by=1,
-        )
-
-        assert result is not None or result is False
-
-    def test_get_pitfall_not_found(self, service):
-        """测试获取不存在的坑点"""
-        result = service.get_pitfall(99999)
-
+    def test_get_pitfall_not_found(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        result = svc.get_pitfall(99, user_id=1)
         assert result is None
 
-    def test_list_pitfalls_empty(self, service):
-        """测试列表查询 - 空结果"""
-        result = service.list_pitfalls()
+    def test_get_pitfall_sensitive_denied(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.is_sensitive = True
+        pitfall.created_by = 2
+        pitfall.visible_to = [3, 4]
+        db.query.return_value.filter.return_value.first.return_value = pitfall
+        result = svc.get_pitfall(1, user_id=1, is_admin=False)
+        assert result is None
 
-        assert isinstance(result, (list, dict, tuple))
+    def test_get_pitfall_sensitive_admin(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.is_sensitive = True
+        pitfall.created_by = 2
+        db.query.return_value.filter.return_value.first.return_value = pitfall
+        result = svc.get_pitfall(1, user_id=1, is_admin=True)
+        assert result == pitfall
 
-    def test_list_pitfalls_with_filters(self, service):
-        """测试列表查询 - 带筛选"""
-        result = service.list_pitfalls(
-            stage="S5",
-            equipment_type="ICT",
-            problem_type="设计问题",
-        )
+    def test_get_pitfall_sensitive_creator(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.is_sensitive = True
+        pitfall.created_by = 1
+        db.query.return_value.filter.return_value.first.return_value = pitfall
+        result = svc.get_pitfall(1, user_id=1, is_admin=False)
+        assert result == pitfall
 
-        assert isinstance(result, (list, dict, tuple))
+    @patch("app.services.pitfall.pitfall_service.apply_keyword_filter")
+    @patch("app.services.pitfall.pitfall_service.apply_pagination")
+    def test_list_pitfalls(self, mock_pag, mock_kw):
+        svc, db = self._make_service()
+        q = MagicMock()
+        db.query.return_value = q
+        q.filter.return_value = q
+        mock_kw.return_value = q
+        q.count.return_value = 0
+        mock_pag.return_value.all.return_value = []
+        q.order_by.return_value = q
 
-    def test_list_pitfalls_with_search(self, service):
-        """测试列表查询 - 搜索"""
-        result = service.list_pitfalls(
-            keyword="测试",
-        )
+        result, total = svc.list_pitfalls(user_id=1)
+        assert total == 0
+        assert result == []
 
-        assert isinstance(result, (list, dict, tuple))
+    def test_publish_pitfall_not_found(self):
+        svc, db = self._make_service()
+        with patch.object(svc, "get_pitfall", return_value=None):
+            result = svc.publish_pitfall(99, user_id=1)
+            assert result is None
 
-    def test_publish_pitfall_not_found(self, service):
-        """测试发布不存在的坑点"""
-        result = service.publish_pitfall(99999, published_by=1)
+    def test_publish_pitfall_wrong_user(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.created_by = 2
+        with patch.object(svc, "get_pitfall", return_value=pitfall):
+            result = svc.publish_pitfall(1, user_id=1)
+            assert result is None
 
-        assert result is False
+    def test_publish_pitfall_success(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.created_by = 1
+        with patch.object(svc, "get_pitfall", return_value=pitfall):
+            result = svc.publish_pitfall(1, user_id=1)
+            assert pitfall.status == "PUBLISHED"
+            db.commit.assert_called()
 
-    def test_verify_pitfall_not_found(self, service):
-        """测试验证不存在的坑点"""
-        result = service.verify_pitfall(99999, verified_by=1)
+    def test_verify_pitfall(self):
+        svc, db = self._make_service()
+        pitfall = MagicMock()
+        pitfall.verify_count = 2
+        db.query.return_value.filter.return_value.first.return_value = pitfall
+        result = svc.verify_pitfall(1)
+        assert pitfall.verified is True
+        assert pitfall.verify_count == 3
 
-        assert result is False
-
-
-class TestPitfallServiceModule:
-    """测试坑点服务模块"""
-
-    def test_import_module(self):
-        """测试导入模块"""
-        from app.services.pitfall import PitfallService
-        assert PitfallService is not None
-
-    def test_service_has_methods(self):
-        """测试服务有所需方法"""
-        from app.services.pitfall import PitfallService
-
-        assert hasattr(PitfallService, 'create_pitfall')
-        assert hasattr(PitfallService, 'get_pitfall')
-        assert hasattr(PitfallService, 'list_pitfalls')
-        assert hasattr(PitfallService, 'publish_pitfall')
-        assert hasattr(PitfallService, 'verify_pitfall')
+    def test_verify_pitfall_not_found(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        result = svc.verify_pitfall(99)
+        assert result is None

@@ -1,141 +1,120 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for meeting_report_helpers service
-Covers: app/services/meeting_report_helpers.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 108 lines
-Batch: 2
-"""
+"""Tests for meeting_report_helpers.py"""
+from unittest.mock import MagicMock, patch
+from datetime import date
 
-import pytest
-pytestmark = pytest.mark.skip(reason="Import errors - needs review")
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from sqlalchemy.orm import Session
-import app.services.meeting_report_helpers
+from app.services.meeting_report_helpers import (
+    calculate_periods,
+    calculate_meeting_statistics,
+    calculate_action_item_statistics,
+    calculate_completion_rate,
+    calculate_change,
+    collect_key_decisions,
+    calculate_by_level_statistics,
+    build_report_summary,
+)
 
 
+class TestCalculatePeriods:
+    def test_normal_month(self):
+        s, e, ps, pe = calculate_periods(2025, 6)
+        assert s == date(2025, 6, 1)
+        assert e == date(2025, 6, 30)
+        assert ps == date(2025, 5, 1)
+        assert pe == date(2025, 5, 31)
+
+    def test_january_wraps(self):
+        s, e, ps, pe = calculate_periods(2025, 1)
+        assert ps == date(2024, 12, 1)
+        assert pe == date(2024, 12, 31)
+
+    def test_february(self):
+        s, e, ps, pe = calculate_periods(2024, 2)
+        assert e == date(2024, 2, 29)  # leap year
 
 
-class TestMeetingReportHelpers:
-    """Test suite for meeting_report_helpers."""
+class TestCalculateMeetingStatistics:
+    def test_basic(self):
+        meetings = [
+            MagicMock(status="COMPLETED"),
+            MagicMock(status="COMPLETED"),
+            MagicMock(status="PENDING"),
+        ]
+        total, completed = calculate_meeting_statistics(meetings)
+        assert total == 3
+        assert completed == 2
 
-    def test_calculate_periods(self):
-        """测试 calculate_periods 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_periods
-        pass
-
-
-    def test_query_meetings(self):
-        """测试 query_meetings 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import query_meetings
-        pass
-
-
-    def test_calculate_meeting_statistics(self):
-        """测试 calculate_meeting_statistics 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_meeting_statistics
-        pass
+    def test_empty(self):
+        total, completed = calculate_meeting_statistics([])
+        assert total == 0
+        assert completed == 0
 
 
-    def test_calculate_action_item_statistics(self):
-        """测试 calculate_action_item_statistics 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_action_item_statistics
-        pass
+class TestCalculateActionItemStatistics:
+    def test_empty_ids(self):
+        db = MagicMock()
+        total, completed, overdue = calculate_action_item_statistics(db, [])
+        assert total == 0
+
+    def test_with_ids(self):
+        db = MagicMock()
+        db.query.return_value.filter.return_value.count.return_value = 10
+        total, completed, overdue = calculate_action_item_statistics(db, [1, 2])
+        assert total == 10
 
 
-    def test_calculate_completion_rate(self):
-        """测试 calculate_completion_rate 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_completion_rate
-        pass
+class TestCalculateCompletionRate:
+    def test_normal(self):
+        assert calculate_completion_rate(3, 10) == "30.0%"
+
+    def test_zero_total(self):
+        assert calculate_completion_rate(0, 0) == "0.0%"
 
 
-    def test_calculate_change(self):
-        """测试 calculate_change 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_change
-        pass
+class TestCalculateChange:
+    def test_increase(self):
+        result = calculate_change(10, 8)
+        assert result['change'] == 2
+        assert result['current'] == 10
+
+    def test_from_zero(self):
+        result = calculate_change(5, 0)
+        assert result['change_rate'] == "+100.0%"
+
+    def test_both_zero(self):
+        result = calculate_change(0, 0)
+        assert result['change'] == 0
 
 
-    def test_build_comparison_data(self):
-        """测试 build_comparison_data 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import build_comparison_data
-        pass
+class TestCollectKeyDecisions:
+    def test_basic(self):
+        m1 = MagicMock(key_decisions=["决策A", "决策B"])
+        m2 = MagicMock(key_decisions=None)
+        m3 = MagicMock(key_decisions=["决策C"])
+        result = collect_key_decisions([m1, m2, m3])
+        assert len(result) == 3
 
 
-    def test_collect_key_decisions(self):
-        """测试 collect_key_decisions 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import collect_key_decisions
-        pass
+class TestCalculateByLevelStatistics:
+    def test_basic(self):
+        meetings = [
+            MagicMock(rhythm_level="L1", status="COMPLETED"),
+            MagicMock(rhythm_level="L1", status="PENDING"),
+            MagicMock(rhythm_level="L2", status="COMPLETED"),
+        ]
+        result = calculate_by_level_statistics(meetings)
+        assert result['L1']['total'] == 2
+        assert result['L1']['completed'] == 1
+        assert result['L2']['total'] == 1
 
 
-    def test_build_meetings_data(self):
-        """测试 build_meetings_data 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import build_meetings_data
-        pass
-
-
-    def test_calculate_by_level_statistics(self):
-        """测试 calculate_by_level_statistics 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_by_level_statistics
-        pass
-
-
-    def test_build_report_summary(self):
-        """测试 build_report_summary 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import build_report_summary
-        pass
-
-
-    def test_calculate_business_metrics(self):
-        """测试 calculate_business_metrics 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_business_metrics
-        pass
-
-
-    def test_calculate_metric_comparisons(self):
-        """测试 calculate_metric_comparisons 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_metric_comparisons
-        pass
-
-
-    def test_collect_strategic_structures(self):
-        """测试 collect_strategic_structures 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import collect_strategic_structures
-        pass
-
-
-    def test_calculate_yoy_comparisons(self):
-        """测试 calculate_yoy_comparisons 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import calculate_yoy_comparisons
-        pass
-
-
-    def test_create_report_record(self):
-        """测试 create_report_record 函数"""
-        # TODO: 实现测试逻辑
-        from app.services.meeting_report_helpers import create_report_record
-        pass
-
-
-    # TODO: 添加更多测试用例
-    # - 正常流程测试 (Happy Path)
-    # - 边界条件测试 (Edge Cases)
-    # - 异常处理测试 (Error Handling)
-    # - 数据验证测试 (Data Validation)
+class TestBuildReportSummary:
+    def test_basic(self):
+        result = build_report_summary(
+            {'total': 10, 'completed': 8},
+            {'total': 20, 'completed': 15, 'overdue': 3},
+            75.0
+        )
+        assert result['total_meetings'] == 10
+        assert result['completion_rate'] == "80.0%"
+        assert result['action_completion_rate'] == "75.0%"

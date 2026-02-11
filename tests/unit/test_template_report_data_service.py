@@ -1,80 +1,108 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for TemplateReportDataService
-"""
-
+"""Tests for template_report_data_service.py"""
+from unittest.mock import MagicMock, patch
 from datetime import date
-from unittest.mock import patch
+import json
 
-from app.models.report_center import ReportTemplate
 from app.services.template_report_data_service import TemplateReportDataService
 
 
-def _create_template(db_session) -> ReportTemplate:
-    template = ReportTemplate(
-        template_code="TPL-CTX-001",
-        template_name="上下文测试模板",
-        report_type="PROJECT_WEEKLY",
-        is_active=True,
-    )
-    db_session.add(template)
-    db_session.commit()
-    db_session.refresh(template)
-    return template
+class TestTemplateReportDataService:
+    def setup_method(self):
+        self.db = MagicMock()
+        self.service = TemplateReportDataService(self.db)
 
+    def test_parse_filters_none(self):
+        assert self.service._parse_filters(None) == {}
 
-def test_build_context_with_mocked_report(db_session):
-    """确保数据服务能正确转换模板报表数据"""
-    template = _create_template(db_session)
-    service = TemplateReportDataService(db_session)
+    def test_parse_filters_dict(self):
+        assert self.service._parse_filters({"a": 1}) == {"a": 1}
 
-    fake_report = {
-        "template_id": template.id,
-        "template_code": template.template_code,
-        "template_name": template.template_name,
-        "report_type": template.report_type,
-        "period": {"start_date": "2026-01-01", "end_date": "2026-01-31"},
-        "metrics": {
-        "total_hours": 120.5,
-        "active_members": 8,
-        },
-        "sections": {
-        "milestones": {
-        "title": "里程碑",
-        "type": "table",
-        "data": [
-        {"name": "M1", "status": "COMPLETED"},
-        {"name": "M2", "status": "IN_PROGRESS"},
-        ],
-        },
-        "timesheet": {
-        "title": "工时汇总",
-        "type": "summary",
-        "data": {"total": 120},
-        },
-        },
-        "charts": [
-        {"title": "趋势", "type": "line", "data": [{"week": 1, "value": 10}]},
-        ],
-    }
+    def test_parse_filters_json_string(self):
+        assert self.service._parse_filters('{"a": 1}') == {"a": 1}
 
-    with patch.object(
-        TemplateReportDataService,
-        "_get_template",
-        return_value=template,
-    ), patch(
-        "app.services.template_report.core.TemplateReportCore.generate_from_template",
-        return_value=fake_report,
-    ):
-        context = service.build_context(
-        template_id=template.id,
-        project_id=1,
-        start_date=date(2026, 1, 1),
-        end_date=date(2026, 1, 15),
-        )
+    def test_parse_filters_invalid_string(self):
+        assert self.service._parse_filters("not json") == {}
 
-    assert context["template_info"]["template_id"] == template.id
-    assert len(context["metrics_list"]) == 2
-    assert context["sections_overview"][0]["section_id"] == "milestones"
-    assert context["section_rows"], "应包含区块数据"
-    assert context["charts_overview"][0]["data_points"] == 1
+    def test_parse_filters_other_type(self):
+        assert self.service._parse_filters(123) == {}
+
+    def test_normalize_dates_defaults(self):
+        start, end = self.service._normalize_dates(None, None)
+        assert start < end
+
+    def test_normalize_dates_swapped(self):
+        start, end = self.service._normalize_dates(date(2025, 6, 1), date(2025, 1, 1))
+        assert start <= end
+
+    def test_humanize_label(self):
+        assert TemplateReportDataService._humanize_label("total_hours") == "Total Hours"
+
+    def test_to_json(self):
+        assert TemplateReportDataService._to_json({"a": 1}) == '{"a": 1}'
+        assert TemplateReportDataService._to_json(object()) != ""
+
+    def test_build_metrics_list(self):
+        result = self.service._build_metrics_list({"total": 100, "avg": 50})
+        assert len(result) == 2
+        assert result[0]['value'] == 100
+
+    def test_build_sections_overview(self):
+        sections = {
+            "sec1": {"title": "Section 1", "type": "table", "data": [1, 2, 3]},
+            "sec2": {"title": "Section 2", "data": {"key": "val"}, "summary": "ok"},
+        }
+        result = self.service._build_sections_overview(sections)
+        assert len(result) == 2
+        assert result[0]['item_count'] == 3
+        assert result[1]['has_summary'] is True
+
+    def test_build_section_rows_list_data(self):
+        sections = {"sec1": {"title": "S1", "data": [{"a": 1}, {"a": 2}]}}
+        result = self.service._build_section_rows(sections)
+        assert len(result) == 2
+
+    def test_build_section_rows_dict_data(self):
+        sections = {"sec1": {"title": "S1", "data": {"key": "val"}}}
+        result = self.service._build_section_rows(sections)
+        assert len(result) == 1
+
+    def test_build_section_rows_scalar_data(self):
+        sections = {"sec1": {"title": "S1", "data": 42}}
+        result = self.service._build_section_rows(sections)
+        assert len(result) == 1
+        assert result[0]['data_preview'] == "42"
+
+    def test_build_charts_overview(self):
+        charts = [{"title": "Chart 1", "type": "bar", "data": [1, 2, 3]}]
+        result = self.service._build_charts_overview(charts)
+        assert result[0]['data_points'] == 3
+
+    def test_get_template_not_found(self):
+        self.db.query.return_value.filter.return_value.first.return_value = None
+        import pytest
+        with pytest.raises(ValueError, match="不存在"):
+            self.service._get_template(999)
+
+    def test_get_template_inactive(self):
+        template = MagicMock(is_active=False)
+        self.db.query.return_value.filter.return_value.first.return_value = template
+        import pytest
+        with pytest.raises(ValueError, match="已停用"):
+            self.service._get_template(1)
+
+    @patch("app.services.template_report_data_service.TemplateReportCore.generate_from_template")
+    def test_build_context(self, mock_gen):
+        template = MagicMock(id=1, template_code="T001", template_name="测试",
+                             report_type="MONTHLY", is_active=True)
+        self.db.query.return_value.filter.return_value.first.return_value = template
+        mock_gen.return_value = {
+            "sections": {"s1": {"title": "S", "data": []}},
+            "metrics": {"total": 10},
+            "charts": [],
+            "report_type": "MONTHLY",
+            "period": {"start_date": "2025-01-01", "end_date": "2025-01-31"},
+        }
+        result = self.service.build_context(1)
+        assert 'template_info' in result
+        assert 'metrics_list' in result

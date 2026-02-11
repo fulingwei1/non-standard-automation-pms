@@ -1,85 +1,107 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for material_transfer_service service
-Covers: app/services/material_transfer_service.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 137 lines
-Batch: 2
-"""
+"""物料调拨服务测试"""
+from decimal import Decimal
+from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy.orm import Session
 
-pytestmark = pytest.mark.skip(reason="Import errors - needs review: app.models.inventory module not found")
+from app.services.material_transfer_service import MaterialTransferService
 
 
 @pytest.fixture
-def material_transfer_service(db_session: Session):
-    """创建 MaterialTransferService 实例"""
-    from app.services.material_transfer_service import MaterialTransferService
-    return MaterialTransferService(db_session)
+def db():
+    return MagicMock()
 
 
-class TestMaterialTransferService:
-    """Test suite for MaterialTransferService."""
+class TestGetProjectMaterialStock:
+    def test_from_project_material(self, db):
+        pm = MagicMock(available_qty=Decimal("10"), reserved_qty=Decimal("2"), total_qty=Decimal("12"))
+        db.query.return_value.filter.return_value.first.return_value = pm
+        result = MaterialTransferService.get_project_material_stock(db, 1, 1)
+        assert result["available_qty"] == Decimal("10")
+        assert result["source"] == "项目物料表"
 
-    def test_init(self, db_session: Session):
-        """测试服务初始化"""
-        from app.services.material_transfer_service import MaterialTransferService
-        service = MaterialTransferService(db_session)
-        assert service is not None
-        if hasattr(service, 'db'):
-            assert service.db == db_session
+    def test_from_inventory(self, db):
+        db.query.return_value.filter.return_value.first.side_effect = [
+            None,  # no project_material
+            MagicMock(available_qty=Decimal("5"), reserved_qty=Decimal("0"), total_qty=Decimal("5"))
+        ]
+        result = MaterialTransferService.get_project_material_stock(db, 1, 1)
+        assert result["source"] == "库存表"
 
-
-    def test_get_project_material_stock(self, material_transfer_service):
-        """测试 get_project_material_stock 方法"""
-        # TODO: 实现测试逻辑
-        # 1. 准备测试数据
-        # 2. 调用方法
-        # 3. 验证结果
-        pass
-
-
-    def test_check_transfer_available(self, material_transfer_service):
-        """测试 check_transfer_available 方法"""
-        # TODO: 实现测试逻辑
-        # 1. 准备测试数据
-        # 2. 调用方法
-        # 3. 验证结果
-        pass
+    def test_from_material_archive(self, db):
+        db.query.return_value.filter.return_value.first.side_effect = [
+            None, None, MagicMock(current_stock=Decimal("3"))
+        ]
+        result = MaterialTransferService.get_project_material_stock(db, 1, 1)
+        assert result["source"] == "物料档案"
 
 
-    def test_execute_stock_update(self, material_transfer_service):
-        """测试 execute_stock_update 方法"""
-        # TODO: 实现测试逻辑
-        # 1. 准备测试数据
-        # 2. 调用方法
-        # 3. 验证结果
-        pass
+class TestCheckTransferAvailable:
+    def test_sufficient(self, db):
+        pm = MagicMock(available_qty=Decimal("10"), reserved_qty=Decimal("0"), total_qty=Decimal("10"))
+        db.query.return_value.filter.return_value.first.return_value = pm
+        result = MaterialTransferService.check_transfer_available(db, 1, 1, Decimal("5"))
+        assert result["is_sufficient"] is True
+
+    def test_insufficient(self, db):
+        pm = MagicMock(available_qty=Decimal("3"), reserved_qty=Decimal("0"), total_qty=Decimal("3"))
+        db.query.return_value.filter.return_value.first.return_value = pm
+        result = MaterialTransferService.check_transfer_available(db, 1, 1, Decimal("5"))
+        assert result["is_sufficient"] is False
+        assert result["shortage_qty"] == 2.0
 
 
-    def test_suggest_transfer_sources(self, material_transfer_service):
-        """测试 suggest_transfer_sources 方法"""
-        # TODO: 实现测试逻辑
-        # 1. 准备测试数据
-        # 2. 调用方法
-        # 3. 验证结果
-        pass
+class TestExecuteStockUpdate:
+    def test_basic_transfer(self, db):
+        transfer = MagicMock(
+            from_project_id=1, to_project_id=2, material_id=1,
+            transfer_qty=Decimal("5")
+        )
+        pm = MagicMock(available_qty=Decimal("10"), total_qty=Decimal("10"))
+        db.query.return_value.filter.return_value.first.return_value = pm
+        result = MaterialTransferService.execute_stock_update(db, transfer)
+        assert "from_project" in result
+        assert "to_project" in result
 
 
-    def test_validate_transfer_before_execute(self, material_transfer_service):
-        """测试 validate_transfer_before_execute 方法"""
-        # TODO: 实现测试逻辑
-        # 1. 准备测试数据
-        # 2. 调用方法
-        # 3. 验证结果
-        pass
+class TestSuggestTransferSources:
+    def test_no_sources(self, db):
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.first.return_value = None
+        result = MaterialTransferService.suggest_transfer_sources(db, 1, 1, Decimal("5"))
+        assert result == []
+
+    def test_with_project_source(self, db):
+        pm = MagicMock(project_id=2, available_qty=Decimal("10"))
+        project = MagicMock(project_name='P2', project_code='PC2')
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [pm]
+        db.query.return_value.filter.return_value.first.side_effect = [project, None]
+        result = MaterialTransferService.suggest_transfer_sources(db, 1, 1, Decimal("5"))
+        assert len(result) >= 1
 
 
-    # TODO: 添加更多测试用例
-    # - 正常流程测试 (Happy Path)
-    # - 边界条件测试 (Edge Cases)
-    # - 异常处理测试 (Error Handling)
-    # - 数据验证测试 (Data Validation)
+class TestValidateTransferBeforeExecute:
+    def test_valid(self, db):
+        transfer = MagicMock(
+            to_project_id=2, from_project_id=1, material_id=1,
+            transfer_qty=Decimal("5"), status="APPROVED"
+        )
+        to_proj = MagicMock(is_active=True)
+        from_proj = MagicMock(is_active=True)
+        material = MagicMock()
+        pm = MagicMock(available_qty=Decimal("10"), reserved_qty=Decimal("0"), total_qty=Decimal("10"))
+        db.query.return_value.filter.return_value.first.side_effect = [to_proj, from_proj, material, pm]
+        result = MaterialTransferService.validate_transfer_before_execute(db, transfer)
+        assert result["is_valid"] is True
+
+    def test_wrong_status(self, db):
+        transfer = MagicMock(
+            to_project_id=2, from_project_id=None, material_id=1,
+            transfer_qty=Decimal("5"), status="DRAFT"
+        )
+        to_proj = MagicMock(is_active=True)
+        material = MagicMock()
+        db.query.return_value.filter.return_value.first.side_effect = [to_proj, material]
+        result = MaterialTransferService.validate_transfer_before_execute(db, transfer)
+        assert result["is_valid"] is False

@@ -1,70 +1,121 @@
 # -*- coding: utf-8 -*-
-"""
-Tests for pdf_content_builders service
-Covers: app/services/pdf_content_builders.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 142 lines
-Batch: 2
-"""
+"""PDF内容构建工具函数测试"""
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from sqlalchemy.orm import Session
-import app.services.pdf_content_builders
 
 
-
-
-class TestPdfContentBuilders:
-    """Test suite for pdf_content_builders."""
-
+class TestPdfNotAvailable:
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_basic_info_section(self):
-        """测试 build_basic_info_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_basic_info_section
-        pass
+        result = build_basic_info_section(MagicMock(), MagicMock(), MagicMock(), "R001", 1, {})
+        assert result == []
 
-
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_statistics_section(self):
-        """测试 build_statistics_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_statistics_section
-        pass
+        result = build_statistics_section(MagicMock(), MagicMock(), {})
+        assert result == []
 
-
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_conclusion_section(self):
-        """测试 build_conclusion_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_conclusion_section
-        pass
+        result = build_conclusion_section(MagicMock(), {})
+        assert result == []
 
-
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_issues_section(self):
-        """测试 build_issues_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_issues_section
-        pass
+        result = build_issues_section(MagicMock(), MagicMock(), {})
+        assert result == []
 
-
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_signatures_section(self):
-        """测试 build_signatures_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_signatures_section
-        pass
+        result = build_signatures_section(MagicMock(), MagicMock(), {})
+        assert result == []
 
-
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', False)
     def test_build_footer_section(self):
-        """测试 build_footer_section 函数"""
-        # TODO: 实现测试逻辑
         from app.services.pdf_content_builders import build_footer_section
-        pass
+        result = build_footer_section(MagicMock(), {})
+        assert result == []
 
 
-    # TODO: 添加更多测试用例
-    # - 正常流程测试 (Happy Path)
-    # - 边界条件测试 (Edge Cases)
-    # - 异常处理测试 (Error Handling)
-    # - 数据验证测试 (Data Validation)
+class TestPdfAvailable:
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_basic_info_section(self):
+        from app.services.pdf_content_builders import build_basic_info_section
+        order = MagicMock(acceptance_type='FAT', order_no='AC-001', actual_end_date=None, location='Lab')
+        project = MagicMock(project_name='Test Project')
+        machine = MagicMock(machine_name='Machine 1')
+        styles = {'title': MagicMock(), 'normal': MagicMock()}
+        with patch('app.services.pdf_content_builders.get_info_table_style'):
+            result = build_basic_info_section(order, project, machine, "R001", 1, styles)
+            assert len(result) > 0
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_conclusion_section(self):
+        from app.services.pdf_content_builders import build_conclusion_section
+        order = MagicMock(overall_result='PASSED', conclusion='Good', conditions=None)
+        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        result = build_conclusion_section(order, styles)
+        assert len(result) > 0
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_statistics_section(self):
+        from app.services.pdf_content_builders import build_statistics_section
+        order = MagicMock(id=1)
+        db = MagicMock()
+        item = MagicMock(category_code='C1', category_name='Cat1', result_status='PASSED', sort_order=1)
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [item]
+        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        with patch('app.services.pdf_content_builders.get_stats_table_style'):
+            result = build_statistics_section(order, db, styles)
+            assert len(result) > 0
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_issues_no_issues(self):
+        from app.services.pdf_content_builders import build_issues_section
+        order = MagicMock(id=1)
+        db = MagicMock()
+        db.query.return_value.filter.return_value.all.return_value = []
+        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        result = build_issues_section(order, db, styles)
+        assert result == []
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_issues_with_issues(self):
+        from app.services.pdf_content_builders import build_issues_section
+        order = MagicMock(id=1)
+        db = MagicMock()
+        issue = MagicMock(
+            issue_no='I001', title='Bug', severity='CRITICAL',
+            status='OPEN', is_blocking=True
+        )
+        db.query.return_value.filter.return_value.all.return_value = [issue]
+        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        with patch('app.services.pdf_content_builders.get_issue_table_style'):
+            result = build_issues_section(order, db, styles)
+            assert len(result) > 0
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_signatures(self):
+        from app.services.pdf_content_builders import build_signatures_section
+        order = MagicMock(id=1)
+        db = MagicMock()
+        sig = MagicMock(signer_type='QA', signer_name='Alice', signer_role='QA', signer_company='Co', signed_at=None)
+        db.query.return_value.filter.return_value.all.return_value = [sig]
+        styles = {'heading': MagicMock(), 'normal': MagicMock()}
+        with patch('app.services.pdf_content_builders.get_signature_table_style'):
+            result = build_signatures_section(order, db, styles)
+            assert len(result) > 0
+
+    @patch('app.services.pdf_content_builders.REPORTLAB_AVAILABLE', True)
+    def test_build_footer(self):
+        from app.services.pdf_content_builders import build_footer_section
+        user = MagicMock(real_name='Admin', username='admin')
+        styles = {'footer': MagicMock()}
+        result = build_footer_section(user, styles)
+        assert len(result) > 0

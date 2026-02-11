@@ -9,10 +9,11 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.sales import PurchaseMaterialCost
 from app.models.user import User
@@ -56,9 +57,18 @@ def match_material_cost(
         match_score = 100
     else:
         # 2. 模糊匹配物料名称
-        name_matches = query.filter(
-            PurchaseMaterialCost.material_name.like(f"%{match_request.item_name}%")
-        ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).limit(5).all()
+        name_matches = (
+            apply_keyword_filter(
+                query,
+                PurchaseMaterialCost,
+                match_request.item_name,
+                "material_name",
+                use_ilike=False,
+            )
+            .order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date))
+            .limit(5)
+            .all()
+        )
 
         if name_matches:
             matched_cost = name_matches[0]
@@ -70,12 +80,18 @@ def match_material_cost(
                 keywords = match_request.item_name.split()
                 for keyword in keywords:
                     if len(keyword) > 2:  # 只匹配长度大于2的关键词
-                        keyword_matches = query.filter(
-                            or_(
-                                PurchaseMaterialCost.material_name.like(f"%{keyword}%"),
-                                PurchaseMaterialCost.match_keywords.like(f"%{keyword}%")
+                        keyword_matches = (
+                            apply_keyword_filter(
+                                query,
+                                PurchaseMaterialCost,
+                                keyword,
+                                ["material_name", "match_keywords"],
+                                use_ilike=False,
                             )
-                        ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count)).limit(5).all()
+                            .order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count))
+                            .limit(5)
+                            .all()
+                        )
 
                         if keyword_matches:
                             matched_cost = keyword_matches[0]

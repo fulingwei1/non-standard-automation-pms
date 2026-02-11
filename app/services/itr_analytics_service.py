@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.issue import Issue
 from app.models.service import CustomerSatisfaction, ServiceTicket
 from app.models.sla import SLAMonitor
@@ -139,7 +140,13 @@ def analyze_satisfaction_trend(
     if end_date:
         query = query.filter(CustomerSatisfaction.survey_date <= end_date)
     if project_id:
-        query = query.filter(CustomerSatisfaction.project_code.like(f"%{project_id}%"))
+        query = apply_keyword_filter(
+            query,
+            CustomerSatisfaction,
+            str(project_id),
+            "project_code",
+            use_ilike=False,
+        )
 
     satisfactions = query.order_by(CustomerSatisfaction.survey_date).all()
 

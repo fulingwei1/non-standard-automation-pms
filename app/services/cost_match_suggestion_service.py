@@ -6,9 +6,10 @@
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter
 from app.models.sales.quotes import PurchaseMaterialCost
 from app.models.sales import QuoteItem
 from app.schemas.sales import CostMatchSuggestion, PurchaseMaterialCostResponse
@@ -28,8 +29,12 @@ def check_cost_anomalies(
     if not item.item_name:
         return warnings
 
-    historical_costs = cost_query.filter(
-        PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
+    historical_costs = apply_keyword_filter(
+        cost_query,
+        PurchaseMaterialCost,
+        item.item_name,
+        "material_name",
+        use_ilike=False,
     ).all()
 
     if not historical_costs:
@@ -84,8 +89,12 @@ def find_matching_cost(
 
     # 2. 模糊匹配
     fuzzy_matches = (
-        cost_query.filter(
-            PurchaseMaterialCost.material_name.like(f"%{item.item_name}%")
+        apply_keyword_filter(
+            cost_query,
+            PurchaseMaterialCost,
+            item.item_name,
+            "material_name",
+            use_ilike=False,
         )
         .order_by(
             desc(PurchaseMaterialCost.match_priority),
@@ -103,11 +112,12 @@ def find_matching_cost(
     for keyword in keywords:
         if len(keyword) > 2:
             keyword_matches = (
-                cost_query.filter(
-                    or_(
-                        PurchaseMaterialCost.material_name.like(f"%{keyword}%"),
-                        PurchaseMaterialCost.match_keywords.like(f"%{keyword}%"),
-                    )
+                apply_keyword_filter(
+                    cost_query,
+                    PurchaseMaterialCost,
+                    keyword,
+                    ["material_name", "match_keywords"],
+                    use_ilike=False,
                 )
                 .order_by(
                     desc(PurchaseMaterialCost.match_priority),
