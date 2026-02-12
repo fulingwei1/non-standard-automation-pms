@@ -16,8 +16,8 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.production import (
 from app.common.query_filters import apply_pagination
+from app.schemas.production import (
     WorkshopCreate,
     WorkshopResponse,
     WorkshopUpdate,

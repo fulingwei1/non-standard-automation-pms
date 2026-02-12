@@ -24,8 +24,8 @@ from app.models.user import User
 from app.services.data_scope_service import DataScopeConfig, DataScopeService
 from app.common.pagination import PaginationParams, get_pagination_query
 
-from .utils import (
 from app.common.query_filters import apply_pagination
+from .utils import (
     decimal_value,
     generate_order_no,
     serialize_order_item,

@@ -20,8 +20,8 @@ from app.models.organization import (
     HrTransaction,
 )
 from app.models.user import User
-from app.schemas.organization import (
 from app.common.query_filters import apply_pagination
+from app.schemas.organization import (
     HrTransactionCreate,
     HrTransactionResponse,
 )
