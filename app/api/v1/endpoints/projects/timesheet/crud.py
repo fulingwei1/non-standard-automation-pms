@@ -77,9 +77,12 @@ base_router = create_project_crud_router(
 # 创建新的router
 router = APIRouter()
 
-# 先包含 base_router（包含所有 CRUD 端点）
-# 然后我们会覆盖 GET / 和 GET /{id} 端点
-router.include_router(base_router)
+# 从 base_router 中只保留 POST/PUT/DELETE 端点，
+# GET / 和 GET /{item_id} 由下方自定义实现提供（避免路由重复注册）
+for _route in base_router.routes:
+    if hasattr(_route, 'methods') and 'GET' in _route.methods:
+        continue  # 跳过 GET 路由，由自定义端点覆盖
+    router.routes.append(_route)
 
 
 def enrich_timesheet_response(ts: Timesheet, db: Session, project: Project) -> TimesheetResponse:

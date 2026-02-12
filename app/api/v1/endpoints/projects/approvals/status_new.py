@@ -32,19 +32,13 @@ router = APIRouter()
 # 项目审批的实体类型常量
 ENTITY_TYPE_PROJECT = "PROJECT"
 
-@router.get(
-    "/",
-    response_model=ResponseModel[Dict[str, Any]],
-    status_code=status.HTTP_200_OK,
-    deprecated=True,
-    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
-)
+# 已移除 GET "/" 路由，避免与项目CRUD的 GET /projects/ 冲突
 @router.get(
     "/status",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
-    include_in_schema=False,
     deprecated=True,
+    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
 )
 def get_project_approval_status(
     *,

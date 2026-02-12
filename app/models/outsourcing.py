@@ -370,3 +370,4 @@ class OutsourcingProgress(Base, TimestampMixin):
 # ---------------------------------------------------------------------------
 # 兼容层：旧 OutsourcingVendor 模型（现统一为 Vendor）
 # ---------------------------------------------------------------------------
+from app.models.vendor import Vendor as OutsourcingVendor  # noqa: F401

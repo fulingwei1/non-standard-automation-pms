@@ -4,6 +4,10 @@
 """
 from enum import Enum
 
+# 从其他模块的枚举中重新导出，保持向后兼容
+from app.models.enums.acceptance import IssueStatusEnum  # noqa: F401
+from app.models.enums.stage import ReviewResultEnum  # noqa: F401
+
 
 
 class EngineerJobTypeEnum(str, Enum):

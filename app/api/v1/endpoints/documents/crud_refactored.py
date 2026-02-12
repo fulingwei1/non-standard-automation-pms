@@ -18,7 +18,8 @@ from app.models.user import User
 from app.schemas.project import (
     ProjectDocumentCreate,
 )
-from app.services.data_scope_service import DataScopeConfig, DataScopeService
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope_service import DataScopeService
 from app.common.query_filters import apply_pagination
 
 router = APIRouter()

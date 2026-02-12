@@ -10,14 +10,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.material import Material, BomHeader, BomItem
-from app.models.purchase import PurchaseOrder
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
 from app.models.project import Project
 
-from sqlalchemy import Column, Integer, Numeric
 from sqlalchemy.orm import selectinload
 from datetime import datetime
-from app.models.base import Base
 
 
 class BOMService:
@@ -167,17 +165,5 @@ class BOMService:
         }
 
 
-class PurchaseOrderItem(Base):
-    """采购订单明细模型（临时，用于BOM服务）"""
 
-    __tablename__ = "purchase_order_items"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键")
-    purchase_order_id = Column(
-        Integer, nullable=False, index=True, comment="采购订单ID"
-    )
-    bom_item_id = Column(Integer, nullable=True, comment="BOM明细ID")
-    material_id = Column(Integer, nullable=False, comment="物料ID")
-    quantity = Column(Numeric(10, 4), default=0, comment="数量")
-    unit_price = Column(Numeric(12, 4), default=0, comment="单价")
-    amount = Column(Numeric(14, 2), default=0, comment="金额")
+# PurchaseOrderItem is imported from app.models.purchase
