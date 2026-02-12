@@ -44,8 +44,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-mock pytest-asyncio factory-boy faker httpx
+          pip install -r requirements.txt || pip install -r requirements.txt --use-deprecated=legacy-resolver
+          pip install pytest-mock factory-boy faker httpx
 
       - name: Run API tests
         env:
