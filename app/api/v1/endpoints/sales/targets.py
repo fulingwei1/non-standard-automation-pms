@@ -22,6 +22,7 @@ from app.services.sales_team_service import SalesTeamService
 from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import get_user_role_code
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

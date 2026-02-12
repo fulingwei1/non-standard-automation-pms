@@ -51,6 +51,7 @@ from app.schemas.alert import (
     ProjectHealthResponse,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.query_filters import apply_pagination
 
 router = APIRouter(tags=["subscriptions"])
 

@@ -17,6 +17,7 @@ from app.core.schemas import list_response, paginated_response, success_response
 from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.notification import (
+from app.common.query_filters import apply_pagination
     BatchReadRequest,
     NotificationResponse,
 )

@@ -20,6 +20,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.project import (
+from app.common.query_filters import apply_pagination
     ProjectTemplateVersionCreate,
     ProjectTemplateVersionResponse,
     ProjectTemplateVersionUpdate,

@@ -20,6 +20,7 @@ from app.schemas.project import (
     ProjectDocumentResponse,
 )
 from app.services.data_scope_service import DataScopeConfig, DataScopeService
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

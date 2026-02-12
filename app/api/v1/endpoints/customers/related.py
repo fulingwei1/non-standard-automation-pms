@@ -15,6 +15,7 @@ from app.core import security
 from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

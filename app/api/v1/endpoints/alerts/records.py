@@ -22,6 +22,7 @@ from app.schemas.alert import (
     AlertRecordResponse,
 )
 from app.schemas.common import PaginatedResponse
+from app.common.query_filters import apply_pagination
 
 router = APIRouter(tags=["records"])
 

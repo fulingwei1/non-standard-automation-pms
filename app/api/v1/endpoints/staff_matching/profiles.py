@@ -10,7 +10,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.organization import Employee
 from app.models.staff_matching import HrEmployeeProfile

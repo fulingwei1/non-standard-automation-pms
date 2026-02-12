@@ -12,7 +12,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project_review import ProjectLesson
 from app.models.user import User

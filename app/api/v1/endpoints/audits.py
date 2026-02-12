@@ -16,6 +16,7 @@ from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import PermissionAudit, User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

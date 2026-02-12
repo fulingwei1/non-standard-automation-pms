@@ -31,6 +31,7 @@ from app.schemas.material import (
 )
 from app.services.vendor_service import VendorService
 from app.api.v1.endpoints.base_crud_router_sync import create_crud_router_sync
+from app.common.query_filters import apply_pagination
 
 # 创建通用CRUD路由
 crud_router = create_crud_router_sync(

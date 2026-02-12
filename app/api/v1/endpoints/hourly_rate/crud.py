@@ -16,6 +16,7 @@ from app.models.hourly_rate import HourlyRateConfig
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.hourly_rate import (
+from app.common.query_filters import apply_pagination
     HourlyRateConfigCreate,
     HourlyRateConfigResponse,
     HourlyRateConfigUpdate,

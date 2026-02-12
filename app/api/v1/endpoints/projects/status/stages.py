@@ -21,6 +21,7 @@ from app.schemas.project import StageAdvanceRequest
 
 from ..utils import _serialize_project_status_log, check_gate_detailed
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

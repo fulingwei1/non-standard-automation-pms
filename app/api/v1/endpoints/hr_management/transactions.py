@@ -21,6 +21,7 @@ from app.models.organization import (
 )
 from app.models.user import User
 from app.schemas.organization import (
+from app.common.query_filters import apply_pagination
     HrTransactionCreate,
     HrTransactionResponse,
 )

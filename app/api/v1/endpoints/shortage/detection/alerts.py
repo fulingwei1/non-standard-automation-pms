@@ -29,6 +29,7 @@ from app.core import security
 from app.models.material import MaterialShortage
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.query_filters import apply_pagination
 
 logger = logging.getLogger(__name__)
 

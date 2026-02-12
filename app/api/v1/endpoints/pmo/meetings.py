@@ -35,6 +35,7 @@ router = APIRouter(tags=["pmo-meetings"])
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import pmo as pmo_codes
+from app.common.query_filters import apply_pagination
 
 generate_initiation_no = pmo_codes.generate_initiation_no
 generate_risk_no = pmo_codes.generate_risk_no

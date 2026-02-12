@@ -15,6 +15,7 @@ from app.models.issue import Issue
 from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

@@ -20,6 +20,7 @@ from app.schemas.budget import (
     ProjectCostAllocationRuleUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

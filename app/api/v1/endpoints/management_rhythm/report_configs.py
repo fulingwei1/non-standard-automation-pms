@@ -34,6 +34,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.common.query_filters import apply_pagination
 
 router = APIRouter(
     prefix="/management-rhythm/report-configs",

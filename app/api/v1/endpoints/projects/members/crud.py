@@ -28,7 +28,7 @@ from app.schemas.project import (
 )
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 
 def filter_by_role(query, role: str):

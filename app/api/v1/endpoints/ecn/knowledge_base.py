@@ -18,6 +18,7 @@ from app.models.ecn import Ecn, EcnSolutionTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.ecn_knowledge_service import EcnKnowledgeService
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

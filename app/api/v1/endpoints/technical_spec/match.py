@@ -23,6 +23,7 @@ from app.schemas.technical_spec import (
 )
 from app.utils.spec_matcher import SpecMatcher
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 

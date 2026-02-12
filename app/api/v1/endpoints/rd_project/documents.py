@@ -29,6 +29,7 @@ from app.models.rd_project import RdProject
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse
+from app.common.query_filters import apply_pagination
 
 # 文档上传目录
 DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
