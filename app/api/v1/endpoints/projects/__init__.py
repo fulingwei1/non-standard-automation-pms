@@ -27,6 +27,11 @@ from . import (
     core,
     extended,
     ext_best_practices,
+    ext_lessons,
+    ext_relations,
+    ext_resources,
+    ext_reviews,
+    ext_risks,
     overview,
     payment_plans,
     risk_analytics,
@@ -48,6 +53,7 @@ from .stages import router as stages_router
 from .timesheet import router as timesheet_router
 from .work_logs import router as work_logs_router
 from .workload import router as workload_router
+from .approvals import router as approvals_router
 
 # Export gate check functions for use by stage_advance_service
 from .gate_checks import check_gate, check_gate_detailed
@@ -187,3 +193,13 @@ router.include_router(
     prefix="/{project_id}/workload",
     tags=["projects-workload"],
 )
+
+# 扩展模块路由（经验教训、关联、资源、复盘、风险）
+router.include_router(ext_lessons.router, tags=["projects-lessons"])
+router.include_router(ext_relations.router, tags=["projects-relations"])
+router.include_router(ext_resources.router, tags=["projects-resources"])
+router.include_router(ext_reviews.router, tags=["projects-reviews"])
+router.include_router(ext_risks.router, tags=["projects-risks"])
+
+# 项目审批路由（已废弃，迁移到统一审批）
+router.include_router(approvals_router, tags=["projects-approvals"])

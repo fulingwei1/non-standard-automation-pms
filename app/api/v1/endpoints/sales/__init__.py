@@ -22,6 +22,16 @@ from . import (
     priority,
     quotes,
     quote_approval,
+    quote_cost_analysis,
+    quote_cost_breakdown,
+    quote_cost_calculations,
+    quote_delivery,
+    quote_exports,
+    quote_items,
+    quote_quotes_crud,
+    quote_status,
+    quote_templates,
+    quote_versions,
     statistics,
     team,
     targets,
@@ -37,6 +47,7 @@ from . import (
     receivables,
     templates,
 )
+from .contracts import contracts as contracts_contracts
 
 # 创建主路由
 router = APIRouter()
@@ -72,9 +83,24 @@ router.include_router(receivables.router, tags=["sales-receivables"])
 router.include_router(workflows.router, tags=["sales-workflows"])
 router.include_router(requirements.router, tags=["sales-requirements"])
 router.include_router(pipeline_analysis.router, tags=["sales-pipeline-analysis"])
-# router.include_router(accountability.router, tags=["sales-accountability"])
-# router.include_router(health.router, tags=["sales-health"])
-# router.include_router(delay_analysis.router, tags=["sales-delay-analysis"])
-# router.include_router(cost_overrun.router, tags=["sales-cost-overrun"])
-# router.include_router(information_gap.router, tags=["sales-information-gap"])
-# router.include_router(cross_analysis.router, tags=["sales-cross-analysis"])
+router.include_router(accountability.router, tags=["sales-accountability"])
+router.include_router(health.router, tags=["sales-health"])
+router.include_router(delay_analysis.router, tags=["sales-delay-analysis"])
+router.include_router(cost_overrun.router, tags=["sales-cost-overrun"])
+router.include_router(information_gap.router, tags=["sales-information-gap"])
+router.include_router(cross_analysis.router, tags=["sales-cross-analysis"])
+
+# 合同创建项目路由
+router.include_router(contracts_contracts.router, tags=["sales-contracts-projects"])
+
+# 报价详细模块路由
+router.include_router(quote_cost_analysis.router, tags=["sales-quote-cost-analysis"])
+router.include_router(quote_cost_breakdown.router, tags=["sales-quote-cost-breakdown"])
+router.include_router(quote_cost_calculations.router, tags=["sales-quote-cost-calculations"])
+router.include_router(quote_delivery.router, tags=["sales-quote-delivery"])
+router.include_router(quote_exports.router, tags=["sales-quote-exports"])
+router.include_router(quote_items.router, tags=["sales-quote-items"])
+router.include_router(quote_quotes_crud.router, tags=["sales-quote-crud"])
+router.include_router(quote_status.router, tags=["sales-quote-status"])
+router.include_router(quote_templates.router, tags=["sales-quote-templates"])
+router.include_router(quote_versions.router, tags=["sales-quote-versions"])

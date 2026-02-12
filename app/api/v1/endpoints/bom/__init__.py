@@ -5,6 +5,7 @@ BOM 管理 API - 模块化结构
 
 from fastapi import APIRouter
 
+from .bom_approve import router as bom_approve_router
 from .bom_detail import router as bom_detail_router
 from .bom_export import router as bom_export_router
 from .bom_generate import router as bom_generate_router
@@ -28,5 +29,6 @@ router.include_router(bom_import_router)
 router.include_router(bom_export_router)
 router.include_router(bom_templates_router)
 router.include_router(bom_generate_router)
+router.include_router(bom_approve_router)
 
 __all__ = ["router"]

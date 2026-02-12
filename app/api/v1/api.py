@@ -44,6 +44,7 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
 # 导入suppliers端点
 
 from app.api.v1.endpoints.suppliers import router as suppliers_router
+from app.api.v1.endpoints.pitfalls import router as pitfalls_router
 
 # 统一审批路由
 from app.api.v1.endpoints.approvals import router as approvals_router
@@ -51,6 +52,7 @@ from app.api.v1.endpoints.approvals import router as approvals_router
 api_router = APIRouter()
 
 api_router.include_router(approvals_router, prefix="/approvals", tags=["approvals"])
+api_router.include_router(pitfalls_router, prefix="/pitfalls", tags=["pitfalls"])
 # 项目模块已拆分为子模块，从projects包导入
 from app.api.v1.endpoints.projects import router as projects_router
 
