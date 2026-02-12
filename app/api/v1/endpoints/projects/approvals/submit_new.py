@@ -29,19 +29,13 @@ router = APIRouter()
 ENTITY_TYPE_PROJECT = "PROJECT"
 
 
-@router.post(
-    "/",
-    response_model=ResponseModel[Dict[str, Any]],
-    status_code=status.HTTP_200_OK,
-    deprecated=True,
-    description="[已废弃] 请使用 POST /api/v1/approvals/instances/submit",
-)
+# 已移除 POST "/" 路由，避免与项目CRUD的 POST /projects/ 冲突
 @router.post(
     "/submit",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
-    include_in_schema=False,
     deprecated=True,
+    description="[已废弃] 请使用 POST /api/v1/approvals/instances/submit",
 )
 def submit_project_approval(
     *,

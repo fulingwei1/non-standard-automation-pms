@@ -31,19 +31,13 @@ router = APIRouter()
 ENTITY_TYPE_PROJECT = "PROJECT"
 
 
-@router.get(
-    "/",
-    response_model=ResponseModel[List[Dict[str, Any]]],
-    status_code=status.HTTP_200_OK,
-    deprecated=True,
-    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
-)
+# 已移除 GET "/" 路由，避免与项目CRUD的 GET /projects/ 冲突
 @router.get(
     "/history",
     response_model=ResponseModel[List[Dict[str, Any]]],
     status_code=status.HTTP_200_OK,
-    include_in_schema=False,
     deprecated=True,
+    description="[已废弃] 请使用 GET /api/v1/approvals/instances/{instance_id}",
 )
 def get_project_approval_history(
     *,

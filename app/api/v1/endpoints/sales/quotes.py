@@ -124,33 +124,7 @@ def create_quote(
     }
 
 
-@router.post("/quotes/{quote_id}/versions", status_code=status.HTTP_201_CREATED)
-def create_quote_version(
-    quote_id: int,
-    payload: dict = Body(...),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
-
-    version_no = payload.get("version_no")
-    if not version_no:
-        raise HTTPException(status_code=422, detail="version_no 必填")
-
-    version = QuoteVersion(
-        quote_id=quote.id,
-        version_no=version_no,
-        total_price=payload.get("total_price"),
-        created_by=current_user.id,
-    )
-    db.add(version)
-    db.flush()
-
-    quote.current_version_id = version.id
-    db.commit()
-    return {"id": version.id, "version_no": version.version_no}
+# 已移除 POST /quotes/{quote_id}/versions —— 与 quote_versions.py 重复，保留 quote_versions.py 中更完整的实现
 
 
 @router.post("/quotes/{quote_id}/approve", response_model=ResponseModel, status_code=status.HTTP_200_OK)
