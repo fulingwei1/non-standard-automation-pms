@@ -88,7 +88,7 @@ def _get_team_members(db: Session, team_id: int) -> List[int]:
     # 临时使用部门作为团队
     users = db.query(User).filter(
         User.department_id == team_id,
-        User.is_active == True
+        User.is_active
     ).all()
     return [u.id for u in users]
 
@@ -106,7 +106,7 @@ def _get_department_members(db: Session, dept_id: int) -> List[int]:
     """
     users = db.query(User).filter(
         User.department_id == dept_id,
-        User.is_active == True
+        User.is_active
     ).all()
     return [u.id for u in users]
 

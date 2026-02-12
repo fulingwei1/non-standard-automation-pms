@@ -5,7 +5,6 @@
 使用项目中心CRUD路由基类，大幅减少代码量
 """
 
-from fastapi import APIRouter
 from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.models.project import ProjectCost
 from app.schemas.project import (

@@ -5,7 +5,6 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps

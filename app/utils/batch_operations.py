@@ -32,8 +32,6 @@ from typing import (
     TypeVar,
 )
 from sqlalchemy.orm import Session
-from sqlalchemy import Column
-from sqlalchemy.inspection import inspect
 
 from app.models.user import User
 

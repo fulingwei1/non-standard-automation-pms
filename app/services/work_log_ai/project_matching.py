@@ -23,7 +23,7 @@ class ProjectMatchingMixin:
         # 查询用户作为成员的项目
         members = self.db.query(ProjectMember).filter(
             ProjectMember.user_id == user_id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         ).all()
 
         project_ids = [m.project_id for m in members]
@@ -31,7 +31,7 @@ class ProjectMatchingMixin:
         # 查询项目详情
         projects = self.db.query(Project).filter(
             Project.id.in_(project_ids),
-            Project.is_active == True
+            Project.is_active
         ).all()
 
         # 构建项目列表（包含历史填报频率，用于智能推荐）

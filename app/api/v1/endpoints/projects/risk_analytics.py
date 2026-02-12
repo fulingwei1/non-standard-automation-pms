@@ -7,8 +7,8 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from typing import Any, List, Optional
+from datetime import datetime, timedelta
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, func

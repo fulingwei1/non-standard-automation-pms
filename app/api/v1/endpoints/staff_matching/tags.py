@@ -6,7 +6,6 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -49,7 +48,7 @@ def get_tag_tree(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取标签层级树"""
-    query = db.query(HrTagDict).filter(HrTagDict.is_active == True)
+    query = db.query(HrTagDict).filter(HrTagDict.is_active)
 
     if tag_type:
         query = query.filter(HrTagDict.tag_type == tag_type)

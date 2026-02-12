@@ -4,13 +4,12 @@ ECN自动分配服务
 功能：根据部门、角色自动分配评估、审批、执行任务
 """
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
-from app.models.organization import Department
 from app.models.user import Role, User, UserRole
 
 
@@ -24,7 +23,7 @@ def find_users_by_department(
     users = db.query(User).filter(
         and_(
             User.department == department_name,
-            User.is_active == True
+            User.is_active
         )
     ).all()
     return users
@@ -41,7 +40,7 @@ def find_users_by_role(
     role = db.query(Role).filter(
         and_(
             Role.role_name == role_name,
-            Role.is_active == True
+            Role.is_active
         )
     ).first()
 
@@ -58,7 +57,7 @@ def find_users_by_role(
     users = db.query(User).filter(
         and_(
             User.id.in_(user_ids),
-            User.is_active == True
+            User.is_active
         )
     ).all()
 
@@ -94,7 +93,7 @@ def auto_assign_evaluation(
             project_dept_users = db.query(User).filter(
                 User.id.in_(project_user_ids),
                 User.department == dept_name,
-                User.is_active == True
+                User.is_active
             ).all()
 
             if project_dept_users:
@@ -159,7 +158,7 @@ def auto_assign_approval(
         # 查找项目成员
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         ).all()
 
         project_user_ids = [pm.user_id for pm in project_members]
@@ -170,7 +169,7 @@ def auto_assign_approval(
             for user_id in project_user_ids:
                 user = db.query(User).filter(
                     User.id == user_id,
-                    User.is_active == True
+                    User.is_active
                 ).first()
                 if user:
                     # 检查用户是否拥有该角色
@@ -233,7 +232,7 @@ def auto_assign_task(
             project_dept_users = db.query(User).filter(
                 User.id.in_(project_user_ids),
                 User.department == dept_name,
-                User.is_active == True
+                User.is_active
             ).all()
 
             if project_dept_users:

@@ -16,7 +16,6 @@ from app.models.culture_wall import (
 )
 from app.models.culture_wall_config import CultureWallConfig
 from app.models.notification import Notification
-from app.models.user import User
 from app.schemas.culture_wall import CultureWallContentResponse, PersonalGoalResponse
 
 
@@ -31,7 +30,7 @@ def get_culture_wall_config(db: Session) -> Optional[CultureWallConfig]:
     config = (
         db.query(CultureWallConfig)
         .filter(
-            CultureWallConfig.is_default == True, CultureWallConfig.is_enabled == True
+            CultureWallConfig.is_default, CultureWallConfig.is_enabled
         )
         .first()
     )
@@ -40,7 +39,7 @@ def get_culture_wall_config(db: Session) -> Optional[CultureWallConfig]:
         # 如果没有默认配置，获取最新的启用配置
         config = (
             db.query(CultureWallConfig)
-            .filter(CultureWallConfig.is_enabled == True)
+            .filter(CultureWallConfig.is_enabled)
             .order_by(desc(CultureWallConfig.created_at))
             .first()
         )
@@ -85,7 +84,7 @@ def build_content_query(db: Session, today: date):
     """
     return db.query(CultureWallContent).filter(
         and_(
-            CultureWallContent.is_published == True,
+            CultureWallContent.is_published,
             or_(
                 CultureWallContent.expire_date.is_(None),
                 CultureWallContent.expire_date >= today,
@@ -290,7 +289,7 @@ def get_notifications(
 
     notifications = (
         db.query(Notification)
-        .filter(and_(Notification.user_id == user_id, Notification.is_read == False))
+        .filter(and_(Notification.user_id == user_id, not Notification.is_read))
         .order_by(desc(Notification.created_at))
         .limit(max_count)
         .all()

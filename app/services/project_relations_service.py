@@ -182,7 +182,7 @@ def get_shared_customer_relations(
     customer_projects = db.query(Project).filter(
         Project.customer_id == project.customer_id,
         Project.id != project_id,
-        Project.is_active == True
+        Project.is_active
     ).all()
 
     for customer_project in customer_projects:
@@ -248,7 +248,7 @@ def discover_same_customer_relations(
     customer_projects = db.query(Project).filter(
         Project.customer_id == project.customer_id,
         Project.id != project_id,
-        Project.is_active == True
+        Project.is_active
     ).all()
 
     for related_project in customer_projects:
@@ -283,7 +283,7 @@ def discover_same_pm_relations(
     pm_projects = db.query(Project).filter(
         Project.pm_id == project.pm_id,
         Project.id != project_id,
-        Project.is_active == True
+        Project.is_active
     ).all()
 
     for related_project in pm_projects:
@@ -317,7 +317,7 @@ def discover_time_overlap_relations(
 
     overlapping_projects = db.query(Project).filter(
         Project.id != project_id,
-        Project.is_active == True,
+        Project.is_active,
         Project.planned_start_date <= project.planned_end_date,
         Project.planned_end_date >= project.planned_start_date
     ).all()

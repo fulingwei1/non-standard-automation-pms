@@ -4,20 +4,16 @@
 实现优先级评分模型和排产建议生成算法
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from datetime import date, timedelta
+from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models import (
-    BomHeader,
     Customer,
     Machine,
     MaterialReadiness,
     Project,
-    SchedulingSuggestion,
 )
 from app.services.resource_allocation_service import ResourceAllocationService
 
@@ -317,9 +313,8 @@ class SchedulingSuggestionService:
                 suggested_end_date = suggested_start_date + timedelta(days=duration_days)
 
                 # 检查资源可用性
-                machine = None
                 if readiness.machine_id:
-                    machine = db.query(Machine).filter(Machine.id == readiness.machine_id).first()
+                    db.query(Machine).filter(Machine.id == readiness.machine_id).first()
 
                 resource_allocation = ResourceAllocationService.allocate_resources(
                     db,
@@ -435,7 +430,7 @@ class SchedulingSuggestionService:
         shortages = db.query(ShortageDetail).filter(
             ShortageDetail.readiness_id == readiness.id,
             ShortageDetail.assembly_stage == stage_code,
-            ShortageDetail.is_blocking == True,
+            ShortageDetail.is_blocking,
             ShortageDetail.shortage_qty > 0
         ).all()
 

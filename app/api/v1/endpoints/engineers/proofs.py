@@ -7,7 +7,6 @@
 import logging
 import os
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import and_

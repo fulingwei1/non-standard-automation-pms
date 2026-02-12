@@ -46,13 +46,13 @@ class HrDashboardAdapter(DashboardAdapter):
 
         # 在职员工总数
         total_active = (
-            self.db.query(Employee).filter(Employee.is_active == True).count()
+            self.db.query(Employee).filter(Employee.is_active).count()
         )
 
         # 试用期员工数
         probation_count = (
             self.db.query(Employee)
-            .filter(Employee.is_active == True, Employee.employment_type == "probation")
+            .filter(Employee.is_active, Employee.employment_type == "probation")
             .count()
         )
 
@@ -101,7 +101,7 @@ class HrDashboardAdapter(DashboardAdapter):
             self.db.query(Employee)
             .join(EmployeeHrProfile)
             .filter(
-                Employee.is_active == True,
+                Employee.is_active,
                 Employee.employment_type == "probation",
                 EmployeeHrProfile.probation_end_date <= today + timedelta(days=30),
                 EmployeeHrProfile.probation_end_date >= today,
@@ -174,7 +174,7 @@ class HrDashboardAdapter(DashboardAdapter):
             self.db.query(Employee)
             .join(EmployeeHrProfile)
             .filter(
-                Employee.is_active == True,
+                Employee.is_active,
                 Employee.employment_type == "probation",
                 EmployeeHrProfile.probation_end_date <= today + timedelta(days=60),
             )
@@ -219,7 +219,7 @@ class HrDashboardAdapter(DashboardAdapter):
     def get_detailed_data(self) -> DetailedDashboardResponse:
         """获取详细数据"""
         today = date.today()
-        this_month_start = date(today.year, today.month, 1)
+        date(today.year, today.month, 1)
 
         # 汇总数据
         stats_cards = self.get_stats()
@@ -231,7 +231,7 @@ class HrDashboardAdapter(DashboardAdapter):
                 EmployeeHrProfile.dept_level1, func.count(EmployeeHrProfile.id)
             )
             .join(Employee)
-            .filter(Employee.is_active == True)
+            .filter(Employee.is_active)
             .group_by(EmployeeHrProfile.dept_level1)
             .all()
         )

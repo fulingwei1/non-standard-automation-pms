@@ -325,13 +325,6 @@ class ExceptionEventsService:
     def _auto_assign_handler(self, exception_event: ExceptionEvent):
         """自动分配处理人"""
         # 根据异常类型和严重程度自动分配
-        assignment_rules = {
-            "safety_incident": ["安全员", "安全主管"],
-            "quality_issue": ["质量工程师", "质量主管"],
-            "delivery_delay": ["项目经理", "生产主管"],
-            "cost_overrun": ["财务经理", "成本工程师"],
-            "resource_shortage": ["资源经理", "HR经理"]
-        }
 
         # TODO: 完善实现 - 根据 assignment_rules 查找对应角色的用户并分配
         logger.info("自动分配处理人: 暂未实现，需要配置分配规则 (event_id=%s, type=%s)",

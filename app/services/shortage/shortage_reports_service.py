@@ -6,19 +6,14 @@
 旧模块已改为重导出兼容层。
 """
 
-from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import date, datetime, timezone
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.core import security
-from app.core.config import settings
 from app.models.alert import AlertRecord
 from app.models.shortage import (
   KitCheck,
@@ -26,10 +21,9 @@ from app.models.shortage import (
  ShortageReport,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.shortage import (
     ShortageReportCreate,
-    ShortageReportListResponse,
     ShortageReportResponse,
 )
 
@@ -339,7 +333,7 @@ def calculate_arrival_statistics(
 
     delayed_arrivals = db.query(func.count(MaterialArrival.id)).filter(
         MaterialArrival.actual_date == target_date,
-        MaterialArrival.is_delayed == True
+        MaterialArrival.is_delayed
     ).scalar() or 0
 
     on_time_rate = round(

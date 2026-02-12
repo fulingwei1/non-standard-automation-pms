@@ -5,10 +5,9 @@
 将分析报表数据生成器适配到统一报表框架
 """
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any, Dict, Optional
 
-from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter

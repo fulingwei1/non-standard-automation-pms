@@ -56,14 +56,14 @@ def list_profiles(
     if min_workload is not None:
         query = query.filter(
             or_(
-                HrEmployeeProfile.id == None,
+                HrEmployeeProfile.id is None,
                 HrEmployeeProfile.current_workload_pct >= min_workload
             )
         )
     if max_workload is not None:
         query = query.filter(
             or_(
-                HrEmployeeProfile.id == None,
+                HrEmployeeProfile.id is None,
                 HrEmployeeProfile.current_workload_pct <= max_workload
             )
         )

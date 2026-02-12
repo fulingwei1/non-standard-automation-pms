@@ -10,57 +10,17 @@
 核心功能：多层级绩效视图、绩效对比、趋势分析、排行榜
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.organization import Department, Employee
-from app.models.performance import (  # New Performance System
-    EvaluationWeightConfig,
-    MonthlyWorkSummary,
-    PerformanceAppeal,
-    PerformanceEvaluation,
-    PerformanceEvaluationRecord,
-    PerformanceIndicator,
-    PerformancePeriod,
-    PerformanceRankingSnapshot,
-    PerformanceResult,
-    ProjectContribution,
-)
+from app.models.organization import Department
 from app.models.project import Project
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.performance import (  # New Performance System
-    DepartmentPerformanceResponse,
-    EvaluationDetailResponse,
-    EvaluationTaskItem,
-    EvaluationTaskListResponse,
-    EvaluationWeightConfigCreate,
-    EvaluationWeightConfigListResponse,
-    EvaluationWeightConfigResponse,
-    MonthlyWorkSummaryCreate,
-    MonthlyWorkSummaryListItem,
-    MonthlyWorkSummaryResponse,
-    MonthlyWorkSummaryUpdate,
-    MyPerformanceResponse,
-    PerformanceCompareResponse,
-    PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordResponse,
-    PerformanceEvaluationRecordUpdate,
-    PerformanceRankingResponse,
-    PerformanceTrendResponse,
-    PersonalPerformanceResponse,
-    ProjectPerformanceResponse,
-    ProjectProgressReportResponse,
-    TeamPerformanceResponse,
-)
+from app.schemas.common import ResponseModel
 from app.services.performance_integration_service import PerformanceIntegrationService
 from app.services.performance_service import PerformanceService
 
@@ -113,7 +73,6 @@ def _check_performance_view_permission(current_user: User, target_user_id: int, 
         return True
 
     # 检查是否管理同一项目
-    from app.models.project import Project
     user_projects = db.query(Project).filter(Project.pm_id == current_user.id).all()
     project_ids = [p.id for p in user_projects]
 
@@ -143,10 +102,9 @@ def _get_team_members(db: Session, team_id: int) -> List[int]:
         List[int]: 成员ID列表
     """
     # 临时使用部门作为团队
-    from app.models.organization import Department
     users = db.query(User).filter(
         User.department_id == team_id,
-        User.is_active == True
+        User.is_active
     ).all()
     return [u.id for u in users]
 
@@ -164,7 +122,7 @@ def _get_department_members(db: Session, dept_id: int) -> List[int]:
     """
     users = db.query(User).filter(
         User.department_id == dept_id,
-        User.is_active == True
+        User.is_active
     ).all()
     return [u.id for u in users]
 
@@ -204,14 +162,12 @@ def _get_evaluator_type(user: User, db: Session) -> str:
 
 def _get_team_name(db: Session, team_id: int) -> str:
     """获取团队名称"""
-    from app.models.organization import Department
     dept = db.query(Department).filter(Department.id == team_id).first()
     return dept.name if dept else f"团队{team_id}"
 
 
 def _get_department_name(db: Session, dept_id: int) -> str:
     """获取部门名称"""
-    from app.models.organization import Department
     dept = db.query(Department).filter(Department.id == dept_id).first()
     return dept.name if dept else f"部门{dept_id}"
 

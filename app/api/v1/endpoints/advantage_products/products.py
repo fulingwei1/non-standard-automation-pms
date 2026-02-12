@@ -6,7 +6,6 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -38,7 +37,7 @@ def get_products(
     query = db.query(AdvantageProduct)
 
     if not include_inactive:
-        query = query.filter(AdvantageProduct.is_active == True)
+        query = query.filter(AdvantageProduct.is_active)
 
     if category_id:
         query = query.filter(AdvantageProduct.category_id == category_id)
@@ -78,7 +77,7 @@ def get_products_grouped(
     # 获取所有类别
     cat_query = db.query(AdvantageProductCategory)
     if not include_inactive:
-        cat_query = cat_query.filter(AdvantageProductCategory.is_active == True)
+        cat_query = cat_query.filter(AdvantageProductCategory.is_active)
     categories = cat_query.order_by(AdvantageProductCategory.sort_order).all()
 
     result = []
@@ -88,7 +87,7 @@ def get_products_grouped(
             AdvantageProduct.category_id == cat.id
         )
         if not include_inactive:
-            prod_query = prod_query.filter(AdvantageProduct.is_active == True)
+            prod_query = prod_query.filter(AdvantageProduct.is_active)
         products = prod_query.order_by(AdvantageProduct.product_code).all()
 
         product_count = len(products)
@@ -136,7 +135,7 @@ def get_products_simple(
     current_user: User = Depends(security.require_permission("advantage_product:read"))
 ):
     """获取产品简略列表（用于下拉选择）"""
-    query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active == True)
+    query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active)
 
     if category_id:
         query = query.filter(AdvantageProduct.category_id == category_id)

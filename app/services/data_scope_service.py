@@ -16,7 +16,6 @@ from app.models.organization import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission import ScopeType
 from app.models.user import User
 from app.services.permission_service import PermissionService
-from app.services.data_scope import DataScopeConfig
 from app.services.data_scope.generic_filter import GenericFilterService
 
 logger = logging.getLogger(__name__)

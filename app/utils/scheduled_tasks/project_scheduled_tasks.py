@@ -4,16 +4,14 @@
 包含项目健康检查、进度汇总、规格匹配等任务
 """
 import logging
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import datetime, timedelta
 
 from sqlalchemy import case, func
-from sqlalchemy.orm import Session
 
 from app.models.alert import ProjectHealthSnapshot
 from app.models.base import get_db_session
 from app.models.material import BomHeader, BomItem
-from app.models.project import Project, ProjectCost, ProjectMilestone
+from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
 from app.utils.spec_match_service import SpecMatchService
@@ -33,7 +31,7 @@ def daily_spec_match_check():
         try:
             # 查询所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status != 'completed'
             ).all()
 
@@ -100,7 +98,7 @@ def daily_spec_match_check():
             for project in projects:
                 bom_headers = db.query(BomHeader).filter(
                     BomHeader.project_id == project.id,
-                    BomHeader.is_latest == True
+                    BomHeader.is_latest
                 ).all()
 
                 for bom in bom_headers:
@@ -201,7 +199,7 @@ def daily_health_snapshot():
 
             # 获取所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True
+                Project.is_active
             ).all()
 
             snapshot_count = 0
@@ -265,7 +263,7 @@ def calculate_progress_summary():
 
             # 获取所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status != 'completed'
             ).all()
 
@@ -333,7 +331,7 @@ def check_project_deadline_alerts():
             upcoming_deadline = datetime.now() + timedelta(days=7)
 
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status != 'completed',
                 Project.planned_end_date <= upcoming_deadline,
                 Project.planned_end_date >= datetime.now().date()
@@ -365,7 +363,7 @@ def check_project_deadline_alerts():
                     target_id=project.id,
                     target_no=project.project_code,
                     target_name=project.project_name,
-                    alert_title=f'项目截止日期预警',
+                    alert_title='项目截止日期预警',
                     alert_content=f'项目 "{project.project_name}" 将在 {days_remaining} 天后截止（{project.planned_end_date}），当前进度 {project.progress_pct or 0}%。',
                     alert_level=urgency,
                     status='PENDING',
@@ -404,7 +402,7 @@ def check_project_cost_overrun():
 
             # 获取所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status != 'completed'
             ).all()
 
@@ -442,7 +440,7 @@ def check_project_cost_overrun():
                         target_id=project.id,
                         target_no=project.project_code,
                         target_name=project.project_name,
-                        alert_title=f'项目成本超支预警',
+                        alert_title='项目成本超支预警',
                         alert_content=f'项目 "{project.project_name}" 成本已超支 {overrun_percentage:.1f}%（超支金额：{overrun_amount:,.2f}），预算 {project.budget_amount:,.2f}，实际成本 {actual_cost:,.2f}。',
                         alert_level=urgency,
                         status='PENDING',

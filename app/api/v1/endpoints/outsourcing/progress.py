@@ -11,51 +11,25 @@
 """
 
 import logging
-from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, List, Optional
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.outsourcing import (
-    OutsourcingDelivery,
-    OutsourcingDeliveryItem,
-    OutsourcingEvaluation,
-    OutsourcingInspection,
     OutsourcingOrder,
-    OutsourcingOrderItem,
-    OutsourcingPayment,
     OutsourcingProgress,
 )
-from app.models.project import Machine, Project
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    OutsourcingDeliveryCreate,
-    OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate,
-    OutsourcingInspectionResponse,
-    OutsourcingOrderCreate,
-    OutsourcingOrderItemCreate,
-    OutsourcingOrderItemResponse,
-    OutsourcingOrderListResponse,
-    OutsourcingOrderResponse,
-    OutsourcingOrderUpdate,
-    OutsourcingPaymentCreate,
-    OutsourcingPaymentResponse,
-    OutsourcingPaymentUpdate,
     OutsourcingProgressCreate,
     OutsourcingProgressResponse,
-    VendorCreate,
-    VendorResponse,
-    VendorUpdate,
 )
 
 router = APIRouter()

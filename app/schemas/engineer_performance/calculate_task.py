@@ -10,11 +10,10 @@ calculate_task Schemas
 包含：请求/响应模型、数据验证
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 # ==================== 计算任务 Schemas ====================

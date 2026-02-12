@@ -116,16 +116,16 @@ def get_my_strategy(
     # 获取我负责的公司 KPI
     my_kpis = db.query(KPI).join(CSF).filter(
         CSF.strategy_id == active_strategy.id,
-        CSF.is_active == True,
-        KPI.is_active == True,
+        CSF.is_active,
+        KPI.is_active,
         KPI.owner_user_id == user_id
     ).all()
 
     # 获取我负责的年度重点工作
     my_annual_works = db.query(AnnualKeyWork).join(CSF).filter(
         CSF.strategy_id == active_strategy.id,
-        CSF.is_active == True,
-        AnnualKeyWork.is_active == True,
+        CSF.is_active,
+        AnnualKeyWork.is_active,
         AnnualKeyWork.owner_user_id == user_id
     ).all()
 
@@ -203,8 +203,8 @@ def get_execution_status(
         kpis = db.query(KPI).join(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dim_code,
-            CSF.is_active == True,
-            KPI.is_active == True
+            CSF.is_active,
+            KPI.is_active
         ).all()
 
         kpi_total = len(kpis)
@@ -227,8 +227,8 @@ def get_execution_status(
         works = db.query(AnnualKeyWork).join(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dim_code,
-            CSF.is_active == True,
-            AnnualKeyWork.is_active == True
+            CSF.is_active,
+            AnnualKeyWork.is_active
         ).all()
 
         work_total = len(works)
@@ -297,7 +297,7 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
         from app.models.strategy import Strategy, CSF, KPI, AnnualKeyWork
 
         # 统计战略数量
-        strategy_count = db.query(Strategy).filter(Strategy.is_active == True).count()
+        strategy_count = db.query(Strategy).filter(Strategy.is_active).count()
         active_strategy = strategy_service.get_active_strategy(db)
 
         # 统计 CSF 数量
@@ -308,19 +308,19 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
         if active_strategy:
             csf_count = db.query(CSF).filter(
                 CSF.strategy_id == active_strategy.id,
-                CSF.is_active == True
+                CSF.is_active
             ).count()
 
             kpi_count = db.query(KPI).join(CSF).filter(
                 CSF.strategy_id == active_strategy.id,
-                CSF.is_active == True,
-                KPI.is_active == True
+                CSF.is_active,
+                KPI.is_active
             ).count()
 
             work_count = db.query(AnnualKeyWork).join(CSF).filter(
                 CSF.strategy_id == active_strategy.id,
-                CSF.is_active == True,
-                AnnualKeyWork.is_active == True
+                CSF.is_active,
+                AnnualKeyWork.is_active
             ).count()
 
         # 使用基类方法创建统计卡片

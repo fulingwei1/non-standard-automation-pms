@@ -10,7 +10,7 @@ from typing import Any, List
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
@@ -31,7 +31,6 @@ def _generate_payment_plans_from_contract(db: Session, contract: Contract) -> Li
 
     使用重构后的PaymentPlanService，将原来157行的复杂函数拆分为多个小函数
     """
-    from app.models.project import ProjectPaymentPlan
     from app.services.sales.payment_plan_service import PaymentPlanService
 
     payment_service = PaymentPlanService(db)

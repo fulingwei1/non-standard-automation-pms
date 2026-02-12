@@ -12,14 +12,11 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Dict, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.notification import Notification
 from app.models.timesheet import Timesheet
-from app.models.user import User
 from app.services.timesheet_quality_service import TimesheetQualityService
 from app.services.timesheet_reminder.base import create_timesheet_notification
 

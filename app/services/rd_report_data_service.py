@@ -5,8 +5,7 @@
 提取研发费用报表的数据查询和构建逻辑
 """
 
-from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -214,7 +213,7 @@ def build_personnel_data(
                 "岗位": user.position or "",
             })
 
-    all_users = db.query(User).filter(User.is_active == True).count()
+    all_users = db.query(User).filter(User.is_active).count()
 
     return {
         "summary": {

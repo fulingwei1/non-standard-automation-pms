@@ -4,16 +4,13 @@
 定期向工程师展示个人五维得分和排名变化
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import EngineerProfile
 from app.models.performance import PerformancePeriod, PerformanceResult
-from app.schemas.engineer_performance import EngineerDimensionScore
 
 
 class PerformanceFeedbackService:
@@ -314,7 +311,7 @@ class PerformanceFeedbackService:
         }
 
         # 获取工程师档案以确定岗位类型
-        profile = self.db.query(EngineerProfile).filter(
+        self.db.query(EngineerProfile).filter(
             EngineerProfile.user_id == engineer_id
         ).first()
 

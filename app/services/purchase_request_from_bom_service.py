@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem, Material
-from app.models.vendor import Vendor
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem
 
 

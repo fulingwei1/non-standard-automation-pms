@@ -3,7 +3,6 @@
 工程师绩效评价模块 - 通用模型
 """
 from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import (
     JSON,

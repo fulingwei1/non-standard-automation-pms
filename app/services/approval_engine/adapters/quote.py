@@ -239,7 +239,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         }
 
         # 创建审批实例
-        approval_data = ApprovalInstanceCreate(
+        ApprovalInstanceCreate(
             template_code="SALES_QUOTE",
             entity_type="QUOTE",
             entity_id=quote_version.id,

@@ -7,7 +7,7 @@
 import logging
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -128,7 +128,7 @@ def complete_task(
                 link_url=f"/engineers/tasks/{task.id}",
             )
             dispatcher.send_notification_request(request)
-    except Exception as e:
+    except Exception:
         # 通知失败不影响主流程
         logger.warning("任务完成通知发送失败，不影响主流程", exc_info=True)
 

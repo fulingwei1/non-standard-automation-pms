@@ -49,7 +49,7 @@ class WorkflowEngine:
         """
         flow = (
             self.db.query(ApprovalFlow)
-            .filter(ApprovalFlow.flow_code == flow_code, ApprovalFlow.is_active == True)
+            .filter(ApprovalFlow.flow_code == flow_code, ApprovalFlow.is_active)
             .first()
         )
 
@@ -532,7 +532,7 @@ class WorkflowEngine:
                 self.db.query(ApprovalFlow)
                 .filter(
                     ApprovalFlow.flow_code == flow_code,
-                    ApprovalFlow.is_active == True,
+                    ApprovalFlow.is_active,
                 )
                 .first()
             )
@@ -542,7 +542,7 @@ class WorkflowEngine:
                     self.db.query(ApprovalFlow)
                     .filter(
                         ApprovalFlow.module_name == flow_code,
-                        ApprovalFlow.is_active == True,
+                        ApprovalFlow.is_active,
                     )
                     .first()
                 )
@@ -580,7 +580,7 @@ class ApprovalRouter:
             self.db.query(ApprovalFlow)
             .filter(
                 ApprovalFlow.module_name == business_type,
-                ApprovalFlow.is_active == True,
+                ApprovalFlow.is_active,
             )
             .first()
         )

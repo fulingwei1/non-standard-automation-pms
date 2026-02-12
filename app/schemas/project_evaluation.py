@@ -5,11 +5,11 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common import PageParams, PaginatedResponse, ResponseModel
+from app.schemas.common import PageParams, PaginatedResponse
 
 # ==================== 项目评价 ====================
 

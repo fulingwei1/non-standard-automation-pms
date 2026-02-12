@@ -35,7 +35,7 @@ class DeptReportMixin:
         # 部门人员
         users = db.query(User).filter(
             User.department_id == department_id,
-            User.is_active == True
+            User.is_active
         ).all()
 
         user_ids = [u.id for u in users]

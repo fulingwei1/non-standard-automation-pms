@@ -49,14 +49,14 @@ class AnalysisReportMixin:
                 # User 模型只有 department 字符串字段，通过部门名称匹配
                 users = db.query(User).filter(
                     User.department == dept.dept_name,
-                    User.is_active == True
+                    User.is_active
                 ).all()
                 scope_name = dept.dept_name
             else:
                 users = []
                 scope_name = "部门"
         else:
-            users = db.query(User).filter(User.is_active == True).all()
+            users = db.query(User).filter(User.is_active).all()
             scope_name = "全公司"
 
         user_ids = [u.id for u in users]
@@ -161,7 +161,7 @@ class AnalysisReportMixin:
             projects = db.query(Project).filter(Project.id == project_id).all()
         else:
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status.in_(["IN_PROGRESS", "ON_HOLD"])
             ).all()
 

@@ -7,17 +7,13 @@
 from datetime import date, timedelta
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
-from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
 from app.common.date_range import get_month_range
-from app.core import security
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
-from app.schemas.common import ResponseModel
 
 
 class ProductionDashboardEndpoint(BaseDashboardEndpoint):
@@ -40,7 +36,7 @@ class ProductionDashboardEndpoint(BaseDashboardEndpoint):
 
         # 统计车间数量
         workshop_count = db.query(func.count(Workshop.id)).filter(
-            Workshop.is_active == True
+            Workshop.is_active
         ).scalar() or 0
 
         # 统计本月工单

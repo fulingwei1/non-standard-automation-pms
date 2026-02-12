@@ -8,9 +8,9 @@ Dashboard API 端点基类
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-from datetime import date, datetime
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps

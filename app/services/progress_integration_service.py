@@ -451,7 +451,7 @@ class ProgressIntegrationService:
             # 检查是否还有未解决的阻塞问题
             blocking_issues = self.db.query(Issue).filter(
                 Issue.project_id == acceptance_order.project_id,
-                Issue.is_blocking == True,
+                Issue.is_blocking,
                 Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
                 Issue.acceptance_order_id != acceptance_order.id
             ).count()

@@ -38,8 +38,8 @@ def match_material_cost(
     """
     # 查询启用的标准件成本清单
     query = db.query(PurchaseMaterialCost).filter(
-        PurchaseMaterialCost.is_active == True,
-        PurchaseMaterialCost.is_standard_part == True
+        PurchaseMaterialCost.is_active,
+        PurchaseMaterialCost.is_standard_part
     )
 
     # 匹配逻辑：优先精确匹配，其次模糊匹配

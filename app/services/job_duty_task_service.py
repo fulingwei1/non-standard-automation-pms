@@ -6,8 +6,8 @@
 """
 
 import calendar
-from datetime import date, datetime, timedelta
-from typing import List, Optional, Tuple
+from datetime import date, timedelta
+from typing import List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -105,14 +105,14 @@ def find_template_users(
     if hasattr(User, 'position_id') and template.position_id:
         users = db.query(User).filter(
             User.position_id == template.position_id,
-            User.is_active == True
+            User.is_active
         ).all()
     elif template.department_id:
         # 如果有部门ID，通过部门查找用户
         if hasattr(User, 'department_id'):
             users = db.query(User).filter(
                 User.department_id == template.department_id,
-                User.is_active == True
+                User.is_active
             ).all()
 
     return users

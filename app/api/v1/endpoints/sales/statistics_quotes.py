@@ -96,7 +96,7 @@ def get_quote_stats(
     # 即将到期（7天内）
     today = date_type.today()
     expiring_soon = base_query.filter(
-        Quote.valid_until != None,
+        Quote.valid_until is not None,
         Quote.valid_until <= today + timedelta(days=7),
         Quote.valid_until > today,
         Quote.status.in_(["DRAFT", "IN_REVIEW", "APPROVED", "SENT"])

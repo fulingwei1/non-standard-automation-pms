@@ -19,7 +19,7 @@ class HelpersMixin:
         self.db.query(StageTemplate).filter(
             and_(
                 StageTemplate.project_type == project_type,
-                StageTemplate.is_default == True
+                StageTemplate.is_default
             )
         ).update({"is_default": False})
 

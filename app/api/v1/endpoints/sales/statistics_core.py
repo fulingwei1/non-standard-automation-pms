@@ -111,7 +111,7 @@ def get_opportunities_by_stage(
         count = stage_query.count()
 
         # 对于金额统计，需要重新构建查询
-        amount_query = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.stage == stage)
+        db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.stage == stage)
         # 应用数据权限过滤（需要子查询方式）
         filtered_ids = [opp.id for opp in base_query.filter(Opportunity.stage == stage).all()]
         if filtered_ids:

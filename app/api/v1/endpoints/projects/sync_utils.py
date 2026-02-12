@@ -58,7 +58,7 @@ def _sync_to_erp_system(project: Project, erp_order_no: Optional[str] = None) ->
     """
     # 检查是否配置了ERP接口
     erp_api_url = getattr(settings, 'ERP_API_URL', None)
-    erp_api_key = getattr(settings, 'ERP_API_KEY', None)
+    getattr(settings, 'ERP_API_KEY', None)
 
     # 如果没有配置ERP接口，返回模拟成功
     if not erp_api_url:

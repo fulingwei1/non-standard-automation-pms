@@ -9,60 +9,28 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import date, timedelta
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.enums import (
     ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
 )
 from app.models.management_rhythm import (
-    ManagementRhythmConfig,
     MeetingActionItem,
-    MeetingReport,
-    MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
     StrategicMeeting,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
     MeetingCalendarResponse,
     MeetingMapItem,
     MeetingMapResponse,
-    MeetingReportConfigCreate,
-    MeetingReportConfigResponse,
-    MeetingReportConfigUpdate,
-    MeetingReportGenerateRequest,
-    MeetingReportResponse,
     MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
-    RhythmConfigCreate,
-    RhythmConfigResponse,
-    RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
-    StrategicMeetingCreate,
-    StrategicMeetingMinutesRequest,
-    StrategicMeetingResponse,
-    StrategicMeetingUpdate,
-    StrategicStructureTemplate,
 )
 
 from .permission_utils import (

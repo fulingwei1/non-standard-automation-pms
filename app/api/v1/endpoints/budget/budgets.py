@@ -298,7 +298,7 @@ def approve_budget(
         db.query(ProjectBudget).filter(
             ProjectBudget.project_id == budget.project_id,
             ProjectBudget.id != budget_id,
-            ProjectBudget.is_active == True
+            ProjectBudget.is_active
         ).update({"is_active": False})
 
         budget.is_active = True

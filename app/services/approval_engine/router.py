@@ -46,7 +46,7 @@ class ApprovalRouterService:
             self.db.query(ApprovalRoutingRule)
             .filter(
                 ApprovalRoutingRule.template_id == template_id,
-                ApprovalRoutingRule.is_active == True,
+                ApprovalRoutingRule.is_active,
             )
             .order_by(ApprovalRoutingRule.rule_order)
             .all()
@@ -66,8 +66,8 @@ class ApprovalRouterService:
             self.db.query(ApprovalFlowDefinition)
             .filter(
                 ApprovalFlowDefinition.template_id == template_id,
-                ApprovalFlowDefinition.is_default == True,
-                ApprovalFlowDefinition.is_active == True,
+                ApprovalFlowDefinition.is_default,
+                ApprovalFlowDefinition.is_active,
             )
             .first()
         )
@@ -300,7 +300,7 @@ class ApprovalRouterService:
             .join(Role, UserRole.role_id == Role.id)
             .filter(
                 Role.role_code.in_(role_codes),
-                User.is_active == True,
+                User.is_active,
             )
             .all()
         )
@@ -364,7 +364,7 @@ class ApprovalRouterService:
             self.db.query(Department)
             .filter(
                 Department.dept_name.in_(dept_names),
-                Department.is_active == True,
+                Department.is_active,
             )
             .all()
         )
@@ -395,7 +395,7 @@ class ApprovalRouterService:
             .filter(
                 ApprovalNodeDefinition.flow_id == flow_id,
                 ApprovalNodeDefinition.node_order > current_order,
-                ApprovalNodeDefinition.is_active == True,
+                ApprovalNodeDefinition.is_active,
             )
             .order_by(ApprovalNodeDefinition.node_order)
             .all()

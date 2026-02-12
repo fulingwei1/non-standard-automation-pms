@@ -4,9 +4,7 @@
 包含：奖金规则、奖金计算记录、奖金发放记录、团队奖金分配
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Optional
+from datetime import datetime
 
 from sqlalchemy import (
     JSON,
@@ -24,13 +22,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import (
-    BonusCalculationStatusEnum,
-    BonusDistributionStatusEnum,
-    BonusTypeEnum,
-    PaymentMethodEnum,
-    TeamBonusAllocationMethodEnum,
-)
 
 # ==================== 奖金规则 ====================
 

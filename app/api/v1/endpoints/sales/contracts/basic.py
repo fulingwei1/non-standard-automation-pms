@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.project import Customer
 from app.models.sales import Contract, ContractDeliverable, Opportunity
 from app.models.user import User

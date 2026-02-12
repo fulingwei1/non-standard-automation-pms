@@ -51,8 +51,8 @@ def daily_health_snapshot():
 
             # 查询所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
-                Project.is_archived == False
+                Project.is_active,
+                not Project.is_archived
             ).all()
 
             today = date.today()

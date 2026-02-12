@@ -6,63 +6,29 @@ import logging
 
 import os
 import uuid
-from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import (
-    APIRouter,
-    Body,
-    Depends,
-    File,
-    Form,
     HTTPException,
-    Query,
     UploadFile,
     status,
 )
-from sqlalchemy import desc, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.core import security
 from app.core.config import settings
-from app.models.project import Customer, Project
 from app.models.service import (
-    CustomerCommunication,
-    CustomerSatisfaction,
-    KnowledgeBase,
-    SatisfactionSurveyTemplate,
     ServiceRecord,
-    ServiceTicket,
 )
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.service import (
-    CustomerCommunicationCreate,
-    CustomerCommunicationResponse,
-    CustomerCommunicationUpdate,
-    CustomerSatisfactionCreate,
-    CustomerSatisfactionResponse,
-    CustomerSatisfactionUpdate,
-    KnowledgeBaseCreate,
-    KnowledgeBaseResponse,
-    KnowledgeBaseUpdate,
     PaginatedResponse,
-    SatisfactionSurveyTemplateCreate,
-    SatisfactionSurveyTemplateUpdate,
-    ServiceDashboardStatistics,
     ServiceRecordCreate,
     ServiceRecordResponse,
-    ServiceRecordUpdate,
-    ServiceTicketAssign,
-    ServiceTicketClose,
-    ServiceTicketCreate,
-    ServiceTicketResponse,
-    ServiceTicketUpdate,
 )
 
 

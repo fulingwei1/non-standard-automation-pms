@@ -4,7 +4,7 @@
 """
 
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from sqlalchemy.orm import Session
 
@@ -14,7 +14,6 @@ from app.schemas.workload import (
     DailyWorkloadItem,
     ProjectWorkloadItem,
     TaskWorkloadItem,
-    UserWorkloadSummary,
 )
 
 

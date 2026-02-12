@@ -46,13 +46,13 @@ class ShortageDashboardAdapter(DashboardAdapter):
         # 缺料上报统计
         report_query = self.db.query(ShortageReport)
         total_reports = report_query.count()
-        reported = (
+        (
             report_query.filter(ShortageReport.status == "REPORTED").count()
         )
-        confirmed = (
+        (
             report_query.filter(ShortageReport.status == "CONFIRMED").count()
         )
-        handling = (
+        (
             report_query.filter(ShortageReport.status == "HANDLING").count()
         )
         resolved = (
@@ -69,11 +69,11 @@ class ShortageDashboardAdapter(DashboardAdapter):
 
         # 系统检测的缺料预警
         alert_query = self.db.query(MaterialShortage)
-        total_alerts = alert_query.count()
+        alert_query.count()
         unresolved_alerts = (
             alert_query.filter(MaterialShortage.status != "RESOLVED").count()
         )
-        critical_alerts = (
+        (
             alert_query.filter(
                 MaterialShortage.alert_level == "CRITICAL",
                 MaterialShortage.status != "RESOLVED",
@@ -82,12 +82,12 @@ class ShortageDashboardAdapter(DashboardAdapter):
 
         # 到货跟踪统计
         arrival_query = self.db.query(MaterialArrival)
-        total_arrivals = arrival_query.count()
+        arrival_query.count()
         pending_arrivals = (
             arrival_query.filter(MaterialArrival.status == "PENDING").count()
         )
         delayed_arrivals = (
-            arrival_query.filter(MaterialArrival.is_delayed == True).count()
+            arrival_query.filter(MaterialArrival.is_delayed).count()
         )
 
         return [

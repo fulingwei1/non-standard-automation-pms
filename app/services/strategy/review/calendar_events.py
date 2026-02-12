@@ -9,28 +9,20 @@
 战略管理服务 - 战略审视与例行管理
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import Dict, List, Optional
 
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
-from app.models.strategy import StrategyCalendarEvent, StrategyReview
+from app.models.strategy import StrategyCalendarEvent
 from app.common.date_range import get_month_range_by_ym
 from app.schemas.strategy import (
     CalendarMonthResponse,
     CalendarYearResponse,
-    DimensionHealthDetail,
-    HealthScoreResponse,
-    RoutineManagementCycleItem,
-    RoutineManagementCycleResponse,
     StrategyCalendarEventCreate,
     StrategyCalendarEventResponse,
     StrategyCalendarEventUpdate,
-    StrategyReviewCreate,
-    StrategyReviewResponse,
-    StrategyReviewUpdate,
 )
 
 
@@ -86,7 +78,7 @@ def get_calendar_event(db: Session, event_id: int) -> Optional[StrategyCalendarE
     """
     return db.query(StrategyCalendarEvent).filter(
         StrategyCalendarEvent.id == event_id,
-        StrategyCalendarEvent.is_active == True
+        StrategyCalendarEvent.is_active
     ).first()
 
 
@@ -116,7 +108,7 @@ def list_calendar_events(
     """
     query = db.query(StrategyCalendarEvent).filter(
         StrategyCalendarEvent.strategy_id == strategy_id,
-        StrategyCalendarEvent.is_active == True
+        StrategyCalendarEvent.is_active
     )
 
     if start_date:

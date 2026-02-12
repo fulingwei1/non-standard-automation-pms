@@ -4,53 +4,20 @@ NOTIFICATIONS - 自动生成
 从 alerts.py 拆分
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, case, func, or_
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_like_filter
 from app.models.alert import (
-    AlertNotification,
-    AlertRecord,
-    AlertRule,
-    AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
-    ExceptionAction,
-    ExceptionEscalation,
     ExceptionEvent,
-    ProjectHealthSnapshot,
 )
-from app.models.issue import Issue
-from app.models.project import Machine, Project
 from app.models.user import User
-from app.schemas.alert import (
-    AlertRecordHandle,
-    AlertRecordListResponse,
-    AlertRecordResponse,
-    AlertRuleCreate,
-    AlertRuleResponse,
-    AlertRuleUpdate,
-    AlertStatisticsResponse,
-    AlertSubscriptionCreate,
-    AlertSubscriptionResponse,
-    AlertSubscriptionUpdate,
-    ExceptionEventCreate,
-    ExceptionEventListResponse,
-    ExceptionEventResolve,
-    ExceptionEventResponse,
-    ExceptionEventUpdate,
-    ExceptionEventVerify,
-    ProjectHealthResponse,
-)
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter(tags=["notifications"])
@@ -170,4 +137,4 @@ def generate_exception_no(db: Session) -> str:
     max_event = max_event_query.order_by(ExceptionEvent.event_no.desc()).first()
 
     if max_event:
-        seq = int(max_event.event_no.split("-")[-1]) + 1
+        int(max_event.event_no.split("-")[-1]) + 1

@@ -11,41 +11,19 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
 from app.models.task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
     TaskUnified,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
-    TaskCommentCreate,
-    TaskCommentResponse,
-    TaskOverviewResponse,
-    TaskProgressUpdate,
-    TaskTransferRequest,
-    TaskUnifiedCreate,
-    TaskUnifiedListResponse,
     TaskUnifiedResponse,
-    TaskUnifiedUpdate,
 )
 from app.services.sales_reminder import create_notification
 
@@ -55,7 +33,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
+from .batch_helpers import log_task_operation
 
 
 from fastapi import APIRouter
@@ -156,11 +134,11 @@ def reject_transferred_task(
             # 通知原转办人
             if task.transfer_from_id:
                 try:
-                    notification = create_notification(
+                    create_notification(
                         db=db,
                         user_id=task.transfer_from_id,
                         notification_type="TASK_TRANSFER_REJECTED",
-                        title=f"任务转办被拒绝",
+                        title="任务转办被拒绝",
                         content=f"{current_user.real_name or current_user.username} 拒绝了任务「{task.title}」的转办，原因：{reason or '未提供原因'}",
                         source_type="task",
                         source_id=task.id,
@@ -169,7 +147,7 @@ def reject_transferred_task(
                         extra_data={"task_id": task.id, "reject_reason": reason}
                     )
                     db.commit()
-                except Exception as e:
+                except Exception:
                     # 通知发送失败不影响主流程
                     logger.warning("任务转办拒绝通知发送失败，不影响主流程", exc_info=True)
 

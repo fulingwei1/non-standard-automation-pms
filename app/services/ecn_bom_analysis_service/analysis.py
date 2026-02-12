@@ -4,7 +4,7 @@ ECN BOM影响分析服务 - 主要分析功能
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
 from app.models.material import BomHeader, BomItem
@@ -65,7 +65,7 @@ def analyze_bom_impact(
     bom_headers = service.db.query(BomHeader).filter(
         BomHeader.machine_id == machine_id,
         BomHeader.status == 'RELEASED',
-        BomHeader.is_latest == True
+        BomHeader.is_latest
     ).all()
 
     if not bom_headers:

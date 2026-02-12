@@ -2,11 +2,9 @@
 """
 技术评估和需求管理模型
 """
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     Column,
     DateTime,
@@ -21,13 +19,8 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 from app.models.enums import (
-    AssessmentDecisionEnum,
-    AssessmentSourceTypeEnum,
     AssessmentStatusEnum,
-    FreezeTypeEnum,
     OpenItemStatusEnum,
-    OpenItemTypeEnum,
-    ResponsiblePartyEnum,
 )
 
 

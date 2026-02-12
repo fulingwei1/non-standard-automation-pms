@@ -8,7 +8,7 @@
 """
 
 from datetime import date
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ from app.api import deps
 from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
-from app.schemas.common import ResponseModel, BatchOperationResponse
+from app.schemas.common import BatchOperationResponse
 from app.services.data_scope import DataScopeService
 from app.utils.batch_operations import BatchOperationExecutor, create_scope_filter
 

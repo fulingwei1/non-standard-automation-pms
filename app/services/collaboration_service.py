@@ -3,15 +3,13 @@
 跨部门协作评价服务
 """
 
-from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import CollaborationRating, EngineerProfile
-from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.engineer_performance import CollaborationRatingCreate
 

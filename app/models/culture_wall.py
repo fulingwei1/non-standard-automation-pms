@@ -15,7 +15,6 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

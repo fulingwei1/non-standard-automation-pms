@@ -8,21 +8,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.organization import Employee
 from app.models.qualification import (
     AssessmentResultEnum,
-    AssessmentTypeEnum,
     EmployeeQualification,
     PositionCompetencyModel,
-    PositionTypeEnum,
     QualificationAssessment,
     QualificationLevel,
     QualificationStatusEnum,
 )
-from app.models.user import User
 
 
 class QualificationService:
@@ -55,7 +52,7 @@ class QualificationService:
         query = db.query(PositionCompetencyModel).filter(
             PositionCompetencyModel.position_type == position_type,
             PositionCompetencyModel.level_id == level_id,
-            PositionCompetencyModel.is_active == True
+            PositionCompetencyModel.is_active
         )
 
         if position_subtype:
@@ -292,7 +289,7 @@ class QualificationService:
         """获取指定岗位的所有能力模型"""
         query = db.query(PositionCompetencyModel).filter(
             PositionCompetencyModel.position_type == position_type,
-            PositionCompetencyModel.is_active == True
+            PositionCompetencyModel.is_active
         )
 
         if position_subtype:

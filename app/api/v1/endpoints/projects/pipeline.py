@@ -45,14 +45,14 @@ def get_pipeline_view(
     """
 
     # 获取所有可用模板（用于筛选下拉框）
-    all_templates = db.query(StageTemplate).filter(StageTemplate.is_active == True).all()
+    all_templates = db.query(StageTemplate).filter(StageTemplate.is_active).all()
     available_templates = [
         {"id": t.id, "code": t.template_code, "name": t.template_name}
         for t in all_templates
     ]
 
     # 查询所有活跃项目
-    projects_query = db.query(Project).filter(Project.is_active == True)
+    projects_query = db.query(Project).filter(Project.is_active)
 
     # 按健康状态筛选
     if health_status:
@@ -207,7 +207,7 @@ def get_pipeline_view(
 
     # 获取阶段定义（用于表头）
     default_template = (
-        db.query(StageTemplate).filter(StageTemplate.is_default == True).first()
+        db.query(StageTemplate).filter(StageTemplate.is_default).first()
     )
     stage_definitions = []
     if default_template:

@@ -71,7 +71,7 @@ async def init_project_role_configs(
         raise HTTPException(status_code=400, detail="项目已初始化角色配置")
 
     role_types = (
-        db.query(ProjectRoleType).filter(ProjectRoleType.is_active == True).all()
+        db.query(ProjectRoleType).filter(ProjectRoleType.is_active).all()
     )
 
     configs = []

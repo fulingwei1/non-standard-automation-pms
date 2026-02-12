@@ -16,7 +16,6 @@ from app.models.user import User
 from app.schemas.presale import DeliverableCreate, DeliverableResponse, TicketAcceptRequest, TicketProgressUpdate, TicketRatingRequest, TicketResponse
 
 from .crud import read_ticket
-from .utils import build_ticket_response
 
 router = APIRouter()
 

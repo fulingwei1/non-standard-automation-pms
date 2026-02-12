@@ -42,7 +42,7 @@ async def get_data_collection(
     elif not start_date or not end_date:
         # 使用当前周期
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
@@ -80,7 +80,7 @@ async def extract_self_evaluation(
         end_date = period.end_date
     elif not start_date or not end_date:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
@@ -148,7 +148,7 @@ async def generate_collection_report(
         end_date = period.end_date
     elif not start_date or not end_date:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")

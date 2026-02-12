@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -39,7 +39,7 @@ def export_project_list(
     """
     导出项目列表（Excel）
     """
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
 
     filters = export_in.filters or {}
     query = apply_keyword_filter(query, Project, filters.get("keyword"), ["project_name", "project_code", "contract_no"])

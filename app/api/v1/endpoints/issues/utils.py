@@ -43,7 +43,7 @@ def create_blocking_issue_alert(db: Session, issue: Issue) -> Optional[AlertReco
     # 获取或创建预警规则
     rule = db.query(AlertRule).filter(
         AlertRule.rule_code == 'BLOCKING_ISSUE',
-        AlertRule.is_enabled == True
+        AlertRule.is_enabled
     ).first()
 
     if not rule:

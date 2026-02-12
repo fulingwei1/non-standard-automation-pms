@@ -6,7 +6,6 @@
 
 from typing import Any, Dict, List, Optional
 
-from app.models.performance import PerformancePeriod
 
 
 class AutoFixMixin:

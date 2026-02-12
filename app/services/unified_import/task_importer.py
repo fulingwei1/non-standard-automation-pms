@@ -103,7 +103,7 @@ class TaskImporter(ImportBase):
                     except (ValueError, TypeError, InvalidOperation):
                         pass
 
-                task_description = str(row.get('任务描述', '') or '').strip()
+                str(row.get('任务描述', '') or '').strip()
 
                 # 检查是否已存在
                 existing = db.query(Task).filter(

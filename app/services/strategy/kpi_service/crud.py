@@ -61,7 +61,7 @@ def get_kpi(db: Session, kpi_id: int) -> Optional[KPI]:
     """
     return db.query(KPI).filter(
         KPI.id == kpi_id,
-        KPI.is_active == True
+        KPI.is_active
     ).first()
 
 
@@ -89,7 +89,7 @@ def list_kpis(
     Returns:
         tuple: (KPI 列表, 总数)
     """
-    query = db.query(KPI).filter(KPI.is_active == True)
+    query = db.query(KPI).filter(KPI.is_active)
 
     if csf_id:
         query = query.filter(KPI.csf_id == csf_id)
@@ -97,7 +97,7 @@ def list_kpis(
     if strategy_id:
         query = query.join(CSF).filter(
             CSF.strategy_id == strategy_id,
-            CSF.is_active == True
+            CSF.is_active
         )
 
     if ipooc_type:

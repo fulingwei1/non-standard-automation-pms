@@ -15,7 +15,7 @@
 - GET    /kit-rate              齐套率统计
 - GET    /supplier-delivery     供应商交期分析
 """
-from datetime import date, timedelta
+from datetime import date
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -277,7 +277,7 @@ def get_kit_rate_statistics(
         end_date = end_date or default_end
 
     # 获取项目列表
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
     if project_id:
         query = query.filter(Project.id == project_id)
     projects = query.all()

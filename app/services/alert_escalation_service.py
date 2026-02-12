@@ -6,7 +6,7 @@ S.10: 实现预警升级机制，自动升级超时未处理的预警
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 

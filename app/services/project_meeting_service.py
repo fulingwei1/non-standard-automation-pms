@@ -4,14 +4,12 @@
 支持会议与项目的关联和查询
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import JSON, and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.management_rhythm import MeetingActionItem, StrategicMeeting
-from app.models.project import Project
 
 
 class ProjectMeetingService:

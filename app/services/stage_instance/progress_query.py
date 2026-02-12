@@ -10,7 +10,6 @@ from sqlalchemy.orm import joinedload
 
 from app.models.enums import StageStatusEnum
 from app.models.stage_instance import (
-    ProjectNodeInstance,
     ProjectStageInstance,
 )
 

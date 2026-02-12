@@ -10,8 +10,6 @@ from pydantic import BaseModel
 
 from app.common.crud.repository import BaseRepository
 from app.common.crud.exceptions import (
-    NotFoundError,
-    AlreadyExistsError,
     raise_not_found,
     raise_already_exists,
 )

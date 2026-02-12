@@ -34,7 +34,7 @@ def get_global_skill_matrix(
     # 获取所有技能标签
     tags = db.query(HrTagDict).filter(
         HrTagDict.tag_type == tag_type,
-        HrTagDict.is_active == True,
+        HrTagDict.is_active,
     ).order_by(HrTagDict.sort_order).all()
 
     skill_matrix = []
@@ -77,7 +77,7 @@ def get_skill_list(
     """
     tags = db.query(HrTagDict).filter(
         HrTagDict.tag_type == tag_type,
-        HrTagDict.is_active == True,
+        HrTagDict.is_active,
     ).all()
 
     result = []
@@ -192,7 +192,7 @@ def search_available_employees(
     # 进一步过滤
     employees_query = db.query(User).filter(
         User.id.in_(employee_ids),
-        User.is_active == True,
+        User.is_active,
     )
 
     if department_id:
@@ -257,8 +257,8 @@ def get_skill_gaps(
     """
     # 获取标记为必需的技能
     required_skills = db.query(HrTagDict).filter(
-        HrTagDict.is_required == True,
-        HrTagDict.is_active == True,
+        HrTagDict.is_required,
+        HrTagDict.is_active,
     ).all()
 
     critical_gaps = []
@@ -341,7 +341,7 @@ def get_department_skill_matrix(
     # 获取部门成员
     members = db.query(User).filter(
         User.department_id == dept_id,
-        User.is_active == True,
+        User.is_active,
     ).all()
 
     member_ids = [m.id for m in members]
@@ -356,7 +356,7 @@ def get_department_skill_matrix(
     # 获取所有技能标签
     skills = db.query(HrTagDict).filter(
         HrTagDict.tag_type == "SKILL",
-        HrTagDict.is_active == True,
+        HrTagDict.is_active,
     ).all()
 
     # 获取该部门成员的技能评估

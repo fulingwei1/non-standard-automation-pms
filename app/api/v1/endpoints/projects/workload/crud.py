@@ -88,7 +88,7 @@ def get_project_team_workload(
     if not user_ids:
         return TeamWorkloadResponse(items=[])
 
-    users = db.query(User).filter(User.id.in_(user_ids), User.is_active == True).all()
+    users = db.query(User).filter(User.id.in_(user_ids), User.is_active).all()
 
     workdays = _calculate_workdays(start_date, end_date)
     standard_hours = workdays * 8.0

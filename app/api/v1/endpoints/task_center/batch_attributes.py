@@ -8,7 +8,7 @@
 """
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -263,7 +263,7 @@ def batch_urge_tasks(
     """
     批量催办任务（发送催办通知）
     """
-    executor = BatchOperationExecutor(
+    BatchOperationExecutor(
         model=TaskUnified,
         db=db,
         current_user=current_user

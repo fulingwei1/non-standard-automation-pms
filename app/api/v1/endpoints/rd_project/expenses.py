@@ -311,7 +311,7 @@ def calculate_labor_cost(
     # 获取人工费用类型
     labor_cost_type = db.query(RdCostType).filter(
         RdCostType.category == 'LABOR',
-        RdCostType.is_active == True
+        RdCostType.is_active
     ).first()
 
     if not labor_cost_type:

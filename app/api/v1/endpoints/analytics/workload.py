@@ -5,7 +5,7 @@
 提供部门和全局工作负载分布、瓶颈分析
 """
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -43,7 +43,7 @@ def get_department_workload_summary(
     # 获取部门成员
     members = db.query(User).filter(
         User.department_id == dept_id,
-        User.is_active == True,
+        User.is_active,
     ).all()
 
     member_ids = [m.id for m in members]
@@ -140,7 +140,7 @@ def get_department_workload_distribution(
 
     members = db.query(User).filter(
         User.department_id == dept_id,
-        User.is_active == True,
+        User.is_active,
     ).all()
 
     member_ids = [m.id for m in members]
@@ -208,13 +208,13 @@ def get_global_workload_overview(
         start_date, end_date = get_month_range(date.today())
 
     # 按部门统计
-    departments = db.query(Department).filter(Department.is_active == True).all()
+    departments = db.query(Department).filter(Department.is_active).all()
 
     dept_stats = []
     for dept in departments:
         members = db.query(User).filter(
             User.department_id == dept.id,
-            User.is_active == True,
+            User.is_active,
         ).all()
 
         if not members:
@@ -293,9 +293,9 @@ def get_workload_bottlenecks(
         })
 
     # 2. 检测超载部门
-    departments = db.query(Department).filter(Department.is_active == True).all()
+    departments = db.query(Department).filter(Department.is_active).all()
     for dept in departments:
-        members = db.query(User).filter(User.department_id == dept.id, User.is_active == True).all()
+        members = db.query(User).filter(User.department_id == dept.id, User.is_active).all()
         if not members:
             continue
 

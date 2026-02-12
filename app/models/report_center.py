@@ -4,10 +4,8 @@
 包含：报表模板、报表定义、报表生成记录、报表订阅、数据导入导出
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -18,12 +16,9 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    LargeBinary,
-    Numeric,
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

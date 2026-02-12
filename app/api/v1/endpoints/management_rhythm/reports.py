@@ -74,8 +74,8 @@ def generate_meeting_report(
         default_config = db.query(MeetingReportConfig).filter(
             and_(
                 MeetingReportConfig.report_type == report_request.report_type,
-                MeetingReportConfig.is_default == True,
-                MeetingReportConfig.is_active == True
+                MeetingReportConfig.is_default,
+                MeetingReportConfig.is_active
             )
         ).first()
         if default_config:
@@ -91,7 +91,7 @@ def generate_meeting_report(
 
             # 年度报告使用统一报表框架（如果YAML配置不存在，使用适配器）
             try:
-                result = engine.generate(
+                engine.generate(
                     report_code="MEETING_ANNUAL",
                     params={
                         "year": report_request.period_year,
@@ -105,13 +105,13 @@ def generate_meeting_report(
                 # 如果统一框架返回数据，需要转换为MeetingReport对象
                 # 这里暂时使用适配器方法（待完善）
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
-                adapter = MeetingReportAdapter(db)
+                MeetingReportAdapter(db)
                 # 使用适配器生成数据，然后创建MeetingReport对象
                 raise ConfigError("MEETING_ANNUAL YAML配置待创建")
             except ConfigError:
                 # 如果YAML配置不存在，使用适配器（向后兼容）
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
-                adapter = MeetingReportAdapter(db)
+                MeetingReportAdapter(db)
                 # 暂时返回错误，提示需要创建YAML配置或完善适配器
                 raise HTTPException(
                     status_code=501,
@@ -131,7 +131,7 @@ def generate_meeting_report(
                             monthrange(report_request.period_year, report_request.period_month)[1])
 
             try:
-                result = engine.generate(
+                engine.generate(
                     report_code="MEETING_MONTHLY",
                     params={
                         "year": report_request.period_year,
@@ -151,7 +151,7 @@ def generate_meeting_report(
             except ConfigError:
                 # 如果YAML配置不存在或需要返回MeetingReport对象，使用适配器
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
-                adapter = MeetingReportAdapter(db)
+                MeetingReportAdapter(db)
                 # 暂时返回错误，提示需要完善适配器
                 raise HTTPException(
                     status_code=501,

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.bonus import BonusCalculation, BonusRule
+from app.models.bonus import BonusRule
 from app.models.enums import PerformanceLevelEnum
 
 
@@ -148,7 +148,7 @@ class BonusCalculatorBase:
         Returns:
             List[BonusRule]: 规则列表
         """
-        query = self.db.query(BonusRule).filter(BonusRule.is_active == True)
+        query = self.db.query(BonusRule).filter(BonusRule.is_active)
 
         # 检查生效日期
         today = date.today()

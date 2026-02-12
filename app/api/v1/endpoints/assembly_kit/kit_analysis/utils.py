@@ -133,7 +133,7 @@ def determine_alert_level(
 ) -> str:
     """确定预警级别"""
     rules = db.query(ShortageAlertRule).filter(
-        ShortageAlertRule.is_active == True
+        ShortageAlertRule.is_active
     ).order_by(ShortageAlertRule.days_before_required).all()
 
     for rule in rules:

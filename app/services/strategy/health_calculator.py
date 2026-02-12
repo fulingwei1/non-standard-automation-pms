@@ -71,7 +71,7 @@ def calculate_kpi_health(db: Session, kpi_id: int) -> Dict[str, Any]:
     Returns:
         Dict: 健康度数据
     """
-    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active == True).first()
+    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active).first()
     if not kpi:
         return {"score": None, "level": None, "completion_rate": None}
 
@@ -107,13 +107,13 @@ def calculate_csf_health(db: Session, csf_id: int) -> Dict[str, Any]:
     Returns:
         Dict: 健康度数据
     """
-    csf = db.query(CSF).filter(CSF.id == csf_id, CSF.is_active == True).first()
+    csf = db.query(CSF).filter(CSF.id == csf_id, CSF.is_active).first()
     if not csf:
         return {"score": None, "level": None, "kpi_completion_rate": None}
 
     kpis = db.query(KPI).filter(
         KPI.csf_id == csf_id,
-        KPI.is_active == True
+        KPI.is_active
     ).all()
 
     if not kpis:
@@ -162,7 +162,7 @@ def calculate_dimension_health(db: Session, strategy_id: int, dimension: str) ->
     csfs = db.query(CSF).filter(
         CSF.strategy_id == strategy_id,
         CSF.dimension == dimension,
-        CSF.is_active == True
+        CSF.is_active
     ).all()
 
     if not csfs:
@@ -202,7 +202,7 @@ def calculate_strategy_health(db: Session, strategy_id: int) -> Optional[int]:
     """
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
     if not strategy:
         return None
@@ -225,7 +225,7 @@ def calculate_strategy_health(db: Session, strategy_id: int) -> Optional[int]:
             csf_weights = db.query(func.sum(CSF.weight)).filter(
                 CSF.strategy_id == strategy_id,
                 CSF.dimension == dimension,
-                CSF.is_active == True
+                CSF.is_active
             ).scalar() or 0
 
             weight = float(csf_weights) if csf_weights > 0 else default_weight
@@ -258,7 +258,7 @@ def get_health_trend(
 
     reviews = db.query(StrategyReview).filter(
         StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active == True
+        StrategyReview.is_active
     ).order_by(StrategyReview.review_date.desc()).limit(periods).all()
 
     return [
@@ -304,22 +304,22 @@ def get_dimension_health_details(
         csf_count = db.query(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dimension,
-            CSF.is_active == True
+            CSF.is_active
         ).count()
 
         kpi_count = db.query(KPI).join(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dimension,
-            CSF.is_active == True,
-            KPI.is_active == True
+            CSF.is_active,
+            KPI.is_active
         ).count()
 
         # 统计 KPI 完成情况
         kpis = db.query(KPI).join(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dimension,
-            CSF.is_active == True,
-            KPI.is_active == True
+            CSF.is_active,
+            KPI.is_active
         ).all()
 
         on_track = 0

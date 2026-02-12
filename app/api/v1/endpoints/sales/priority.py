@@ -3,7 +3,7 @@
 销售线索优先级管理 API endpoints
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

@@ -11,78 +11,25 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-import json
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models import (
     AssemblyStage,
-    AssemblyTemplate,
-    BomHeader,
-    BomItem,
-    BomItemAssemblyAttrs,
-    CategoryStageMapping,
-    Machine,
-    Material,
-    MaterialCategory,
-    MaterialReadiness,
-    Project,
-    SchedulingSuggestion,
-    ShortageAlertRule,
-    ShortageDetail,
     User,
 )
-from app.models.enums import (
-    AssemblyStageEnum,
-    ImportanceLevelEnum,
-    ShortageAlertLevelEnum,
-    SuggestionStatusEnum,
-    SuggestionTypeEnum,
-)
 from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
-    AssemblyDashboardResponse,
-    AssemblyDashboardStageStats,
-    AssemblyDashboardStats,
-    AssemblyStageCreate,
     AssemblyStageResponse,
     AssemblyStageUpdate,
-    AssemblyTemplateCreate,
-    AssemblyTemplateResponse,
-    AssemblyTemplateUpdate,
-    BomAssemblyAttrsAutoRequest,
-    BomAssemblyAttrsTemplateRequest,
-    BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsCreate,
-    BomItemAssemblyAttrsResponse,
-    BomItemAssemblyAttrsUpdate,
-    CategoryStageMappingCreate,
-    CategoryStageMappingResponse,
-    CategoryStageMappingUpdate,
-    MaterialReadinessCreate,
-    MaterialReadinessDetailResponse,
-    MaterialReadinessResponse,
-    SchedulingSuggestionAccept,
-    SchedulingSuggestionReject,
-    SchedulingSuggestionResponse,
-    ShortageAlertItem,
-    ShortageAlertListResponse,
-    ShortageAlertRuleCreate,
-    ShortageAlertRuleResponse,
-    ShortageAlertRuleUpdate,
-    ShortageDetailResponse,
-    StageKitRate,
 )
-from app.schemas.common import MessageResponse, ResponseModel
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -107,7 +54,7 @@ async def get_assembly_stages(
     """获取所有装配阶段"""
     query = db.query(AssemblyStage)
     if not include_inactive:
-        query = query.filter(AssemblyStage.is_active == True)
+        query = query.filter(AssemblyStage.is_active)
     stages = query.order_by(AssemblyStage.stage_order).all()
 
     return ResponseModel(

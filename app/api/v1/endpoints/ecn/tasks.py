@@ -123,7 +123,7 @@ def create_ecn_task(
             assignee = db.query(User).filter(
                 User.id == assignee_id,
                 User.department == task_in.task_dept,
-                User.is_active == True
+                User.is_active
             ).first()
 
             if not assignee:

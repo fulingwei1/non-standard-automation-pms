@@ -3,9 +3,8 @@
 优势产品导入服务
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory

@@ -14,7 +14,6 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.core.config import settings
 from app.models.service import CustomerCommunication
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -50,7 +49,7 @@ def get_customer_communication_statistics(
 
     # 待跟进数
     pending_follow_up = db.query(CustomerCommunication).filter(
-        CustomerCommunication.follow_up_required == True,
+        CustomerCommunication.follow_up_required,
         CustomerCommunication.follow_up_status == "待处理"
     ).count()
 

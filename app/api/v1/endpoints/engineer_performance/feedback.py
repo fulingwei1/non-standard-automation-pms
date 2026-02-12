@@ -3,13 +3,11 @@
 绩效反馈 API 端点
 """
 
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.performance_feedback_service import PerformanceFeedbackService

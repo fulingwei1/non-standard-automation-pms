@@ -11,79 +11,37 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-import json
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
-from app.core import security
 from app.models import (
     AssemblyStage,
-    AssemblyTemplate,
     BomHeader,
-    BomItem,
-    BomItemAssemblyAttrs,
-    CategoryStageMapping,
     Machine,
-    Material,
-    MaterialCategory,
     MaterialReadiness,
     Project,
     SchedulingSuggestion,
-    ShortageAlertRule,
     ShortageDetail,
     User,
-)
-from app.models.enums import (
-    AssemblyStageEnum,
-    ImportanceLevelEnum,
-    ShortageAlertLevelEnum,
-    SuggestionStatusEnum,
-    SuggestionTypeEnum,
 )
 from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
     AssemblyDashboardResponse,
     AssemblyDashboardStageStats,
     AssemblyDashboardStats,
-    AssemblyStageCreate,
-    AssemblyStageResponse,
-    AssemblyStageUpdate,
-    AssemblyTemplateCreate,
-    AssemblyTemplateResponse,
-    AssemblyTemplateUpdate,
-    BomAssemblyAttrsAutoRequest,
-    BomAssemblyAttrsTemplateRequest,
-    BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsCreate,
-    BomItemAssemblyAttrsResponse,
-    BomItemAssemblyAttrsUpdate,
-    CategoryStageMappingCreate,
-    CategoryStageMappingResponse,
-    CategoryStageMappingUpdate,
-    MaterialReadinessCreate,
-    MaterialReadinessDetailResponse,
     MaterialReadinessResponse,
-    SchedulingSuggestionAccept,
-    SchedulingSuggestionReject,
     SchedulingSuggestionResponse,
-    ShortageAlertItem,
-    ShortageAlertListResponse,
-    ShortageAlertRuleCreate,
-    ShortageAlertRuleResponse,
-    ShortageAlertRuleUpdate,
-    ShortageDetailResponse,
-    StageKitRate,
 )
-from app.schemas.common import MessageResponse, ResponseModel
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -240,7 +198,7 @@ class AssemblyKitDashboardEndpoint(BaseDashboardEndpoint):
 
         # 使用辅助函数计算统计数据
         stats = _calculate_dashboard_stats(recent_analyses)
-        stages = db.query(AssemblyStage).filter(AssemblyStage.is_active == True).order_by(AssemblyStage.stage_order).all()
+        stages = db.query(AssemblyStage).filter(AssemblyStage.is_active).order_by(AssemblyStage.stage_order).all()
         stage_stats = _calculate_stage_stats(db, stages, recent_analyses, stats['total'])
 
         # 预警汇总
@@ -344,7 +302,7 @@ class AssemblyKitDashboardEndpoint(BaseDashboardEndpoint):
             data = self.get_dashboard_data(db, current_user, project_ids)
             # 移除stat_cards，因为AssemblyDashboardResponse不包含这个字段
             dashboard_data = data.copy()
-            stat_cards = dashboard_data.pop("stat_cards", [])
+            dashboard_data.pop("stat_cards", [])
             
             # 构建AssemblyDashboardResponse
             dashboard_response = AssemblyDashboardResponse(**dashboard_data)

@@ -14,7 +14,6 @@
 
 import logging
 from datetime import date, datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func
@@ -184,7 +183,7 @@ class ProjectRiskService:
         if project_ids:
             query = query.filter(Project.id.in_(project_ids))
         if active_only:
-            query = query.filter(Project.is_active == True)
+            query = query.filter(Project.is_active)
 
         projects = query.all()
         results = []

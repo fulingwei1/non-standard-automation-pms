@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.issue import Issue, IssueFollowUpRecord
+from app.models.issue import IssueFollowUpRecord
 from app.models.user import User
 from app.schemas.issue import IssueFollowUpCreate, IssueFollowUpResponse
 

@@ -5,7 +5,7 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -150,8 +150,8 @@ def publish_template(
         db.query(ApprovalFlowDefinition)
         .filter(
             ApprovalFlowDefinition.template_id == template_id,
-            ApprovalFlowDefinition.is_default == True,
-            ApprovalFlowDefinition.is_active == True,
+            ApprovalFlowDefinition.is_default,
+            ApprovalFlowDefinition.is_active,
         )
         .first()
     )
@@ -178,7 +178,7 @@ def list_flows(
         db.query(ApprovalFlowDefinition)
         .filter(
             ApprovalFlowDefinition.template_id == template_id,
-            ApprovalFlowDefinition.is_active == True,
+            ApprovalFlowDefinition.is_active,
         )
         .all()
     )
@@ -191,7 +191,7 @@ def list_flows(
             db.query(ApprovalNodeDefinition)
             .filter(
                 ApprovalNodeDefinition.flow_id == flow.id,
-                ApprovalNodeDefinition.is_active == True,
+                ApprovalNodeDefinition.is_active,
             )
             .order_by(ApprovalNodeDefinition.node_order)
             .all()
@@ -218,7 +218,7 @@ def create_flow(
     if data.is_default:
         db.query(ApprovalFlowDefinition).filter(
             ApprovalFlowDefinition.template_id == template_id,
-            ApprovalFlowDefinition.is_default == True,
+            ApprovalFlowDefinition.is_default,
         ).update({"is_default": False})
 
     flow = ApprovalFlowDefinition(
@@ -266,7 +266,7 @@ def update_flow(
     if data.is_default:
         db.query(ApprovalFlowDefinition).filter(
             ApprovalFlowDefinition.template_id == flow.template_id,
-            ApprovalFlowDefinition.is_default == True,
+            ApprovalFlowDefinition.is_default,
             ApprovalFlowDefinition.id != flow_id,
         ).update({"is_default": False})
 
@@ -369,7 +369,7 @@ def list_routing_rules(
         db.query(ApprovalRoutingRule)
         .filter(
             ApprovalRoutingRule.template_id == template_id,
-            ApprovalRoutingRule.is_active == True,
+            ApprovalRoutingRule.is_active,
         )
         .order_by(ApprovalRoutingRule.rule_order)
         .all()

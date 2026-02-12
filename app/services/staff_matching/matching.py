@@ -176,7 +176,7 @@ class MatchingEngine(StaffMatchingBase):
         # 基础查询：活跃员工
         query = db.query(Employee, HrEmployeeProfile).outerjoin(
             HrEmployeeProfile, Employee.id == HrEmployeeProfile.employee_id
-        ).filter(Employee.is_active == True)
+        ).filter(Employee.is_active)
 
         # 如果不包含超负荷员工，过滤工作负载
         if not include_overloaded:
@@ -184,7 +184,7 @@ class MatchingEngine(StaffMatchingBase):
             # 员工当前负载 + 需求分配比例 <= 100%，或者没有档案记录的员工
             query = query.filter(
                 or_(
-                    HrEmployeeProfile.id == None,  # 没有档案的员工（假设可用）
+                    HrEmployeeProfile.id is None,  # 没有档案的员工（假设可用）
                     HrEmployeeProfile.current_workload_pct <= (100 - required_allocation * 0.5)
                 )
             )

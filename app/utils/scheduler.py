@@ -141,7 +141,7 @@ def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
         with get_db_session() as db:
             config = db.query(SchedulerTaskConfig).filter(
                 SchedulerTaskConfig.task_id == task_id,
-                SchedulerTaskConfig.is_enabled == True
+                SchedulerTaskConfig.is_enabled
             ).first()
 
             if config:

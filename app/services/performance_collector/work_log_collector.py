@@ -8,7 +8,6 @@ import re
 from datetime import date
 from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 
 from app.models.work_log import WorkLog
 from .base import PerformanceDataCollectorBase

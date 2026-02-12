@@ -5,18 +5,16 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models import (
     BomItem,
     Material,
     MaterialReadiness,
-    Project,
     PurchaseOrder,
     PurchaseOrderItem,
     ShortageDetail,
@@ -45,7 +43,7 @@ class AssemblyKitOptimizer:
         # 获取阻塞物料
         blocking_shortages = db.query(ShortageDetail).filter(
             ShortageDetail.readiness_id == readiness.id,
-            ShortageDetail.is_blocking == True,
+            ShortageDetail.is_blocking,
             ShortageDetail.shortage_qty > 0
         ).all()
 
@@ -130,7 +128,7 @@ class AssemblyKitOptimizer:
         from app.models import BomItemAssemblyAttrs
         attr = db.query(BomItemAssemblyAttrs).filter(
             BomItemAssemblyAttrs.bom_item_id == bom_item.id,
-            BomItemAssemblyAttrs.has_substitute == True
+            BomItemAssemblyAttrs.has_substitute
         ).first()
 
         if not attr or not attr.substitute_material_ids:
@@ -192,7 +190,7 @@ class AssemblyKitOptimizer:
         # 获取阻塞物料
         blocking_shortages = db.query(ShortageDetail).filter(
             ShortageDetail.readiness_id == readiness.id,
-            ShortageDetail.is_blocking == True,
+            ShortageDetail.is_blocking,
             ShortageDetail.shortage_qty > 0
         ).all()
 
@@ -267,7 +265,7 @@ class AssemblyKitOptimizer:
         from app.models import BomItemAssemblyAttrs
         attr = db.query(BomItemAssemblyAttrs).filter(
             BomItemAssemblyAttrs.bom_item_id == bom_item.id,
-            BomItemAssemblyAttrs.has_substitute == True
+            BomItemAssemblyAttrs.has_substitute
         ).first()
 
         if not attr or not attr.substitute_material_ids:

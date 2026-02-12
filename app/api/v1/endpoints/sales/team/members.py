@@ -40,7 +40,7 @@ def list_team_members(
 
     query = db.query(SalesTeamMember).filter(SalesTeamMember.team_id == team_id)
     if not include_inactive:
-        query = query.filter(SalesTeamMember.is_active == True)
+        query = query.filter(SalesTeamMember.is_active)
 
     members = query.all()
     items = [
@@ -171,7 +171,7 @@ def batch_add_team_members(
         existing = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team_id,
             SalesTeamMember.user_id == user_id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).first()
         if existing:
             skipped.append(user_id)

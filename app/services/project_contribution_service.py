@@ -8,18 +8,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, extract, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue
 from app.models.project import (
-    Project,
     ProjectDocument,
-    ProjectMember,
     ProjectMemberContribution,
 )
 from app.models.task_center import TaskUnified
-from app.models.user import User
 from app.services.project_bonus_service import ProjectBonusService
 
 

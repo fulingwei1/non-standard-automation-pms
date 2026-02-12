@@ -14,7 +14,6 @@ from ...user import (
 )
 
 # 租户
-from ...tenant import Tenant, TenantStatus, TenantPlan
 
 # 组织架构
 from ...organization import (

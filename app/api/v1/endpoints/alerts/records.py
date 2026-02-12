@@ -98,7 +98,6 @@ def read_alert_records(
     # 补充关联信息
     items = []
     for alert in alerts:
-        rule_name = alert.rule.rule_name if alert.rule else None
         project_name = alert.project.project_name if alert.project else None
 
         handler_name = None

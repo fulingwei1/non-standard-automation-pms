@@ -101,7 +101,7 @@ class NotificationDispatcher:
         users = (
             self.db.query(User)
             .filter(User.id.in_(list(clean_ids)))
-            .filter(User.is_active == True)
+            .filter(User.is_active)
             .all()
         )
         if not users:

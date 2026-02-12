@@ -6,7 +6,6 @@
 
 from typing import Any, Dict
 
-from sqlalchemy import and_
 
 from app.models.engineer_performance import (
     CollaborationRating,

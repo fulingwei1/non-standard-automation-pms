@@ -185,7 +185,7 @@ class ContractApprovalAdapter(ApprovalAdapter):
         }
 
         # 创建审批实例
-        approval_data = ApprovalInstanceCreate(
+        ApprovalInstanceCreate(
             template_code="SALES_CONTRACT",
             entity_type="CONTRACT",
             entity_id=contract.id,

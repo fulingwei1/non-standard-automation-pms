@@ -2,7 +2,6 @@
 """
 商务支持模块 - 回款跟踪模型
 """
-from datetime import date
 
 from sqlalchemy import Column, Date, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship

@@ -5,7 +5,7 @@ Milestone Status Change Handler.
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 import logging
 
 from sqlalchemy.orm import Session

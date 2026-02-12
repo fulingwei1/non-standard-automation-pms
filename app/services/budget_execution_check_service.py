@@ -4,8 +4,7 @@
 """
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -27,7 +26,7 @@ def get_project_budget(db: Session, project_id: int, project: Project) -> float:
         db.query(ProjectBudget)
         .filter(
             ProjectBudget.project_id == project_id,
-            ProjectBudget.is_active == True,
+            ProjectBudget.is_active,
             ProjectBudget.status == "APPROVED"
         )
         .order_by(ProjectBudget.version.desc())
@@ -60,7 +59,7 @@ def get_or_create_alert_rule(db: Session) -> AlertRule:
     """
     alert_rule = db.query(AlertRule).filter(
         AlertRule.rule_code == 'COST_OVERRUN',
-        AlertRule.is_enabled == True
+        AlertRule.is_enabled
     ).first()
 
     if not alert_rule:

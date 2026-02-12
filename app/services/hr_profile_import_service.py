@@ -5,7 +5,7 @@ HR档案导入服务
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 from sqlalchemy.orm import Session

@@ -2,7 +2,7 @@
 """
 缺料管理 - 物料处理模型（替代、调拨）
 """
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin

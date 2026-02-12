@@ -76,7 +76,7 @@ def get_financial_metrics(
     # 查询预算总额（已批准的预算）
     budget_total = db.query(func.coalesce(func.sum(ProjectBudget.total_amount), 0)).filter(
         ProjectBudget.status == 'APPROVED',
-        ProjectBudget.is_active == True
+        ProjectBudget.is_active
     ).scalar() or 0
 
     # 计算毛利率和净利润率

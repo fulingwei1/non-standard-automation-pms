@@ -4,16 +4,15 @@
 整合项目奖金、会议、问题、文档等数据
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue
-from app.models.project import Project, ProjectDocument, ProjectMember
-from app.models.task_center import TaskUnified
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project_bonus_service import ProjectBonusService
@@ -193,7 +192,6 @@ def get_project_issues(
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
 
-    from app.models.issue import Issue
     query = db.query(Issue).filter(Issue.project_id == project_id)
 
     if status:

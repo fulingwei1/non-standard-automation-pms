@@ -31,7 +31,7 @@ def get_project_stats(
     """
     项目统计数据
     """
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
 
     # 应用数据权限过滤
     from app.services.data_scope import DataScopeService

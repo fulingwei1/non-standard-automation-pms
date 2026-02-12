@@ -4,16 +4,13 @@
 负责在成本归集时实时检查预算执行情况，并生成预警
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.alert import AlertNotification, AlertRecord, AlertRule
-from app.models.budget import ProjectBudget
-from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
-from app.models.project import Project, ProjectCost
+from app.models.alert import AlertRecord
+from app.models.project import Project
 
 
 class CostAlertService:
@@ -109,7 +106,7 @@ class CostAlertService:
         if project_ids:
             projects = db.query(Project).filter(Project.id.in_(project_ids)).all()
         else:
-            projects = db.query(Project).filter(Project.is_active == True).all()
+            projects = db.query(Project).filter(Project.is_active).all()
 
         alert_count = 0
         checked_projects = []

@@ -14,11 +14,6 @@ from app.models.sales import Contract, Invoice, Lead, Opportunity
 from app.models.user import User, UserRole
 from app.services.sales_team_service import SalesTeamService
 
-from ..utils import (
-    build_department_name_map,
-    get_visible_sales_users,
-    normalize_date_range,
-)
 
 
 def ensure_sales_director_permission(current_user: User, db: Session):
@@ -153,7 +148,7 @@ def build_team_response(team, db: Session, include_members: bool = True) -> dict
     # 获取成员数量
     member_count = db.query(SalesTeamMember).filter(
         SalesTeamMember.team_id == team.id,
-        SalesTeamMember.is_active == True,
+        SalesTeamMember.is_active,
     ).count()
 
     # 获取部门名称
@@ -193,7 +188,7 @@ def build_team_response(team, db: Session, include_members: bool = True) -> dict
     if include_members:
         members = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).all()
         result["members"] = [
             {

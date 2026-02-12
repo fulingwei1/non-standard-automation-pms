@@ -222,10 +222,10 @@ class HelpersMixin:
     def _check_stage_completion(self, stage_instance_id: int) -> None:
         """检查阶段是否可以自动完成"""
         # 检查所有必需节点是否完成
-        incomplete = self.db.query(ProjectNodeInstance).filter(
+        self.db.query(ProjectNodeInstance).filter(
             and_(
                 ProjectNodeInstance.stage_instance_id == stage_instance_id,
-                ProjectNodeInstance.is_required == True,
+                ProjectNodeInstance.is_required,
                 ProjectNodeInstance.status.notin_([
                     StageStatusEnum.COMPLETED.value,
                     StageStatusEnum.SKIPPED.value

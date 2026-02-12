@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.api import deps
 from app.core import security
 from app.models.material import BomHeader, BomItem, Material
-from app.models.project import Machine
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.material import BomResponse, BomUpdate
 
 router = APIRouter()

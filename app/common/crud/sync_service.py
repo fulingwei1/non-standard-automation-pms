@@ -7,12 +7,9 @@
 from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from fastapi import HTTPException, status
 
 from app.common.crud.sync_repository import SyncBaseRepository
 from app.common.crud.exceptions import (
-    NotFoundError,
-    AlreadyExistsError,
     raise_not_found,
     raise_already_exists
 )

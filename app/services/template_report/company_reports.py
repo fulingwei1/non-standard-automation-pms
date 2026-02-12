@@ -29,7 +29,7 @@ class CompanyReportMixin:
         """生成公司月报"""
         # 获取所有活跃项目
         projects = db.query(Project).filter(
-            Project.is_active == True
+            Project.is_active
         ).all()
 
         # 项目状态统计
@@ -50,7 +50,7 @@ class CompanyReportMixin:
         for dept in departments:
             users = db.query(User).filter(
                 User.department_id == dept.id,
-                User.is_active == True
+                User.is_active
             ).all()
             user_ids = [u.id for u in users]
 

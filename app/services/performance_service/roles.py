@@ -38,7 +38,7 @@ def get_user_manager_roles(db: Session, user: User) -> Dict[str, Any]:
     if user.employee_id:
         dept = db.query(Department).filter(
             Department.manager_id == user.employee_id,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if dept:
@@ -49,7 +49,7 @@ def get_user_manager_roles(db: Session, user: User) -> Dict[str, Any]:
     # 查找该用户作为PM的所有活跃项目
     managed_projects = db.query(Project).filter(
         Project.pm_id == user.id,
-        Project.is_active == True
+        Project.is_active
     ).all()
 
     if managed_projects:
@@ -86,14 +86,14 @@ def get_manageable_employees(
             # 查找该部门的所有员工
             employees = db.query(Employee).filter(
                 Employee.department == dept.dept_name,  # 使用字符串字段匹配
-                Employee.is_active == True
+                Employee.is_active
             ).all()
 
             # 通过员工ID找到对应的用户
             for emp in employees:
                 user_obj = db.query(User).filter(
                     User.employee_id == emp.id,
-                    User.is_active == True
+                    User.is_active
                 ).first()
                 if user_obj:
                     employee_ids.add(user_obj.id)
@@ -102,7 +102,7 @@ def get_manageable_employees(
     if roles['is_project_manager'] and roles['managed_project_ids']:
         query = db.query(ProjectMember).filter(
             ProjectMember.project_id.in_(roles['managed_project_ids']),
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         )
 
         # 如果指定了周期，只查询该周期内活跃的成员

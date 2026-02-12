@@ -10,44 +10,16 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-import os
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import FileResponse
-from sqlalchemy import and_, desc, func, or_
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.outsourcing import OutsourcingOrder
-from app.models.vendor import Vendor
-from app.models.project import Machine, Project, ProjectPaymentPlan
-from app.models.rd_project import RdCost, RdCostType, RdProject
-from app.models.report_center import (
-    ReportDefinition,
-    ReportGeneration,
-    ReportSubscription,
-    ReportTemplate,
-)
-from app.models.sales import Contract
-from app.models.timesheet import Timesheet
 from app.models.user import Role, User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.report_center import (
-    ApplyTemplateRequest,
-    ReportCompareRequest,
-    ReportCompareResponse,
-    ReportExportRequest,
-    ReportGenerateRequest,
-    ReportGenerateResponse,
-    ReportPreviewResponse,
     ReportRoleResponse,
-    ReportTemplateListResponse,
-    ReportTemplateResponse,
     ReportTypeResponse,
     RoleReportMatrixResponse,
 )
@@ -76,7 +48,7 @@ def get_report_roles(
     """
     获取支持角色列表（角色配置）
     """
-    roles = db.query(Role).filter(Role.is_active == True).all()
+    roles = db.query(Role).filter(Role.is_active).all()
 
     role_list = []
     for role in roles:

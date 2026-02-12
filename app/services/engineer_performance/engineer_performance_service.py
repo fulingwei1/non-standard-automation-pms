@@ -11,11 +11,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import EngineerDimensionConfig, EngineerProfile
-from app.models.performance import PerformancePeriod, PerformanceResult
+from app.models.performance import PerformanceResult
 from app.schemas.engineer_performance import (
     DimensionConfigCreate,
     EngineerDimensionScore,
-    EngineerPerformanceSummary,
     EngineerProfileCreate,
     EngineerProfileUpdate,
 )

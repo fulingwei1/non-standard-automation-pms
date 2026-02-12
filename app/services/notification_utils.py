@@ -63,7 +63,7 @@ def resolve_recipients(
     users = (
         db.query(User)
         .filter(User.id.in_(user_ids))
-        .filter(User.is_active == True)
+        .filter(User.is_active)
         .all()
     )
     settings_map = {}

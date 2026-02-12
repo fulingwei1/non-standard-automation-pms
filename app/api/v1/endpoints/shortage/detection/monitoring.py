@@ -46,7 +46,7 @@ def list_inventory_warnings(
     获取库存预警列表
     检测库存低于安全库存或高于最大库存的物料
     """
-    query = db.query(Material).filter(Material.is_active == True)
+    query = db.query(Material).filter(Material.is_active)
 
     # 分类筛选
     if category_id:
@@ -120,7 +120,7 @@ def run_inventory_check(
     执行库存检查
     检查所有物料的库存状态，返回预警汇总
     """
-    query = db.query(Material).filter(Material.is_active == True)
+    query = db.query(Material).filter(Material.is_active)
     materials = query.all()
 
     low_stock_count = 0

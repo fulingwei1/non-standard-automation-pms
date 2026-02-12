@@ -67,7 +67,7 @@ def download_allocation_template(
 
     # 添加说明行
     ws.insert_rows(1)
-    ws.merge_cells(f'A1:K1')
+    ws.merge_cells('A1:K1')
     note_cell = ws.cell(row=1, column=1, value="说明：1. 带*的列为必填项；2. 必须提供'计算记录ID'或'团队奖金分配ID'之一；3. 如果使用团队奖金分配ID，系统会自动创建个人计算记录；4. 受益人ID必须为数字；5. 金额必须为数字；6. 发放日期格式：YYYY-MM-DD")
     note_cell.font = Font(size=10, italic=True)
     note_cell.alignment = Alignment(horizontal="left", vertical="center")

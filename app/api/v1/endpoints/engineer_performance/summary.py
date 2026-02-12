@@ -12,7 +12,6 @@ from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.engineer_performance import CompanySummaryResponse
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,
 )
@@ -32,7 +31,7 @@ async def get_company_summary(
     # 如果未指定周期，获取当前活跃周期
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
@@ -73,7 +72,7 @@ async def get_job_type_summary(
     # 获取周期
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")

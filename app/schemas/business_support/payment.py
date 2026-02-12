@@ -3,7 +3,7 @@
 回款催收 Schema
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Optional
 

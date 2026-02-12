@@ -7,7 +7,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -82,7 +82,7 @@ class MilestoneAlertService:
         warning_rule = self.db.query(AlertRule).filter(
             and_(
                 AlertRule.rule_code == 'MILESTONE_WARNING',
-                AlertRule.is_enabled == True
+                AlertRule.is_enabled
             )
         ).first()
 
@@ -110,7 +110,7 @@ class MilestoneAlertService:
         critical_rule = self.db.query(AlertRule).filter(
             and_(
                 AlertRule.rule_code == 'MILESTONE_OVERDUE',
-                AlertRule.is_enabled == True
+                AlertRule.is_enabled
             )
         ).first()
 

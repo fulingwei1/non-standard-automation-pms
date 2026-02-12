@@ -4,12 +4,10 @@
 包含：转商机、标记无效、导出
 """
 
-import json
 from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -61,7 +59,7 @@ def convert_lead_to_opportunity(
     if not skip_validation:
         is_valid, messages = validate_g1_lead_to_opportunity(lead, requirement, db)
         errors = [msg for msg in messages if not msg.startswith("技术评估") and not msg.startswith("存在")]
-        warnings = [msg for msg in messages if msg.startswith("技术评估") or msg.startswith("存在")]
+        [msg for msg in messages if msg.startswith("技术评估") or msg.startswith("存在")]
 
         if errors:
             raise HTTPException(

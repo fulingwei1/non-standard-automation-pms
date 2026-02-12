@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.enums import (
     InvoiceStatusEnum,
     WorkflowTypeEnum,
@@ -153,7 +152,7 @@ def create_invoice(
         try:
             workflow_service = ApprovalWorkflowService(db)
             routing_params = {"amount": float(invoice.amount or 0)}
-            record = workflow_service.start_approval(
+            workflow_service.start_approval(
                 entity_type=WorkflowTypeEnum.INVOICE,
                 entity_id=invoice.id,
                 initiator_id=current_user.id,

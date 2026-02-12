@@ -10,53 +10,24 @@
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.query_filters import apply_like_filter
 from app.core import security
 from app.common.date_range import get_month_range
-from app.core.config import settings
 from app.models.presale import (
     PresaleSolution,
-    PresaleSolutionCost,
-    PresaleSolutionTemplate,
     PresaleSupportTicket,
     PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
     PresaleWorkload,
 )
-from app.models.project import Project
-from app.models.sales import Opportunity
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.presale import (
-    DeliverableCreate,
-    DeliverableResponse,
-    SolutionCostResponse,
-    SolutionCreate,
-    SolutionResponse,
-    SolutionReviewRequest,
-    SolutionUpdate,
-    TemplateCreate,
-    TemplateResponse,
-    TenderCreate,
-    TenderResponse,
-    TenderResultUpdate,
-    TicketAcceptRequest,
-    TicketBoardResponse,
-    TicketCreate,
-    TicketProgressUpdate,
-    TicketRatingRequest,
-    TicketResponse,
-    TicketUpdate,
-)
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -141,7 +112,6 @@ def get_workload_stats(
     """
     工作量统计
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()
@@ -208,7 +178,6 @@ def get_response_time_stats(
     """
     响应时效统计
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()
@@ -273,7 +242,6 @@ def get_conversion_stats(
     """
     方案转化率
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()
@@ -340,7 +308,6 @@ def get_performance_stats(
     """
     人员绩效
     """
-    from datetime import timedelta
 
     # 默认使用当前月
     today = date.today()
@@ -350,7 +317,7 @@ def get_performance_stats(
         _, end_date = get_month_range(today)
 
     # 获取人员列表
-    query_users = db.query(User).filter(User.is_active == True)
+    query_users = db.query(User).filter(User.is_active)
     if user_id:
         query_users = query_users.filter(User.id == user_id)
     users = query_users.all()

@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -19,7 +18,6 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.issue import (
     IssueCreate,
-    IssueListResponse,
     IssueResponse,
 )
 from app.services.data_scope import DataScopeService

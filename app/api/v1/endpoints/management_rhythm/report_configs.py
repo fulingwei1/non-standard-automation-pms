@@ -108,7 +108,7 @@ def create_report_config(
         db.query(MeetingReportConfig).filter(
             and_(
                 MeetingReportConfig.report_type == config_data.report_type,
-                MeetingReportConfig.is_default == True
+                MeetingReportConfig.is_default
             )
         ).update({"is_default": False})
 
@@ -192,7 +192,7 @@ def update_report_config(
         db.query(MeetingReportConfig).filter(
             and_(
                 MeetingReportConfig.report_type == config.report_type,
-                MeetingReportConfig.is_default == True,
+                MeetingReportConfig.is_default,
                 MeetingReportConfig.id != config_id
             )
         ).update({"is_default": False})
@@ -241,8 +241,8 @@ def get_default_report_config(
     config = db.query(MeetingReportConfig).filter(
         and_(
             MeetingReportConfig.report_type == report_type,
-            MeetingReportConfig.is_default == True,
-            MeetingReportConfig.is_active == True
+            MeetingReportConfig.is_default,
+            MeetingReportConfig.is_active
         )
     ).first()
 

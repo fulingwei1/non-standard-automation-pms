@@ -87,7 +87,7 @@ class StageFlowMixin:
         incomplete_required = self.db.query(ProjectNodeInstance).filter(
             and_(
                 ProjectNodeInstance.stage_instance_id == stage_instance_id,
-                ProjectNodeInstance.is_required == True,
+                ProjectNodeInstance.is_required,
                 ProjectNodeInstance.status.notin_([
                     StageStatusEnum.COMPLETED.value,
                     StageStatusEnum.SKIPPED.value

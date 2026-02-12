@@ -10,7 +10,7 @@ from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
 from app.models.base import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
-from app.models.issue import Issue, IssueStatisticsSnapshot
+from app.models.issue import Issue
 from app.models.project import Project
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ def check_blocking_issues():
 
             # 查询所有阻塞问题（is_blocking=True 且状态为OPEN或PROCESSING）
             blocking_issues = db.query(Issue).filter(
-                Issue.is_blocking == True,
+                Issue.is_blocking,
                 Issue.status.in_(['OPEN', 'PROCESSING']),
                 Issue.status != 'DELETED'
             ).all()
@@ -119,7 +119,7 @@ def check_blocking_issues():
                     # 创建或更新预警记录
                     rule = db.query(AlertRule).filter(
                         AlertRule.rule_code == 'BLOCKING_ISSUE',
-                        AlertRule.is_enabled == True
+                        AlertRule.is_enabled
                     ).first()
 
                     if not rule:
@@ -305,7 +305,7 @@ def daily_issue_statistics_snapshot():
             )
 
             # 创建快照记录
-            snapshot = create_snapshot_record(
+            create_snapshot_record(
                 db, today, status_counts, severity_counts, priority_counts,
                 type_counts, blocking_overdue, category_counts, today_counts,
                 avg_resolve_time, distributions

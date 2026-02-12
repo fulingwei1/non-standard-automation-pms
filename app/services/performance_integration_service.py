@@ -4,20 +4,16 @@
 将任职资格体系与绩效评价系统融合
 """
 
-from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.performance import (
     MonthlyWorkSummary,
     PerformanceEvaluationRecord,
     PerformancePeriod,
-    PerformanceResult,
 )
-from app.models.qualification import EmployeeQualification
 from app.models.user import User
 from app.services.qualification_service import QualificationService
 

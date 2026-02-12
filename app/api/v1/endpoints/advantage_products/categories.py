@@ -31,7 +31,7 @@ def get_categories(
     """获取所有产品类别"""
     query = db.query(AdvantageProductCategory)
     if not include_inactive:
-        query = query.filter(AdvantageProductCategory.is_active == True)
+        query = query.filter(AdvantageProductCategory.is_active)
 
     categories = query.order_by(AdvantageProductCategory.sort_order).all()
 
@@ -40,7 +40,7 @@ def get_categories(
     for cat in categories:
         product_count = db.query(func.count(AdvantageProduct.id)).filter(
             AdvantageProduct.category_id == cat.id,
-            AdvantageProduct.is_active == True
+            AdvantageProduct.is_active
         ).scalar()
 
         cat_dict = {
@@ -112,7 +112,7 @@ def update_category(
 
     product_count = db.query(func.count(AdvantageProduct.id)).filter(
         AdvantageProduct.category_id == category.id,
-        AdvantageProduct.is_active == True
+        AdvantageProduct.is_active
     ).scalar()
 
     return AdvantageProductCategoryResponse(

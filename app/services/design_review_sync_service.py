@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.models.engineer_performance import DesignReview
 from app.models.project import Project
 from app.models.technical_review import TechnicalReview
-from app.models.user import User
 
 
 class DesignReviewSyncService:

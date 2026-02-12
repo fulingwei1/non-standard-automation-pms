@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session

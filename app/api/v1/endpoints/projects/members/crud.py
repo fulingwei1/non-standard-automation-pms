@@ -254,7 +254,7 @@ def check_member_conflicts_internal(
 
     query = db.query(ProjectMember).filter(
         ProjectMember.user_id == user_id,
-        ProjectMember.is_active == True,
+        ProjectMember.is_active,
         or_(
             and_(ProjectMember.start_date <= start_date, ProjectMember.end_date >= start_date),
             and_(ProjectMember.start_date <= end_date, ProjectMember.end_date >= end_date),
@@ -433,18 +433,18 @@ def get_dept_users_for_project(
 
     employees = db.query(Employee).filter(
         Employee.department == dept.dept_name,
-        Employee.is_active == True
+        Employee.is_active
     ).all()
 
     employee_ids = [e.id for e in employees]
     users = db.query(User).filter(
         User.employee_id.in_(employee_ids),
-        User.is_active == True
+        User.is_active
     ).all()
 
     existing_member_ids = db.query(ProjectMember.user_id).filter(
         ProjectMember.project_id == project_id,
-        ProjectMember.is_active == True
+        ProjectMember.is_active
     ).all()
     existing_user_ids = {m[0] for m in existing_member_ids}
 

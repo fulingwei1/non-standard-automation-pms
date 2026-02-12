@@ -250,7 +250,7 @@ def submit_ecn(
                         .filter(
                             User.id == evaluator_id,
                             User.department == dept,
-                            User.is_active == True,
+                            User.is_active,
                         )
                         .first()
                     )

@@ -104,7 +104,6 @@ class BOMService:
 
             if not vendor:
                 # 记录警告，继续处理
-                supplier_name = f"供应商ID: {supplier_id}"
                 continue
 
             # 计算采购金额（物料数量 * 标准价格 * 1.1安全系数）

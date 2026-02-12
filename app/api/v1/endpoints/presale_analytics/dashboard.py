@@ -7,17 +7,13 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
-from app.core import security
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.presales import PresalesDashboardData
 
 

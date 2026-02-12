@@ -93,7 +93,6 @@ def perform_project_approval_action(
                 instance_id=instance.id, approver_id=current_user.id, comment=comment
             )
             message = "审批通过"
-            data_status = "APPROVED"
 
         elif decision.upper() == "REJECT":
             # 审批驳回
@@ -103,7 +102,6 @@ def perform_project_approval_action(
                 comment=comment or "审批驳回",
             )
             message = "审批已驳回"
-            data_status = "REJECTED"
 
         else:
             raise HTTPException(status_code=400, detail=f"不支持的审批动作：{decision}")

@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 
 from .analysis_reports import AnalysisReportMixin
-from .core import ReportDataGenerationCore
 from .dept_reports import DeptReportMixin
 from .project_reports import ProjectReportMixin
 

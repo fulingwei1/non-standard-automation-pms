@@ -50,7 +50,7 @@ def build_team_info(
         .options(joinedload(ProjectMember.user))
         .filter(
             ProjectMember.project_id == project_id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         )
         .all()
     )

@@ -5,11 +5,9 @@
 """
 
 import logging
-from datetime import date, datetime
-from typing import List
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -116,7 +114,7 @@ def report_task_delay(
                 link_url=f"/engineers/tasks/{task.id}",
             )
             dispatcher.send_notification_request(request)
-    except Exception as e:
+    except Exception:
         # 通知失败不影响主流程
         logger.warning("任务延期报告通知发送失败，不影响主流程", exc_info=True)
 

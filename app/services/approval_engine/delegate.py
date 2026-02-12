@@ -46,7 +46,7 @@ class ApprovalDelegateService:
         # 查询生效的代理配置
         query = self.db.query(ApprovalDelegate).filter(
             ApprovalDelegate.user_id == user_id,
-            ApprovalDelegate.is_active == True,
+            ApprovalDelegate.is_active,
             ApprovalDelegate.start_date <= check_date,
             ApprovalDelegate.end_date >= check_date,
         )
@@ -163,7 +163,7 @@ class ApprovalDelegateService:
             self.db.query(ApprovalDelegate)
             .filter(
                 ApprovalDelegate.user_id == user_id,
-                ApprovalDelegate.is_active == True,
+                ApprovalDelegate.is_active,
                 ApprovalDelegate.end_date >= start_date,
                 ApprovalDelegate.start_date <= end_date,
             )
@@ -278,7 +278,7 @@ class ApprovalDelegateService:
         )
 
         if not include_inactive:
-            query = query.filter(ApprovalDelegate.is_active == True)
+            query = query.filter(ApprovalDelegate.is_active)
 
         return query.order_by(ApprovalDelegate.start_date.desc()).all()
 
@@ -302,7 +302,7 @@ class ApprovalDelegateService:
         )
 
         if not include_inactive:
-            query = query.filter(ApprovalDelegate.is_active == True)
+            query = query.filter(ApprovalDelegate.is_active)
 
         return query.order_by(ApprovalDelegate.start_date.desc()).all()
 
@@ -365,7 +365,7 @@ class ApprovalDelegateService:
         today = date.today()
 
         self.db.query(ApprovalDelegate).filter(
-            ApprovalDelegate.is_active == True,
+            ApprovalDelegate.is_active,
             ApprovalDelegate.end_date < today,
         ).update({"is_active": False}, synchronize_session=False)
 

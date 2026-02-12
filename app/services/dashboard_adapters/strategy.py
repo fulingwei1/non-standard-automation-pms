@@ -35,7 +35,7 @@ class StrategyDashboardAdapter(DashboardAdapter):
         """获取统计卡片"""
         # 统计战略数量
         strategy_count = (
-            self.db.query(Strategy).filter(Strategy.is_active == True).count()
+            self.db.query(Strategy).filter(Strategy.is_active).count()
         )
 
         # 获取当前生效的战略
@@ -54,7 +54,7 @@ class StrategyDashboardAdapter(DashboardAdapter):
             # 统计CSF数量
             csf_count = (
                 self.db.query(CSF)
-                .filter(CSF.strategy_id == active_strategy.id, CSF.is_active == True)
+                .filter(CSF.strategy_id == active_strategy.id, CSF.is_active)
                 .count()
             )
 
@@ -64,8 +64,8 @@ class StrategyDashboardAdapter(DashboardAdapter):
                 .join(CSF)
                 .filter(
                     CSF.strategy_id == active_strategy.id,
-                    CSF.is_active == True,
-                    KPI.is_active == True,
+                    CSF.is_active,
+                    KPI.is_active,
                 )
                 .all()
             )
@@ -89,8 +89,8 @@ class StrategyDashboardAdapter(DashboardAdapter):
                 .join(CSF)
                 .filter(
                     CSF.strategy_id == active_strategy.id,
-                    CSF.is_active == True,
-                    AnnualKeyWork.is_active == True,
+                    CSF.is_active,
+                    AnnualKeyWork.is_active,
                 )
                 .count()
             )
@@ -161,8 +161,8 @@ class StrategyDashboardAdapter(DashboardAdapter):
             .join(CSF)
             .filter(
                 CSF.strategy_id == active_strategy.id,
-                CSF.is_active == True,
-                KPI.is_active == True,
+                CSF.is_active,
+                KPI.is_active,
                 KPI.owner_user_id == self.current_user.id,
             )
             .all()
@@ -186,8 +186,8 @@ class StrategyDashboardAdapter(DashboardAdapter):
             .join(CSF)
             .filter(
                 CSF.strategy_id == active_strategy.id,
-                CSF.is_active == True,
-                AnnualKeyWork.is_active == True,
+                CSF.is_active,
+                AnnualKeyWork.is_active,
                 AnnualKeyWork.owner_user_id == self.current_user.id,
             )
             .all()
@@ -258,8 +258,8 @@ class StrategyDashboardAdapter(DashboardAdapter):
                 .filter(
                     CSF.strategy_id == active_strategy.id,
                     CSF.dimension == dim_code,
-                    CSF.is_active == True,
-                    KPI.is_active == True,
+                    CSF.is_active,
+                    KPI.is_active,
                 )
                 .all()
             )

@@ -3,7 +3,6 @@
 销售目标管理 API endpoints
 """
 
-from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.organization import Department
 from app.models.sales import SalesTarget
 from app.models.user import User

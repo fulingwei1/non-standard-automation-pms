@@ -15,7 +15,6 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.engineer_performance import (
     EngineerProfileCreate,
-    EngineerProfileResponse,
     EngineerProfileUpdate,
 )
 from app.services.engineer_performance.engineer_performance_service import (
@@ -115,7 +114,7 @@ async def get_engineer_performance(
     # 获取周期
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id
@@ -191,7 +190,7 @@ async def get_engineer_comparison(
     # 获取周期
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id

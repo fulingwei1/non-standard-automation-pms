@@ -9,12 +9,11 @@ import logging
 from datetime import datetime, time
 from typing import Any, Dict, List, Optional, Set
 
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule, AlertSubscription
 from app.models.enums import AlertLevelEnum
-from app.services.alert_rule_engine import AlertRuleEngine
 
 
 logger = logging.getLogger(__name__)
@@ -56,7 +55,7 @@ class AlertSubscriptionService:
 
         # 查询匹配的订阅配置
         query = self.db.query(AlertSubscription).filter(
-            AlertSubscription.is_active == True
+            AlertSubscription.is_active
         )
 
         # 预警类型匹配：订阅的 alert_type 为空（全部）或与规则的 rule_type 匹配
@@ -230,7 +229,7 @@ class AlertSubscriptionService:
         """
         query = self.db.query(AlertSubscription).filter(
             AlertSubscription.user_id == user_id,
-            AlertSubscription.is_active == True
+            AlertSubscription.is_active
         )
 
         if alert_type:

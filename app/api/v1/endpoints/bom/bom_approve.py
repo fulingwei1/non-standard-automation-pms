@@ -4,9 +4,8 @@ BOM管理端点 - BOM审核通过后自动创建采购订单
 创建日期：2026-01-25
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Dict, Any
 
 from app.services.material.bom_service import BOMService
 from app.api.deps import get_db

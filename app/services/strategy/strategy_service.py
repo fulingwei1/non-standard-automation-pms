@@ -68,7 +68,7 @@ def get_strategy(db: Session, strategy_id: int) -> Optional[Strategy]:
     """
     return db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
 
@@ -85,7 +85,7 @@ def get_strategy_by_code(db: Session, code: str) -> Optional[Strategy]:
     """
     return db.query(Strategy).filter(
         Strategy.code == code,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
 
@@ -102,7 +102,7 @@ def get_strategy_by_year(db: Session, year: int) -> Optional[Strategy]:
     """
     return db.query(Strategy).filter(
         Strategy.year == year,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
 
@@ -118,7 +118,7 @@ def get_active_strategy(db: Session) -> Optional[Strategy]:
     """
     return db.query(Strategy).filter(
         Strategy.status == "ACTIVE",
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
 
@@ -142,7 +142,7 @@ def list_strategies(
     Returns:
         tuple: (战略列表, 总数)
     """
-    query = db.query(Strategy).filter(Strategy.is_active == True)
+    query = db.query(Strategy).filter(Strategy.is_active)
 
     if year:
         query = query.filter(Strategy.year == year)
@@ -283,19 +283,19 @@ def get_strategy_detail(db: Session, strategy_id: int) -> Optional[StrategyDetai
 
     csf_count = db.query(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True
+        CSF.is_active
     ).count()
 
     kpi_count = db.query(KPI).join(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True,
-        KPI.is_active == True
+        CSF.is_active,
+        KPI.is_active
     ).count()
 
     annual_work_count = db.query(AnnualKeyWork).join(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True,
-        AnnualKeyWork.is_active == True
+        CSF.is_active,
+        AnnualKeyWork.is_active
     ).count()
 
     # 获取健康度评分
@@ -358,7 +358,7 @@ def get_strategy_map_data(db: Session, strategy_id: int) -> Optional[StrategyMap
         csfs = db.query(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dim_code,
-            CSF.is_active == True
+            CSF.is_active
         ).order_by(CSF.sort_order).all()
 
         csf_items = []
@@ -366,7 +366,7 @@ def get_strategy_map_data(db: Session, strategy_id: int) -> Optional[StrategyMap
         for csf in csfs:
             kpi_count = db.query(KPI).filter(
                 KPI.csf_id == csf.id,
-                KPI.is_active == True
+                KPI.is_active
             ).count()
 
             health_data = calculate_csf_health(db, csf.id)

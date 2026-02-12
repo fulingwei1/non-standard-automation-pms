@@ -129,7 +129,7 @@ def get_engineer_stats(db: Session, current_user: User) -> dict:
     # 待办任务统计（未完成的任务）
     pending_tasks = db.query(func.count(TaskUnified.id)).filter(
         TaskUnified.assignee_id == user_id,
-        TaskUnified.is_active == True,
+        TaskUnified.is_active,
         TaskUnified.status.in_(['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'PAUSED'])
     ).scalar() or 0
 
@@ -273,7 +273,7 @@ def get_pmo_stats(db: Session, current_user: User) -> dict:
     """获取PMO统计数据"""
     # 应用数据权限过滤
     from app.services.data_scope import DataScopeService
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     projects = query.all()
@@ -301,7 +301,7 @@ def get_admin_stats(db: Session, current_user: User) -> dict:
     today = date.today()
 
     total_users = db.query(func.count(User.id)).scalar() or 0
-    active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
+    db.query(func.count(User.id)).filter(User.is_active).scalar() or 0
     total_roles = db.query(func.count(Role.id)).scalar() or 0
 
     # 今日审计操作次数（使用权限审计表统计今日活动）

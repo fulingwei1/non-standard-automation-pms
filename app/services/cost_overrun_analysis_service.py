@@ -7,11 +7,11 @@
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import FinancialProjectCost, Project, ProjectCost
@@ -112,7 +112,7 @@ class CostOverrunAnalysisService:
         })
 
         # 按部门归责
-        department_stats = defaultdict(lambda: {
+        defaultdict(lambda: {
             'overrun_count': 0,
             'total_overrun': Decimal('0'),
             'people': []
@@ -317,7 +317,6 @@ class CostOverrunAnalysisService:
 
     def _calculate_material_cost(self, project_id: int) -> Decimal:
         """计算物料成本"""
-        from app.models.project import ProjectCost
         material_costs = self.db.query(func.sum(ProjectCost.amount)).filter(
             ProjectCost.project_id == project_id,
             ProjectCost.cost_type == 'MATERIAL'

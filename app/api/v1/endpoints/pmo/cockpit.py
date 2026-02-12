@@ -10,55 +10,25 @@ PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.pmo import (
-    PmoMeeting,
-    PmoProjectClosure,
-    PmoProjectInitiation,
-    PmoProjectPhase,
     PmoProjectRisk,
     PmoResourceAllocation,
 )
-from app.models.project import Customer, Project
+from app.models.project import Project
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
-    ClosureCreate,
-    ClosureLessonsRequest,
-    ClosureResponse,
-    ClosureReviewRequest,
     DashboardResponse,
     DashboardSummary,
-    InitiationApproveRequest,
-    InitiationCreate,
-    InitiationRejectRequest,
-    InitiationResponse,
-    InitiationUpdate,
-    MeetingCreate,
-    MeetingMinutesRequest,
-    MeetingResponse,
-    MeetingUpdate,
-    PhaseAdvanceRequest,
-    PhaseEntryCheckRequest,
-    PhaseExitCheckRequest,
-    PhaseResponse,
-    PhaseReviewRequest,
     ResourceOverviewResponse,
-    RiskAssessRequest,
-    RiskCloseRequest,
-    RiskCreate,
     RiskResponse,
-    RiskResponseRequest,
-    RiskStatusUpdateRequest,
     RiskWallResponse,
     WeeklyReportResponse,
 )
@@ -86,17 +56,17 @@ def get_pmo_dashboard(
     """
     # 统计项目
     total_projects = db.query(func.count(Project.id)).scalar() or 0
-    active_projects = db.query(func.count(Project.id)).filter(Project.is_active == True).scalar() or 0
+    active_projects = db.query(func.count(Project.id)).filter(Project.is_active).scalar() or 0
     completed_projects = db.query(func.count(Project.id)).filter(Project.stage == 'S9').scalar() or 0
 
     # 统计延期项目（简化：计划结束日期已过但未完成）
     from datetime import date
     today = date.today()
     delayed_projects = db.query(func.count(Project.id)).filter(
-        Project.planned_end_date != None,
+        Project.planned_end_date is not None,
         Project.planned_end_date < today,
         Project.stage != 'S9',
-        Project.is_active == True
+        Project.is_active
     ).scalar() or 0
 
     # 统计预算和成本
@@ -332,7 +302,7 @@ def get_weekly_report(
     delayed_projects = db.query(Project).filter(
         Project.planned_end_date < today,
         Project.stage != 'S9',
-        Project.is_active == True
+        Project.is_active
     ).count()
 
     # 统计新风险
@@ -388,7 +358,7 @@ def get_resource_overview(
     资源负荷总览
     """
     # 统计资源分配
-    total_resources = db.query(User).filter(User.is_active == True).count()
+    total_resources = db.query(User).filter(User.is_active).count()
 
     # 统计已分配资源
     allocated_resource_ids = db.query(PmoResourceAllocation.resource_id).filter(
@@ -431,7 +401,7 @@ def get_resource_overview(
     for dept in departments:
         dept_users = db.query(User).filter(
             User.department == dept.name,
-            User.is_active == True
+            User.is_active
         ).count()
 
         dept_allocated = db.query(PmoResourceAllocation.resource_id).join(

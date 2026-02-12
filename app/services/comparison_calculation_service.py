@@ -4,7 +4,7 @@
 计算环比（与上月对比）和同比（与去年同期对比）
 """
 from calendar import monthrange
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session

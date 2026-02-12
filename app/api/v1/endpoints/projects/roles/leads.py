@@ -42,8 +42,8 @@ async def get_project_leads(
         .options(joinedload(ProjectMember.user), joinedload(ProjectMember.role_type))
         .filter(
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
-            ProjectMember.is_active == True,
+            ProjectMember.is_lead,
+            ProjectMember.is_active,
         )
     )
 
@@ -54,7 +54,7 @@ async def get_project_leads(
         team_count = (
             db.query(ProjectMember)
             .filter(
-                ProjectMember.lead_member_id == lead.id, ProjectMember.is_active == True
+                ProjectMember.lead_member_id == lead.id, ProjectMember.is_active
             )
             .count()
         )
@@ -114,8 +114,8 @@ async def create_project_lead(
         .filter(
             ProjectMember.project_id == project_id,
             ProjectMember.role_type_id == data.role_type_id,
-            ProjectMember.is_lead == True,
-            ProjectMember.is_active == True,
+            ProjectMember.is_lead,
+            ProjectMember.is_active,
         )
         .first()
     )
@@ -184,7 +184,7 @@ async def update_project_lead(
         .filter(
             ProjectMember.id == member_id,
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
+            ProjectMember.is_lead,
         )
         .first()
     )
@@ -201,7 +201,7 @@ async def update_project_lead(
 
     team_count = (
         db.query(ProjectMember)
-        .filter(ProjectMember.lead_member_id == lead.id, ProjectMember.is_active == True)
+        .filter(ProjectMember.lead_member_id == lead.id, ProjectMember.is_active)
         .count()
     )
 
@@ -245,7 +245,7 @@ async def remove_project_lead(
         .filter(
             ProjectMember.id == member_id,
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
+            ProjectMember.is_lead,
         )
         .first()
     )
@@ -255,7 +255,7 @@ async def remove_project_lead(
 
     team_count = (
         db.query(ProjectMember)
-        .filter(ProjectMember.lead_member_id == member_id, ProjectMember.is_active == True)
+        .filter(ProjectMember.lead_member_id == member_id, ProjectMember.is_active)
         .count()
     )
 

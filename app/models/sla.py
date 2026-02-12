@@ -4,12 +4,9 @@ SLA管理模块 ORM 模型
 包含：SLA策略、SLA监控记录
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Optional
 
-from sqlalchemy import JSON, Boolean, Column, Date, DateTime
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Boolean, Column, DateTime
 from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 

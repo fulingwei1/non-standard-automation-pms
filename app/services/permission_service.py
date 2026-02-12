@@ -22,7 +22,7 @@ from app.models.permission import (
     RoleDataScope,
     RoleMenu,
 )
-from app.models.user import Role, RoleApiPermission, User, UserRole
+from app.models.user import Role, User, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class PermissionService:
                 if ur.role_id not in roles_set:
                     role = db.query(Role).filter(
                         Role.id == ur.role_id,
-                        Role.is_active == True
+                        Role.is_active
                     ).first()
                     if role:
                         roles_set.add(role.id)
@@ -70,21 +70,21 @@ class PermissionService:
                 User, User.employee_id == EmployeeOrgAssignment.employee_id
             ).filter(
                 User.id == user_id,
-                EmployeeOrgAssignment.is_active == True
+                EmployeeOrgAssignment.is_active
             ).all()
             
             for assignment in assignments:
                 if assignment.position_id:
                     position_roles = db.query(PositionRole).filter(
                         PositionRole.position_id == assignment.position_id,
-                        PositionRole.is_active == True
+                        PositionRole.is_active
                     ).all()
                     
                     for pr in position_roles:
                         if pr.role_id not in roles_set:
                             role = db.query(Role).filter(
                                 Role.id == pr.role_id,
-                                Role.is_active == True
+                                Role.is_active
                             ).first()
                             if role:
                                 roles_set.add(role.id)
@@ -298,9 +298,9 @@ class PermissionService:
         # 超级管理员获取所有菜单
         if user and user.is_superuser:
             menus = db.query(MenuPermission).filter(
-                MenuPermission.is_active == True,
-                MenuPermission.is_visible == True,
-                MenuPermission.parent_id == None
+                MenuPermission.is_active,
+                MenuPermission.is_visible,
+                MenuPermission.parent_id is None
             ).order_by(MenuPermission.sort_order).all()
             return [menu.to_dict() for menu in menus]
         
@@ -315,7 +315,7 @@ class PermissionService:
         menu_ids: Set[int] = set()
         role_menus = db.query(RoleMenu).filter(
             RoleMenu.role_id.in_(role_ids),
-            RoleMenu.is_active == True
+            RoleMenu.is_active
         ).all()
         
         for rm in role_menus:
@@ -328,8 +328,8 @@ class PermissionService:
         def build_menu_tree(parent_id: Optional[int] = None) -> List[Dict[str, Any]]:
             menus = db.query(MenuPermission).filter(
                 MenuPermission.id.in_(menu_ids),
-                MenuPermission.is_active == True,
-                MenuPermission.is_visible == True,
+                MenuPermission.is_active,
+                MenuPermission.is_visible,
                 MenuPermission.parent_id == parent_id
             ).order_by(MenuPermission.sort_order).all()
             
@@ -377,7 +377,7 @@ class PermissionService:
             # 获取每个角色的数据权限
             role_data_scopes = db.query(RoleDataScope).filter(
                 RoleDataScope.role_id.in_(role_ids),
-                RoleDataScope.is_active == True
+                RoleDataScope.is_active
             ).all()
             
             # 合并数据权限（取最大范围）

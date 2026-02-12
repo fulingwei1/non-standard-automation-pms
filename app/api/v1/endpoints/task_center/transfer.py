@@ -11,41 +11,21 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
 from app.models.task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
     TaskUnified,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
-    TaskCommentCreate,
-    TaskCommentResponse,
-    TaskOverviewResponse,
-    TaskProgressUpdate,
     TaskTransferRequest,
-    TaskUnifiedCreate,
-    TaskUnifiedListResponse,
     TaskUnifiedResponse,
-    TaskUnifiedUpdate,
 )
 from app.services.sales_reminder import create_notification
 
@@ -55,7 +35,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
+from .batch_helpers import log_task_operation
 
 
 from fastapi import APIRouter
@@ -127,11 +107,11 @@ def transfer_task(
     try:
         target_user = db.query(User).filter(User.id == transfer_in.target_user_id).first()
         if target_user:
-            notification = create_notification(
+            create_notification(
                 db=db,
                 user_id=transfer_in.target_user_id,
                 notification_type="TASK_ASSIGNED",
-                title=f"任务转办通知",
+                title="任务转办通知",
                 content=f"{current_user.real_name or current_user.username} 将任务「{task.title}」转办给您，原因：{transfer_in.transfer_reason}",
                 source_type="task",
                 source_id=task.id,

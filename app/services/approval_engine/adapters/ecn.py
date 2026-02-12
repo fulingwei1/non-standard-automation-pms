@@ -238,7 +238,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
             ]
         
         # 创建审批实例
-        approval_data = ApprovalInstanceCreate(
+        ApprovalInstanceCreate(
             template_code="ECN_STANDARD",
             entity_type="ECN",
             entity_id=ecn.id,
@@ -426,7 +426,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 .filter(
                     EcnApprovalMatrix.ecn_type == ecn.ecn_type,
                     EcnApprovalMatrix.approval_level == level,
-                    EcnApprovalMatrix.is_active == True,
+                    EcnApprovalMatrix.is_active,
                 )
                 .all()
             )
@@ -442,7 +442,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                     .join(Role, UserRole.role_id == Role.id)
                     .filter(
                         Role.code == matrix_item.approval_role,
-                        User.is_active == True,
+                        User.is_active,
                     )
                     .all()
                 )

@@ -5,15 +5,13 @@
 支持多种收入类型：合同金额、已收款金额、已开票金额等
 """
 
-from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.models.sales import Contract, Invoice
+from app.models.sales import Invoice
 
 
 class RevenueService:

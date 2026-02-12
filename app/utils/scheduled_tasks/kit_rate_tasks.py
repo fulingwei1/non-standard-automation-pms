@@ -174,7 +174,7 @@ def create_kit_rate_snapshot(
             bom = (
                 db.query(BomHeader)
                 .filter(BomHeader.machine_id == machine.id)
-                .filter(BomHeader.is_latest == True)
+                .filter(BomHeader.is_latest)
                 .first()
             )
 
@@ -240,7 +240,7 @@ def daily_kit_rate_snapshot():
             active_projects = (
                 db.query(Project)
                 .filter(
-                    Project.is_active == True,
+                    Project.is_active,
                     Project.stage.notin_(["S9", "COMPLETED", "CLOSED"]),
                 )
                 .all()

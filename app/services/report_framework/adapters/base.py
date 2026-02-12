@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.report_framework.engine import ReportEngine
-from app.services.report_framework.models import ReportConfig
 
 
 class BaseReportAdapter(ABC):

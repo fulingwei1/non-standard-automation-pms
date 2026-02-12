@@ -6,7 +6,7 @@
 from datetime import date, timedelta
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -51,11 +51,11 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
         this_month_start, _ = get_month_range(today)
 
         # 在职员工总数
-        total_active = db.query(Employee).filter(Employee.is_active == True).count()
+        total_active = db.query(Employee).filter(Employee.is_active).count()
 
         # 试用期员工数
         probation_count = db.query(Employee).filter(
-            Employee.is_active == True,
+            Employee.is_active,
             Employee.employment_type == "probation"
         ).count()
 
@@ -92,7 +92,7 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
 
         # 即将转正（30天内）
         confirmation_due = db.query(Employee).join(EmployeeHrProfile).filter(
-            Employee.is_active == True,
+            Employee.is_active,
             Employee.employment_type == "probation",
             EmployeeHrProfile.probation_end_date <= today + timedelta(days=30),
             EmployeeHrProfile.probation_end_date >= today
@@ -103,7 +103,7 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
             EmployeeHrProfile.dept_level1,
             func.count(EmployeeHrProfile.id)
         ).join(Employee).filter(
-            Employee.is_active == True
+            Employee.is_active
         ).group_by(EmployeeHrProfile.dept_level1).all()
 
         # 使用基类方法创建统计卡片
@@ -185,7 +185,7 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
         today = date.today()
 
         employees = db.query(Employee).join(EmployeeHrProfile).filter(
-            Employee.is_active == True,
+            Employee.is_active,
             Employee.employment_type == "probation",
             EmployeeHrProfile.probation_end_date <= today + timedelta(days=60)
         ).order_by(EmployeeHrProfile.probation_end_date.asc()).limit(20).all()

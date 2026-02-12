@@ -4,11 +4,10 @@
 负责统计工程师的工作量、项目贡献度、技能评估等
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import date
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.organization import Department

@@ -7,7 +7,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from sqlalchemy.orm import Session
 

@@ -73,7 +73,7 @@ class AssemblyKitDashboardAdapter(DashboardAdapter):
             if total > 0
             else Decimal(0)
         )
-        avg_blocking = (
+        (
             sum(r.blocking_kit_rate for r in recent_analyses) / total
             if total > 0
             else Decimal(0)
@@ -184,7 +184,7 @@ class AssemblyKitDashboardAdapter(DashboardAdapter):
         # 分阶段统计
         stages = (
             self.db.query(AssemblyStage)
-            .filter(AssemblyStage.is_active == True)
+            .filter(AssemblyStage.is_active)
             .order_by(AssemblyStage.stage_order)
             .all()
         )
@@ -251,7 +251,7 @@ class AssemblyKitDashboardAdapter(DashboardAdapter):
         recent_list = []
         for r in recent_analyses:
             project = self.db.query(Project).filter(Project.id == r.project_id).first()
-            bom = self.db.query(BomHeader).filter(BomHeader.id == r.bom_id).first()
+            self.db.query(BomHeader).filter(BomHeader.id == r.bom_id).first()
             machine = (
                 self.db.query(Machine).filter(Machine.id == r.machine_id).first()
                 if r.machine_id

@@ -158,7 +158,7 @@ class TenantService:
 
         # 1. 复制角色模板
         if init_data.copy_role_templates:
-            templates = self.db.query(RoleTemplate).filter(RoleTemplate.is_active == True).all()
+            templates = self.db.query(RoleTemplate).filter(RoleTemplate.is_active).all()
             for template in templates:
                 # 检查角色是否已存在
                 existing_role = self.db.query(Role).filter(

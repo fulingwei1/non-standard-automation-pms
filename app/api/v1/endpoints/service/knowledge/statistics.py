@@ -27,8 +27,8 @@ def get_knowledge_base_statistics(
     """
     total = db.query(KnowledgeBase).count()
     published = db.query(KnowledgeBase).filter(KnowledgeBase.status == "已发布").count()
-    faq = db.query(KnowledgeBase).filter(KnowledgeBase.is_faq == True).count()
-    featured = db.query(KnowledgeBase).filter(KnowledgeBase.is_featured == True).count()
+    faq = db.query(KnowledgeBase).filter(KnowledgeBase.is_faq).count()
+    featured = db.query(KnowledgeBase).filter(KnowledgeBase.is_featured).count()
 
     # 总浏览量
     total_views = db.query(func.sum(KnowledgeBase.view_count)).scalar() or 0

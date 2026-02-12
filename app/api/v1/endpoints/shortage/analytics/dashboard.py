@@ -166,7 +166,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
         arrival_query = db.query(MaterialArrival)
         total_arrivals = arrival_query.count()
         pending_arrivals = arrival_query.filter(MaterialArrival.status == 'PENDING').count()
-        delayed_arrivals = arrival_query.filter(MaterialArrival.is_delayed == True).count()
+        delayed_arrivals = arrival_query.filter(MaterialArrival.is_delayed).count()
 
         # === 物料替代统计 ===
         sub_query = db.query(MaterialSubstitution)

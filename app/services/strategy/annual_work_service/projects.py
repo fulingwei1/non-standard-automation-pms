@@ -76,7 +76,7 @@ def unlink_project(db: Session, work_id: int, project_id: int) -> bool:
     link = db.query(AnnualKeyWorkProjectLink).filter(
         AnnualKeyWorkProjectLink.annual_work_id == work_id,
         AnnualKeyWorkProjectLink.project_id == project_id,
-        AnnualKeyWorkProjectLink.is_active == True
+        AnnualKeyWorkProjectLink.is_active
     ).first()
 
     if not link:
@@ -100,7 +100,7 @@ def get_linked_projects(db: Session, work_id: int) -> List[ProjectLinkItem]:
     """
     links = db.query(AnnualKeyWorkProjectLink).filter(
         AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active == True
+        AnnualKeyWorkProjectLink.is_active
     ).all()
 
     result = []

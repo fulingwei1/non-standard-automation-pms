@@ -46,8 +46,8 @@ def get_material_supplier(
         db.query(MaterialSupplier)
         .filter(
             MaterialSupplier.material_id == material_id,
-            MaterialSupplier.is_preferred == True,
-            MaterialSupplier.is_active == True
+            MaterialSupplier.is_preferred,
+            MaterialSupplier.is_active
         )
         .first()
     )
@@ -64,7 +64,7 @@ def get_material_supplier(
         db.query(MaterialSupplier)
         .filter(
             MaterialSupplier.material_id == material_id,
-            MaterialSupplier.is_active == True
+            MaterialSupplier.is_active
         )
         .first()
     )
@@ -97,7 +97,7 @@ def get_material_price(
             .filter(
                 MaterialSupplier.material_id == material_id,
                 MaterialSupplier.supplier_id == supplier_id,
-                MaterialSupplier.is_active == True
+                MaterialSupplier.is_active
             )
             .first()
         )

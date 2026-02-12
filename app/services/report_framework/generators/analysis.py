@@ -175,7 +175,7 @@ class AnalysisReportGenerator:
                     db.query(User)
                     .filter(
                         User.department_id == department_id,
-                        User.is_active == True,
+                        User.is_active,
                     )
                     .all()
                 )
@@ -188,7 +188,7 @@ class AnalysisReportGenerator:
                             db.query(User)
                             .filter(
                                 User.department == dept_name,
-                                User.is_active == True,
+                                User.is_active,
                             )
                             .all()
                         )
@@ -198,7 +198,7 @@ class AnalysisReportGenerator:
                 users = []
                 scope_name = "部门"
         else:
-            users = db.query(User).filter(User.is_active == True).all()
+            users = db.query(User).filter(User.is_active).all()
             scope_name = "全公司"
 
         return users, scope_name
@@ -267,7 +267,7 @@ class AnalysisReportGenerator:
             return (
                 db.query(Project)
                 .filter(
-                    Project.is_active == True,
+                    Project.is_active,
                     Project.status.in_(["IN_PROGRESS", "ON_HOLD"]),
                 )
                 .all()

@@ -45,7 +45,7 @@ class SolutionCreditService:
         """获取配置值"""
         config = self.db.query(SolutionCreditConfig).filter(
             SolutionCreditConfig.config_key == key,
-            SolutionCreditConfig.is_active == True
+            SolutionCreditConfig.is_active
         ).first()
 
         if config:
@@ -349,7 +349,7 @@ class SolutionCreditService:
         Returns:
             Tuple[List[Dict], int]: (用户积分列表, 总数)
         """
-        query = self.db.query(User).filter(User.is_active == True)
+        query = self.db.query(User).filter(User.is_active)
 
         query = apply_keyword_filter(query, User, search, ["username", "real_name", "employee_no"])
 

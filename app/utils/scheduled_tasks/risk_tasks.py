@@ -10,7 +10,7 @@
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from app.models.base import get_db_session
 from app.common.query_filters import apply_keyword_filter
@@ -79,8 +79,8 @@ def create_daily_risk_snapshots() -> Dict[str, Any]:
 
             # 获取所有活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
-                Project.is_archived == False,
+                Project.is_active,
+                not Project.is_archived,
             ).all()
 
             success_count = 0

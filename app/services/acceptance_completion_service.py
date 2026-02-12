@@ -41,7 +41,7 @@ def validate_required_check_items(
 
     pending_items = db.query(AcceptanceOrderItem).filter(
         AcceptanceOrderItem.order_id == order_id,
-        AcceptanceOrderItem.is_required == True,
+        AcceptanceOrderItem.is_required,
         AcceptanceOrderItem.result_status == "PENDING"
     ).count()
 

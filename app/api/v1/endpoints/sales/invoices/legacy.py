@@ -6,13 +6,12 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse

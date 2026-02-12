@@ -135,7 +135,7 @@ class OthersDashboardAdapter:
             query = self.db.query(Notification)
             query = query.filter(Notification.user_id == user_id)
             if unread_only:
-                query = query.filter(Notification.is_read == False)
+                query = query.filter(not Notification.is_read)
             query = query.order_by(Notification.created_at.desc())
             query = query.limit(20)
             return query.all()
@@ -184,27 +184,27 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         )
 
         # 匹配统计
-        total_requests = (
+        (
             self.db.query(func.count(func.distinct(HrAIMatchingLog.request_id))).scalar()
             or 0
         )
         total_matched = self.db.query(func.count(HrAIMatchingLog.id)).scalar() or 0
         accepted = (
             self.db.query(func.count(HrAIMatchingLog.id))
-            .filter(HrAIMatchingLog.is_accepted == True)
+            .filter(HrAIMatchingLog.is_accepted)
             .scalar()
             or 0
         )
-        rejected = (
+        (
             self.db.query(func.count(HrAIMatchingLog.id))
-            .filter(HrAIMatchingLog.is_accepted == False)
+            .filter(not HrAIMatchingLog.is_accepted)
             .scalar()
             or 0
         )
 
-        avg_score = (
+        (
             self.db.query(func.avg(HrAIMatchingLog.total_score))
-            .filter(HrAIMatchingLog.is_accepted == True)
+            .filter(HrAIMatchingLog.is_accepted)
             .scalar()
         )
 

@@ -367,7 +367,6 @@ def build_footer_section(
     if not REPORTLAB_AVAILABLE:
         return []
 
-    from reportlab.lib.styles import ParagraphStyle
     from reportlab.platypus import Paragraph, Spacer
 
     story = []

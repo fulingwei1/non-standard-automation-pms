@@ -7,7 +7,7 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,6 @@ from app.models.enums import AssessmentSourceTypeEnum
 from app.models.sales import AIClarification, Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.query_filters import apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     AIClarificationCreate,

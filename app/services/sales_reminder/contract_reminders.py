@@ -3,7 +3,7 @@
 销售提醒服务 - 合同提醒
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Optional
 
 from sqlalchemy import and_

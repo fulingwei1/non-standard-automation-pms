@@ -134,7 +134,7 @@ def get_upcoming_deliveries(
     end_date = today + timedelta(days=days)
 
     quotes = db.query(Quote).filter(
-        Quote.delivery_date != None,
+        Quote.delivery_date is not None,
         Quote.delivery_date >= today,
         Quote.delivery_date <= end_date,
         Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"])
@@ -175,7 +175,7 @@ def get_overdue_deliveries(
     today = date.today()
 
     quotes = db.query(Quote).filter(
-        Quote.delivery_date != None,
+        Quote.delivery_date is not None,
         Quote.delivery_date < today,
         Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"])
     ).order_by(Quote.delivery_date).all()
@@ -220,7 +220,7 @@ def get_delivery_calendar(
     start_date, end_date = get_month_range_by_ym(year, month)
 
     quotes = db.query(Quote).filter(
-        Quote.delivery_date != None,
+        Quote.delivery_date is not None,
         Quote.delivery_date >= start_date,
         Quote.delivery_date <= end_date
     ).order_by(Quote.delivery_date).all()

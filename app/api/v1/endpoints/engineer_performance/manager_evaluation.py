@@ -4,14 +4,13 @@
 """
 
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.models.performance import PerformancePeriod, PerformanceResult
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.manager_evaluation_service import ManagerEvaluationService

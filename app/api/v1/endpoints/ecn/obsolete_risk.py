@@ -56,7 +56,7 @@ def get_obsolete_material_alerts(
     """
     affected_materials = db.query(EcnAffectedMaterial).filter(
         EcnAffectedMaterial.ecn_id == ecn_id,
-        EcnAffectedMaterial.is_obsolete_risk == True
+        EcnAffectedMaterial.is_obsolete_risk
     ).all()
 
     alerts = []

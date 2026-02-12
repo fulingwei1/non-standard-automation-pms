@@ -4,19 +4,15 @@ BOM装配属性智能推荐服务
 实现多级推荐规则：历史数据匹配、分类匹配、关键词匹配、供应商类型推断
 """
 
-from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models import (
-    BomHeader,
     BomItem,
     BomItemAssemblyAttrs,
     CategoryStageMapping,
     Material,
-    MaterialCategory,
     Vendor,
 )
 
@@ -140,7 +136,7 @@ class AssemblyAttrRecommender:
         ).filter(
             BomItem.material_id == material_id,
             BomItemAssemblyAttrs.bom_id != current_bom_id,
-            BomItemAssemblyAttrs.confirmed == True  # 只考虑已确认的配置
+            BomItemAssemblyAttrs.confirmed  # 只考虑已确认的配置
         ).all()
 
         if not history_attrs:
@@ -208,7 +204,7 @@ class AssemblyAttrRecommender:
 
         mapping = db.query(CategoryStageMapping).filter(
             CategoryStageMapping.category_id == material.category_id,
-            CategoryStageMapping.is_active == True
+            CategoryStageMapping.is_active
         ).first()
 
         if not mapping:

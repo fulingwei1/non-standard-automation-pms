@@ -4,10 +4,8 @@
 包含：工时记录、工时审批、工时汇总、加班申请
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -25,7 +23,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import ApprovalActionEnum
 
 # ==================== 枚举定义 ====================
 

@@ -12,7 +12,6 @@ from pydantic import BaseModel
 
 from app.common.crud.sync_filters import SyncQueryBuilder
 from app.common.crud.types import SortOrder
-from app.common.crud.exceptions import NotFoundError, AlreadyExistsError
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)

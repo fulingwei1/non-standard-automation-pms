@@ -6,9 +6,9 @@
 """
 
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -30,7 +30,7 @@ def get_projects_overview(
     """
     项目概览数据
     """
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
 
     from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
@@ -76,7 +76,7 @@ def get_project_dashboard(
     """
     项目仪表盘数据
     """
-    query = db.query(Project).filter(Project.is_active == True, Project.is_archived == False)
+    query = db.query(Project).filter(Project.is_active, not Project.is_archived)
 
     from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
@@ -150,7 +150,7 @@ def get_in_production_summary(
     在产项目进度汇总
     """
     query = db.query(Project).filter(
-        Project.is_active == True,
+        Project.is_active,
         Project.stage.in_(['S5', 'S6'])
     )
 

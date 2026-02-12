@@ -10,47 +10,23 @@ BI 报表 - 自动生成
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import FileResponse
-from sqlalchemy import and_, desc, func, or_
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.outsourcing import OutsourcingOrder
 from app.models.vendor import Vendor
-from app.models.project import Machine, Project, ProjectPaymentPlan
-from app.models.rd_project import RdCost, RdCostType, RdProject
-from app.models.report_center import (
-    ReportDefinition,
-    ReportGeneration,
-    ReportSubscription,
-    ReportTemplate,
-)
+from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.models.timesheet import Timesheet
-from app.models.user import Role, User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.report_center import (
-    ApplyTemplateRequest,
-    ReportCompareRequest,
-    ReportCompareResponse,
-    ReportExportRequest,
-    ReportGenerateRequest,
-    ReportGenerateResponse,
-    ReportPreviewResponse,
-    ReportRoleResponse,
-    ReportTemplateListResponse,
-    ReportTemplateResponse,
-    ReportTypeResponse,
-    RoleReportMatrixResponse,
-)
+from app.models.user import User
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -382,13 +358,12 @@ def get_executive_dashboard(
     ).scalar() or 0
 
     # 回款统计（从项目收款计划）
-    from app.models.project import ProjectPaymentPlan
     total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
         ProjectPaymentPlan.status == "PAID"
     ).scalar() or 0
 
     # 人员统计
-    total_users = db.query(User).filter(User.is_active == True).count()
+    total_users = db.query(User).filter(User.is_active).count()
 
     # 工时统计（本月）
     month_timesheets = db.query(Timesheet).filter(

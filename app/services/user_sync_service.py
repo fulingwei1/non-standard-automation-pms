@@ -16,7 +16,6 @@ from app.models.user import Role, User, UserRole
 from app.utils.pinyin_utils import (
     generate_initial_password,
     generate_unique_username,
-    name_to_pinyin,
 )
 
 logger = logging.getLogger(__name__)

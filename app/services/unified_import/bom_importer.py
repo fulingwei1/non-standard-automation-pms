@@ -98,7 +98,7 @@ class BomImporter(ImportBase):
                     continue
 
                 # 解析可选字段
-                machine_code = str(row.get('机台编号', '') or '').strip()
+                str(row.get('机台编号', '') or '').strip()
                 unit = str(row.get('单位', '件') or '件').strip()
                 remark = str(row.get('备注', '') or '').strip()
 

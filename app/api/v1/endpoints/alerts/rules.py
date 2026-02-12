@@ -4,52 +4,25 @@ RULES - 自动生成
 从 alerts.py 拆分
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, case, func
-from sqlalchemy.orm import Session, joinedload, selectinload
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.alert import (
-    AlertNotification,
     AlertRecord,
     AlertRule,
     AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
-    ExceptionAction,
-    ExceptionEscalation,
-    ExceptionEvent,
-    ProjectHealthSnapshot,
 )
-from app.models.issue import Issue
-from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.alert import (
-    AlertRecordHandle,
-    AlertRecordListResponse,
-    AlertRecordResponse,
     AlertRuleCreate,
     AlertRuleResponse,
     AlertRuleUpdate,
-    AlertStatisticsResponse,
-    AlertSubscriptionCreate,
-    AlertSubscriptionResponse,
-    AlertSubscriptionUpdate,
-    ExceptionEventCreate,
-    ExceptionEventListResponse,
-    ExceptionEventResolve,
-    ExceptionEventResponse,
-    ExceptionEventUpdate,
-    ExceptionEventVerify,
-    ProjectHealthResponse,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 

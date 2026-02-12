@@ -30,7 +30,7 @@ async def get_collaboration_matrix(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id
@@ -166,7 +166,7 @@ async def get_pending_ratings(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id
@@ -289,7 +289,7 @@ async def get_pending_ratings_new(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id

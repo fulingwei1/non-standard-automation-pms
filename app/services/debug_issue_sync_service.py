@@ -6,14 +6,12 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import MechanicalDebugIssue, TestBugRecord
 from app.models.issue import Issue
-from app.models.project import Project
-from app.models.user import User
 
 
 class DebugIssueSyncService:

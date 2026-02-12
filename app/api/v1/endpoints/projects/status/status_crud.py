@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.project import Project, ProjectStatusLog
+from app.models.project import ProjectStatusLog
 from app.models.user import User
 from app.schemas.common import ResponseModel
 

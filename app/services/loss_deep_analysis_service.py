@@ -7,18 +7,17 @@
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.enums import LeadOutcomeEnum, LossReasonEnum
 from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.models.work_log import WorkLog
 from app.services.hourly_rate_service import HourlyRateService
 
 logger = logging.getLogger(__name__)
@@ -377,7 +376,7 @@ class LossDeepAnalysisService:
 
     def _calculate_project_cost(self, project_id: int) -> Decimal:
         """计算项目成本"""
-        hours = self._get_project_hours(project_id)
+        self._get_project_hours(project_id)
 
         # 获取项目相关人员的工时记录，按角色计算成本
         timesheets = self.db.query(Timesheet).filter(

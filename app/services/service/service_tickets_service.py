@@ -89,7 +89,7 @@ class ServiceTicketsService:
         """获取项目成员列表"""
         # User.department 是 String 字段，不是关系
         users = self.db.query(User).filter(
-            User.is_active == True
+            User.is_active
         ).all()
 
         return {

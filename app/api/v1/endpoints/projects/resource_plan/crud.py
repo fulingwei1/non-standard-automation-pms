@@ -16,7 +16,6 @@ from app.core import security
 from app.models.project import Project
 from app.models.project.resource_plan import ProjectStageResourcePlan
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.resource_plan import (
     ResourcePlanCreate,
     ResourcePlanUpdate,

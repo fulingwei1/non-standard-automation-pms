@@ -4,7 +4,6 @@
 """
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -39,7 +38,7 @@ def check_product_match(
 
     # 精确匹配
     exact_match = db.query(AdvantageProduct).filter(
-        AdvantageProduct.is_active == True,
+        AdvantageProduct.is_active,
         AdvantageProduct.product_name == product_name
     ).first()
 
@@ -60,7 +59,7 @@ def check_product_match(
         )
 
     # 模糊匹配 - 查找相似产品
-    base_query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active == True)
+    base_query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active)
     base_query = apply_keyword_filter(base_query, AdvantageProduct, product_name, ["product_name", "product_code"], use_ilike=False)
     similar_products = base_query.limit(5).all()
 

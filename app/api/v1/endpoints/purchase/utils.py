@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -137,7 +137,7 @@ def serialize_purchase_order(order: PurchaseOrder, *, include_items: bool = Fals
             # 安全地访问 items 关系，处理可能的异常
             items_query = order.items.order_by(PurchaseOrderItem.item_no)
             data["items"] = [serialize_order_item(i) for i in items_query.all()]
-        except Exception as e:
+        except Exception:
             # 如果访问 items 失败，返回空列表
             data["items"] = []
     return data

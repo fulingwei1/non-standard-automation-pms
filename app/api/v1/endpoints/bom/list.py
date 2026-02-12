@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.core.config import settings
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.material import BomResponse

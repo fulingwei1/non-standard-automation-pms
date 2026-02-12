@@ -3,23 +3,20 @@
 商机管理 - CRUD操作
 """
 
-from datetime import date, datetime
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.common.query_filters import apply_pagination
 from app.common.pagination import get_pagination_query, PaginationParams
-from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.models.enums import OpportunityStageEnum
+from app.common.query_filters import apply_keyword_filter
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
     OpportunityCreate,
     OpportunityRequirementResponse,
@@ -30,7 +27,6 @@ from app.schemas.sales import (
 from .utils import (
     generate_opportunity_code,
     get_entity_creator_id,
-    validate_g2_opportunity_to_quote,
 )
 
 router = APIRouter()

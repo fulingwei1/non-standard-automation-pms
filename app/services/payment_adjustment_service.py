@@ -6,16 +6,13 @@ Issue 7.3: 项目进度影响收款计划
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
-from app.models.sales import Contract, Invoice
-from app.models.user import User
+from app.models.sales import Contract
 from app.services.notification_dispatcher import NotificationDispatcher
 
 logger = logging.getLogger(__name__)
@@ -121,7 +118,7 @@ class PaymentAdjustmentService:
                             "payment_name": plan.payment_name,
                             "old_date": str(old_date),
                             "new_date": str(plan.planned_date),
-                            "reason": f"里程碑提前完成，允许提前开票"
+                            "reason": "里程碑提前完成，允许提前开票"
                         })
 
         if adjusted_plans:
@@ -400,7 +397,7 @@ class PaymentAdjustmentService:
             delayed_milestones = self.db.query(ProjectMilestone).join(
                 Project, ProjectMilestone.project_id == Project.id
             ).filter(
-                Project.is_active == True,
+                Project.is_active,
                 ProjectMilestone.planned_date < today,
                 ProjectMilestone.status.in_(['PENDING', 'IN_PROGRESS'])
             ).all()

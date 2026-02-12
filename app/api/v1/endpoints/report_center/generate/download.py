@@ -3,7 +3,6 @@
 报表生成 - 下载功能
 """
 import os
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse

@@ -8,10 +8,8 @@
 3. AI秒出方案的产品匹配
 """
 
-from datetime import datetime
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     Column,
     DateTime,
@@ -20,7 +18,6 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
-    Table,
     Text,
 )
 from sqlalchemy.orm import relationship

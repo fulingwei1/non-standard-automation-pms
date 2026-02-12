@@ -3,7 +3,6 @@
 绩效模型 - 结果和评价
 """
 from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, JSON, Numeric, String, Text
 from sqlalchemy.orm import relationship

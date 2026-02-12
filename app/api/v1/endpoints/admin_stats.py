@@ -33,7 +33,7 @@ def get_admin_stats(
     # 用户统计
     total_users = db.query(func.count(User.id)).scalar() or 0
     active_users = (
-        db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
+        db.query(func.count(User.id)).filter(User.is_active).scalar() or 0
     )
     inactive_users = total_users - active_users
 
@@ -46,7 +46,7 @@ def get_admin_stats(
     # 角色统计
     total_roles = db.query(func.count(Role.id)).scalar() or 0
     active_roles = (
-        db.query(func.count(Role.id)).filter(Role.is_active == True).scalar() or 0
+        db.query(func.count(Role.id)).filter(Role.is_active).scalar() or 0
     )
     inactive_roles = total_roles - active_roles
 
@@ -63,7 +63,7 @@ def get_admin_stats(
     # 权限统计（使用新的 ApiPermission 和 RoleApiPermission 表）
     total_permissions = (
         db.query(func.count(ApiPermission.id))
-        .filter(ApiPermission.is_active == True)
+        .filter(ApiPermission.is_active)
         .scalar()
         or 0
     )
@@ -80,7 +80,7 @@ def get_admin_stats(
             unassigned_permissions = (
                 db.query(func.count(ApiPermission.id))
                 .filter(
-                    ApiPermission.is_active == True,
+                    ApiPermission.is_active,
                     ~ApiPermission.id.in_(assigned_perm_ids),
                 )
                 .scalar()

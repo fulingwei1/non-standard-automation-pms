@@ -3,7 +3,6 @@
 PMO模型 - 项目成本和会议
 """
 from sqlalchemy import Column, Date, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Time
-from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
 

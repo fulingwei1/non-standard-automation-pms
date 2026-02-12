@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 
 from app.core import security
-from app.models.base import get_db
 from app.models.user import User
 
 # Re-export get_db from models.base for API endpoint dependencies

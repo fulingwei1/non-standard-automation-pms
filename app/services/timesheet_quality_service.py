@@ -4,14 +4,11 @@
 负责工时异常检测、工作日志完整性检查、数据一致性校验
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.models.work_log import WorkLog

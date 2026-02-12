@@ -3,7 +3,7 @@
 规格匹配检查服务
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 from sqlalchemy.orm import Session
 

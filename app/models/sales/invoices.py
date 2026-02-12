@@ -2,8 +2,6 @@
 """
 发票相关模型
 """
-from datetime import date
-from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
@@ -20,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import DisputeStatusEnum, InvoiceStatusEnum, InvoiceTypeEnum
+from app.models.enums import DisputeStatusEnum, InvoiceStatusEnum
 
 
 class Invoice(Base, TimestampMixin):

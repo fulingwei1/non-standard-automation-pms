@@ -6,7 +6,7 @@
 from decimal import Decimal
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
@@ -15,8 +15,7 @@ from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine, Project
 from app.models.user import User
-from app.schemas.common import ResponseModel
-from app.schemas.material import BomCreate, BomItemCreate, BomItemResponse, BomResponse
+from app.schemas.material import BomCreate, BomItemResponse, BomResponse
 
 router = APIRouter()
 

@@ -2,9 +2,8 @@
 """
 销售订单管理 - 工具函数
 """
-from sqlalchemy.orm import Session
 
-from app.models.business_support import SalesOrder, SalesOrderItem
+from app.models.business_support import SalesOrder
 from app.schemas.business_support import SalesOrderItemResponse, SalesOrderResponse
 
 

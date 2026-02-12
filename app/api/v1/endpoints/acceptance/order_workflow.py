@@ -21,7 +21,6 @@ from app.schemas.acceptance import (
     AcceptanceOrderResponse,
     AcceptanceOrderStart,
 )
-from app.schemas.common import ResponseModel
 
 from .order_crud import read_acceptance_order
 from .utils import validate_completion_rules, validate_edit_rules

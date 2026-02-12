@@ -23,8 +23,8 @@ class DefaultTemplateMixin:
         return self.db.query(StageTemplate).filter(
             and_(
                 StageTemplate.project_type == project_type,
-                StageTemplate.is_default == True,
-                StageTemplate.is_active == True
+                StageTemplate.is_default,
+                StageTemplate.is_active
             )
         ).first()
 

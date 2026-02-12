@@ -4,15 +4,12 @@ ITR流程效率分析服务
 包含：问题解决时间分析、客户满意度趋势、流程瓶颈识别、SLA达成率分析
 """
 
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
-from app.models.issue import Issue
 from app.models.service import CustomerSatisfaction, ServiceTicket
 from app.models.sla import SLAMonitor
 

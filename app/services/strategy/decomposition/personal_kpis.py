@@ -11,30 +11,18 @@
 实现从公司战略到部门目标到个人 KPI 的层层分解
 """
 
-import json
-from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
 from app.models.strategy import (
-    CSF,
-    KPI,
-    DepartmentObjective,
     PersonalKPI,
-    Strategy,
 )
 from app.schemas.strategy import (
-    DecompositionTreeNode,
-    DecompositionTreeResponse,
-    DepartmentObjectiveCreate,
-    DepartmentObjectiveDetailResponse,
-    DepartmentObjectiveUpdate,
     PersonalKPICreate,
     PersonalKPIUpdate,
-    TraceToStrategyResponse,
 )
 
 
@@ -87,7 +75,7 @@ def get_personal_kpi(db: Session, kpi_id: int) -> Optional[PersonalKPI]:
     """
     return db.query(PersonalKPI).filter(
         PersonalKPI.id == kpi_id,
-        PersonalKPI.is_active == True
+        PersonalKPI.is_active
     ).first()
 
 
@@ -115,7 +103,7 @@ def list_personal_kpis(
     Returns:
         tuple: (个人 KPI 列表, 总数)
     """
-    query = db.query(PersonalKPI).filter(PersonalKPI.is_active == True)
+    query = db.query(PersonalKPI).filter(PersonalKPI.is_active)
 
     if user_id:
         query = query.filter(PersonalKPI.user_id == user_id)

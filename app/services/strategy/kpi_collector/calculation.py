@@ -78,7 +78,7 @@ def collect_kpi_value(
     Returns:
         Optional[Decimal]: 采集到的值
     """
-    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active == True).first()
+    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active).first()
     if not kpi:
         return None
 
@@ -87,14 +87,14 @@ def collect_kpi_value(
         data_source = db.query(KPIDataSource).filter(
             KPIDataSource.id == data_source_id,
             KPIDataSource.kpi_id == kpi_id,
-            KPIDataSource.is_active == True
+            KPIDataSource.is_active
         ).first()
     else:
         # 使用主数据源
         data_source = db.query(KPIDataSource).filter(
             KPIDataSource.kpi_id == kpi_id,
-            KPIDataSource.is_primary == True,
-            KPIDataSource.is_active == True
+            KPIDataSource.is_primary,
+            KPIDataSource.is_active
         ).first()
 
     if not data_source:
@@ -167,7 +167,7 @@ def auto_collect_kpi(
     if value is None:
         return None
 
-    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active == True).first()
+    kpi = db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active).first()
     if not kpi:
         return None
 
@@ -203,14 +203,14 @@ def batch_collect_kpis(
     from app.models.strategy import CSF
 
     query = db.query(KPI).filter(
-        KPI.is_active == True,
+        KPI.is_active,
         KPI.data_source_type == "AUTO"
     )
 
     if strategy_id:
         query = query.join(CSF).filter(
             CSF.strategy_id == strategy_id,
-            CSF.is_active == True
+            CSF.is_active
         )
 
     if frequency:

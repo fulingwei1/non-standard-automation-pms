@@ -51,7 +51,7 @@ class HourlyRateService:
         user_config = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "USER",
             HourlyRateConfig.user_id == user_id,
-            HourlyRateConfig.is_active == True,
+            HourlyRateConfig.is_active,
             (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
             (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
         ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
@@ -65,7 +65,7 @@ class HourlyRateService:
             role_config = db.query(HourlyRateConfig).filter(
                 HourlyRateConfig.config_type == "ROLE",
                 HourlyRateConfig.role_id == user_role.role_id,
-                HourlyRateConfig.is_active == True,
+                HourlyRateConfig.is_active,
                 (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
                 (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
             ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
@@ -81,13 +81,13 @@ class HourlyRateService:
         if user.department:
             dept = db.query(Department).filter(
                 Department.dept_name == user.department,
-                Department.is_active == True
+                Department.is_active
             ).first()
             if dept:
                 dept_config = db.query(HourlyRateConfig).filter(
                     HourlyRateConfig.config_type == "DEPT",
                     HourlyRateConfig.dept_id == dept.id,
-                    HourlyRateConfig.is_active == True,
+                    HourlyRateConfig.is_active,
                     (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
                     (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
                 ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
@@ -98,7 +98,7 @@ class HourlyRateService:
         # 4. 查找默认配置
         default_config = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "DEFAULT",
-            HourlyRateConfig.is_active == True,
+            HourlyRateConfig.is_active,
             (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
             (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
         ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()

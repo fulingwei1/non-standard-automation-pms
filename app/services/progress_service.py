@@ -187,7 +187,7 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
     # 2. 计算项目整体进度（使用聚合函数优化）
     base_filter = and_(
         TaskUnified.project_id == project_id,
-        TaskUnified.is_active == True,
+        TaskUnified.is_active,
         TaskUnified.status.notin_(['CANCELLED'])
     )
 
@@ -225,7 +225,7 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
         stage_filter = and_(
             TaskUnified.project_id == project_id,
             TaskUnified.stage == stage_code,
-            TaskUnified.is_active == True,
+            TaskUnified.is_active,
             TaskUnified.status.notin_(['CANCELLED'])
         )
 
@@ -281,7 +281,7 @@ def _check_and_update_health(db: Session, project_id: int):
     # 使用聚合查询统计任务情况
     active_filter = and_(
         TaskUnified.project_id == project_id,
-        TaskUnified.is_active == True,
+        TaskUnified.is_active,
         TaskUnified.status.notin_(['CANCELLED', 'COMPLETED'])
     )
 
@@ -294,7 +294,7 @@ def _check_and_update_health(db: Session, project_id: int):
     # 统计延期和逾期任务
     delayed_count = (
         db.query(func.count(TaskUnified.id))
-        .filter(and_(active_filter, TaskUnified.is_delayed == True))
+        .filter(and_(active_filter, TaskUnified.is_delayed))
         .scalar()
     ) or 0
 
@@ -409,7 +409,7 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
     # 统计延期任务
     delayed_tasks = (
         db.query(func.count(TaskUnified.id))
-        .filter(and_(base_filter, TaskUnified.is_delayed == True))
+        .filter(and_(base_filter, TaskUnified.is_delayed))
         .scalar()
     ) or 0
 
@@ -467,7 +467,7 @@ class ProgressAggregationService:
         # 使用聚合函数优化查询
         base_filter = and_(
             TaskUnified.project_id == project_id,
-            TaskUnified.is_active == True,
+            TaskUnified.is_active,
             TaskUnified.status.notin_(['CANCELLED'])
         )
 
@@ -534,7 +534,7 @@ class ProgressAggregationService:
         # 统计延期和逾期任务
         delayed_tasks = (
             db.query(func.count(TaskUnified.id))
-            .filter(and_(base_filter, TaskUnified.is_delayed == True))
+            .filter(and_(base_filter, TaskUnified.is_delayed))
             .scalar()
         ) or 0
 

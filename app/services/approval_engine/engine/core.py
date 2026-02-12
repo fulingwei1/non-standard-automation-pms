@@ -34,7 +34,7 @@ class ApprovalEngineCore:
 
     def _generate_instance_no(self, template_code: str) -> str:
         """生成审批单号（使用 SELECT FOR UPDATE 防止竞态条件）"""
-        from sqlalchemy import func, text
+        from sqlalchemy import func
 
         now = datetime.now()
         prefix = f"AP{now.strftime('%y%m%d')}"
@@ -68,7 +68,7 @@ class ApprovalEngineCore:
             self.db.query(ApprovalNodeDefinition)
             .filter(
                 ApprovalNodeDefinition.flow_id == flow_id,
-                ApprovalNodeDefinition.is_active == True,
+                ApprovalNodeDefinition.is_active,
                 ApprovalNodeDefinition.node_type == "APPROVAL",
             )
             .order_by(ApprovalNodeDefinition.node_order)
@@ -85,7 +85,7 @@ class ApprovalEngineCore:
             .filter(
                 ApprovalNodeDefinition.flow_id == current_node.flow_id,
                 ApprovalNodeDefinition.node_order < current_node.node_order,
-                ApprovalNodeDefinition.is_active == True,
+                ApprovalNodeDefinition.is_active,
                 ApprovalNodeDefinition.node_type == "APPROVAL",
             )
             .order_by(ApprovalNodeDefinition.node_order.desc())

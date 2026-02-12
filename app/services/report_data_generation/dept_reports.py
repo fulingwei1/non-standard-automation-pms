@@ -51,7 +51,7 @@ class DeptReportMixin:
         # 获取部门人员
         dept_members = db.query(User).filter(
             User.department == department.dept_name,
-            User.is_active == True
+            User.is_active
         ).all()
 
         # 部门工时统计
@@ -145,7 +145,7 @@ class DeptReportMixin:
         # 获取部门人员（User 模型只有 department 字符串字段）
         dept_members = db.query(User).filter(
             User.department == department.dept_name,
-            User.is_active == True
+            User.is_active
         ).all()
         dept_user_ids = [u.id for u in dept_members]
 
@@ -158,7 +158,7 @@ class DeptReportMixin:
 
         projects = db.query(Project).filter(
             Project.id.in_(project_ids),
-            Project.is_active == True
+            Project.is_active
         ).all()
 
         # 项目状态统计

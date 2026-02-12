@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.project import Project
-from app.models.project.resource_plan import ProjectStageResourcePlan
 from app.models.user import User
 from app.schemas.resource_plan import (
     ProjectResourcePlanSummary,

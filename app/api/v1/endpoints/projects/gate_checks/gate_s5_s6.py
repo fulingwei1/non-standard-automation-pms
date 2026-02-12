@@ -12,11 +12,11 @@ gate_s5_s6 阶段门检查
 """
 
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.project import Machine, Project
 
 
 

@@ -9,7 +9,6 @@ import re
 from datetime import date
 from typing import Any, Dict, List
 
-from .core import ALIBABA_MODEL
 
 
 class AIPromptMixin:

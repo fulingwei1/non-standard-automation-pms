@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .common import BaseSchema, PaginatedResponse, TimestampSchema
+from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 任务概览 ====================
 

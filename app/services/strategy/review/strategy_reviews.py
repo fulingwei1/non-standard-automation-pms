@@ -9,24 +9,15 @@
 战略管理服务 - 战略审视与例行管理
 """
 
-from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import date
+from typing import List, Optional
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
-from app.models.strategy import StrategyCalendarEvent, StrategyReview
+from app.models.strategy import StrategyReview
 from app.schemas.strategy import (
-    CalendarMonthResponse,
-    CalendarYearResponse,
-    DimensionHealthDetail,
-    HealthScoreResponse,
-    RoutineManagementCycleItem,
-    RoutineManagementCycleResponse,
-    StrategyCalendarEventCreate,
-    StrategyCalendarEventResponse,
-    StrategyCalendarEventUpdate,
     StrategyReviewCreate,
     StrategyReviewResponse,
     StrategyReviewUpdate,
@@ -103,7 +94,7 @@ def get_strategy_review(db: Session, review_id: int) -> Optional[StrategyReview]
     """
     return db.query(StrategyReview).filter(
         StrategyReview.id == review_id,
-        StrategyReview.is_active == True
+        StrategyReview.is_active
     ).first()
 
 
@@ -129,7 +120,7 @@ def list_strategy_reviews(
     """
     query = db.query(StrategyReview).filter(
         StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active == True
+        StrategyReview.is_active
     )
 
     if review_type:
@@ -203,7 +194,7 @@ def get_latest_review(db: Session, strategy_id: int) -> Optional[StrategyReviewR
     """
     review = db.query(StrategyReview).filter(
         StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active == True
+        StrategyReview.is_active
     ).order_by(desc(StrategyReview.review_date)).first()
 
     if not review:

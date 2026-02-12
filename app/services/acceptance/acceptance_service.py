@@ -5,24 +5,19 @@
 """
 import logging
 
-import json
 from datetime import date, datetime
-from typing import List, Dict, Any, Optional
-from sqlalchemy import select, and_, func
+from typing import Dict, Any, Optional
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceIssue,
-    AcceptanceOrderItem,
 )
 from app.models.project import (
     Project,
-    ProjectMilestone,
-    ProjectStatus,
 )
 from app.models.sales.invoices import Invoice
-from app.models.enums import InvoiceStatusEnum
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +62,7 @@ class AcceptanceService:
         
         order = order_data[0]
         project = order_data[2]
-        customer = order_data[3]
+        order_data[3]
         
         # 2. 检查验收单状态
         if order.status != "PASSED":

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.core.schemas import list_response, paginated_response, success_response
+from app.core.schemas import paginated_response, success_response
 from app.models.notification import Notification
 from app.models.user import User
 from app.common.query_filters import apply_pagination
@@ -99,7 +99,7 @@ def get_unread_count(
     count = (
         db.query(Notification)
         .filter(Notification.user_id == current_user.id)
-        .filter(Notification.is_read == False)
+        .filter(not Notification.is_read)
         .count()
     )
 
@@ -195,7 +195,7 @@ def mark_all_read(
     count = (
         db.query(Notification)
         .filter(Notification.user_id == current_user.id)
-        .filter(Notification.is_read == False)
+        .filter(not Notification.is_read)
         .update({
             Notification.is_read: True,
             Notification.read_at: datetime.now()

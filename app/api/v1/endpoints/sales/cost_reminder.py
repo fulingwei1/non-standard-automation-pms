@@ -35,7 +35,7 @@ def get_cost_update_reminder(
     获取物料成本更新提醒配置和状态
     """
     reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled == True
+        MaterialCostUpdateReminder.is_enabled
     ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
 
     if not reminder:
@@ -84,7 +84,7 @@ def update_cost_update_reminder(
     更新物料成本更新提醒配置
     """
     reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled == True
+        MaterialCostUpdateReminder.is_enabled
     ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
 
     if not reminder:
@@ -141,7 +141,7 @@ def acknowledge_cost_update_reminder(
     确认物料成本更新提醒（标记为已处理，更新下次提醒日期）
     """
     reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled == True
+        MaterialCostUpdateReminder.is_enabled
     ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
 
     if not reminder:

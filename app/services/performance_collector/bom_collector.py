@@ -6,7 +6,6 @@
 from datetime import date
 from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem
 from app.models.project import ProjectMember

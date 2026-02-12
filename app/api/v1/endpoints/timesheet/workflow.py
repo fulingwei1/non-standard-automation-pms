@@ -13,7 +13,7 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -125,7 +125,7 @@ def submit_timesheets_for_approval(
 
         try:
             # 使用统一审批引擎提交
-            instance = engine.submit(
+            engine.submit(
                 template_code="TIMESHEET_APPROVAL",
                 entity_type="TIMESHEET",
                 entity_id=timesheet_id,

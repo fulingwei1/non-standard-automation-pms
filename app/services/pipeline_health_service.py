@@ -6,16 +6,13 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import date, datetime
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectMilestone
+from app.models.project import Project
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
-from app.models.user import User
 
 logger = logging.getLogger(__name__)
 

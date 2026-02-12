@@ -3,7 +3,7 @@
 绩效排名端点
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ async def get_ranking(
     # 获取周期
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
@@ -95,7 +95,7 @@ async def get_ranking_by_department(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id
@@ -146,7 +146,7 @@ async def get_ranking_by_job_type(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id
@@ -194,7 +194,7 @@ async def get_top_engineers(
 
     if not period_id:
         period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active == True
+            PerformancePeriod.is_active
         ).first()
         if period:
             period_id = period.id

@@ -6,7 +6,7 @@
 """
 
 from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -189,7 +189,7 @@ class DeptReportGenerator:
             db.query(User)
             .filter(
                 User.department_id == department.id,
-                User.is_active == True,
+                User.is_active,
             )
             .all()
         )
@@ -202,7 +202,7 @@ class DeptReportGenerator:
                     db.query(User)
                     .filter(
                         User.department == dept_name,
-                        User.is_active == True,
+                        User.is_active,
                     )
                     .all()
                 )
@@ -412,7 +412,7 @@ class DeptReportGenerator:
             db.query(Project)
             .filter(
                 Project.id.in_(project_ids),
-                Project.is_active == True,
+                Project.is_active,
             )
             .all()
         )

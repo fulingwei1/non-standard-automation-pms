@@ -20,7 +20,7 @@ def check_contract_expiry_reminder():
     logger.info(f"[{datetime.now()}] 开始执行合同到期提醒检查...")
 
     try:
-        from app.models.organization import ContractReminder, Employee, EmployeeContract
+        from app.models.organization import ContractReminder, EmployeeContract
 
         with get_db_session() as db:
             today = date.today()
@@ -139,7 +139,7 @@ def check_employee_confirmation_reminder():
                     "HUMAN_RESOURCES",
                     "HRD",
                 }
-                roles_query = db.query(Role).filter(Role.is_active == True)
+                roles_query = db.query(Role).filter(Role.is_active)
                 roles = roles_query.filter(Role.role_code.in_(role_codes)).all()
                 if not roles:
                     role_names = {"人事", "人事经理", "人力资源", "人力资源经理", "HR", "HR经理"}
@@ -161,13 +161,13 @@ def check_employee_confirmation_reminder():
                     if user_ids:
                         users = db.query(User).filter(
                             User.id.in_(list(user_ids)),
-                            User.is_active == True,
+                            User.is_active,
                         ).all()
                         return [user.id for user in users]
 
                 admins = db.query(User).filter(
-                    User.is_superuser == True,
-                    User.is_active == True,
+                    User.is_superuser,
+                    User.is_active,
                 ).all()
                 return [user.id for user in admins]
 

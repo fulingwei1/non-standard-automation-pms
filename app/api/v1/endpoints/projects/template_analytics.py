@@ -31,7 +31,7 @@ def get_recommended_templates(
     """
     获取推荐模板
     """
-    query = db.query(ProjectTemplate).filter(ProjectTemplate.is_active == True)
+    query = db.query(ProjectTemplate).filter(ProjectTemplate.is_active)
 
     if project_type:
         query = query.filter(ProjectTemplate.project_type == project_type)

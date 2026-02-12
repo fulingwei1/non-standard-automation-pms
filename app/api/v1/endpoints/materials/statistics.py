@@ -144,7 +144,7 @@ def get_warehouse_statistics(
     # 仓储利用率计算
     # 基于物料的体积和数量估算占用的仓储空间
     total_volume = 0
-    materials = db.query(Material).filter(Material.is_active == True).all()
+    materials = db.query(Material).filter(Material.is_active).all()
     for material in materials:
         stock = float(material.current_stock or 0)
         # 假设每个物料单位占用基础体积，可以根据物料规格调整

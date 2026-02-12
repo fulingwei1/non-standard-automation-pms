@@ -55,7 +55,7 @@ class ApprovalSubmitMixin:
             self.db.query(ApprovalTemplate)
             .filter(
                 ApprovalTemplate.template_code == template_code,
-                ApprovalTemplate.is_active == True,
+                ApprovalTemplate.is_active,
             )
             .first()
         )
@@ -180,7 +180,7 @@ class ApprovalSubmitMixin:
             self.db.query(ApprovalTemplate)
             .filter(
                 ApprovalTemplate.template_code == template_code,
-                ApprovalTemplate.is_active == True,
+                ApprovalTemplate.is_active,
             )
             .first()
         )

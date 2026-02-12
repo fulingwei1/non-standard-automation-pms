@@ -143,7 +143,7 @@ async def _generate_project_code(db: AsyncSession) -> str:
     result = await db.execute(
         select(func.count(Project.id)).where(pj_conditions[0])
     )
-    count = result.scalar() + 1
+    result.scalar() + 1
 
     # 格式：PJyymmddxxx
     from datetime import datetime
@@ -153,7 +153,6 @@ async def _generate_project_code(db: AsyncSession) -> str:
     # 获取日期部分
     year = now.year
     month = now.month
-    day = now.day
 
     # 获取序号
     month_conditions = build_like_conditions(
@@ -162,13 +161,13 @@ async def _generate_project_code(db: AsyncSession) -> str:
         "code",
         use_ilike=False,
     )
-    count = await db.execute(
+    await db.execute(
         select(func.count(Project.id)).where(month_conditions[0])
     )
     last_seq = result.scalar()
 
     # 格式化序号为3位
-    seq = last_seq + 1
+    last_seq + 1
 
     # 获取对应的数字部分
     # 获取最后创建项目的序号

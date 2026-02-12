@@ -5,23 +5,19 @@
 包含付款计划的创建、更新、删除、列表等操作
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, List, Optional
+from datetime import date
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.project import Project, ProjectPaymentPlan
+from app.models.project import ProjectPaymentPlan
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import (
     ProjectPaymentPlanCreate,
-    ProjectPaymentPlanResponse,
     ProjectPaymentPlanUpdate,
 )
 
@@ -96,7 +92,7 @@ def create_project_payment_plan(
     创建项目付款计划
     """
     from app.utils.permission_helpers import check_project_access_or_raise
-    project = check_project_access_or_raise(db, current_user, project_id)
+    check_project_access_or_raise(db, current_user, project_id)
 
     plan = ProjectPaymentPlan(
         project_id=project_id,

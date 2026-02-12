@@ -8,7 +8,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.bonus import BonusCalculation, BonusDistribution, BonusRule
@@ -46,7 +45,7 @@ class ProjectBonusService:
         )
 
         if is_active:
-            query = query.filter(BonusRule.is_active == True)
+            query = query.filter(BonusRule.is_active)
 
         # 检查规则是否适用于此项目
         applicable_rules = []

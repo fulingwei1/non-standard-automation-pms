@@ -3,9 +3,6 @@
 线索和商机模型
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,

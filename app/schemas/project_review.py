@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .common import BaseSchema, TimestampSchema
+from .common import TimestampSchema
 
 # ==================== 项目复盘报告 ====================
 

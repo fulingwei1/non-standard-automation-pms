@@ -158,7 +158,7 @@ def validate_completion_rules(
     # AR004: 检查是否存在未闭环的阻塞问题
     blocking_issues = db.query(AcceptanceIssue).filter(
         AcceptanceIssue.order_id == order_id,
-        AcceptanceIssue.is_blocking == True,
+        AcceptanceIssue.is_blocking,
         AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
     ).all()
 

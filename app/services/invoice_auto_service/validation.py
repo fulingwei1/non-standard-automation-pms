@@ -3,7 +3,6 @@
 发票自动服务 - 验证功能
 """
 from app.models.acceptance import AcceptanceOrder, AcceptanceIssue
-from app.models.business_support import InvoiceRequest
 from app.models.project import ProjectPaymentPlan
 
 
@@ -46,7 +45,7 @@ def check_acceptance_issues_resolved(service: "InvoiceAutoService", order: Accep
     # 查找所有阻塞问题
     blocking_issues = service.db.query(AcceptanceIssue).filter(
         AcceptanceIssue.order_id == order.id,
-        AcceptanceIssue.is_blocking == True,
+        AcceptanceIssue.is_blocking,
         AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
     ).all()
 

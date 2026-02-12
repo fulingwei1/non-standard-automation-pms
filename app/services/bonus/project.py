@@ -117,7 +117,7 @@ class ProjectBonusCalculator(BonusCalculatorBase):
         # 获取项目成员
         members = self.db.query(ProjectMember).filter(
             ProjectMember.project_id == project.id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         ).all()
 
         if not members:

@@ -7,7 +7,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security

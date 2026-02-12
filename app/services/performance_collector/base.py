@@ -3,8 +3,6 @@
 工程师绩效数据自动采集服务 - 基础类和常量
 """
 
-import re
-from typing import Dict, List
 
 from sqlalchemy.orm import Session
 

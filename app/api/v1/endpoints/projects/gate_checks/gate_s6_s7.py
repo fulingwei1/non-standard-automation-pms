@@ -11,12 +11,11 @@ gate_s6_s7 阶段门检查
 包含所有阶段门校验逻辑（S1→S2 到 S8→S9）
 """
 
-from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.project import Machine, Project
 
 
 
@@ -54,7 +53,7 @@ def check_gate_s6_to_s7(db: Session, project: Project) -> Tuple[bool, List[str]]
     from app.models.issue import Issue
     blocking_issues = db.query(Issue).filter(
         Issue.project_id == project.id,
-        Issue.is_blocking == True,
+        Issue.is_blocking,
         Issue.status.notin_(["RESOLVED", "CLOSED"])
     ).count()
 

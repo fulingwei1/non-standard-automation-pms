@@ -3,8 +3,6 @@
 通知中心模块 ORM 模型
 包含：系统通知、通知设置
 """
-from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import (
     JSON,

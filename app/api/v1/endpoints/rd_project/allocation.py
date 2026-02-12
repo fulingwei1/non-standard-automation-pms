@@ -12,8 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.project import Project
-from app.models.rd_project import RdCost, RdCostAllocationRule, RdProject
+from app.models.rd_project import RdCostAllocationRule, RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel

@@ -11,16 +11,11 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from typing import Dict, Optional
+from typing import Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.timesheet import Timesheet
-from app.models.user import User
 from app.services.notification_dispatcher import NotificationDispatcher
-from app.services.timesheet_quality_service import TimesheetQualityService
 
 logger = logging.getLogger(__name__)
 

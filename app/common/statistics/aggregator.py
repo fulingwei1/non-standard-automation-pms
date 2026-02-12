@@ -5,7 +5,6 @@
 """
 
 from typing import Dict, List, Any, Optional
-from datetime import date, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.statistics.base import BaseStatisticsService

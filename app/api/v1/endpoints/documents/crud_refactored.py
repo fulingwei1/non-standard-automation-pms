@@ -3,7 +3,7 @@
 文档CRUD操作（重构版）
 使用统一响应格式
 """
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
@@ -17,7 +17,6 @@ from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
 from app.schemas.project import (
     ProjectDocumentCreate,
-    ProjectDocumentResponse,
 )
 from app.services.data_scope_service import DataScopeConfig, DataScopeService
 from app.common.query_filters import apply_pagination

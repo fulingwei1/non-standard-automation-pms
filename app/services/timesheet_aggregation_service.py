@@ -4,18 +4,14 @@
 负责从工时记录自动生成多维度汇总和多格式报表
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, extract, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.organization import Department
 from app.models.project import Project
 from app.models.rd_project import RdProject
-from app.models.timesheet import Timesheet, TimesheetSummary
-from app.models.user import User
+from app.models.timesheet import Timesheet
 from app.services.hourly_rate_service import HourlyRateService
 from app.common.date_range import get_month_range_by_ym
 

@@ -16,7 +16,6 @@ from app.models.user import User
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
-    NotificationChannel,
     NotificationPriority,
 )
 from .utils import find_users_by_department
@@ -83,7 +82,7 @@ def notify_task_assigned(
             db.query(ProjectMember)
             .filter(
                 ProjectMember.project_id == ecn.project_id,
-                ProjectMember.is_active == True,
+                ProjectMember.is_active,
                 ~ProjectMember.user_id.in_(assignee_ids),
             )
             .all()
@@ -164,7 +163,7 @@ def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
             db.query(ProjectMember)
             .filter(
                 ProjectMember.project_id == ecn.project_id,
-                ProjectMember.is_active == True,
+                ProjectMember.is_active,
                 ProjectMember.user_id != ecn.applicant_id,
             )
             .all()

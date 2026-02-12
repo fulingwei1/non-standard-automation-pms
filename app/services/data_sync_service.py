@@ -6,10 +6,8 @@
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project, ProjectPaymentPlan

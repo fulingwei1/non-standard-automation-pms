@@ -9,12 +9,12 @@
 PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -22,46 +22,17 @@ from app.core import security
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.pmo import (
-    PmoMeeting,
-    PmoProjectClosure,
     PmoProjectInitiation,
-    PmoProjectPhase,
-    PmoProjectRisk,
-    PmoResourceAllocation,
 )
 from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
-    ClosureCreate,
-    ClosureLessonsRequest,
-    ClosureResponse,
-    ClosureReviewRequest,
-    DashboardResponse,
-    DashboardSummary,
     InitiationApproveRequest,
     InitiationCreate,
     InitiationRejectRequest,
     InitiationResponse,
     InitiationUpdate,
-    MeetingCreate,
-    MeetingMinutesRequest,
-    MeetingResponse,
-    MeetingUpdate,
-    PhaseAdvanceRequest,
-    PhaseEntryCheckRequest,
-    PhaseExitCheckRequest,
-    PhaseResponse,
-    PhaseReviewRequest,
-    ResourceOverviewResponse,
-    RiskAssessRequest,
-    RiskCloseRequest,
-    RiskCreate,
-    RiskResponse,
-    RiskResponseRequest,
-    RiskStatusUpdateRequest,
-    RiskWallResponse,
-    WeeklyReportResponse,
 )
 
 # This module is included into `app.api.v1.endpoints.pmo.router` without an

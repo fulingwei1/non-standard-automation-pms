@@ -311,7 +311,7 @@ def get_margin_analysis(
         ResponseModel: 分析结果
     """
     versions = db.query(QuoteVersion).filter(
-        QuoteVersion.gross_margin != None,
+        QuoteVersion.gross_margin is not None,
         QuoteVersion.gross_margin >= min_margin,
         QuoteVersion.gross_margin <= max_margin
     ).all()

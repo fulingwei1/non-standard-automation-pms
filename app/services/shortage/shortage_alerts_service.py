@@ -4,45 +4,20 @@
 """
 
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, List, Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc, func
+from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.core import security
-from app.core.config import settings
-from app.models.material import BomItem, Material, MaterialShortage
-from app.models.production import WorkOrder
-from app.models.project import Machine, Project
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.material import Material, MaterialShortage
 from app.models.shortage import (
     ArrivalFollowUp,
-    MaterialArrival,
-    MaterialSubstitution,
-    MaterialTransfer,
-    ShortageReport,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.shortage import (
-    ArrivalFollowUpCreate,
-    MaterialArrivalListResponse,
-    MaterialArrivalResponse,
-    MaterialSubstitutionCreate,
-    MaterialSubstitutionListResponse,
-    MaterialSubstitutionResponse,
-    MaterialTransferCreate,
-    MaterialTransferListResponse,
-    MaterialTransferResponse,
-    ShortageReportCreate,
-    ShortageReportListResponse,
-    ShortageReportResponse,
-)
+from app.schemas.common import PaginatedResponse
 
 
 class ShortageAlertsService:

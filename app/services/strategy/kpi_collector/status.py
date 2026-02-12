@@ -2,7 +2,6 @@
 """
 KPI数据采集器 - 状态查询
 """
-from datetime import datetime
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
@@ -23,8 +22,8 @@ def get_collection_status(db: Session, strategy_id: int) -> Dict[str, Any]:
     """
     kpis = db.query(KPI).join(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True,
-        KPI.is_active == True
+        CSF.is_active,
+        KPI.is_active
     ).all()
 
     auto_kpis = [k for k in kpis if k.data_source_type == "AUTO"]

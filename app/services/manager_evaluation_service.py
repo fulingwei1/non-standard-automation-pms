@@ -8,7 +8,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.organization import Department
@@ -45,7 +45,7 @@ class ManagerEvaluationService:
         # 检查是否是部门经理
         dept = self.db.query(Department).filter(
             Department.manager_id == manager.employee_id,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if not dept:
@@ -282,7 +282,7 @@ class ManagerEvaluationService:
 
         dept = self.db.query(Department).filter(
             Department.manager_id == manager.employee_id,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if not dept:
@@ -292,7 +292,7 @@ class ManagerEvaluationService:
         from app.models.organization import Employee
         employees = self.db.query(Employee).filter(
             Employee.department_id == dept.id,
-            Employee.is_active == True
+            Employee.is_active
         ).all()
 
         employee_ids = [e.id for e in employees]

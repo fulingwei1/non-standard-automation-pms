@@ -5,19 +5,17 @@
 包含模板版本比较、序列化等辅助功能
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List
 
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import aliased
 
 from app.models.sales import (
     ContractTemplate,
-    ContractTemplateVersion,
     CpqRuleSet,
     QuoteTemplate,
-    QuoteTemplateVersion,
 )
 from app.models.user import User
 from app.schemas.sales import (

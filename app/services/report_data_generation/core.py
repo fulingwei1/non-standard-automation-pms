@@ -55,7 +55,7 @@ class ReportDataGenerationCore:
         from app.models.user import UserRole, Role
         user_roles = db.query(UserRole).join(Role).filter(
             UserRole.user_id == user.id,
-            Role.is_active == True
+            Role.is_active
         ).all()
         for user_role in user_roles:
             if user_role.role and user_role.role.is_active:

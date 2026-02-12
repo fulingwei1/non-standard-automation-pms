@@ -16,7 +16,6 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.models.sales import Opportunity, Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel

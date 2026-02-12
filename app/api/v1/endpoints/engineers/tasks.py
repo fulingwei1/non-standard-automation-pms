@@ -52,7 +52,7 @@ def create_task(
         and_(
             ProjectMember.project_id == task_data.project_id,
             ProjectMember.user_id == current_user.id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         )
     ).first()
 

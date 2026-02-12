@@ -36,7 +36,7 @@ class PmoDashboardAdapter(DashboardAdapter):
         # 应用数据权限过滤
         from app.services.data_scope_service import DataScopeService
 
-        query = self.db.query(Project).filter(Project.is_active == True)
+        query = self.db.query(Project).filter(Project.is_active)
         query = DataScopeService.apply_data_scope(
             query,
             self.db,
@@ -105,7 +105,7 @@ class PmoDashboardAdapter(DashboardAdapter):
         from app.services.data_scope_service import DataScopeService
 
         query = self.db.query(Project).filter(
-            Project.is_active == True, Project.health.in_(["H2", "H3"])
+            Project.is_active, Project.health.in_(["H2", "H3"])
         )
         query = DataScopeService.apply_data_scope(
             query,
@@ -147,7 +147,7 @@ class PmoDashboardAdapter(DashboardAdapter):
         # 按阶段统计
         from app.services.data_scope_service import DataScopeService
 
-        query = self.db.query(Project).filter(Project.is_active == True)
+        query = self.db.query(Project).filter(Project.is_active)
         query = DataScopeService.apply_data_scope(
             query,
             self.db,

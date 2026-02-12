@@ -54,7 +54,7 @@ def get_material_suppliers(
     material_suppliers = (
         db.query(MaterialSupplier)
         .filter(MaterialSupplier.material_id == material_id)
-        .filter(MaterialSupplier.is_active == True)
+        .filter(MaterialSupplier.is_active)
         .all()
     )
 

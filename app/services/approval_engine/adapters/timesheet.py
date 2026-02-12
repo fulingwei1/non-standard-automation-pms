@@ -7,11 +7,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.timesheet import Timesheet
 
 from .base import ApprovalAdapter

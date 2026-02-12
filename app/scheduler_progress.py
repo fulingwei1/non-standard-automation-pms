@@ -5,7 +5,6 @@
 """
 
 import logging
-from datetime import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -35,7 +34,7 @@ def run_progress_auto_processing_job():
             # 查询所有进行中的项目
             in_progress_projects = db.query(Project).filter(
                 Project.status.in_(["ST05", "ST06", "ST07", "ST08"]),  # 装配调试、出厂验收、包装发运、现场安装
-                Project.is_active == True
+                Project.is_active
             ).all()
 
             logger.info(f"找到 {len(in_progress_projects)} 个进行中的项目")

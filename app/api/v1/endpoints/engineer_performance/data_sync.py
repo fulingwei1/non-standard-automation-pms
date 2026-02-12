@@ -3,10 +3,10 @@
 绩效数据自动同步 API 端点
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -197,7 +197,7 @@ async def get_sync_status(
 ):
     """获取数据同步状态（最近7天）"""
     end_date = date.today()
-    start_date = end_date - timedelta(days=7)
+    end_date - timedelta(days=7)
 
     # 统计各数据源的同步情况
     status = {

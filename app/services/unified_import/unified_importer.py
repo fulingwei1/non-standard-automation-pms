@@ -5,7 +5,6 @@
 
 from typing import Any, Dict
 
-import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 

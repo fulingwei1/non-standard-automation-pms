@@ -72,7 +72,7 @@ class WeChatAlertService:
             db.query(ShortageAlertRule)
             .filter(
                 ShortageAlertRule.alert_level == alert_level,
-                ShortageAlertRule.is_active == True,
+                ShortageAlertRule.is_active,
             )
             .first()
         )
@@ -137,7 +137,6 @@ class WeChatAlertService:
             delay_days = (shortage.expected_arrival - project.planned_start_date).days
 
         # 获取当前可做到的阶段
-        stage_rates = readiness.stage_kit_rates or {}
         current_stage = readiness.current_workable_stage or "未开始"
 
         # 构建卡片消息
@@ -201,7 +200,7 @@ class WeChatAlertService:
                 db.query(SD)
                 .filter(
                     SD.readiness_id == readiness.id,
-                    SD.is_blocking == True,
+                    SD.is_blocking,
                     SD.shortage_qty > 0,
                 )
                 .limit(5)

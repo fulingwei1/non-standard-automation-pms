@@ -3,7 +3,7 @@
 工作日志模块 Schema
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 

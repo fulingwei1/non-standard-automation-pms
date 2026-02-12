@@ -8,7 +8,6 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.models.project import ProjectDocument
 
 from .utils import create_requirement
 
@@ -191,7 +190,7 @@ def extract_from_word(
         if not requirements:
             # 尝试从段落中识别物料规格
             for para in doc.paragraphs:
-                text = para.text.strip()
+                para.text.strip()
                 # 简单的模式匹配：物料名称 + 规格描述
                 # 这里可以根据实际文档格式扩展
                 pass

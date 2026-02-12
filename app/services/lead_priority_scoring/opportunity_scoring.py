@@ -5,7 +5,7 @@
 """
 
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from app.models.project import Customer
 from app.models.sales import Opportunity

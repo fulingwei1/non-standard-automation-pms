@@ -8,7 +8,6 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List
 
-from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range, month_start
 from app.models.alert import AlertRecord

@@ -5,7 +5,6 @@
 """
 
 from sqlalchemy import JSON, Boolean, Column, Index, Integer, String
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

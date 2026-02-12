@@ -5,11 +5,11 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, List, Optional
+from typing import List, Optional
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from ..common import BaseSchema, TimestampSchema
+from ..common import TimestampSchema
 
 
 class OpportunityRequirementCreate(BaseModel):

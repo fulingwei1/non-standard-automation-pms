@@ -2,7 +2,7 @@
 """
 绩效模型 - 周期和指标
 """
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Index, Integer, JSON, Numeric, String, Text
+from sqlalchemy import Boolean, Column, Date, Index, Integer, JSON, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin

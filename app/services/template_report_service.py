@@ -123,7 +123,7 @@ class TemplateReportService:
 
         users = db.query(User).filter(
             User.department_id == department_id,
-            User.is_active == True,
+            User.is_active,
         ).all() if department_id else []
 
         summary = {

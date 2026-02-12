@@ -3,7 +3,7 @@
 资源分配服务 - 冲突检测
 """
 from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session

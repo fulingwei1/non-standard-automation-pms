@@ -5,7 +5,7 @@
 """
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
@@ -183,7 +183,7 @@ def calculate_contributions(
     from app.models.project import ProjectMember
     members = db.query(ProjectMember).filter(
         ProjectMember.project_id == project_id,
-        ProjectMember.is_active == True
+        ProjectMember.is_active
     ).all()
 
     service = ProjectContributionService(db)

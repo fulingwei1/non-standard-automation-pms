@@ -286,7 +286,7 @@ def list_comments(
         db.query(ApprovalComment)
         .filter(
             ApprovalComment.instance_id == instance_id,
-            ApprovalComment.is_deleted == False,
+            not ApprovalComment.is_deleted,
         )
         .order_by(ApprovalComment.created_at)
         .all()

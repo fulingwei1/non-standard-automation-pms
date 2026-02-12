@@ -205,7 +205,7 @@ def submit_ecn_evaluation(
                     # 查找匹配的审批规则
                     approval_rules = db.query(EcnApprovalMatrix).filter(
                         EcnApprovalMatrix.ecn_type == ecn.ecn_type,
-                        EcnApprovalMatrix.is_active == True
+                        EcnApprovalMatrix.is_active
                     ).all()
 
                     for rule in approval_rules:

@@ -6,7 +6,6 @@ AI匹配 API端点
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps

@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover - 可选依赖
     TemplateSyntaxError = Exception
     UndefinedError = Exception
 
-from app.common.date_range import get_last_month_range, get_month_range, month_start, month_end
+from app.common.date_range import get_last_month_range, month_start, month_end
 from app.services.report_framework.expressions.filters import register_filters
 
 

@@ -2,13 +2,11 @@
 """
 绩效模型 - 新绩效系统（月度工作总结）
 """
-from datetime import datetime
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, JSON, Numeric, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, Integer, JSON, String, Text
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
-from .enums import EvaluationStatusEnum, EvaluatorTypeEnum, MonthlySummaryStatusEnum
 
 
 class MonthlyWorkSummary(Base, TimestampMixin):

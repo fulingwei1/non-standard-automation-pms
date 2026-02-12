@@ -6,18 +6,16 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.schemas import list_response, paginated_response, success_response
+from app.core.schemas import paginated_response, success_response
 from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTask
-from app.schemas.approval.instance import ApprovalInstanceListResponse, ApprovalInstanceResponse
+from app.schemas.approval.instance import ApprovalInstanceResponse
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.approval.task import (
-    ApprovalTaskListResponse,
     ApprovalTaskResponse,
-    CarbonCopyListResponse,
     CarbonCopyResponse,
 )
 
@@ -114,7 +112,7 @@ def get_my_initiated(
         .all()
     )
 
-    pages = pagination.pages_for_total(total)
+    pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
@@ -162,7 +160,7 @@ def get_my_cc(
             item.initiator_name = cc.instance.initiator_name
         items.append(item)
 
-    pages = pagination.pages_for_total(total)
+    pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
@@ -192,7 +190,7 @@ def mark_cc_as_read(
             message="标记成功"
         )
     else:
-        from fastapi import Depends, HTTPException
+        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="记录不存在或无权操作")
 
 
@@ -243,7 +241,7 @@ def get_my_processed(
             item.node_name = task.node.node_name
         items.append(item)
 
-    pages = pagination.pages_for_total(total)
+    pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
@@ -289,7 +287,7 @@ def get_pending_counts(
         db.query(ApprovalCarbonCopy)
         .filter(
             ApprovalCarbonCopy.cc_user_id == current_user.id,
-            ApprovalCarbonCopy.is_read == False,
+            not ApprovalCarbonCopy.is_read,
         )
         .count()
     )

@@ -3,9 +3,9 @@
 商务支持工作台统计服务
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from sqlalchemy import and_, or_, text
 from sqlalchemy.orm import Session
@@ -37,7 +37,7 @@ def calculate_pending_amount(db: Session, today: date) -> Decimal:
     Returns:
         Decimal: 待回款金额
     """
-    today_str = today.strftime("%Y-%m-%d")
+    today.strftime("%Y-%m-%d")
 
     pending_result = db.execute(text("""
         SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as pending
@@ -137,7 +137,7 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
     Returns:
         List[Dict]: 紧急任务列表
     """
-    today_start = datetime.combine(today, datetime.min.time())
+    datetime.combine(today, datetime.min.time())
 
     urgent_tasks_query = (
         db.query(TaskUnified)
@@ -145,7 +145,7 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
             TaskUnified.assignee_id == current_user_id,
             TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
             or_(
-                TaskUnified.is_urgent == True,
+                TaskUnified.is_urgent,
                 TaskUnified.priority == "URGENT"
             )
         )

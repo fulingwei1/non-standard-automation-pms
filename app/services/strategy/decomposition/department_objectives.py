@@ -12,9 +12,7 @@
 """
 
 import json
-from datetime import date
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -24,17 +22,11 @@ from app.models.strategy import (
     KPI,
     DepartmentObjective,
     PersonalKPI,
-    Strategy,
 )
 from app.schemas.strategy import (
-    DecompositionTreeNode,
-    DecompositionTreeResponse,
     DepartmentObjectiveCreate,
     DepartmentObjectiveDetailResponse,
     DepartmentObjectiveUpdate,
-    PersonalKPICreate,
-    PersonalKPIUpdate,
-    TraceToStrategyResponse,
 )
 
 
@@ -91,7 +83,7 @@ def get_department_objective(
     """
     return db.query(DepartmentObjective).filter(
         DepartmentObjective.id == objective_id,
-        DepartmentObjective.is_active == True
+        DepartmentObjective.is_active
     ).first()
 
 
@@ -117,7 +109,7 @@ def list_department_objectives(
     Returns:
         tuple: (部门目标列表, 总数)
     """
-    query = db.query(DepartmentObjective).filter(DepartmentObjective.is_active == True)
+    query = db.query(DepartmentObjective).filter(DepartmentObjective.is_active)
 
     if strategy_id:
         query = query.filter(DepartmentObjective.strategy_id == strategy_id)
@@ -238,7 +230,7 @@ def get_department_objective_detail(
     # 统计个人 KPI 数量
     personal_kpi_count = db.query(PersonalKPI).filter(
         PersonalKPI.dept_objective_id == objective_id,
-        PersonalKPI.is_active == True
+        PersonalKPI.is_active
     ).count()
 
     return DepartmentObjectiveDetailResponse(

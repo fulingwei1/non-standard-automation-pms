@@ -3,7 +3,6 @@
 PMO模型 - 资源分配和项目结项
 """
 from sqlalchemy import Column, Date, ForeignKey, Index, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
 

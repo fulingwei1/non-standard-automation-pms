@@ -6,7 +6,6 @@
 
 from typing import Any, Dict
 
-from app.models.project import Customer
 from app.models.sales import Lead
 
 

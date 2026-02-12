@@ -90,7 +90,7 @@ class ApprovalWorkflowService:
         workflows = self.db.query(ApprovalWorkflow).filter(
             ApprovalWorkflow.workflow_type == business_type,
         ).filter(
-            ApprovalWorkflow.is_active == True,
+            ApprovalWorkflow.is_active,
         ).all()
 
         if not workflows:

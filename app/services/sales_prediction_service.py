@@ -5,15 +5,14 @@
 """
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.project import Customer
-from app.models.sales import Contract, Lead, Opportunity, Quote
+from app.models.sales import Contract, Opportunity
 
 
 class SalesPredictionService:
@@ -68,7 +67,7 @@ class SalesPredictionService:
             customer_id: 客户ID筛选（可选）
             owner_id: 负责人ID筛选（可选）
         """
-        today = date.today()
+        date.today()
 
         # 获取历史合同数据（用于训练预测模型）
         query_contracts = self.db.query(Contract).filter(

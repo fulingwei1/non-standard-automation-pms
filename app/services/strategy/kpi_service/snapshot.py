@@ -9,7 +9,7 @@ from typing import Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.strategy import KPI, KPIHistory
+from app.models.strategy import KPIHistory
 
 from .crud import get_kpi
 

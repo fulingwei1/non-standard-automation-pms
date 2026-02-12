@@ -11,7 +11,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
@@ -58,7 +58,7 @@ def get_issue_statistics(
             Issue.status.in_(['OPEN', 'PROCESSING'])
         )
     ).count()
-    blocking_count = query.filter(Issue.is_blocking == True).count()
+    blocking_count = query.filter(Issue.is_blocking).count()
 
     # 按严重程度统计
     by_severity = {}

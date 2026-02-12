@@ -17,7 +17,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.auth import get_current_user
 from app.core.config import settings
-from app.models.base import get_db
 
 logger = logging.getLogger(__name__)
 

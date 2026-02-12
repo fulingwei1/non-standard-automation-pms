@@ -3,7 +3,7 @@
 员工导入服务
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -323,7 +323,7 @@ def import_employees_from_dataframe(
     existing_codes = {e.employee_code for e in existing_employees}
 
     # 获取标签字典
-    tags = db.query(HrTagDict).filter(HrTagDict.is_active == True).all()
+    tags = db.query(HrTagDict).filter(HrTagDict.is_active).all()
     tag_dict = {tag.tag_name: tag for tag in tags}
 
     imported_count = 0

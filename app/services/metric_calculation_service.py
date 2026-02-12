@@ -84,7 +84,7 @@ class MetricCalculationService:
             self.db.query(ReportMetricDefinition)
             .filter(
                 ReportMetricDefinition.metric_code == metric_code,
-                ReportMetricDefinition.is_active == True,
+                ReportMetricDefinition.is_active,
             )
             .first()
         )

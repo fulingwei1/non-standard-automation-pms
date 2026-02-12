@@ -16,7 +16,6 @@ from app.models.user import User
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
-    NotificationChannel,
     NotificationPriority,
 )
 from .utils import find_users_by_role
@@ -80,7 +79,7 @@ def notify_approval_assigned(
         # 查找项目成员（排除审批人员，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active == True,
+            ProjectMember.is_active,
             ~ProjectMember.user_id.in_(approver_ids)
         ).all()
 
@@ -162,7 +161,7 @@ def notify_approval_result(
         # 查找项目成员（排除申请人，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active == True,
+            ProjectMember.is_active,
             ProjectMember.user_id != ecn.applicant_id
         ).all()
 

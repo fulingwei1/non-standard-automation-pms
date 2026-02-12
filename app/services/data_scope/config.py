@@ -7,7 +7,6 @@
 from dataclasses import dataclass
 from typing import Callable, List, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Query, Session
 
 from app.models.user import User

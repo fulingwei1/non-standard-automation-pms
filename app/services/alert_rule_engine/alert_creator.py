@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertStatusEnum
 
-from .base import AlertRuleEngineBase
 from .condition_evaluator import ConditionEvaluator
 
 

@@ -4,7 +4,7 @@
 """
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,7 @@ def query_allocatable_costs(
     """
     query = db.query(RdCost).filter(
         RdCost.status == 'APPROVED',
-        RdCost.is_allocated == False
+        not RdCost.is_allocated
     )
 
     if cost_ids:

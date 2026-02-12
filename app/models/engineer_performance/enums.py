@@ -4,8 +4,6 @@
 """
 from enum import Enum
 
-from app.models.enums.acceptance import IssueStatusEnum
-from app.models.enums.stage import ReviewResultEnum
 
 
 class EngineerJobTypeEnum(str, Enum):

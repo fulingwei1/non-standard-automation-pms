@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.project import Project
 from app.models.vendor import Vendor

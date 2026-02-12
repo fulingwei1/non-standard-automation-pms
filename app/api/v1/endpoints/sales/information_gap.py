@@ -6,7 +6,7 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -42,7 +42,6 @@ def get_information_gap_impact(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """信息把握不足影响分析"""
-    from datetime import date
     service = InformationGapAnalysisService(db)
     result = service.analyze_impact(start_date=start_date, end_date=end_date)
     return ResponseModel(code=200, message="分析成功", data=result)

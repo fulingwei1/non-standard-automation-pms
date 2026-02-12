@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .common import PageParams, PaginatedResponse, ResponseModel
+from .common import PageParams, PaginatedResponse
 
 # ==================== 任职资格等级 ====================
 

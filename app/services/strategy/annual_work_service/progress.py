@@ -61,7 +61,7 @@ def calculate_progress_from_projects(db: Session, work_id: int) -> Optional[Deci
     """
     links = db.query(AnnualKeyWorkProjectLink).filter(
         AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active == True
+        AnnualKeyWorkProjectLink.is_active
     ).all()
 
     if not links:

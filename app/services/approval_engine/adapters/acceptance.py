@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem, AcceptanceTemplate
 from app.models.project import Project, Machine
 
@@ -110,7 +110,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             # 查询是否有关键项不合格
             critical_failed_items = self.db.query(AcceptanceOrderItem).filter(
                 AcceptanceOrderItem.order_id == entity_id,
-                AcceptanceOrderItem.is_key_item == True,
+                AcceptanceOrderItem.is_key_item,
                 AcceptanceOrderItem.check_result == "NG"
             ).count()
             has_critical_failure = critical_failed_items > 0

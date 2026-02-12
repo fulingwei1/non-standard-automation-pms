@@ -2,8 +2,6 @@
 """
 商务支持模块 - 发货订单模型
 """
-from datetime import date, datetime
-from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,

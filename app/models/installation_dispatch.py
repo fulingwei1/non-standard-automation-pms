@@ -4,13 +4,9 @@
 包含：安装调试派工单
 """
 
-from datetime import date, datetime
-from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
-from sqlalchemy import JSON, Boolean, Column, Date, DateTime
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import JSON, Column, Date, DateTime
 from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 

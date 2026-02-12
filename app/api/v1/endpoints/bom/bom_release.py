@@ -14,9 +14,8 @@ from app.api import deps
 from app.core import security
 from app.models.material import BomHeader
 from app.models.vendor import Vendor
-from app.models.project import Machine, Project
+from app.models.project import Project
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.material import BomResponse
 
 logger = logging.getLogger(__name__)

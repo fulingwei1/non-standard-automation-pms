@@ -6,7 +6,6 @@
 from datetime import date
 from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import DesignReview, MechanicalDebugIssue, TestBugRecord
 from .base import PerformanceDataCollectorBase

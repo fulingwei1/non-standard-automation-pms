@@ -6,7 +6,6 @@ import json
 import logging
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -71,7 +70,7 @@ async def execute_kit_analysis(
 
     # 获取装配阶段
     stages = db.query(AssemblyStage).filter(
-        AssemblyStage.is_active == True
+        AssemblyStage.is_active
     ).order_by(AssemblyStage.stage_order).all()
 
     stage_map = {s.stage_code: s for s in stages}
@@ -214,7 +213,7 @@ async def get_analysis_detail(
     bom = db.query(BomHeader).filter(BomHeader.id == readiness.bom_id).first()
 
     # 获取阶段信息构建stage_kit_rates
-    stages = db.query(AssemblyStage).filter(AssemblyStage.is_active == True).order_by(AssemblyStage.stage_order).all()
+    stages = db.query(AssemblyStage).filter(AssemblyStage.is_active).order_by(AssemblyStage.stage_order).all()
     stage_rates_data = readiness.stage_kit_rates or {}
 
     stage_kit_rates = []

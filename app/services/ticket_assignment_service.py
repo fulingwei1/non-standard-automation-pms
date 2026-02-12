@@ -6,11 +6,9 @@
 
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectMember
-from app.models.user import User
 
 
 def get_project_members_for_ticket(
@@ -47,7 +45,7 @@ def get_project_members_for_ticket(
     # 查询项目成员
     query = db.query(ProjectMember).filter(
         ProjectMember.project_id.in_(project_ids),
-        ProjectMember.is_active == True
+        ProjectMember.is_active
     )
 
     if include_roles:

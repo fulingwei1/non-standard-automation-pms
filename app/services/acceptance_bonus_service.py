@@ -28,7 +28,7 @@ def get_active_rules(
     """
     return db.query(BonusRule).filter(
         BonusRule.bonus_type == bonus_type,
-        BonusRule.is_active == True
+        BonusRule.is_active
     ).all()
 
 
@@ -208,7 +208,7 @@ def calculate_project_bonus(
                 # 获取项目成员信息（用于后续分配参考）
                 members = db.query(ProjectMember).filter(
                     ProjectMember.project_id == project.id,
-                    ProjectMember.is_active == True
+                    ProjectMember.is_active
                 ).all()
 
                 # 获取项目贡献记录（如果有）

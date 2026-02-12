@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, field_validator
 from .common import TimestampSchema
 
 # 从 role.py 导入角色相关 Schema（保持向后兼容）
-from .role import RoleCreate, RoleUpdate, RoleResponse
 
 
 def validate_password_strength(password: str) -> str:

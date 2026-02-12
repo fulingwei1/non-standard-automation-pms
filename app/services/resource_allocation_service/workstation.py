@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.models import WorkOrder, Workstation
 
-from .utils import calculate_workdays
 
 
 def check_workstation_availability(
@@ -88,7 +87,7 @@ def find_available_workstations(
 
     # 查询工位
     query = db.query(Workstation).filter(
-        Workstation.is_active == True,
+        Workstation.is_active,
         Workstation.status == 'IDLE'
     )
 

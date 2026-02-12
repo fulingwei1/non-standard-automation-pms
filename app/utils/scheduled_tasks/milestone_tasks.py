@@ -4,12 +4,12 @@
 包含：里程碑预警、里程碑状态监控与收款计划调整、里程碑风险预警
 """
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from app.common.query_filters import apply_keyword_filter
-from app.models.alert import AlertRecord, AlertRule
+from app.models.alert import AlertRecord
 from app.models.base import get_db_session
-from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+from app.models.enums import AlertLevelEnum, AlertStatusEnum
 from app.models.project import ProjectMilestone
 
 logger = logging.getLogger(__name__)
@@ -85,8 +85,8 @@ def check_milestone_risk_alerts():
 
             # 查询活跃项目
             projects = db.query(Project).filter(
-                Project.is_active == True,
-                Project.is_archived == False
+                Project.is_active,
+                not Project.is_archived
             ).all()
 
             risk_count = 0

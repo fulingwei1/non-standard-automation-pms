@@ -99,12 +99,6 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, RoleResponse]):
         role_ids = [r.id for r in result.items]
         permissions_map = {}
         if role_ids:
-            perm_sql = """
-                SELECT rap.role_id, ap.perm_name
-                FROM role_api_permissions rap
-                JOIN api_permissions ap ON rap.permission_id = ap.id
-                WHERE rap.role_id IN :role_ids AND ap.is_active = 1
-            """
             # SQLAlchemy IN clause needs proper formatting
             placeholders = ','.join([str(rid) for rid in role_ids])
             perm_sql_formatted = f"""

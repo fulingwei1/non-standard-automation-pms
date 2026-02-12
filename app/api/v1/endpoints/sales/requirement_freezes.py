@@ -8,7 +8,7 @@
 from datetime import datetime
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 

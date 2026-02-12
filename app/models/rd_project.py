@@ -5,7 +5,6 @@
 适用场景：IPO合规、高新技术企业认定、研发费用加计扣除
 """
 
-import enum
 from datetime import datetime
 
 from sqlalchemy import (
@@ -14,7 +13,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     Integer,

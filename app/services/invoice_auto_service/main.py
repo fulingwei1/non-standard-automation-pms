@@ -4,7 +4,7 @@
 """
 import logging
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.project import ProjectMilestone, ProjectPaymentPlan

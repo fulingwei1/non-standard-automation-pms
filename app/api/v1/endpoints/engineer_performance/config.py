@@ -14,7 +14,6 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.engineer_performance import (
     DimensionConfigCreate,
-    DimensionConfigUpdate,
 )
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,

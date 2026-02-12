@@ -9,14 +9,13 @@ import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.core.config import settings
 from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel

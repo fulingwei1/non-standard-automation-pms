@@ -28,7 +28,7 @@ def get_permission_matrix(
 
     返回按 模块 → 页面 → 操作 组织的权限树形结构
     """
-    permissions = db.query(ApiPermission).filter(ApiPermission.is_active == True).all()
+    permissions = db.query(ApiPermission).filter(ApiPermission.is_active).all()
 
     # 构建矩阵结构: module → page → action
     matrix: Dict[str, Dict[str, List[Dict]]] = {}
@@ -113,7 +113,7 @@ def get_role_permissions(
     direct_perms = (
         db.query(ApiPermission)
         .join(RoleApiPermission)
-        .filter(RoleApiPermission.role_id == role_id, ApiPermission.is_active == True)
+        .filter(RoleApiPermission.role_id == role_id, ApiPermission.is_active)
         .all()
     )
 
@@ -131,7 +131,7 @@ def get_role_permissions(
                 .join(RoleApiPermission)
                 .filter(
                     RoleApiPermission.role_id == parent_role.id,
-                    ApiPermission.is_active == True,
+                    ApiPermission.is_active,
                 )
                 .all()
             )

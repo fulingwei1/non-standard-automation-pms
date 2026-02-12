@@ -4,7 +4,6 @@
 """
 from enum import Enum
 
-from app.models.performance.enums import PerformanceLevelEnum
 
 
 class MaterialTypeEnum(str, Enum):

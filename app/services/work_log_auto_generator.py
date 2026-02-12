@@ -8,7 +8,6 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
@@ -70,7 +69,6 @@ class WorkLogAutoGenerator:
         # 聚合工时记录，生成工作日志内容
         work_content_parts = []
         mentioned_projects = []
-        mentioned_machines = []
         total_hours = Decimal('0')
 
         # 按项目分组

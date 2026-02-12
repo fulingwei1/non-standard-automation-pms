@@ -43,7 +43,7 @@ async def get_project_role_overview(
 
     role_types = (
         db.query(ProjectRoleType)
-        .filter(ProjectRoleType.is_active == True)
+        .filter(ProjectRoleType.is_active)
         .order_by(ProjectRoleType.sort_order)
         .all()
     )
@@ -61,8 +61,8 @@ async def get_project_role_overview(
         .options(joinedload(ProjectMember.user), joinedload(ProjectMember.team_members))
         .filter(
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
-            ProjectMember.is_active == True,
+            ProjectMember.is_lead,
+            ProjectMember.is_active,
         )
         .all()
     }

@@ -7,7 +7,7 @@ from typing import List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.strategy import CSF, KPI, KPIHistory
+from app.models.strategy import CSF, KPIHistory
 from app.schemas.strategy import (
     KPIDetailResponse,
     KPIHistoryResponse,

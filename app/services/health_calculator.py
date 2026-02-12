@@ -10,10 +10,9 @@
 - H4: 已完结(灰色) - Closed
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule
@@ -21,7 +20,6 @@ from app.models.enums import AlertLevelEnum, IssueStatusEnum, ProjectHealthEnum
 from app.models.issue import Issue, IssueTypeEnum
 from app.models.progress import Task
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
-from app.models.shortage import ShortageReport
 
 
 class HealthCalculator:
@@ -218,7 +216,7 @@ class HealthCalculator:
             ProjectMilestone.project_id == project.id,
             ProjectMilestone.planned_date < today,
             ProjectMilestone.status != 'COMPLETED',
-            ProjectMilestone.is_key == True  # 只检查关键里程碑
+            ProjectMilestone.is_key  # 只检查关键里程碑
         ).count()
 
         return overdue_milestones > 0
@@ -415,8 +413,8 @@ class HealthCalculator:
         """
         # 查询项目（Sprint 5.2: 性能优化 - 只查询必要字段）
         query = self.db.query(Project).filter(
-            Project.is_active == True,
-            Project.is_archived == False
+            Project.is_active,
+            not Project.is_archived
         )
 
         if project_ids:
@@ -499,7 +497,7 @@ class HealthCalculator:
                     ProjectMilestone.project_id == project.id,
                     ProjectMilestone.planned_date < date.today(),
                     ProjectMilestone.status != 'COMPLETED',
-                    ProjectMilestone.is_key == True
+                    ProjectMilestone.is_key
                 ).count(),
                 'active_alerts': self.db.query(AlertRecord).filter(
                     AlertRecord.project_id == project.id,

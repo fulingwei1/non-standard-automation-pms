@@ -4,16 +4,12 @@
 包含：项目评价记录、评价维度配置
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
     Boolean,
     Column,
     Date,
-    DateTime,
     ForeignKey,
     Index,
     Integer,

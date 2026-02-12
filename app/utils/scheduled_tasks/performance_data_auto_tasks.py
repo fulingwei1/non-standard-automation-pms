@@ -5,7 +5,6 @@
 
 from datetime import date, datetime, timedelta
 
-from sqlalchemy.orm import Session
 
 from app.models.base import get_db_session
 from app.services.debug_issue_sync_service import DebugIssueSyncService
@@ -32,7 +31,7 @@ def daily_work_log_generation_task():
         print(f"  错误数量: {stats['error_count']}")
 
         if stats['errors']:
-            print(f"  错误详情:")
+            print("  错误详情:")
             for error in stats['errors'][:5]:  # 只显示前5个错误
                 print(f"    - {error['user_name']} ({error['date']}): {error['error']}")
 
@@ -60,7 +59,7 @@ def daily_design_review_sync_task():
         print(f"  错误数量: {stats['error_count']}")
 
         if stats['errors']:
-            print(f"  错误详情:")
+            print("  错误详情:")
             for error in stats['errors'][:5]:
                 print(f"    - {error['review_no']}: {error['error']}")
 
@@ -90,7 +89,7 @@ def daily_debug_issue_sync_task():
         print(f"  错误数量: {stats['error_count']}")
 
         if stats['errors']:
-            print(f"  错误详情:")
+            print("  错误详情:")
             for error in stats['errors'][:5]:
                 print(f"    - {error['issue_no']}: {error['error']}")
 
@@ -123,10 +122,10 @@ def weekly_knowledge_identification_task():
         )
 
         print(f"[知识贡献自动识别] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"  服务工单:")
+        print("  服务工单:")
         print(f"    总工单数: {ticket_stats['total_tickets']}")
         print(f"    识别数量: {ticket_stats['identified_count']}")
-        print(f"  知识库:")
+        print("  知识库:")
         print(f"    总文章数: {kb_stats['total_articles']}")
         print(f"    识别数量: {kb_stats['identified_count']}")
 

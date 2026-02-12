@@ -40,7 +40,7 @@ async def get_team_members(
         .filter(
             ProjectMember.id == member_id,
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
+            ProjectMember.is_lead,
         )
         .first()
     )
@@ -52,7 +52,7 @@ async def get_team_members(
         db.query(ProjectMember)
         .options(joinedload(ProjectMember.user))
         .filter(
-            ProjectMember.lead_member_id == member_id, ProjectMember.is_active == True
+            ProjectMember.lead_member_id == member_id, ProjectMember.is_active
         )
         .all()
     )
@@ -99,7 +99,7 @@ async def add_team_member(
         .filter(
             ProjectMember.id == member_id,
             ProjectMember.project_id == project_id,
-            ProjectMember.is_lead == True,
+            ProjectMember.is_lead,
         )
         .first()
     )
@@ -120,7 +120,7 @@ async def add_team_member(
             ProjectMember.project_id == project_id,
             ProjectMember.user_id == data.user_id,
             ProjectMember.lead_member_id == member_id,
-            ProjectMember.is_active == True,
+            ProjectMember.is_active,
         )
         .first()
     )

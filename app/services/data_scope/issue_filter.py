@@ -79,7 +79,7 @@ class IssueFilterService:
             if user.department:
                 dept_user_rows = (
                     db.query(User.id)
-                    .filter(User.department == user.department, User.is_active == True)
+                    .filter(User.department == user.department, User.is_active)
                     .all()
                 )
                 dept_user_ids = [row[0] for row in dept_user_rows]

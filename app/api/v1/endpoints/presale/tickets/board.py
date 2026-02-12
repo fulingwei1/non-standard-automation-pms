@@ -11,7 +11,7 @@ from app.api import deps
 from app.core import security
 from app.models.presale import PresaleSupportTicket
 from app.models.user import User
-from app.schemas.presale import TicketBoardResponse, TicketResponse
+from app.schemas.presale import TicketBoardResponse
 
 from .utils import build_ticket_response
 

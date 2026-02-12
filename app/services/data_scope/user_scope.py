@@ -52,7 +52,7 @@ class UserScopeService:
             db.query(ProjectMember.project_id)
             .filter(
                 ProjectMember.user_id == user_id,
-                ProjectMember.is_active == True
+                ProjectMember.is_active
             )
             .all()
         )
@@ -65,7 +65,7 @@ class UserScopeService:
             db.query(User.id)
             .filter(
                 User.reporting_to == user_id,
-                User.is_active == True
+                User.is_active
             )
             .all()
         )

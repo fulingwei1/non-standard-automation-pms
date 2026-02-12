@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.project import ProjectStage, ProjectStatusLog
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel

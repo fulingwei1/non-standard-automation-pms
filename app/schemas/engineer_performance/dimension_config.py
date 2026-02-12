@@ -11,8 +11,7 @@ dimension_config Schemas
 """
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 

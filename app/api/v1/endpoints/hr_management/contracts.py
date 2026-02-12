@@ -204,7 +204,7 @@ def get_expiring_contracts(
         EmployeeContract.status == "active",
         EmployeeContract.end_date <= expiry_date,
         EmployeeContract.end_date >= date.today(),
-        Employee.is_active == True
+        Employee.is_active
     ).order_by(EmployeeContract.end_date.asc()).all()
 
     # 分组：两个月内、一个月内、两周内

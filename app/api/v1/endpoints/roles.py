@@ -95,7 +95,7 @@ def list_permissions(
             ApiPermission.module.label("module"),
             ApiPermission.action.label("action"),
         )
-        .filter(ApiPermission.is_active == True)
+        .filter(ApiPermission.is_active)
     )
     if module:
         query = query.filter(ApiPermission.module == module)
@@ -131,7 +131,7 @@ def list_role_templates(
     """获取角色模板列表"""
     templates = (
         db.query(RoleTemplate)
-        .filter(RoleTemplate.is_active == True)
+        .filter(RoleTemplate.is_active)
         .order_by(RoleTemplate.template_name)
         .all()
     )
@@ -161,7 +161,7 @@ def get_all_config(
     roles = (
         db.query(Role)
         .filter(
-            Role.is_active == True,
+            Role.is_active,
             or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
         )
         .order_by(Role.sort_order)
@@ -198,7 +198,7 @@ def get_my_nav_groups(
         return ResponseModel(code=200, message="获取成功", data={"nav_groups": []})
 
     # 获取角色的导航配置
-    roles = db.query(Role).filter(Role.id.in_(role_ids), Role.is_active == True).all()
+    roles = db.query(Role).filter(Role.id.in_(role_ids), Role.is_active).all()
 
     # 合并导航组
     merged_nav_groups = []
@@ -425,7 +425,7 @@ def get_role_hierarchy_tree(
     roles = (
         db.query(Role)
         .filter(
-            Role.is_active == True,
+            Role.is_active,
             or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
         )
         .order_by(Role.sort_order)
@@ -591,7 +591,7 @@ def get_role_descendants(
 def _collect_descendants(db: Session, parent_id: int, result: list):
     """递归收集所有子孙角色"""
     children = (
-        db.query(Role).filter(Role.parent_id == parent_id, Role.is_active == True).all()
+        db.query(Role).filter(Role.parent_id == parent_id, Role.is_active).all()
     )
     for child in children:
         result.append(

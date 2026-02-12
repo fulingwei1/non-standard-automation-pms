@@ -7,7 +7,6 @@
 from datetime import date
 from typing import Any, Dict
 
-from sqlalchemy.orm import Session
 
 from app.models.progress import Task
 from app.models.project import Project, ProjectMember

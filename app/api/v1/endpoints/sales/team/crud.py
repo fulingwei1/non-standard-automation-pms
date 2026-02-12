@@ -51,11 +51,11 @@ def list_sales_teams(
     for team in teams:
         member_count = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).count()
         sub_team_count = db.query(SalesTeam).filter(
             SalesTeam.parent_team_id == team.id,
-            SalesTeam.is_active == True,
+            SalesTeam.is_active,
         ).count()
 
         items.append({
@@ -201,7 +201,7 @@ def delete_sales_team(
     # 检查是否有子团队
     sub_teams = db.query(SalesTeam).filter(
         SalesTeam.parent_team_id == team_id,
-        SalesTeam.is_active == True,
+        SalesTeam.is_active,
     ).count()
     if sub_teams > 0:
         raise HTTPException(

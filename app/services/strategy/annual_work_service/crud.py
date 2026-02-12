@@ -59,7 +59,7 @@ def get_annual_work(db: Session, work_id: int) -> Optional[AnnualKeyWork]:
     """
     return db.query(AnnualKeyWork).filter(
         AnnualKeyWork.id == work_id,
-        AnnualKeyWork.is_active == True
+        AnnualKeyWork.is_active
     ).first()
 
 
@@ -87,7 +87,7 @@ def list_annual_works(
     Returns:
         tuple: (重点工作列表, 总数)
     """
-    query = db.query(AnnualKeyWork).filter(AnnualKeyWork.is_active == True)
+    query = db.query(AnnualKeyWork).filter(AnnualKeyWork.is_active)
 
     if csf_id:
         query = query.filter(AnnualKeyWork.csf_id == csf_id)
@@ -95,7 +95,7 @@ def list_annual_works(
     if strategy_id:
         query = query.join(CSF).filter(
             CSF.strategy_id == strategy_id,
-            CSF.is_active == True
+            CSF.is_active
         )
 
     if year:

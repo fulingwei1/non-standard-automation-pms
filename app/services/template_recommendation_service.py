@@ -7,10 +7,10 @@ Issue 4.3: 实现智能模板推荐功能，根据项目信息推荐合适的模
 
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectTemplate
+from app.models.project import ProjectTemplate
 
 
 class TemplateRecommendationService:
@@ -39,7 +39,7 @@ class TemplateRecommendationService:
             List[Dict]: 推荐模板列表，包含推荐理由和评分
         """
         query = self.db.query(ProjectTemplate).filter(
-            ProjectTemplate.is_active == True
+            ProjectTemplate.is_active
         )
 
         recommendations = []

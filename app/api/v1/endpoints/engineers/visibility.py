@@ -143,7 +143,7 @@ def get_project_progress_visibility(
         and_(
             ProjectMember.project_id == project_id,
             ProjectMember.user_id == current_user.id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         )
     ).first()
 

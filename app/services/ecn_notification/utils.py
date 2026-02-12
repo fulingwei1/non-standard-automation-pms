@@ -35,14 +35,14 @@ def find_users_by_department(db: Session, department_name: str) -> List[User]:
         # 如果找不到部门，尝试通过用户表的department字段匹配
         users = db.query(User).filter(
             User.department == department_name,
-            User.is_active == True
+            User.is_active
         ).all()
         return users
 
     # 通过部门ID查找用户
     users = db.query(User).filter(
         User.department_id == department.id,
-        User.is_active == True
+        User.is_active
     ).all()
 
     return users
@@ -65,7 +65,7 @@ def find_users_by_role(db: Session, role_code: str) -> List[User]:
     users = db.query(User).join(
         User.roles
     ).filter(
-        User.is_active == True
+        User.is_active
     ).all()
 
     # 过滤匹配的角色

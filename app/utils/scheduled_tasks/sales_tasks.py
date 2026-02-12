@@ -70,7 +70,7 @@ def check_overdue_receivable_alerts():
             # 获取或创建预警规则
             overdue_rule = db.query(AlertRule).filter(
                 AlertRule.rule_code == 'OVERDUE_RECEIVABLE',
-                AlertRule.is_enabled == True
+                AlertRule.is_enabled
             ).first()
 
             if not overdue_rule:

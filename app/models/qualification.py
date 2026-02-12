@@ -4,10 +4,7 @@
 包含：任职资格等级、岗位能力模型、员工任职资格、评估记录
 """
 
-from datetime import date, datetime
-from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from sqlalchemy import (
     JSON,

@@ -5,7 +5,7 @@
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session

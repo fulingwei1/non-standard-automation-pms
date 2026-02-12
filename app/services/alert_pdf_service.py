@@ -6,7 +6,6 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule

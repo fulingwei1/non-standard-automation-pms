@@ -6,7 +6,7 @@
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -98,7 +98,7 @@ def get_service_dashboard_statistics(
     if engineer_role:
         total_engineers = db.query(User).join(UserRole).filter(
             UserRole.role_id == engineer_role.id,
-            User.is_active == True
+            User.is_active
         ).count()
         # 简化处理：假设所有工程师都在岗
         active_engineers = total_engineers

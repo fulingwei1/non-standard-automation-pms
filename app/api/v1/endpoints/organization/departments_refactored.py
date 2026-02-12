@@ -7,7 +7,7 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -77,13 +77,13 @@ def get_department_statistics(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取部门统计数据（用于总经理仪表板）"""
-    departments = db.query(Department).filter(Department.is_active == True).all()
+    departments = db.query(Department).filter(Department.is_active).all()
 
     result = []
     for dept in departments:
         employee_count = db.query(func.count(Employee.id)).filter(
             Employee.department == dept.dept_name,
-            Employee.is_active == True
+            Employee.is_active
         ).scalar() or 0
 
         result.append({

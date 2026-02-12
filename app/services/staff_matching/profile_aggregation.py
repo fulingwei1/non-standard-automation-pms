@@ -5,12 +5,10 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.organization import Employee
 from app.models.project import ProjectMember
 from app.models.staff_matching import (
     HrEmployeeProfile,
@@ -53,7 +51,7 @@ class ProfileAggregator(StaffMatchingBase):
         for tag_type, field_name in tag_types:
             evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
                 HrEmployeeTagEvaluation.employee_id == employee_id,
-                HrEmployeeTagEvaluation.is_valid == True,
+                HrEmployeeTagEvaluation.is_valid,
                 HrTagDict.tag_type == tag_type
             ).all()
 
@@ -72,7 +70,7 @@ class ProfileAggregator(StaffMatchingBase):
         # 计算态度聚合分
         attitude_evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
             HrEmployeeTagEvaluation.employee_id == employee_id,
-            HrEmployeeTagEvaluation.is_valid == True,
+            HrEmployeeTagEvaluation.is_valid,
             HrTagDict.tag_type == TagTypeEnum.ATTITUDE.value
         ).all()
 
@@ -126,9 +124,9 @@ class ProfileAggregator(StaffMatchingBase):
             today = datetime.now().date()
             active_assignments = db.query(ProjectMember).filter(
                 ProjectMember.user_id == user.id,
-                ProjectMember.is_active == True,
+                ProjectMember.is_active,
                 or_(
-                    ProjectMember.end_date == None,
+                    ProjectMember.end_date is None,
                     ProjectMember.end_date >= today
                 )
             ).all()

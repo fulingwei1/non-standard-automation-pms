@@ -4,13 +4,11 @@
 """
 
 from datetime import date
-from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.budget import ProjectBudget, ProjectBudgetItem
+from app.models.budget import ProjectBudget
 from app.models.project import Project, ProjectCost
 
 
@@ -37,7 +35,7 @@ class BudgetAnalysisService:
             db.query(ProjectBudget)
             .filter(
                 ProjectBudget.project_id == project_id,
-                ProjectBudget.is_active == True,
+                ProjectBudget.is_active,
                 ProjectBudget.status == "APPROVED"
             )
             .order_by(ProjectBudget.version.desc())
@@ -155,7 +153,7 @@ class BudgetAnalysisService:
             db.query(ProjectBudget)
             .filter(
                 ProjectBudget.project_id == project_id,
-                ProjectBudget.is_active == True,
+                ProjectBudget.is_active,
                 ProjectBudget.status == "APPROVED"
             )
             .order_by(ProjectBudget.version.desc())

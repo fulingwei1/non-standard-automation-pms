@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
-from app.core import security
 from app.models.staff_matching import HrAIMatchingLog, MesProjectStaffingNeed
 from app.models.user import User
 
@@ -79,15 +78,15 @@ class StaffMatchingDashboardEndpoint(BaseDashboardEndpoint):
         total_requests = db.query(func.count(func.distinct(HrAIMatchingLog.request_id))).scalar() or 0
         total_matched = db.query(func.count(HrAIMatchingLog.id)).scalar() or 0
         accepted = db.query(func.count(HrAIMatchingLog.id)).filter(
-            HrAIMatchingLog.is_accepted == True
+            HrAIMatchingLog.is_accepted
         ).scalar() or 0
         rejected = db.query(func.count(HrAIMatchingLog.id)).filter(
-            HrAIMatchingLog.is_accepted == False
+            not HrAIMatchingLog.is_accepted
         ).scalar() or 0
         pending = total_matched - accepted - rejected
 
         avg_score = db.query(func.avg(HrAIMatchingLog.total_score)).filter(
-            HrAIMatchingLog.is_accepted == True
+            HrAIMatchingLog.is_accepted
         ).scalar()
 
         success_rate = (accepted / total_matched * 100) if total_matched > 0 else 0

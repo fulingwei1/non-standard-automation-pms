@@ -7,14 +7,11 @@
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import date
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.project import Project
 from app.models.sales import Lead, Opportunity, Quote
 
 logger = logging.getLogger(__name__)

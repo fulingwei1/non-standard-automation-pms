@@ -139,7 +139,7 @@ def get_team_pk(
         # 查询该团队在PK期间的业绩
         members = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).all()
         member_ids = [m.user_id for m in members]
 
@@ -265,7 +265,7 @@ def complete_team_pk(
     for team in teams:
         members = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).all()
         member_ids = [m.user_id for m in members]
 

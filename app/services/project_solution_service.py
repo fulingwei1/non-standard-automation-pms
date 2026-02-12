@@ -6,12 +6,10 @@
 
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
 from app.models.issue import Issue, SolutionTemplate
-from app.models.project import Project
 
 
 class ProjectSolutionService:
@@ -102,7 +100,7 @@ class ProjectSolutionService:
         query = self.db.query(SolutionTemplate)
 
         if is_active:
-            query = query.filter(SolutionTemplate.is_active == True)
+            query = query.filter(SolutionTemplate.is_active)
 
         if issue_type:
             query = query.filter(SolutionTemplate.issue_type == issue_type)

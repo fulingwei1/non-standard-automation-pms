@@ -10,7 +10,6 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord
-from app.models.base import get_db_session
 
 # 模块级 logger
 logger = logging.getLogger(__name__)

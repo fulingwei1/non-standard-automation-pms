@@ -4,14 +4,13 @@
 封装库存相关的数据分析逻辑
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import date, timedelta
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.material import Material, MaterialCategory, MaterialSupplier
+from app.models.material import Material, MaterialCategory
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -49,7 +48,7 @@ class InventoryAnalysisService:
         ).outerjoin(
             MaterialCategory, Material.category_id == MaterialCategory.id
         ).filter(
-            Material.is_active == True
+            Material.is_active
         )
 
         if category_id:
@@ -128,7 +127,7 @@ class InventoryAnalysisService:
 
         库存 > 0 且 N 天无变动
         """
-        threshold_date = date.today() - timedelta(days=threshold_days)
+        date.today() - timedelta(days=threshold_days)
 
         # 查询有库存的物料
         query = db.query(
@@ -144,7 +143,7 @@ class InventoryAnalysisService:
             MaterialCategory, Material.category_id == MaterialCategory.id
         ).filter(
             Material.current_stock > 0,
-            Material.is_active == True
+            Material.is_active
         )
 
         if category_id:
@@ -229,7 +228,7 @@ class InventoryAnalysisService:
         ).outerjoin(
             MaterialCategory, Material.category_id == MaterialCategory.id
         ).filter(
-            Material.is_active == True
+            Material.is_active
         )
 
         if category_id:
@@ -422,7 +421,7 @@ class InventoryAnalysisService:
         ).outerjoin(
             Material, MaterialCategory.id == Material.category_id
         ).filter(
-            Material.is_active == True
+            Material.is_active
         ).group_by(
             MaterialCategory.id,
             MaterialCategory.category_name
@@ -459,7 +458,7 @@ class InventoryAnalysisService:
         ).outerjoin(
             MaterialCategory, Material.category_id == MaterialCategory.id
         ).filter(
-            Material.is_active == True,
+            Material.is_active,
             Material.current_stock > 0
         ).order_by(
             (Material.current_stock * Material.standard_price).desc()

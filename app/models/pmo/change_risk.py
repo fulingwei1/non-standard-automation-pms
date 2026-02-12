@@ -5,7 +5,6 @@ PMO模型 - 项目变更和风险
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
 

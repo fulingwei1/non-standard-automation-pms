@@ -5,7 +5,6 @@
 """
 
 from datetime import date
-from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy.orm import Session

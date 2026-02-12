@@ -5,7 +5,7 @@ ITR流程服务
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import and_, desc, or_
 from sqlalchemy.orm import Session

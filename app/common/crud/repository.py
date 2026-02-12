@@ -11,7 +11,6 @@ from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 
 from app.common.crud.filters import QueryBuilder
-from app.common.crud.exceptions import NotFoundError, AlreadyExistsError
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)

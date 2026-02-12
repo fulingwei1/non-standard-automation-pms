@@ -64,7 +64,7 @@ def get_sales_teams_ranking(
     end_datetime = datetime.combine(end_date_value, datetime.max.time())
 
     # 查询团队
-    query = db.query(SalesTeam).filter(SalesTeam.is_active == True)
+    query = db.query(SalesTeam).filter(SalesTeam.is_active)
     if department_id:
         query = query.filter(SalesTeam.department_id == department_id)
     teams = query.all()
@@ -74,7 +74,7 @@ def get_sales_teams_ranking(
     for team in teams:
         members = db.query(SalesTeamMember).filter(
             SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active == True,
+            SalesTeamMember.is_active,
         ).all()
         member_ids = [m.user_id for m in members]
 

@@ -101,7 +101,6 @@ def get_info_table_style():
     if not REPORTLAB_AVAILABLE:
         return None
 
-    from reportlab.platypus import TableStyle
 
     base_style = get_table_style_base()
     base_style.add('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6'))

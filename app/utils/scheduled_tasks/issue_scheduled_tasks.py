@@ -7,7 +7,6 @@ import logging
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
-from sqlalchemy.orm import Session
 
 from app.models.base import get_db_session
 from app.models.issue import Issue, IssueStatisticsSnapshot
@@ -59,7 +58,7 @@ def check_overdue_issues():
                     target_id=issue.id,
                     target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
                     target_name=issue.title,
-                    alert_title=f'问题逾期预警',
+                    alert_title='问题逾期预警',
                     alert_content=f'问题 "{issue.title}" 已逾期 {overdue_days} 天，截止日期为 {issue.due_date.strftime("%Y-%m-%d")}，当前状态为 {issue.status}。',
                     alert_level=urgency,
                     status='PENDING',
@@ -127,7 +126,7 @@ def check_blocking_issues():
                     target_id=issue.id,
                     target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
                     target_name=issue.title,
-                    alert_title=f'阻塞问题预警',
+                    alert_title='阻塞问题预警',
                     alert_content=f'紧急问题 "{issue.title}" 已存在 {days_open} 天仍未解决，可能影响项目进度。问题描述：{issue.description[:100] if issue.description else ""}...',
                     alert_level='CRITICAL',
                     status='PENDING',
@@ -320,7 +319,7 @@ def check_issue_assignment_timeout():
                     target_id=issue.id,
                     target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
                     target_name=issue.title,
-                    alert_title=f'问题分配超时预警',
+                    alert_title='问题分配超时预警',
                     alert_content=f'问题 "{issue.title}" 已创建超过24小时仍未分配处理人，请及时分配。',
                     alert_level='MEDIUM',
                     status='PENDING',
@@ -391,7 +390,7 @@ def check_issue_resolution_timeout():
                     target_id=issue.id,
                     target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
                     target_name=issue.title,
-                    alert_title=f'问题解决超时预警',
+                    alert_title='问题解决超时预警',
                     alert_content=f'问题 "{issue.title}" 已超过预期解决时间 {overdue_days} 天，截止日期为 {issue.due_date.strftime("%Y-%m-%d")}。',
                     alert_level=urgency,
                     status='PENDING',

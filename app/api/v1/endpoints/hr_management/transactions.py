@@ -245,7 +245,7 @@ def get_transaction_statistics(
 
     # 待转正人数（试用期即将到期）
     probation_due = db.query(Employee).join(EmployeeHrProfile).filter(
-        Employee.is_active == True,
+        Employee.is_active,
         Employee.employment_type == "probation",
         EmployeeHrProfile.probation_end_date <= now.date() + timedelta(days=30)
     ).count()

@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.data_integrity import DataIntegrityService

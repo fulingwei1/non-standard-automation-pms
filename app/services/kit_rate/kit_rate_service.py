@@ -39,7 +39,7 @@ class KitRateService:
         return (
             self.db.query(BomHeader)
             .filter(BomHeader.machine_id == machine_id)
-            .filter(BomHeader.is_latest == True)
+            .filter(BomHeader.is_latest)
             .first()
         )
 

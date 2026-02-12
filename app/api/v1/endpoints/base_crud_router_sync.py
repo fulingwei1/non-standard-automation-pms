@@ -82,7 +82,6 @@ def create_crud_router_sync(
     Returns:
         APIRouter: 配置好的路由
     """
-    from typing import TypeVar
     
     router = APIRouter(prefix=prefix, tags=tags or [resource_name])
     resource_name_plural = resource_name_plural or resource_name

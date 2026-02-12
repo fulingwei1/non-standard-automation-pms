@@ -4,7 +4,7 @@ ECN BOM影响分析服务 - 呆滞料检查
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
 from app.models.material import Material

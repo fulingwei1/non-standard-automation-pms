@@ -60,7 +60,7 @@ def get_csf(db: Session, csf_id: int) -> Optional[CSF]:
     """
     return db.query(CSF).filter(
         CSF.id == csf_id,
-        CSF.is_active == True
+        CSF.is_active
     ).first()
 
 
@@ -86,7 +86,7 @@ def list_csfs(
     """
     query = db.query(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True
+        CSF.is_active
     )
 
     if dimension:
@@ -161,12 +161,12 @@ def get_csf_detail(db: Session, csf_id: int) -> Optional[CSFDetailResponse]:
     # 统计 KPI 和重点工作数量
     kpi_count = db.query(KPI).filter(
         KPI.csf_id == csf_id,
-        KPI.is_active == True
+        KPI.is_active
     ).count()
 
     annual_work_count = db.query(AnnualKeyWork).filter(
         AnnualKeyWork.csf_id == csf_id,
-        AnnualKeyWork.is_active == True
+        AnnualKeyWork.is_active
     ).count()
 
     # 获取健康度
@@ -239,7 +239,7 @@ def get_csfs_by_dimension(db: Session, strategy_id: int) -> List[CSFByDimensionR
         csfs = db.query(CSF).filter(
             CSF.strategy_id == strategy_id,
             CSF.dimension == dim_code,
-            CSF.is_active == True
+            CSF.is_active
         ).order_by(CSF.sort_order).all()
 
         csf_items = []
@@ -250,7 +250,7 @@ def get_csfs_by_dimension(db: Session, strategy_id: int) -> List[CSFByDimensionR
         for csf in csfs:
             kpi_count = db.query(KPI).filter(
                 KPI.csf_id == csf.id,
-                KPI.is_active == True
+                KPI.is_active
             ).count()
 
             health_data = calculate_csf_health(db, csf.id)

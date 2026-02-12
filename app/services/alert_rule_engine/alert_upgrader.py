@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.alert import AlertRecord, AlertRule
+from app.models.alert import AlertRecord
 
 from .alert_generator import AlertGenerator
 from .base import AlertRuleEngineBase
@@ -59,7 +59,6 @@ class AlertUpgrader(AlertRuleEngineBase):
         Returns:
             AlertRecord: 升级后的预警记录
         """
-        old_level = alert.alert_level
 
         # 更新预警级别
         alert.alert_level = new_level

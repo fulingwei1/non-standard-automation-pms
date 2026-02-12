@@ -484,7 +484,7 @@ class WorkLogStatisticsService(ProjectStatisticsServiceBase):
         from datetime import timedelta
         from app.models.work_log import WorkLog, WorkLogMention
 
-        project = self.get_project(project_id)
+        self.get_project(project_id)
 
         # 如果没有指定日期范围，使用最近N天
         if not start_date:

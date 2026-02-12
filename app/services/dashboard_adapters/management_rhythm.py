@@ -54,7 +54,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
             .first()
         )
 
-        operational_snapshot = (
+        (
             self.db.query(RhythmDashboardSnapshot)
             .filter(
                 RhythmDashboardSnapshot.rhythm_level

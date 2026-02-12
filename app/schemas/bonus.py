@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common import PageParams, PaginatedResponse, ResponseModel
+from app.schemas.common import PageParams, PaginatedResponse
 
 # ==================== 奖金规则 ====================
 

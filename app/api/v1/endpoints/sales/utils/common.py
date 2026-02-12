@@ -77,7 +77,7 @@ def get_visible_sales_users(
     is_sales_director = 'SALES_DIR' in user_role_codes
     is_sales_manager = 'SALES_MANAGER' in user_role_codes
 
-    query = db.query(User).filter(User.is_active == True)
+    query = db.query(User).filter(User.is_active)
 
     # 应用部门过滤
     if department_id is not None:
@@ -96,7 +96,7 @@ def get_visible_sales_users(
             db.query(UserRole.user_id)
             .join(Role, Role.id == UserRole.role_id)
             .filter(Role.role_code.in_(sales_role_codes))
-            .filter(Role.is_active == True)  # 只查询激活的角色
+            .filter(Role.is_active)  # 只查询激活的角色
             .distinct()
             .all()
         )

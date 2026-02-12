@@ -5,13 +5,10 @@
 为具体业务场景提供缓存支持
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from app.models.alert import AlertRecord
 from app.models.project import Project
-from app.models.user import User
-from app.services.cache.redis_cache import CacheKeys, cache_key, cache_result, get_cache
+from app.services.cache.redis_cache import CacheKeys, cache_key, get_cache
 
 
 class BusinessCacheService:

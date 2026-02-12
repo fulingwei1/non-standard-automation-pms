@@ -79,7 +79,7 @@ def validate_g1_lead_to_opportunity(
             and_(
                 OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
                 OpenItem.source_id == lead.id,
-                OpenItem.blocks_quotation == True,
+                OpenItem.blocks_quotation,
                 OpenItem.status != 'CLOSED'
             )
         ).count()

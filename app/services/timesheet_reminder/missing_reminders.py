@@ -12,7 +12,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Dict, Optional
+from typing import Optional
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -20,7 +20,6 @@ from sqlalchemy.orm import Session
 from app.models.notification import Notification
 from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.services.timesheet_quality_service import TimesheetQualityService
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +83,7 @@ def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) ->
     engineers = (
         db.query(User)
         .filter(
-            User.is_active == True,
+            User.is_active,
             or_(
                 User.id.in_(user_ids_by_role) if user_ids_by_role else False,
                 User.department_id.in_(tech_dept_ids) if tech_dept_ids else False,
@@ -218,7 +217,7 @@ def notify_weekly_timesheet_missing(
     engineers = (
         db.query(User)
         .filter(
-            User.is_active == True,
+            User.is_active,
             or_(
                 User.id.in_(user_ids_by_role) if user_ids_by_role else False,
                 User.department_id.in_(tech_dept_ids) if tech_dept_ids else False,

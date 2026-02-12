@@ -11,10 +11,8 @@
 实现从公司战略到部门目标到个人 KPI 的层层分解
 """
 
-import json
 from datetime import date
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
@@ -23,17 +21,6 @@ from app.models.strategy import (
     KPI,
     DepartmentObjective,
     PersonalKPI,
-    Strategy,
-)
-from app.schemas.strategy import (
-    DecompositionTreeNode,
-    DecompositionTreeResponse,
-    DepartmentObjectiveCreate,
-    DepartmentObjectiveDetailResponse,
-    DepartmentObjectiveUpdate,
-    PersonalKPICreate,
-    PersonalKPIUpdate,
-    TraceToStrategyResponse,
 )
 
 
@@ -63,29 +50,29 @@ def get_decomposition_stats(
     # 统计 CSF 数量
     csf_count = db.query(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True
+        CSF.is_active
     ).count()
 
     # 统计 KPI 数量
     kpi_count = db.query(KPI).join(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True,
-        KPI.is_active == True
+        CSF.is_active,
+        KPI.is_active
     ).count()
 
     # 统计部门目标数量
     dept_obj_count = db.query(DepartmentObjective).filter(
         DepartmentObjective.strategy_id == strategy_id,
         DepartmentObjective.year == year,
-        DepartmentObjective.is_active == True
+        DepartmentObjective.is_active
     ).count()
 
     # 统计个人 KPI 数量
     personal_kpi_count = db.query(PersonalKPI).join(DepartmentObjective).filter(
         DepartmentObjective.strategy_id == strategy_id,
         DepartmentObjective.year == year,
-        DepartmentObjective.is_active == True,
-        PersonalKPI.is_active == True
+        DepartmentObjective.is_active,
+        PersonalKPI.is_active
     ).count()
 
     # 统计各部门分解情况
@@ -93,7 +80,7 @@ def get_decomposition_stats(
     dept_objs = db.query(DepartmentObjective).filter(
         DepartmentObjective.strategy_id == strategy_id,
         DepartmentObjective.year == year,
-        DepartmentObjective.is_active == True
+        DepartmentObjective.is_active
     ).all()
 
     for obj in dept_objs:
@@ -104,7 +91,7 @@ def get_decomposition_stats(
 
         pkpi_count = db.query(PersonalKPI).filter(
             PersonalKPI.dept_objective_id == obj.id,
-            PersonalKPI.is_active == True
+            PersonalKPI.is_active
         ).count()
         dept_stats[dept_id]["personal_kpis"] += pkpi_count
 

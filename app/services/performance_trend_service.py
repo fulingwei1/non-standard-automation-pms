@@ -4,14 +4,11 @@
 展示工程师历史6个周期的得分趋势，识别能力变化
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.engineer_performance import EngineerProfile
 from app.models.performance import PerformancePeriod, PerformanceResult
 
 
@@ -209,7 +206,7 @@ class PerformanceTrendService:
                 'has_data': False
             }
 
-        period_ids = [p.id for p in recent_periods]
+        [p.id for p in recent_periods]
 
         # 统计每个周期的平均分
         period_stats = []

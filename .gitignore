@@ -116,11 +116,5 @@ Thumbs.db
 # Allow frontend source libs (constants, formatters) to be tracked
 !frontend/src/lib/
 !frontend/src/lib/**
-
-
-
-
-
-
-
-
+# Nightshift plan artifacts (keep out of version control)
+.nightshift-plan

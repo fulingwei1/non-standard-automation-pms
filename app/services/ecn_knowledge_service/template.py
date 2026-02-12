@@ -33,7 +33,7 @@ def recommend_solutions(
 
     # 获取所有活跃的解决方案模板
     templates = service.db.query(EcnSolutionTemplate).filter(
-        EcnSolutionTemplate.is_active == True
+        EcnSolutionTemplate.is_active
     ).all()
 
     recommendations = []

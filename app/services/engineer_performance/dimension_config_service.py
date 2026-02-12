@@ -56,7 +56,7 @@ class DimensionConfigService:
         dept_query = self.db.query(EngineerDimensionConfig).filter(
             EngineerDimensionConfig.job_type == job_type,
             EngineerDimensionConfig.department_id == department_id,
-            EngineerDimensionConfig.is_global == False,
+            not EngineerDimensionConfig.is_global,
             EngineerDimensionConfig.approval_status == 'APPROVED',
             EngineerDimensionConfig.effective_date <= effective_date,
             or_(
@@ -84,7 +84,7 @@ class DimensionConfigService:
         """获取全局配置"""
         query = self.db.query(EngineerDimensionConfig).filter(
             EngineerDimensionConfig.job_type == job_type,
-            EngineerDimensionConfig.is_global == True,
+            EngineerDimensionConfig.is_global,
             EngineerDimensionConfig.effective_date <= effective_date,
             or_(
                 EngineerDimensionConfig.expired_date.is_(None),
@@ -164,7 +164,7 @@ class DimensionConfigService:
         dept = self.db.query(Department).filter(
             Department.id == department_id,
             Department.manager_id == operator.employee_id,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if not dept:
@@ -194,7 +194,7 @@ class DimensionConfigService:
         if department_id:
             query = query.filter(EngineerDimensionConfig.department_id == department_id)
         elif not include_global:
-            query = query.filter(EngineerDimensionConfig.is_global == False)
+            query = query.filter(not EngineerDimensionConfig.is_global)
 
         if not include_expired:
             today = date.today()
@@ -234,7 +234,7 @@ class DimensionConfigService:
         # 获取部门经理管理的部门
         dept = self.db.query(Department).filter(
             Department.manager_id == manager.employee_id,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if not dept:
@@ -247,7 +247,7 @@ class DimensionConfigService:
         # 获取部门内所有工程师的岗位类型
         employees = self.db.query(Employee).filter(
             Employee.department_id == dept.id,
-            Employee.is_active == True
+            Employee.is_active
         ).all()
 
         employee_ids = [e.id for e in employees]
@@ -415,6 +415,6 @@ class DimensionConfigService:
     def get_pending_approvals(self) -> List[EngineerDimensionConfig]:
         """获取待审批的部门级别配置"""
         return self.db.query(EngineerDimensionConfig).filter(
-            EngineerDimensionConfig.is_global == False,
+            not EngineerDimensionConfig.is_global,
             EngineerDimensionConfig.approval_status == 'PENDING'
         ).order_by(desc(EngineerDimensionConfig.created_at)).all()

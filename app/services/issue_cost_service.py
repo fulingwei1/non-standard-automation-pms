@@ -3,7 +3,7 @@
 用于查询问题关联的成本记录和工时记录
 """
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict
 
 from sqlalchemy.orm import Session
 

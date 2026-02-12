@@ -7,7 +7,6 @@
 
 import logging
 from datetime import datetime
-from io import BytesIO
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -43,10 +42,8 @@ def generate_acceptance_report(
     """
     生成验收报告（使用统一报表框架）
     """
-    from datetime import datetime
 
     from app.services.report_framework import ConfigError
-    from app.services.report_framework.adapters.acceptance import AcceptanceReportAdapter
     from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()

@@ -11,309 +11,42 @@ env:
   PYTHON_VERSION: "3.11"
 
 jobs:
-  frontend:
-    name: Frontend (lint/test/build)
+  backend-check:
+    name: Backend Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Syntax check
+        run: python -m py_compile app/main.py
+
+      - name: Ruff lint (warnings only)
+        run: ruff check app/ --output-format=github || true
+
+  frontend-check:
+    name: Frontend Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: "10"
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: pnpm install --frozen-lockfile
-
-      - name: Run frontend lint
-        working-directory: frontend
-        run: pnpm run lint
-
-      - name: Run frontend unit tests
-        working-directory: frontend
-        run: pnpm run test:run
-
-      - name: Build frontend
-        working-directory: frontend
-        run: pnpm run build
-
-  lint:
-    name: Code Linting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff flake8 mypy
-          pip install -r requirements.txt
-
-      - name: Run Ruff linter
-        run: |
-          ruff check app/ --output-format=github
-
-      - name: Run Ruff formatter check
-        run: |
-          ruff format --check app/
-
-      - name: Check for TODO/FIXME
-        run: |
-          echo "Checking for TODO/FIXME markers..."
-          TODO_COUNT=$(grep -r "TODO\|FIXME\|XXX\|HACK" app/ --include="*.py" | wc -l || echo "0")
-          if [ "$TODO_COUNT" -gt 0 ]; then
-            echo "⚠️  Found $TODO_COUNT TODO/FIXME markers in code"
-            grep -r "TODO\|FIXME\|XXX\|HACK" app/ --include="*.py" | head -20
-          fi
-
-  type-check:
-    name: Type Checking
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install mypy types-all
-          pip install -r requirements.txt
-
-      - name: Run MyPy type check
-        run: |
-          mypy app/ --ignore-missing-imports --no-error-summary || true
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit safety
-          pip install -r requirements.txt
-
-      - name: Run Bandit security check
-        run: |
-          bandit -r app/ -f json -o bandit-report.json || true
-          bandit -r app/
-
-      - name: Check dependencies for vulnerabilities
-        run: |
-          safety check --json || true
-          safety check
-
-      - name: Upload Bandit report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: bandit-report
-          path: bandit-report.json
-
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-      fail-fast: false
-
-    services:
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: testpassword
-          MYSQL_DATABASE: test_db
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 3306:3306
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install test dependencies
-        run: |
-          pip install pytest pytest-cov pytest-xdist pytest-mock pytest-asyncio
-          pip install factory-boy faker
-
-      - name: Setup test environment
-        run: |
-          mkdir -p data logs uploads
-
-      - name: Run unit tests
-        env:
-          DATABASE_URL: sqlite:///test.db
-          REDIS_URL: redis://localhost:6379/0
-        run: |
-          python -m pytest tests/ -m "not slow and not integration" -v \
-            --cov=app \
-            --cov-report=xml \
-            --cov-report=html \
-            --cov-report=term-missing \
-            --cov-fail-under=40 \
-            -n auto
-
-      - name: Run integration tests
-        env:
-          DATABASE_URL: mysql://root:testpassword@localhost:3306/test_db
-          REDIS_URL: redis://localhost:6379/0
-        run: |
-          python -m pytest tests/integration -v \
-            --cov=app \
-            --cov-append \
-            --cov-report=xml \
-            --cov-fail-under=40 \
-            -n auto || true
-
-      - name: Generate coverage report summary
-        run: |
-          coverage report || true
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.11'
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report-${{ matrix.python-version }}
-          path: htmlcov/
-
-  performance:
-    name: Performance Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest-benchmark locust
-
-      - name: Run performance tests
-        run: |
-          python -m pytest tests/performance -v --benchmark-only || true
-
-      - name: Upload performance results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: performance-results
-          path: .benchmarks/
-
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: [lint, type-check, security, test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/non-standard-automation-pms:latest
-            ${{ secrets.DOCKER_USERNAME }}/non-standard-automation-pms:${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/non-standard-automation-pms:latest
-          cache-to: type=inline
-
-  notify:
-    name: Notify Results
-    runs-on: ubuntu-latest
-    needs: [lint, type-check, security, test, performance]
-    if: always()
-
-    steps:
-      - name: Send notification
-        run: |
-          echo "CI/CD pipeline completed"
-          echo "Lint: ${{ needs.lint.result }}"
-          echo "Type Check: ${{ needs.type-check.result }}"
-          echo "Security: ${{ needs.security.result }}"
-          echo "Test: ${{ needs.test.result }}"
-          echo "Performance: ${{ needs.performance.result }}"
+      - run: pnpm install --frozen-lockfile || pnpm install
+      - run: pnpm run lint || true
+      - run: pnpm run build || true

@@ -9,12 +9,11 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -24,37 +23,15 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
-    PresaleSolutionTemplate,
-    PresaleSupportTicket,
-    PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
 )
-from app.models.project import Project
-from app.models.sales import Opportunity
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import PaginatedResponse
 from app.schemas.presale import (
-    DeliverableCreate,
-    DeliverableResponse,
     SolutionCostResponse,
     SolutionCreate,
     SolutionResponse,
     SolutionReviewRequest,
     SolutionUpdate,
-    TemplateCreate,
-    TemplateResponse,
-    TenderCreate,
-    TenderResponse,
-    TenderResultUpdate,
-    TicketAcceptRequest,
-    TicketBoardResponse,
-    TicketCreate,
-    TicketProgressUpdate,
-    TicketRatingRequest,
-    TicketResponse,
-    TicketUpdate,
 )
 
 router = APIRouter()

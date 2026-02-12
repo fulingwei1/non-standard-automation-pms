@@ -8,7 +8,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.notification import Notification
-from app.models.sales import Contract, Invoice
+from app.models.sales import Invoice
 from app.services.sales_reminder.base import create_notification
 
 

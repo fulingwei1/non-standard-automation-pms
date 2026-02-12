@@ -13,10 +13,9 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.unified_notification_service import get_notification_service, NotificationService as UnifiedNotificationService
+from app.services.unified_notification_service import get_notification_service
 from app.services.channel_handlers.base import (
     NotificationRequest,
-    NotificationChannel,
     NotificationPriority,
 )
 

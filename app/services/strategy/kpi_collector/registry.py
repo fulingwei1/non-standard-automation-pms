@@ -2,7 +2,7 @@
 """
 KPI数据采集器 - 注册器
 """
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 # 数据采集器注册表
 _collectors: Dict[str, Callable] = {}

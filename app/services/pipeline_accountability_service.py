@@ -7,15 +7,14 @@
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
+from app.models.sales import Lead, Quote
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService

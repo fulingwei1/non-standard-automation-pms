@@ -14,7 +14,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
-from app.core.config import settings
 from app.core.schemas import paginated_response, success_response
 from app.models.purchase import (
     PurchaseRequest,

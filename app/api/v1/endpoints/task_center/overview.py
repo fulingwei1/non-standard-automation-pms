@@ -10,48 +10,26 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
 from app.models.task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
     TaskUnified,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
-    TaskCommentCreate,
-    TaskCommentResponse,
     TaskOverviewResponse,
-    TaskProgressUpdate,
-    TaskTransferRequest,
-    TaskUnifiedCreate,
-    TaskUnifiedListResponse,
-    TaskUnifiedResponse,
-    TaskUnifiedUpdate,
 )
-from app.services.sales_reminder import create_notification
 
 router = APIRouter()
 
 # 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
 
 
 from fastapi import APIRouter
@@ -113,7 +91,7 @@ def get_task_overview(
     urgent_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-        or_(TaskUnified.is_urgent == True, TaskUnified.priority == "URGENT")
+        or_(TaskUnified.is_urgent, TaskUnified.priority == "URGENT")
     ).count()
 
     # 按状态统计

@@ -180,7 +180,6 @@ def get_workshop_capacity(
 
     # 如果没有指定日期范围，使用当前月
     from calendar import monthrange
-    from datetime import timedelta
     today = date.today()
     if not start_date:
         start_date = date(today.year, today.month, 1)

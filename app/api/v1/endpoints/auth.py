@@ -3,7 +3,7 @@
 认证相关 API endpoints
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -234,7 +234,7 @@ def get_me(
         .all()
     )
     role_ids = [row.id for row in role_rows]
-    role_names = [row.role_name for row in role_rows]
+    [row.role_name for row in role_rows]
 
     # 检查是否为系统管理员（使用已查询的角色数据，避免N+1查询）
     admin_role_codes = {"admin", "super_admin", "system_admin"}

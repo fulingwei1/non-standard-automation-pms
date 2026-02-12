@@ -21,7 +21,7 @@ def find_users_by_role(db: Session, role_name: str) -> List[User]:
         return []
 
     # 查找匹配的角色
-    roles_query = db.query(Role).filter(Role.is_active == True)
+    roles_query = db.query(Role).filter(Role.is_active)
     roles_query = apply_keyword_filter(
         roles_query,
         Role,
@@ -48,7 +48,7 @@ def find_users_by_role(db: Session, role_name: str) -> List[User]:
 
     users = db.query(User).filter(
         User.id.in_(user_ids),
-        User.is_active == True
+        User.is_active
     ).all()
 
     return users
@@ -62,7 +62,7 @@ def find_users_by_department(db: Session, dept_name: str) -> List[User]:
     if not dept_name:
         return []
 
-    users_query = db.query(User).filter(User.is_active == True)
+    users_query = db.query(User).filter(User.is_active)
     users_query = apply_keyword_filter(
         users_query,
         User,

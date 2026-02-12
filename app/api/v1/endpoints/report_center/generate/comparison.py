@@ -70,13 +70,13 @@ def compare_role_perspectives(
                 common_points.append({
                     "field": key,
                     "value": value,
-                    "description": f"所有角色在此项上一致"
+                    "description": "所有角色在此项上一致"
                 })
             elif values_by_role:
                 differences.append({
                     "field": key,
                     "values": values_by_role,
-                    "description": f"各角色在此项上存在差异"
+                    "description": "各角色在此项上存在差异"
                 })
 
     comparison_data = {

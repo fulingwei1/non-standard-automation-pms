@@ -5,7 +5,6 @@ PMO模型 - 项目立项和阶段
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
 

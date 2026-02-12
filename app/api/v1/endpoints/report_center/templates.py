@@ -59,7 +59,7 @@ def get_report_templates(
     """
     获取报表模板列表
     """
-    query = db.query(ReportTemplate).filter(ReportTemplate.is_active == True)
+    query = db.query(ReportTemplate).filter(ReportTemplate.is_active)
 
     if report_type:
         query = query.filter(ReportTemplate.report_type == report_type)

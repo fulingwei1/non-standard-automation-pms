@@ -11,10 +11,7 @@
 实现从公司战略到部门目标到个人 KPI 的层层分解
 """
 
-import json
-from datetime import date
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -28,11 +25,6 @@ from app.models.strategy import (
 from app.schemas.strategy import (
     DecompositionTreeNode,
     DecompositionTreeResponse,
-    DepartmentObjectiveCreate,
-    DepartmentObjectiveDetailResponse,
-    DepartmentObjectiveUpdate,
-    PersonalKPICreate,
-    PersonalKPIUpdate,
     TraceToStrategyResponse,
 )
 
@@ -57,7 +49,7 @@ def get_decomposition_tree(
     """
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
     if not strategy:
@@ -72,7 +64,7 @@ def get_decomposition_tree(
     # 获取 CSF 节点
     csfs = db.query(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True
+        CSF.is_active
     ).order_by(CSF.dimension, CSF.sort_order).all()
 
     for csf in csfs:
@@ -88,7 +80,7 @@ def get_decomposition_tree(
         # 获取 KPI 子节点
         kpis = db.query(KPI).filter(
             KPI.csf_id == csf.id,
-            KPI.is_active == True
+            KPI.is_active
         ).all()
 
         for kpi in kpis:
@@ -104,7 +96,7 @@ def get_decomposition_tree(
             # 获取部门目标子节点
             dept_objs = db.query(DepartmentObjective).filter(
                 DepartmentObjective.kpi_id == kpi.id,
-                DepartmentObjective.is_active == True
+                DepartmentObjective.is_active
             ).all()
 
             for obj in dept_objs:
@@ -124,7 +116,7 @@ def get_decomposition_tree(
                 # 获取个人 KPI 子节点
                 personal_kpis = db.query(PersonalKPI).filter(
                     PersonalKPI.dept_objective_id == obj.id,
-                    PersonalKPI.is_active == True
+                    PersonalKPI.is_active
                 ).all()
 
                 for pkpi in personal_kpis:

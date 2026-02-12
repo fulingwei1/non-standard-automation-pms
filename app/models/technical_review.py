@@ -16,26 +16,12 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    Numeric,
     String,
     Text,
 )
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
-from .enums import (
-    AttendanceStatusEnum,
-    ChecklistResultEnum,
-    IssueLevelEnum,
-    MaterialTypeEnumReview,
-    MeetingTypeEnum,
-    ParticipantRoleEnum,
-    ReviewConclusionEnum,
-    ReviewIssueStatusEnum,
-    ReviewStatusEnum,
-    ReviewTypeEnum,
-    VerifyResultEnum,
-)
 
 
 class TechnicalReview(Base, TimestampMixin):

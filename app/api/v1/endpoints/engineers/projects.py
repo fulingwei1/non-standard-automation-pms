@@ -38,7 +38,7 @@ def get_my_projects(
     project_members = db.query(ProjectMember).filter(
         and_(
             ProjectMember.user_id == current_user.id,
-            ProjectMember.is_active == True
+            ProjectMember.is_active
         )
     ).all()
 

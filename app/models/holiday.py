@@ -5,7 +5,6 @@
 """
 
 from sqlalchemy import Column, Integer, String, Date, Boolean, Text, Index
-from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
 
@@ -69,7 +68,7 @@ class HolidayService:
         holiday = db.query(Holiday).filter(
             Holiday.holiday_date == check_date,
             Holiday.holiday_type == 'HOLIDAY',
-            Holiday.is_active == True
+            Holiday.is_active
         ).first()
         return holiday is not None
 
@@ -88,7 +87,7 @@ class HolidayService:
         workday = db.query(Holiday).filter(
             Holiday.holiday_date == check_date,
             Holiday.holiday_type == 'WORKDAY',
-            Holiday.is_active == True
+            Holiday.is_active
         ).first()
         return workday is not None
 
@@ -132,6 +131,6 @@ class HolidayService:
         """
         holiday = db.query(Holiday).filter(
             Holiday.holiday_date == check_date,
-            Holiday.is_active == True
+            Holiday.is_active
         ).first()
         return holiday.name if holiday else None

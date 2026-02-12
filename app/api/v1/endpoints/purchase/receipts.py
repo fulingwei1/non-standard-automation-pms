@@ -12,7 +12,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
-from app.core.config import settings
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,

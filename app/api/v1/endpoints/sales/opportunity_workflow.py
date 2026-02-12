@@ -3,7 +3,7 @@
 商机管理 - 工作流操作（阶段门、阶段、评分、赢单、输单）
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query

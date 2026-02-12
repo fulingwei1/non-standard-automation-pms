@@ -11,41 +11,21 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
 from app.models.task_center import (
-    JobDutyTemplate,
     TaskComment,
-    TaskOperationLog,
-    TaskReminder,
     TaskUnified,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
     TaskCommentCreate,
     TaskCommentResponse,
-    TaskOverviewResponse,
-    TaskProgressUpdate,
-    TaskTransferRequest,
-    TaskUnifiedCreate,
-    TaskUnifiedListResponse,
-    TaskUnifiedResponse,
-    TaskUnifiedUpdate,
 )
 from app.services.sales_reminder import create_notification
 
@@ -53,7 +33,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
 
 
 from fastapi import APIRouter
@@ -110,11 +89,11 @@ def create_task_comment(
                 if user_id != current_user.id:  # 不通知自己
                     mentioned_user = db.query(User).filter(User.id == user_id).first()
                     if mentioned_user:
-                        notification = create_notification(
+                        create_notification(
                             db=db,
                             user_id=user_id,
                             notification_type="TASK_MENTIONED",
-                            title=f"任务评论中@了您",
+                            title="任务评论中@了您",
                             content=f"{current_user.real_name or current_user.username} 在任务「{task.title}」的评论中@了您：{comment_in.content[:100]}",
                             source_type="task",
                             source_id=task.id,

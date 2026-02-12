@@ -2,7 +2,6 @@
 """
 商务支持模块 - 客户供应商注册模型
 """
-from datetime import date
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship

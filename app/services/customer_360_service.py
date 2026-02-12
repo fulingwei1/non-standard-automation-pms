@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project, ProjectPaymentPlan

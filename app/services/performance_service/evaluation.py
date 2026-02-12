@@ -18,7 +18,6 @@ from app.models.performance import (
 from app.models.project import Project, ProjectMember
 from app.models.user import User
 
-from .roles import get_user_manager_roles
 
 
 def create_evaluation_tasks(
@@ -48,7 +47,7 @@ def create_evaluation_tasks(
         if emp_obj and emp_obj.department:
             dept = db.query(Department).filter(
                 Department.dept_name == emp_obj.department,
-                Department.is_active == True
+                Department.is_active
             ).first()
 
             if dept and dept.manager_id:
@@ -57,7 +56,7 @@ def create_evaluation_tasks(
                 if manager_emp:
                     manager_user = db.query(User).filter(
                         User.employee_id == manager_emp.id,
-                        User.is_active == True
+                        User.is_active
                     ).first()
 
                     if manager_user:
@@ -90,7 +89,7 @@ def create_evaluation_tasks(
 
     project_members = db.query(ProjectMember).filter(
         ProjectMember.user_id == summary.employee_id,
-        ProjectMember.is_active == True,
+        ProjectMember.is_active,
         or_(
             ProjectMember.start_date.is_(None),
             ProjectMember.start_date <= period_end
@@ -104,7 +103,7 @@ def create_evaluation_tasks(
     for member in project_members:
         project = db.query(Project).filter(
             Project.id == member.project_id,
-            Project.is_active == True
+            Project.is_active
         ).first()
 
         if project and project.pm_id:

@@ -207,7 +207,7 @@ def get_procurement_overview(
     返回各分析模块的汇总数据，用于仪表盘展示
     """
     today = date.today()
-    last_month = today - timedelta(days=30)
+    today - timedelta(days=30)
     last_quarter = today - timedelta(days=90)
 
     # 并行获取各模块数据

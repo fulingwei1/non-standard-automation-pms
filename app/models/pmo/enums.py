@@ -4,7 +4,6 @@ PMO模型 - 枚举定义
 """
 from enum import Enum
 
-from app.models.enums import MeetingTypeEnum
 
 
 class ProjectLevelEnum(str, Enum):

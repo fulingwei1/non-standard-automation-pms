@@ -17,7 +17,6 @@ from app.core import security
 from app.core.state_machine.installation_dispatch import InstallationDispatchStateMachine
 from app.core.state_machine.exceptions import (
     InvalidStateTransitionError,
-    StateMachineValidationError,
     PermissionDeniedError,
 )
 from app.models.installation_dispatch import InstallationDispatchOrder

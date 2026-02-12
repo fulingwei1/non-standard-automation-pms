@@ -7,17 +7,14 @@
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.issue import Issue
 from app.models.progress import Task
-from app.models.project import Project, ProjectMilestone, ProjectStage
-from app.models.user import User
+from app.models.project import Project
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +34,7 @@ class DelayRootCauseService:
         """延期根因分析"""
         # 查询延期任务
         query = self.db.query(Task).filter(
-            Task.is_delayed == True
+            Task.is_delayed
         )
 
         if project_id:

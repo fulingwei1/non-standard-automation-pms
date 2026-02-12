@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.organization import Employee
 from app.models.staff_matching import (
     HrEmployeeProfile,
     HrEmployeeTagEvaluation,
@@ -46,7 +45,7 @@ class SkillScoreCalculator(StaffMatchingBase):
         employee_skills = {}
         skill_evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
             HrEmployeeTagEvaluation.employee_id == employee_id,
-            HrEmployeeTagEvaluation.is_valid == True,
+            HrEmployeeTagEvaluation.is_valid,
             HrTagDict.tag_type == TagTypeEnum.SKILL.value
         ).all()
 
@@ -114,7 +113,7 @@ class DomainScoreCalculator(StaffMatchingBase):
         # 获取员工的领域评估
         domain_evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
             HrEmployeeTagEvaluation.employee_id == employee_id,
-            HrEmployeeTagEvaluation.is_valid == True,
+            HrEmployeeTagEvaluation.is_valid,
             HrTagDict.tag_type == TagTypeEnum.DOMAIN.value
         ).all()
 
@@ -158,7 +157,7 @@ class AttitudeScoreCalculator(StaffMatchingBase):
             # 从评估记录计算
             attitude_evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
                 HrEmployeeTagEvaluation.employee_id == employee_id,
-                HrEmployeeTagEvaluation.is_valid == True,
+                HrEmployeeTagEvaluation.is_valid,
                 HrTagDict.tag_type == TagTypeEnum.ATTITUDE.value
             ).all()
 
@@ -173,7 +172,7 @@ class AttitudeScoreCalculator(StaffMatchingBase):
             employee_attitudes = {}
             evals = db.query(HrEmployeeTagEvaluation).filter(
                 HrEmployeeTagEvaluation.employee_id == employee_id,
-                HrEmployeeTagEvaluation.is_valid == True
+                HrEmployeeTagEvaluation.is_valid
             ).all()
             for eval in evals:
                 employee_attitudes[eval.tag_id] = eval.score
@@ -286,7 +285,7 @@ class SpecialScoreCalculator(StaffMatchingBase):
         # 获取员工的特殊能力评估
         special_evals = db.query(HrEmployeeTagEvaluation).join(HrTagDict).filter(
             HrEmployeeTagEvaluation.employee_id == employee_id,
-            HrEmployeeTagEvaluation.is_valid == True,
+            HrEmployeeTagEvaluation.is_valid,
             HrTagDict.tag_type == TagTypeEnum.SPECIAL.value
         ).all()
 

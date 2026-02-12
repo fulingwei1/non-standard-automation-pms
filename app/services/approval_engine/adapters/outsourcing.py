@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.outsourcing import OutsourcingOrder, OutsourcingOrderItem
 from app.models.project import Project, Machine
 from app.models.vendor import Vendor

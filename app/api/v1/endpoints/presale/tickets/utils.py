@@ -4,15 +4,11 @@
 """
 from datetime import datetime
 
-from fastapi import Depends
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.api import deps
 from app.common.query_filters import apply_like_filter
-from app.core import security
 from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
-from app.models.user import User
 from app.schemas.presale import TicketResponse
 
 

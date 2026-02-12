@@ -8,7 +8,7 @@
 """
 
 from datetime import datetime
-from typing import Any, List
+from typing import List
 
 from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.orm import Session

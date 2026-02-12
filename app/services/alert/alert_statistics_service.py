@@ -4,51 +4,15 @@
 """
 
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, extract, func, or_
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
-from app.core import security
-from app.core.config import settings
 from app.models.alert import (
-    AlertNotification,
     AlertRecord,
     AlertRule,
-    AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
-    ExceptionAction,
-    ExceptionEscalation,
-    ExceptionEvent,
-    ProjectHealthSnapshot,
 )
-from app.models.issue import Issue
-from app.models.project import Machine, Project
-from app.models.user import User
-from app.schemas.alert import (
-    AlertRecordHandle,
-    AlertRecordListResponse,
-    AlertRecordResponse,
-    AlertRuleCreate,
-    AlertRuleResponse,
-    AlertRuleUpdate,
-    AlertStatisticsResponse,
-    AlertSubscriptionCreate,
-    AlertSubscriptionResponse,
-    AlertSubscriptionUpdate,
-    ExceptionEventCreate,
-    ExceptionEventListResponse,
-    ExceptionEventResolve,
-    ExceptionEventResponse,
-    ExceptionEventUpdate,
-    ExceptionEventVerify,
-    ProjectHealthResponse,
-)
-from app.schemas.common import PaginatedResponse, ResponseModel
 
 
 class AlertStatisticsService:

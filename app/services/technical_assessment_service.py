@@ -13,7 +13,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.enums import (
@@ -24,7 +24,6 @@ from app.models.enums import (
 from app.models.sales import (
     FailureCase,
     Lead,
-    LeadRequirementDetail,
     Opportunity,
     ScoringRule,
     TechnicalAssessment,
@@ -105,7 +104,7 @@ class TechnicalAssessmentService:
     def _get_active_scoring_rule(self) -> Optional[ScoringRule]:
         """获取启用的评分规则"""
         return self.db.query(ScoringRule).filter(
-            ScoringRule.is_active == True
+            ScoringRule.is_active
         ).order_by(ScoringRule.created_at.desc()).first()
 
     def _calculate_scores(self, requirement_data: Dict[str, Any],
@@ -118,7 +117,7 @@ class TechnicalAssessmentService:
         """
         evaluation_criteria = rules_config.get('evaluation_criteria', {})
         scales = rules_config.get('scales', {})
-        score_levels = scales.get('score_levels', {})
+        scales.get('score_levels', {})
 
         dimension_scores = {
             'technology': 0,      # 技术维度
@@ -260,9 +259,9 @@ class TechnicalAssessmentService:
 
         # 获取关键匹配字段
         industry = requirement_data.get('industry')
-        product_types = requirement_data.get('productTypes') or requirement_data.get('product_type')
-        takt_time = requirement_data.get('targetTakt') or requirement_data.get('takt_time_s')
-        budget_status = requirement_data.get('budgetStatus') or requirement_data.get('budget_status')
+        requirement_data.get('productTypes') or requirement_data.get('product_type')
+        requirement_data.get('targetTakt') or requirement_data.get('takt_time_s')
+        requirement_data.get('budgetStatus') or requirement_data.get('budget_status')
 
         # 查询失败案例
         query = self.db.query(FailureCase)
@@ -422,7 +421,7 @@ class TechnicalAssessmentService:
                     and_(
                         OpenItem.source_type == source_type,
                         OpenItem.source_id == source_id,
-                        OpenItem.blocks_quotation == True,
+                        OpenItem.blocks_quotation,
                         OpenItem.status != 'CLOSED'
                     )
                 ).all()

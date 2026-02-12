@@ -159,12 +159,12 @@ class PitfallService:
         if problem_type:
             query = query.filter(Pitfall.problem_type == problem_type)
         if verified_only:
-            query = query.filter(Pitfall.verified == True)
+            query = query.filter(Pitfall.verified)
 
         # 排除无权限的敏感记录
         query = query.filter(
             or_(
-                Pitfall.is_sensitive == False,
+                not Pitfall.is_sensitive,
                 Pitfall.created_by == user_id,
             )
         )

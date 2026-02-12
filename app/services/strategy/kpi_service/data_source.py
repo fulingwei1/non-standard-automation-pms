@@ -56,7 +56,7 @@ def get_kpi_data_sources(db: Session, kpi_id: int) -> List[KPIDataSourceResponse
     """
     sources = db.query(KPIDataSource).filter(
         KPIDataSource.kpi_id == kpi_id,
-        KPIDataSource.is_active == True
+        KPIDataSource.is_active
     ).all()
 
     return [

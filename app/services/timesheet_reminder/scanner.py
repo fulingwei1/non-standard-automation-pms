@@ -11,16 +11,10 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models.notification import Notification
-from app.models.timesheet import Timesheet
-from app.models.user import User
-from app.services.timesheet_quality_service import TimesheetQualityService
 from app.services.timesheet_reminder.missing_reminders import notify_timesheet_missing, notify_weekly_timesheet_missing
 from app.services.timesheet_reminder.anomaly_reminders import notify_timesheet_anomaly
 from app.services.timesheet_reminder.approval_reminders import notify_approval_timeout

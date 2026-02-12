@@ -57,7 +57,6 @@ def get_week_timesheet(
     获取周工时表（按周展示）
     """
     from app.core.permissions.timesheet import (
-        is_timesheet_admin,
         get_user_manageable_dimensions,
     )
 

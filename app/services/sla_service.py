@@ -12,7 +12,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.service import ServiceTicket
-from app.models.sla import SLAMonitor, SLAPolicy, SLAStatusEnum
+from app.models.sla import SLAMonitor, SLAPolicy
 
 
 def match_sla_policy(
@@ -34,7 +34,7 @@ def match_sla_policy(
         and_(
             SLAPolicy.problem_type == problem_type,
             SLAPolicy.urgency == urgency,
-            SLAPolicy.is_active == True
+            SLAPolicy.is_active
         )
     ).order_by(SLAPolicy.priority).first()
 
@@ -46,7 +46,7 @@ def match_sla_policy(
         and_(
             SLAPolicy.problem_type == problem_type,
             SLAPolicy.urgency.is_(None),
-            SLAPolicy.is_active == True
+            SLAPolicy.is_active
         )
     ).order_by(SLAPolicy.priority).first()
 
@@ -58,7 +58,7 @@ def match_sla_policy(
         and_(
             SLAPolicy.urgency == urgency,
             SLAPolicy.problem_type.is_(None),
-            SLAPolicy.is_active == True
+            SLAPolicy.is_active
         )
     ).order_by(SLAPolicy.priority).first()
 
@@ -70,7 +70,7 @@ def match_sla_policy(
         and_(
             SLAPolicy.problem_type.is_(None),
             SLAPolicy.urgency.is_(None),
-            SLAPolicy.is_active == True
+            SLAPolicy.is_active
         )
     ).order_by(SLAPolicy.priority).first()
 
@@ -219,19 +219,19 @@ def check_sla_warnings(
     # 查找需要预警的监控记录
     monitors = db.query(SLAMonitor).join(SLAPolicy).filter(
         and_(
-            SLAPolicy.is_active == True,
+            SLAPolicy.is_active,
             or_(
                 # 响应预警：未响应且达到预警阈值且未发送过预警
                 and_(
                     SLAMonitor.actual_response_time.is_(None),
                     SLAMonitor.response_status == 'WARNING',
-                    SLAMonitor.response_warning_sent == False
+                    not SLAMonitor.response_warning_sent
                 ),
                 # 解决预警：未解决且达到预警阈值且未发送过预警
                 and_(
                     SLAMonitor.actual_resolve_time.is_(None),
                     SLAMonitor.resolve_status == 'WARNING',
-                    SLAMonitor.resolve_warning_sent == False
+                    not SLAMonitor.resolve_warning_sent
                 )
             )
         )

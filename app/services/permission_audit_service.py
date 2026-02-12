@@ -4,12 +4,11 @@
 记录权限相关的操作日志
 """
 
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.user import PermissionAudit, User
+from app.models.user import PermissionAudit
 
 
 class PermissionAuditService:

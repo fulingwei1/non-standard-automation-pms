@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.models.project import ProjectTemplate, ProjectTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -22,8 +21,6 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.schemas.project import (
     ProjectTemplateVersionCreate,
-    ProjectTemplateVersionResponse,
-    ProjectTemplateVersionUpdate,
 )
 
 router = APIRouter()
@@ -56,7 +53,6 @@ def get_template_versions(
         items.append({
             "id": version.id,
             "template_id": version.template_id,
-            "version_no": version.version_no,
             "version_no": version.version_no,
             "description": version.description,
             "is_published": version.status == "published",
@@ -116,7 +112,6 @@ def create_template_version(
         data={
             "id": version.id,
             "template_id": version.template_id,
-            "version_no": version.version_no,
             "version_no": version.version_no,
         }
     )

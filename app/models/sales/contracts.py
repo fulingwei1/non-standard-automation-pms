@@ -2,8 +2,6 @@
 """
 合同相关模型
 """
-from datetime import date, datetime
-from decimal import Decimal
 
 from sqlalchemy import (
     JSON,

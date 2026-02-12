@@ -98,24 +98,24 @@ def create_hourly_rate_config(
         existing = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "USER",
             HourlyRateConfig.user_id == config_in.user_id,
-            HourlyRateConfig.is_active == True
+            HourlyRateConfig.is_active
         ).first()
     elif config_in.config_type == "ROLE" and config_in.role_id:
         existing = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "ROLE",
             HourlyRateConfig.role_id == config_in.role_id,
-            HourlyRateConfig.is_active == True
+            HourlyRateConfig.is_active
         ).first()
     elif config_in.config_type == "DEPT" and config_in.dept_id:
         existing = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "DEPT",
             HourlyRateConfig.dept_id == config_in.dept_id,
-            HourlyRateConfig.is_active == True
+            HourlyRateConfig.is_active
         ).first()
     elif config_in.config_type == "DEFAULT":
         existing = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "DEFAULT",
-            HourlyRateConfig.is_active == True
+            HourlyRateConfig.is_active
         ).first()
 
     if existing:

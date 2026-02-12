@@ -47,7 +47,6 @@ def assign_acceptance_issue(
 
     # 记录原值
     old_assigned_to = issue.assigned_to
-    old_due_date = issue.due_date
 
     # 更新问题
     issue.assigned_to = assign_in.assigned_to

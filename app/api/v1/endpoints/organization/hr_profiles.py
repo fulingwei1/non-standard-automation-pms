@@ -6,7 +6,7 @@
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -187,12 +187,12 @@ def get_hr_statistics(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Dict[str, Any]:
     """获取人事统计概览"""
-    total = db.query(Employee).filter(Employee.is_active == True).count()
+    total = db.query(Employee).filter(Employee.is_active).count()
 
     dept_stats = db.query(
         EmployeeHrProfile.dept_level1,
         func.count(EmployeeHrProfile.id)
-    ).join(Employee).filter(Employee.is_active == True).group_by(
+    ).join(Employee).filter(Employee.is_active).group_by(
         EmployeeHrProfile.dept_level1
     ).all()
 
@@ -202,7 +202,7 @@ def get_hr_statistics(
     ).group_by(Employee.employment_status).all()
 
     probation_count = db.query(Employee).filter(
-        Employee.is_active == True,
+        Employee.is_active,
         Employee.employment_type == 'probation'
     ).count()
 

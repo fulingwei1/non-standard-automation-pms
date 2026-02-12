@@ -147,7 +147,7 @@ def find_available_workers(
 
     # 查询工人
     query = db.query(Worker).filter(
-        Worker.is_active == True,
+        Worker.is_active,
         Worker.status == 'ACTIVE'
     )
 
@@ -215,7 +215,7 @@ def check_worker_skill(
         ProcessDict, WorkerSkill.process_id == ProcessDict.id
     ).filter(
         WorkerSkill.worker_id == worker_id,
-        ProcessDict.is_active == True
+        ProcessDict.is_active
     ).all()
 
     if not worker_skills:

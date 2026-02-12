@@ -5,8 +5,7 @@
 """
 
 from datetime import datetime
-from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -196,7 +195,7 @@ class SpecMatchService:
         # 查找或创建预警规则
         rule = db.query(AlertRule).filter(
             AlertRule.rule_type == AlertRuleTypeEnum.SPECIFICATION_MISMATCH.value,
-            AlertRule.is_enabled == True
+            AlertRule.is_enabled
         ).first()
 
         if not rule:

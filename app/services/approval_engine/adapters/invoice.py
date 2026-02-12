@@ -196,7 +196,7 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         }
 
         # 创建审批实例
-        approval_data = ApprovalInstanceCreate(
+        ApprovalInstanceCreate(
             template_code="SALES_INVOICE",
             entity_type="INVOICE",
             entity_id=invoice.id,

@@ -4,9 +4,8 @@
 """
 
 from datetime import date, datetime
-from typing import Any, Dict
+from typing import Dict
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue, IssueStatisticsSnapshot
@@ -136,7 +135,7 @@ def count_blocking_and_overdue_issues(
         Dict[str, int]: 阻塞和逾期统计字典
     """
     blocking_count = db.query(Issue).filter(
-        Issue.is_blocking == True,
+        Issue.is_blocking,
         Issue.status.in_(['OPEN', 'PROCESSING'])
     ).count()
 

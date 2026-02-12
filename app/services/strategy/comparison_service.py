@@ -67,7 +67,7 @@ def get_strategy_comparison(
     """
     return db.query(StrategyComparison).filter(
         StrategyComparison.id == comparison_id,
-        StrategyComparison.is_active == True
+        StrategyComparison.is_active
     ).first()
 
 
@@ -89,7 +89,7 @@ def list_strategy_comparisons(
     Returns:
         tuple: (对比记录列表, 总数)
     """
-    query = db.query(StrategyComparison).filter(StrategyComparison.is_active == True)
+    query = db.query(StrategyComparison).filter(StrategyComparison.is_active)
 
     if base_strategy_id:
         query = query.filter(StrategyComparison.base_strategy_id == base_strategy_id)
@@ -142,12 +142,12 @@ def generate_yoy_report(
     # 获取两年的战略
     current_strategy = db.query(Strategy).filter(
         Strategy.year == current_year,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
     previous_strategy = db.query(Strategy).filter(
         Strategy.year == previous_year,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
     if not current_strategy or not previous_strategy:
@@ -234,13 +234,13 @@ def _compare_csfs(
     current_csfs = db.query(CSF).filter(
         CSF.strategy_id == current_strategy_id,
         CSF.dimension == dimension,
-        CSF.is_active == True
+        CSF.is_active
     ).all()
 
     previous_csfs = db.query(CSF).filter(
         CSF.strategy_id == previous_strategy_id,
         CSF.dimension == dimension,
-        CSF.is_active == True
+        CSF.is_active
     ).all()
 
     # 按编码匹配
@@ -293,14 +293,14 @@ def _compare_kpis(
 
     current_kpis = db.query(KPI).filter(
         KPI.csf_id == current_csf_id,
-        KPI.is_active == True
+        KPI.is_active
     ).all()
 
     previous_kpis = []
     if previous_csf_id:
         previous_kpis = db.query(KPI).filter(
             KPI.csf_id == previous_csf_id,
-            KPI.is_active == True
+            KPI.is_active
         ).all()
 
     # 按编码匹配
@@ -361,7 +361,7 @@ def get_multi_year_trend(
     for year in range(current_year - years + 1, current_year + 1):
         strategy = db.query(Strategy).filter(
             Strategy.year == year,
-            Strategy.is_active == True
+            Strategy.is_active
         ).first()
 
         if not strategy:
@@ -419,19 +419,19 @@ def get_kpi_achievement_comparison(
 
     current_strategy = db.query(Strategy).filter(
         Strategy.year == current_year,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
     previous_strategy = db.query(Strategy).filter(
         Strategy.year == previous_year,
-        Strategy.is_active == True
+        Strategy.is_active
     ).first()
 
     def get_kpi_stats(strategy_id: int) -> Dict[str, Any]:
         kpis = db.query(KPI).join(CSF).filter(
             CSF.strategy_id == strategy_id,
-            CSF.is_active == True,
-            KPI.is_active == True
+            CSF.is_active,
+            KPI.is_active
         ).all()
 
         total = len(kpis)

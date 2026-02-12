@@ -5,10 +5,9 @@
 """
 
 from typing import Dict, List, Any, Optional, Type, TypeVar
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select, and_, or_
-from sqlalchemy.orm import Query
+from sqlalchemy import func, select, and_
 
 from app.common.crud.filters import QueryBuilder
 

@@ -40,14 +40,14 @@ class ProjectFilterService:
         """
         # 超级管理员可以访问所有项目
         if user.is_superuser:
-            all_projects = db.query(Project.id).filter(Project.is_active == True).all()
+            all_projects = db.query(Project.id).filter(Project.is_active).all()
             return {p[0] for p in all_projects}
 
         data_scope = UserScopeService.get_user_data_scope(db, user)
 
         if data_scope == DataScopeEnum.ALL.value:
             # 全部可见
-            all_projects = db.query(Project.id).filter(Project.is_active == True).all()
+            all_projects = db.query(Project.id).filter(Project.is_active).all()
             return {p[0] for p in all_projects}
 
         elif data_scope == DataScopeEnum.DEPT.value:
@@ -61,7 +61,7 @@ class ProjectFilterService:
                 if dept:
                     dept_projects = db.query(Project.id).filter(
                         Project.dept_id == dept.id,
-                        Project.is_active == True,
+                        Project.is_active,
                     ).all()
                     project_ids = {p[0] for p in dept_projects}
 
@@ -79,7 +79,7 @@ class ProjectFilterService:
                     Project.created_by.in_(allowed_user_ids),
                     Project.pm_id.in_(allowed_user_ids),
                 ),
-                Project.is_active == True,
+                Project.is_active,
             ).all()
             project_ids = {p[0] for p in sub_projects}
 
@@ -98,7 +98,7 @@ class ProjectFilterService:
                     Project.created_by == user.id,
                     Project.pm_id == user.id,
                 ),
-                Project.is_active == True,
+                Project.is_active,
             ).all()
             project_ids = {p[0] for p in own_projects}
 
@@ -277,7 +277,7 @@ class ProjectFilterService:
                 .filter(
                     ProjectMember.project_id == project_id,
                     ProjectMember.user_id == user.id,
-                    ProjectMember.is_active == True
+                    ProjectMember.is_active
                 )
                 .first()
             )

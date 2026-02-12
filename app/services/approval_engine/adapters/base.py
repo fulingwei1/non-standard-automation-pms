@@ -217,7 +217,7 @@ class ApprovalAdapter(ABC):
         # 查找部门
         dept = self.db.query(Department).filter(
             Department.dept_name == dept_name,
-            Department.is_active == True
+            Department.is_active
         ).first()
 
         if not dept or not dept.manager_id:
@@ -237,7 +237,7 @@ class ApprovalAdapter(ABC):
                 User.real_name == manager.name,
                 User.username == manager.employee_code
             ),
-            User.is_active == True
+            User.is_active
         ).first()
 
         return user.id if user else None
@@ -261,7 +261,7 @@ class ApprovalAdapter(ABC):
         # 批量查询部门
         depts = self.db.query(Department).filter(
             Department.dept_code.in_(dept_codes),
-            Department.is_active == True
+            Department.is_active
         ).all()
 
         manager_ids = [d.manager_id for d in depts if d.manager_id]
@@ -285,7 +285,7 @@ class ApprovalAdapter(ABC):
         # 批量查询用户
         users = self.db.query(User).filter(
             or_(*name_conditions),
-            User.is_active == True
+            User.is_active
         ).all()
 
         user_ids = [u.id for u in users]

@@ -12,7 +12,6 @@ from typing import Any, Dict
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
     NotificationRequest,
-    NotificationChannel,
     NotificationPriority,
 )
 

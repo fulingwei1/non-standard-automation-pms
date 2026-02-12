@@ -3,17 +3,15 @@
 工作日志服务层
 """
 
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from datetime import datetime
 
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.organization import Department
 from app.models.project import Machine, Project, ProjectStatusLog
 from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.models.work_log import MentionTypeEnum, WorkLog, WorkLogConfig, WorkLogMention
+from app.models.work_log import MentionTypeEnum, WorkLog, WorkLogMention
 from app.schemas.work_log import (
     MentionOption,
     MentionOptionsResponse,
@@ -55,7 +53,7 @@ class WorkLogService:
         ).first()
 
         if existing:
-            raise ValueError(f'该日期已提交工作日志，请更新现有记录或选择其他日期')
+            raise ValueError('该日期已提交工作日志，请更新现有记录或选择其他日期')
 
         # 获取用户信息
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -396,7 +394,7 @@ class WorkLogService:
 
         # 获取用户有权限的项目列表（简化处理：获取所有项目，实际应该根据权限过滤）
         project_list = self.db.query(Project).filter(
-            Project.is_active == True
+            Project.is_active
         ).all()
         for project in project_list:
             projects.append(MentionOption(
@@ -407,7 +405,7 @@ class WorkLogService:
 
         # 获取用户有权限的设备列表（简化处理：获取所有设备，实际应该根据权限过滤）
         machine_list = self.db.query(Machine).join(Project).filter(
-            Project.is_active == True
+            Project.is_active
         ).all()
         for machine in machine_list:
             machines.append(MentionOption(
@@ -418,7 +416,7 @@ class WorkLogService:
 
         # 获取用户列表（简化处理：获取所有活跃用户，实际应该根据权限范围过滤）
         user_list = self.db.query(User).filter(
-            User.is_active == True
+            User.is_active
         ).all()
         for user in user_list:
             users.append(MentionOption(

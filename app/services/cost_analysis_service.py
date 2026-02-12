@@ -4,18 +4,14 @@
 负责项目成本预测、成本超支预警、成本对比分析
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectCost
+from app.models.project import Project
 from app.models.timesheet import Timesheet
-from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
-from app.services.labor_cost_service import LaborCostService
 
 
 class CostAnalysisService:
@@ -119,7 +115,7 @@ class CostAnalysisService:
         Returns:
             预警列表
         """
-        query = self.db.query(Project).filter(Project.is_active == True)
+        query = self.db.query(Project).filter(Project.is_active)
 
         if project_id:
             query = query.filter(Project.id == project_id)

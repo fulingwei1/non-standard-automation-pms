@@ -269,7 +269,7 @@ class PerformanceCalculator:
             else:
                 weighted_win_rate = 0
 
-            win_rate = total_won / len(solutions) * 100 if solutions else 0
+            total_won / len(solutions) * 100 if solutions else 0
             win_rate_score = min(Decimal(str(weighted_win_rate)) / 40 * 100, 120)  # 目标40%，使用加权值
 
             # 方案通过率

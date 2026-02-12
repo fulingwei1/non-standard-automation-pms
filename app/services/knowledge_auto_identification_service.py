@@ -5,7 +5,7 @@
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
@@ -13,10 +13,8 @@ from app.common.query_filters import apply_keyword_filter
 from app.models.engineer_performance import (
     CodeModule,
     KnowledgeContribution,
-    PlcModuleLibrary,
 )
 from app.models.service import KnowledgeBase, ServiceTicket
-from app.models.user import User
 from app.services.knowledge_extraction_service import auto_extract_knowledge_from_ticket
 
 

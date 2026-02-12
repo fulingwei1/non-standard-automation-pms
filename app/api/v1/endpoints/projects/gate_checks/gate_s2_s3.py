@@ -11,12 +11,11 @@ gate_s2_s3 阶段门检查
 包含所有阶段门校验逻辑（S1→S2 到 S8→S9）
 """
 
-from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.project import Project
 
 
 

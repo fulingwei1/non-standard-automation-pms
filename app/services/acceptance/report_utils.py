@@ -9,7 +9,7 @@ import hashlib
 import logging
 import os
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Tuple
 
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
@@ -98,7 +98,7 @@ def save_report_file(
     report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
     os.makedirs(report_dir, exist_ok=True)
 
-    version = get_report_version(db, order.id, report_type)
+    get_report_version(db, order.id, report_type)
 
     try:
         # 尝试生成PDF（如果reportlab可用）

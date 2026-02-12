@@ -29,7 +29,7 @@ def check_production_plan_alerts():
             # 获取或创建预警规则
             plan_rule = db.query(AlertRule).filter(
                 AlertRule.rule_code == 'PRODUCTION_PLAN',
-                AlertRule.is_enabled == True
+                AlertRule.is_enabled
             ).first()
 
             if not plan_rule:
@@ -131,7 +131,7 @@ def check_work_report_timeout():
             # 获取或创建预警规则
             timeout_rule = db.query(AlertRule).filter(
                 AlertRule.rule_code == 'WORK_REPORT_TIMEOUT',
-                AlertRule.is_enabled == True
+                AlertRule.is_enabled
             ).first()
 
             if not timeout_rule:
@@ -236,7 +236,6 @@ def generate_production_daily_reports(target_date=None):
     生成生产日报
     每天凌晨执行，汇总前一天的生产数据
     """
-    from typing import Optional
 
     try:
         with get_db_session() as db:
@@ -288,7 +287,7 @@ def _calculate_production_daily_stats(db, target_date, workshop_id):
     """
     计算生产日统计数据
     """
-    from app.models.production import WorkOrder, WorkReport
+    from app.models.production import WorkOrder
 
     # 查询当天的工单
     query = db.query(WorkOrder).filter(

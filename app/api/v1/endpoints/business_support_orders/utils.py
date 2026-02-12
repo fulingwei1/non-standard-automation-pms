@@ -8,7 +8,6 @@
 import json
 import logging
 from datetime import datetime
-from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy import desc
@@ -109,11 +108,10 @@ def _send_project_department_notifications(
     # 获取项目成员
     project_members = db.query(ProjectMember).filter(
         ProjectMember.project_id == project_id,
-        ProjectMember.is_active == True
+        ProjectMember.is_active
     ).all()
 
     # 根据角色分类发送通知
-    from app.models.user import Role, UserRole
 
     # 获取相关部门的ID
     dept_mapping = {
@@ -152,7 +150,7 @@ def _send_project_department_notifications(
         if dept:
             dept_users = db.query(User).filter(
                 User.department_id == dept.id,
-                User.is_active == True
+                User.is_active
             ).all()
 
             for user in dept_users:

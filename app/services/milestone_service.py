@@ -53,7 +53,7 @@ class MilestoneService(
         )
 
         # This will trigger _on_status_change
-        updated_milestone = self.update(milestone_id, update_data)
+        self.update(milestone_id, update_data)
 
         # Convert back to model if response_schema was used
         # Note: BaseService.update returns response_schema

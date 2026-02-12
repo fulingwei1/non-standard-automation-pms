@@ -4,10 +4,9 @@
 """
 
 import io
-from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_
 from sqlalchemy.orm import Session

@@ -64,7 +64,7 @@ class CustomRuleService:
             role_data_scope = db.query(RoleDataScope).filter(
                 RoleDataScope.role_id.in_(role_ids),
                 RoleDataScope.resource_type == resource_type,
-                RoleDataScope.is_active == True
+                RoleDataScope.is_active
             ).first()
 
             if not role_data_scope:
@@ -74,7 +74,7 @@ class CustomRuleService:
             rule = db.query(DataScopeRule).filter(
                 DataScopeRule.id == role_data_scope.scope_rule_id,
                 DataScopeRule.scope_type == "CUSTOM",
-                DataScopeRule.is_active == True
+                DataScopeRule.is_active
             ).first()
 
             return rule

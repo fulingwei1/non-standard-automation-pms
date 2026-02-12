@@ -3,12 +3,12 @@
 KPI数据采集器 - 模块采集器
 """
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .registry import get_collector, register_collector
+from .registry import register_collector
 
 
 @register_collector("PROJECT")
@@ -34,7 +34,7 @@ def collect_project_metrics(
 
     filters = filters or {}
 
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
 
     # 应用筛选条件
     if "status" in filters:
@@ -214,7 +214,7 @@ def collect_purchase_metrics(
 
     filters = filters or {}
 
-    query = db.query(PurchaseOrder).filter(PurchaseOrder.is_active == True)
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.is_active)
 
     # 应用筛选条件
     if "year" in filters:
@@ -343,9 +343,8 @@ def collect_hr_metrics(
 
     elif metric == "EMPLOYEE_CONFIRMATION_RATE":
         # 转正率 = 已转正人数 / (已转正 + 试用期离职) * 100
-        from sqlalchemy import or_
         confirmed = db.query(func.count(EmployeeHrProfile.id)).filter(
-            EmployeeHrProfile.is_confirmed == True
+            EmployeeHrProfile.is_confirmed
         ).scalar() or 0
 
         # 试用期离职（简化：employment_type仍为probation且状态为resigned）

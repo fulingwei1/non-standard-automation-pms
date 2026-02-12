@@ -19,7 +19,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.ecn import EcnListResponse
 
-from .utils import build_ecn_list_response, get_user_display_name
+from .utils import get_user_display_name
 
 router = APIRouter()
 

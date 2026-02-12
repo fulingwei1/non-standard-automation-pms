@@ -4,7 +4,6 @@
 从已解决工单自动提取知识，生成知识库文章和解决方案模板
 """
 
-from datetime import datetime
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -80,7 +79,7 @@ def auto_extract_knowledge_from_ticket(
     if ticket.preventive_action:
         content_parts.append(f"## 预防措施\n\n{ticket.preventive_action}\n\n")
 
-    content_parts.append(f"## 相关信息\n\n")
+    content_parts.append("## 相关信息\n\n")
     content_parts.append(f"- 工单号：{ticket.ticket_no}\n")
     content_parts.append(f"- 问题类型：{ticket.problem_type}\n")
     content_parts.append(f"- 紧急程度：{ticket.urgency}\n")

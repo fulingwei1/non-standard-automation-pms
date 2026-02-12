@@ -32,12 +32,12 @@ class AnalysisReportMixin:
         if department_id:
             users = db.query(User).filter(
                 User.department_id == department_id,
-                User.is_active == True
+                User.is_active
             ).all()
             dept = db.query(Department).filter(Department.id == department_id).first()
             scope_name = dept.name if dept else "部门"
         else:
-            users = db.query(User).filter(User.is_active == True).all()
+            users = db.query(User).filter(User.is_active).all()
             scope_name = "全公司"
 
         user_ids = [u.id for u in users]
@@ -134,7 +134,7 @@ class AnalysisReportMixin:
             projects = db.query(Project).filter(Project.id == project_id).all()
         else:
             projects = db.query(Project).filter(
-                Project.is_active == True,
+                Project.is_active,
                 Project.status.in_(["IN_PROGRESS", "ON_HOLD"])
             ).all()
 

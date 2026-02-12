@@ -4,10 +4,10 @@
 """
 
 import io
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ def export_workload(
     导出负荷数据（Excel）
     基于资源分配和工时数据计算人员负荷
     """
-    users = db.query(User).filter(User.is_active == True).all()
+    users = db.query(User).filter(User.is_active).all()
 
     data = []
     for user in users:

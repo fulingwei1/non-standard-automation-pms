@@ -54,7 +54,7 @@ def create_project_from_template(
     else:
         version = db.query(ProjectTemplateVersion).filter(
             ProjectTemplateVersion.template_id == template_id,
-            ProjectTemplateVersion.is_published == True
+            ProjectTemplateVersion.is_published
         ).order_by(desc(ProjectTemplateVersion.version_no)).first()
 
     # 创建项目

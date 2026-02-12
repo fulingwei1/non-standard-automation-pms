@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
-from app.core.schemas import list_response, paginated_response, success_response
+from app.core.schemas import paginated_response, success_response
 from app.models.user import User
 from app.schemas.pitfall import (
     PitfallCreate,

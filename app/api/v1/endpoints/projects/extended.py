@@ -10,7 +10,6 @@ from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -62,7 +61,7 @@ def get_project_statistics(
     """
     from app.services.data_scope import DataScopeService
 
-    query = db.query(Project).filter(Project.is_active == True)
+    query = db.query(Project).filter(Project.is_active)
 
     # 应用数据权限过滤
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)

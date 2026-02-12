@@ -56,7 +56,7 @@ def get_annual_work_detail(db: Session, work_id: int) -> Optional[AnnualKeyWorkD
     # 获取关联项目
     links = db.query(AnnualKeyWorkProjectLink).filter(
         AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active == True
+        AnnualKeyWorkProjectLink.is_active
     ).all()
 
     linked_projects = []
@@ -125,9 +125,9 @@ def get_annual_work_stats(
 
     works = db.query(AnnualKeyWork).join(CSF).filter(
         CSF.strategy_id == strategy_id,
-        CSF.is_active == True,
+        CSF.is_active,
         AnnualKeyWork.year == year,
-        AnnualKeyWork.is_active == True
+        AnnualKeyWork.is_active
     ).all()
 
     total = len(works)

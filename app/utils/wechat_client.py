@@ -4,7 +4,6 @@
 实现access_token获取、缓存和消息发送
 """
 
-import json
 import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional

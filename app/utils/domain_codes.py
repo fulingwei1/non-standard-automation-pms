@@ -16,7 +16,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.utils.number_generator import generate_sequential_no, generate_monthly_no
+from app.utils.number_generator import generate_sequential_no
 
 
 # ==================== 外协管理 (Outsourcing) ====================

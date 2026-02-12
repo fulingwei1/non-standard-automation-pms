@@ -12,7 +12,6 @@ from app.api import deps
 from app.core import security
 from app.models.material import BomHeader
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.material import BomResponse
 
 router = APIRouter()
@@ -43,7 +42,7 @@ def get_bom_versions(
     result = []
     for version in versions:
         # 获取BOM明细数量（简化版，不加载完整明细）
-        item_count = version.items.count()
+        version.items.count()
 
         result.append(
             BomResponse(
@@ -94,7 +93,7 @@ def compare_bom_versions(
             .filter(
                 BomHeader.bom_no == bom.bom_no,
                 BomHeader.status == "RELEASED",
-                BomHeader.is_latest == True,
+                BomHeader.is_latest,
             )
             .first()
         )

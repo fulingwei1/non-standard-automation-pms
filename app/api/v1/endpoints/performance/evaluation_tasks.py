@@ -9,7 +9,7 @@ from datetime import date
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -48,7 +48,7 @@ def _get_department_members(db: Session, user: User) -> List[int]:
 
     # 先查找当前用户关联的 employee
     employee = db.query(Employee).filter(
-        Employee.is_active == True,
+        Employee.is_active,
         or_(
             Employee.name == user.real_name,
             Employee.employee_code == user.username
@@ -61,7 +61,7 @@ def _get_department_members(db: Session, user: User) -> List[int]:
     # 查找以该员工为经理的部门
     managed_depts = db.query(Department).filter(
         Department.manager_id == employee.id,
-        Department.is_active == True
+        Department.is_active
     ).all()
 
     if not managed_depts:
@@ -73,7 +73,7 @@ def _get_department_members(db: Session, user: User) -> List[int]:
     # 通过 User 表的 department 字段匹配
     member_ids = db.query(User.id).filter(
         User.department.in_(dept_names),
-        User.is_active == True,
+        User.is_active,
         User.id != user.id  # 排除自己
     ).all()
 
@@ -90,7 +90,7 @@ def _get_project_member_info(db: Session, user: User) -> List[dict]:
     # 查找当前用户担任PM的活跃项目
     managed_projects = db.query(Project).filter(
         Project.pm_id == user.id,
-        Project.is_active == True
+        Project.is_active
     ).all()
 
     if not managed_projects:

@@ -7,21 +7,15 @@
 from typing import (
     Any,
     Dict,
-    Generic,
-    List,
     Optional,
-    Sequence,
-    Tuple,
     Type,
     TypeVar,
-    Union,
 )
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from .sync_repository import SyncBaseRepository
 from .base_crud_service import BaseCRUDService
-from .types import PaginatedResult, QueryParams, SortOrder
 
 # 类型变量声明
 ModelType = TypeVar("ModelType")

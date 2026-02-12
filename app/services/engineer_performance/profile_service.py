@@ -121,7 +121,7 @@ class ProfileService:
             # 获取部门内的员工
             employees = self.db.query(Employee).filter(
                 Employee.department_id == department_id,
-                Employee.is_active == True
+                Employee.is_active
             ).all()
 
             employee_ids = [e.id for e in employees]

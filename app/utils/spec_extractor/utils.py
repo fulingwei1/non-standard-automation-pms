@@ -3,7 +3,6 @@
 技术规格要求提取器 - 工具函数
 """
 import re
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session

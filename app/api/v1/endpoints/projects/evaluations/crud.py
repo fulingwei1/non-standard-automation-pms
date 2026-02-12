@@ -7,8 +7,8 @@
 """
 
 from decimal import Decimal
-from typing import Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Path, Body, Query, status
+from typing import Any
+from fastapi import APIRouter, Depends, HTTPException, Path, Body, status
 from sqlalchemy.orm import Session
 
 from app.api.v1.core.project_crud_base import create_project_crud_router
@@ -188,7 +188,6 @@ def list_project_evaluations(
 ) -> Any:
     """获取项目的所有评价记录（覆盖基类端点，使用正确的响应格式）"""
     from app.schemas.project_evaluation import ProjectEvaluationListResponse
-    from sqlalchemy import or_
     
     check_project_access_or_raise(db, current_user, project_id)
     

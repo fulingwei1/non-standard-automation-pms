@@ -42,7 +42,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
         # 统计车间数量
         workshop_count = (
             self.db.query(func.count(Workshop.id))
-            .filter(Workshop.is_active == True)
+            .filter(Workshop.is_active)
             .scalar()
             or 0
         )
@@ -146,7 +146,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
     def get_detailed_data(self) -> DetailedDashboardResponse:
         """获取详细数据"""
         today = date.today()
-        month_start_date = month_start(today)
+        month_start(today)
 
         # 统计数据（复用get_stats的逻辑）
         stats_cards = self.get_stats()

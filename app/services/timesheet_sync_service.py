@@ -4,18 +4,15 @@
 负责将工时数据自动同步到财务、研发、项目和HR系统
 """
 
-from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
-from app.models.project import FinancialProjectCost, Project, ProjectCost
+from app.models.project import FinancialProjectCost
 from app.models.rd_project import RdCost, RdProject
 from app.models.timesheet import Timesheet
-from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
 from app.services.labor_cost_service import LaborCostService
 from app.common.date_range import get_month_range_by_ym
@@ -245,7 +242,7 @@ class TimesheetSyncService:
         if not cost_type:
             cost_type = self.db.query(RdCostType).filter(
                 RdCostType.category == 'LABOR',
-                RdCostType.is_active == True
+                RdCostType.is_active
             ).first()
 
         # 如果还是不存在，创建一个默认的人工费用类型

@@ -104,7 +104,7 @@ def generate_contract_reminders(
         EmployeeContract.status == "active",
         EmployeeContract.end_date <= two_months_later,
         EmployeeContract.end_date >= today,
-        Employee.is_active == True
+        Employee.is_active
     ).all()
 
     created_count = 0

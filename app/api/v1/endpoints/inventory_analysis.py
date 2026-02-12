@@ -4,8 +4,7 @@
 提供库存周转率、呆滞物料预警、安全库存达标率等分析
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -194,7 +193,7 @@ def get_inventory_overview(
     返回各分析模块的汇总数据，用于仪表盘展示
     """
     today = date.today()
-    last_quarter = today - timedelta(days=90)
+    today - timedelta(days=90)
 
     # 获取各模块数据
     stale_materials = inventory_analysis_service.get_stale_materials_data(

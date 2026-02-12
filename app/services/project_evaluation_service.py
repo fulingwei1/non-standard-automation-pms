@@ -48,7 +48,7 @@ class ProjectEvaluationService:
             Dict[str, Decimal]: 权重配置字典
         """
         dimensions = self.db.query(ProjectEvaluationDimension).filter(
-            ProjectEvaluationDimension.is_active == True
+            ProjectEvaluationDimension.is_active
         ).all()
 
         if not dimensions:
@@ -179,7 +179,7 @@ class ProjectEvaluationService:
         # 查询历史相似项目
         similar_projects = self.db.query(Project).filter(
             Project.id != project.id,
-            Project.is_archived == True,  # 只查询已归档的项目
+            Project.is_archived,  # 只查询已归档的项目
             or_(
                 Project.project_type == project.project_type,
                 Project.product_category == project.product_category,
@@ -192,7 +192,7 @@ class ProjectEvaluationService:
             return Decimal('2.0')  # 1-3分，取中值
 
         # 统计相似项目数量
-        similar_count = len(similar_projects)
+        len(similar_projects)
 
         # 统计已完成的项目数量
         completed_count = sum(1 for p in similar_projects if p.stage == 'S9')

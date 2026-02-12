@@ -4,21 +4,17 @@
 实现方案完成奖金、中标奖金、高质量方案补偿、成功率奖励
 """
 
-from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.models.performance import PerformancePeriod
 from app.models.presale import (
     PresaleSolution,
-    PresaleSolutionTemplate,
     PresaleSupportTicket,
 )
 from app.models.sales import Contract
-from app.models.user import User
 
 
 class SolutionEngineerBonusService:

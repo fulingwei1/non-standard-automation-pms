@@ -4,16 +4,12 @@
 支持物料交期查询、项目周期估算、交期合理性校验
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
-from app.models.material import BomItem, Material
-from app.models.vendor import Vendor
-from app.models.project import Project
+from app.models.material import Material
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 
 
@@ -183,7 +179,6 @@ class DeliveryValidationService:
 
         # 计算各阶段时间
         stage_details = []
-        total_ratio = 0
 
         # 计算各阶段占比和天数
         stage_ratios = {
