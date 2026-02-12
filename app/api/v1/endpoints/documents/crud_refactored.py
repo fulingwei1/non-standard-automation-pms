@@ -66,16 +66,12 @@ def read_documents(
     total = query.count()
     documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
 
-    pages = (total + page_size - 1) // page_size
-    
     # 使用统一响应格式
     return paginated_response(
         items=documents,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pages,
-        message="获取文档列表成功"
     )
 
 

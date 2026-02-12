@@ -81,11 +81,12 @@ def read_alert_records(
     total = query.count()
 
     # 分页 - 使用 eager loading 避免 N+1 查询
-    alerts = query.options(
+    alerts_query = query.options(
         joinedload(AlertRecord.rule),
         joinedload(AlertRecord.project),
         joinedload(AlertRecord.machine)
-    ).apply_pagination(order_by(AlertRecord.triggered_at.desc()), pagination.offset, pagination.limit).all()
+    ).order_by(AlertRecord.triggered_at.desc())
+    alerts = apply_pagination(alerts_query, pagination.offset, pagination.limit).all()
 
     # 批量获取处理人信息（避免循环查询）
     handler_ids = [alert.handler_id for alert in alerts if alert.handler_id]

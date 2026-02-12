@@ -56,7 +56,7 @@ def archive_project(
             )
 
     project.is_archived = True
-    project.archived_at = datetime.now()
+    project.status = "archived"
     project.archived_by = current_user.id
 
     if reason:
@@ -96,7 +96,7 @@ def archive_project(
             "project_id": project_id,
             "project_code": project.project_code,
             "project_name": project.project_name,
-            "archived_at": project.archived_at.isoformat(),
+            "archived_at": project.updated_at.isoformat() if project.status == "archived" else None,
             "old_health": old_health,
             "new_health": 'H4',
         }
@@ -125,7 +125,7 @@ def unarchive_project(
         )
 
     project.is_archived = False
-    project.archived_at = None
+    project.status = "active"
     project.archived_by = None
 
     db.add(project)
@@ -190,7 +190,7 @@ def get_archived_projects(
         query = query.filter(Project.project_type == project_type)
 
     total = query.count()
-    projects = apply_pagination(query.order_by(desc(Project.archived_at)), pagination.offset, pagination.limit).all()
+    projects = apply_pagination(query.order_by(desc(Project.updated_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for project in projects:
@@ -204,7 +204,7 @@ def get_archived_projects(
             "stage": project.stage,
             "status": project.status,
             "contract_amount": float(project.contract_amount or 0),
-            "archived_at": project.archived_at.isoformat() if project.archived_at else None,
+            "archived_at": project.updated_at.isoformat() if project.status == "archived" else None,
             "archived_by": project.archived_by,
         })
 
@@ -270,7 +270,7 @@ def batch_archive_projects(
                     continue
 
             project.is_archived = True
-            project.archived_at = datetime.now()
+            project.status = "archived"
             project.archived_by = current_user.id
             project.health = 'H4'
 

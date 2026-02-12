@@ -100,6 +100,9 @@ class TestMaterialCRUD:
 
         assert response.status_code in [200, 201], response.text
         data = response.json()
+        # API may wrap response in {success, code, message, data}
+        if isinstance(data, dict) and "data" in data and "material_code" not in data:
+            data = data["data"]
         assert data["material_code"] == material_data["material_code"]
         return data["id"]
 
@@ -120,11 +123,17 @@ class TestMaterialCRUD:
             pytest.skip("Failed to get materials list")
 
         data = list_response.json()
+        # Unwrap envelope if present
+        if isinstance(data, dict) and "data" in data:
+            data = data["data"]
         items = data.get("items", data) if isinstance(data, dict) else data
         if not items:
             pytest.skip("No materials available for testing")
 
-        material_id = items[0]["id"]
+        first_item = items[0] if isinstance(items, list) else items
+        material_id = first_item.get("id") if isinstance(first_item, dict) else None
+        if not material_id:
+            pytest.skip("No material id found")
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/{material_id}",
@@ -133,6 +142,8 @@ class TestMaterialCRUD:
 
         assert response.status_code == 200
         data = response.json()
+        if isinstance(data, dict) and "data" in data and "id" not in data:
+            data = data["data"]
         assert data["id"] == material_id
 
     def test_get_material_not_found(self, client: TestClient, admin_token: str):

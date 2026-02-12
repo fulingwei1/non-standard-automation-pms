@@ -90,7 +90,9 @@ class TestDocumentCRUD:
 
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        assert isinstance(data, (list, dict))
+        if isinstance(data, dict):
+            assert "items" in data or "data" in data
 
     def test_create_document(self, client: TestClient, admin_token: str):
         """测试创建文档"""

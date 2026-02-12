@@ -82,8 +82,8 @@ def list_project_work_logs(
         data={
             "items": items,
             "total": total,
-            "skip": skip,
-            "limit": limit,
+            "skip": pagination.offset,
+            "limit": pagination.limit,
         }
     )
 

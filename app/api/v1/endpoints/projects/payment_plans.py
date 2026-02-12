@@ -62,7 +62,7 @@ def get_project_payment_plans(
         items.append({
             "id": plan.id,
             "project_id": plan.project_id,
-            "plan_name": plan.plan_name,
+            "payment_name": plan.payment_name,
             "plan_type": plan.plan_type,
             "planned_amount": float(plan.planned_amount or 0),
             "actual_amount": float(plan.actual_amount or 0),
@@ -100,7 +100,7 @@ def create_project_payment_plan(
 
     plan = ProjectPaymentPlan(
         project_id=project_id,
-        plan_name=plan_in.plan_name,
+        payment_name=getattr(plan_in, "payment_name", "未命名") if hasattr(plan_in, "payment_name") else plan_in.plan_name if hasattr(plan_in, "plan_name") else "未命名",
         plan_type=plan_in.plan_type,
         planned_amount=plan_in.planned_amount,
         planned_date=plan_in.planned_date,
@@ -119,7 +119,7 @@ def create_project_payment_plan(
         data={
             "id": plan.id,
             "project_id": plan.project_id,
-            "plan_name": plan.plan_name,
+            "payment_name": plan.payment_name,
             "plan_type": plan.plan_type,
             "planned_amount": float(plan.planned_amount or 0),
             "planned_date": plan.planned_date.isoformat() if plan.planned_date else None,
@@ -175,7 +175,7 @@ def update_project_payment_plan(
         data={
             "id": plan.id,
             "project_id": plan.project_id,
-            "plan_name": plan.plan_name,
+            "payment_name": plan.payment_name,
             "plan_type": plan.plan_type,
             "planned_amount": float(plan.planned_amount or 0),
             "actual_amount": float(plan.actual_amount or 0),

@@ -517,7 +517,7 @@ def get_machine_service_history(
                 "page": pagination.page,
                 "page_size": pagination.page_size,
                 "total": total,
-                "pages": (total + page_size - 1) // page_size
+                "pages": (total + pagination.page_size - 1) // pagination.page_size
             }
         }
     )

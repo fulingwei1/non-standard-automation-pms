@@ -50,7 +50,8 @@ def get_quote_items(
         # 查询明细列表
         items = db.query(QuoteItem).filter(
             QuoteItem.quote_version_id == quote_version_id
-        ).apply_pagination(order_by(QuoteItem.id), pagination.offset, pagination.limit).all()
+        ).order_by(QuoteItem.id)
+        items = apply_pagination(items, pagination.offset, pagination.limit).all()
 
         # 转换为字典列表
         items_data = [{

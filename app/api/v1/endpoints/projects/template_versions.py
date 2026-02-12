@@ -57,9 +57,9 @@ def get_template_versions(
             "id": version.id,
             "template_id": version.template_id,
             "version_no": version.version_no,
-            "version_name": version.version_name,
+            "version_no": version.version_no,
             "description": version.description,
-            "is_published": version.is_published,
+            "is_published": version.status == "published",
             "published_at": version.published_at.isoformat() if version.published_at else None,
             "created_at": version.created_at.isoformat() if version.created_at else None,
         })
@@ -100,10 +100,9 @@ def create_template_version(
     version = ProjectTemplateVersion(
         template_id=template_id,
         version_no=new_version_no,
-        version_name=version_in.version_name or f"V{new_version_no}.0",
-        description=version_in.description,
-        config=version_in.config,
-        is_published=False,
+        release_notes=getattr(version_in, 'description', '') or getattr(version_in, 'release_notes', ''),
+        template_config=getattr(version_in, 'config', None) or getattr(version_in, 'template_config', None),
+        status="draft",
         created_by=current_user.id,
     )
 
@@ -118,7 +117,7 @@ def create_template_version(
             "id": version.id,
             "template_id": version.template_id,
             "version_no": version.version_no,
-            "version_name": version.version_name,
+            "version_no": version.version_no,
         }
     )
 
@@ -142,14 +141,14 @@ def publish_template_version(
     if not version:
         raise HTTPException(status_code=404, detail="版本不存在")
 
-    if version.is_published:
+    if version.status == "published":
         return ResponseModel(
             code=200,
             message="版本已发布",
             data={"version_id": version_id}
         )
 
-    version.is_published = True
+    version.status = "published"
     version.published_at = datetime.now()
     db.add(version)
     db.commit()
@@ -191,20 +190,20 @@ def compare_template_versions(
         raise HTTPException(status_code=404, detail="版本不存在")
 
     # 比较配置差异
-    config1 = version1.config or {}
-    config2 = version2.config or {}
+    config1 = version1.template_config or {}
+    config2 = version2.template_config or {}
 
     differences = {
         "version1": {
             "id": version1.id,
             "version_no": version1.version_no,
-            "version_name": version1.version_name,
+            "version_no": version1.version_name,
             "config": config1,
         },
         "version2": {
             "id": version2.id,
             "version_no": version2.version_no,
-            "version_name": version2.version_name,
+            "version_no": version2.version_name,
             "config": config2,
         },
         "changes": []
@@ -261,10 +260,9 @@ def rollback_template_version(
     new_version = ProjectTemplateVersion(
         template_id=template_id,
         version_no=new_version_no,
-        version_name=f"回滚自 {version.version_name}",
-        description=f"回滚自版本 {version.version_no}",
-        config=version.config,
-        is_published=False,
+        release_notes=f"回滚自版本 {version.version_no}",
+        template_config=version.template_config,
+        status="draft",
         created_by=current_user.id,
     )
 

@@ -73,13 +73,6 @@ class BatchOperationResult:
             ]
         }
     
-    def to_dict(self) -> Dict[str, Any]:
-        """转换为字典"""
-        return {
-            "success_count": self.success_count,
-            "failed_count": self.failed_count,
-            "failed_items": self.failed_items
-        }
 
 
 class BatchOperationExecutor(Generic[ModelType]):

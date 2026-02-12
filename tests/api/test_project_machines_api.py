@@ -248,6 +248,7 @@ class TestProjectMachinesAPI:
         # 先创建机台
         machine_data = {
             "machine_name": f"测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(
@@ -328,6 +329,7 @@ class TestProjectMachinesAPI:
         # 先创建机台
         machine_data = {
             "machine_name": f"测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(
@@ -385,6 +387,7 @@ class TestProjectMachinesAPI:
         # 先创建机台
         machine_data = {
             "machine_name": f"测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(
@@ -523,6 +526,7 @@ class TestProjectMachinesAdvanced:
         # 先创建机台
         machine_data = {
             "machine_name": f"阶段测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(
@@ -578,6 +582,7 @@ class TestProjectMachinesAdvanced:
         # 先创建机台
         machine_data = {
             "machine_name": f"健康状态测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(
@@ -675,6 +680,7 @@ class TestProjectMachinesAdvanced:
         # 在项目1创建机台
         machine_data = {
             "machine_name": f"跨项目测试机台-{uuid.uuid4().hex[:4]}",
+            "machine_code": f"MC-{uuid.uuid4().hex[:8]}",
         }
 
         create_response = client.post(

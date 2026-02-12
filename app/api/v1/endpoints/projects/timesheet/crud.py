@@ -40,6 +40,22 @@ def filter_by_status(query, status: str):
     return query.filter(Timesheet.status == status)
 
 
+def _map_timesheet_fields(item_data: dict, project_id: int, current_user) -> dict:
+    """将 schema 字段映射为 model 字段"""
+    if "work_hours" in item_data:
+        item_data["hours"] = item_data.pop("work_hours")
+    if "work_type" in item_data:
+        item_data["overtime_type"] = item_data.pop("work_type")
+    if "description" in item_data:
+        item_data["work_content"] = item_data.pop("description")
+    # 移除 model 不存在的字段
+    item_data.pop("is_billable", None)
+    # 设置 user_id
+    if "user_id" not in item_data or item_data["user_id"] is None:
+        item_data["user_id"] = current_user.id
+    return item_data
+
+
 # 使用项目中心CRUD路由基类创建路由
 base_router = create_project_crud_router(
     model=Timesheet,
@@ -55,6 +71,7 @@ base_router = create_project_crud_router(
         "user_id": filter_by_user,  # 支持 ?user_id=1 筛选
         "status": filter_by_status,  # 支持 ?status=APPROVED 筛选
     },
+    before_create=_map_timesheet_fields,
 )
 
 # 创建新的router

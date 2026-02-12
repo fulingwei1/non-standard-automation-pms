@@ -187,7 +187,7 @@ def get_pending_approval_tasks(
 
     tasks = filtered_tasks
     total = len(tasks)
-    paginated_tasks = tasks[offset : offset + page_size]
+    paginated_tasks = tasks[pagination.offset : pagination.offset + pagination.page_size]
 
     items = []
     for task in paginated_tasks:
@@ -221,7 +221,7 @@ def get_pending_approval_tasks(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "pages": (total + pagination.page_size - 1) // pagination.page_size,
         },
     )
 
@@ -535,6 +535,6 @@ def get_approval_history(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-            "pages": (total + page_size - 1) // page_size,
+            "pages": (total + pagination.page_size - 1) // pagination.page_size,
         },
     )

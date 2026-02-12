@@ -145,7 +145,7 @@ def get_project_risk_history(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-            "pages": (total + page_size - 1) // page_size if total > 0 else 0,
+            "pages": (total + pagination.page_size - 1) // pagination.page_size if total > 0 else 0,
         },
     )
 
