@@ -3,6 +3,7 @@
 异常事件管理服务
 """
 
+import logging
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -26,6 +27,9 @@ from app.schemas.alert import (
     ExceptionEventVerify,
 )
 from app.schemas.common import PaginatedResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 class ExceptionEventsService:
@@ -329,8 +333,9 @@ class ExceptionEventsService:
             "resource_shortage": ["资源经理", "HR经理"]
         }
 
-        # 这里可以实现更复杂的自动分配逻辑
-        pass
+        # TODO: 完善实现 - 根据 assignment_rules 查找对应角色的用户并分配
+        logger.info("自动分配处理人: 暂未实现，需要配置分配规则 (event_id=%s, type=%s)",
+                     exception_event.id, exception_event.exception_type)
 
     def _determine_exception_severity(self, issue: Issue) -> str:
         """根据问题确定异常严重程度"""
@@ -344,13 +349,13 @@ class ExceptionEventsService:
 
     def _send_exception_notification(self, exception_event: ExceptionEvent, action: str):
         """发送异常事件通知"""
-        # 集成通知系统
-        pass
+        # TODO: 完善实现 - 集成 NotificationDispatcher 发送通知
+        logger.info("发送异常事件通知: 暂未实现 (event_id=%s, action=%s)", exception_event.id, action)
 
     def _send_escalation_notification(self, exception_event: ExceptionEvent, escalation: ExceptionEscalation):
         """发送升级通知"""
-        # 集成通知系统
-        pass
+        # TODO: 完善实现 - 集成 NotificationDispatcher 发送升级通知
+        logger.info("发送升级通知: 暂未实现 (event_id=%s, escalation_id=%s)", exception_event.id, escalation.id)
 
     # ------------------------------------------------------------------
     # 简化别名方法（向后兼容）

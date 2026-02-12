@@ -46,6 +46,7 @@ crud_router = create_crud_router_sync(
     permission_update="customer:update",
     permission_delete="customer:delete",
     enable_list=False,  # 禁用通用列表端点，使用自定义的列表端点
+    enable_create=False,  # 禁用通用创建端点，使用自定义的创建端点（支持自动生成编码）
     enable_delete=False,  # 禁用通用删除端点，使用自定义的删除端点（支持软删除）
 )
 

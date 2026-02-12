@@ -97,7 +97,7 @@ router.include_router(status.router, tags=["projects-status"])
 router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 
 # 扩展功能路由（复盘、经验教训、高级分析等）
-router.include_router(extended.router, tags=["projects-extended"])
+router.include_router(extended.router, prefix="/extensions", tags=["projects-extended"])
 
 # 风险分析路由（风险趋势、风险报表）
 router.include_router(risk_analytics.router, tags=["projects-risk-analytics"])

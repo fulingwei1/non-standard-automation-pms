@@ -184,7 +184,7 @@ def delete_knowledge_base(
     return {"message": "文章已删除"}
 
 
-@router.post("", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/quick", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def add_knowledge_entry(
     *,
     db: Session = Depends(deps.get_db),
@@ -196,8 +196,7 @@ def add_knowledge_entry(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    添加知识条目
-    快速添加知识库文章
+    快速添加知识条目（直接发布）
     """
     article = KnowledgeBase(
         article_no=generate_article_no(db),
@@ -207,7 +206,7 @@ def add_knowledge_entry(
         tags=tags or [],
         is_faq=False,
         is_featured=False,
-        status="PUBLISHED",  # 直接发布
+        status="PUBLISHED",
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username,
     )

@@ -2,6 +2,7 @@
 """
 现场服务记录管理服务
 """
+import logging
 
 import os
 import uuid
@@ -63,6 +64,9 @@ from app.schemas.service import (
     ServiceTicketResponse,
     ServiceTicketUpdate,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceRecordsService:
@@ -329,7 +333,8 @@ class ServiceRecordsService:
         if service_record.ticket:
             # 根据服务记录状态更新工单状态
             if service_record.status == "completed" and not service_record.ticket.resolved_at:
-                # 可以设置工单为解决状态或等待客户确认
-                pass
+                # TODO: 完善实现 - 设置工单为解决状态或等待客户确认
+                logger.info("工单状态联动: 暂未实现 (record_id=%s, ticket_id=%s)",
+                            service_record.id, service_record.ticket.id)
 
     # 其他方法可以根据需要添加...

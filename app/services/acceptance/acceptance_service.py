@@ -3,6 +3,7 @@
 验收服务层 - 实施验收→开票自动触发功能
 创建日期：2026-01-25
 """
+import logging
 
 import json
 from datetime import date, datetime
@@ -22,6 +23,9 @@ from app.models.project import (
 )
 from app.models.sales.invoices import Invoice
 from app.models.enums import InvoiceStatusEnum
+
+
+logger = logging.getLogger(__name__)
 
 
 class AcceptanceService:
@@ -169,5 +173,6 @@ class AcceptanceService:
         project: Project,
     ):
         """发送开票通知"""
-        
-        pass
+        # TODO: 完善实现 - 集成通知系统发送开票通知
+        logger.info("发送开票通知: 暂未实现 (invoice_id=%s, project_id=%s)",
+                     invoice.id, project.id)

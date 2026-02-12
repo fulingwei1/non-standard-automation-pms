@@ -2,6 +2,7 @@
 """
 服务工单管理服务
 """
+import logging
 
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -22,6 +23,9 @@ from app.schemas.service import (
     ServiceDashboardStatistics,
     ServiceTicketResponse,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceTicketsService:
@@ -411,15 +415,19 @@ class ServiceTicketsService:
 
     def _auto_assign_ticket(self, service_ticket: ServiceTicket):
         """自动分配工单"""
-        pass
+        # TODO: 完善实现 - 根据工单类型查找对应技术人员并分配
+        logger.info("自动分配工单: 暂未实现 (ticket_id=%s, type=%s)",
+                     service_ticket.id, service_ticket.ticket_type)
 
     def _send_ticket_notification(self, service_ticket: ServiceTicket, action: str):
         """发送工单通知"""
-        pass
+        # TODO: 完善实现 - 集成通知系统
+        logger.info("发送工单通知: 暂未实现 (ticket_id=%s, action=%s)", service_ticket.id, action)
 
     def _create_satisfaction_survey(self, service_ticket: ServiceTicket):
         """创建满意度调查"""
-        pass
+        # TODO: 完善实现 - 创建满意度调查记录
+        logger.info("创建满意度调查: 暂未实现 (ticket_id=%s)", service_ticket.id)
 
     def _calculate_avg_response_time(self) -> float:
         """计算平均响应时间"""

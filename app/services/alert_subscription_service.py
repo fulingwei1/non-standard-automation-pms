@@ -5,6 +5,7 @@
 实现预警订阅匹配逻辑，在预警生成时根据用户订阅配置决定是否发送通知
 """
 
+import logging
 from datetime import datetime, time
 from typing import Any, Dict, List, Optional, Set
 
@@ -14,6 +15,9 @@ from sqlalchemy.orm import Session
 from app.models.alert import AlertRecord, AlertRule, AlertSubscription
 from app.models.enums import AlertLevelEnum
 from app.services.alert_rule_engine import AlertRuleEngine
+
+
+logger = logging.getLogger(__name__)
 
 
 class AlertSubscriptionService:
@@ -144,8 +148,8 @@ class AlertSubscriptionService:
                 user_ids.update(rule.notify_users)
             else:
                 # 如果没有配置，返回空列表（不发送通知）
-                # 或者可以根据规则类型获取默认接收人（如项目负责人）
-                pass
+                # TODO: 完善实现 - 根据规则类型获取默认接收人（如项目负责人）
+                logger.info("订阅默认接收人: 暂未配置 (rule_id=%s, rule_name=%s)", rule.id, rule.name)
 
             # 使用规则配置的默认通知渠道
             if rule.notify_channels:
