@@ -57,8 +57,8 @@ def download_import_template(
     下载导入模板（按类型下载）
     """
     try:
-        import openpyxl
-        import pandas as pd
+        import openpyxl  # noqa: F401
+        import pandas as pd  # noqa: F401
     except ImportError:
         raise HTTPException(
             status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"

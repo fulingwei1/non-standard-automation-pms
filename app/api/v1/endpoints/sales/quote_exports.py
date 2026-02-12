@@ -158,8 +158,8 @@ def export_quote_to_pdf(
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib.units import cm
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.pdfbase import pdfmetrics  # noqa: F401
+        from reportlab.pdfbase.ttfonts import TTFont  # noqa: F401
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
         output = io.BytesIO()

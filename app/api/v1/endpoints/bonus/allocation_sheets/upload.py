@@ -36,7 +36,7 @@ async def upload_allocation_sheet(
     上传后会自动解析Excel文件，验证数据格式
     """
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: F401
     except ImportError:
         raise HTTPException(
             status_code=500,

@@ -38,7 +38,8 @@ from app.schemas.acceptance import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
-from app.services.data_scope_service import DataScopeConfig, DataScopeService
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope_service import DataScopeService
 
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
 

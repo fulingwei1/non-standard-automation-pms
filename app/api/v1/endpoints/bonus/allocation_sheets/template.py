@@ -24,7 +24,7 @@ def download_allocation_template(
     下载奖金分配明细表模板（Excel）
     """
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: F401
         from openpyxl import Workbook
         from openpyxl.styles import Alignment, Font, PatternFill
         from openpyxl.utils import get_column_letter

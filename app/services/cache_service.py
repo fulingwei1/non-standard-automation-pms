@@ -24,7 +24,7 @@ from typing import Any, Dict, Optional
 
 # 尝试导入Redis（可选）
 try:
-    import redis
+    import redis  # noqa: F401
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

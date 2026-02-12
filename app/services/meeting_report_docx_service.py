@@ -8,10 +8,10 @@ from typing import Any, Dict, Optional
 
 try:
     from docx import Document
-    from docx.enum.table import WD_TABLE_ALIGNMENT
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_TABLE_ALIGNMENT  # noqa: F401
+    from docx.enum.text import WD_ALIGN_PARAGRAPH  # noqa: F401
     from docx.oxml.ns import qn
-    from docx.shared import Cm, Inches, Pt, RGBColor
+    from docx.shared import Cm, Inches, Pt, RGBColor  # noqa: F401
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False

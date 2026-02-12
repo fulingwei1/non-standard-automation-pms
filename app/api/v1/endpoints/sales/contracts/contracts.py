@@ -7,12 +7,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.endpoints.sales.contracts import Contract
+from app.models.sales.contracts import Contract
 from app.models.project import Project
 from app.common.query_filters import build_like_conditions
-from app.schemas.sales.contract import (
-    ProjectCreateResponse,
-)
 from app.api.deps import get_db, get_current_active_user
 
 from sqlalchemy import func, select
@@ -25,7 +22,7 @@ from app.models.project import ProjectMilestone
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
 
-@router.post("/{contract_id}/create-project", response_model=ProjectCreateResponse)
+@router.post("/{contract_id}/create-project")
 async def create_project_from_contract(
     contract_id: int,
     db: AsyncSession = Depends(get_db),

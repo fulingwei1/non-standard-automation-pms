@@ -71,7 +71,6 @@ from .project_config import (
     ProjectStageResponse,
     ProjectStageUpdate,
     ProjectStatusCreate,
-    ProjectStatusResponse,
     ProjectTemplateCreate,
     ProjectTemplateResponse,
     ProjectTemplateUpdate,

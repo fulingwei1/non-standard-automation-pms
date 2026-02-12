@@ -40,7 +40,7 @@ class PDFRenderer(BaseRenderer):
     def render(self, data: Dict[str, Any], **kwargs) -> bytes:
         """渲染PDF"""
         try:
-            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.pagesizes import letter, A4  # noqa: F401
             from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
             from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.lib import colors
@@ -98,7 +98,7 @@ class ExcelRenderer(BaseRenderer):
         """渲染Excel"""
         try:
             import pandas as pd
-            from openpyxl import Workbook
+            from openpyxl import Workbook  # noqa: F401
             from openpyxl.styles import Font, PatternFill, Alignment
             
             buffer = io.BytesIO()
@@ -154,7 +154,7 @@ class WordRenderer(BaseRenderer):
         """渲染Word"""
         try:
             from docx import Document
-            from docx.shared import Inches, Pt
+            from docx.shared import Inches, Pt  # noqa: F401
             from docx.enum.text import WD_ALIGN_PARAGRAPH
             
             buffer = io.BytesIO()

@@ -30,7 +30,7 @@ def extract_from_excel(
     假设Excel格式：物料编码、物料名称、规格型号、品牌、型号等列
     """
     try:
-        import openpyxl
+        import openpyxl  # noqa: F401
         from openpyxl import load_workbook
 
         wb = load_workbook(file_path, data_only=True)

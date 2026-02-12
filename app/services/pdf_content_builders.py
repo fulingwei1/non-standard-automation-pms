@@ -9,9 +9,9 @@ from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 try:
-    from reportlab.lib import colors
+    from reportlab.lib import colors  # noqa: F401
     from reportlab.lib.units import cm
-    from reportlab.platypus import Paragraph, Spacer, Table
+    from reportlab.platypus import Paragraph, Spacer, Table  # noqa: F401
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False

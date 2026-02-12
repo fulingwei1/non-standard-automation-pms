@@ -10,10 +10,10 @@ from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
 
 try:
-    import openpyxl
+    import openpyxl  # noqa: F401
     import pandas as pd
     from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side  # noqa: F401
     from openpyxl.utils import get_column_letter
     EXCEL_AVAILABLE = True
 except ImportError:

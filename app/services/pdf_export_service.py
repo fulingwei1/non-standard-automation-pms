@@ -9,15 +9,15 @@ from typing import Any, Dict, List, Optional
 
 try:
     from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT  # noqa: F401
+    from reportlab.lib.pagesizes import A4, letter  # noqa: F401
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-    from reportlab.lib.units import cm, mm
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.units import cm, mm  # noqa: F401
+    from reportlab.pdfbase import pdfmetrics  # noqa: F401
+    from reportlab.pdfbase.ttfonts import TTFont  # noqa: F401
     from reportlab.platypus import (
-        Image,
-        PageBreak,
+        Image,  # noqa: F401
+        PageBreak,  # noqa: F401
         Paragraph,
         SimpleDocTemplate,
         Spacer,
