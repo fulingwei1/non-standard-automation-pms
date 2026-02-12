@@ -31,6 +31,8 @@ def db_engine():
 
     # 导入所有模型以确保表结构被注册
     import app.models  # noqa: F401
+    import app.models.tenant  # noqa: F401
+    import app.models.permission  # noqa: F401
     from app.models.base import Base
 
     Base.metadata.create_all(bind=engine)

@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import app.models.tenant  # noqa: F401 - ensure Tenant model is registered for relationship resolution
 from app.services.collaboration_service import CollaborationService
 
 
