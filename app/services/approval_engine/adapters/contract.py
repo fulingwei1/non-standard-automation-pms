@@ -19,6 +19,13 @@ from app.models.sales.contracts import Contract
 
 from .base import ApprovalAdapter
 
+from datetime import datetime, timedelta
+from app.schemas.approval.instance import ApprovalInstanceCreate
+from app.models.user import User
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ContractApprovalAdapter(ApprovalAdapter):
     """

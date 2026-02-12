@@ -7,6 +7,7 @@ from app.models.user import User
 
 # Re-export get_db from models.base for API endpoint dependencies
 # This is the single source of truth for database session injection
+from app.models.base import get_db  # noqa: F401
 
 def get_current_user_from_state(request: Request) -> User:
     """

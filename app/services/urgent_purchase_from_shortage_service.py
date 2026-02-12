@@ -10,7 +10,10 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.alert import AlertRecord
 
 from sqlalchemy.orm import Session
 

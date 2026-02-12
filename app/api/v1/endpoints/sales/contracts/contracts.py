@@ -15,6 +15,12 @@ from app.schemas.sales.contract import (
 )
 from app.api.deps import get_db, get_current_active_user
 
+from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
+from app.models.customer import Customer
+from app.models.project import PaymentPlan
+from app.models.project import ProjectMilestone
+
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 

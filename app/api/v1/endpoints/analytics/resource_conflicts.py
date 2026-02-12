@@ -153,8 +153,8 @@ def get_all_conflicts(
     return ResponseModel(data={
         "conflicts": result,
         "total": total,
-        "skip": skip,
-        "limit": limit,
+        "skip": pagination.offset,
+        "limit": pagination.limit,
     })
 
 

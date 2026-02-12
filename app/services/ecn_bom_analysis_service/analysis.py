@@ -4,7 +4,7 @@ ECN BOM影响分析服务 - 主要分析功能
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
 from app.models.material import BomHeader, BomItem
@@ -13,6 +13,9 @@ from app.models.project import Machine
 from .calculation import calculate_cost_impact, calculate_schedule_impact
 from .cascade import analyze_cascade_impact
 from .utils import get_impact_description, save_bom_impact
+
+if TYPE_CHECKING:
+    from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 
 
 def analyze_bom_impact(

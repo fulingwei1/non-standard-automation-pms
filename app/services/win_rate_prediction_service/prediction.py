@@ -4,7 +4,7 @@
 """
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from app.models.enums import ProductMatchTypeEnum, WinProbabilityLevelEnum
 from app.schemas.presales import DimensionScore
@@ -22,6 +22,9 @@ from .history import (
     get_salesperson_historical_win_rate,
     get_similar_leads_statistics,
 )
+
+if TYPE_CHECKING:
+    from app.services.win_rate_prediction_service import WinRatePredictionService
 
 logger = logging.getLogger(__name__)
 

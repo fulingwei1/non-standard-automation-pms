@@ -13,6 +13,8 @@
 
 from typing import Optional
 
+from app.services.strategy.decomposition.personal_kpis import get_personal_kpi
+
 from sqlalchemy.orm import Session
 
 from app.models.strategy import (

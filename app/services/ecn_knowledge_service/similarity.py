@@ -3,9 +3,12 @@
 ECN知识库服务 - 相似度计算
 """
 import re
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
+
+if TYPE_CHECKING:
+    from app.services.ecn_knowledge_service import EcnKnowledgeService
 
 
 def find_similar_ecns(

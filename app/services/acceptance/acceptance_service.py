@@ -19,6 +19,10 @@ from app.models.project import (
 )
 from app.models.sales.invoices import Invoice
 
+from sqlalchemy.orm import selectinload
+from app.models.customer import Customer
+from app.services.invoice_service import InvoiceService
+
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +124,7 @@ class AcceptanceService:
         # 6. 如果验收类型是SAT（现场验收），更新项目状态
         if order.acceptance_type == "SAT":
             # SAT验收通过，进入质保阶段
-            await _update_project_to_warranty(db, project_id, completed_by)
+            await AcceptanceService._update_project_to_warranty(db, order.project_id, completed_by)
         
         await db.commit()
         

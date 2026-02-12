@@ -12,9 +12,16 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.sales.invoices import Invoice
+from app.models.sales.invoices import Invoice, InvoiceApproval
 
 from .base import ApprovalAdapter
+
+from datetime import datetime, timedelta
+from app.schemas.approval.instance import ApprovalInstanceCreate
+from app.models.user import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InvoiceApprovalAdapter(ApprovalAdapter):
@@ -287,9 +294,9 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         """更新发票审批记录"""
         approval_level = task.node_order
         approval = (
-            self.db.query(invoiceApproval)
+            self.db.query(InvoiceApproval)
             .filter(
-                InvoiceApproval.invoice_id == instance.entity_id,
+                InvoiceApproval.invoice_id == task.instance.entity_id,
                 InvoiceApproval.approval_level == approval_level,
             )
             .first()

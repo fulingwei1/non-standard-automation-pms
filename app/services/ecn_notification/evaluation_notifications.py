@@ -143,7 +143,7 @@ def notify_evaluation_completed(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)
 
     # 通知审批人员（如果所有评估都完成，进入审批阶段）
     if check_all_evaluations_completed(db, ecn.id):
@@ -179,4 +179,4 @@ def notify_evaluation_completed(
                         "approval_id": approval.id
                     }
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)

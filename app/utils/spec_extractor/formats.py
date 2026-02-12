@@ -4,12 +4,15 @@
 """
 import logging
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Session
 
 
 from .utils import create_requirement
+
+if TYPE_CHECKING:
+    from app.utils.spec_extractor import SpecExtractor
 
 logger = logging.getLogger(__name__)
 

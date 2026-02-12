@@ -102,6 +102,16 @@ class RiskStatusEnum(str, Enum):
     CLOSED = 'CLOSED'          # 已关闭
 
 
+class MeetingTypeEnum(str, Enum):
+    """会议类型"""
+    KICKOFF = 'KICKOFF'
+    REVIEW = 'REVIEW'
+    WEEKLY = 'WEEKLY'
+    MILESTONE = 'MILESTONE'
+    CLOSURE = 'CLOSURE'
+    OTHER = 'OTHER'
+
+
 class ResourceAllocationStatusEnum(str, Enum):
     """资源分配状态"""
     PLANNED = 'PLANNED'      # 已计划

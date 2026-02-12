@@ -8,7 +8,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.sales.quotes import QuoteApproval
 
 from sqlalchemy.orm import Session
 
@@ -16,6 +19,13 @@ from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.quotes import Quote, QuoteVersion
 
 from .base import ApprovalAdapter
+
+from datetime import datetime
+from app.schemas.approval.instance import ApprovalInstanceCreate
+from app.models.user import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class QuoteApprovalAdapter(ApprovalAdapter):

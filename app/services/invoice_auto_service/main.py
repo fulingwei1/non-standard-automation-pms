@@ -4,7 +4,7 @@
 """
 import logging
 from datetime import date
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
@@ -12,6 +12,9 @@ from app.models.project import ProjectMilestone, ProjectPaymentPlan
 from .creation import create_invoice_directly, create_invoice_request
 from .notifications import log_auto_invoice, send_invoice_notifications
 from .validation import check_acceptance_issues_resolved, check_deliverables_complete
+
+if TYPE_CHECKING:
+    from app.services.invoice_auto_service import InvoiceAutoService
 
 logger = logging.getLogger(__name__)
 

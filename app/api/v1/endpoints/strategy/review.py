@@ -65,7 +65,7 @@ def list_strategy_reviews(
     获取战略审视记录列表
     """
     items, total = strategy_service.list_strategy_reviews(
-        db, strategy_id, review_type, skip, limit
+        db, strategy_id, review_type, pagination.offset, pagination.limit
     )
 
     responses = [
@@ -277,7 +277,7 @@ def list_calendar_events(
     获取日历事件列表
     """
     items, total = strategy_service.list_calendar_events(
-        db, strategy_id, start_date, end_date, event_type, skip, limit
+        db, strategy_id, start_date, end_date, event_type, pagination.offset, pagination.limit
     )
 
     responses = [

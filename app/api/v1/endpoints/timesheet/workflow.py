@@ -214,8 +214,8 @@ def get_pending_approval_tasks(
         message="success",
         data={
             "total": len(timesheet_tasks),
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "items": timesheet_tasks,
         }
     )

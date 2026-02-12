@@ -230,7 +230,7 @@ def get_allowed_transitions(
                 is_editable=state_machine.current_state.is_editable,
                 allowed_transitions=allowed,
             ),
-            message=f"ECN {ecn_id} 允许 {len(allowed.get(current_state.display_name(), []))} 个转换",
+            message=f"ECN {ecn_id} 允许 {len(allowed.get(state_machine.current_state.display_name(), []))} 个转换",
         )
     except Exception as e:
         logger.error(f"获取允许转换失败: {e}")
@@ -360,11 +360,11 @@ def get_ecn_state_health(
             success=True,
             data={
                 "ecn_id": ecn_id,
-                "current_state": current_state,
+                "current_state": state_machine.current_state.value,
                 "health_status": health_status,
                 "can_edit": state_machine.current_state.is_editable,
                 "can_submit": state_machine.current_state.is_submittable,
-                is_cancellable: state_machine.current_state.is_cancellable,
+                "is_cancellable": state_machine.current_state.is_cancellable,
             },
             message=f"ECN {ecn_id} 健康度: {health_status}",
         )

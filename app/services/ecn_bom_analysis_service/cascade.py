@@ -2,9 +2,12 @@
 """
 ECN BOM影响分析服务 - 级联分析
 """
-from typing import Any, Dict, List, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Set
 
 from app.models.material import BomItem
+
+if TYPE_CHECKING:
+    from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 
 
 def analyze_cascade_impact(

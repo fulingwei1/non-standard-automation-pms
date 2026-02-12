@@ -14,6 +14,8 @@
 import logging
 from typing import Optional, TYPE_CHECKING
 
+from app.services.notification_utils import get_alert_icon_url
+
 try:
     import requests
 except ImportError:  # pragma: no cover - 运行环境可选依赖

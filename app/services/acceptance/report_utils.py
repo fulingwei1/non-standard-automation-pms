@@ -251,7 +251,7 @@ def build_report_content(
 
 报告编号：{report_no}
 验收单号：{order.order_no if hasattr(order, 'order_no') else f'ORDER-{order.id}'}
-报告类型：{order.acceptance_type if hasattr(order, 'acceptance_type') else report_type}
+报告类型：{order.acceptance_type if hasattr(order, 'acceptance_type') else 'N/A'}
 版本号：{version}
 
 项目信息：

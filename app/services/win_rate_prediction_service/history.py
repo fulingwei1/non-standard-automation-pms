@@ -3,13 +3,16 @@
 中标率预测服务 - 历史数据获取
 """
 from datetime import date, timedelta
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from sqlalchemy import case, func
 
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Customer, Project
 from app.schemas.presales import DimensionScore
+
+if TYPE_CHECKING:
+    from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
 def get_salesperson_historical_win_rate(

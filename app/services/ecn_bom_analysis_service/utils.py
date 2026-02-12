@@ -4,9 +4,12 @@ ECN BOM影响分析服务 - 工具函数
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from app.models.ecn import EcnAffectedMaterial, EcnBomImpact
+
+if TYPE_CHECKING:
+    from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 
 
 def get_impact_description(affected_mat: EcnAffectedMaterial) -> str:

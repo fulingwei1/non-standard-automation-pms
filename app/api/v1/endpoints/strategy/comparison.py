@@ -56,7 +56,7 @@ def list_comparisons(
     获取战略对比记录列表
     """
     items, total = strategy_service.list_strategy_comparisons(
-        db, base_strategy_id, skip, limit
+        db, base_strategy_id, pagination.offset, pagination.limit
     )
 
     responses = [

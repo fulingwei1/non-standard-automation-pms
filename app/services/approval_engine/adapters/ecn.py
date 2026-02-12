@@ -21,6 +21,17 @@ if TYPE_CHECKING:
     from app.models.ecn import EcnApproval
 
 
+
+from datetime import datetime, timedelta
+from app.schemas.approval.instance import ApprovalInstanceCreate
+from app.models.user import UserRole
+from app.models.user import User
+from app.models.user import Role
+from app.models.ecn import EcnApprovalMatrix
+from app.models.approval import ApprovalNodeDefinition
+import logging
+
+logger = logging.getLogger(__name__)
 class EcnApprovalAdapter(ApprovalAdapter):
     """
     ECN审批适配器

@@ -251,6 +251,7 @@ def compare_project_kit_rates(
     if len(ids) > 10:
         raise HTTPException(status_code=400, detail="最多支持10个项目同时对比")
 
+    service = KitRateService(db)
     results = []
     for project_id in ids:
         project = db.query(Project).filter(Project.id == project_id).first()

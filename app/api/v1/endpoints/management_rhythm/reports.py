@@ -81,6 +81,7 @@ def generate_meeting_report(
         if default_config:
             config_id = default_config.id
 
+    report = None  # will be set when report generation is fully implemented
     try:
         # 使用统一报表框架生成报告
         engine = ReportEngine(db)

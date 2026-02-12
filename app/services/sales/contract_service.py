@@ -14,11 +14,16 @@ from typing import Dict, Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import Column, Date, Integer, Numeric, String
+from sqlalchemy.orm import relationship, selectinload
+
+from app.models.base import Base
 from app.models.project import (
     Project,
     ProjectMilestone,
     Customer,
 )
+from app.models.sales.contracts import Contract
 
 
 class ContractService:

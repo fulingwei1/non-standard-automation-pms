@@ -23,7 +23,10 @@ DEPRECATED: 此文件作为向后兼容层，内部使用 unified_notification_s
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.alert import Alert, AlertNotification
 
 from sqlalchemy.orm import Session
 
@@ -34,6 +37,8 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationChannel as UnifiedNotificationChannel,
 )
+
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 

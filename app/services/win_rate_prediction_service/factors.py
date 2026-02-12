@@ -3,10 +3,13 @@
 中标率预测服务 - 因子计算
 """
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from app.models.enums import ProductMatchTypeEnum
 from app.schemas.presales import DimensionScore
+
+if TYPE_CHECKING:
+    from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
 def calculate_base_score(service: "WinRatePredictionService", dimension_scores: DimensionScore) -> float:

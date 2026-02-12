@@ -4,9 +4,12 @@ ECN知识库服务 - 解决方案提取
 """
 import re
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
+
+if TYPE_CHECKING:
+    from app.services.ecn_knowledge_service import EcnKnowledgeService
 
 
 def extract_solution(

@@ -14,6 +14,11 @@ from app.models.purchase import PurchaseOrder
 from app.models.vendor import Vendor
 from app.models.project import Project
 
+from sqlalchemy import Column, Integer, Numeric
+from sqlalchemy.orm import selectinload
+from datetime import datetime
+from app.models.base import Base
+
 
 class BOMService:
     """BOM服务类 - 实施BOM审核通过后自动创建采购订单功能"""

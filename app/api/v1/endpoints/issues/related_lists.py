@@ -83,9 +83,9 @@ def _build_issue_list_response(
     return IssueListResponse(
         items=items,
         total=total,
-        page=pagination.page,
-        page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size if page_size > 0 else 0
     )
 
 
@@ -112,7 +112,7 @@ def get_project_issues(
     total = query.count()
     issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
-    return _build_issue_list_response(issues, total, page, page_size)
+    return _build_issue_list_response(issues, total, pagination.page, pagination.page_size)
 
 
 @router.get("/machines/{machine_id}/issues", response_model=IssueListResponse)
@@ -138,7 +138,7 @@ def get_machine_issues(
     total = query.count()
     issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
-    return _build_issue_list_response(issues, total, page, page_size)
+    return _build_issue_list_response(issues, total, pagination.page, pagination.page_size)
 
 
 @router.get("/tasks/{task_id}/issues", response_model=IssueListResponse)
@@ -169,7 +169,7 @@ def get_task_issues(
     total = query.count()
     issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
-    return _build_issue_list_response(issues, total, page, page_size)
+    return _build_issue_list_response(issues, total, pagination.page, pagination.page_size)
 
 
 @router.get("/acceptance-orders/{order_id}/issues", response_model=IssueListResponse)
@@ -198,4 +198,4 @@ def get_acceptance_order_issues(
     total = query.count()
     issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
-    return _build_issue_list_response(issues, total, page, page_size)
+    return _build_issue_list_response(issues, total, pagination.page, pagination.page_size)

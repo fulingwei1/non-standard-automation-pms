@@ -5,7 +5,7 @@
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from sqlalchemy import desc
 
@@ -14,6 +14,9 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.business_support import InvoiceRequest
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice
+
+if TYPE_CHECKING:
+    from app.services.invoice_auto_service import InvoiceAutoService
 
 logger = logging.getLogger(__name__)
 

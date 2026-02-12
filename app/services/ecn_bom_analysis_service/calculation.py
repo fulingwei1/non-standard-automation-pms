@@ -3,10 +3,13 @@
 ECN BOM影响分析服务 - 计算功能
 """
 from decimal import Decimal
-from typing import List, Set
+from typing import TYPE_CHECKING, List, Set
 
 from app.models.ecn import EcnAffectedMaterial
 from app.models.material import BomItem, Material
+
+if TYPE_CHECKING:
+    from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 
 
 def calculate_cost_impact(

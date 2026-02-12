@@ -496,7 +496,7 @@ def get_approval_history(
     total = query.count()
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
-        .offset(offset)
+        .offset(pagination.offset)
         .limit(pagination.page_size)
         .all()
     )
@@ -535,8 +535,8 @@ def get_approval_history(
         data={
             "items": items,
             "total": total,
-            "page": page,
-            "page_size": page_size,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
             "pages": (total + pagination.page_size - 1) // pagination.page_size,
         },
     )

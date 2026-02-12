@@ -5,12 +5,15 @@
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Contract
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
+
+if TYPE_CHECKING:
+    from app.services.invoice_auto_service import InvoiceAutoService
 
 logger = logging.getLogger(__name__)
 

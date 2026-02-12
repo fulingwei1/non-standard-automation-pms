@@ -20,6 +20,8 @@ from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
 
+from datetime import date
+
 
 class ProjectFinancial(Base, TimestampMixin):
     """

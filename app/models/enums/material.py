@@ -6,6 +6,15 @@ from enum import Enum
 
 
 
+class PerformanceLevelEnum(str, Enum):
+    EXCELLENT = "EXCELLENT"
+    GOOD = "GOOD"
+    QUALIFIED = "QUALIFIED"
+    AVERAGE = "AVERAGE"
+    NEEDS_IMPROVEMENT = "NEEDS_IMPROVEMENT"
+    POOR = "POOR"
+
+
 class MaterialTypeEnum(str, Enum):
     STANDARD = "STANDARD"
     MECHANICAL = "MECHANICAL"

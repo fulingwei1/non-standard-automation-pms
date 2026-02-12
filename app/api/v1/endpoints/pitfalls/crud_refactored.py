@@ -117,14 +117,14 @@ def list_pitfalls(
 
     # 使用统一响应格式（注意：这里使用skip/limit，不是page/page_size）
     # 为了兼容，我们计算page和pages
-    page = (skip // limit) + 1 if limit > 0 else 1
-    pages = (total + limit - 1) // limit if limit > 0 else 1
+    page = (pagination.offset // pagination.limit) + 1 if pagination.limit > 0 else 1
+    pages = (total + pagination.limit - 1) // pagination.limit if pagination.limit > 0 else 1
     
     return paginated_response(
         items=items,
         total=total,
         page=page,
-        page_size=limit,
+        page_size=pagination.limit,
         pages=pages,
         message="获取踩坑列表成功"
     )

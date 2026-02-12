@@ -4,11 +4,14 @@ ECN BOM影响分析服务 - 呆滞料检查
 """
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from app.models.ecn import Ecn, EcnAffectedMaterial
 from app.models.material import Material
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+
+if TYPE_CHECKING:
+    from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 
 
 def check_obsolete_material_risk(

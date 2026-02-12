@@ -414,20 +414,159 @@ class ServiceTicketsService:
         return f"{type_code}{today.strftime('%Y%m%d')}{count+1:04d}"
 
     def _auto_assign_ticket(self, service_ticket: ServiceTicket):
-        """自动分配工单"""
-        # TODO: 完善实现 - 根据工单类型查找对应技术人员并分配
-        logger.info("自动分配工单: 暂未实现 (ticket_id=%s, type=%s)",
-                     service_ticket.id, service_ticket.ticket_type)
+        """自动分配工单
+
+        分配策略：
+        1. 根据工单类型查找对应技能的工程师
+        2. 选择当前工单数最少的工程师（负载均衡）
+        3. 如未找到匹配工程师，记录日志等待手动分配
+        """
+        try:
+            # 工单类型对应的部门/技能映射
+            type_dept_mapping = {
+                "installation": "安装部",
+                "maintenance": "维护部",
+                "repair": "维修部",
+                "consultation": "技术支持",
+                "complaint": "客服部",
+            }
+
+            target_dept = type_dept_mapping.get(service_ticket.ticket_type)
+
+            # 查找对应部门的活跃工程师
+            engineer_query = self.db.query(User).filter(User.is_active == True)
+            if target_dept:
+                engineer_query = engineer_query.filter(User.department == target_dept)
+
+            engineers = engineer_query.all()
+            if not engineers:
+                logger.warning("未找到可分配工程师 (ticket_id=%s, type=%s, dept=%s)",
+                               service_ticket.id, service_ticket.ticket_type, target_dept)
+                return
+
+            # 负载均衡：选择当前待处理工单最少的工程师
+            best_engineer = None
+            min_load = float('inf')
+            for eng in engineers:
+                load = self.db.query(ServiceTicket).filter(
+                    ServiceTicket.assigned_to_id == eng.id,
+                    ServiceTicket.status.in_(["PENDING", "assigned", "IN_PROGRESS"])
+                ).count()
+                if load < min_load:
+                    min_load = load
+                    best_engineer = eng
+
+            if best_engineer:
+                service_ticket.assigned_to = str(best_engineer.id)
+                service_ticket.assigned_to_id = best_engineer.id
+                service_ticket.status = "assigned"
+                service_ticket.assigned_time = datetime.now()
+                self.db.commit()
+                self.db.refresh(service_ticket)
+                logger.info("工单已自动分配 (ticket_id=%s, engineer_id=%s, load=%d)",
+                            service_ticket.id, best_engineer.id, min_load)
+
+        except Exception as e:
+            logger.error("自动分配工单失败 (ticket_id=%s): %s", service_ticket.id, str(e))
 
     def _send_ticket_notification(self, service_ticket: ServiceTicket, action: str):
         """发送工单通知"""
-        # TODO: 完善实现 - 集成通知系统
-        logger.info("发送工单通知: 暂未实现 (ticket_id=%s, action=%s)", service_ticket.id, action)
+        try:
+            from app.services.unified_notification_service import get_notification_service
+            from app.services.channel_handlers.base import NotificationRequest
+
+            notification_service = get_notification_service(self.db)
+
+            action_labels = {
+                "created": "新建",
+                "assigned": "已分配",
+                "closed": "已关闭",
+            }
+            action_label = action_labels.get(action, action)
+
+            title = f"服务工单{action_label}: {service_ticket.ticket_no}"
+            content = (
+                f"工单编号: {service_ticket.ticket_no}\n"
+                f"问题类型: {service_ticket.problem_type}\n"
+                f"状态: {service_ticket.status}\n"
+                f"描述: {service_ticket.problem_desc or ''}"
+            )
+
+            # 确定通知接收人
+            recipient_ids = set()
+            if getattr(service_ticket, 'assigned_to_id', None):
+                recipient_ids.add(service_ticket.assigned_to_id)
+            if getattr(service_ticket, 'reported_by', None):
+                try:
+                    recipient_ids.add(int(service_ticket.reported_by))
+                except (ValueError, TypeError):
+                    pass
+
+            for recipient_id in recipient_ids:
+                if not recipient_id:
+                    continue
+                request = NotificationRequest()
+                request.recipient_id = recipient_id
+                request.notification_type = "service_ticket"
+                request.category = "service"
+                request.title = title
+                request.content = content
+                request.priority = "HIGH" if getattr(service_ticket, 'urgency', '') == "URGENT" else "NORMAL"
+                request.source_type = "service_ticket"
+                request.source_id = service_ticket.id
+                notification_service.send_notification(request)
+
+            logger.info("工单通知已发送 (ticket_id=%s, action=%s, recipients=%s)",
+                        service_ticket.id, action, recipient_ids)
+        except Exception as e:
+            logger.error("发送工单通知失败 (ticket_id=%s, action=%s): %s",
+                         service_ticket.id, action, str(e))
 
     def _create_satisfaction_survey(self, service_ticket: ServiceTicket):
-        """创建满意度调查"""
-        # TODO: 完善实现 - 创建满意度调查记录
-        logger.info("创建满意度调查: 暂未实现 (ticket_id=%s)", service_ticket.id)
+        """创建满意度调查 — 工单关闭时自动创建"""
+        try:
+            today = date.today()
+            # 生成调查编号
+            count = self.db.query(CustomerSatisfaction).filter(
+                func.date(CustomerSatisfaction.created_at) == today
+            ).count()
+            survey_no = f"SAT{today.strftime('%Y%m%d')}{count + 1:04d}"
+
+            # 获取客户信息
+            customer = getattr(service_ticket, 'customer', None)
+            customer_name = getattr(customer, 'name', None) or getattr(customer, 'customer_name', '未知客户') if customer else '未知客户'
+
+            # 获取创建人ID
+            created_by = None
+            if getattr(service_ticket, 'assigned_to_id', None):
+                created_by = service_ticket.assigned_to_id
+            elif getattr(service_ticket, 'reported_by', None):
+                try:
+                    created_by = int(service_ticket.reported_by)
+                except (ValueError, TypeError):
+                    created_by = 1
+            else:
+                created_by = 1
+
+            survey = CustomerSatisfaction(
+                survey_no=survey_no,
+                survey_type="service_ticket",
+                customer_name=customer_name,
+                customer_contact=getattr(customer, 'contact', None) if customer else None,
+                customer_email=getattr(customer, 'email', None) if customer else None,
+                project_name=getattr(service_ticket, 'project_name', None),
+                survey_date=today,
+                deadline=today + timedelta(days=7),
+                status="PENDING",
+                created_by=created_by,
+            )
+
+            self.db.add(survey)
+            self.db.commit()
+            logger.info("满意度调查已创建 (ticket_id=%s, survey_no=%s)",
+                        service_ticket.id, survey_no)
+        except Exception as e:
+            logger.error("创建满意度调查失败 (ticket_id=%s): %s", service_ticket.id, str(e))
 
     def _calculate_avg_response_time(self) -> float:
         """计算平均响应时间"""

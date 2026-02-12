@@ -4,7 +4,7 @@
 """
 import logging
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,9 @@ from app.models.project import ProjectDocument
 from app.models.technical_spec import TechnicalSpecRequirement
 
 from .formats import extract_from_excel, extract_from_pdf, extract_from_word
+
+if TYPE_CHECKING:
+    from app.utils.spec_extractor import SpecExtractor
 
 logger = logging.getLogger(__name__)
 

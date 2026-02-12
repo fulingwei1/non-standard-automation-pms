@@ -193,4 +193,4 @@ def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
                         "is_cc": True,  # 标记为抄送
                     },
                 )
-                unified_service.send_notification(request)
+                dispatcher.send_notification_request(request)

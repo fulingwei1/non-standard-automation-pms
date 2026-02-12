@@ -3,11 +3,14 @@
 技术规格要求提取器 - 工具函数
 """
 import re
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.technical_spec import TechnicalSpecRequirement
+
+if TYPE_CHECKING:
+    from app.utils.spec_extractor import SpecExtractor
 
 
 def extract_key_parameters(specification: str) -> Dict[str, Any]:

@@ -43,6 +43,8 @@ router = APIRouter()
 from app.utils.domain_codes import outsourcing as outsourcing_codes
 from app.common.query_filters import apply_pagination
 
+from app.models.outsourcing import OutsourcingVendor
+
 generate_order_no = outsourcing_codes.generate_order_no
 generate_delivery_no = outsourcing_codes.generate_delivery_no
 generate_inspection_no = outsourcing_codes.generate_inspection_no

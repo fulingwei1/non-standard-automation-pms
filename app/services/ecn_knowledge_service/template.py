@@ -4,11 +4,14 @@ ECN知识库服务 - 模板管理
 """
 import math
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.ecn import Ecn, EcnSolutionTemplate
 
 from .solution_extraction import _extract_keywords
+
+if TYPE_CHECKING:
+    from app.services.ecn_knowledge_service import EcnKnowledgeService
 
 
 def recommend_solutions(

@@ -138,7 +138,7 @@ class RemindersMixin:
                 NotificationPriority as UnifiedPriority,
             )
 
-            dispatcher = NotificationDispatcher(db)
+            dispatcher = NotificationDispatcher(self.db)
             for reminder in reminders:
                 try:
                     # 确定通知优先级

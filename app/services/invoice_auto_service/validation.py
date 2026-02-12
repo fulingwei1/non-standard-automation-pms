@@ -4,6 +4,10 @@
 """
 from app.models.acceptance import AcceptanceOrder, AcceptanceIssue
 from app.models.project import ProjectPaymentPlan
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.invoice_auto_service import InvoiceAutoService
 
 
 def check_deliverables_complete(service: "InvoiceAutoService", plan: ProjectPaymentPlan) -> bool:

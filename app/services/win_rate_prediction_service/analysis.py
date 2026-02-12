@@ -3,10 +3,13 @@
 中标率预测服务 - 分析和验证
 """
 from datetime import date, timedelta
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum
 from app.models.project import Project
+
+if TYPE_CHECKING:
+    from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
 def get_win_rate_distribution(
