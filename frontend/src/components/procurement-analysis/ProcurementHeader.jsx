@@ -5,7 +5,7 @@
 import { Calendar, Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import { PageHeader } from '../layout';
-import { TIME_RANGE_OPTIONS } from './procurementConstants';
+import { TIME_RANGE_OPTIONS } from '@/lib/constants/procurementAnalysis';
 
 /**
  * 采购分析头部组件

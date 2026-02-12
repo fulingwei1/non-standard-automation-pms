@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ImportExportEngine
 from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -22,8 +23,6 @@ try:
     EXCEL_AVAILABLE = True
 except ImportError:
     EXCEL_AVAILABLE = False
-
-import io
 
 router = APIRouter()
 
@@ -55,7 +54,7 @@ async def import_bom_from_excel(
     try:
         # 读取Excel文件
         file_content = await file.read()
-        df = pd.read_excel(io.BytesIO(file_content))
+        df = ImportExportEngine.parse_excel(file_content)
 
         # 验证必需的列
         required_columns = ["物料编码", "物料名称", "数量"]

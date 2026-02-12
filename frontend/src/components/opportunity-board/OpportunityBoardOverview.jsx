@@ -19,7 +19,7 @@ import {
   OPPORTUNITY_STAGES,
   OPPORTUNITY_STAGE_CONFIGS,
   OPPORTUNITY_PRIORITY } from
-"./opportunityBoardConstants";
+"@/lib/constants/opportunityBoard";
 
 export default function OpportunityBoardOverview({ opportunities = [] }) {
   // 计算统计数据

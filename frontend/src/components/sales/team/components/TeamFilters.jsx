@@ -8,7 +8,7 @@ import { Filter, RefreshCw } from "lucide-react";
 import { Card, CardContent, Button, Input } from "../../../ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select";
 import { cn } from "../../../../lib/utils";
-import { QUICK_RANGE_PRESETS, formatAutoRefreshTime } from "../constants/salesTeamConstants";
+import { QUICK_RANGE_PRESETS, formatAutoRefreshTime } from "@/lib/constants/salesTeam";
 
 export default function TeamFilters({
   filters,

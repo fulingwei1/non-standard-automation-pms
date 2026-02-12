@@ -15,7 +15,7 @@ import {
   PROJECT_STAGES,
   MILESTONE_STATUSES,
   PROJECT_HEALTH } from
-'./projectDetailConstants';
+'@/lib/constants/projectDetail';
 import { format, differenceInDays, isAfter, isBefore as _isBefore } from 'date-fns';
 import { zhCN as _zhCN } from 'date-fns/locale';
 

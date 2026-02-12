@@ -54,7 +54,7 @@ import {
   formatDate,
   formatDuration,
   hasPermission } from
-"./installationDispatchConstants";import { toast } from "sonner";
+"@/lib/constants/installationDispatch";import { toast } from "sonner";
 
 export function TeamAssignment({
   engineers,

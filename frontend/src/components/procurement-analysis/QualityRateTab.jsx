@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Badge } from '../ui/badge';
 import ProcurementStatsCard from './ProcurementStatsCard';
-import { STATS_CARD_CONFIGS, getQualityRateBadgeColor } from './procurementConstants';
+import { STATS_CARD_CONFIGS, getQualityRateBadgeColor } from '@/lib/constants/procurementAnalysis';
 
 /**
  * 质量合格率 Tab 组件

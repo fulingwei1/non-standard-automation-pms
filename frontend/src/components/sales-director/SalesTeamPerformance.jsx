@@ -36,7 +36,7 @@ import {
   getPerformanceGrade,
   calculateRankingValidation,
   validateMetricConfig as _validateMetricConfig } from
-'./salesDirectorConstants';
+'@/lib/constants/sales';
 
 export default function SalesTeamPerformance({
   teamPerformance = [],

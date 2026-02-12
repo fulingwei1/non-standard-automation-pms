@@ -21,7 +21,7 @@ import {
 '@/components/ui';
 import {
   PROJECT_ROLES } from
-'./projectDetailConstants';
+'@/lib/constants/projectDetail';
 import { format } from 'date-fns';
 import { zhCN as _zhCN } from 'date-fns/locale';
 import { Mail, Phone, Calendar, UserCheck, UserX } from 'lucide-react';

@@ -77,6 +77,7 @@ import {
 "../components/opportunity-board";
 
 // 阶段映射函数
+import { confirmAction } from "@/lib/confirmAction";
 const mapStageToFrontend = (backendStage) => {
   const config = OpportunityUtils.getStageConfig(backendStage);
   return config?.frontendKey || "lead";
@@ -316,7 +317,7 @@ export default function OpportunityBoard() {
   };
 
   const handleDeleteOpportunity = async () => {
-    if (!confirm("确定要删除这个销售机会吗？")) {return;}
+    if (!await confirmAction("确定要删除这个销售机会吗？")) {return;}
 
     try {
       await opportunityApi.delete(selectedOpportunity.id);

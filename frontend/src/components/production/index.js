@@ -35,7 +35,7 @@ export {
   RANKING,
   METRICS,
   TIME_RANGE,
-} from './productionConstants';
+} from '@/lib/constants/production';
 
 // 工具函数
 export {
@@ -51,4 +51,4 @@ export {
   calculateOEE,
   formatProductionData,
   validateProductionData,
-} from './productionConstants';
+} from '@/lib/constants/production';

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function ArchiveClosureDialog({ open, onOpenChange, onSubmit }) {
   const [pathsText, setPathsText] = useState("");
 
@@ -29,8 +30,8 @@ export default function ArchiveClosureDialog({ open, onOpenChange, onSubmit }) {
     return out;
   };
 
-  const handleSubmit = () => {
-    const ok = window.confirm("确认将该结项记录归档？归档后将不可编辑。");
+  const handleSubmit = async () => {
+    const ok = await confirmAction("确认将该结项记录归档？归档后将不可编辑。");
     if (!ok) {return;}
     onSubmit(parsePaths(pathsText));
   };

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../lib/utils";
 import { PROJECT_STAGES, HEALTH_CONFIG } from "../lib/constants";
@@ -60,7 +59,6 @@ const getStoredUser = () => {
 };
 
 export default function ProjectBoard() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);

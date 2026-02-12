@@ -4,7 +4,7 @@
  */
 import { Search, List, LayoutGrid } from 'lucide-react';
 import { Card, CardContent, Input, Button } from '../ui';
-import { PAYMENT_TYPES, PAYMENT_STATUS } from './paymentManagementConstants';
+import { PAYMENT_TYPES, PAYMENT_STATUS } from '@/lib/constants/finance';
 
 /**
  * 支付筛选组件

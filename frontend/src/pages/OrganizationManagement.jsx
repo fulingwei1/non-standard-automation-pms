@@ -36,6 +36,7 @@ import {
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Select,
   SelectContent,
@@ -797,20 +798,14 @@ export default function OrganizationManagement() {
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-            <DialogDescription>
-              确定要删除组织"{selectedUnit?.unit_name}"吗？此操作不可恢复。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>取消</Button>
-            <Button variant="destructive" onClick={handleDelete}>删除</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="确认删除"
+        description={`确定要删除组织"${selectedUnit?.unit_name}"吗？此操作不可恢复。`}
+        confirmText="删除"
+        onConfirm={handleDelete}
+      />
     </motion.div>
   );
 }

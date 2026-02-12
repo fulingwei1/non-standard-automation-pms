@@ -16,6 +16,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { toast } from "../../components/ui/toast";
+import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
 import { Users, Download, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export function ServiceTicketBatchActions({
@@ -258,44 +259,32 @@ export function ServiceTicketBatchActions({
 
       {/* Batch Delete Dialog */}
       {showBatchDeleteDialog && (
-        <Dialog open onOpenChange={() => setShowBatchDeleteDialog(false)}>
-          <DialogContent className="max-w-md bg-slate-900 border-slate-700">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-400">
-                <AlertTriangle className="w-5 h-5" />
-                批量删除工单
-              </DialogTitle>
-              <DialogDescription>
-                您确定要删除选中的 {selectedTickets.length} 个工单吗？此操作不可撤销。
-              </DialogDescription>
-            </DialogHeader>
-            <DialogBody>
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span className="text-red-400 font-medium">警告</span>
-                </div>
-                <ul className="text-sm text-slate-300 space-y-1">
-                  <li>• 删除后的工单无法恢复</li>
-                  <li>• 所有相关数据将被永久删除</li>
-                  <li>• 建议先导出数据作为备份</li>
-                </ul>
-              </div>
-            </DialogBody>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBatchDeleteDialog(false)} disabled={submitting}>
-                取消
-              </Button>
-              <Button 
-                onClick={handleBatchDelete} 
-                disabled={submitting}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {submitting ? "删除中..." : "确认删除"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeleteConfirmDialog
+          open
+          onOpenChange={() => setShowBatchDeleteDialog(false)}
+          title="批量删除工单"
+          description={`您确定要删除选中的 ${selectedTickets.length} 个工单吗？此操作不可撤销。`}
+          confirmText={submitting ? "删除中..." : "确认删除"}
+          confirmDisabled={submitting}
+          onConfirm={handleBatchDelete}
+          contentClassName="max-w-md bg-slate-900 border-slate-700"
+          titleClassName="text-red-400"
+          descriptionClassName="text-slate-300"
+          cancelButtonClassName="border-slate-700"
+          confirmButtonClassName="bg-red-600 hover:bg-red-700"
+        >
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-red-400 font-medium">警告</span>
+            </div>
+            <ul className="text-sm text-slate-300 space-y-1">
+              <li>• 删除后的工单无法恢复</li>
+              <li>• 所有相关数据将被永久删除</li>
+              <li>• 建议先导出数据作为备份</li>
+            </ul>
+          </div>
+        </DeleteConfirmDialog>
       )}
     </>
   );

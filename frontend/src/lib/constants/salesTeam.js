@@ -9,7 +9,7 @@ import {
   getDefaultDateRange as getDefaultDateRangeShared,
   getWeekDateRange as getWeekDateRangeShared,
   formatAutoRefreshTime as formatAutoRefreshTimeShared,
-} from "../../salesConstants";
+} from "@/lib/constants/sales";
 
 export {
   DEFAULT_RANKING_METRICS,
@@ -19,7 +19,7 @@ export {
   buildMetricDetailMap,
   formatMetricValueDisplay,
   formatMetricScoreDisplay,
-} from "../../salesConstants";
+} from "@/lib/constants/sales";
 
 // ==================== 日期工具函数 ====================
 

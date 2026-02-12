@@ -60,8 +60,7 @@ export function useTechnicalReviewList() {
     useEffect(() => {
         fetchReviews();
         fetchProjectList();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, projectId, status, reviewType]); // Keep original dependencies behavior
+    }, [fetchReviews, fetchProjectList]);
 
     const handleDelete = async () => {
         if (!deleteDialog.review) return;

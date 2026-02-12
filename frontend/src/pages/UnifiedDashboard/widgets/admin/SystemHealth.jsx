@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Badge } from '../../../../components/ui/badge';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 
-export default function SystemHealth({ data }) {
+export default function SystemHealth({ data: _data }) {
   return (
     <Card>
       <CardHeader className="pb-2">

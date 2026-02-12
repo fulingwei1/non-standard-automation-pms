@@ -3,7 +3,6 @@
 项目导入服务
 """
 
-import io
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional, Tuple
@@ -14,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project
 from app.models.user import User
+from app.services.import_export_engine import ImportExportEngine
 from app.utils.project_utils import init_project_stages
 
 
@@ -36,8 +36,7 @@ def parse_excel_data(file_content: bytes) -> pd.DataFrame:
         pd.DataFrame: 解析后的数据框
     """
     try:
-        df = pd.read_excel(io.BytesIO(file_content))
-        df = df.dropna(how='all')  # 去除空行
+        df = ImportExportEngine.parse_excel(file_content)
 
         if len(df) == 0:
             raise HTTPException(status_code=400, detail="文件中没有数据")

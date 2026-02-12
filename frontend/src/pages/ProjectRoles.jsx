@@ -44,6 +44,7 @@ import { Label } from "../components/ui/label";
 import { projectRolesApi, userApi } from "../services/api";
 import { fadeIn } from "../lib/animations";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function ProjectRoles() {
   const { id } = useParams();
   const projectId = id ? parseInt(id) : null;
@@ -206,7 +207,7 @@ export default function ProjectRoles() {
 
   const handleRemoveLead = async (memberId) => {
     if (!projectId) {return;}
-    if (!window.confirm("确定要移除这个负责人吗？")) {
+    if (!await confirmAction("确定要移除这个负责人吗？")) {
       return;
     }
     try {

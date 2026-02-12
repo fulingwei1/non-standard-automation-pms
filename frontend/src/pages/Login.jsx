@@ -167,7 +167,6 @@ export default function Login({ onLoginSuccess }) {
               ManufacturingDirector: "manufacturing_director",
               MANUFACTURING_DIRECTOR: "manufacturing_director",
               计划管理: "pmc",
-              PMC: "pmc",
               采购部经理: "procurement_manager",
               采购经理: "procurement_manager",
               ProcurementManager: "procurement_manager",

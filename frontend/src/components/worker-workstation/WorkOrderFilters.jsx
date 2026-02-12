@@ -5,7 +5,7 @@
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { WORK_ORDER_STATUS } from './workerWorkstationConstants';
+import { WORK_ORDER_STATUS } from '@/lib/constants/workerWorkstation';
 
 /**
  * 工单筛选器组件

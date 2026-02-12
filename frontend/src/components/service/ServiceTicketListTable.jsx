@@ -24,7 +24,7 @@ import {
   getStatusLabel,
   getUrgencyLabel,
   getProblemTypeIcon } from
-"./serviceTicketConstants";
+"@/lib/constants/service";
 
 export function ServiceTicketListTable({
   tickets = [],

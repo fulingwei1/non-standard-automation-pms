@@ -6,7 +6,7 @@
 import { Users, TrendingUp, BarChart3, MoreHorizontal, Mail, Phone, Edit } from "lucide-react";
 import { Card, Badge, Progress, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../../ui";
 import { cn } from "../../../../lib/utils";
-import { statusConfig, formatCurrency, formatFollowUpType, formatTimeAgo } from "../constants/salesTeamConstants";
+import { statusConfig, formatCurrency, formatFollowUpType, formatTimeAgo } from "@/lib/constants/salesTeam";
 
 export default function TeamMemberCard({
   member,

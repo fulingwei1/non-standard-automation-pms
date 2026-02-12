@@ -132,7 +132,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       const quotesData = response.data?.items || response.data || [];
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
     } catch (error) {
-      const { useMockData } = handleApiError(error, '获取报价列表');
+      const { useMockData: _useMockData } = handleApiError(error, '获取报价列表');
 
       // 使用模拟数据
       const mockQuotes = [

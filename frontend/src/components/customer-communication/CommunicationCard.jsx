@@ -35,7 +35,7 @@ import {
   formatType,
   formatPriority,
   formatChannel } from
-"./communicationConstants";
+"@/lib/constants/customer";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

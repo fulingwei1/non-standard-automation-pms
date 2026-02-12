@@ -34,7 +34,7 @@ import {
   getCommunicationTypeStats,
   getTopicDistributionStats,
   getCommunicationTypeIcon } from
-'./customerCommunicationConstants';
+'@/lib/constants/customer';
 
 const CustomerCommunicationOverview = ({
   communications = [],

@@ -20,7 +20,7 @@ import {
   PRIORITY_COLORS,
   INSTALLATION_TYPE,
   INSTALLATION_TYPE_LABELS,
-} from "./installationDispatchConstants";
+} from "@/lib/constants/installationDispatch";
 
 export default function DispatchList({
   orders,

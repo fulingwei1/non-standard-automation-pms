@@ -26,7 +26,7 @@ import {
   calculateCompletionRate as _calculateCompletionRate,
   calculateQualityRate as _calculateQualityRate,
   formatProductionData as _formatProductionData } from
-'./productionConstants';
+'@/lib/constants/production';
 
 export default function ProductionStatsOverview({
   productionStats,

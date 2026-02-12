@@ -36,7 +36,7 @@ import {
   evaluationStatusConfigs,
   impactTypeConfigs,
   formatStatus } from
-"./ecnConstants";
+"@/lib/constants/ecn";
 import { cn, formatDate } from "../../lib/utils";import { toast } from "sonner";
 
 export function ECNEvaluationManager({

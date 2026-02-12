@@ -16,7 +16,7 @@ import {
   calculateTeamStats,
   aggregateTargets } from
 "../utils/salesTeamTransformers";
-import { DEFAULT_TEAM_STATS } from "../constants/salesTeamConstants";
+import { DEFAULT_TEAM_STATS } from "@/lib/constants/salesTeam";
 
 export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast) => {
   const [loading, setLoading] = useState(false);

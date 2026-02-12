@@ -54,6 +54,7 @@ import {
 "../components/ui/dialog";
 import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },
   SUBMITTED: { label: "已提交", color: "bg-blue-500" },
@@ -171,7 +172,7 @@ export default function ProductionPlanList() {
     }
   };
   const handlePublish = async (planId) => {
-    if (!confirm("确认发布此生产计划？")) {return;}
+    if (!await confirmAction("确认发布此生产计划？")) {return;}
     try {
       await productionApi.productionPlans.publish(planId);
       fetchPlans();

@@ -28,7 +28,7 @@ import {
   priorityConfigs,
   defaultECNForm,
   getTypesByCategory 
-} from "./ecnManagementConstants";
+} from "@/lib/constants/ecn";
 
 export function ECNCreateDialog({
   open = false,
@@ -69,8 +69,7 @@ export function ECNCreateDialog({
         setFormData(prev => ({ ...prev, machine_id: null }));
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.project_id]);
+  }, [formData.project_id, formData.machine_id, machines]);
 
   // 表单验证
   const validateForm = () => {

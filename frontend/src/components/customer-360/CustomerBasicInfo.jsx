@@ -21,7 +21,7 @@ import {
   CUSTOMER_STATUS, 
   CUSTOMER_LEVELS,
   BUSINESS_METRICS 
-} from './customer360Constants';
+} from '@/lib/constants/customer360';
 
 const { Title, Text, Paragraph } = Typography;
 

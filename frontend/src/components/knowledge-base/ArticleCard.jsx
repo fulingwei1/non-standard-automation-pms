@@ -40,7 +40,7 @@ import {
   getCategoryColor,
   getPriorityConfig,
   getStatusConfig } from
-"./knowledgeBaseConstants";
+"@/lib/constants/knowledge";
 
 export default function ArticleCard({
   article,

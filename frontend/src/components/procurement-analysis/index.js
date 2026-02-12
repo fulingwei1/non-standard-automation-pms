@@ -9,4 +9,4 @@ export { default as DeliveryPerformanceTab } from './DeliveryPerformanceTab';
 export { default as RequestEfficiencyTab } from './RequestEfficiencyTab';
 export { default as QualityRateTab } from './QualityRateTab';
 export { useProcurementData } from './useProcurementData';
-export * from './procurementConstants';
+export * from '@/lib/constants/procurementAnalysis';

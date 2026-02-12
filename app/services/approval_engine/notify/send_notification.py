@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-审批通知服务（使用统一NotificationService）
+审批通知服务（使用统一NotificationDispatcher）
 提供统一的通知发送入口和站内通知保存功能
 
-BACKWARD COMPATIBILITY: 此模块现在使用unified_notification_service进行通知发送
+BACKWARD COMPATIBILITY: 此模块现在通过 NotificationDispatcher 进行通知发送
 """
 
 import logging

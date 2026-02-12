@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag, Progress } from 'antd';
-import { PROJECT_PHASES, TABLE_CONFIG } from './customer360Constants';
+import { PROJECT_PHASES, TABLE_CONFIG } from '@/lib/constants/customer360';
 
 const CustomerProjectDelivery = ({ projects = [], loading = false }) => {
   const columns = useMemo(() => {

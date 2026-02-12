@@ -35,7 +35,7 @@ import {
   fulfillmentStatusConfigs,
   formatStatus as _formatStatus,
   formatType } from
-"./contractManagementConstants";
+"@/lib/constants/contractManagement";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 
 export function ContractCard({

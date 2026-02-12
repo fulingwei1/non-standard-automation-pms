@@ -20,7 +20,7 @@ import {
   LEAD_STATUS,
   QUALIFICATION_LEVELS,
   SCORE_COLORS } from
-'./leadAssessmentConstants';
+'@/lib/constants/leadAssessment';
 
 const LeadOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');

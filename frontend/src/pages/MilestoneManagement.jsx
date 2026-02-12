@@ -43,6 +43,7 @@ import {
 "../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { milestoneApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   PENDING: { label: "待开始", color: "bg-slate-500", icon: Clock },
   IN_PROGRESS: { label: "进行中", color: "bg-blue-500", icon: TrendingUp },
@@ -126,7 +127,7 @@ export default function MilestoneManagement() {
     }
   };
   const handleCompleteMilestone = async (milestoneId) => {
-    if (!confirm("确认完成此里程碑？")) {return;}
+    if (!await confirmAction("确认完成此里程碑？")) {return;}
     try {
       await milestoneApi.complete(milestoneId);
       fetchMilestones();

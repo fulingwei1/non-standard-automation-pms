@@ -42,6 +42,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { ecnApi } from "../services/api";
 import { formatDate as _formatDate } from "../lib/utils";
 
+import { confirmAction } from "@/lib/confirmAction";
 const alertTypeConfigs = {
   EVALUATION_OVERDUE: {
     label: "评估超时",
@@ -138,7 +139,7 @@ export default function ECNOverdueAlerts() {
     }
 
     if (
-    !confirm(
+    !await confirmAction(
       `确认发送提醒通知给相关人员？将处理 ${selectedAlerts.size} 个超时提醒。`
     ))
     {

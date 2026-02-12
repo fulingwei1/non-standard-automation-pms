@@ -20,7 +20,7 @@ import {
   SIGNATURE_STATUS,
   RISK_LEVELS,
   CHART_COLORS } from
-'./contractManagementConstants';
+'@/lib/constants/contractManagement';
 
 const ContractOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');

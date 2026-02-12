@@ -14,7 +14,7 @@ import {
   deliveryPriorityConfigs as _deliveryPriorityConfigs,
   getStatusConfig,
   formatStatus } from
-'./deliveryConstants';
+'@/lib/constants/service';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

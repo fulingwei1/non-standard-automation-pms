@@ -5,6 +5,7 @@ import { defaultWeights } from "../utils/weightConfigUtils";
 /**
  * 权重配置自定义 Hook
  */
+import { confirmAction } from "@/lib/confirmAction";
 export const useWeightConfig = () => {
   const [weights, setWeights] = useState(defaultWeights);
   const [isDirty, setIsDirty] = useState(false);
@@ -140,8 +141,8 @@ export const useWeightConfig = () => {
   };
 
   // 重置为默认值
-  const handleReset = () => {
-    if (!confirm("确认重置为默认权重配置吗？（部门50%、项目50%）")) {
+  const handleReset = async () => {
+    if (!await confirmAction("确认重置为默认权重配置吗？（部门50%、项目50%）")) {
       return;
     }
     setWeights(defaultWeights);
@@ -156,7 +157,7 @@ export const useWeightConfig = () => {
     }
 
     if (
-      !confirm(
+      !await confirmAction(
         `确认保存权重配置吗？\n\n部门经理权重：${weights.deptManager}%\n项目经理权重：${weights.projectManager}%\n\n此配置将影响所有员工的绩效计算`,
       )
     ) {

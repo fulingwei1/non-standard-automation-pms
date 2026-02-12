@@ -32,20 +32,8 @@ class WeChatAlertService:
     """企业微信预警消息推送服务
     实现缺料预警的企业微信卡片消息推送
 
-    BACKWARD COMPATIBILITY: This service now uses unified NotificationService.
+    BACKWARD COMPATIBILITY: This service now uses NotificationDispatcher.
     """
-
-    def __init__(self, db: Session):
-        self.db = db
-        self.unified_service = None
-
-    def _get_unified_service(self):
-        """获取统一的NotificationService单例"""
-        if self.unified_service is None:
-            from app.services.unified_notification_service import notification_service
-
-            self.unified_service = notification_service(self.db)
-        return self.unified_service
 
     @classmethod
     def send_shortage_alert(

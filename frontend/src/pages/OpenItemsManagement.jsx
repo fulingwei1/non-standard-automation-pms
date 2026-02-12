@@ -39,6 +39,7 @@ import {
 "../components/ui";
 import { technicalAssessmentApi } from "../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 const itemTypeConfig = {
   INTERFACE: "接口",
   TAKT: "节拍",
@@ -124,7 +125,7 @@ export default function OpenItemsManagement() {
   };
 
   const handleClose = async (itemId) => {
-    if (!confirm("确定要关闭此未决事项吗？")) {return;}
+    if (!await confirmAction("确定要关闭此未决事项吗？")) {return;}
 
     try {
       await technicalAssessmentApi.closeOpenItem(itemId);

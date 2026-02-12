@@ -4,7 +4,7 @@
  */
 
 // 配置和常量
-export * from "./hrConstants";
+export * from "@/lib/constants/hr";
 
 // HR 管理组件
 export { HRStatsOverview } from "./HRStatsOverview";

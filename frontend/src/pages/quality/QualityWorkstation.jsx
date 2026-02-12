@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
-import { fadeIn, staggerContainer } from "../../lib/animations";
+import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片
 function StatsCards({ stats }) {
@@ -313,7 +313,7 @@ function AcceptanceTasksCard({ tasks, viewAllPath }) {
 }
 
 export default function QualityWorkstation() {
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [inspectionTasks, setInspectionTasks] = useState([]);
   const [qualityIssues, setQualityIssues] = useState([]);

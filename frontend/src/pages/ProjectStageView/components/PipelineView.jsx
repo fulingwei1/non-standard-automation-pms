@@ -75,7 +75,6 @@ function PipelineViewSkeleton() {
  */
 function StageCell({ stage, onClick }) {
   const statusConfig = getStatusConfig(stage.status);
-  const categoryConfig = getCategoryConfig(stage.category);
 
   return (
     <TooltipProvider>

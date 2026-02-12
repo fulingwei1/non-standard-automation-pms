@@ -54,8 +54,9 @@ import {
   getSatisfactionScoreConfig as _getSatisfactionScoreConfig,
   formatSatisfactionScore,
   satisfactionConstants } from
-"./satisfactionConstants";
+"@/lib/constants/customer";
 
+import { confirmAction } from "@/lib/confirmAction";
 export const FeedbackList = ({
   feedbacks = [],
   loading = false,
@@ -170,9 +171,9 @@ export const FeedbackList = ({
   };
 
   // 处理删除
-  const handleDelete = (feedbackId, e) => {
+  const handleDelete = async (feedbackId, e) => {
     e.stopPropagation();
-    if (onDelete && confirm("确定要删除这条反馈吗？")) {
+    if (onDelete && await confirmAction("确定要删除这条反馈吗？")) {
       onDelete(feedbackId);
     }
   };

@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Typography } from 'antd';
-import { KNOWLEDGE_TYPES, CATEGORIES, STATUS_OPTIONS, ACCESS_LEVELS, TABLE_CONFIG } from './knowledgeBaseConstants';
+import { KNOWLEDGE_TYPES, CATEGORIES, STATUS_OPTIONS, ACCESS_LEVELS, TABLE_CONFIG } from '@/lib/constants/knowledge';
 
 const { Text } = Typography;
 

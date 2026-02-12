@@ -60,7 +60,7 @@ import {
   LEAD_SOURCES,
   LEAD_PRIORITIES,
   LEAD_STATUSES } from
-"./leadAssessmentConstants";
+"@/lib/constants/leadAssessment";
 
 export const AssessmentForm = ({
   lead,

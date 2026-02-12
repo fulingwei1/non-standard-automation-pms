@@ -17,6 +17,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -67,51 +68,44 @@ def export_quote_to_excel(
         QuoteItem.quote_version_id == version.id
     ).all()
 
-    try:
-        import pandas as pd
+    # 构建数据
+    header_rows = [{
+        "报价编码": quote.quote_code,
+        "客户名称": quote.customer.customer_name if quote.customer else "",
+        "版本号": version.version_no,
+        "总价": float(version.total_price) if version.total_price else 0,
+        "成本合计": float(version.cost_total) if version.cost_total else 0,
+        "毛利率": f"{float(version.gross_margin)}%" if version.gross_margin else "",
+        "交期(天)": version.lead_time_days or "",
+    }]
 
-        # 构建数据
-        header_data = {
-            "报价编码": [quote.quote_code],
-            "客户名称": [quote.customer.customer_name if quote.customer else ""],
-            "版本号": [version.version_no],
-            "总价": [float(version.total_price) if version.total_price else 0],
-            "成本合计": [float(version.cost_total) if version.cost_total else 0],
-            "毛利率": [f"{float(version.gross_margin)}%" if version.gross_margin else ""],
-            "交期(天)": [version.lead_time_days or ""],
-        }
+    items_data = []
+    for i, item in enumerate(items, 1):
+        items_data.append({
+            "序号": i,
+            "类型": item.item_type or "",
+            "名称": item.item_name or "",
+            "数量": float(item.qty) if item.qty else 0,
+            "单价": float(item.unit_price) if item.unit_price else 0,
+            "成本": float(item.cost) if item.cost else 0,
+            "小计": float(item.qty * item.unit_price) if item.qty and item.unit_price else 0,
+            "备注": item.remark or "",
+        })
 
-        items_data = []
-        for i, item in enumerate(items, 1):
-            items_data.append({
-                "序号": i,
-                "类型": item.item_type or "",
-                "名称": item.item_name or "",
-                "数量": float(item.qty) if item.qty else 0,
-                "单价": float(item.unit_price) if item.unit_price else 0,
-                "成本": float(item.cost) if item.cost else 0,
-                "小计": float(item.qty * item.unit_price) if item.qty and item.unit_price else 0,
-                "备注": item.remark or "",
-            })
+    sheets = [
+        {"name": "报价概要", "data": header_rows},
+    ]
+    if items_data:
+        sheets.append({"name": "报价明细", "data": items_data})
 
-        # 创建Excel
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            pd.DataFrame(header_data).to_excel(writer, sheet_name='报价概要', index=False)
-            if items_data:
-                pd.DataFrame(items_data).to_excel(writer, sheet_name='报价明细', index=False)
+    output = ExcelExportEngine.export_multi_sheet(sheets)
 
-        output.seek(0)
-
-        filename = f"报价_{quote.quote_code}_{version.version_no}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-        return StreamingResponse(
-            output,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
-        )
-
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Excel导出功能需要安装pandas和openpyxl")
+    filename = f"报价_{quote.quote_code}_{version.version_no}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
 
 
 @router.get("/quotes/{quote_id}/export/pdf")

@@ -54,6 +54,7 @@ import {
 "../components/ui/dialog";
 import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500" },
   IN_PROGRESS: { label: "处理中", color: "bg-amber-500" },
@@ -191,7 +192,7 @@ export default function ProductionExceptionList() {
     }
   };
   const handleClose = async (excId) => {
-    if (!confirm("确认关闭此异常？")) {return;}
+    if (!await confirmAction("确认关闭此异常？")) {return;}
     try {
       await productionApi.exceptions.close(excId);
       fetchExceptions();

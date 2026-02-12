@@ -34,7 +34,7 @@ import {
   getTrendDirection,
   getTrendColor,
   getTrendIcon } from
-"./alertStatsConstants";
+"@/lib/constants/alert";
 
 export function AlertTrendChart({
   data,

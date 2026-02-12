@@ -14,12 +14,6 @@ import {
   EmptyState,
 } from "../../ui";
 import {
-  UserPlus,
-  UserMinus,
-  UserCheck,
-  TrendingUp,
-  ArrowRightLeft,
-  BadgeDollarSign,
   FileText,
   Search,
   Plus,
@@ -29,17 +23,6 @@ import { useHRTransactions } from "../hooks/useHRTransactions";
 import { hrApi } from "../../../services/api";
 import { toast } from "../../ui/toast";
 import { DynamicIcon } from "../../../utils/iconMap.jsx";
-
-// 动态导入图标组件
-const iconMap = {
-  UserPlus,
-  UserMinus,
-  UserCheck,
-  TrendingUp,
-  ArrowRightLeft,
-  BadgeDollarSign,
-  FileText,
-};
 
 export default function HRTransactionsTab() {
   const {
@@ -79,12 +62,6 @@ export default function HRTransactionsTab() {
       return true;
     });
   }, [transactions, filter.searchText]);
-
-  // 已迁移到 DynamicIcon 组件，保留此函数以向后兼容
-  const getIcon = (iconName) => {
-    // 这个函数现在主要用于向后兼容，新代码应该使用 DynamicIcon 组件
-    return FileText; // 默认返回 FileText，实际渲染使用 DynamicIcon
-  };
 
   return (
     <div className="space-y-6">

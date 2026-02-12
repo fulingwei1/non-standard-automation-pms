@@ -24,7 +24,7 @@ import {
   FEEDBACK_RATINGS,
   calculateServiceCompletionRate,
   getServiceQualityScore
-} from "./serviceRecordConstants";
+} from "@/lib/constants/serviceRecord";
 
 const ServiceRecordOverview = ({ 
   records, 

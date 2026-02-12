@@ -46,6 +46,7 @@ import { cn } from "../lib/utils";
 import { staffMatchingApi } from "../services/api";
 
 // 推荐类型配置
+import { confirmAction } from "@/lib/confirmAction";
 const RECOMMENDATION_CONFIG = {
   STRONG: { color: "green", text: "强烈推荐", icon: Star },
   RECOMMENDED: { color: "blue", text: "推荐", icon: TrendingUp },
@@ -180,7 +181,7 @@ export default function AIStaffMatching() {
   // 采纳候选人
   const handleAccept = async (candidate) => {
     if (
-    !window.confirm(
+    !await confirmAction(
       `确定要采纳 ${candidate.employee_name} 作为该职位的候选人吗？`
     ))
 

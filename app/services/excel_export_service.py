@@ -131,7 +131,8 @@ class ExcelExportService:
     def export_multisheet(
         self,
         sheets: List[Dict[str, Any]],
-        filename: Optional[str] = None
+        filename: Optional[str] = None,
+        sheet_post_process: Optional[Callable] = None,
     ) -> io.BytesIO:
         """
         导出多 Sheet Excel 文件
@@ -216,6 +217,9 @@ class ExcelExportService:
                     cell = ws[f'{col_letter}{row}']
                     cell.value = value
                     cell.alignment = Alignment(horizontal="left", vertical="center")
+
+            if sheet_post_process:
+                sheet_post_process(ws, sheet_config)
 
         output = io.BytesIO()
         wb.save(output)

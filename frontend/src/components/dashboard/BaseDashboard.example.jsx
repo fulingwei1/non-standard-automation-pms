@@ -163,7 +163,7 @@ export function CustomActionsDashboard() {
           </Button>
         </>
       }
-      renderContent={(data) => (
+      renderContent={(_data) => (
         <div className="space-y-6">
           {/* 内容 */}
         </div>

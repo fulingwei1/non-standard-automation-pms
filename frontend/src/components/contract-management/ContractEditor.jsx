@@ -11,7 +11,7 @@ import {
   RISK_LEVELS,
   CONTRACT_TEMPLATES,
   APPROVAL_LEVELS
-} from './contractManagementConstants';
+} from '@/lib/constants/contractManagement';
 
 const ContractEditor = ({ contract, onSave, onCancel }) => {
   const [form] = Form.useForm();

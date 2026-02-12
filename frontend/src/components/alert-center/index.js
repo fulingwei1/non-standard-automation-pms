@@ -4,4 +4,4 @@
  */
 
 export { default as AlertCenterOverview } from './AlertCenterOverview';
-export * from './alertCenterConstants';
+export * from '@/lib/constants/alertCenter';

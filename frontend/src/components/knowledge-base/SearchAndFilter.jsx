@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   ACCESS_LEVELS,
   STATUS_OPTIONS
-} from './knowledgeBaseConstants';
+} from '@/lib/constants/knowledge';
 
 const { Text } = Typography;
 

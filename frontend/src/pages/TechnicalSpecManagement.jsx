@@ -36,6 +36,7 @@ import {
 "../components/ui/select";
 import api from "../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function TechnicalSpecManagement() {
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +107,7 @@ export default function TechnicalSpecManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("确定要删除这个规格要求吗？")) {return;}
+    if (!await confirmAction("确定要删除这个规格要求吗？")) {return;}
 
     try {
       await api.delete(`/technical-spec/requirements/${id}`);

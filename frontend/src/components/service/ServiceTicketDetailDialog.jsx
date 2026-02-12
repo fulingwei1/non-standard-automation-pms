@@ -18,7 +18,7 @@ import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { toast } from "../../components/ui/toast";
 import { Star, Phone, MapPin, Calendar, User, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { statusConfigs, urgencyConfigs, problemTypeConfigs } from "./serviceTicketConstants";
+import { statusConfigs, urgencyConfigs, problemTypeConfigs } from "@/lib/constants/service";
 import { cn, formatDate } from "../../lib/utils";
 
 export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {

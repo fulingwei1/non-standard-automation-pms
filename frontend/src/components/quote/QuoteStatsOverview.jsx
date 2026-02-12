@@ -34,7 +34,7 @@ import {
   calculateConversionRate,
   formatCurrency,
   QUOTE_VIEW_MODES } from
-"./quoteConstants";
+"@/lib/constants/quote";
 import {
   SimpleBarChart,
   SimpleLineChart,

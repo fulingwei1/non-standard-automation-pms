@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import { GitBranch, TrendingUp, DollarSign, Layers } from "lucide-react";
 import { ecnApi } from "../../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function ECNIntegrationTab({
   ecnId,
   ecn,
@@ -58,7 +59,7 @@ export default function ECNIntegrationTab({
 
   // 批量同步
   const handleBatchSync = async () => {
-    if (!confirm("确认要同步到所有相关模块吗？")) {return;}
+    if (!await confirmAction("确认要同步到所有相关模块吗？")) {return;}
 
     try {
       const results = [];

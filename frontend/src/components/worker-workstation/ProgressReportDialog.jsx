@@ -7,8 +7,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Slider } from '../ui/slider';
-import { QUICK_QUANTITY_OPTIONS } from './workerWorkstationConstants';
-import { calculateProgress } from './workerWorkstationConstants';
+import { QUICK_QUANTITY_OPTIONS } from '@/lib/constants/workerWorkstation';
+import { calculateProgress } from '@/lib/constants/workerWorkstation';
 
 /**
  * 进度报工对话框

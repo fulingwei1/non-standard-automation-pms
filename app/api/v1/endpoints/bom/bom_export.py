@@ -3,7 +3,6 @@
 BOM导出 - 从 bom.py 拆分
 """
 
-import io
 from datetime import datetime
 from urllib.parse import quote
 
@@ -13,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ExcelExportEngine
 from app.models.material import BomHeader, BomItem
 from app.models.user import User
 
@@ -34,7 +34,7 @@ def export_bom_to_excel(
     # 获取BOM明细
     items = bom.items.order_by(BomItem.item_no).all()
 
-    # 构建DataFrame
+    # 构建导出数据
     data = []
     for item in items:
         data.append(
@@ -59,45 +59,38 @@ def export_bom_to_excel(
             }
         )
 
-    import pandas as pd
+    labels = [
+        "行号",
+        "物料编码",
+        "物料名称",
+        "规格型号",
+        "图号",
+        "单位",
+        "数量",
+        "单价",
+        "金额",
+        "来源类型",
+        "需求日期",
+        "已采购数量",
+        "已到货数量",
+        "是否关键",
+        "备注",
+    ]
+    widths = [10, 15, 30, 20, 10, 8, 10, 12, 12, 12, 12, 12, 12, 8, 30]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
 
-    df = pd.DataFrame(data)
-
-    # 创建Excel文件
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="BOM明细", index=False)
-
-        # 设置列宽
-        worksheet = writer.sheets["BOM明细"]
-        column_widths = {
-            "A": 10,  # 行号
-            "B": 15,  # 物料编码
-            "C": 30,  # 物料名称
-            "D": 20,  # 规格型号
-            "E": 10,  # 图号
-            "F": 8,  # 单位
-            "G": 10,  # 数量
-            "H": 12,  # 单价
-            "I": 12,  # 金额
-            "J": 12,  # 来源类型
-            "K": 12,  # 需求日期
-            "L": 12,  # 已采购数量
-            "M": 12,  # 已到货数量
-            "N": 8,  # 是否关键
-            "O": 30,  # 备注
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-    output.seek(0)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name="BOM明细",
+    )
 
     # 生成文件名
     filename = f"BOM_{bom.bom_no}_v{bom.version}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
     encoded_filename = quote(filename)
 
     return StreamingResponse(
-        io.BytesIO(output.read()),
+        output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheet",
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"

@@ -51,6 +51,7 @@ import {
 "../components/ui/dialog";
 import { cn as _cn, formatDate } from "../lib/utils";
 import { shortageApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500" },
   CONFIRMED: { label: "已确认", color: "bg-emerald-500" },
@@ -116,7 +117,7 @@ export default function ShortageReportList() {
     }
   };
   const handleConfirm = async (reportId) => {
-    if (!confirm("确认此缺料上报？")) {return;}
+    if (!await confirmAction("确认此缺料上报？")) {return;}
     try {
       await shortageApi.reports.confirm(reportId);
       fetchReports();

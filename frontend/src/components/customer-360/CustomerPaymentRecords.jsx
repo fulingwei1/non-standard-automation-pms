@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag } from 'antd';
-import { PAYMENT_STATUS, TABLE_CONFIG, CHART_COLORS } from './customer360Constants';
+import { PAYMENT_STATUS, TABLE_CONFIG, CHART_COLORS } from '@/lib/constants/customer360';
 
 const CustomerPaymentRecords = ({ payments = [], loading = false }) => {
   const columns = useMemo(() => {

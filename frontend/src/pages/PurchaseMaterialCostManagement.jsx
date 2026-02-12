@@ -26,6 +26,7 @@ import {
   Settings } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Card,
   CardContent,
@@ -878,28 +879,14 @@ export default function PurchaseMaterialCostManagement() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-            <DialogDescription>
-              确定要删除物料成本 "{selectedCost?.material_name}"
-              吗？此操作不可恢复。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}>
-
-              取消
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="确认删除"
+        description={`确定要删除物料成本 "${selectedCost?.material_name}" 吗？此操作不可恢复。`}
+        confirmText="删除"
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Reminder Settings Dialog */}
       <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>

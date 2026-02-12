@@ -21,6 +21,7 @@ import {
   statusConfig,
 } from "../components/lead-management";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -209,7 +210,7 @@ export default function LeadManagement() {
         return;
       }
       if (!exactCustomerMatch && similarCustomers.length === 0) {
-        const shouldCreate = window.confirm(
+        const shouldCreate = await confirmAction(
           "未找到相似客户，是否新建该客户？"
         );
         if (!shouldCreate) {

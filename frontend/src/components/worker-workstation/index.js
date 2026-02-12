@@ -14,4 +14,4 @@ export { default as ProgressReportDialog } from './ProgressReportDialog';
 export { default as CompleteWorkDialog } from './CompleteWorkDialog';
 
 // 配置常量和工具
-export * from './workerWorkstationConstants';
+export * from '@/lib/constants/workerWorkstation';

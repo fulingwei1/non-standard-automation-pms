@@ -82,6 +82,7 @@ import {
 } from "../components/user-management";
 
 // 配置常量 - 使用新的配置系统
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfig = {
   [USER_STATUS.ACTIVE]: {
     label: USER_STATUS_LABELS[USER_STATUS.ACTIVE],
@@ -259,7 +260,7 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!confirm("确定要删除这个用户吗？")) {
+    if (!await confirmAction("确定要删除这个用户吗？")) {
       return;
     }
 

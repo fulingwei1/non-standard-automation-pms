@@ -34,7 +34,7 @@ import {
   calculateReviewProgress,
   calculateReviewScore,
   generateReviewRecommendations } from
-"./projectReviewConstants";
+"@/lib/constants/projectReview";
 import { cn } from "../../lib/utils";
 import { formatCurrency as _formatCurrency, formatDate } from "../../lib/utils";
 

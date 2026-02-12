@@ -37,7 +37,7 @@ import {
   formatPriority,
   formatChannel,
   sortByCreatedTime } from
-"./communicationConstants";
+"@/lib/constants/customer";
 
 /**
  * 消息列表组件

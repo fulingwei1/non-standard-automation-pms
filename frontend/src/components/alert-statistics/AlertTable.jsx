@@ -46,7 +46,7 @@ import {
   ALERT_STATUS_STATS,
   ALERT_TYPE_STATS,
   formatStatValue as _formatStatValue } from
-"./alertStatsConstants";
+"@/lib/constants/alert";
 
 export function AlertTable({
   data,

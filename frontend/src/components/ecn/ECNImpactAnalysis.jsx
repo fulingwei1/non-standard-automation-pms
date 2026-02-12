@@ -34,7 +34,7 @@ import {
 "lucide-react";
 import {
   impactTypeConfigs as _impactTypeConfigs } from
-"./ecnConstants";
+"@/lib/constants/ecn";
 import { cn as _cn, formatDate as _formatDate } from "../../lib/utils";
 
 export function ECNImpactAnalysis({

@@ -20,7 +20,7 @@ import {
   formatMetricScoreDisplay,
   buildMetricDetailMap,
   formatDateTime,
-} from "../constants/salesTeamConstants";
+} from "@/lib/constants/salesTeam";
 
 export default function TeamRankingBoard({
   rankingData,

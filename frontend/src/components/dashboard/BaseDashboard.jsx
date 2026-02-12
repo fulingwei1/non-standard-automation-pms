@@ -25,7 +25,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '../layout/PageHeader';

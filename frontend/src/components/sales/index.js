@@ -4,7 +4,7 @@
  */
 
 // 配置和常量
-export * from "./salesConstants";
+export * from "@/lib/constants/sales";
 
 // 核心组件
 export { SalesStatsOverview } from "./SalesStatsOverview";

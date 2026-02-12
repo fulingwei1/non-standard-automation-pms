@@ -9,6 +9,7 @@ import { cn } from "../lib/utils";
 import { projectReviewApi, projectApi as _projectApi } from "../services/api";
 import { formatDate as _formatDate, formatCurrency as _formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Card,
   CardContent,
@@ -61,6 +62,7 @@ import {
   getLessonType } from
 "../components/project-review";
 
+import { confirmAction } from "@/lib/confirmAction";
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -165,7 +167,7 @@ export default function ProjectReviewDetail() {
 
   // 发布评审
   const handlePublish = async () => {
-    if (!confirm("确定要发布这个评审报告吗？")) {return;}
+    if (!await confirmAction("确定要发布这个评审报告吗？")) {return;}
 
     try {
       setSaving(true);
@@ -181,7 +183,7 @@ export default function ProjectReviewDetail() {
 
   // 归档评审
   const handleArchive = async () => {
-    if (!confirm("确定要归档这个评审报告吗？")) {return;}
+    if (!await confirmAction("确定要归档这个评审报告吗？")) {return;}
 
     try {
       setSaving(true);
@@ -678,30 +680,15 @@ export default function ProjectReviewDetail() {
       </Tabs>
 
       {/* 删除评审确认对话框 */}
-      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-slate-300">
-              确定要删除这个复盘报告吗？此操作不可撤销。
-            </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog(false)}>
-              取消
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={saving}>
-
-              {saving ? "删除中..." : "确认删除"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={deleteDialog}
+        onOpenChange={setDeleteDialog}
+        title="确认删除"
+        description="确定要删除这个复盘报告吗？此操作不可撤销。"
+        confirmText={saving ? "删除中..." : "确认删除"}
+        confirmDisabled={saving}
+        onConfirm={handleDelete}
+      />
 
       {/* 经验教训编辑对话框 */}
       <Dialog
@@ -891,72 +878,30 @@ export default function ProjectReviewDetail() {
       </Dialog>
 
       {/* 删除经验教训确认对话框 */}
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteLessonDialog.open}
         onOpenChange={(open) =>
-        setDeleteLessonDialog({ open, lessonId: null })
-        }>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-slate-300">确定要删除这个经验教训吗？</p>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-              setDeleteLessonDialog({ open: false, lessonId: null })
-              }>
-
-              取消
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteLesson}
-              disabled={saving}>
-
-              {saving ? "删除中..." : "确认删除"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          setDeleteLessonDialog({ open, lessonId: open ? deleteLessonDialog.lessonId : null })
+        }
+        title="确认删除"
+        description="确定要删除这个经验教训吗？"
+        confirmText={saving ? "删除中..." : "确认删除"}
+        confirmDisabled={saving}
+        onConfirm={handleDeleteLesson}
+      />
 
       {/* 删除最佳实践确认对话框 */}
-      <Dialog
+      <DeleteConfirmDialog
         open={deletePracticeDialog.open}
         onOpenChange={(open) =>
-        setDeletePracticeDialog({ open, practiceId: null })
-        }>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-slate-300">确定要删除这个最佳实践吗？</p>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-              setDeletePracticeDialog({ open: false, practiceId: null })
-              }>
-
-              取消
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePractice}
-              disabled={saving}>
-
-              {saving ? "删除中..." : "确认删除"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          setDeletePracticeDialog({ open, practiceId: open ? deletePracticeDialog.practiceId : null })
+        }
+        title="确认删除"
+        description="确定要删除这个最佳实践吗？"
+        confirmText={saving ? "删除中..." : "确认删除"}
+        confirmDisabled={saving}
+        onConfirm={handleDeletePractice}
+      />
     </motion.div>);
 
 }

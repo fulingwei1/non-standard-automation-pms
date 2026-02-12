@@ -24,7 +24,7 @@ export {
   getProgressColor,
   calculateDelayDays,
   isDelayed,
-} from "./purchaseOrderConstants";
+} from "@/lib/constants/procurement";
 
 // ==================== 组件 ====================
 export { default as OrderCard } from "./OrderCard";
@@ -36,7 +36,7 @@ export { default as PurchaseOrderList } from "./PurchaseOrderList";
 export { default as OrderDetailDialog } from "./OrderDetailDialog";
 export { default as CreateEditOrderDialog } from "./CreateEditOrderDialog";
 export { default as MaterialSelectDialog } from "./MaterialSelectDialog";
-export { default as DeleteConfirmDialog } from "./DeleteConfirmDialog";
+export { default as DeleteConfirmDialog } from "../../common/DeleteConfirmDialog";
 export { default as ReceiveGoodsDialog } from "./ReceiveGoodsDialog";
 
 // ==================== Hooks ====================

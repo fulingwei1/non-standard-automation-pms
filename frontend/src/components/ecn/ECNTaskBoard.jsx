@@ -37,7 +37,7 @@ import {
   taskTypeConfigs,
   taskStatusConfigs,
   formatStatus as _formatStatus } from
-"./ecnConstants";
+"@/lib/constants/ecn";
 import { cn, formatDate } from "../../lib/utils";import { toast } from "sonner";
 
 export function ECNTaskBoard({

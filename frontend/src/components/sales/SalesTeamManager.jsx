@@ -39,7 +39,7 @@ import {
   formatPerformanceMetric,
   calculateSalesCompletionRate,
   formatCurrency
-} from "./salesConstants";
+} from "@/lib/constants/sales";
 
 export const SalesTeamManager = ({
   teamMembers = [],

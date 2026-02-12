@@ -15,7 +15,7 @@ import {
   Progress,
   Badge,
 } from "../../../ui";
-import { formatCurrency, formatFollowUpType, formatDateTime } from "../constants/salesTeamConstants";
+import { formatCurrency, formatFollowUpType, formatDateTime } from "@/lib/constants/salesTeam";
 
 export default function TeamMemberDetailDialog({
   open,

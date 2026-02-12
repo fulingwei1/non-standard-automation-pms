@@ -63,7 +63,7 @@ import {
   DELIVERY_PRIORITY,
   SHIPPING_METHODS,
   PACKAGE_TYPES } from
-'../components/delivery-management/deliveryManagementConstants';
+'@/lib/constants/service';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

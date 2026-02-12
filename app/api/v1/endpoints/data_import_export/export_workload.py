@@ -7,7 +7,7 @@ import io
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -18,6 +18,7 @@ from app.models.pmo import PmoResourceAllocation
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.data_import_export import ExportWorkloadRequest
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -35,14 +36,6 @@ def export_workload(
     导出负荷数据（Excel）
     基于资源分配和工时数据计算人员负荷
     """
-    try:
-        import openpyxl
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     users = db.query(User).filter(User.is_active == True).all()
 
     data = []
@@ -107,41 +100,26 @@ def export_workload(
             }
         )
 
-    df = pd.DataFrame(data)
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="负荷数据", index=False)
-
-        worksheet = writer.sheets["负荷数据"]
-        column_widths = {
-            "A": 12,
-            "B": 15,
-            "C": 15,
-            "D": 12,
-            "E": 10,
-            "F": 12,
-            "G": 12,
-            "H": 12,
-            "I": 12,
-            "J": 12,
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-        from openpyxl.styles import Alignment, Font, PatternFill
-
-        header_fill = PatternFill(
-            start_color="366092", end_color="366092", fill_type="solid"
-        )
-        header_font = Font(bold=True, color="FFFFFF")
-
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    output.seek(0)
+    labels = [
+        "人员姓名",
+        "用户名",
+        "部门",
+        "总工时(小时)",
+        "工作日数",
+        "平均每日工时",
+        "标准工时(小时)",
+        "利用率(%)",
+        "分配项目数",
+        "负荷状态",
+    ]
+    widths = [12, 15, 15, 12, 10, 12, 12, 12, 12, 12]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name="负荷数据",
+        title=None,
+    )
 
     filename = f"负荷数据_{export_in.start_date.strftime('%Y%m%d')}_{export_in.end_date.strftime('%Y%m%d')}.xlsx"
 

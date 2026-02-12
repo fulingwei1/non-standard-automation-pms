@@ -54,6 +54,7 @@ import {
 } from "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { acceptanceApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },
   IN_PROGRESS: { label: "进行中", color: "bg-blue-500" },
@@ -156,7 +157,7 @@ export default function AcceptanceOrderList() {
     }
   };
   const handleStart = async (orderId) => {
-    if (!confirm("确认开始验收？")) {return;}
+    if (!await confirmAction("确认开始验收？")) {return;}
     try {
       await acceptanceApi.orders.start(orderId, { location: "" });
       fetchOrders();

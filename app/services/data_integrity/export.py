@@ -7,13 +7,13 @@
 import io
 from typing import Any, Dict, Optional
 
-import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from app.services.import_export_engine import ExcelExportEngine
 
 class ExportMixin:
     """导出功能混入类"""
@@ -58,32 +58,25 @@ class ExportMixin:
         Returns:
             包含Excel文件内容的字典
         """
-        output = io.BytesIO()
+        summary_rows = [
+            {"指标": "数据完整率", "值": f"{report.get('overall_completeness', 0):.1f}%"},
+            {"指标": "工程师总数", "值": report.get('total_engineers', 0)},
+            {"指标": "有数据的工程师", "值": report.get('engineers_with_data', 0)},
+            {"指标": "平均完整率", "值": f"{report.get('average_completeness', 0):.1f}%"},
+        ]
+        summary_columns = ExcelExportEngine.build_columns(["指标", "值"])
 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            # 概览信息
-            summary_data = {
-                '指标': ['数据完整率', '工程师总数', '有数据的工程师', '平均完整率'],
-                '值': [
-                    f"{report.get('overall_completeness', 0):.1f}%",
-                    report.get('total_engineers', 0),
-                    report.get('engineers_with_data', 0),
-                    f"{report.get('average_completeness', 0):.1f}%"
-                ]
-            }
-            pd.DataFrame(summary_data).to_excel(writer, sheet_name='概览', index=False)
+        sheets = [
+            {"name": "概览", "data": summary_rows, "columns": summary_columns},
+        ]
 
-            # 详细数据
-            if 'details' in report and report['details']:
-                details_df = pd.DataFrame(report['details'])
-                details_df.to_excel(writer, sheet_name='详细数据', index=False)
+        if 'details' in report and report['details']:
+            sheets.append({"name": "详细数据", "data": report['details']})
 
-            # 缺失数据统计
-            if 'missing_summary' in report and report['missing_summary']:
-                missing_df = pd.DataFrame(report['missing_summary'])
-                missing_df.to_excel(writer, sheet_name='缺失统计', index=False)
+        if 'missing_summary' in report and report['missing_summary']:
+            sheets.append({"name": "缺失统计", "data": report['missing_summary']})
 
-        output.seek(0)
+        output = ExcelExportEngine.export_multi_sheet(sheets)
         return {
             'format': 'excel',
             'content': output.getvalue(),

@@ -11,7 +11,7 @@ import {
   Label,
   Textarea,
 } from "../../components/ui";
-import { sourceOptions } from "./leadManagementConstants";
+import { sourceOptions } from "@/lib/constants/leadManagement";
 
 export default function CreateLeadDialog({
   open,

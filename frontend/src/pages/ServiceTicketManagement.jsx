@@ -30,7 +30,7 @@ import { ServiceTicketAssignDialog } from "../components/service/ServiceTicketAs
 import { ServiceTicketBatchActions } from "../components/service/ServiceTicketBatchActions";
 
 // Import constants and utilities
-import { urgencyConfigs } from "../components/service/serviceTicketConstants";
+import { urgencyConfigs } from "@/lib/constants/service";
 import { serviceApi } from "../services/api";
 import { Plus, Download, RefreshCw } from "lucide-react";
 

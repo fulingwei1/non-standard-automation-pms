@@ -4,7 +4,7 @@
  */
 
 // 配置和常量
-export * from "./quoteConstants";
+export * from "@/lib/constants/quote";
 
 // 核心组件
 export { QuoteStatsOverview } from "./QuoteStatsOverview";

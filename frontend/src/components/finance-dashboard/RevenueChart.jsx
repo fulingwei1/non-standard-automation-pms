@@ -25,7 +25,7 @@ import {
   calculateTrend as _calculateTrend,
   revenueTypes,
   chartTypes as _chartTypes } from
-"./financeDashboardConstants";
+"@/lib/constants/finance";
 
 // 收入概览卡片组件
 const RevenueOverviewCard = ({ revenueData, loading }) => {

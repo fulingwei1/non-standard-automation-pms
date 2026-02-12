@@ -28,7 +28,7 @@ import {
   getPopularCategories,
   getCategoryConfig,
   formatCategory } from
-"./knowledgeBaseConstants";
+"@/lib/constants/knowledge";
 
 export default function CategoryTree({
   categories = null,

@@ -23,7 +23,7 @@ import {
 import { cn } from "../../lib/utils";
 import { formatDate, formatDateTime } from "../../lib/formatters";
 import { fadeIn } from "../../lib/animations";
-import { sourceOptions } from "./leadManagementConstants";
+import { sourceOptions } from "@/lib/constants/leadManagement";
 
 
 // 获取来源标签

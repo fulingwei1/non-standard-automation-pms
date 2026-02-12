@@ -2,7 +2,7 @@
  * 仓储管理员工作台
  * 核心入口页面，展示出入库任务、库存预警、盘点任务等
  */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
-import { fadeIn, staggerContainer } from "../../lib/animations";
+import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片
 function StatsCards({ stats }) {
@@ -246,7 +246,7 @@ function StockAlertList({ alerts }) {
 }
 
 export default function WarehouseWorkstation() {
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [inboundTasks, setInboundTasks] = useState([]);
   const [outboundTasks, setOutboundTasks] = useState([]);

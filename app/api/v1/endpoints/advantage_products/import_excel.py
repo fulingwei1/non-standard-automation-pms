@@ -3,13 +3,12 @@
 优势产品Excel导入端点
 """
 
-import io
-
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ImportExportEngine
 from app.models.user import User
 from app.schemas.advantage_product import AdvantageProductImportResult
 
@@ -54,7 +53,7 @@ async def import_from_excel(
     try:
         # 读取 Excel 文件
         content = await file.read()
-        df = pd.read_excel(io.BytesIO(content), header=None)
+        df = ImportExportEngine.parse_excel(content, header=None)
 
         # 确保类别存在
         category_id_map, categories_created = ensure_categories_exist(db, clear_existing)

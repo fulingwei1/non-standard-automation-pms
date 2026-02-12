@@ -103,6 +103,7 @@ import {
 "../components/customer-communication";
 
 // 配置常量 - 使用新的配置系统
+import { confirmAction } from "@/lib/confirmAction";
 const communicationTypeConfig = {
   [COMMUNICATION_TYPE.PHONE]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.PHONE], icon: Phone },
   [COMMUNICATION_TYPE.EMAIL]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.EMAIL], icon: Mail },
@@ -267,7 +268,7 @@ export default function CustomerCommunication() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("确定要删除这个沟通记录吗？")) {return;}
+    if (!await confirmAction("确定要删除这个沟通记录吗？")) {return;}
 
     try {
       await customerCommunicationApi.delete(id);

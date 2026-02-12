@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, List, Button, Tag, Typography } from 'antd';
-import { SURVEY_TYPES } from './customerSatisfactionConstants';
+import { SURVEY_TYPES } from '@/lib/constants/customer';
 
 const { Text } = Typography;
 

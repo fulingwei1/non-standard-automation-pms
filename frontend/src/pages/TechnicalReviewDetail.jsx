@@ -49,6 +49,7 @@ import {
   X } from
 "lucide-react";
 
+import { confirmAction } from "@/lib/confirmAction";
 const getStatusBadge = (status) => {
   const badges = {
     DRAFT: { label: "草稿", color: "bg-slate-500/20 text-slate-400" },
@@ -552,7 +553,7 @@ export default function TechnicalReviewDetail() {
                       size="sm"
                       variant="ghost"
                       onClick={async () => {
-                        if (confirm("确定删除此材料吗？")) {
+                        if (await confirmAction("确定删除此材料吗？")) {
                           try {
                             await technicalReviewApi.deleteMaterial(m.id);
                             await fetchReview();

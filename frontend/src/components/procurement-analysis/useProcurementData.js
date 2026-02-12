@@ -4,7 +4,7 @@
  */
 import { useState, useCallback } from 'react';
 import { api } from '../../services/api';
-import { getDateByRange } from './procurementConstants';
+import { getDateByRange } from '@/lib/constants/procurementAnalysis';
 
 /**
  * 采购分析数据管理 Hook

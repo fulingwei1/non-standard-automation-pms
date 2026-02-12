@@ -7,4 +7,4 @@ export { default as EditLeadDialog } from "./EditLeadDialog";
 export { default as ConvertLeadDialog } from "./ConvertLeadDialog";
 export { default as LeadDetailDialog } from "./LeadDetailDialog";
 export { default as FollowUpDialog } from "./FollowUpDialog";
-export * from "./leadManagementConstants";
+export * from "@/lib/constants/leadManagement";

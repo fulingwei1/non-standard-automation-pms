@@ -45,7 +45,7 @@ const valueIcons = {
 };
 
 export default function CultureWallWidget() {
-  const [cultureData, setCultureData] = useState(mockCultureData);
+  const [cultureData, _setCultureData] = useState(mockCultureData);
   const [currentHighlight, setCurrentHighlight] = useState(0);
 
   // 员工风采轮播

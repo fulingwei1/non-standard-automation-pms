@@ -1,10 +1,7 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '../../components/layout';
 import { ApiIntegrationError } from '../../components/ui';
 import { staggerContainer } from '../../lib/animations';
-import { getRoleInfo, isEngineerRole } from '../../lib/roleConfig';
-import { projectApi } from '../../services/api';
 
 // Hooks
 import { useTaskData, useTaskFilters } from './hooks';
@@ -26,31 +23,10 @@ export default function TaskCenter() {
     // 获取当前用户信息
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const role = currentUser?.role || 'admin';
-    const userId = currentUser?.id;
-    const isWorker = isEngineerRole(role) || role === 'assembler';
-    const roleInfo = getRoleInfo(role);
-
-    // 项目数据
-    const [projects, setProjects] = useState([]);
 
     // 使用自定义 Hooks
     const filters = useTaskFilters();
     const taskData = useTaskData(filters.filterParams);
-
-    // 加载项目列表（用于过滤）
-    useEffect(() => {
-        const loadProjects = async () => {
-            try {
-                const response = await projectApi.list({ page_size: 100 });
-                const data = response.data || response;
-                setProjects(data.items || data || []);
-            } catch (err) {
-                console.error('Failed to load projects:', err);
-                setProjects([]);
-            }
-        };
-        loadProjects();
-    }, []);
 
     // 处理错误状态
     const handleStatusChange = async (taskId, newStatus) => {

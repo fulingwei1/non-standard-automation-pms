@@ -53,8 +53,9 @@ import {
   formatDate,
   formatDuration,
   isTaskOverdue } from
-"./installationDispatchConstants";import { toast } from "sonner";
+"@/lib/constants/installationDispatch";import { toast } from "sonner";
 
+import { confirmAction } from "@/lib/confirmAction";
 export function DispatchCard({
   task,
   onUpdateTask,
@@ -147,8 +148,8 @@ export function DispatchCard({
     });
   };
 
-  const handleDelete = () => {
-    if (window.confirm("确定要删除这个任务吗？")) {
+  const handleDelete = async () => {
+    if (await confirmAction("确定要删除这个任务吗？")) {
       onDeleteTask(task.id);
     }
   };

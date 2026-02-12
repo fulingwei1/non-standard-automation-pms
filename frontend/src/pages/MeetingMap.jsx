@@ -13,7 +13,6 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { formatDate } from "../lib/formatters";
 
 const rhythmLevelConfig = {
   STRATEGIC: { label: "战略层", color: "bg-purple-500", icon: Target },

@@ -96,7 +96,7 @@ import {
   STATUS_OPTIONS,
   TABLE_CONFIG,
   DEFAULT_FILTERS } from
-'../components/knowledge-base/knowledgeBaseConstants';
+'@/lib/constants/knowledge';
 
 // 导入API服务
 import { serviceApi } from '../services/api/service';

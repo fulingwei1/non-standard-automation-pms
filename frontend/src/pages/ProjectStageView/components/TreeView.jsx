@@ -62,7 +62,6 @@ function TreeViewSkeleton() {
  * 任务节点组件
  */
 function TaskItem({ task }) {
-  const statusConfig = getStatusConfig(task.status);
   const priorityConfig = TASK_PRIORITIES[task.priority] || TASK_PRIORITIES.NORMAL;
 
   return (
@@ -343,7 +342,7 @@ function StatsSummary({ data }) {
 /**
  * 分解树视图主组件
  */
-export default function TreeView({ data, loading, stageActions, onRefresh }) {
+export default function TreeView({ data, loading, stageActions: _stageActions, onRefresh: _onRefresh }) {
   if (loading || !data) {
     return <TreeViewSkeleton />;
   }

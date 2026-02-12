@@ -46,7 +46,7 @@ import {
   formatCurrency,
   QUOTE_SORT_OPTIONS,
   QUOTE_VIEW_MODES } from
-"./quoteConstants";
+"@/lib/constants/quote";
 
 export const QuoteListManager = ({
   quotes = [],

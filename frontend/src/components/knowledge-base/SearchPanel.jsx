@@ -49,7 +49,7 @@ import {
   isValidStatus as _isValidStatus,
   isValidPriority as _isValidPriority,
   isValidType as _isValidType } from
-"./knowledgeBaseConstants";
+"@/lib/constants/knowledge";
 
 export default function SearchPanel({
   onSearch,

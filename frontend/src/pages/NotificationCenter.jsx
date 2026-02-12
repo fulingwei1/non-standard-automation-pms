@@ -32,6 +32,7 @@ import { ApiIntegrationError } from "../components/ui";
 
 // Mock notification data - 已移除，使用真实API
 
+import { confirmAction } from "@/lib/confirmAction";
 const notificationTypes = [
 { value: "all", label: "全部", icon: Bell },
 { value: "alert", label: "预警", icon: AlertTriangle },
@@ -298,7 +299,7 @@ export default function NotificationCenter() {
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm("确定要清空所有通知吗？此操作不可撤销。")) {
+    if (!await confirmAction("确定要清空所有通知吗？此操作不可撤销。")) {
       return;
     }
     try {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { timesheetApi, projectApi } from "../../../services/api";
 import { getWeekDates, formatFullDate } from "../utils/dateUtils";
 
+import { confirmAction } from "@/lib/confirmAction";
 export function useTimesheet() {
     const [weekOffset, setWeekOffset] = useState(0);
     const [entries, setEntries] = useState([]);
@@ -206,7 +207,7 @@ export function useTimesheet() {
     // Handle delete entry
     const handleDeleteEntry = async (entryId) => {
         const entry = entries.find((e) => e.id === entryId);
-        if (!entry || !confirm("确定要删除这条工时记录吗？")) return;
+        if (!entry || !await confirmAction("确定要删除这条工时记录吗？")) return;
 
         try {
             if (entry.timesheet_ids && entry.timesheet_ids.length > 0) {
@@ -235,7 +236,7 @@ export function useTimesheet() {
             return;
         }
 
-        if (!confirm(`确定要提交 ${timesheetIds.length} 条工时记录进行审批吗？`)) {
+        if (!await confirmAction(`确定要提交 ${timesheetIds.length} 条工时记录进行审批吗？`)) {
             return;
         }
 
@@ -269,7 +270,7 @@ export function useTimesheet() {
             return;
         }
 
-        if (!confirm("确定要复制上周的工时记录到本周吗？")) {
+        if (!await confirmAction("确定要复制上周的工时记录到本周吗？")) {
             return;
         }
 

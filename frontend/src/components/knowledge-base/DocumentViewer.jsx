@@ -6,7 +6,7 @@
 import React from 'react';
 import { Card, Descriptions, Tag, Space, Button, Typography } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { KNOWLEDGE_TYPES, FILE_TYPES, CATEGORIES, ACCESS_LEVELS, STATUS_OPTIONS } from './knowledgeBaseConstants';
+import { KNOWLEDGE_TYPES, FILE_TYPES, CATEGORIES, ACCESS_LEVELS, STATUS_OPTIONS } from '@/lib/constants/knowledge';
 
 const { Paragraph, Link, Text } = Typography;
 

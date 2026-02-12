@@ -75,7 +75,7 @@ import {
   BUSINESS_METRICS,
   TABLE_CONFIG,
   CHART_COLORS } from
-'../components/customer-360/customer360Constants';
+'@/lib/constants/customer360';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

@@ -17,7 +17,7 @@ import {
   customer360TabConfigs as _customer360TabConfigs,
   getContractStatusConfig,
   formatContractStatus } from
-"./customer360Constants";
+"@/lib/constants/customer360";
 
 /**
  * PurchaseHistory - 客户采购历史组件

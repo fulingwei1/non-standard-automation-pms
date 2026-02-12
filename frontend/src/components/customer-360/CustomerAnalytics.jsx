@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Typography } from 'antd';
-import { CHART_COLORS } from './customer360Constants';
+import { CHART_COLORS } from '@/lib/constants/customer360';
 
 const { Text } = Typography;
 

@@ -6,7 +6,7 @@
 import { Card, List, Space, Tag, Typography } from "antd";
 import { Settings } from "lucide-react";
 
-import { APPROVAL_RULES } from "./approvalCenterConstants";
+import { APPROVAL_RULES } from "@/lib/constants/approval";
 
 const { Text } = Typography;
 

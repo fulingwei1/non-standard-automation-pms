@@ -10,7 +10,7 @@
  * - 角色模板快速创建
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     Plus,
@@ -71,6 +71,7 @@ import { fadeIn, staggerContainer } from '../../lib/animations';
 import { useRoleData } from './hooks';
 
 // 数据权限范围映射
+import { confirmAction } from "@/lib/confirmAction";
 const DATA_SCOPE_MAP = {
     'OWN': { label: '仅本人', color: 'bg-blue-100 text-blue-700' },
     'SUBORDINATE': { label: '本人及下属', color: 'bg-green-100 text-green-700' },
@@ -289,7 +290,7 @@ export default function RoleManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('确定要删除该角色吗？删除后将影响拥有此角色的用户。')) return;
+        if (!await confirmAction('确定要删除该角色吗？删除后将影响拥有此角色的用户。')) return;
         const result = await roleData.deleteRole(id);
         if (!result.success) {
             alert('删除失败: ' + result.error);

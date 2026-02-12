@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { customerApi } from "../../../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 export function useCustomerManagement() {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -84,7 +85,7 @@ export function useCustomerManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("确定要删除此客户吗？")) return;
+        if (!await confirmAction("确定要删除此客户吗？")) return;
         try {
             await customerApi.delete(id);
             loadCustomers();

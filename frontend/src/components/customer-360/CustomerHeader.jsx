@@ -25,7 +25,7 @@ import {
   formatRiskLevel as _formatRiskLevel,
   calculateCustomerValueScore,
   DEFAULT_CUSTOMER_360_DATA } from
-"./customer360Constants";
+"@/lib/constants/customer360";
 
 /**
  * CustomerHeader - 客户头部信息组件

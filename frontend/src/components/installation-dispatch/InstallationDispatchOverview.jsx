@@ -22,7 +22,7 @@ import {
   calculateDelayRate,
   getDispatchStatusStats,
   getTechnicianStatusStats
-} from './installationDispatchConstants';
+} from '@/lib/constants/installationDispatch';
 
 const InstallationDispatchOverview = ({ 
   dispatches = [], 

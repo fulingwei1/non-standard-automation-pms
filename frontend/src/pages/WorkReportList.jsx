@@ -40,6 +40,7 @@ import {
 } from "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   PENDING: { label: "待审批", color: "bg-blue-500" },
   APPROVED: { label: "已审批", color: "bg-emerald-500" },
@@ -89,7 +90,7 @@ export default function WorkReportList() {
     }
   };
   const handleApprove = async (reportId) => {
-    if (!confirm("确认审批通过此报工记录？")) {return;}
+    if (!await confirmAction("确认审批通过此报工记录？")) {return;}
     try {
       await productionApi.workReports.approve(reportId);
       fetchReports();

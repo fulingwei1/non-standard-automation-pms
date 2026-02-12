@@ -21,7 +21,7 @@ import {
 } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
-import { batchOperations } from "./ecnManagementConstants";
+import { batchOperations } from "@/lib/constants/ecn";
 
 export function ECNBatchActions({
   selectedECNIds = new Set(),

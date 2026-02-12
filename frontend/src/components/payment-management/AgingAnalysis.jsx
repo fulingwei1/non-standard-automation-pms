@@ -4,7 +4,7 @@
  */
 import { Card, CardContent, Progress } from '../ui';
 import { cn } from '../../lib/utils';
-import { formatCurrency } from './paymentManagementConstants';
+import { formatCurrency } from '@/lib/constants/finance';
 
 /**
  * 账龄分析组件

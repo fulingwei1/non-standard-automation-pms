@@ -28,7 +28,7 @@ import {
   formatCurrency,
   formatPercentage,
   getPerformanceGrade as _getPerformanceGrade } from
-'./salesDirectorConstants';
+'@/lib/constants/sales';
 
 export default function SalesDirectorStatsOverview({
   overallStats = null,

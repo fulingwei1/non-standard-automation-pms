@@ -6,7 +6,7 @@
 import { Card, List, Space, Tag, Typography } from "antd";
 import { Wrench } from "lucide-react";
 
-import { WORKFLOW_STEPS, APPROVAL_RULES } from "./approvalCenterConstants";
+import { WORKFLOW_STEPS, APPROVAL_RULES } from "@/lib/constants/approval";
 
 const { Text } = Typography;
 

@@ -83,7 +83,7 @@ import {
   EXPORT_FORMATS,
   DEFAULT_FILTERS,
   TABLE_CONFIG } from
-'../components/customer-satisfaction/customerSatisfactionConstants';
+'@/lib/constants/customer';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;

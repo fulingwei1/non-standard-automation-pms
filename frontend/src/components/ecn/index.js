@@ -4,8 +4,8 @@
  */
 
 // 配置和常量
-export * from "./ecnConstants";
-import * as ecnManagementConstants from "./ecnManagementConstants";
+export * from "@/lib/constants/ecn";
+import * as ecnManagementConstants from "@/lib/constants/ecn";
 export { ecnManagementConstants };
 export { formatDate } from "../../lib/utils";
 

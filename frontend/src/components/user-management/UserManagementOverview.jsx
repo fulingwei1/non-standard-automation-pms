@@ -35,7 +35,7 @@ import {
   getUserStatusColor as _getUserStatusColor,
   getRoleColor,
   getDepartmentColor as _getDepartmentColor } from
-'./userManagementConstants';
+'@/lib/constants/userManagement';
 
 const UserManagementOverview = ({
   users = [],

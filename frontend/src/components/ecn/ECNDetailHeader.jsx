@@ -6,7 +6,7 @@ import { ArrowLeft, RefreshCw, Edit2, CheckCircle2, XCircle } from "lucide-react
 import { PageHeader } from "../layout";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { getStatusBadge, getTypeBadge, getPriorityBadge } from "./ecnConstants";
+import { getStatusBadge, getTypeBadge, getPriorityBadge } from "@/lib/constants/ecn";
 
 export default function ECNDetailHeader({
   ecn,

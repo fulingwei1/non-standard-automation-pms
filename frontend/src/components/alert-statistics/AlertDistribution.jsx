@@ -32,7 +32,7 @@ import {
   ALERT_TYPE_STATS,
   CHART_TYPES,
   formatStatValue as _formatStatValue } from
-"./alertStatsConstants";
+"@/lib/constants/alert";
 
 export function AlertDistribution({
   data,

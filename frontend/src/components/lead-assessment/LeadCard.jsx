@@ -44,7 +44,7 @@ import {
   SCORE_THRESHOLDS,
   DECISION_TIMELINES,
   BUDGET_RANGES } from
-"./leadAssessmentConstants";
+"@/lib/constants/leadAssessment";
 
 export const LeadCard = ({
   lead,

@@ -37,7 +37,7 @@ describe('usePurchaseOrders Hook', () => {
     });
 
     it('should load orders on mount', async () => {
-        const { result } = renderHook(() => usePurchaseOrders());
+        renderHook(() => usePurchaseOrders());
 
         await waitFor(() => {
             expect(purchaseApi.list).toHaveBeenCalled();

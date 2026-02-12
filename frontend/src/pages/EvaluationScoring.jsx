@@ -19,6 +19,7 @@ import {
   validateComment } from
 "../utils/evaluationUtils";
 
+import { confirmAction } from "@/lib/confirmAction";
 const EvaluationScoring = () => {
   const navigate = useNavigate();
   const { taskId } = useParams();
@@ -152,7 +153,7 @@ const EvaluationScoring = () => {
       return;
     }
 
-    if (!confirm(`确认提交评价？\n\n评分：${score}分\n提交后将无法修改`)) {
+    if (!await confirmAction(`确认提交评价？\n\n评分：${score}分\n提交后将无法修改`)) {
       return;
     }
 

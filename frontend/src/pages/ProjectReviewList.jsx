@@ -17,14 +17,7 @@ import {
   Input,
   SkeletonCard,
 } from "../components/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Search,
   Plus,
@@ -518,33 +511,16 @@ export default function ProjectReviewList() {
       )}
 
       {/* 删除确认对话框 */}
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false, review: null })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-slate-300">
-              确定要删除复盘报告 "{deleteDialog.review?.review_no}" 吗？
-              此操作不可恢复。
-            </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialog({ open: false, review: null })}
-            >
-              取消
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={(open) =>
+          setDeleteDialog({ open, review: open ? deleteDialog.review : null })
+        }
+        title="确认删除"
+        description={`确定要删除复盘报告 "${deleteDialog.review?.review_no}" 吗？此操作不可恢复。`}
+        confirmText="删除"
+        onConfirm={handleDelete}
+      />
     </motion.div>
   );
 }

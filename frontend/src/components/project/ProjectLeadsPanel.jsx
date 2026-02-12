@@ -49,6 +49,7 @@ import { cn } from "../../lib/utils";
 import { projectRoleApi, userApi } from "../../services/api";
 
 // 角色编码对应的图标
+import { confirmAction } from "@/lib/confirmAction";
 const ROLE_ICONS = {
   PM: ClipboardList,
   TECH_LEAD: Settings,
@@ -219,7 +220,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
   // 移除负责人
   const handleRemoveLead = async (lead) => {
     if (
-      !window.confirm(`确定要移除 ${lead.user?.real_name || "该负责人"} 吗？`)
+      !await confirmAction(`确定要移除 ${lead.user?.real_name || "该负责人"} 吗？`)
     )
       {return;}
     try {

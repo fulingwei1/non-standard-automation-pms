@@ -46,6 +46,7 @@ import { fadeIn } from "../lib/animations";
 import { stageTemplateApi } from "../services/api";
 
 // 节点类型枚举
+import { confirmAction } from "@/lib/confirmAction";
 const NODE_TYPES = {
   TASK: { label: "任务节点", color: "bg-blue-500/20 text-blue-400" },
   APPROVAL: { label: "审批节点", color: "bg-amber-500/20 text-amber-400" },
@@ -68,7 +69,6 @@ export default function StageTemplateEditor() {
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedStages, setExpandedStages] = useState(new Set());
-  const [saving, setSaving] = useState(false);
 
   // Stage Dialog states
   const [showStageDialog, setShowStageDialog] = useState(false);
@@ -238,7 +238,7 @@ export default function StageTemplateEditor() {
   };
 
   const handleDeleteStage = async (stage) => {
-    if (!confirm(`确定要删除阶段 "${stage.stage_name}" 吗？`)) return;
+    if (!await confirmAction(`确定要删除阶段 "${stage.stage_name}" 吗？`)) return;
     try {
       await stageTemplateApi.stages.delete(stage.id);
       loadTemplate();
@@ -311,7 +311,7 @@ export default function StageTemplateEditor() {
   };
 
   const handleDeleteNode = async (stage, node) => {
-    if (!confirm(`确定要删除节点 "${node.node_name}" 吗？`)) return;
+    if (!await confirmAction(`确定要删除节点 "${node.node_name}" 吗？`)) return;
     try {
       await stageTemplateApi.nodes.delete(node.id);
       loadTemplate();

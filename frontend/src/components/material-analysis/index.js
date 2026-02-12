@@ -44,7 +44,7 @@ export {
   isExpired,
   calculateAnalysisScore,
   generateAnalysisSuggestions
-} from './materialAnalysisConstants';
+} from '@/lib/constants/materialAnalysis';
 
 // 默认导出
-export { default as materialAnalysisConstants } from './materialAnalysisConstants';
+export { default as materialAnalysisConstants } from '@/lib/constants/materialAnalysis';

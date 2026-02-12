@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Users
 } from "lucide-react";
-import { statusConfigs } from "./ecnManagementConstants";
+import { statusConfigs } from "@/lib/constants/ecn";
 
 export function ECNStatsCards({ stats = {}, ecns = [] }) {
   // 如果没有传入统计数据，从ecns计算

@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Badge } from '../ui/badge';
 import ProcurementStatsCard from './ProcurementStatsCard';
-import { STATS_CARD_CONFIGS, getOnTimeRateRating, getOnTimeRateBadgeColor } from './procurementConstants';
+import { STATS_CARD_CONFIGS, getOnTimeRateRating, getOnTimeRateBadgeColor } from '@/lib/constants/procurementAnalysis';
 
 /**
  * 交期准时率 Tab 组件

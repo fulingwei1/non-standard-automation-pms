@@ -37,6 +37,7 @@ import {
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Select,
   SelectContent,
@@ -282,7 +283,7 @@ export default function StageTemplateManagement() {
     }
   };
 
-  const handleSetDefault = async (template) => {
+  const _handleSetDefault = async (template) => {
     try {
       await stageTemplateApi.setDefault(template.id);
       loadTemplates();
@@ -349,7 +350,7 @@ export default function StageTemplateManagement() {
             { label: "默认模板", value: stats.default, icon: Star, color: "text-amber-400" },
             { label: "阶段总数", value: stats.totalStages, icon: Settings, color: "text-blue-400" },
             { label: "节点总数", value: stats.totalNodes, icon: FileText, color: "text-purple-400" },
-          ].map((stat, index) => (
+          ].map((stat) => (
             <motion.div key={stat.label} variants={fadeIn}>
               <Card className="bg-surface-100 border-white/5 hover:border-white/10 transition-colors">
                 <CardContent className="p-4">
@@ -769,33 +770,18 @@ export default function StageTemplateManagement() {
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-400">
-              <Trash2 className="h-5 w-5" />
-              确认删除
-            </DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-slate-300">
-              确定要删除模板{" "}
-              <span className="text-white font-medium">{selectedTemplate?.template_name}</span> 吗？
-            </p>
-            <p className="text-sm text-slate-500 mt-2">
-              此操作不可撤销，所有相关的阶段和节点定义也将被删除。
-            </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
-              取消
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              确认删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="确认删除"
+        description={`确定要删除模板 "${selectedTemplate?.template_name}" 吗？`}
+        confirmText="确认删除"
+        onConfirm={handleDelete}
+      >
+        <p className="text-sm text-slate-500 mt-2">
+          此操作不可撤销，所有相关的阶段和节点定义也将被删除。
+        </p>
+      </DeleteConfirmDialog>
     </div>
   );
 }

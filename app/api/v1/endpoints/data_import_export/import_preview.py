@@ -3,16 +3,16 @@
 数据导入预览 routes
 """
 
-import io
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.data_import_export import ImportPreviewResponse
+from app.services.import_export_engine import ImportExportEngine
 
 from .validators import _validate_import_row
 
@@ -43,24 +43,8 @@ def preview_import_data(
     - BOM: BOM导入
     """
     try:
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas")
-
-    REQUIRED_COLUMNS = {
-        "PROJECT": ["项目编码*", "项目名称*"],
-        "USER": ["姓名"],
-        "TIMESHEET": ["工作日期*", "人员姓名*", "工时(小时)*"],
-        "TASK": ["任务名称*", "项目编码*"],
-        "MATERIAL": ["物料编码*", "物料名称*"],
-        "BOM": ["BOM编码*", "项目编码*", "物料编码*", "用量*"],
-    }
-
-    try:
         file_content = file.file.read()
-        df = pd.read_excel(io.BytesIO(file_content))
-
-        df = df.dropna(how="all")
+        df = ImportExportEngine.parse_excel(file_content)
         total_rows = len(df)
 
         if total_rows == 0:
@@ -74,12 +58,8 @@ def preview_import_data(
 
         template_type_upper = template_type.upper()
 
-        required_columns = REQUIRED_COLUMNS.get(template_type_upper, [])
-        missing_columns = []
-
-        for req_col in required_columns:
-            if req_col not in df.columns and req_col.replace("*", "") not in df.columns:
-                missing_columns.append(req_col)
+        required_columns = ImportExportEngine.get_required_columns(template_type_upper)
+        missing_columns = ImportExportEngine.find_missing_columns(df, required_columns)
 
         if missing_columns:
             return ImportPreviewResponse(
@@ -102,6 +82,7 @@ def preview_import_data(
         errors = []
         valid_rows = 0
 
+        import pandas as pd
         for idx, row in df.iterrows():
             row_num = idx + 2
             is_valid = _validate_import_row(

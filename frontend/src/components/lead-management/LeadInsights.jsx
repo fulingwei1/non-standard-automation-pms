@@ -23,7 +23,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { sourceOptions } from "./leadManagementConstants";
+import { sourceOptions } from "@/lib/constants/leadManagement";
 
 // 来源图���映射
 const sourceIcons = {

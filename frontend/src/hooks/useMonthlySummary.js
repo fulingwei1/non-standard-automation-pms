@@ -5,6 +5,7 @@ import { getCurrentPeriod } from "../utils/monthlySummaryUtils";
 /**
  * 月度总结自定义 Hook
  */
+import { confirmAction } from "@/lib/confirmAction";
 export const useMonthlySummary = () => {
   const currentPeriod = getCurrentPeriod();
   const [formData, setFormData] = useState({
@@ -106,7 +107,7 @@ export const useMonthlySummary = () => {
       return;
     }
 
-    if (!confirm("提交后将无法修改，确认提交吗？")) {
+    if (!await confirmAction("提交后将无法修改，确认提交吗？")) {
       return;
     }
 

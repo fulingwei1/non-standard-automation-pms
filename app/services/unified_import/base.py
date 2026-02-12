@@ -4,12 +4,13 @@
 包含：文件验证、解析、辅助函数
 """
 
-import io
 from datetime import date, datetime
 from typing import List
 
 import pandas as pd
 from fastapi import HTTPException
+
+from app.services.import_export_engine import ImportExportEngine
 
 
 class ImportBase:
@@ -25,8 +26,7 @@ class ImportBase:
     def parse_file(file_content: bytes) -> pd.DataFrame:
         """解析Excel文件"""
         try:
-            df = pd.read_excel(io.BytesIO(file_content))
-            df = df.dropna(how='all')
+            df = ImportExportEngine.parse_excel(file_content)
             if len(df) == 0:
                 raise HTTPException(status_code=400, detail="文件中没有数据")
             return df

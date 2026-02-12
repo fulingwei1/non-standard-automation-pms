@@ -44,6 +44,7 @@ import { cn } from "../lib/utils";
 import { staffMatchingApi, projectApi } from "../services/api";
 
 // 优先级配置
+import { confirmAction } from "@/lib/confirmAction";
 const PRIORITY_OPTIONS = [
   { value: "P1", label: "P1 - 紧急", color: "red", threshold: 85 },
   { value: "P2", label: "P2 - 高", color: "orange", threshold: 75 },
@@ -261,7 +262,7 @@ export default function ProjectStaffingNeed() {
   // 取消需求
   const handleCancel = async (need) => {
     if (
-      !window.confirm(
+      !await confirmAction(
         `确定要取消需求"${need.project_name} - ${need.role_name}"吗？`,
       )
     )

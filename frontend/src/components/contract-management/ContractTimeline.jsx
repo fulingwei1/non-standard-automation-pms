@@ -40,7 +40,7 @@ import {
   getStatusConfig,
   formatStatus,
   canTransition as _canTransition } from
-"./contractManagementConstants";
+"@/lib/constants/contractManagement";
 import { cn, formatDate } from "../../lib/utils";
 
 export function ContractTimeline({

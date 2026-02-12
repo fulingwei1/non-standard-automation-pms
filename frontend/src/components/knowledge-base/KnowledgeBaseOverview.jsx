@@ -21,7 +21,7 @@ import {
   FILE_TYPES,
   CATEGORIES,
   ACCESS_LEVELS } from
-'./knowledgeBaseConstants';
+'@/lib/constants/knowledge';
 
 const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   const [_selectedType, _setSelectedType] = useState(null);

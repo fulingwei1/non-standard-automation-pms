@@ -9,7 +9,7 @@ import {
   DEFAULT_RANKING_METRICS,
   FALLBACK_RANKING_FIELDS,
   buildMetricDetailMap as _buildMetricDetailMap } from
-"../constants/salesTeamConstants";
+"@/lib/constants/salesTeam";
 
 export const useSalesTeamRanking = (filters, showRanking, dateError) => {
   const [loading, setRankingLoading] = useState(false);

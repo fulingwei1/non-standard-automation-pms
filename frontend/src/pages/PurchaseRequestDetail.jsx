@@ -55,6 +55,7 @@ import { ErrorMessage } from "../components/common";
 import { EmptyState } from "../components/common";
 
 // 状态配置
+import { confirmAction } from "@/lib/confirmAction";
 const STATUS_CONFIG = {
   DRAFT: { label: "草稿", color: "bg-gray-500", icon: FileText },
   SUBMITTED: { label: "待审批", color: "bg-blue-500", icon: Clock },
@@ -101,7 +102,7 @@ export default function PurchaseRequestDetail() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`确定要删除采购申请 ${request?.request_no} 吗？`)) {
+    if (!await confirmAction(`确定要删除采购申请 ${request?.request_no} 吗？`)) {
       return;
     }
 

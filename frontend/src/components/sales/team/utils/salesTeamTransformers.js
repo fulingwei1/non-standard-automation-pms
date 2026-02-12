@@ -5,7 +5,7 @@
 
 import {
   getAchievementStatus,
-} from "../constants/salesTeamConstants";
+} from "@/lib/constants/salesTeam";
 
 // ==================== 数据归一化 ====================
 

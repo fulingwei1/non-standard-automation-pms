@@ -49,7 +49,7 @@ export function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
  *
  * 所有角色使用相同的菜单结构，权限由 NavGroup/NavItem 组件根据 permission 字段控制
  */
-export function getNavGroupsForRole(role, isSuperuser = false) {
+export function getNavGroupsForRole(role, _isSuperuser = false) {
   // 所有角色都使用统一的菜单结构
   // 权限控制在组件层面通过 checkPermission 实现
   return defaultNavGroups;

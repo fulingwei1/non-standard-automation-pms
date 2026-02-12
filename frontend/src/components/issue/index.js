@@ -4,7 +4,7 @@
  */
 
 // 配置和常量
-export * from "./issueConstants";
+export * from "@/lib/constants/issue";
 
 // 核心组件
 export { IssueStatsOverview } from "./IssueStatsOverview";

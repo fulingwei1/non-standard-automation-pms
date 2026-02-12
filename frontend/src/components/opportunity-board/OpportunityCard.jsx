@@ -43,7 +43,7 @@ import {
   calculateOpportunityHealth,
   getOpportunityHealthStatus,
   opportunityStageFlow
-} from "./opportunityBoardConstants";
+} from "@/lib/constants/opportunityBoard";
 
 /**
  * 商机卡片组件属性

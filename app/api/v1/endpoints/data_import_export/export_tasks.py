@@ -7,7 +7,7 @@ import io
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
@@ -20,6 +20,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.data_import_export import ExportTaskListRequest
 from app.services.data_scope import DataScopeService
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -36,14 +37,6 @@ def export_task_list(
     """
     导出任务列表（Excel）
     """
-    try:
-        import openpyxl
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     query = db.query(Task)
 
     filters = export_in.filters or {}
@@ -123,48 +116,51 @@ def export_task_list(
             }
         )
 
-    df = pd.DataFrame(data)
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="任务列表", index=False)
-
-        worksheet = writer.sheets["任务列表"]
-        column_widths = {
-            "A": 10,
-            "B": 30,
-            "C": 15,
-            "D": 30,
-            "E": 8,
-            "F": 12,
-            "G": 12,
-            "H": 12,
-            "I": 12,
-            "J": 12,
-            "K": 12,
-            "L": 12,
-            "M": 10,
-            "N": 8,
-            "O": 40,
-            "P": 18,
-            "Q": 18,
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-        from openpyxl.styles import Alignment, Font, PatternFill
-
-        header_fill = PatternFill(
-            start_color="366092", end_color="366092", fill_type="solid"
-        )
-        header_font = Font(bold=True, color="FFFFFF")
-
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    output.seek(0)
+    labels = [
+        "任务ID",
+        "任务名称",
+        "项目编码",
+        "项目名称",
+        "阶段",
+        "状态",
+        "状态名称",
+        "负责人",
+        "计划开始日期",
+        "计划结束日期",
+        "实际开始日期",
+        "实际结束日期",
+        "进度(%)",
+        "权重",
+        "阻塞原因",
+        "创建时间",
+        "更新时间",
+    ]
+    widths = [
+        10,
+        30,
+        15,
+        30,
+        8,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        10,
+        8,
+        40,
+        18,
+        18,
+    ]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name="任务列表",
+        title=None,
+    )
 
     filename = f"任务列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 

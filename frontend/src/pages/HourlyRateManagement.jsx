@@ -46,6 +46,7 @@ import { hourlyRateApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function HourlyRateManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -176,7 +177,7 @@ export default function HourlyRateManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("确定要删除这个配置吗？")) {
+    if (!await confirmAction("确定要删除这个配置吗？")) {
       return;
     }
 

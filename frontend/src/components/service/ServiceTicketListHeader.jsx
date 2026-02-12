@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue } from
 "../ui/select";
-import { filterOptions, sortOptions } from "./serviceTicketConstants";
+import { filterOptions, sortOptions } from "@/lib/constants/service";
 
 export function ServiceTicketListHeader({
   searchQuery,

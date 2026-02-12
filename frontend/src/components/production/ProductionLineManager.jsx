@@ -37,7 +37,7 @@ import {
   WORK_SHIFT,
   getStatusColor as _getStatusColor,
   getStatusLabel as _getStatusLabel } from
-'./productionConstants';
+'@/lib/constants/production';
 
 export default function ProductionLineManager({
   workshops = [],

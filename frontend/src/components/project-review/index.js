@@ -34,7 +34,7 @@ export {
   generateReviewRecommendations,
   validateReviewCompleteness,
   formatReviewReport
-} from './projectReviewConstants';
+} from '@/lib/constants/projectReview';
 
 // 默认导出
-export { default as projectReviewConstants } from './projectReviewConstants';
+export { default as projectReviewConstants } from '@/lib/constants/projectReview';

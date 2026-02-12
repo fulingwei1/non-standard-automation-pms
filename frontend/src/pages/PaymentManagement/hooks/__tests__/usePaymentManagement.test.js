@@ -26,7 +26,7 @@ describe('usePaymentManagement Hook', () => {
     });
 
     it('should load payments on mount', async () => {
-        const { result } = renderHook(() => usePaymentManagement());
+        renderHook(() => usePaymentManagement());
 
         await waitFor(() => {
             expect(paymentApi.list).toHaveBeenCalled();

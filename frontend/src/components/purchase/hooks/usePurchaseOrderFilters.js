@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { PurchaseOrderUtils } from "../orders/purchaseOrderConstants";
+import { PurchaseOrderUtils } from "@/lib/constants/procurement";
 
 export const usePurchaseOrderFilters = (initialState = {}) => {
   // 搜索和筛选状态

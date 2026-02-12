@@ -40,7 +40,7 @@ import {
   getSatisfactionScoreConfig,
   getSatisfactionColor as _getSatisfactionColor,
   satisfactionConstants } from
-"./satisfactionConstants";
+"@/lib/constants/customer";
 
 // 模拟图表数据 - 实际项目中应该来自 props
 const generateChartData = () => {

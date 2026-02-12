@@ -331,13 +331,11 @@ export function StrategyProtectedRoute({ children }) {
 export function WarehouseProtectedRoute({ children }) {
   const userStr = localStorage.getItem("user");
   let isSuperuser = false;
-  let role = null;
 
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
       isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-      role = user.role;
     } catch {
       // ignore
     }
@@ -371,13 +369,11 @@ export function WarehouseProtectedRoute({ children }) {
 export function QualityProtectedRoute({ children }) {
   const userStr = localStorage.getItem("user");
   let isSuperuser = false;
-  let role = null;
 
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
       isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-      role = user.role;
     } catch {
       // ignore
     }

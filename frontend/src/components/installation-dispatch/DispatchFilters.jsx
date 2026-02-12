@@ -13,7 +13,7 @@ import {
   PRIORITY_FILTER_OPTIONS,
   INSTALLATION_TYPE,
   INSTALLATION_TYPE_LABELS,
-} from "./installationDispatchConstants";
+} from "@/lib/constants/installationDispatch";
 
 export default function DispatchFilters({
   searchQuery,

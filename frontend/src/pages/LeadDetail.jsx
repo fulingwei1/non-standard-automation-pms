@@ -54,6 +54,7 @@ import {
 "../components/ui/dialog";
 import { cn as _cn, formatDate } from "../lib/utils";
 import { leadApi, customerApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   NEW: { label: "待跟进", color: "bg-blue-500" },
   CONTACTED: { label: "已联系", color: "bg-sky-500" },
@@ -167,7 +168,7 @@ export default function LeadDetail() {
       console.error("Failed to convert lead:", error);
       const errorMsg = error.response?.data?.detail || error.message;
       if (errorMsg.includes("G1阶段门验证失败")) {
-        if (confirm(errorMsg + "\n\n是否跳过验证继续转换？")) {
+        if (await confirmAction(errorMsg + "\n\n是否跳过验证继续转换？")) {
           setConvertData({ ...convertData, skip_validation: true });
           handleConvert();
         }

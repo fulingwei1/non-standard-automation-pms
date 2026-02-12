@@ -23,7 +23,7 @@ import {
   APPROVAL_PRIORITY,
   WORKFLOW_STEPS,
   CHART_COLORS } from
-'./approvalCenterConstants';
+'@/lib/constants/approval';
 
 const ApprovalOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('week');

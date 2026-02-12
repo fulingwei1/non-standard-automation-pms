@@ -4,6 +4,7 @@ EXPORTS - 自动生成
 从 alerts.py 拆分
 """
 
+import io
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, List, Optional
@@ -16,6 +17,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.services.import_export_engine import ExcelExportEngine
 from app.models.alert import (
     AlertNotification,
     AlertRecord,
@@ -75,18 +77,6 @@ def export_alerts_excel(
     支持筛选参数（与列表接口一致）
     支持多 Sheet（按级别或类型分组）
     """
-    try:
-        import io
-
-        import openpyxl
-        import pandas as pd
-        from openpyxl.styles import Alignment, Font, PatternFill
-    except ImportError:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl"
-        )
-
     # 构建查询（与列表接口一致）
     query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
 
@@ -109,6 +99,23 @@ def export_alerts_excel(
         raise HTTPException(status_code=404, detail="没有符合条件的数据")
 
     # 准备数据
+    labels = [
+        "预警编号",
+        "预警级别",
+        "预警标题",
+        "预警类型",
+        "项目名称",
+        "项目编码",
+        "触发时间",
+        "状态",
+        "处理人",
+        "确认时间",
+        "处理完成时间",
+        "是否升级",
+        "处理结果",
+    ]
+    widths = [20, 12, 40, 20, 25, 15, 18, 12, 12, 18, 18, 10, 40]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
     data = []
     for alert in alerts:
         rule = alert.rule
@@ -135,56 +142,56 @@ def export_alerts_excel(
             '处理结果': alert.handle_result or '',
         })
 
-    # 创建 Excel 文件
-    output = io.BytesIO()
+    def post_process(worksheet, sheet_config):
+        _format_alert_excel_sheet(worksheet, sheet_config.get("level"))
 
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        if group_by == 'level':
-            # 按级别分组
-            level_groups = {}
-            for item in data:
-                level = item['预警级别']
-                if level not in level_groups:
-                    level_groups[level] = []
-                level_groups[level].append(item)
+    if group_by == 'level':
+        # 按级别分组
+        level_groups = {}
+        for item in data:
+            level = item['预警级别']
+            if level not in level_groups:
+                level_groups[level] = []
+            level_groups[level].append(item)
 
-            for level, items in level_groups.items():
-                df = pd.DataFrame(items)
-                sheet_name = f"{level}级预警"[:31]  # Excel sheet名称限制31字符
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+        sheets = []
+        for level, items in level_groups.items():
+            sheet_name = f"{level}级预警"[:31]
+            sheets.append({
+                "name": sheet_name,
+                "data": items,
+                "columns": columns,
+                "level": level,
+            })
 
-                # 设置样式
-                worksheet = writer.sheets[sheet_name]
-                _format_alert_excel_sheet(worksheet, level)
+        output = ExcelExportEngine.export_multi_sheet(sheets, sheet_post_process=post_process)
 
-        elif group_by == 'type':
-            # 按类型分组
-            type_groups = {}
-            for item in data:
-                rule_type = item['预警类型']
-                if rule_type not in type_groups:
-                    type_groups[rule_type] = []
-                type_groups[rule_type].append(item)
+    elif group_by == 'type':
+        # 按类型分组
+        type_groups = {}
+        for item in data:
+            rule_type = item['预警类型']
+            if rule_type not in type_groups:
+                type_groups[rule_type] = []
+            type_groups[rule_type].append(item)
 
-            for rule_type, items in type_groups.items():
-                df = pd.DataFrame(items)
-                sheet_name = rule_type[:31]  # Excel sheet名称限制31字符
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+        sheets = []
+        for rule_type, items in type_groups.items():
+            sheet_name = rule_type[:31]
+            sheets.append({
+                "name": sheet_name,
+                "data": items,
+                "columns": columns,
+            })
 
-                # 设置样式
-                worksheet = writer.sheets[sheet_name]
-                _format_alert_excel_sheet(worksheet, None)
+        output = ExcelExportEngine.export_multi_sheet(sheets, sheet_post_process=post_process)
 
-        else:
-            # 不分组，单个Sheet
-            df = pd.DataFrame(data)
-            df.to_excel(writer, sheet_name='预警列表', index=False)
-
-            # 设置样式
-            worksheet = writer.sheets['预警列表']
-            _format_alert_excel_sheet(worksheet, None)
-
-    output.seek(0)
+    else:
+        # 不分组，单个Sheet
+        output = ExcelExportEngine.export_multi_sheet(
+            [{"name": "预警列表", "data": data, "columns": columns}],
+            sheet_post_process=post_process,
+        )
 
     # 生成文件名
     filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"

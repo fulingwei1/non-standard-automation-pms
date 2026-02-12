@@ -7,11 +7,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Plus } from 'lucide-react';
-import { evalResultConfigs } from './ecnConstants';
+import { evalResultConfigs } from '@/lib/constants/ecn';
 
 /**
  * 评估汇总卡片组件
  */
+import { confirmAction } from "@/lib/confirmAction";
 const EvaluationSummaryCard = ({ summary }) => {
   if (!summary) {return null;}
 
@@ -75,7 +76,7 @@ const EvaluationSummaryCard = ({ summary }) => {
  */
 const EvaluationCard = ({ evaluation, onSubmit, formatDate }) => {
   const handleSubmit = async () => {
-    if (!confirm('确认提交此评估？提交后将无法修改。')) {return;}
+    if (!await confirmAction('确认提交此评估？提交后将无法修改。')) {return;}
     await onSubmit(evaluation.id);
   };
 

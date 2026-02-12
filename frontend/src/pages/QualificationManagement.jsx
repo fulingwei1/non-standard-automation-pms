@@ -67,6 +67,7 @@ import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
 import { Checkbox } from "../components/ui/checkbox";
+import { confirmAction } from "@/lib/confirmAction";
 export default function QualificationManagement() {
   const [pagination, setPagination] = useState({
     page: 1,
@@ -224,7 +225,7 @@ export default function QualificationManagement() {
   };
 
   const handleDeleteLevel = async (id) => {
-    if (!confirm("确定要删除该等级吗？")) {return;}
+    if (!await confirmAction("确定要删除该等级吗？")) {return;}
 
     try {
       await qualificationApi.deleteLevel(id);

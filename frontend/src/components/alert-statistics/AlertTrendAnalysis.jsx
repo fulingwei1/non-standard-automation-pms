@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Table, Tag } from 'antd';
-import { ALERT_LEVELS, ALERT_STATUS, CHART_COLORS } from './alertStatsConstants';
+import { ALERT_LEVELS, ALERT_STATUS, CHART_COLORS } from '@/lib/constants/alert';
 
 const AlertTrendAnalysis = ({ alerts = [], loading = false }) => {
   const stats = useMemo(() => {

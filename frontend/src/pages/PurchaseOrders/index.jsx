@@ -46,9 +46,13 @@ export default function PurchaseOrders() {
         setNewOrder,
         editOrder,
         setEditOrder,
+        receiveData,
+        setReceiveData,
         handleCreateOrder,
+        handleEditOrder,
         handleDeleteOrder,
         handleSubmitApproval,
+        handleReceiveGoods,
         handleExportData,
         refresh
     } = usePurchaseOrders();
@@ -216,17 +220,38 @@ export default function PurchaseOrders() {
                     onConfirm={handleReceiveGoods}
                 />
 
-                <PurchaseOrderDeleteConfirmDialog
-                    open={showDeleteModal}
-                    onOpenChange={(open) => {
-                        setShowDeleteModal(open);
-                        if (!open) {
-                            setSelectedOrder(null);
-                        }
-                    }}
-                    order={selectedOrder}
-                    onConfirm={handleDeleteOrder}
-                />
+                {selectedOrder && (
+                    <PurchaseOrderDeleteConfirmDialog
+                        open={showDeleteModal}
+                        onOpenChange={(open) => {
+                            setShowDeleteModal(open);
+                            if (!open) {
+                                setSelectedOrder(null);
+                            }
+                        }}
+                        title="确认删除"
+                        description={`确定要删除采购订单 ${selectedOrder.id} 吗？此操作不可撤销，请谨慎操作`}
+                        onConfirm={handleDeleteOrder}
+                    >
+                        {selectedOrder.supplierName && (
+                            <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                                <p className="text-sm text-slate-400">
+                                    供应商：<span className="text-white">{selectedOrder.supplierName}</span>
+                                </p>
+                                {selectedOrder.projectName && (
+                                    <p className="text-sm text-slate-400 mt-1">
+                                        项目：<span className="text-white">{selectedOrder.projectName}</span>
+                                    </p>
+                                )}
+                                {selectedOrder.totalAmount && (
+                                    <p className="text-sm text-slate-400 mt-1">
+                                        金额：<span className="text-white">¥{selectedOrder.totalAmount.toLocaleString()}</span>
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </PurchaseOrderDeleteConfirmDialog>
+                )}
             </div>
         </div>
     );

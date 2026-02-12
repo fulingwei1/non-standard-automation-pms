@@ -85,6 +85,17 @@ def get_pdf_styles():
         tuple: (title_style, heading_style, normal_style, styles)
     """
     try:
+        from app.services.pdf_styles import get_pdf_styles as get_core_styles
+
+        core_styles = get_core_styles()
+        if core_styles:
+            return (
+                core_styles.get("title"),
+                core_styles.get("heading"),
+                core_styles.get("normal"),
+                core_styles,
+            )
+
         from reportlab.lib import colors
         from reportlab.lib.enums import TA_CENTER
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet

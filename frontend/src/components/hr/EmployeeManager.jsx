@@ -46,7 +46,7 @@ import {
   getDepartmentConfig,
   formatEmployeeStatus,
   formatDepartment } from
-"./hrConstants";
+"@/lib/constants/hr";
 import { cn, formatDate } from "../../lib/utils";
 
 export function EmployeeManager({

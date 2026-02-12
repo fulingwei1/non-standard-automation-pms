@@ -16,7 +16,7 @@ import {
   PROJECT_PRIORITY,
   PROJECT_STAGES,
   METRICS } from
-'./projectDetailConstants';
+'@/lib/constants/projectDetail';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 

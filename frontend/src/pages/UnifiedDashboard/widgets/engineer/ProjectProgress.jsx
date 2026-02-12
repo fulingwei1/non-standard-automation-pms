@@ -10,7 +10,7 @@ const defaultProjects = [
   { id: 'PJ250101-003', name: 'EOL测试设备', progress: 90, status: 'on-track' },
 ];
 
-export default function ProjectProgress({ view, filter, data }) {
+export default function ProjectProgress({ view: _view, filter: _filter, data }) {
   const projects = data?.projects || defaultProjects;
 
   return (

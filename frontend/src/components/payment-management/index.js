@@ -49,7 +49,7 @@ export {
   formatCurrency,
   formatPercentage,
   generateCollectionReport
-} from './paymentManagementConstants';
+} from '@/lib/constants/finance';
 
 // 默认导出
-export { default as paymentManagementConstants } from './paymentManagementConstants';
+export { default as paymentManagementConstants } from '@/lib/constants/finance';

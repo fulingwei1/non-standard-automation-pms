@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Typography } from 'antd';
-import { STATISTICS_METRICS, CHART_COLORS } from './alertStatsConstants';
+import { STATISTICS_METRICS, CHART_COLORS } from '@/lib/constants/alert';
 
 const { Text } = Typography;
 

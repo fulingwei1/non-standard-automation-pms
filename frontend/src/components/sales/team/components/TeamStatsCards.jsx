@@ -11,7 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { Card, CardContent } from "../../../ui";
-import { formatCurrency } from "../constants/salesTeamConstants";
+import { formatCurrency } from "@/lib/constants/salesTeam";
 
 export default function TeamStatsCards({ teamStats }) {
   return (

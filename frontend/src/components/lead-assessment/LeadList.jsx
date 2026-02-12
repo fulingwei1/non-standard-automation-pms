@@ -6,7 +6,7 @@
 import { Card, Space, Table, Tag, Typography, Button } from "antd";
 import { Eye, Edit, Trash2, Target } from "lucide-react";
 
-import { LEAD_SOURCES, LEAD_STATUS, QUALIFICATION_LEVELS, TABLE_CONFIG } from "./leadAssessmentConstants";
+import { LEAD_SOURCES, LEAD_STATUS, QUALIFICATION_LEVELS, TABLE_CONFIG } from "@/lib/constants/leadAssessment";
 
 const { Text } = Typography;
 

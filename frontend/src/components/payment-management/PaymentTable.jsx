@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Eye } from 'lucide-react';
 import { Card, CardContent, Badge, Button } from '../ui';
 import { cn } from '../../lib/utils';
-import { getPaymentStatus, getPaymentType, formatCurrency } from './paymentManagementConstants';
+import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
 
 /**
  * 支付表格组件

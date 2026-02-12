@@ -52,6 +52,7 @@ import {
 } from "../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { shortageAlertApi, projectApi } from "../services/api";
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   PENDING: { label: "待处理", color: "bg-blue-500" },
   ACKNOWLEDGED: { label: "已确认", color: "bg-amber-500" },
@@ -142,7 +143,7 @@ export default function ShortageAlert() {
     }
   };
   const handleAcknowledge = async (alertId) => {
-    if (!confirm("确认已收到此缺料预警？")) {return;}
+    if (!await confirmAction("确认已收到此缺料预警？")) {return;}
     try {
       await shortageAlertApi.acknowledge(alertId);
       fetchAlerts();

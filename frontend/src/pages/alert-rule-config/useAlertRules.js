@@ -3,6 +3,7 @@ import { alertApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 import { initialFormData } from "./constants";
 
+import { confirmAction } from "@/lib/confirmAction";
 export function useAlertRules() {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +116,7 @@ export function useAlertRules() {
   };
 
   const handleDelete = async (rule) => {
-    if (!confirm(`确定要删除规则 "${rule.rule_name}" 吗？`)) {
+    if (!await confirmAction(`确定要删除规则 "${rule.rule_name}" 吗？`)) {
       return;
     }
     try {

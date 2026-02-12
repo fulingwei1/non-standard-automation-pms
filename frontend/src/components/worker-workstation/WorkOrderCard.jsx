@@ -8,7 +8,7 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Button } from '../ui/button';
 import { cn, formatDate } from '../../lib/utils';
-import { WORK_ORDER_STATUS, WORK_ORDER_TYPES, getStatusColor as _getStatusColor, calculateProgress } from './workerWorkstationConstants';
+import { WORK_ORDER_STATUS, WORK_ORDER_TYPES, getStatusColor as _getStatusColor, calculateProgress } from '@/lib/constants/workerWorkstation';
 
 /**
  * 工单卡片组件

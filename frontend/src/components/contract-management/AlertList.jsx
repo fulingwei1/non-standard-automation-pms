@@ -49,7 +49,7 @@ import {
   statusConfigs as _statusConfigs,
   formatStatus as _formatStatus,
   getRiskLevelConfig as _getRiskLevelConfig } from
-"./contractManagementConstants";
+"@/lib/constants/contractManagement";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 
 export function AlertList({

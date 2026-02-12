@@ -23,7 +23,7 @@ import {
   getProgressColor,
   canEditOrder,
   canDeleteOrder,
-} from "./purchaseOrderConstants";
+} from "@/lib/constants/procurement";
 
 export default function OrderCard({
   order,

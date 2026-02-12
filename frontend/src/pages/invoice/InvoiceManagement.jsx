@@ -417,8 +417,8 @@ export default function InvoiceManagement() {
   onOpenChange={setShowPaymentDialog}
    selectedInvoice={selectedInvoice}
    paymentData={paymentData}
- onPaymentDataChange={setPaymentData}
- onSubmit={handleReceivePayment}
+ setPaymentData={setPaymentData}
+ onConfirm={handleReceivePayment}
   />
 
  <EditInvoiceDialog
@@ -433,7 +433,9 @@ export default function InvoiceManagement() {
  <DeleteConfirmDialog
   open={showDeleteDialog}
   onOpenChange={setShowDeleteDialog}
-  selectedInvoice={selectedInvoice}
+  title="确认删除"
+  description={`确定要删除发票 ${selectedInvoice?.id} 吗？此操作不可撤销。`}
+  confirmText="删除"
   onConfirm={handleDelete}
   />
 

@@ -34,7 +34,7 @@ import {
   formatSatisfactionScore,
   getSatisfactionColor as _getSatisfactionColor,
   satisfactionConstants } from
-"./satisfactionConstants";import { cn } from "../../lib/utils";
+"@/lib/constants/customer";import { cn } from "../../lib/utils";
 
 export const SatisfactionCard = ({
   satisfaction = satisfactionConstants.DEFAULT_SATISFACTION_STATS,

@@ -3,7 +3,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
-export default function WorkOrderList({ filter, data }) {
+export default function WorkOrderList({ filter: _filter, data: _data }) {
   return (
     <Card>
       <CardHeader className="pb-2">

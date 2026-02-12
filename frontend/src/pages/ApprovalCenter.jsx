@@ -124,7 +124,7 @@ const ApprovalCenter = () => {
     items,
     loading,
     error,
-    pagination,
+    pagination: _pagination,
     counts,
     tabBadges,
     activeTab,

@@ -35,7 +35,7 @@ import {
   formatCurrency,
   formatPercentage,
   generateCollectionReport as _generateCollectionReport } from
-"./paymentManagementConstants";
+"@/lib/constants/finance";
 import { cn } from "../../lib/utils";
 
 const calculateAging = (dueDate) => {

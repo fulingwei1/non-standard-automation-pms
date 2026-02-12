@@ -37,7 +37,7 @@ import {
   opportunitySizeConfig,
   quickFiltersConfig,
   sortOptionsConfig } from
-"./opportunityBoardConstants";
+"@/lib/constants/opportunityBoard";
 
 /**
  * 过滤器组件属性

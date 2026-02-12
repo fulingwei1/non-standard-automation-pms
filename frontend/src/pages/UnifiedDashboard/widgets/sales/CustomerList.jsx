@@ -3,7 +3,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
-export default function CustomerList({ limit = 5, data }) {
+export default function CustomerList({ limit: _limit = 5, data: _data }) {
   return (
     <Card>
       <CardHeader className="pb-2">

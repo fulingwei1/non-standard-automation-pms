@@ -3,7 +3,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
-export default function ProductionBoard({ view, data }) {
+export default function ProductionBoard({ view: _view, data: _data }) {
   return (
     <Card>
       <CardHeader className="pb-2">

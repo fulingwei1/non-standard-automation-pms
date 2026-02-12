@@ -66,7 +66,7 @@ import {
   isMaterialReady as _isMaterialReady,
   isMaterialDelayed as _isMaterialDelayed,
   isMaterialCritical as _isMaterialCritical } from
-"./materialReadinessConstants";
+"@/lib/constants/materialReadiness";
 
 /**
  * 警报级别配置

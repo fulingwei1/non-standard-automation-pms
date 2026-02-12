@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { purchaseApi, supplierApi, projectApi } from "../../../../services/api";
 import { toast } from "../../../../components/ui/toast";
-import { ORDER_STATUS, PurchaseOrderUtils } from "../orders/purchaseOrderConstants";
+import { ORDER_STATUS, PurchaseOrderUtils } from "@/lib/constants/procurement";
 
 export const usePurchaseOrderData = (initialFilters = {}) => {
   // 订单数据状态

@@ -113,6 +113,9 @@ Thumbs.db
 *.old
 *.orig
 
+# Allow frontend source libs (constants, formatters) to be tracked
+!frontend/src/lib/
+!frontend/src/lib/**
 
 
 

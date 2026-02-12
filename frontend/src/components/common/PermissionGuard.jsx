@@ -5,8 +5,10 @@
  * 推荐直接使用: import { PermissionGuard, useHasPermission } from '../../hooks/usePermission';
  */
 
+import { PermissionGuard, usePermission } from "../../hooks/usePermission";
+
 // 从 usePermission 重新导出权限守卫组件
-export { PermissionGuard } from "../../hooks/usePermission";
+export { PermissionGuard };
 
 /**
  * 条件渲染Hook
@@ -16,8 +18,7 @@ export { PermissionGuard } from "../../hooks/usePermission";
  * @returns {boolean}
  */
 export function useHasPermission(permission, requireAll = false) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { hasPermission, hasAnyPermission, hasAllPermissions } = require("../../hooks/usePermission").usePermission();
+  const { hasPermission, hasAnyPermission, hasAllPermissions } = usePermission();
 
   if (!permission) {return true;}
 

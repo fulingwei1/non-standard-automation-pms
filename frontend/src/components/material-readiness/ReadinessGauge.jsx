@@ -16,7 +16,7 @@ import {
   isMaterialReady,
   isMaterialDelayed,
   isMaterialInProgress } from
-"./materialReadinessConstants";
+"@/lib/constants/materialReadiness";
 
 /**
  * 物料准备状态环形仪表盘组件

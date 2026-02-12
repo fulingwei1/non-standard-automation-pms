@@ -6,7 +6,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Badge } from '../ui/badge';
 import ProcurementStatsCard from './ProcurementStatsCard';
-import { STATS_CARD_CONFIGS, formatAmount as _formatAmount } from './procurementConstants';
+import { STATS_CARD_CONFIGS, formatAmount as _formatAmount } from '@/lib/constants/procurementAnalysis';
 
 /**
  * 成本趋势 Tab 组件

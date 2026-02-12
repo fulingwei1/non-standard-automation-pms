@@ -4,11 +4,11 @@
  * 包含销售状态、阶段、类型、优先级等配置
  */
 
-import { cn, formatDate, formatDateTime, formatCurrency } from "../../lib/utils";
+import { cn, formatDate, formatDateTime, formatCurrency } from "../utils";
 import {
   formatCurrency as formatCurrencySymbol,
   formatCurrencyCompact
-} from "../../lib/formatters";
+} from "../formatters";
 
 export {
   cn,

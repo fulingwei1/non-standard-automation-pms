@@ -3,7 +3,6 @@
 奖金分配表解析服务
 """
 
-import io
 import os
 import uuid
 from datetime import date, datetime
@@ -18,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.bonus import BonusCalculation, TeamBonusAllocation
 from app.models.user import User
+from app.services.import_export_engine import ImportExportEngine
 
 
 def validate_file_type(filename: str) -> None:
@@ -73,9 +73,7 @@ def parse_excel_file(file_content: bytes) -> pd.DataFrame:
         pd.DataFrame: 解析后的数据框
     """
     try:
-        df = pd.read_excel(io.BytesIO(file_content))
-        df = df.dropna(how='all')  # 删除空行
-        return df
+        return ImportExportEngine.parse_excel(file_content)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Excel文件解析失败: {str(e)}")
 

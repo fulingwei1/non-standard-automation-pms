@@ -6,7 +6,7 @@
 import { Card, Col, Row, Space, Statistic, Tag, Typography, Progress, Empty } from "antd";
 import { PackageCheck, Truck, Clock, AlertCircle } from "lucide-react";
 
-import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS } from "./deliveryManagementConstants";
+import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS } from "@/lib/constants/service";
 
 const { Title, Text } = Typography;
 

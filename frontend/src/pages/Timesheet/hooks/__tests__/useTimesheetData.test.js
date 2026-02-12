@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTimesheetData } from '../useTimesheetData';
 import { timesheetApi } from '../../../../services/api';
@@ -35,7 +35,7 @@ describe('useTimesheetData Hook', () => {
     const { result } = renderHook(() => useTimesheetData());
 
     // Wait for loading to finish
-    if (result.current.hasOwnProperty('loading')) {
+    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
         await waitFor(() => expect(result.current.loading).toBe(false));
     } else {
         await waitFor(() => {});

@@ -24,6 +24,7 @@ import {
   Edit } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
+import { PaymentDialog } from "../components/invoice-management/dialogs";
 import {
   Card,
   CardContent,
@@ -32,14 +33,7 @@ import {
   Button,
   Badge,
   Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
   Label,
-  Textarea,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -278,6 +272,23 @@ export default function ReceivableManagement() {
       overdueCount: receivables.filter((r) => r.overdue_days > 0).length
     };
   }, [receivables, total, summary]);
+
+  const receivableBaseAmount = selectedReceivable
+    ? (selectedReceivable.invoice_amount ??
+      selectedReceivable.total_amount ??
+      0)
+    : 0;
+  const receivablePendingAmount = selectedReceivable
+    ? (selectedReceivable.unpaid_amount ??
+      (receivableBaseAmount - (selectedReceivable.paid_amount ?? 0)))
+    : 0;
+  const receivableMaxAmount = selectedReceivable
+    ? (selectedReceivable.unpaid_amount ?? receivableBaseAmount)
+    : undefined;
+  const paymentDateMax = new Date().toISOString().split("T")[0];
+  const paymentAmountPlaceholder = selectedReceivable
+    ? `最大可收: ${formatCurrency(receivableMaxAmount)}`
+    : "请输入收款金额";
 
   return (
     <motion.div
@@ -692,97 +703,23 @@ export default function ReceivableManagement() {
       }
 
       {/* 记录收款对话框 */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>记录收款</DialogTitle>
-            <DialogDescription>
-              发票: {selectedReceivable?.invoice_code}
-              <br />
-              待收金额: {formatCurrency(selectedReceivable?.unpaid_amount)}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>收款金额 *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max={
-                selectedReceivable?.unpaid_amount ||
-                selectedReceivable?.invoice_amount
-                }
-                value={paymentData.paid_amount}
-                onChange={(e) =>
-                setPaymentData({
-                  ...paymentData,
-                  paid_amount: e.target.value
-                })
-                }
-                placeholder={`最大可收: ${formatCurrency(selectedReceivable?.unpaid_amount || selectedReceivable?.invoice_amount)}`} />
-
-            </div>
-            <div>
-              <Label>收款日期 *</Label>
-              <Input
-                type="date"
-                value={paymentData.paid_date}
-                onChange={(e) =>
-                setPaymentData({ ...paymentData, paid_date: e.target.value })
-                }
-                max={new Date().toISOString().split("T")[0]} />
-
-            </div>
-            <div>
-              <Label>收款方式</Label>
-              <Input
-                value={paymentData.payment_method || ""}
-                onChange={(e) =>
-                setPaymentData({
-                  ...paymentData,
-                  payment_method: e.target.value
-                })
-                }
-                placeholder="如：银行转账、现金等" />
-
-            </div>
-            <div>
-              <Label>收款账户</Label>
-              <Input
-                value={paymentData.bank_account || ""}
-                onChange={(e) =>
-                setPaymentData({
-                  ...paymentData,
-                  bank_account: e.target.value
-                })
-                }
-                placeholder="收款银行账户" />
-
-            </div>
-            <div>
-              <Label>备注</Label>
-              <Textarea
-                value={paymentData.remark}
-                onChange={(e) =>
-                setPaymentData({ ...paymentData, remark: e.target.value })
-                }
-                placeholder="请输入备注"
-                rows={3} />
-
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowPaymentDialog(false)}>
-
-              取消
-            </Button>
-            <Button onClick={handleReceivePayment}>确认收款</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        paymentData={paymentData}
+        setPaymentData={setPaymentData}
+        invoiceLabel={selectedReceivable?.invoice_code}
+        pendingAmount={receivablePendingAmount}
+        amountStep="0.01"
+        amountMin={0}
+        amountMax={receivableMaxAmount}
+        amountPlaceholder={paymentAmountPlaceholder}
+        dateMax={paymentDateMax}
+        showPaymentMethod
+        showBankAccount
+        formatAmount={formatCurrency}
+        onConfirm={handleReceivePayment}
+      />
     </motion.div>);
 
 }

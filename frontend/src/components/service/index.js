@@ -4,7 +4,7 @@
  */
 
 // 配置和常量
-export * from './serviceTicketConstants';
+export * from '@/lib/constants/service';
 
 // 工单管理组件
 export { ServiceTicketStats } from './ServiceTicketStats';

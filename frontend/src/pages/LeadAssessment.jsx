@@ -99,7 +99,7 @@ import {
   SCORE_COLORS,
   TABLE_CONFIG,
   DEFAULT_FILTERS } from
-'../components/lead-assessment/leadAssessmentConstants';
+'@/lib/constants/leadAssessment';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;

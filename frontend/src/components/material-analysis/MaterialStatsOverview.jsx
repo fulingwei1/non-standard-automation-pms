@@ -29,7 +29,7 @@ import {
   getImpactLevel,
   calculateReadinessRate,
   calculateAnalysisScore as _calculateAnalysisScore } from
-"./materialAnalysisConstants";
+"@/lib/constants/materialAnalysis";
 import { api, purchaseApi } from "../../services/api";
 import { cn } from "../../lib/utils";
 

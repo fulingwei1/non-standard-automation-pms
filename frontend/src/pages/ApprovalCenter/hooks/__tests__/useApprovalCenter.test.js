@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useApprovalCenter } from '../useApprovalCenter';
 import { approvalApi } from '../../../../services/api';
@@ -35,7 +35,7 @@ describe('useApprovalCenter Hook', () => {
     const { result } = renderHook(() => useApprovalCenter());
 
     // Wait for loading to finish
-    if (result.current.hasOwnProperty('loading')) {
+    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
         await waitFor(() => expect(result.current.loading).toBe(false));
     } else {
         await waitFor(() => {});

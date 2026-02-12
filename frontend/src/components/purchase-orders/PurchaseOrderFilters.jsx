@@ -13,7 +13,7 @@ import { Button } from "../ui";
 import {
   ORDER_STATUS_OPTIONS,
   ORDER_URGENCY_OPTIONS,
-} from "../purchase/orders/purchaseOrderConstants";
+} from "@/lib/constants/procurement";
 
 /**
  * 采购订单筛选器组件

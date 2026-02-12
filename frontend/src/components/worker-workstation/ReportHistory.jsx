@@ -6,7 +6,7 @@ import { Clock, CheckCircle2, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { cn as _cn, formatDate } from '../../lib/utils';
-import { REPORT_TYPE, getReportTypeColor } from './workerWorkstationConstants';
+import { REPORT_TYPE, getReportTypeColor } from '@/lib/constants/workerWorkstation';
 
 /**
  * 报工记录历史组件

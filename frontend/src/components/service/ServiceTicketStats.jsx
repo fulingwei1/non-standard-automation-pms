@@ -18,7 +18,7 @@ import {
   statusConfigs, 
   urgencyConfigs,
   calculateTicketStats
-} from "./serviceTicketConstants";
+} from "@/lib/constants/service";
 
 export function ServiceTicketStats({ tickets = [], stats: externalStats = null }) {
   // 计算统计数据

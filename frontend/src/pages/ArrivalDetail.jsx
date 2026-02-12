@@ -47,6 +47,7 @@ import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { shortageApi } from "../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   PENDING: { label: "待处理", color: "bg-slate-500", icon: Clock },
   IN_TRANSIT: { label: "在途", color: "bg-blue-500", icon: Truck },
@@ -153,7 +154,7 @@ export default function ArrivalDetail() {
   };
 
   const handleUpdateStatus = async (status) => {
-    if (!confirm(`确认要将状态更新为"${statusConfigs[status]?.label}"吗？`))
+    if (!await confirmAction(`确认要将状态更新为"${statusConfigs[status]?.label}"吗？`))
       {return;}
     setActionLoading(true);
     try {

@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag } from 'antd';
-import { TABLE_CONFIG, CHART_COLORS } from './customer360Constants';
+import { TABLE_CONFIG, CHART_COLORS } from '@/lib/constants/customer360';
 
 const CONTRACT_STATUS_COLORS = {
   active: '#52c41a',

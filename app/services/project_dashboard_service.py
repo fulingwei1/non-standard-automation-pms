@@ -10,7 +10,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.progress import Task
-from app.models.project import Project, ProjectCost, ProjectMilestone, ProjectStatusLog
+from app.models.project import Project, ProjectMilestone, ProjectStatusLog
 
 # 可选模型导入（支持 mock patching）
 try:
@@ -93,50 +93,10 @@ def calculate_cost_stats(db: Session, project_id: int, budget_amount: float) -> 
     Returns:
         dict: 成本统计数据
     """
-    # 使用聚合函数优化查询
+    from app.services.cost_service import CostService
 
-    total_cost_result = (
-        db.query(func.sum(ProjectCost.amount).label('total'))
-        .filter(ProjectCost.project_id == project_id)
-        .first()
-    )
-    total_cost = float(total_cost_result.total or 0)
-
-    # 按类型和类别聚合
-    cost_by_type_result = (
-        db.query(
-            ProjectCost.cost_type,
-            func.sum(ProjectCost.amount).label('amount')
-        )
-        .filter(ProjectCost.project_id == project_id)
-        .group_by(ProjectCost.cost_type)
-        .all()
-    )
-    cost_by_type = {ct or "其他": float(amount or 0) for ct, amount in cost_by_type_result}
-
-    cost_by_category_result = (
-        db.query(
-            ProjectCost.cost_category,
-            func.sum(ProjectCost.amount).label('amount')
-        )
-        .filter(ProjectCost.project_id == project_id)
-        .group_by(ProjectCost.cost_category)
-        .all()
-    )
-    cost_by_category = {cc or "其他": float(amount or 0) for cc, amount in cost_by_category_result}
-
-    cost_variance = budget_amount - total_cost if budget_amount > 0 else 0
-    cost_variance_rate = (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
-
-    return {
-        "total_cost": total_cost,
-        "budget_amount": budget_amount,
-        "cost_variance": cost_variance,
-        "cost_variance_rate": cost_variance_rate,
-        "cost_by_type": cost_by_type,
-        "cost_by_category": cost_by_category,
-        "is_over_budget": total_cost > budget_amount if budget_amount > 0 else False,
-    }
+    service = CostService(db)
+    return service.calculate_cost_stats(project_id, budget_amount)
 
 
 def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:

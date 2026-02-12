@@ -42,7 +42,8 @@ import {
 import {
   MEETING_TYPES,
   MEETING_STATUS } from
-'../components/meeting-management/meetingManagementConstants';
+'@/lib/constants/meetingManagement';
+import { getMeetings } from "../services/meetingService";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

@@ -8,7 +8,7 @@ import {
   getDefaultDateRange,
   QUICK_RANGE_PRESETS,
   formatAutoRefreshTime,
-} from "../constants/salesTeamConstants";
+} from "@/lib/constants/salesTeam";
 
 // 自动刷新高亮显示时长（毫秒）
 const AUTO_REFRESH_HIGHLIGHT_DURATION = 2400;

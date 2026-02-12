@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue } from
 "../../../ui/select";
-import { PAYMENT_TERMS, PAYMENT_TERMS_CONFIGS, SHIPPING_METHODS } from "./purchaseOrderConstants";
+import { PAYMENT_TERMS, PAYMENT_TERMS_CONFIGS, SHIPPING_METHODS } from "@/lib/constants/procurement";
 
 export default function CreateEditOrderDialog({
   open,

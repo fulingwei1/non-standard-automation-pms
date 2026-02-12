@@ -58,7 +58,7 @@ import {
   getUserStatusConfig,
   formatUserRole,
   formatUserStatus as _formatUserStatus } from
-"./userManagementConstants";
+"@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
 
 export function UserFilters({

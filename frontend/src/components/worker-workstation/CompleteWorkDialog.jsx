@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { QUICK_QUANTITY_OPTIONS } from './workerWorkstationConstants';
+import { QUICK_QUANTITY_OPTIONS } from '@/lib/constants/workerWorkstation';
 
 /**
  * 完工报工对话框

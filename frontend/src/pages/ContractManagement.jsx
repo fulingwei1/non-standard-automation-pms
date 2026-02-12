@@ -90,10 +90,10 @@ import {
   TABLE_CONFIG,
   DEFAULT_FILTERS,
   CHART_COLORS } from
-'../components/contract-management/contractManagementConstants';
+'@/lib/constants/contractManagement';
 
 // 导入 API service
-import { getContracts, getContractDetail, createContract, updateContract, deleteContract, getContractHistory } from '../services/contractService';
+import { getContracts } from '../services/contractService';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;

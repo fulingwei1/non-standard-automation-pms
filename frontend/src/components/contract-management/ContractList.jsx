@@ -12,7 +12,7 @@ import {
   RISK_LEVELS,
   TABLE_CONFIG,
   CHART_COLORS
-} from './contractManagementConstants';
+} from '@/lib/constants/contractManagement';
 
 const { Text } = Typography;
 

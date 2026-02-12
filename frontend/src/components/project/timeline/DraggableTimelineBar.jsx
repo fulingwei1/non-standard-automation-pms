@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { addDays, differenceInCalendarDays, format } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 /**
@@ -111,9 +111,6 @@ export function DraggableTimelineBar({
       visualWidth = Math.max(cellWidth, width - dragOffset);
     }
   }
-
-  // 日期标签
-  const dateLabel = `${format(item.startDate, "MM/dd")} - ${format(item.endDate, "MM/dd")}`;
 
   // 根据变体和状态决定样式
   const getVariantStyles = () => {

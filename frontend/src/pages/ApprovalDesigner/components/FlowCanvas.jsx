@@ -266,7 +266,7 @@ export function FlowCanvas({
   selectedEdgeId,
   onSelectNode,
   onSelectEdge,
-  onAddNode,
+  onAddNode: _onAddNode,
   onDeleteNode,
   onDeleteEdge,
   onAddEdge,
@@ -277,7 +277,7 @@ export function FlowCanvas({
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragOffset, _setDragOffset] = useState({ x: 0, y: 0 });
   const [draggingNodeId, setDraggingNodeId] = useState(null);
 
   // 设置为可放置区域
@@ -326,22 +326,6 @@ export function FlowCanvas({
       });
     }
   }, [zoom, draggingNodeId, dragOffset, onMoveNode]);
-
-  // 开始拖拽节点
-  const handleNodeDragStart = useCallback((nodeId, e) => {
-    const node = flow.nodes.find(n => n.id === nodeId);
-    if (!node || !canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoom;
-    const y = (e.clientY - rect.top) / zoom;
-
-    setDragOffset({
-      x: x - node.position.x,
-      y: y - node.position.y,
-    });
-    setDraggingNodeId(nodeId);
-  }, [flow.nodes, zoom]);
 
   // 结束拖拽节点
   const handleMouseUp = useCallback(() => {

@@ -24,6 +24,13 @@ import { Button } from "../ui/button";
  * @param {Function} onConfirm - 确认删除回调
  * @param {string} confirmText - 确认按钮文字，默认"确认删除"
  * @param {string} cancelText - 取消按钮文字，默认"取消"
+ * @param {boolean} confirmDisabled - 确认按钮禁用
+ * @param {boolean} cancelDisabled - 取消按钮禁用
+ * @param {string} contentClassName - DialogContent 额外样式
+ * @param {string} titleClassName - 标题额外样式
+ * @param {string} descriptionClassName - 描述额外样式
+ * @param {string} confirmButtonClassName - 确认按钮额外样式
+ * @param {string} cancelButtonClassName - 取消按钮额外样式
  */
 const DeleteConfirmDialog = ({
  open,
@@ -34,6 +41,13 @@ const DeleteConfirmDialog = ({
  onConfirm,
  confirmText = "确认删除",
  cancelText = "取消",
+ confirmDisabled = false,
+ cancelDisabled = false,
+ contentClassName = "",
+ titleClassName = "",
+ descriptionClassName = "",
+ confirmButtonClassName = "",
+ cancelButtonClassName = "",
 }) => {
  const handleConfirm = () => {
  onConfirm?.();
@@ -42,27 +56,35 @@ const DeleteConfirmDialog = ({
 
  return (
  <Dialog open={open} onOpenChange={onOpenChange}>
- <DialogContent>
+ <DialogContent className={contentClassName || undefined}>
  <DialogHeader>
-  <DialogTitle className="flex items-center gap-2">
+  <DialogTitle className={["flex items-center gap-2", titleClassName].filter(Boolean).join(" ")}>
   <AlertTriangle className="h-5 w-5 text-red-400" />
   {title}
     </DialogTitle>
   {description && (
-  <DialogDescription>{description}</DialogDescription>
+  <DialogDescription className={descriptionClassName || undefined}>
+    {description}
+  </DialogDescription>
  )}
   </DialogHeader>
 
   {children && <div className="py-4">{children}</div>}
 
     <DialogFooter className="gap-2">
-  <Button variant="outline" onClick={() => onOpenChange(false)}>
+  <Button
+   variant="outline"
+   onClick={() => onOpenChange(false)}
+   disabled={cancelDisabled}
+   className={cancelButtonClassName || undefined}
+  >
   {cancelText}
    </Button>
   <Button
   variant="destructive"
    onClick={handleConfirm}
-   className="bg-red-500 hover:bg-red-600 text-white"
+   disabled={confirmDisabled}
+   className={["bg-red-500 hover:bg-red-600 text-white", confirmButtonClassName].filter(Boolean).join(" ")}
  >
   {confirmText}
   </Button>

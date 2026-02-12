@@ -23,7 +23,7 @@ import {
   formatPercentage,
   getHealthLevel,
   getBudgetStatus
-} from "./financeDashboardConstants";
+} from "@/lib/constants/finance";
 import StatCard from "../common/StatCard";
 
 // 指标状态指示器

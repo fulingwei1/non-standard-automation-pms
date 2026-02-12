@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { formatDate } from "../../lib/utils";
-import { getStatusBadge, getTypeBadge, getPriorityBadge } from "./ecnConstants";
+import { getStatusBadge, getTypeBadge, getPriorityBadge } from "@/lib/constants/ecn";
 import { 
   FileText, 
   Users, 

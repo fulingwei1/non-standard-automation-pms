@@ -6,7 +6,7 @@
 import { Card, Empty, List, Space, Tag, Typography, Button } from "antd";
 import { RefreshCw } from "lucide-react";
 
-import { FOLLOW_UP_STATUS, TASK_TYPES } from "./leadAssessmentConstants";
+import { FOLLOW_UP_STATUS, TASK_TYPES } from "@/lib/constants/leadAssessment";
 
 const { Text } = Typography;
 

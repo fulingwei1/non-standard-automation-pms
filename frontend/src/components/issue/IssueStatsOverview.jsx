@@ -31,7 +31,7 @@ import {
   getIssueCategoryConfig,
   formatResolutionTime,
   ISSUE_VIEW_MODES } from
-"./issueConstants";
+"@/lib/constants/issue";
 import {
   SimpleBarChart,
   SimpleLineChart,

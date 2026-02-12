@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Plus } from 'lucide-react';
-import { taskStatusConfigs } from './ecnConstants';
+import { taskStatusConfigs } from '@/lib/constants/ecn';
 
 /**
  * 任务卡片组件

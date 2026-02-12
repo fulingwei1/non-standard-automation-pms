@@ -64,6 +64,7 @@ import { serviceApi } from "../services/api";
 
 // Mock data
 // Mock data - 已移除，使用真实API
+import { confirmAction } from "@/lib/confirmAction";
 const categoryConfig = {
   故障处理: { label: "故障处理", color: "text-red-400", bg: "bg-red-500/20" },
   操作指南: { label: "操作指南", color: "text-blue-400", bg: "bg-blue-500/20" },
@@ -274,7 +275,7 @@ export default function ServiceKnowledgeBase() {
   };
 
   const handleDeleteArticle = async (articleId) => {
-    if (!confirm("确定要删除这篇文章吗？")) {return;}
+    if (!await confirmAction("确定要删除这篇文章吗？")) {return;}
     try {
       await serviceApi.knowledgeBase.delete(articleId);
       toast.success("文章删除成功");

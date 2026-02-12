@@ -31,16 +31,15 @@ export function RoleSwitcher({
   onChange,
   className = '',
 }) {
-  // 单角色或无角色时不显示切换器
-  if (!roles || roles.length <= 1) {
-    return null;
-  }
-
-  // 获取当前角色的显示名称
   const currentRoleName = useMemo(() => {
     const role = roles.find(r => r.role_code === currentRole);
     return role?.role_name || '选择角色视图';
   }, [roles, currentRole]);
+
+  // 单角色或无角色时不显示切换器
+  if (!roles || roles.length <= 1) {
+    return null;
+  }
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -87,14 +86,14 @@ export function RoleSwitcherCompact({
   onChange,
   className = '',
 }) {
-  if (!roles || roles.length <= 1) {
-    return null;
-  }
-
   const currentRoleName = useMemo(() => {
     const role = roles.find(r => r.role_code === currentRole);
     return role?.role_name || '选择';
   }, [roles, currentRole]);
+
+  if (!roles || roles.length <= 1) {
+    return null;
+  }
 
   return (
     <Select value={currentRole} onValueChange={onChange}>

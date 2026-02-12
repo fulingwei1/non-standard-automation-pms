@@ -18,7 +18,7 @@ import {
   formatPercentage,
   cashFlowTypes as _cashFlowTypes,
   timePeriods } from
-"./financeDashboardConstants";
+"@/lib/constants/finance";
 
 // 现金流汇总卡片
 const CashFlowSummaryCard = ({ cashFlowData, loading }) => {

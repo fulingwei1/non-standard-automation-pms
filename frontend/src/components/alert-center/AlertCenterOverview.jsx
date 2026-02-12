@@ -31,7 +31,7 @@ import {
   isBusinessHour,
   formatAlertTime,
   requiresEscalation } from
-"./alertCenterConstants";
+"@/lib/constants/alertCenter";
 
 const AlertCenterOverview = ({
   alerts,

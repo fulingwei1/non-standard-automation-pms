@@ -13,7 +13,7 @@ const defaultFunnelData = [
   { stage: '客户', count: 45, value: '¥4,500,000', color: 'bg-green-500' },
 ];
 
-export default function SalesFunnel({ view, data }) {
+export default function SalesFunnel({ view: _view, data }) {
   const [funnelData, setFunnelData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,7 @@ export default function SalesFunnel({ view, data }) {
           <div className="h-48 bg-muted/50 rounded-lg animate-pulse" />
         ) : (
           <div className="space-y-3">
-            {funnelData.map((item, index) => (
+            {funnelData.map((item) => (
               <div key={item.stage} className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>{item.stage}</span>

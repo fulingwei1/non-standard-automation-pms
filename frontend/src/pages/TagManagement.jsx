@@ -43,6 +43,7 @@ import { cn } from "../lib/utils";
 import { staffMatchingApi } from "../services/api";
 
 // 标签类型配置
+import { confirmAction } from "@/lib/confirmAction";
 const TAG_TYPES = [
   { key: "SKILL", label: "技能标签", icon: Target, color: "blue" },
   { key: "DOMAIN", label: "领域经验", icon: Users, color: "green" },
@@ -155,7 +156,7 @@ export default function TagManagement() {
 
   // 删除标签
   const handleDelete = async (tag) => {
-    if (!window.confirm(`确定要删除标签"${tag.tag_name}"吗？`)) {return;}
+    if (!await confirmAction(`确定要删除标签"${tag.tag_name}"吗？`)) {return;}
 
     try {
       await staffMatchingApi.deleteTag(tag.id);

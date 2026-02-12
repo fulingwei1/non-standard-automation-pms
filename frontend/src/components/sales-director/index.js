@@ -30,7 +30,7 @@ export {
   formatPercentage,
   calculateRankingValidation,
   validateMetricConfig,
-} from './salesDirectorConstants';
+} from '@/lib/constants/sales';
 
 // 工具函数别名
 export {
@@ -43,4 +43,4 @@ export {
   ALERT_TYPES as ALERTS,
   FORECAST_MODELS as MODELS,
   TREND_TYPES as TRENDS,
-} from './salesDirectorConstants';
+} from '@/lib/constants/sales';

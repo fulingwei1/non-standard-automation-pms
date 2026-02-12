@@ -1,5 +1,4 @@
 import axios from "axios";
-import { formatResponse } from "../../utils/responseFormatter.js";
 
 const api = axios.create({
   baseURL: "/api/v1",

@@ -50,6 +50,7 @@ import { fadeIn, staggerContainer } from "../lib/animations";
 import { alertApi, projectApi } from "../services/api";
 
 // 预警类型选项
+import { confirmAction } from "@/lib/confirmAction";
 const alertTypeOptions = [
   { value: "", label: "全部类型" },
   { value: "SCHEDULE_DELAY", label: "进度延期" },
@@ -182,7 +183,7 @@ export default function AlertSubscriptionSettings() {
   };
 
   const handleDelete = async (subscription) => {
-    if (!confirm(`确定要删除订阅配置吗？`)) {
+    if (!await confirmAction(`确定要删除订阅配置吗？`)) {
       return;
     }
     try {

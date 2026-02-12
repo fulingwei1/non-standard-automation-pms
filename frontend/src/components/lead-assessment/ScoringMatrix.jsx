@@ -41,7 +41,7 @@ import {
   BUDGET_RANGES,
   DECISION_TIMELINES,
   LEAD_STATUSES } from
-"./leadAssessmentConstants";
+"@/lib/constants/leadAssessment";
 import { Checkbox } from "../ui/checkbox";
 
 export const ScoringMatrix = ({

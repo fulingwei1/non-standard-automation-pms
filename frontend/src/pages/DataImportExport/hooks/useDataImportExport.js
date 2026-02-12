@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { dataImportExportApi } from "../../../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 export function useDataImportExport() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -99,7 +100,7 @@ export function useDataImportExport() {
             return;
         }
 
-        if (!window.confirm("确定要导入数据吗？")) {
+        if (!await confirmAction("确定要导入数据吗？")) {
             return;
         }
 

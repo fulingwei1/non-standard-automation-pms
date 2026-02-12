@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag } from 'antd';
-import { TABLE_CONFIG, CHART_COLORS } from './customer360Constants';
+import { TABLE_CONFIG, CHART_COLORS } from '@/lib/constants/customer360';
 
 const QUOTE_STATUS_COLORS = {
   accepted: '#52c41a',

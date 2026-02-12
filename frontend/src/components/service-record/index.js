@@ -4,4 +4,4 @@
  */
 
 export { default as ServiceRecordOverview } from './ServiceRecordOverview';
-export * from './serviceRecordConstants';
+export * from '@/lib/constants/serviceRecord';

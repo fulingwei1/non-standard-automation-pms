@@ -69,6 +69,7 @@ import { cn } from "../lib/utils";
 import { assemblyKitApi, bomApi, projectApi } from "../services/api";
 
 // 装配阶段配置
+import { confirmAction } from "@/lib/confirmAction";
 const stageOptions = [
 { value: "FRAME", label: "框架装配", icon: Wrench, color: "bg-slate-500" },
 { value: "MECH", label: "机械模组", icon: Package, color: "bg-blue-500" },
@@ -251,7 +252,7 @@ export default function BomAssemblyAttrs() {
 
       // 询问用户是否应用推荐
       if (
-      window.confirm(
+      await confirmAction(
         `智能推荐完成，共推荐 ${previewRes.data?.total || 0} 项。是否应用推荐结果？`
       ))
       {

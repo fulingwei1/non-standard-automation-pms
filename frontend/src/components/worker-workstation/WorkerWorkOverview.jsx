@@ -26,7 +26,7 @@ import {
   formatWorkHours,
   getQualityLevel,
   getNextAvailableActions
-} from "./workerWorkstationConstants";
+} from "@/lib/constants/workerWorkstation";
 
 const WorkerWorkOverview = ({ 
   worker, 

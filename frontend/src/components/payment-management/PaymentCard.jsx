@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, FileText, Eye } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import { cn } from '../../lib/utils';
-import { getPaymentStatus, getPaymentType, formatCurrency } from './paymentManagementConstants';
+import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
 
 /**
  * 支付卡片组件

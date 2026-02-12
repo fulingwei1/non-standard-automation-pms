@@ -6,7 +6,7 @@
 import { Card, Space, Table, Tag, Typography } from "antd";
 import { ClipboardCheck } from "lucide-react";
 
-import { APPROVAL_TYPES, APPROVAL_STATUS, APPROVAL_PRIORITY, TABLE_CONFIG } from "./approvalCenterConstants";
+import { APPROVAL_TYPES, APPROVAL_STATUS, APPROVAL_PRIORITY, TABLE_CONFIG } from "@/lib/constants/approval";
 
 const { Text } = Typography;
 

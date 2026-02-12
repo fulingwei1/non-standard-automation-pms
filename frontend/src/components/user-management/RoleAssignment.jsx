@@ -59,9 +59,8 @@ import {
   permissionAuditConfigs as _permissionAuditConfigs,
   getUserRoleConfig as _getUserRoleConfig,
   formatUserRole as _formatUserRole } from
-"./userManagementConstants";
+"@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
-import { Checkbox } from "../ui/checkbox";
 
 export function RoleAssignment({
   user,

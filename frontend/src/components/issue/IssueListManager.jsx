@@ -54,7 +54,7 @@ import {
   isIssueBlocking,
   ISSUE_SORT_OPTIONS,
   ISSUE_VIEW_MODES } from
-"./issueConstants";
+"@/lib/constants/issue";
 
 export const IssueListManager = ({
   issues = [],

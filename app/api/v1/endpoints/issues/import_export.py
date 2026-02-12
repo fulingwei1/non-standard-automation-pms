@@ -21,19 +21,11 @@ from app.models.issue import Issue
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.data_scope import DataScopeService
+from app.services.import_export_engine import ExcelExportEngine, ImportExportEngine
 
 from .utils import generate_issue_no
 
 router = APIRouter()
-
-# 检查Excel库是否可用
-try:
-    import openpyxl
-    import pandas as pd
-    EXCEL_AVAILABLE = True
-except ImportError:
-    EXCEL_AVAILABLE = False
-
 
 @router.get("/export", response_class=StreamingResponse)
 def export_issues(
@@ -46,12 +38,6 @@ def export_issues(
     end_date: Optional[date] = Query(None, description="结束日期"),
 ) -> Any:
     """导出问题到Excel"""
-    if not EXCEL_AVAILABLE:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     query = db.query(Issue).filter(Issue.status != 'DELETED')
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
@@ -68,7 +54,6 @@ def export_issues(
 
     issues = query.order_by(desc(Issue.created_at)).all()
 
-    # 构建DataFrame
     data = []
     for issue in issues:
         data.append({
@@ -91,38 +76,33 @@ def export_issues(
             '创建时间': issue.created_at.strftime('%Y-%m-%d %H:%M:%S') if issue.created_at else '',
         })
 
-    df = pd.DataFrame(data)
-
-    # 创建Excel文件
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='问题列表', index=False)
-
-        # 设置列宽
-        worksheet = writer.sheets['问题列表']
-        column_widths = {
-            'A': 15,  # 问题编号
-            'B': 12,  # 问题分类
-            'C': 12,  # 问题类型
-            'D': 10,  # 严重程度
-            'E': 8,   # 优先级
-            'F': 30,  # 标题
-            'G': 50,  # 描述
-            'H': 12,  # 提出人
-            'I': 18,  # 提出时间
-            'J': 12,  # 处理人
-            'K': 12,  # 要求完成日期
-            'L': 10,  # 状态
-            'M': 50,  # 解决方案
-            'N': 18,  # 解决时间
-            'O': 8,   # 是否阻塞
-            'P': 10,  # 跟进次数
-            'Q': 18,  # 创建时间
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-    output.seek(0)
+    labels = [
+        '问题编号',
+        '问题分类',
+        '问题类型',
+        '严重程度',
+        '优先级',
+        '标题',
+        '描述',
+        '提出人',
+        '提出时间',
+        '处理人',
+        '要求完成日期',
+        '状态',
+        '解决方案',
+        '解决时间',
+        '是否阻塞',
+        '跟进次数',
+        '创建时间',
+    ]
+    widths = [15, 12, 12, 10, 8, 30, 50, 12, 18, 12, 12, 10, 50, 18, 8, 10, 18]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name='问题列表',
+        title=None,
+    )
 
     filename = f"问题列表_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
     encoded_filename = quote(filename)
@@ -149,15 +129,10 @@ async def import_issues(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """从Excel导入问题"""
-    if not EXCEL_AVAILABLE:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     try:
         file_content = await file.read()
-        df = pd.read_excel(io.BytesIO(file_content))
+        df = ImportExportEngine.parse_excel(file_content)
+        import pandas as pd
 
         # 验证必需的列
         required_columns = ['问题分类', '问题类型', '严重程度', '标题', '描述']

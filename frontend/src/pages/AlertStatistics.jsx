@@ -66,7 +66,7 @@ import {
   CHART_COLORS,
   DEFAULT_FILTERS,
   DASHBOARD_LAYOUTS } from
-'../components/alert-statistics/alertStatsConstants';
+'@/lib/constants/alert';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

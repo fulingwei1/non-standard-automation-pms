@@ -59,7 +59,7 @@ import {
   isMaterialReady,
   isMaterialDelayed,
   isMaterialCritical
-} from "./materialReadinessConstants";
+} from "@/lib/constants/materialReadiness";
 
 /**
  * 物料准备状态卡片组件

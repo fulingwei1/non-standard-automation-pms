@@ -7,7 +7,7 @@ import io
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -17,6 +17,7 @@ from app.core import security
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.data_import_export import ExportTimesheetRequest
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -33,14 +34,6 @@ def export_timesheet(
     """
     导出工时数据（按日期范围，Excel）
     """
-    try:
-        import openpyxl
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     query = db.query(Timesheet).filter(
         and_(
             Timesheet.work_date >= export_in.start_date,
@@ -107,50 +100,55 @@ def export_timesheet(
             }
         )
 
-    df = pd.DataFrame(data)
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="工时数据", index=False)
-
-        worksheet = writer.sheets["工时数据"]
-        column_widths = {
-            "A": 12,
-            "B": 12,
-            "C": 15,
-            "D": 15,
-            "E": 30,
-            "F": 30,
-            "G": 12,
-            "H": 12,
-            "I": 15,
-            "J": 40,
-            "K": 40,
-            "L": 12,
-            "M": 12,
-            "N": 12,
-            "O": 12,
-            "P": 18,
-            "Q": 12,
-            "R": 18,
-            "S": 40,
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-        from openpyxl.styles import Alignment, Font, PatternFill
-
-        header_fill = PatternFill(
-            start_color="366092", end_color="366092", fill_type="solid"
-        )
-        header_font = Font(bold=True, color="FFFFFF")
-
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    output.seek(0)
+    labels = [
+        "工作日期",
+        "人员姓名",
+        "部门",
+        "项目编码",
+        "项目名称",
+        "任务名称",
+        "工时(小时)",
+        "加班类型",
+        "加班类型名称",
+        "工作内容",
+        "工作成果",
+        "更新前进度(%)",
+        "更新后进度(%)",
+        "状态",
+        "状态名称",
+        "提交时间",
+        "审核人",
+        "审核时间",
+        "审核意见",
+    ]
+    widths = [
+        12,
+        12,
+        15,
+        15,
+        30,
+        30,
+        12,
+        12,
+        15,
+        40,
+        40,
+        12,
+        12,
+        12,
+        12,
+        18,
+        12,
+        18,
+        40,
+    ]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name="工时数据",
+        title=None,
+    )
 
     filename = f"工时数据_{export_in.start_date.strftime('%Y%m%d')}_{export_in.end_date.strftime('%Y%m%d')}.xlsx"
 

@@ -47,7 +47,7 @@ import {
   formatUserRole,
   getUserStatusConfig as _getUserStatusConfig,
   cn } from
-"./userManagementConstants";
+"@/lib/constants/userManagement";
 import { formatDate, formatDateTime } from "../../lib/utils";
 
 export function UserCard({

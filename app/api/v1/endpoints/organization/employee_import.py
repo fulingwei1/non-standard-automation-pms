@@ -3,15 +3,14 @@
 员工批量导入端点
 """
 
-import io
 from typing import Any, Dict
 
-import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ImportExportEngine
 from app.models.user import User
 
 router = APIRouter()
@@ -48,7 +47,7 @@ async def import_employees_from_excel(
 
     try:
         contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
+        df = ImportExportEngine.parse_excel(contents)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
 

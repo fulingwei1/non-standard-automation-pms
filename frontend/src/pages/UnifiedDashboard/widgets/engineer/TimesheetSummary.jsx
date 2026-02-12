@@ -3,7 +3,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
-export default function TimesheetSummary({ data }) {
+export default function TimesheetSummary({ data: _data }) {
   return (
     <Card>
       <CardHeader className="pb-2">

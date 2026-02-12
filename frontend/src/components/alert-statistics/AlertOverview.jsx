@@ -21,7 +21,7 @@ import {
   ALERT_STATUS,
   STATISTICS_METRICS,
   CHART_COLORS } from
-'./alertStatsConstants';
+'@/lib/constants/alert';
 
 const AlertOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('last_24h');

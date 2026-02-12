@@ -23,7 +23,7 @@ import {
   getStatusLabel,
   getTypeLabel,
   getPriorityLabel 
-} from "./ecnManagementConstants";
+} from "@/lib/constants/ecn";
 
 export function ECNListTable({
   ecns = [],

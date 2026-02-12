@@ -22,7 +22,7 @@ import {
   formatPriority as _formatPriority,
   formatMethod as _formatMethod,
   formatStage as _formatStage } from
-'./deliveryConstants';
+'@/lib/constants/service';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

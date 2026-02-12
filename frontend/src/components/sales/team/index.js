@@ -25,7 +25,7 @@ export {
   buildMetricDetailMap,
   formatMetricValueDisplay,
   formatMetricScoreDisplay,
-} from "./constants/salesTeamConstants";
+} from "@/lib/constants/salesTeam";
 
 // ==================== 工具函数 ====================
 export {

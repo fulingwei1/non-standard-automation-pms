@@ -13,7 +13,7 @@ import {
   getStatusConfig,
   getTypeConfig,
   getPriorityConfig } from
-"./ecnConstants";
+"@/lib/constants/ecn";
 
 export function ECNBasicInfo({ ecn, loading }) {
   if (loading) {

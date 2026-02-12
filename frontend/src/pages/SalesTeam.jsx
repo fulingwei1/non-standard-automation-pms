@@ -18,7 +18,7 @@ import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui";
 import { salesTeamApi } from "../services/api";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { getDefaultDateRange } from "../components/sales/team/constants/salesTeamConstants";
+import { getDefaultDateRange } from "@/lib/constants/salesTeam";
 import { useSalesTeamFilters } from "../components/sales/team/hooks/useSalesTeamFilters";
 import { useSalesTeamData } from "../components/sales/team/hooks/useSalesTeamData";
 import { useSalesTeamRanking } from "../components/sales/team/hooks/useSalesTeamRanking";

@@ -7,7 +7,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { MATERIAL_STATUS } from './materialAnalysisConstants';
+import { MATERIAL_STATUS } from '@/lib/constants/materialAnalysis';
 
 /**
  * 物料筛选器组件

@@ -27,9 +27,8 @@ import {
 "lucide-react";
 import {
   approvalStatusConfigs,
-  getStatusConfig as _getStatusConfig,
   formatStatus } from
-"./ecnConstants";
+"@/lib/constants/ecn";
 import { cn, formatDate } from "../../lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -37,8 +36,7 @@ import {
   approveApproval,
   rejectApproval,
   delegateApproval,
-  APPROVAL_STATUS,
-  getStatusConfig
+  APPROVAL_STATUS
 } from "../../services/api/approval.js";
 
 export function ECNApprovalFlow({

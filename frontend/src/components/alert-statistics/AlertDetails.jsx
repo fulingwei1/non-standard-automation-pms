@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag, Space, Typography } from 'antd';
-import { ALERT_TYPES, ALERT_LEVELS, ALERT_STATUS, TABLE_CONFIG } from './alertStatsConstants';
+import { ALERT_TYPES, ALERT_LEVELS, ALERT_STATUS, TABLE_CONFIG } from '@/lib/constants/alert';
 
 const { Text } = Typography;
 

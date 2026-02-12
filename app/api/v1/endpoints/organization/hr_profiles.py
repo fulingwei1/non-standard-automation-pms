@@ -3,16 +3,15 @@
 人事档案管理端点
 """
 
-import io
 from typing import Any, Dict, Optional
 
-import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ImportExportEngine
 from app.models.organization import Employee, EmployeeHrProfile
 from app.models.user import User
 from app.schemas.organization import (
@@ -162,7 +161,7 @@ async def import_hr_profiles(
 
     try:
         contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
+        df = ImportExportEngine.parse_excel(contents)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"读取Excel文件失败: {str(e)}")
 

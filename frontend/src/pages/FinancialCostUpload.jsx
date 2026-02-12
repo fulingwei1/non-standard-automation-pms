@@ -55,6 +55,7 @@ import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { financialCostApi } from "../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function FinancialCostUpload() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -188,7 +189,7 @@ export default function FinancialCostUpload() {
   };
 
   const handleDelete = async (costId) => {
-    if (!confirm("确定要删除这条成本记录吗？")) {
+    if (!await confirmAction("确定要删除这条成本记录吗？")) {
       return;
     }
 

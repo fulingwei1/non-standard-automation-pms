@@ -45,6 +45,7 @@ import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { kitCheckApi } from "../services/api";
 
+import { confirmAction } from "@/lib/confirmAction";
 const kitStatusConfigs = {
   complete: {
     label: "完全齐套",
@@ -162,7 +163,7 @@ export default function KitCheck() {
   };
 
   const handleConfirmStart = async (workOrderId, confirmType = "start_now") => {
-    if (!confirm(`确认工单物料齐套，可以开工吗？`)) {return;}
+    if (!await confirmAction(`确认工单物料齐套，可以开工吗？`)) {return;}
 
     setActionLoading(true);
     try {

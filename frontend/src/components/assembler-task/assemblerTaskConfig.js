@@ -1,45 +1,7 @@
 /**
  * 装配任务中心 - 配置
+ *
+ * 统一从 production/assembler/utils 导出，避免重复维护。
  */
 
-import {
-  Circle,
-  PlayCircle,
-  PauseCircle,
-  CheckCircle2
-} from "lucide-react";
-
-// 状态配置
-export const statusConfigs = {
-  pending: {
-    label: "待开始",
-    icon: Circle,
-    color: "text-slate-400",
-    bgColor: "bg-slate-500/10"
-  },
-  in_progress: {
-    label: "进行中",
-    icon: PlayCircle,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10"
-  },
-  blocked: {
-    label: "阻塞",
-    icon: PauseCircle,
-    color: "text-red-400",
-    bgColor: "bg-red-500/10"
-  },
-  completed: {
-    label: "已完成",
-    icon: CheckCircle2,
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/10"
-  }
-};
-
-// 优先级配置
-export const priorityConfigs = {
-  low: { label: "低", color: "text-slate-400", bgColor: "bg-slate-500/10" },
-  medium: { label: "中", color: "text-blue-400", bgColor: "bg-blue-500/10" },
-  high: { label: "高", color: "text-amber-400", bgColor: "bg-amber-500/10" }
-};
+export { statusConfigs, priorityConfigs } from "../production/assembler/utils";

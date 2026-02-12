@@ -27,7 +27,7 @@ import {
   getSalesPerformanceLevelConfig,
   formatCurrency,
   formatAutoRefreshTime } from
-"./salesConstants";
+"@/lib/constants/sales";
 
 export const SalesStatsOverview = ({
   teamStats = DEFAULT_SALES_TEAM_STATS,

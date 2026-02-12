@@ -19,7 +19,7 @@ import {
   calculateOverdueDays,
   getPaymentTypeLabel,
   getPaymentStatusLabel,
-} from "../../payment-management/paymentManagementConstants";
+} from "@/lib/constants/finance";
 import {
   CheckCircle2,
   Clock,

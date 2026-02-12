@@ -6,7 +6,7 @@
 import { Card, Empty, List, Space, Tag, Typography } from "antd";
 import { MapPin, Truck, PackageSearch } from "lucide-react";
 
-import { DELIVERY_STATUS, SHIPPING_METHODS } from "./deliveryManagementConstants";
+import { DELIVERY_STATUS, SHIPPING_METHODS } from "@/lib/constants/service";
 
 const { Text } = Typography;
 

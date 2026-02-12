@@ -56,6 +56,7 @@ import { EmptyState } from "../components/common";
 import { ErrorMessage } from "../components/common";
 
 // 状态配置
+import { confirmAction } from "@/lib/confirmAction";
 const STATUS_CONFIG = {
   DRAFT: { label: "草稿", color: "bg-gray-500", icon: FileText },
   SUBMITTED: { label: "待审批", color: "bg-blue-500", icon: Clock },
@@ -188,8 +189,8 @@ function PurchaseRequestCard({
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-emerald-400"
-            onClick={() => {
-              if (confirm("确定要审批通过此申请吗？")) {
+            onClick={async () => {
+              if (await confirmAction("确定要审批通过此申请吗？")) {
                 onApprove(request, true, "");
               }
             }}
@@ -323,7 +324,7 @@ export default function PurchaseRequestList() {
   };
 
   const handleDelete = async (request) => {
-    if (!confirm(`确定要删除采购申请 ${request.request_no} 吗？`)) {
+    if (!await confirmAction(`确定要删除采购申请 ${request.request_no} 吗？`)) {
       return;
     }
 

@@ -12,6 +12,7 @@ import {
   CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
   Card,
   CardContent,
@@ -65,6 +66,7 @@ export default function ECNTypeManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingType, setEditingType] = useState(null);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, type: null });
   const [typeForm, setTypeForm] = useState({
     type_code: "",
     type_name: "",
@@ -150,10 +152,11 @@ export default function ECNTypeManagement() {
     }
   };
 
-  const handleDelete = async (typeId) => {
-    if (!confirm("确认删除此ECN类型配置？")) {return;}
+  const handleDelete = async () => {
+    if (!deleteDialog.type) {return;}
     try {
-      await ecnApi.deleteEcnType(typeId);
+      await ecnApi.deleteEcnType(deleteDialog.type.id);
+      setDeleteDialog({ open: false, type: null });
       fetchECNTypes();
     } catch (error) {
       console.error("Failed to delete ECN type:", error);
@@ -295,7 +298,7 @@ export default function ECNTypeManagement() {
                         <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(type.id)}>
+                      onClick={() => setDeleteDialog({ open: true, type })}>
 
                           <X className="w-4 h-4" />
                         </Button>
@@ -489,6 +492,16 @@ export default function ECNTypeManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) =>
+          setDeleteDialog({ open, type: open ? deleteDialog.type : null })
+        }
+        title="确认删除"
+        description={`确认删除此ECN类型配置 "${deleteDialog.type?.type_name}" 吗？此操作不可恢复。`}
+        confirmText="删除"
+        onConfirm={handleDelete}
+      />
     </div>);
 
 }

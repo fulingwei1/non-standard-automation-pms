@@ -29,7 +29,7 @@ import {
   installationTypeConfigs as _installationTypeConfigs,
   formatDate as _formatDate,
   isTaskOverdue } from
-"./installationDispatchConstants";
+"@/lib/constants/installationDispatch";
 
 // View modes
 const VIEW_MODES = {

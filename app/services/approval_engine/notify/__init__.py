@@ -45,8 +45,7 @@ class ApprovalNotifyService(
 ):
     """审批通知服务（组合所有功能模块）
     
-    现在使用统一通知服务（unified_notification_service）进行所有通知发送。
-    统一服务提供：
+    现在使用 NotificationDispatcher 进行通知发送，统一服务提供：
     - 自动去重
     - 用户偏好管理
     - 免打扰时间

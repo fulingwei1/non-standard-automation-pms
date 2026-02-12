@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/layout";
 import { Card, CardContent } from "../components/ui/card";
 import { formatDate } from "../lib/utils";
-import { ecnApi, projectApi, memberApi, machineApi } from "../services/api";
+import { ecnApi, projectApi, memberApi } from "../services/api";
 import {
   ECNBatchActions,
   ECNCreateDialog,
@@ -20,8 +20,9 @@ import {
   getPriorityLabel,
   getStatusLabel,
   getTypeLabel,
-} from "../components/ecn/ecnManagementConstants";
+} from "@/lib/constants/ecn";
 
+import { confirmAction } from "@/lib/confirmAction";
 export default function ECNManagement() {
   const navigate = useNavigate();
 
@@ -82,7 +83,7 @@ export default function ECNManagement() {
           if (isMember) {
             userProjectIds.push(project.id);
           }
-        } catch (error) {
+        } catch (_error) {
           // 忽略单个项目的成员获取失败
         }
       }
@@ -107,7 +108,7 @@ export default function ECNManagement() {
           const machinesRes = await projectApi.getMachines(project.id);
           const machines = machinesRes.data?.items || machinesRes.data || [];
           allMachines.push(...machines);
-        } catch (error) {
+        } catch (_error) {
           // 忽略单个项目的设备获取失败
         }
       }
@@ -153,7 +154,7 @@ export default function ECNManagement() {
   };
 
   const handleSubmit = async (ecnId) => {
-    if (!confirm("确认提交此ECN？提交后将进入评估流程。")) {return;}
+    if (!await confirmAction("确认提交此ECN？提交后将进入评估流程。")) {return;}
     try {
       await ecnApi.submit(ecnId, { remark: "" });
       await fetchECNs();

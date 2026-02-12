@@ -34,7 +34,7 @@ import {
   getOpportunityStats,
   filterOpportunities,
   sortOpportunities } from
-"./opportunityBoardConstants";
+"@/lib/constants/opportunityBoard";
 
 /**
  * 看板列组件

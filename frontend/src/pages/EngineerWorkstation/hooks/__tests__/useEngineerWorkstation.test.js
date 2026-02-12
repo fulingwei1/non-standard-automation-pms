@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useEngineerWorkstation } from '../useEngineerWorkstation';
 import { projectApi, taskApi } from '../../../../services/api';
@@ -36,7 +36,7 @@ describe('useEngineerWorkstation Hook', () => {
     const { result } = renderHook(() => useEngineerWorkstation());
 
     // Wait for loading to finish
-    if (result.current.hasOwnProperty('loading')) {
+    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
         await waitFor(() => expect(result.current.loading).toBe(false));
     } else {
         await waitFor(() => {});

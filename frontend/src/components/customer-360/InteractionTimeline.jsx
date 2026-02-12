@@ -17,7 +17,7 @@ import {
   customer360TabConfigs as _customer360TabConfigs,
   getInteractionTypeConfig,
   formatInteractionType } from
-"./customer360Constants";
+"@/lib/constants/customer360";
 
 /**
  * InteractionTimeline - 客户互动时间轴组件

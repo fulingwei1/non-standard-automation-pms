@@ -22,6 +22,7 @@ from app.schemas.data_import_export import (
     ExportProjectListRequest,
 )
 from app.services.data_scope import DataScopeService
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -38,14 +39,6 @@ def export_project_list(
     """
     导出项目列表（Excel）
     """
-    try:
-        import openpyxl
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
-
     query = db.query(Project).filter(Project.is_active == True)
 
     filters = export_in.filters or {}
@@ -126,50 +119,55 @@ def export_project_list(
             }
         )
 
-    df = pd.DataFrame(data)
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="项目列表", index=False)
-
-        worksheet = writer.sheets["项目列表"]
-        column_widths = {
-            "A": 15,
-            "B": 30,
-            "C": 20,
-            "D": 15,
-            "E": 12,
-            "F": 12,
-            "G": 12,
-            "H": 8,
-            "I": 15,
-            "J": 10,
-            "K": 8,
-            "L": 15,
-            "M": 10,
-            "N": 12,
-            "O": 12,
-            "P": 12,
-            "Q": 12,
-            "R": 18,
-            "S": 18,
-        }
-        for col, width in column_widths.items():
-            worksheet.column_dimensions[col].width = width
-
-        from openpyxl.styles import Alignment, Font, PatternFill
-
-        header_fill = PatternFill(
-            start_color="366092", end_color="366092", fill_type="solid"
-        )
-        header_font = Font(bold=True, color="FFFFFF")
-
-        for cell in worksheet[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    output.seek(0)
+    labels = [
+        "项目编码",
+        "项目名称",
+        "客户名称",
+        "合同编号",
+        "合同金额",
+        "项目经理",
+        "项目类型",
+        "阶段",
+        "阶段名称",
+        "状态",
+        "健康度",
+        "健康度名称",
+        "进度(%)",
+        "计划开始日期",
+        "计划结束日期",
+        "实际开始日期",
+        "实际结束日期",
+        "创建时间",
+        "更新时间",
+    ]
+    widths = [
+        15,
+        30,
+        20,
+        15,
+        12,
+        12,
+        12,
+        8,
+        15,
+        10,
+        8,
+        15,
+        10,
+        12,
+        12,
+        12,
+        12,
+        18,
+        18,
+    ]
+    columns = ExcelExportEngine.build_columns(labels, widths=widths)
+    output = ExcelExportEngine.export_table(
+        data=data,
+        columns=columns,
+        sheet_name="项目列表",
+        title=None,
+    )
 
     filename = f"项目列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 

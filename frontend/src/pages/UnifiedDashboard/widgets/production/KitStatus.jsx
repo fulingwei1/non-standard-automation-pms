@@ -10,7 +10,7 @@ const defaultKitData = [
   { project: 'PJ250101-003', status: 'shortage', rate: 45 },
 ];
 
-export default function KitStatus({ view, data }) {
+export default function KitStatus({ view: _view, data }) {
   const kitData = data?.kits || defaultKitData;
 
   return (

@@ -14,6 +14,7 @@ from app.core import security
 from app.models.report_center import DataImportTask
 from app.models.user import User
 from app.schemas.data_import_export import ImportUploadResponse
+from app.services.import_export_engine import ImportExportEngine
 
 router = APIRouter()
 
@@ -43,16 +44,9 @@ def upload_and_import_data(
     - BOM: BOM导入
     """
     try:
-        import pandas as pd
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas")
-
-    from app.services.unified_import import unified_import_service
-
-    try:
         file_content = file.file.read()
 
-        result = unified_import_service.import_data(
+        result = ImportExportEngine.import_data(
             db=db,
             file_content=file_content,
             filename=file.filename,

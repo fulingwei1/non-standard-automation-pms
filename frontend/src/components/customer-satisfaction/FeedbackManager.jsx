@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Rate, Typography } from 'antd';
-import { FEEDBACK_CATEGORIES, TABLE_CONFIG } from './customerSatisfactionConstants';
+import { FEEDBACK_CATEGORIES, TABLE_CONFIG } from '@/lib/constants/customer';
 
 const { Text } = Typography;
 
