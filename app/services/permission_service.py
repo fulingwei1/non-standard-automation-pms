@@ -23,6 +23,7 @@ from app.models.permission import (
     RoleMenu,
 )
 from app.models.user import Role, User, UserRole
+from app.services.permission_cache_service import get_permission_cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,12 @@ class PermissionService:
         db: Session, user_id: int, tenant_id: Optional[int] = None
     ) -> List[str]:
         """
-        获取用户的所有权限编码列表（支持多租户隔离 + 角色继承）
+        获取用户的所有权限编码列表（支持多租户隔离 + 角色继承 + 缓存）
+
+        性能优化：
+        - 首先从缓存读取（TTL: 10分钟）
+        - 缓存未命中时查询数据库
+        - 自动写入缓存供后续请求使用
 
         多租户权限规则：
         - 系统级权限（tenant_id=NULL）：所有租户可用
@@ -130,13 +136,22 @@ class PermissionService:
         Returns:
             权限编码列表
         """
-        permissions_set: Set[str] = set()
-
         # 如果未提供 tenant_id，尝试从用户获取
         if tenant_id is None:
             user = db.query(User).filter(User.id == user_id).first()
             if user:
                 tenant_id = user.tenant_id
+
+        # 1. 尝试从缓存读取
+        cache_service = get_permission_cache_service()
+        cached_permissions = cache_service.get_user_permissions(user_id, tenant_id)
+        if cached_permissions is not None:
+            logger.debug(f"缓存命中: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(cached_permissions)}")
+            return list(cached_permissions)
+
+        # 2. 缓存未命中，从数据库查询
+        logger.debug(f"缓存未命中，查询数据库: user_id={user_id}, tenant_id={tenant_id}")
+        permissions_set: Set[str] = set()
 
         try:
             # 使用递归 SQL 查询（支持角色继承 + 租户隔离）
@@ -187,7 +202,12 @@ class PermissionService:
             except Exception as e2:
                 logger.error(f"SQL查询权限也失败: {e2}")
 
-        return list(permissions_set)
+        # 3. 写入缓存
+        permissions_list = list(permissions_set)
+        cache_service.set_user_permissions(user_id, permissions_set, tenant_id)
+        logger.debug(f"权限已缓存: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(permissions_list)}")
+
+        return permissions_list
     
     @staticmethod
     def check_permission(

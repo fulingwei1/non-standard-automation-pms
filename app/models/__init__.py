@@ -38,6 +38,7 @@ __all__ = [
     "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
+    "UserSession",
     # Project
     "Project",
     "Machine",

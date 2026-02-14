@@ -9,6 +9,8 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     alerts,
     audits,
     auth,
+    sessions,
+    two_factor,
     bom,
     budget,
     culture_wall,
@@ -62,6 +64,8 @@ api_router.include_router(customers.router, prefix="/customers", tags=["customer
 api_router.include_router(suppliers_router, prefix="/suppliers", tags=["suppliers"])
 api_router.include_router(organization.router, prefix="/org", tags=["organization"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(sessions.router, prefix="/auth", tags=["sessions"])
+api_router.include_router(two_factor.router, prefix="/auth/2fa", tags=["2fa"])
 api_router.include_router(budget.router, prefix="/budgets", tags=["budgets"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])

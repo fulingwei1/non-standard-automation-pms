@@ -39,6 +39,9 @@ __all__ = [
     "verify_password",
     "get_password_hash",
     "create_access_token",
+    "create_refresh_token",
+    "create_token_pair",
+    "verify_refresh_token",
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",
@@ -47,6 +50,7 @@ __all__ = [
     "require_permission",
     "revoke_token",
     "is_token_revoked",
+    "extract_jti_from_token",
 ]
 
 
@@ -60,25 +64,182 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """创建访问令牌"""
+def create_access_token(
+    data: dict, 
+    expires_delta: Optional[timedelta] = None,
+    jti: Optional[str] = None,
+) -> str:
+    """
+    创建访问令牌
+    
+    Args:
+        data: 要编码的数据
+        expires_delta: 过期时间增量
+        jti: JWT ID（可选，用于会话管理）
+    
+    Returns:
+        JWT token字符串
+    """
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:
         expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    if not jti:
+        jti = secrets.token_hex(16)
+    
     to_encode.update(
         {
             "exp": expire,
             "iat": now,
-            "jti": secrets.token_hex(16),
+            "jti": jti,
+            "token_type": "access",
         }
     )
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
+
+
+def create_refresh_token(
+    data: dict,
+    expires_delta: Optional[timedelta] = None,
+    jti: Optional[str] = None,
+) -> str:
+    """
+    创建刷新令牌
+    
+    Refresh Token有效期更长，用于获取新的Access Token
+    
+    Args:
+        data: 要编码的数据
+        expires_delta: 过期时间增量（默认7天）
+        jti: JWT ID（可选，用于会话管理）
+    
+    Returns:
+        JWT refresh token字符串
+    """
+    to_encode = data.copy()
+    now = datetime.now(timezone.utc)
+    
+    if expires_delta:
+        expire = now + expires_delta
+    else:
+        # 默认7天有效期
+        expire = now + timedelta(days=7)
+    
+    if not jti:
+        jti = secrets.token_hex(16)
+    
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,
+            "jti": jti,
+            "token_type": "refresh",
+        }
+    )
+    
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
+    return encoded_jwt
+
+
+def create_token_pair(
+    data: dict,
+    access_expires: Optional[timedelta] = None,
+    refresh_expires: Optional[timedelta] = None,
+) -> tuple[str, str, str, str]:
+    """
+    创建Access Token和Refresh Token对
+    
+    Args:
+        data: 要编码的数据（通常包含用户ID）
+        access_expires: Access Token过期时间
+        refresh_expires: Refresh Token过期时间
+    
+    Returns:
+        (access_token, refresh_token, access_jti, refresh_jti)
+    """
+    # 生成唯一的JTI
+    access_jti = secrets.token_hex(16)
+    refresh_jti = secrets.token_hex(16)
+    
+    # 创建tokens
+    access_token = create_access_token(
+        data=data,
+        expires_delta=access_expires,
+        jti=access_jti,
+    )
+    
+    refresh_token = create_refresh_token(
+        data=data,
+        expires_delta=refresh_expires,
+        jti=refresh_jti,
+    )
+    
+    return access_token, refresh_token, access_jti, refresh_jti
+
+
+def verify_refresh_token(refresh_token: str) -> Optional[dict]:
+    """
+    验证Refresh Token
+    
+    Args:
+        refresh_token: 要验证的refresh token
+    
+    Returns:
+        解码后的payload，验证失败返回None
+    """
+    try:
+        # 检查是否在黑名单中
+        if is_token_revoked(refresh_token):
+            logger.warning("Refresh token已被撤销")
+            return None
+        
+        # 解码token
+        payload = jwt.decode(
+            refresh_token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+        
+        # 验证token类型
+        if payload.get("token_type") != "refresh":
+            logger.warning("Token类型错误，期望refresh token")
+            return None
+        
+        return payload
+    
+    except JWTError as e:
+        logger.warning(f"Refresh token验证失败: {e}")
+        return None
+
+
+def extract_jti_from_token(token: str) -> Optional[str]:
+    """
+    从token中提取JTI（不验证token有效性）
+    
+    Args:
+        token: JWT token字符串
+    
+    Returns:
+        JTI字符串或None
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+            options={"verify_exp": False}
+        )
+        return payload.get("jti")
+    except JWTError:
+        return None
 
 
 def revoke_token(token: Optional[str]) -> None:

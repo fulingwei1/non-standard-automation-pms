@@ -52,6 +52,11 @@ class User(Base, TimestampMixin):
     is_superuser = Column(Boolean, default=False, comment="是否超级管理员")
     last_login_at = Column(DateTime, comment="最后登录时间")
     last_login_ip = Column(String(50), comment="最后登录IP")
+    
+    # 双因素认证（2FA）字段
+    two_factor_enabled = Column(Boolean, default=False, comment="是否启用2FA")
+    two_factor_method = Column(String(20), comment="2FA方式: totp")
+    two_factor_verified_at = Column(DateTime, comment="2FA验证时间")
 
     # 汇报关系：直接上级
     reporting_to = Column(Integer, ForeignKey("users.id"), comment="直接上级用户ID")
@@ -78,6 +83,17 @@ class User(Base, TimestampMixin):
     # 项目成员关系（补充缺失的反向关系）
     project_memberships = relationship(
         "ProjectMember", back_populates="user", foreign_keys="ProjectMember.user_id"
+    )
+    # 双因素认证关系
+    two_factor_secrets = relationship(
+        "User2FASecret", back_populates="user", cascade="all, delete-orphan"
+    )
+    two_factor_backup_codes = relationship(
+        "User2FABackupCode", back_populates="user", cascade="all, delete-orphan"
+    )
+    # API Key关系
+    api_keys = relationship(
+        "APIKey", back_populates="user", cascade="all, delete-orphan"
     )
 
     # ========================================================================

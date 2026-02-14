@@ -13,6 +13,9 @@ from ...user import (
     UserRole,
 )
 
+# 用户会话
+from ...session import UserSession
+
 # 租户
 
 # 组织架构
@@ -83,6 +86,7 @@ __all__ = [
     "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
+    "UserSession",
     # Organization
     "Department",
     "Employee",

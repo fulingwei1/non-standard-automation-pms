@@ -3,8 +3,10 @@
 认证相关 API endpoints
 """
 
+import logging
+import secrets
 from datetime import timedelta
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -22,17 +24,29 @@ from app.models.user import (
     UserRole,
 )
 from app.schemas.auth import PasswordChange, Token, UserResponse
+from app.schemas.session import (
+    DeviceInfo,
+    LogoutRequest,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+    RevokeSessionRequest,
+    SessionListResponse,
+    SessionResponse,
+)
+from app.services.session_service import SessionService
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
-@router.post("/login", response_model=Token, status_code=status.HTTP_200_OK)
+@router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")  # 每分钟最多5次登录尝试，防止暴力破解
 def login(
     request: Request,  # slowapi 需要 Request 参数
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
+    device_info: Optional[DeviceInfo] = None,
 ) -> Any:
     """
     用户登录，返回 JWT Token
@@ -140,15 +154,58 @@ def login(
                     },
                 )
 
+        # === 2FA验证检查 ===
+        # 如果用户启用了2FA，需要提供2FA验证码
+        if user_dict.get("two_factor_enabled"):
+            # 返回特殊响应，要求提供2FA码
+            # 生成临时令牌（有效期5分钟）用于2FA验证
+            temp_token_data = {
+                "sub": str(user_dict["id"]),
+                "purpose": "2fa_pending"
+            }
+            temp_token = security.create_access_token(
+                data=temp_token_data,
+                expires_delta=timedelta(minutes=5)
+            )
+            return {
+                "requires_2fa": True,
+                "temp_token": temp_token,
+                "message": "请提供双因素认证码"
+            }
+        
         # 更新最后登录时间（临时禁用以绕过只读数据库问题）
         # user.last_login_at = datetime.now()
         # db.add(user)
         # db.commit()
 
+        # 创建Access Token和Refresh Token对
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = security.create_access_token(
-            {"sub": str(user_dict["id"])}, expires_delta=access_token_expires
+        refresh_token_expires = timedelta(days=7)  # Refresh Token有效期7天
+        
+        access_token, refresh_token, access_jti, refresh_jti = security.create_token_pair(
+            data={"sub": str(user_dict["id"])},
+            access_expires=access_token_expires,
+            refresh_expires=refresh_token_expires,
         )
+        
+        # 获取客户端信息
+        client_ip = request.client.host if request.client else None
+        user_agent = request.headers.get("User-Agent")
+        
+        # 创建会话记录
+        try:
+            SessionService.create_session(
+                db=db,
+                user_id=user_dict["id"],
+                access_token_jti=access_jti,
+                refresh_token_jti=refresh_jti,
+                ip_address=client_ip,
+                user_agent=user_agent,
+                device_info=device_info.model_dump() if device_info else None,
+            )
+        except Exception as e:
+            logger.warning(f"创建会话记录失败: {e}")
+        
         # 登录成功，清除失败计数
         try:
             from app.utils.redis_client import get_redis_client as get_redis_success
@@ -158,14 +215,15 @@ def login(
         except Exception:
             pass
 
-
         # 显式回滚任何可能的更改，确保不触发数据库写入
         db.rollback()
 
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            "refresh_expires_in": 7 * 24 * 3600,  # 7天
         }
     finally:
         # 确保在函数退出时回滚任何未提交的更改
@@ -177,40 +235,129 @@ def login(
 
 @router.post("/logout", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def logout(
+    request: Request,
+    logout_data: LogoutRequest,
     token: str = Depends(security.oauth2_scheme),
     current_user: User = Depends(security.get_current_active_user),
+    db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     用户登出，使 Token 失效
-
-    注意：当前实现使用内存黑名单，生产环境应使用 Redis
+    
+    - **logout_all**: 是否登出所有设备（默认false，只登出当前设备）
     """
-    # 将 token 加入黑名单（实际应使用 Redis 等集中存储）
-    security.revoke_token(token)
+    # 提取当前token的JTI
+    current_jti = security.extract_jti_from_token(token)
+    
+    if logout_data.logout_all:
+        # 登出所有设备
+        count = SessionService.revoke_all_sessions(
+            db=db,
+            user_id=current_user.id,
+            except_jti=None,  # 包括当前会话
+        )
+        message = f"已登出所有设备（{count}个会话）"
+    else:
+        # 只登出当前设备
+        if current_jti:
+            session = SessionService.get_session_by_jti(db, current_jti, "access")
+            if session:
+                SessionService.revoke_session(db, session.id, current_user.id)
+            else:
+                # 如果找不到会话，仍然将token加入黑名单
+                security.revoke_token(token)
+        else:
+            security.revoke_token(token)
+        message = "登出成功"
+    
+    return ResponseModel(code=200, message=message)
 
-    return ResponseModel(code=200, message="登出成功")
 
-
-@router.post("/refresh", response_model=Token, status_code=status.HTTP_200_OK)
+@router.post("/refresh", response_model=RefreshTokenResponse, status_code=status.HTTP_200_OK)
 def refresh_token(
-    current_user: User = Depends(security.get_current_active_user),
+    request: Request,
+    refresh_data: RefreshTokenRequest,
+    db: Session = Depends(deps.get_db),
 ) -> Any:
     """
-    刷新访问令牌
-
-    使用当前有效的 token 获取新的 token
+    使用Refresh Token刷新Access Token
+    
+    - **refresh_token**: 刷新令牌
+    - **device_info**: 可选的设备信息
+    
+    错误码：
+    - 401: Refresh Token无效或已过期
+    - 403: 会话已被撤销
     """
-    # 直接使用当前用户生成新token（更简单可靠）
+    # 验证Refresh Token
+    payload = security.verify_refresh_token(refresh_data.refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh Token无效或已过期",
+        )
+    
+    # 提取用户ID和JTI
+    user_id_str = payload.get("sub")
+    refresh_jti = payload.get("jti")
+    
+    if not user_id_str or not refresh_jti:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh Token格式错误",
+        )
+    
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh Token格式错误",
+        )
+    
+    # 检查会话是否存在且有效
+    session = SessionService.get_session_by_jti(db, refresh_jti, "refresh")
+    if not session or not session.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="会话已失效，请重新登录",
+        )
+    
+    # 验证用户
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在或已被禁用",
+        )
+    
+    # 生成新的Access Token（使用滑动窗口策略）
+    new_access_jti = secrets.token_hex(16)
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    new_token = security.create_access_token(
-        {"sub": str(current_user.id)}, expires_delta=access_token_expires
+    new_access_token = security.create_access_token(
+        data={"sub": str(user_id)},
+        expires_delta=access_token_expires,
+        jti=new_access_jti,
     )
-
-    return {
-        "access_token": new_token,
-        "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    }
+    
+    # 将旧的Access Token加入黑名单
+    if session.access_token_jti:
+        security.revoke_token(session.access_token_jti)
+    
+    # 更新会话记录
+    SessionService.update_session_activity(
+        db=db,
+        jti=refresh_jti,
+        new_access_jti=new_access_jti,
+    )
+    
+    logger.info(f"刷新Token成功: user_id={user_id}, session_id={session.id}")
+    
+    return RefreshTokenResponse(
+        access_token=new_access_token,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
 
 
 @router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)

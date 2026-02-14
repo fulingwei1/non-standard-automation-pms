@@ -15,6 +15,7 @@ from fastapi import APIRouter
 from .crud_refactored import router as crud_refactored_router
 from .sync import router as sync_router
 from .time_allocation import router as time_router
+from .import_users import router as import_router
 
 router = APIRouter()
 
@@ -26,3 +27,6 @@ router.include_router(sync_router, tags=["用户同步"])
 
 # 工时分配
 router.include_router(time_router, tags=["工时分配"])
+
+# 用户批量导入
+router.include_router(import_router, tags=["用户批量导入"])

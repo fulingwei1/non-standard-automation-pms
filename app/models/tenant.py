@@ -58,6 +58,7 @@ class Tenant(Base, TimestampMixin):
     # 关系
     users = relationship("User", back_populates="tenant", lazy="dynamic")
     roles = relationship("Role", back_populates="tenant", lazy="dynamic")
+    api_keys = relationship("APIKey", back_populates="tenant", lazy="dynamic")
 
     def __repr__(self):
         return f"<Tenant {self.tenant_code}>"
