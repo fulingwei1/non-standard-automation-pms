@@ -59,6 +59,15 @@ print(f"Found {len(files)} migration files.")
 for f in files:
     print(f"Preparation: {f}")
 
+# First, create all tables using SQLAlchemy models
+print("Creating tables using SQLAlchemy models...")
+try:
+    from app.models.base import Base, engine
+    Base.metadata.create_all(bind=engine)
+    print("✓ Tables created successfully")
+except Exception as e:
+    print(f"Warning: Error creating tables: {e}")
+
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 

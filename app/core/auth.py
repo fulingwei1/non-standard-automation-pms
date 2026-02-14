@@ -24,7 +24,7 @@ from .config import settings
 logger = logging.getLogger(__name__)
 
 # 密码加密上下文
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2配置
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")

@@ -138,15 +138,19 @@ def _ensure_sqlite_schema(engine):
                         logger.debug("SQLite DDL 补丁执行失败，已忽略", exc_info=True)
 
     if "project_statuses" in tables:
-        columns = [col["name"] for col in inspector.get_columns("project_statuses")]
-        if "updated_at" not in columns:
-            with engine.begin() as conn:
-                conn.execute(
-                    text(
-                        "ALTER TABLE project_statuses "
-                        "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+        try:
+            columns = [col["name"] for col in inspector.get_columns("project_statuses")]
+            if "updated_at" not in columns:
+                with engine.begin() as conn:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE project_statuses "
+                            "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                        )
                     )
-                )
+        except Exception:
+            # Column already exists or table cannot be altered
+            logger.debug("project_statuses 列补丁跳过", exc_info=True)
     if "task_unified" in tables:
         columns = [col["name"] for col in inspector.get_columns("task_unified")]
         if "is_active" not in columns:
