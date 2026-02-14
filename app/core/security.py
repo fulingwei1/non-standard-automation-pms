@@ -10,6 +10,7 @@
 from .auth import (
     check_permission,
     create_access_token,
+    create_token_pair,  # Token刷新功能
     get_current_active_superuser,
     get_current_active_user,
     get_current_user,
@@ -46,6 +47,7 @@ __all__ = [
     "verify_password",
     "get_password_hash",
     "create_access_token",
+    "create_token_pair",  # Token刷新功能
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",

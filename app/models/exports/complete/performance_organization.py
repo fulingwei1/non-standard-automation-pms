@@ -13,6 +13,9 @@ from ...user import (
     UserRole,
 )
 
+# API Key认证
+from ...api_key import APIKey
+
 # 用户会话
 from ...session import UserSession
 

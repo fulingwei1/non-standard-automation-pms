@@ -29,6 +29,7 @@ __all__ = [
     "ApiPermission",
     "RoleApiPermission",
     "UserRole",
+    "APIKey",  # API Key认证
     "PermissionAudit",
     # Project (from project_related)
     "Project",
