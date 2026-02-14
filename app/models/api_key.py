@@ -42,7 +42,7 @@ class APIKey(Base):
     usage_count = Column(Integer, default=0, comment="使用次数")
     
     # 元数据
-    metadata = Column(JSON, nullable=True, comment="额外元数据")
+    extra_metadata = Column(JSON, nullable=True, comment="额外元数据")  # 重命名避免与SQLAlchemy.metadata冲突
     notes = Column(Text, nullable=True, comment="备注说明")
     
     # 时间戳
