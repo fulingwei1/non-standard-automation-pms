@@ -90,6 +90,7 @@ __all__ = [
     "UserRole",
     "PermissionAudit",
     "UserSession",
+    "APIKey",  # API Key认证
     # Organization
     "Department",
     "Employee",
