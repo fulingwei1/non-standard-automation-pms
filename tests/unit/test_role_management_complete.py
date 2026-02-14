@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import Mock, MagicMock, patch
 
-from app.models.user import Role, Permission, RolePermission, ApiPermission, RoleApiPermission
+from app.models.user import Role, ApiPermission, RoleApiPermission
 
 
 @pytest.mark.unit
@@ -230,16 +230,16 @@ class TestRolePermissionAssignment:
     def sample_permissions(self):
         """示例权限列表"""
         return [
-            Permission(id=1, perm_code="project:view", perm_name="查看项目"),
-            Permission(id=2, perm_code="project:create", perm_name="创建项目"),
-            Permission(id=3, perm_code="project:update", perm_name="编辑项目"),
+            ApiPermission(id=1, perm_code="project:view", perm_name="查看项目", module="PROJECT"),
+            ApiPermission(id=2, perm_code="project:create", perm_name="创建项目", module="PROJECT"),
+            ApiPermission(id=3, perm_code="project:update", perm_name="编辑项目", module="PROJECT"),
         ]
 
     def test_assign_single_permission(self, mock_db, sample_role, sample_permissions):
         """测试分配单个权限"""
         perm = sample_permissions[0]
         
-        role_perm = RolePermission(role_id=sample_role.id, permission_id=perm.id)
+        role_perm = RoleApiPermission(role_id=sample_role.id, api_permission_id=perm.id)
         mock_db.add(role_perm)
         mock_db.commit()
         
@@ -249,7 +249,7 @@ class TestRolePermissionAssignment:
     def test_assign_multiple_permissions(self, mock_db, sample_role, sample_permissions):
         """测试批量分配权限"""
         for perm in sample_permissions:
-            role_perm = RolePermission(role_id=sample_role.id, permission_id=perm.id)
+            role_perm = RoleApiPermission(role_id=sample_role.id, api_permission_id=perm.id)
             mock_db.add(role_perm)
         
         mock_db.commit()
@@ -260,9 +260,9 @@ class TestRolePermissionAssignment:
     def test_remove_permission(self, mock_db, sample_role, sample_permissions):
         """测试移除权限"""
         perm = sample_permissions[0]
-        role_perm = RolePermission(role_id=sample_role.id, permission_id=perm.id)
+        role_perm = RoleApiPermission(role_id=sample_role.id, api_permission_id=perm.id)
         
-        mock_db.query(RolePermission).filter().first.return_value = role_perm
+        mock_db.query(RoleApiPermission).filter().first.return_value = role_perm
         
         mock_db.delete(role_perm)
         mock_db.commit()
@@ -276,16 +276,16 @@ class TestRolePermissionAssignment:
         new_perms = sample_permissions[1:]  # 后2个
         
         # 模拟删除所有旧权限
-        mock_db.query(RolePermission).filter().delete.return_value = 2
+        mock_db.query(RoleApiPermission).filter().delete.return_value = 2
         
         # 添加新权限
         for perm in new_perms:
-            role_perm = RolePermission(role_id=sample_role.id, permission_id=perm.id)
+            role_perm = RoleApiPermission(role_id=sample_role.id, api_permission_id=perm.id)
             mock_db.add(role_perm)
         
         mock_db.commit()
         
-        assert mock_db.query(RolePermission).filter().delete.called
+        assert mock_db.query(RoleApiPermission).filter().delete.called
         assert mock_db.add.call_count == 2
         assert mock_db.commit.called
 
