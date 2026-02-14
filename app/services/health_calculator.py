@@ -281,7 +281,7 @@ class HealthCalculator:
         if total_days <= 0:
             return False
 
-        planned_progress = (elapsed_days / total_days) * 100
+        planned_progress = min(max((elapsed_days / total_days) * 100, 0), 100)
 
         # 计算偏差 (确保类型一致，progress_pct 可能是 Decimal)
         actual_progress = float(project.progress_pct or 0)
@@ -413,8 +413,8 @@ class HealthCalculator:
         """
         # 查询项目（Sprint 5.2: 性能优化 - 只查询必要字段）
         query = self.db.query(Project).filter(
-            Project.is_active,
-            not Project.is_archived
+            Project.is_active == True,
+            Project.is_archived == False
         )
 
         if project_ids:

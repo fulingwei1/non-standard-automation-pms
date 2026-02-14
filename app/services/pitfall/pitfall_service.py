@@ -164,7 +164,7 @@ class PitfallService:
         # 排除无权限的敏感记录
         query = query.filter(
             or_(
-                not Pitfall.is_sensitive,
+                Pitfall.is_sensitive == False,
                 Pitfall.created_by == user_id,
             )
         )

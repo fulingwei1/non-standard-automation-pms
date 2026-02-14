@@ -24,7 +24,7 @@ def query_allocatable_costs(
     """
     query = db.query(RdCost).filter(
         RdCost.status == 'APPROVED',
-        not RdCost.is_allocated
+        RdCost.is_allocated == False
     )
 
     if cost_ids:

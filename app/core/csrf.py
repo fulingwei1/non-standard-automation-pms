@@ -46,7 +46,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         # 检查是否为豁免路径
         path = request.url.path
-        if any(path.startswith(exempt_path) for exempt_path in self.EXEMPT_PATHS):
+        if path in self.EXEMPT_PATHS:
             return await call_next(request)
 
         # 获取Origin和Referer头
@@ -122,9 +122,11 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         # 检查是否在CORS允许的来源中
         for allowed_origin in settings.CORS_ORIGINS:
-            # 处理通配符情况（开发环境）
+            # 通配符仅在 DEBUG 模式下允许（开发环境）
             if allowed_origin == "*":
-                return True
+                if settings.DEBUG:
+                    return True
+                continue
 
             # 精确匹配
             if origin_base == allowed_origin:

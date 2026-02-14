@@ -10,20 +10,7 @@
 
 from typing import Optional, Tuple, Any
 
-
-class PermissionDeniedError(Exception):
-    """
-    权限拒绝异常
-
-    在状态转换时权限不足时抛出
-    """
-
-    def __init__(self, reason: str = ""):
-        self.reason = reason
-        message = "Permission denied"
-        if reason:
-            message += f": {reason}"
-        super().__init__(message)
+from app.core.state_machine.exceptions import PermissionDeniedError  # noqa: F401 - re-exported
 
 
 class StateMachinePermissionChecker:

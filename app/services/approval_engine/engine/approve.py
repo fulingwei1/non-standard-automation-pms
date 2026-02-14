@@ -267,6 +267,7 @@ class ApprovalProcessMixin:
             node_id=node.id,
             task_type=task.task_type,
             task_order=task.task_order,
+            assignee_id=to_user_id,
             assignee_name=to_user.real_name or to_user.username,
             assignee_type="TRANSFERRED",
             original_assignee_id=from_user_id,

@@ -298,9 +298,9 @@ class PermissionService:
         # 超级管理员获取所有菜单
         if user and user.is_superuser:
             menus = db.query(MenuPermission).filter(
-                MenuPermission.is_active,
-                MenuPermission.is_visible,
-                MenuPermission.parent_id is None
+                MenuPermission.is_active == True,
+                MenuPermission.is_visible == True,
+                MenuPermission.parent_id.is_(None)
             ).order_by(MenuPermission.sort_order).all()
             return [menu.to_dict() for menu in menus]
         

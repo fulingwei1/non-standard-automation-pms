@@ -163,7 +163,102 @@ class OpportunityStateMachine(StateMachine):
         """从谈判阶段输单"""
         self._handle_lose(**kwargs)
 
+    # ==================== ON_HOLD 转换（从任意活跃阶段暂停） ====================
+
+    @transition(
+        from_state="DISCOVERY",
+        to_state="ON_HOLD",
+        required_permission="opportunity:update",
+        action_type="HOLD",
+    )
+    def hold_from_discovery(self, from_state: str, to_state: str, **kwargs):
+        """从发现阶段暂停"""
+        self._handle_hold(**kwargs)
+
+    @transition(
+        from_state="QUALIFIED",
+        to_state="ON_HOLD",
+        required_permission="opportunity:update",
+        action_type="HOLD",
+    )
+    def hold_from_qualified(self, from_state: str, to_state: str, **kwargs):
+        """从合格阶段暂停"""
+        self._handle_hold(**kwargs)
+
+    @transition(
+        from_state="PROPOSAL",
+        to_state="ON_HOLD",
+        required_permission="opportunity:update",
+        action_type="HOLD",
+    )
+    def hold_from_proposal(self, from_state: str, to_state: str, **kwargs):
+        """从提案阶段暂停"""
+        self._handle_hold(**kwargs)
+
+    @transition(
+        from_state="NEGOTIATION",
+        to_state="ON_HOLD",
+        required_permission="opportunity:update",
+        action_type="HOLD",
+    )
+    def hold_from_negotiation(self, from_state: str, to_state: str, **kwargs):
+        """从谈判阶段暂停"""
+        self._handle_hold(**kwargs)
+
+    # ==================== ON_HOLD 恢复转换 ====================
+
+    @transition(
+        from_state="ON_HOLD",
+        to_state="DISCOVERY",
+        required_permission="opportunity:update",
+        action_type="RESUME",
+    )
+    def resume_to_discovery(self, from_state: str, to_state: str, **kwargs):
+        """恢复到发现阶段"""
+        self._handle_resume(**kwargs)
+
+    @transition(
+        from_state="ON_HOLD",
+        to_state="QUALIFIED",
+        required_permission="opportunity:update",
+        action_type="RESUME",
+    )
+    def resume_to_qualified(self, from_state: str, to_state: str, **kwargs):
+        """恢复到合格阶段"""
+        self._handle_resume(**kwargs)
+
+    @transition(
+        from_state="ON_HOLD",
+        to_state="PROPOSAL",
+        required_permission="opportunity:update",
+        action_type="RESUME",
+    )
+    def resume_to_proposal(self, from_state: str, to_state: str, **kwargs):
+        """恢复到提案阶段"""
+        self._handle_resume(**kwargs)
+
+    @transition(
+        from_state="ON_HOLD",
+        to_state="NEGOTIATION",
+        required_permission="opportunity:update",
+        action_type="RESUME",
+    )
+    def resume_to_negotiation(self, from_state: str, to_state: str, **kwargs):
+        """恢复到谈判阶段"""
+        self._handle_resume(**kwargs)
+
     # ==================== 业务逻辑辅助方法 ====================
+
+    def _handle_hold(self, **kwargs):
+        """处理暂停逻辑"""
+        if 'hold_reason' in kwargs:
+            self.model.hold_reason = kwargs['hold_reason']
+        self.model.previous_stage = self.model.stage
+        self.model.held_at = datetime.now()
+
+    def _handle_resume(self, **kwargs):
+        """处理恢复逻辑"""
+        self.model.resumed_at = datetime.now()
 
     def _handle_lose(self, **kwargs):
         """处理输单逻辑"""

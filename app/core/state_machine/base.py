@@ -370,7 +370,7 @@ class StateMachine:
             )
 
             self.db.add(log)
-            self.db.commit()
+            self.db.flush()  # 不在此处 commit，由外层事务管理
 
             logger.info(
                 f"状态转换审计日志已创建: {entity_type}:{entity_id} "
@@ -379,7 +379,6 @@ class StateMachine:
 
         except Exception as e:
             logger.error(f"创建状态转换审计日志失败: {e}")
-            self.db.rollback()
 
     def _send_notifications(
         self,

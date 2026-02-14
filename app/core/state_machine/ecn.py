@@ -105,6 +105,15 @@ class EcnStateMachine(StateMachine):
         - 无（草稿状态可以随时取消）
         """
 
+    @transition(from_state=PENDING_REVIEW, to_state=CANCELLED)
+    def cancel_pending_review(self, from_state, to_state, **kwargs):
+        """
+        取消待审核的ECN
+
+        验证条件：
+        - 无（待审核状态可以取消）
+        """
+
     # ==================== PENDING_REVIEW 状态转换 ====================
 
     @transition(from_state=PENDING_REVIEW, to_state=APPROVED)

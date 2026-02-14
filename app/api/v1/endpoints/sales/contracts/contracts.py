@@ -26,7 +26,7 @@ router = APIRouter(prefix="/contracts", tags=["contracts"])
 async def create_project_from_contract(
     contract_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=get_current_active_user,
+    current_user=Depends(get_current_active_user),
 ):
     """
     从合同创建项目，自动绑定付款节点到里程碑
@@ -43,7 +43,7 @@ async def create_project_from_contract(
     # 1. 查询合同
     result = await db.execute(
         select(Contract)
-        .options(selectinload(Customer))
+        .options(selectinload(Contract.customer))
         .where(Contract.id == contract_id)
     )
     contract = result.scalar_one_or_none()
@@ -84,6 +84,7 @@ async def create_project_from_contract(
     await db.flush()
 
     # 4. 处理付款节点
+    milestone_count = 0
     if payment_nodes:
         milestone_count = len(payment_nodes)
 
@@ -107,7 +108,7 @@ async def create_project_from_contract(
             db.add(payment_plan)
             await db.flush()
 
-            # 创建对应的里程碑（简化逻辑，实际应根据WBS模板创建）
+            # 创建对应的里程碑
             milestone = ProjectMilestone(
                 project_id=project.id,
                 name=f"M{milestone_seq}",
@@ -120,13 +121,6 @@ async def create_project_from_contract(
             db.add(milestone)
             await db.flush()
 
-        return {
-            "project_id": project.id,
-            "project_code": project.code,
-            "payment_plans_count": milestone_count,
-            "milestones_count": milestone_count,
-        }
-
     await db.commit()
 
     return {
@@ -134,81 +128,47 @@ async def create_project_from_contract(
         "message": "项目创建成功，付款节点已关联到里程碑",
         "project_id": project.id,
         "project_code": project.code,
-        "payment_plans_count": len(payment_nodes) if payment_nodes else 0,
-        "milestones_count": len(payment_nodes) if payment_nodes else 0,
+        "payment_plans_count": milestone_count,
+        "milestones_count": milestone_count,
     }
 
 
 # 辅助函数
 async def _generate_project_code(db: AsyncSession) -> str:
     """生成项目编码"""
-    pj_conditions = build_like_conditions(Project, "PJ%", "code", use_ilike=False)
-    result = await db.execute(
-        select(func.count(Project.id)).where(pj_conditions[0])
-    )
-    result.scalar() + 1
-
-    # 格式：PJyymmddxxx
     from datetime import datetime
 
     now = datetime.now()
-
-    # 获取日期部分
     year = now.year
     month = now.month
 
-    # 获取序号
+    # 查找当月已有项目编码
+    month_prefix = f"PJ{year:04d}{month:02d}"
     month_conditions = build_like_conditions(
         Project,
-        f"PJ{year:04d}{month:02d}%",
+        f"{month_prefix}%",
         "code",
         use_ilike=False,
     )
-    await db.execute(
-        select(func.count(Project.id)).where(month_conditions[0])
-    )
-    last_seq = result.scalar()
 
-    # 格式化序号为3位
-    last_seq + 1
-
-    # 获取对应的数字部分
-    # 获取最后创建项目的序号
+    # 获取当月最后一个编码
     result = await db.execute(
         select(Project.code)
         .where(month_conditions[0])
-        .order_by(Project.id.desc())
+        .order_by(Project.code.desc())
         .limit(1)
     )
-    last_project_code = result.scalar_one()
+    last_project_code = result.scalar_one_or_none()
 
     seq_num = 1
     if last_project_code:
-        # 提取序号数字部分
+        # 提取序号数字部分（格式：PJyyyymm###）
         try:
-            seq_num = int(last_project_code[5:9])  # 格式：PJyymmddxxx，提取后3位数字
+            seq_num = int(last_project_code[-3:]) + 1
         except (ValueError, IndexError, TypeError):
             seq_num = 1
 
-    # 计算填充序号
     seq_str = f"{seq_num:03d}"
-
-    # 如果序号重复，则递增
-    result = await db.execute(
-        select(func.count(Project.id)).where(
-            Project.code == f"PJ{year:04d}{month:02d}{seq_str}"
-        )
-    )
-    existing_count = result.scalar()
-
-    if existing_count > 0:
-        # 序号递增
-        seq_num += 1
-        if seq_num >= 999:
-            seq_num = 1
-        seq_str = f"{seq_num:03d}"
-
-    # 生成完整编码
-    project_code = f"PJ{year:04d}{month:02d}{seq_str}"
+    project_code = f"{month_prefix}{seq_str}"
 
     return project_code

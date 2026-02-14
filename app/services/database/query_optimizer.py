@@ -373,7 +373,11 @@ class QueryOptimizer:
             for relation in eager_load:
                 query = query.options(joinedload(relation))
         if filters:
+            import re
             for field, value in filters.items():
+                # 防止 SQL 注入：仅允许合法的列名（字母、数字、下划线、点号）
+                if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_.]*$', field):
+                    raise ValueError(f"非法字段名: {field}")
                 query = query.filter(text(f"{field} = :val").params(val=value))
         return query
 

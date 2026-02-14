@@ -43,11 +43,10 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         "/health",
         "/",
 
-        # API文档（生产环境建议移除或需要认证）
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-        "/api/v1/openapi.json",  # 实际配置的OpenAPI路径
+        # API文档 - 仅在 _is_whitelisted 中通过 DEBUG 条件放行
+        # "/docs",
+        # "/redoc",
+        # "/openapi.json",
     ]
 
     # 白名单前缀：以这些开头的路径都允许
@@ -151,6 +150,10 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         if path in self.WHITE_LIST:
             return True
 
+        # API文档路径仅在 DEBUG 模式下放行
+        if settings.DEBUG and path in {"/docs", "/redoc", "/openapi.json", "/api/v1/openapi.json"}:
+            return True
+
         # 前缀匹配
         for prefix in self.WHITE_LIST_PREFIXES:
             if path.startswith(prefix):
@@ -184,11 +187,14 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
 # 辅助函数：供其他模块添加白名单路径
 def add_whitelist_path(path: str) -> None:
     """
-    动态添加白名单路径
+    动态添加白名单路径（仅允许在应用启动阶段调用）
 
     Args:
         path: 要添加的路径
     """
+    if not path or not path.startswith("/"):
+        logger.warning(f"拒绝添加无效白名单路径: {path}")
+        return
     if path not in GlobalAuthMiddleware.WHITE_LIST:
         GlobalAuthMiddleware.WHITE_LIST.append(path)
         logger.info(f"添加白名单路径: {path}")

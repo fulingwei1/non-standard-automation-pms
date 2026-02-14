@@ -211,8 +211,13 @@ class InstallationDispatchStateMachine(StateMachine):
 
         except Exception as e:
             import logging
-            # 创建服务记录失败不影响派工单完成
+            # 创建服务记录失败不影响派工单完成，但需要回滚脏状态
             logging.warning(f"自动创建现场服务记录失败：{str(e)}")
+            self.model.service_record_id = None
+            try:
+                self.db.rollback()
+            except Exception:
+                pass
 
     def update_progress(self, progress: int, notes: Optional[str] = None):
         """

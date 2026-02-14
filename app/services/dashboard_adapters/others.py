@@ -135,7 +135,7 @@ class OthersDashboardAdapter:
             query = self.db.query(Notification)
             query = query.filter(Notification.user_id == user_id)
             if unread_only:
-                query = query.filter(not Notification.is_read)
+                query = query.filter(Notification.is_read == False)
             query = query.order_by(Notification.created_at.desc())
             query = query.limit(20)
             return query.all()
@@ -197,7 +197,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         )
         (
             self.db.query(func.count(HrAIMatchingLog.id))
-            .filter(not HrAIMatchingLog.is_accepted)
+            .filter(HrAIMatchingLog.is_accepted == False)
             .scalar()
             or 0
         )

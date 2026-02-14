@@ -169,7 +169,10 @@ def create_status_log(
         actual_old_health = old_health
         actual_new_health = old_health
         actual_reason = new_health
-        actual_changed_by = int(reason) if reason is not None else 0
+        try:
+            actual_changed_by = int(reason) if reason is not None else 0
+        except (ValueError, TypeError):
+            actual_changed_by = 0
     else:
         actual_old_health = old_health
         actual_new_health = new_health if new_health is not None else old_health
@@ -239,7 +242,7 @@ def create_installation_dispatch_orders(
                 )
                 db.add(dispatch_order)
     except Exception as e:
-        logger.warning(f"自动创建安装调试派工单失败：{str(e)}")
+        logger.error(f"自动创建安装调试派工单失败：{str(e)}", exc_info=True)
 
 
 def generate_cost_review_report(

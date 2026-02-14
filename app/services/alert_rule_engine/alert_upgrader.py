@@ -82,7 +82,13 @@ class AlertUpgrader(AlertRuleEngineBase):
 
         # 发送升级通知（使用订阅匹配）
         try:
-            # 获取通知接收人（基于订阅配置）
+            # 获取通知接收人（基于订阅配置），rule 可能为 None
+            if not rule:
+                self.notification_service.send_alert_notification(
+                    alert=alert,
+                    force_send=True
+                )
+                return alert
             recipients = self.subscription_service.get_notification_recipients(alert, rule)
 
             if recipients['user_ids']:

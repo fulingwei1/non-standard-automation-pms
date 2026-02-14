@@ -289,7 +289,7 @@ def get_notifications(
 
     notifications = (
         db.query(Notification)
-        .filter(and_(Notification.user_id == user_id, not Notification.is_read))
+        .filter(and_(Notification.user_id == user_id, Notification.is_read == False))
         .order_by(desc(Notification.created_at))
         .limit(max_count)
         .all()

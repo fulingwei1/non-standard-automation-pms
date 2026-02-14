@@ -56,7 +56,7 @@ class DimensionConfigService:
         dept_query = self.db.query(EngineerDimensionConfig).filter(
             EngineerDimensionConfig.job_type == job_type,
             EngineerDimensionConfig.department_id == department_id,
-            not EngineerDimensionConfig.is_global,
+            EngineerDimensionConfig.is_global == False,
             EngineerDimensionConfig.approval_status == 'APPROVED',
             EngineerDimensionConfig.effective_date <= effective_date,
             or_(
@@ -194,7 +194,7 @@ class DimensionConfigService:
         if department_id:
             query = query.filter(EngineerDimensionConfig.department_id == department_id)
         elif not include_global:
-            query = query.filter(not EngineerDimensionConfig.is_global)
+            query = query.filter(EngineerDimensionConfig.is_global == False)
 
         if not include_expired:
             today = date.today()
@@ -415,6 +415,6 @@ class DimensionConfigService:
     def get_pending_approvals(self) -> List[EngineerDimensionConfig]:
         """获取待审批的部门级别配置"""
         return self.db.query(EngineerDimensionConfig).filter(
-            not EngineerDimensionConfig.is_global,
+            EngineerDimensionConfig.is_global == False,
             EngineerDimensionConfig.approval_status == 'PENDING'
         ).order_by(desc(EngineerDimensionConfig.created_at)).all()

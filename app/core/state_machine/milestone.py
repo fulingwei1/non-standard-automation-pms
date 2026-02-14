@@ -3,7 +3,10 @@
 项目里程碑状态机
 
 状态转换规则：
-- PENDING → COMPLETED: 完成里程碑（自动触发开票）
+- PENDING → IN_PROGRESS: 开始里程碑
+- PENDING → CANCELLED: 取消里程碑
+- IN_PROGRESS → COMPLETED: 完成里程碑（自动触发开票）
+- IN_PROGRESS → CANCELLED: 取消进行中的里程碑
 """
 
 from datetime import date
@@ -24,6 +27,26 @@ class MilestoneStateMachine(StateMachine):
 
     @transition(
         from_state="PENDING",
+        to_state="IN_PROGRESS",
+        required_permission="milestone:update",
+        action_type="START",
+        notify_users=["owner", "project_manager"],
+        notification_template="milestone_started",
+    )
+    def start(self, from_state: str, to_state: str, **kwargs):
+        """开始里程碑"""
+
+    @transition(
+        from_state="PENDING",
+        to_state="CANCELLED",
+        required_permission="milestone:update",
+        action_type="CANCEL",
+    )
+    def cancel_pending(self, from_state: str, to_state: str, **kwargs):
+        """取消待启动的里程碑"""
+
+    @transition(
+        from_state="IN_PROGRESS",
         to_state="COMPLETED",
         required_permission="milestone:update",
         action_type="COMPLETE",
@@ -52,6 +75,15 @@ class MilestoneStateMachine(StateMachine):
         auto_trigger_invoice = kwargs.get('auto_trigger_invoice', True)
         if auto_trigger_invoice:
             self._auto_trigger_invoice()
+
+    @transition(
+        from_state="IN_PROGRESS",
+        to_state="CANCELLED",
+        required_permission="milestone:update",
+        action_type="CANCEL",
+    )
+    def cancel_in_progress(self, from_state: str, to_state: str, **kwargs):
+        """取消进行中的里程碑"""
 
     # ==================== 业务逻辑辅助方法 ====================
 
