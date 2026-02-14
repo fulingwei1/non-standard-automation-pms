@@ -61,9 +61,9 @@ def init_preset_stage_templates(db: Session) -> List[StageTemplate]:
 def init_api_permissions(db: Session) -> int:
     """
     初始化 API 权限种子数据
-
-    从 SQL 迁移文件加载权限定义和角色-权限映射。
-    此函数是幂等的（使用 INSERT OR IGNORE）。
+    
+    使用内嵌数据（不依赖外部SQL文件）
+    此函数是幂等的，可重复执行
 
     Args:
         db: 数据库会话
@@ -71,54 +71,22 @@ def init_api_permissions(db: Session) -> int:
     Returns:
         int: 新创建的权限数量
     """
-    # 检查是否已有权限数据
-    from app.models.user import ApiPermission
-    existing_count = db.query(ApiPermission).count()
-    if existing_count > 0:
-        logger.debug(f"API权限表已有 {existing_count} 条记录，跳过初始化")
-        return 0
-
-    # 读取并执行种子数据 SQL
-    seed_file = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "migrations",
-        "20260205_api_permissions_seed_sqlite.sql",
-    )
-
-    if not os.path.exists(seed_file):
-        logger.warning(f"权限种子文件不存在: {seed_file}")
-        return 0
-
     try:
-        with open(seed_file, "r", encoding="utf-8") as f:
-            sql_content = f.read()
-
-        # 按语句分割执行（跳过注释和空行）
-        statements = []
-        current_stmt = []
-        for line in sql_content.split("\n"):
-            stripped = line.strip()
-            if not stripped or stripped.startswith("--"):
-                continue
-            current_stmt.append(line)
-            if stripped.endswith(";"):
-                statements.append("\n".join(current_stmt))
-                current_stmt = []
-
-        for stmt in statements:
-            stmt = stmt.strip()
-            if stmt and not stmt.startswith("--"):
-                try:
-                    db.execute(text(stmt))
-                except Exception as e:
-                    logger.warning(f"执行权限SQL语句失败（可能已存在）: {e}")
-
-        db.flush()
-        new_count = db.query(ApiPermission).count()
-        logger.info(f"API权限初始化完成，共 {new_count} 条权限记录")
-        return new_count
+        # 使用新的内嵌初始化逻辑
+        from app.utils.init_permissions_data import init_api_permissions_data, ensure_admin_permissions
+        
+        result = init_api_permissions_data(db)
+        
+        if result.get('errors'):
+            logger.error(f"API权限初始化有错误: {result['errors']}")
+        
+        # 确保ADMIN角色拥有所有权限
+        ensure_admin_permissions(db)
+        
+        return result.get('permissions_created', 0)
+        
     except Exception as e:
-        logger.error(f"API权限种子数据加载失败: {e}")
+        logger.error(f"API权限初始化失败: {e}")
         return 0
 
 
