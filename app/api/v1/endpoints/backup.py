@@ -11,6 +11,7 @@ from datetime import datetime
 from app.services.backup_service import BackupService
 from app.api.v1.dependencies import get_current_user
 from app.models.user import User
+from app.core.auth import is_superuser
 
 router = APIRouter()
 
@@ -65,7 +66,7 @@ async def create_backup(
     需要管理员权限
     """
     # 检查权限（仅管理员可以执行备份）
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     # 在后台执行备份
@@ -94,7 +95,7 @@ async def list_backups(
     - backup_type: 备份类型 (database/uploads/configs/logs/full)
     """
     # 检查权限
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     backups = BackupService.list_backups(backup_type)
@@ -109,7 +110,7 @@ async def get_latest_backup(
     """
     获取最新的备份
     """
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     backup = BackupService.get_latest_backup(backup_type)
@@ -131,7 +132,7 @@ async def verify_backup(
     参数:
     - backup_file: 备份文件名或完整路径
     """
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     result = BackupService.verify_backup(backup_file)
@@ -155,7 +156,7 @@ async def cleanup_old_backups(
     - retention_days: 保留天数（默认7天）
     - backup_type: 备份类型
     """
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     if retention_days < 1:
@@ -181,7 +182,7 @@ async def get_backup_stats(
     - 最新备份信息
     - 磁盘空间使用情况
     """
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     stats = BackupService.get_backup_stats()
@@ -205,7 +206,7 @@ async def check_backup_health(
     - 磁盘空间是否充足
     - 备份完整性状态
     """
-    if not current_user.is_superuser:
+    if not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     
     stats = BackupService.get_backup_stats()

@@ -136,6 +136,11 @@ def create_user(
 
     employee = prepare_employee_for_new_user(db, user_in)
 
+    # 创建用户时确保租户数据一致性
+    # 普通用户必须属于当前用户的租户
+    # 只有超级管理员可以创建跨租户用户（但这需要专门的接口，这里不支持）
+    user_tenant_id = getattr(current_user, "tenant_id", None)
+    
     user = User(
         employee_id=employee.id,
         username=user_in.username,
@@ -146,9 +151,20 @@ def create_user(
         employee_no=user_in.employee_no or employee.employee_code,
         department=user_in.department or employee.department,
         position=user_in.position or employee.role,
+        # 确保数据一致性：新用户不是超级管理员，必须有租户ID
+        is_superuser=False,
+        tenant_id=user_tenant_id,
     )
     db.add(user)
     db.flush()
+    
+    # 验证用户数据一致性
+    try:
+        from app.core.auth import validate_user_tenant_consistency
+        validate_user_tenant_consistency(user)
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
     replace_user_roles(db, user.id, user_in.role_ids)
     db.commit()
@@ -225,9 +241,24 @@ def update_user(
             update_data["employee_no"] = employee.employee_code
 
     for field, value in update_data.items():
+        # 防止通过普通更新接口修改敏感字段
+        if field in ("is_superuser", "tenant_id"):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"不允许通过此接口修改 {field} 字段，请使用专门的管理接口"
+            )
         setattr(user, field, value)
 
     replace_user_roles(db, user.id, role_ids)
+    
+    # 验证用户数据一致性
+    try:
+        from app.core.auth import validate_user_tenant_consistency
+        validate_user_tenant_consistency(user)
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    
     db.add(user)
     db.commit()
     db.refresh(user)

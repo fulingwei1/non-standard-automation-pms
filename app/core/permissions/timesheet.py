@@ -13,7 +13,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, Query
 from fastapi import Depends, HTTPException, status
 
-from app.core.auth import get_current_active_user
+from app.core.auth import get_current_active_user, is_superuser
 from app.models.organization import Department
 from app.models.project import Project
 from app.models.rd_project import RdProject
@@ -25,7 +25,7 @@ def is_timesheet_admin(user: User) -> bool:
     """
     检查用户是否具有工时管理/审批的全局权限（超级管理员或特定管理角色）
     """
-    if hasattr(user, "is_superuser") and user.is_superuser:
+    if is_superuser(user):
         return True
 
     # 检查是否具有相关管理角色

@@ -46,12 +46,75 @@ __all__ = [
     "get_current_active_user",
     "get_current_active_superuser",
     "is_system_admin",
+    "is_superuser",
+    "validate_user_tenant_consistency",
     "check_permission",
     "require_permission",
     "revoke_token",
     "is_token_revoked",
     "extract_jti_from_token",
 ]
+
+
+def is_superuser(user: User) -> bool:
+    """
+    判断用户是否为超级管理员
+    
+    超级管理员必须同时满足：
+    1. is_superuser = True
+    2. tenant_id IS NULL
+    
+    这是统一的超级管理员判断标准，避免使用 tenant_id is None 单独判断。
+    
+    Args:
+        user: 用户对象
+        
+    Returns:
+        bool: 是否为超级管理员
+        
+    Example:
+        >>> if is_superuser(current_user):
+        >>>     # 超级管理员可以访问所有资源
+        >>>     pass
+    """
+    return getattr(user, "is_superuser", False) and getattr(user, "tenant_id", 0) is None
+
+
+def validate_user_tenant_consistency(user: User) -> None:
+    """
+    验证用户租户数据一致性
+    
+    确保用户数据符合以下规则：
+    1. 超级管理员：is_superuser=True 且 tenant_id IS NULL
+    2. 租户用户：is_superuser=False 且 tenant_id IS NOT NULL
+    
+    Args:
+        user: 用户对象
+        
+    Raises:
+        ValueError: 当用户数据不一致时抛出异常
+        
+    Example:
+        >>> validate_user_tenant_consistency(user)  # 验证通过
+        >>> # 或抛出 ValueError
+    """
+    user_is_superuser = getattr(user, "is_superuser", False)
+    user_tenant_id = getattr(user, "tenant_id", 0)
+    user_id = getattr(user, "id", "unknown")
+    
+    # 超级管理员必须 tenant_id 为 None
+    if user_is_superuser and user_tenant_id is not None:
+        raise ValueError(
+            f"Invalid superuser data: user_id={user_id} has is_superuser=True "
+            f"but tenant_id={user_tenant_id} (should be NULL)"
+        )
+    
+    # 非超级管理员必须有 tenant_id
+    if not user_is_superuser and user_tenant_id is None:
+        raise ValueError(
+            f"Invalid tenant user data: user_id={user_id} has is_superuser=False "
+            f"but tenant_id is NULL (should have a valid tenant_id)"
+        )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -500,13 +563,15 @@ def is_system_admin(user: User) -> bool:
 
     仅通过数据库标志位判断，不使用硬编码角色名，防止通过创建特定角色名提权。
     检查条件：
-    1. User.is_superuser = True
+    1. is_superuser(user) = True (统一判断：is_superuser=True AND tenant_id IS NULL)
     2. User.is_tenant_admin = True
     3. 用户拥有 is_system=True 且 role_code='ADMIN' 的系统预置角色
     """
-    # 优先检查数据库标志位
-    if getattr(user, "is_superuser", False):
+    # 优先检查超级管理员标志位（使用统一判断函数）
+    if is_superuser(user):
         return True
+    
+    # 检查租户管理员
     if getattr(user, "is_tenant_admin", False):
         return True
 

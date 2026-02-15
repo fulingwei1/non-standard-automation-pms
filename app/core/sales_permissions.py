@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..models.user import User
-from .auth import get_current_active_user, get_db
+from .auth import get_current_active_user, get_db, is_superuser
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,9 @@ def get_sales_data_scope(user: User, db: Session) -> str:
         'FINANCE_ONLY': 财务专用 - 只能看到发票和收款数据
         'NONE': 无权限
     """
-    if user.is_superuser:
+    from app.core.auth import is_superuser
+    
+    if is_superuser(user):
         return "ALL"
 
     # 使用 DataScopeService 获取用户的数据权限范围
@@ -239,7 +241,7 @@ def can_manage_sales_opportunity(db: Session, user: User, opportunity) -> bool:
     """
     判断用户是否可以管理指定商机（自身/团队/部门/全部）。
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     if getattr(opportunity, "owner_id", None) == user.id:
@@ -272,7 +274,7 @@ def can_set_opportunity_gate(db: Session, user: User, opportunity) -> bool:
     """
     判断用户是否可以设置商机阶段门（经理/总监级别）。
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     scope = get_sales_data_scope(user, db)
@@ -289,7 +291,7 @@ def check_sales_create_permission(user: User, db: Session) -> bool:
 
     创建权限：有数据范围权限的用户都可以创建
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     scope = get_sales_data_scope(user, db)
@@ -310,7 +312,7 @@ def check_sales_edit_permission(
     - ALL/DEPT/TEAM: 可以编辑权限范围内的所有数据
     - PROJECT/OWN: 只能编辑自己创建或负责的数据
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     scope = get_sales_data_scope(user, db)
@@ -342,7 +344,7 @@ def check_sales_delete_permission(
     - ALL: 可以删除所有数据
     - 其他: 只有创建人可以删除自己的数据
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     scope = get_sales_data_scope(user, db)
@@ -418,7 +420,7 @@ def has_sales_assessment_access(user: User, db: Session = None) -> bool:
     - ALL, DEPT, TEAM, PROJECT, OWN 都有评估权限
     - FINANCE_ONLY 没有评估权限（财务不参与技术评估）
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     # 如果提供了 db，使用数据权限范围判断
@@ -461,7 +463,7 @@ def has_sales_approval_access(user: User, db: Session) -> bool:
     - TEAM: 团队负责人，有团队级审批权限
     - 其他: 没有审批权限
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     scope = get_sales_data_scope(user, db)
@@ -485,7 +487,7 @@ def check_sales_approval_permission(user: User, approval: Any, db: Session) -> b
     - 一级审批(level=1): DEPT, TEAM 级别用户可以审批
     - 二级及以上审批(level>=2): 只有 ALL 级别用户可以审批
     """
-    if user.is_superuser:
+    if is_superuser(user):
         return True
 
     # 检查用户是否有基本审批权限

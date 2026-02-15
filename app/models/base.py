@@ -378,11 +378,15 @@ def get_session_factory():
     global _SessionLocal
     if _SessionLocal is None:
         engine = get_engine()
+        # 导入 TenantQuery - 框架级租户过滤
+        from app.core.database.tenant_query import TenantQuery
+        
         _SessionLocal = sessionmaker(
             autocommit=False,
             autoflush=False,
             bind=engine,
             class_=RuntimePatchedSession,
+            query_cls=TenantQuery,  # 使用租户感知的Query类
         )
     return _SessionLocal
 

@@ -147,6 +147,9 @@ def require_same_tenant(user_tenant_id: Optional[int], resource_tenant_id: Optio
     """
     检查资源是否属于用户的租户
 
+    DEPRECATED: 建议使用 is_superuser(user) 函数判断超级管理员权限，
+    而不是单纯依赖 tenant_id is None。
+    
     Args:
         user_tenant_id: 用户的租户ID
         resource_tenant_id: 资源的租户ID
@@ -156,8 +159,18 @@ def require_same_tenant(user_tenant_id: Optional[int], resource_tenant_id: Optio
 
     Raises:
         None - 返回 False 而不是抛出异常，让调用方决定处理方式
+        
+    Note:
+        此函数仅检查 tenant_id，不验证 is_superuser 标志位。
+        对于超级管理员判断，应该使用：
+        >>> from app.core.auth import is_superuser
+        >>> if is_superuser(user):
+        >>>     # 超级管理员可以访问所有资源
+        >>>     pass
     """
-    # 超级管理员（tenant_id=None）可以访问所有资源
+    # 注意：这里的 tenant_id=None 判断不够严谨
+    # 真正的超级管理员应该同时满足 is_superuser=True AND tenant_id IS NULL
+    # 建议调用方先使用 is_superuser(user) 函数判断
     if user_tenant_id is None:
         return True
 
