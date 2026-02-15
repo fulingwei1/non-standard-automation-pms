@@ -56,6 +56,7 @@ from .work_logs import router as work_logs_router
 from .workload import router as workload_router
 from .approvals import router as approvals_router
 from .change_requests import router as change_requests_router
+from .schedule_prediction import router as schedule_prediction_router
 
 # Export gate check functions for use by stage_advance_service
 from .gate_checks import check_gate, check_gate_detailed
@@ -214,4 +215,19 @@ router.include_router(
     change_requests_router,
     prefix="/{project_id}/changes",
     tags=["projects-changes"],
+)
+
+# 进度预测路由（项目内操作 + 全局概览）
+router.include_router(
+    schedule_prediction_router,
+    prefix="/{project_id}/schedule",
+    tags=["projects-schedule-prediction"],
+)
+
+# 全局风险概览路由（无project_id前缀）
+from .schedule_prediction import router as schedule_overview_router
+router.include_router(
+    schedule_overview_router,
+    prefix="/schedule",
+    tags=["projects-schedule-overview"],
 )

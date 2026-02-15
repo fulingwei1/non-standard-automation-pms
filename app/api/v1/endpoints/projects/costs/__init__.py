@@ -26,6 +26,7 @@ from .alert import router as alert_router
 from .allocation import router as allocation_router
 from .analysis import router as analysis_router
 from .budget import router as budget_router
+from .cost_prediction_ai import router as cost_prediction_ai_router
 from .crud import router as crud_router
 from .evm import router as evm_router
 from .forecast import router as forecast_router
@@ -48,6 +49,7 @@ router.include_router(labor_router, tags=["projects-costs-labor"])
 router.include_router(review_router, tags=["projects-costs-review"])
 router.include_router(alert_router, tags=["projects-costs-alert"])
 router.include_router(evm_router, tags=["projects-costs-evm"])
+router.include_router(cost_prediction_ai_router, tags=["projects-costs-prediction-ai"])
 
 # 再注册CRUD路由（由基类提供）- 动态路径
 router.include_router(crud_router, tags=["projects-costs-crud"])

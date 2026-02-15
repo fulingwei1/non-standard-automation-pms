@@ -41,6 +41,31 @@ from .report import (  # noqa: F401
     DeliveryMethodEnum,
 )
 
+# Project Schedule Prediction System
+from .project.schedule_prediction import (  # noqa: F401
+    ProjectSchedulePrediction,
+    CatchUpSolution,
+    ScheduleAlert,
+)
+
+# Quality Risk Detection System
+from .quality_risk_detection import (  # noqa: F401
+    QualityRiskDetection,
+    QualityTestRecommendation,
+    RiskLevelEnum,
+    RiskSourceEnum,
+    RiskStatusEnum,
+    RiskCategoryEnum,
+    TestRecommendationStatusEnum,
+    TestPriorityEnum,
+)
+
+# Change Impact Analysis System
+from .change_impact import (  # noqa: F401
+    ChangeImpactAnalysis,
+    ChangeResponseSuggestion,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -79,6 +104,9 @@ __all__ = [
     # Earned Value Management (EVM)
     "EarnedValueData",
     "EarnedValueSnapshot",
+    # Cost Prediction & Optimization
+    "CostPrediction",
+    "CostOptimizationSuggestion",
     # Budget
     "ProjectBudget",
     "ProjectBudgetItem",
@@ -480,4 +508,7 @@ __all__ = [
     "ArchiveStatusEnum",
     "RecipientTypeEnum",
     "DeliveryMethodEnum",
+    # Change Impact Analysis System
+    "ChangeImpactAnalysis",
+    "ChangeResponseSuggestion",
 ]

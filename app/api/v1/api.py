@@ -154,6 +154,15 @@ api_router.include_router(
     prefix="/reports",
     tags=["reports"]
 )
+
+# 质量风险识别系统
+from app.api.v1.endpoints.quality_risk import router as quality_risk_router
+
+api_router.include_router(
+    quality_risk_router,
+    prefix="/quality-risk",
+    tags=["quality-risk"]
+)
 # PMO模块已拆分为pmo包
 from app.api.v1.endpoints.pmo import router as pmo_router
 
@@ -352,3 +361,12 @@ api_router.include_router(
     departments.router, prefix="/departments", tags=["departments"]
 )
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+
+# 资源冲突智能调度系统
+from app.api.v1.endpoints.resource_scheduling import router as resource_scheduling_router
+
+api_router.include_router(
+    resource_scheduling_router,
+    prefix="/resource-scheduling",
+    tags=["resource-scheduling", "ai"],
+)

@@ -67,6 +67,9 @@ from ...budget import ProjectBudget, ProjectBudgetItem, ProjectCostAllocationRul
 # 挣值管理 (EVM)
 from ...earned_value import EarnedValueData, EarnedValueSnapshot
 
+# 成本预测与优化
+from ...cost_prediction import CostOptimizationSuggestion, CostPrediction
+
 __all__ = [
     # Project
     "Project",
@@ -91,6 +94,9 @@ __all__ = [
     # Earned Value Management (EVM)
     "EarnedValueData",
     "EarnedValueSnapshot",
+    # Cost Prediction & Optimization
+    "CostPrediction",
+    "CostOptimizationSuggestion",
     # Project Evaluation
     "ProjectEvaluation",
     "ProjectEvaluationDimension",

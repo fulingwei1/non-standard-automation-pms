@@ -170,6 +170,16 @@ class ChangeRequest(Base, TimestampMixin):
         back_populates='change_request',
         cascade='all, delete-orphan'
     )
+    impact_analyses = relationship(
+        'ChangeImpactAnalysis',
+        back_populates='change_request',
+        cascade='all, delete-orphan'
+    )
+    response_suggestions = relationship(
+        'ChangeResponseSuggestion',
+        back_populates='change_request',
+        cascade='all, delete-orphan'
+    )
 
     __table_args__ = (
         Index('idx_change_code', 'change_code'),
