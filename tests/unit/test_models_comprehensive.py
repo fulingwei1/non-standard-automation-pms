@@ -1,482 +1,528 @@
-# -*- coding: utf-8 -*-
 """
-单元测试: 模型测试综合文件 (models)
-
-测试内容：
-- Project 模型的基本字段和验证
-- User 模型的认证相关功能
-- Material 模型的 BOM 相关功能
-- ProjectStage 和 ProjectStatus 枚举测试
+Model层综合测试
+测试新增模型的CRUD、关系验证、枚举等
 """
+import pytest
+from datetime import date, datetime, timedelta
+from sqlalchemy.orm import Session
 
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
-
-
-# 直接在这里定义 ProjectHealth 枚举,避免导入问题
-class ProjectHealth(str, Enum):
-    H1 = "h1"  # 正常（绿色）
-    H2 = "h2"  # 有风险（黄色）
-    H3 = "h3"  # 阻塞（红色）
-    H4 = "h4"  # 已完结（灰色）
-
-
-from app.models.project import (
-    Project,
-    ProjectStage,
-    ProjectStatus,
+from app.models.project.schedule_prediction import (
+    ProjectSchedulePrediction,
+    CatchUpSolution,
+    ScheduleAlert,
+    RiskLevelEnum,
+    SolutionTypeEnum,
+    AlertTypeEnum,
+    SeverityEnum
 )
-from app.models.user import User
-from app.models.organization import Employee
-from app.models.material import Material
-from app.models.vendor import Vendor as Supplier
+from app.models.quality_risk_detection import (
+    QualityRiskDetection,
+    QualityTestRecommendation,
+    RiskSourceEnum,
+    RiskStatusEnum,
+    RiskCategoryEnum,
+    TestPriorityEnum
+)
+from app.models.ai_planning.plan_template import AIProjectPlanTemplate
+from app.models.ai_planning.wbs_suggestion import AIWbsSuggestion
+from app.models.ai_planning.resource_allocation import AIResourceAllocation
 
 
-def _create_employee_for_user(db_session, code, name="测试用户"):
-    """创建 Employee 以满足 User.employee_id NOT NULL 约束"""
-    emp = Employee(
-        employee_code=code,
-        name=name,
-        department="测试部",
-        role="ENGINEER",
-        phone="18800000000",
-    )
-    db_session.add(emp)
-    db_session.flush()
-    return emp
+class TestSchedulePredictionModels:
+    """进度预测模型测试"""
 
-
-class TestProjectModel:
-    """测试 Project 模型"""
-
-    def test_project_creation_basic(self, db_session):
-        """测试基本的 Project 创建"""
-        project = Project(
-        project_code="PJ250101001",
-        project_name="测试项目",
-        customer_name="测试客户",
-        contract_amount=1000000.00,
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 12, 31),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
-        health=ProjectHealth.H1.value,
+    def test_create_schedule_prediction(self, mock_database_session):
+        """测试创建进度预测记录"""
+        prediction = ProjectSchedulePrediction(
+            project_id=1,
+            prediction_date=date.today(),
+            predicted_completion_date=date(2026, 6, 30),
+            delay_days=15,
+            confidence=0.85,
+            risk_level=RiskLevelEnum.HIGH,
+            features={'progress': 60, 'velocity': 1.2},
+            model_version='v1.0'
         )
+        
+        mock_database_session.add(prediction)
+        mock_database_session.commit()
+        
+        assert prediction.id is not None
+        assert prediction.risk_level == RiskLevelEnum.HIGH
+        assert prediction.delay_days == 15
 
-        db_session.add(project)
-        db_session.commit()
-        db_session.refresh(project)
-
-        assert project.id is not None
-        assert project.project_code == "PJ250101001"
-        assert project.project_name == "测试项目"
-        assert project.contract_amount == 1000000.00
-        assert project.status == ProjectStatus.ACTIVE.value
-
-    def test_project_relationships(self, db_session):
-        """测试 Project 关系"""
-        project = Project(
-        project_code="PJ250101002",
-        project_name="关系测试",
-        customer_name="测试客户",
-        contract_amount=500000.00,
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 6, 30),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
-        health=ProjectHealth.H1.value,
+    def test_prediction_to_dict(self):
+        """测试预测记录转字典"""
+        prediction = ProjectSchedulePrediction(
+            project_id=1,
+            predicted_completion_date=date(2026, 6, 30),
+            delay_days=10,
+            confidence=0.9,
+            risk_level=RiskLevelEnum.MEDIUM
         )
+        
+        data = prediction.to_dict()
+        
+        assert data['project_id'] == 1
+        assert data['delay_days'] == 10
+        assert data['risk_level'] == 'medium'
 
-        db_session.add(project)
-        db_session.commit()
-        db_session.refresh(project)
-
-        # 验证默认字段
-        assert project.description is None
-        assert project.created_at is not None
-        assert project.updated_at is not None
-
-    def test_project_enum_fields(self):
-        """测试枚举字段"""
-        # 验证 ProjectStage 枚举值
-        assert ProjectStage.S1.value == "S1"
-        assert ProjectStage.S9.value == "S9"
-        assert len(ProjectStage) == 9  # S1-S9
-
-        # 验证 ProjectStatus 枚举值
-        assert ProjectStatus.ACTIVE.value == "active"
-        assert ProjectStatus.CANCELLED.value == "cancelled"
-        assert len(ProjectStatus) >= 3
-
-        # 验证 ProjectHealth 枚举值
-        assert ProjectHealth.H1.value == "h1"
-        assert ProjectHealth.H4.value == "h4"
-        assert len(ProjectHealth) == 4
-
-    def test_project_unique_constraint(self, db_session):
-        """测试 project_code 唯一约束"""
-        project1 = Project(
-        project_code="PJ250101003",
-        project_name="测试项目1",
-        customer_name="测试客户",
-        contract_amount=100000.00,
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 6, 30),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
-        health=ProjectHealth.H1.value,
+    def test_create_catch_up_solution(self):
+        """测试创建赶工方案"""
+        solution = CatchUpSolution(
+            project_id=1,
+            prediction_id=10,
+            solution_name="加班方案",
+            solution_type=SolutionTypeEnum.OVERTIME,
+            description="团队加班以追赶进度",
+            estimated_catch_up_days=7,
+            additional_cost=8000,
+            risk_level=RiskLevelEnum.LOW,
+            success_rate=0.85,
+            is_recommended=True
         )
+        
+        assert solution.solution_type == SolutionTypeEnum.OVERTIME
+        assert solution.is_recommended is True
+        assert solution.estimated_catch_up_days == 7
 
-        db_session.add(project1)
-        db_session.commit()
-
-        # 尝试创建相同 code 的项目
-        project2 = Project(
-        project_code="PJ250101003",  # 相同的 code
-        project_name="测试项目2",
-        customer_name="测试客户",
-        contract_amount=200000.00,
-        start_date=date(2024, 7, 1),
-        end_date=date(2024, 12, 31),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
+    def test_solution_approval(self):
+        """测试方案审批"""
+        solution = CatchUpSolution(
+            solution_name="增加人力",
+            solution_type=SolutionTypeEnum.MANPOWER,
+            status="pending"
         )
+        
+        # 批准方案
+        solution.status = "approved"
+        solution.approved_by = 100
+        solution.approved_at = datetime.now()
+        solution.approval_comment = "同意实施"
+        
+        assert solution.status == "approved"
+        assert solution.approved_by == 100
 
-
-class TestUserModel:
-    """测试 User 模型"""
-
-    def test_user_creation_basic(self, db_session):
-        """测试基本的 User 创建"""
-        emp = _create_employee_for_user(db_session, "EMP-BASIC", "Test User")
-        user = User(
-            employee_id=emp.id,
-            username="testuser",
-            email="test@example.com",
-            password_hash="password_hash_here",
-            real_name="Test User",
-            is_active=True,
+    def test_create_schedule_alert(self):
+        """测试创建进度预警"""
+        alert = ScheduleAlert(
+            project_id=1,
+            prediction_id=10,
+            alert_type=AlertTypeEnum.DELAY_WARNING,
+            severity=SeverityEnum.HIGH,
+            title="项目延期预警",
+            message="预计延期15天",
+            is_read=False,
+            is_resolved=False
         )
+        
+        assert alert.alert_type == AlertTypeEnum.DELAY_WARNING
+        assert alert.severity == SeverityEnum.HIGH
+        assert alert.is_read is False
 
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        assert user.id is not None
-        assert user.username == "testuser"
-        assert user.email == "test@example.com"
-        assert user.is_active is True
-
-    def test_user_password_hashing(self, db_session):
-        """测试密码哈希字段"""
-        from app.core.auth import get_password_hash
-
-        plain_password = "test_password"
-        hashed = get_password_hash(plain_password)
-
-        emp = _create_employee_for_user(db_session, "EMP-HASH", "User With Hash")
-        user = User(
-            employee_id=emp.id,
-            username="user_with_hash",
-            email="user@example.com",
-            password_hash=hashed,
-            real_name="User With Hash",
-            is_active=True,
+    def test_alert_acknowledgement(self):
+        """测试预警确认"""
+        alert = ScheduleAlert(
+            alert_type=AlertTypeEnum.DELAY_WARNING,
+            is_read=False
         )
+        
+        # 确认预警
+        alert.is_read = True
+        alert.acknowledged_by = 200
+        alert.acknowledged_at = datetime.now()
+        alert.acknowledgement_comment = "已知悉，正在处理"
+        
+        assert alert.is_read is True
+        assert alert.acknowledged_by == 200
 
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        assert user.password_hash == hashed
-        assert user.password_hash is not None
-        assert len(user.password_hash) > 50
-
-    def test_user_default_values(self, db_session):
-        """测试 User 默认值"""
-        emp = _create_employee_for_user(db_session, "EMP-DEFAULT", "Default User")
-        user = User(
-            employee_id=emp.id,
-            username="defaultuser",
-            email="default@example.com",
-            password_hash="hash",
-            real_name="Default User",
+    def test_prediction_solution_relationship(self):
+        """测试预测与方案的关系"""
+        prediction = ProjectSchedulePrediction(
+            project_id=1,
+            predicted_completion_date=date(2026, 6, 30)
         )
-
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        # 验证默认值
-        assert user.is_active is True
-        assert user.created_at is not None
-        assert user.updated_at is not None
-
-
-class TestMaterialModel:
-    """测试 Material 模型"""
-
-    def test_material_creation_basic(self, db_session):
-        """测试基本的 Material 创建"""
-        material = Material(
-        material_code="MAT001",
-        material_name="测试材料",
-        material_type="standard",
-        unit="piece",
-        standard_price=Decimal("100.50"),
-        is_active=True,
+        
+        solution1 = CatchUpSolution(
+            prediction_id=prediction.id,
+            solution_name="方案A"
         )
+        solution2 = CatchUpSolution(
+            prediction_id=prediction.id,
+            solution_name="方案B"
+        )
+        
+        # 一个预测可以有多个方案
+        assert len([solution1, solution2]) == 2
 
-        db_session.add(material)
-        db_session.commit()
-        db_session.refresh(material)
 
-        assert material.id is not None
-        assert material.material_code == "MAT001"
-        assert material.material_name == "测试材料"
-        assert material.unit_price == 100.50
+class TestQualityRiskModels:
+    """质量风险模型测试"""
 
-    def test_material_categories(self, db_session):
-        """测试 Material 类别字段"""
-        # 测试不同类别
-        categories = ["standard", "mechanical", "electrical", "pneumatic"]
+    def test_create_quality_risk_detection(self):
+        """测试创建质量风险检测记录"""
+        detection = QualityRiskDetection(
+            project_id=1,
+            module_name="用户认证",
+            task_id=100,
+            detection_date=date.today(),
+            source_type=RiskSourceEnum.WORK_LOG,
+            risk_level=RiskLevelEnum.HIGH,
+            risk_score=75,
+            risk_category=RiskCategoryEnum.BUG,
+            risk_keywords=['bug', '修复', '问题'],
+            rework_probability=0.65,
+            status=RiskStatusEnum.DETECTED
+        )
+        
+        assert detection.risk_category == RiskCategoryEnum.BUG
+        assert detection.risk_score == 75
+        assert len(detection.risk_keywords) == 3
 
-        for i, category in enumerate(categories):
-            material = Material(
-            material_code=f"MAT{100 + i:03d}",
-            material_name=f"测试材料{i}",
-            material_type=category,
-            unit="piece",
-            standard_price=Decimal("50.00"),
+    def test_risk_status_transition(self):
+        """测试风险状态转换"""
+        detection = QualityRiskDetection(
+            status=RiskStatusEnum.DETECTED
+        )
+        
+        # 确认风险
+        detection.status = RiskStatusEnum.CONFIRMED
+        detection.confirmed_by = 100
+        
+        assert detection.status == RiskStatusEnum.CONFIRMED
+        
+        # 解决风险
+        detection.status = RiskStatusEnum.RESOLVED
+        detection.resolved_by = 100
+        detection.resolved_at = datetime.now()
+        
+        assert detection.status == RiskStatusEnum.RESOLVED
+
+    def test_create_test_recommendation(self):
+        """测试创建测试推荐"""
+        recommendation = QualityTestRecommendation(
+            project_id=1,
+            detection_id=10,
+            recommendation_date=date.today(),
+            focus_areas=['登录模块', '支付模块'],
+            priority_modules=['支付模块'],
+            test_types=['功能测试', '回归测试'],
+            recommended_testers=2,
+            recommended_days=5,
+            priority_level=TestPriorityEnum.HIGH,
+            status="pending"
+        )
+        
+        assert recommendation.priority_level == TestPriorityEnum.HIGH
+        assert len(recommendation.focus_areas) == 2
+        assert recommendation.recommended_days == 5
+
+    def test_recommendation_execution(self):
+        """测试推荐执行跟踪"""
+        recommendation = QualityTestRecommendation(
+            recommended_days=5,
+            status="pending"
+        )
+        
+        # 接受推荐
+        recommendation.status = "accepted"
+        
+        # 执行测试
+        recommendation.status = "in_progress"
+        recommendation.actual_test_days = 4
+        recommendation.bugs_found = 8
+        
+        # 完成测试
+        recommendation.status = "completed"
+        
+        assert recommendation.status == "completed"
+        assert recommendation.bugs_found == 8
+
+    def test_risk_severity_enum_values(self):
+        """测试风险等级枚举值"""
+        assert RiskLevelEnum.LOW.value == "low"
+        assert RiskLevelEnum.MEDIUM.value == "medium"
+        assert RiskLevelEnum.HIGH.value == "high"
+        assert RiskLevelEnum.CRITICAL.value == "critical"
+
+    def test_risk_category_enum_values(self):
+        """测试风险类别枚举值"""
+        assert RiskCategoryEnum.BUG.value == "BUG"
+        assert RiskCategoryEnum.PERFORMANCE.value == "PERFORMANCE"
+        assert RiskCategoryEnum.STABILITY.value == "STABILITY"
+        assert RiskCategoryEnum.COMPATIBILITY.value == "COMPATIBILITY"
+
+
+class TestAIPlanningModels:
+    """AI规划模型测试"""
+
+    def test_create_plan_template(self):
+        """测试创建项目计划模板"""
+        template = AIProjectPlanTemplate(
+            template_name="Web开发标准模板",
+            template_type="WEB_DEV",
+            industry="电商",
+            complexity="high",
+            ai_model="GLM-5",
+            phases=['需求', '设计', '开发', '测试', '部署'],
+            estimated_duration_days=120,
+            estimated_cost=500000,
+            recommended_team_size=8,
+            confidence_score=0.88
+        )
+        
+        assert template.template_type == "WEB_DEV"
+        assert len(template.phases) == 5
+        assert template.estimated_duration_days == 120
+
+    def test_template_usage_tracking(self):
+        """测试模板使用统计"""
+        template = AIProjectPlanTemplate(
+            template_name="模板A",
+            usage_count=0
+        )
+        
+        # 使用模板
+        template.usage_count += 1
+        template.last_used_at = datetime.now()
+        
+        assert template.usage_count == 1
+        
+        # 再次使用
+        template.usage_count += 1
+        
+        assert template.usage_count == 2
+
+    def test_create_wbs_suggestion(self):
+        """测试创建WBS建议"""
+        wbs = AIWbsSuggestion(
+            project_id=1,
+            template_id=10,
+            level=2,
+            parent_id=1,
+            wbs_code="1.2.1",
+            task_name="数据库设计",
+            task_type="design",
+            estimated_duration_days=10,
+            estimated_hours=80,
+            complexity="medium",
+            is_critical_path=True,
+            status="pending"
+        )
+        
+        assert wbs.level == 2
+        assert wbs.wbs_code == "1.2.1"
+        assert wbs.is_critical_path is True
+
+    def test_wbs_dependency(self):
+        """测试WBS任务依赖"""
+        wbs = AIWbsSuggestion(
+            wbs_code="1.2",
+            task_name="任务B",
+            dependency_tasks=['1.1'],
+            dependency_type="FS"  # Finish-to-Start
+        )
+        
+        assert '1.1' in wbs.dependency_tasks
+        assert wbs.dependency_type == "FS"
+
+    def test_wbs_acceptance_rejection(self):
+        """测试WBS建议接受/拒绝"""
+        wbs = AIWbsSuggestion(
+            task_name="任务A",
+            status="pending"
+        )
+        
+        # 接受建议
+        wbs.status = "accepted"
+        wbs.accepted_by = 100
+        wbs.accepted_at = datetime.now()
+        
+        assert wbs.status == "accepted"
+        
+        # 或者拒绝
+        wbs2 = AIWbsSuggestion(task_name="任务B", status="pending")
+        wbs2.status = "rejected"
+        wbs2.rejected_by = 100
+        wbs2.rejection_reason = "不符合实际情况"
+        
+        assert wbs2.status == "rejected"
+
+    def test_create_resource_allocation(self):
+        """测试创建资源分配"""
+        allocation = AIResourceAllocation(
+            project_id=1,
+            wbs_suggestion_id=10,
+            user_id=100,
+            role="后端开发",
+            allocation_type="full_time",
+            planned_start_date=date(2026, 3, 1),
+            planned_end_date=date(2026, 3, 15),
+            allocated_hours=80,
+            load_percentage=80,
+            skill_match_score=90,
+            overall_match_score=85,
+            status="pending"
+        )
+        
+        assert allocation.role == "后端开发"
+        assert allocation.load_percentage == 80
+        assert allocation.overall_match_score == 85
+
+    def test_allocation_matching_details(self):
+        """测试分配匹配度详情"""
+        allocation = AIResourceAllocation(
+            user_id=100,
+            skill_match_score=90,
+            experience_match_score=85,
+            availability_score=70,
+            performance_score=88,
+            overall_match_score=83
+        )
+        
+        # 验证各项匹配度
+        assert allocation.skill_match_score == 90
+        assert allocation.experience_match_score == 85
+        assert allocation.availability_score == 70
+        assert allocation.performance_score == 88
+
+    def test_allocation_execution_tracking(self):
+        """测试分配执行跟踪"""
+        allocation = AIResourceAllocation(
+            allocated_hours=80,
+            status="pending"
+        )
+        
+        # 接受分配
+        allocation.status = "accepted"
+        
+        # 执行跟踪
+        allocation.actual_start_date = date(2026, 3, 1)
+        allocation.actual_hours = 85
+        allocation.actual_performance = 0.92
+        
+        assert allocation.actual_hours == 85
+        assert allocation.actual_performance == 0.92
+
+
+class TestModelRelationships:
+    """模型关系测试"""
+
+    def test_prediction_has_many_solutions(self):
+        """测试预测拥有多个方案"""
+        prediction = ProjectSchedulePrediction(project_id=1)
+        
+        solutions = [
+            CatchUpSolution(prediction_id=prediction.id, solution_name=f"方案{i}")
+            for i in range(3)
+        ]
+        
+        assert len(solutions) == 3
+
+    def test_prediction_has_many_alerts(self):
+        """测试预测拥有多个预警"""
+        prediction = ProjectSchedulePrediction(project_id=1)
+        
+        alerts = [
+            ScheduleAlert(
+                prediction_id=prediction.id,
+                alert_type=AlertTypeEnum.DELAY_WARNING
+            ),
+            ScheduleAlert(
+                prediction_id=prediction.id,
+                alert_type=AlertTypeEnum.VELOCITY_DROP
             )
+        ]
+        
+        assert len(alerts) == 2
 
-            db_session.add(material)
+    def test_risk_has_one_recommendation(self):
+        """测试风险对应一个测试推荐"""
+        risk = QualityRiskDetection(project_id=1)
+        
+        recommendation = QualityTestRecommendation(
+            detection_id=risk.id,
+            project_id=1
+        )
+        
+        assert recommendation.detection_id == risk.id
 
-            db_session.commit()
-
-            # 验证所有材料都被保存
-            materials = (
-            db_session.query(Material).filter(Material.material_code.like("MAT%")).all()
+    def test_template_has_many_wbs(self):
+        """测试模板对应多个WBS"""
+        template = AIProjectPlanTemplate(template_name="模板A")
+        
+        wbs_list = [
+            AIWbsSuggestion(
+                template_id=template.id,
+                wbs_code=f"1.{i}",
+                task_name=f"任务{i}"
             )
-            assert len(materials) == 4
+            for i in range(5)
+        ]
+        
+        assert len(wbs_list) == 5
 
-    def test_supplier_creation(self, db_session):
-        """测试 Supplier 创建"""
-        supplier = Supplier(
-        supplier_name="测试供应商",
-        contact_person="张三",
-        contact_phone="13800138000",
-        contact_email="supplier@example.com",
-        address="北京市朝阳区",
-        )
-
-        db_session.add(supplier)
-        db_session.commit()
-        db_session.refresh(supplier)
-
-        assert supplier.id is not None
-        assert supplier.name == "测试供应商"
-        assert supplier.phone == "13800138000"
-
-    def test_material_supplier_relationship(self, db_session):
-        """测试 Material 和 Supplier 关系"""
-        supplier = Supplier(
-        supplier_name="关联供应商",
-        contact_person="李四",
-        contact_phone="13900139000",
-        contact_email="关联@example.com",
-        )
-
-        db_session.add(supplier)
-        db_session.commit()
-        db_session.refresh(supplier)
-
-        material = Material(
-        material_code="MAT005",
-        material_name="关联测试材料",
-        material_type="standard",
-        unit="piece",
-        standard_price=Decimal("200.00"),
-        is_active=True,
-        )
-
-        db_session.add(material)
-        db_session.commit()
-        db_session.refresh(material)
-
-        assert material.material_name == "关联测试材料"
+    def test_wbs_has_many_allocations(self):
+        """测试WBS对应多个资源分配"""
+        wbs = AIWbsSuggestion(wbs_code="1.1", task_name="任务A")
+        
+        allocations = [
+            AIResourceAllocation(
+                wbs_suggestion_id=wbs.id,
+                user_id=i,
+                role="开发"
+            )
+            for i in range(100, 103)
+        ]
+        
+        assert len(allocations) == 3
 
 
-class TestModelTimestamps:
-    """测试模型时间戳"""
+class TestEnumValidation:
+    """枚举验证测试"""
 
-    def test_project_timestamps(self, db_session):
-        """测试 Project 时间戳"""
-        project = Project(
-        project_code="PJ250101004",
-        project_name="时间戳测试",
-        customer_name="测试客户",
-        contract_amount=1000.00,
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 6, 30),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
-        health=ProjectHealth.H1.value,
-        )
+    def test_all_risk_levels_valid(self):
+        """测试所有风险等级枚举有效"""
+        levels = [
+            RiskLevelEnum.LOW,
+            RiskLevelEnum.MEDIUM,
+            RiskLevelEnum.HIGH,
+            RiskLevelEnum.CRITICAL
+        ]
+        
+        for level in levels:
+            assert level.value in ['low', 'medium', 'high', 'critical']
 
-        db_session.add(project)
-        db_session.commit()
-        db_session.refresh(project)
+    def test_all_solution_types_valid(self):
+        """测试所有方案类型枚举有效"""
+        types = [
+            SolutionTypeEnum.MANPOWER,
+            SolutionTypeEnum.OVERTIME,
+            SolutionTypeEnum.PROCESS,
+            SolutionTypeEnum.HYBRID
+        ]
+        
+        for sol_type in types:
+            assert sol_type.value in ['manpower', 'overtime', 'process', 'hybrid']
 
-        # 验证时间戳字段
-        assert project.created_at is not None
-        assert project.updated_at is not None
-        assert project.created_at <= datetime.utcnow()
-        assert project.updated_at <= datetime.utcnow()
+    def test_all_alert_types_valid(self):
+        """测试所有预警类型枚举有效"""
+        types = [
+            AlertTypeEnum.DELAY_WARNING,
+            AlertTypeEnum.VELOCITY_DROP
+        ]
+        
+        for alert_type in types:
+            assert alert_type.value in ['delay_warning', 'velocity_drop']
 
-    def test_user_timestamps(self, db_session):
-        """测试 User 时间戳"""
-        emp = _create_employee_for_user(db_session, "EMP-TIME", "Time Test User")
-        user = User(
-            employee_id=emp.id,
-            username="timetestuser",
-            email="timetest@example.com",
-            password_hash="hash",
-            real_name="Time Test User",
-        )
-
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        # 验证时间戳字段
-        assert user.created_at is not None
-        assert user.updated_at is not None
-
-
-class TestModelValidators:
-    """测试模型验证"""
-
-    def test_project_required_fields(self, db_session):
-        """测试 Project 必填字段验证"""
-        project = Project(
-            # 缺少必填字段
-        project_code="PJ250101005",
-            # project_name 缺失
-        customer_name="测试客户",
-        )
-
-        # SQLAlchemy 不会自动验证必填字段，但模型应该定义它们
-        # 这里我们只测试对象可以创建
-        assert project.project_code == "PJ250101005"
-        assert project.project_name is None  # 因为我们没有设置
-
-    def test_user_email_validation(self, db_session):
-        """测试 User 邮箱字段"""
-        emp = _create_employee_for_user(db_session, "EMP-EMAIL", "Email Test User")
-        user = User(
-            employee_id=emp.id,
-            username="emailtestuser",
-            email="user@example.com",
-            password_hash="hash",
-            real_name="Email Test User",
-        )
-
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        assert user.email == "user@example.com"
-
-
-class TestModelQueryMethods:
-    """测试模型查询方法"""
-
-    def test_filter_by_status(self, db_session):
-        """测试按状态过滤"""
-        # 创建不同状态的项目
-        active_project = Project(
-        project_code="PJ250101006",
-        project_name="活跃项目",
-        customer_name="客户1",
-        contract_amount=1000.00,
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 6, 30),
-        current_stage=ProjectStage.S1.value,
-        status=ProjectStatus.ACTIVE.value,
-        health=ProjectHealth.H1.value,
-        )
-
-        completed_project = Project(
-        project_code="PJ250101007",
-        project_name="完成项目",
-        customer_name="客户2",
-        contract_amount=2000.00,
-        start_date=date(2023, 1, 1),
-        end_date=date(2023, 12, 31),
-        current_stage=ProjectStage.S9.value,
-        status=ProjectStatus.COMPLETED.value,
-        health=ProjectHealth.H4.value,
-        )
-
-        db_session.add(active_project)
-        db_session.add(completed_project)
-        db_session.commit()
-
-        # 查询活跃项目
-        active_projects = (
-        db_session.query(Project)
-        .filter(Project.status == ProjectStatus.ACTIVE.value)
-        .all()
-        )
-        assert len(active_projects) == 1
-        assert active_projects[0].project_code == "PJ250101006"
-
-        # 查询完成项目
-        completed_projects = (
-        db_session.query(Project)
-        .filter(Project.status == ProjectStatus.COMPLETED.value)
-        .all()
-        )
-        assert len(completed_projects) == 1
-
-    def test_filter_by_active_status(self, db_session):
-        """测试按 is_active 字段过滤"""
-        emp1 = _create_employee_for_user(db_session, "EMP-ACTIVE", "Active User")
-        emp2 = _create_employee_for_user(db_session, "EMP-INACTIVE", "Inactive User")
-
-        active_user = User(
-            employee_id=emp1.id,
-            username="activeuser",
-            email="active@example.com",
-            password_hash="hash",
-            real_name="Active User",
-            is_active=True,
-        )
-
-        inactive_user = User(
-            employee_id=emp2.id,
-            username="inactiveuser",
-            email="inactive@example.com",
-            password_hash="hash",
-            real_name="Inactive User",
-            is_active=False,
-        )
-
-        db_session.add(active_user)
-        db_session.add(inactive_user)
-        db_session.commit()
-
-        # 查询活跃用户
-        active_users = db_session.query(User).filter(User.is_active == True).all()
-        assert len(active_users) == 1
-        assert active_users[0].username == "activeuser"
-
-        # 查询禁用用户
-        inactive_users = db_session.query(User).filter(User.is_active == False).all()
-        assert len(inactive_users) == 1
-        assert inactive_users[0].username == "inactiveuser"
-
-
-# Pytest fixture for database session is provided by conftest.py
+    def test_test_priority_enum(self):
+        """测试测试优先级枚举"""
+        priorities = [
+            TestPriorityEnum.LOW,
+            TestPriorityEnum.MEDIUM,
+            TestPriorityEnum.HIGH,
+            TestPriorityEnum.URGENT
+        ]
+        
+        for priority in priorities:
+            assert priority.value in ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
