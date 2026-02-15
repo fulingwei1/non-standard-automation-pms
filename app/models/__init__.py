@@ -20,6 +20,27 @@ from .exports.complete import *
 # 枚举补充导出（向后兼容）
 from .enums import ApprovalRecordStatusEnum  # noqa: F401
 
+# AI Knowledge Base
+from .presale_knowledge_case import PresaleKnowledgeCase  # noqa: F401
+from .presale_ai_qa import PresaleAIQA  # noqa: F401
+
+# Security & Authentication
+from .login_attempt import LoginAttempt  # noqa: F401
+
+# Report System
+from .report import (  # noqa: F401
+    ReportTemplate,
+    ReportArchive,
+    ReportRecipient,
+    ReportTypeEnum,
+    OutputFormatEnum,
+    FrequencyEnum,
+    GeneratedByEnum,
+    ArchiveStatusEnum,
+    RecipientTypeEnum,
+    DeliveryMethodEnum,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -39,6 +60,7 @@ __all__ = [
     "UserRole",
     "PermissionAudit",
     "UserSession",
+    "LoginAttempt",
     # Project
     "Project",
     "Machine",
@@ -54,6 +76,9 @@ __all__ = [
     "ProjectStatusLog",
     "ProjectTemplate",
     "ProjectMemberContribution",
+    # Earned Value Management (EVM)
+    "EarnedValueData",
+    "EarnedValueSnapshot",
     # Budget
     "ProjectBudget",
     "ProjectBudgetItem",
@@ -385,6 +410,9 @@ __all__ = [
     "FundingRecord",
     "EquityStructure",
     "FundingUsage",
+    # Standard Cost
+    "StandardCost",
+    "StandardCostHistory",
     # Presale Expense
     "PresaleExpense",
     # Pipeline Analysis
@@ -438,4 +466,18 @@ __all__ = [
     "StrategyReview",
     "StrategyCalendarEvent",
     "StrategyComparison",
+    # AI Knowledge Base
+    "PresaleKnowledgeCase",
+    "PresaleAIQA",
+    # Report System
+    "ReportTemplate",
+    "ReportArchive",
+    "ReportRecipient",
+    "ReportTypeEnum",
+    "OutputFormatEnum",
+    "FrequencyEnum",
+    "GeneratedByEnum",
+    "ArchiveStatusEnum",
+    "RecipientTypeEnum",
+    "DeliveryMethodEnum",
 ]

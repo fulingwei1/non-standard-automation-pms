@@ -43,6 +43,13 @@ from ...sales import (
     MaterialCostUpdateReminder,
 )
 
+# AI方案生成
+from ...presale_ai_solution import (
+    PresaleAISolution,
+    PresaleSolutionTemplate,
+    PresaleAIGenerationLog,
+)
+
 __all__ = [
     # Sales
     "Lead",
@@ -84,4 +91,8 @@ __all__ = [
     "ApprovalWorkflowStep",
     "ApprovalRecord",
     "ApprovalHistory",
+    # AI Solution Generation
+    "PresaleAISolution",
+    "PresaleSolutionTemplate",
+    "PresaleAIGenerationLog",
 ]

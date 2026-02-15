@@ -34,6 +34,7 @@ from app.schemas.session import (
     SessionResponse,
 )
 from app.services.session_service import SessionService
+from app.services.account_lockout_service import AccountLockoutService
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
@@ -60,26 +61,33 @@ def login(
     - USER_DISABLED: 账号已禁用（员工已离职）
     - WRONG_PASSWORD: 密码错误
     """
-    # 登录失败锁定检查
-    try:
-        from app.utils.redis_client import get_redis_client
-        redis_client = get_redis_client()
-        if redis_client:
-            lockout_key = f"login:lockout:{form_data.username}"
-            if redis_client.exists(lockout_key):
-                ttl = redis_client.ttl(lockout_key)
-                raise HTTPException(
-                    status_code=status.HTTP_423_LOCKED,
-                    detail={
-                        "error_code": "ACCOUNT_LOCKED",
-                        "message": f"账号已被锁定，请在 {ttl // 60 + 1} 分钟后重试",
-                    },
-                )
-    except Exception as lockout_err:
-        import logging
-        if "ACCOUNT_LOCKED" in str(lockout_err):
-            raise
-        logging.getLogger(__name__).debug(f"登录锁定检查跳过: {lockout_err}")
+    # 获取客户端信息
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("User-Agent", "unknown")
+    
+    # 检查IP黑名单
+    if AccountLockoutService.is_ip_blacklisted(client_ip):
+        logger.warning(f"来自黑名单IP的登录尝试: {client_ip}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error_code": "IP_BLACKLISTED",
+                "message": "您的IP已被限制访问，请联系管理员",
+            },
+        )
+    
+    # 检查账户锁定状态
+    lockout_status = AccountLockoutService.check_lockout(form_data.username, db)
+    if lockout_status["locked"]:
+        logger.warning(f"尝试登录已锁定账户: {form_data.username}, IP: {client_ip}")
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail={
+                "error_code": "ACCOUNT_LOCKED",
+                "message": lockout_status["message"],
+                "locked_until": lockout_status["locked_until"],
+            },
+        )
 
     try:
         # 使用原始 SQL 查询避免 ORM 的自动更新机制
@@ -91,11 +99,20 @@ def login(
         ).fetchone()
 
         if not result:
+            # 记录失败（用户不存在）
+            AccountLockoutService.record_failed_login(
+                username=form_data.username,
+                ip=client_ip,
+                user_agent=user_agent,
+                reason="user_not_found",
+                db=db
+            )
+            # 统一返回"用户名或密码错误"，不泄露用户是否存在
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
-                    "error_code": "USER_NOT_FOUND",
-                    "message": "该员工尚未开通系统账号，请联系管理员",
+                    "error_code": "INVALID_CREDENTIALS",
+                    "message": "用户名或密码错误",
                 },
                 headers={"WWW-Authenticate": "Bearer"},
             )
@@ -105,25 +122,38 @@ def login(
 
         # 2. 密码错误
         if not security.verify_password(form_data.password, user_dict["password_hash"]):
-            # 记录登录失败并检查是否需要锁定
-            try:
-                from app.utils.redis_client import get_redis_client as get_redis
-                redis_cli = get_redis()
-                if redis_cli:
-                    attempt_key = f"login:attempts:{form_data.username}"
-                    attempts = redis_cli.incr(attempt_key)
-                    redis_cli.expire(attempt_key, 900)  # 15分钟窗口
-                    if attempts >= 5:  # 5次失败后锁定
-                        lockout_key = f"login:lockout:{form_data.username}"
-                        redis_cli.setex(lockout_key, 900, "1") # 锁定15分钟
-            except Exception:
-                pass
+            # 记录登录失败
+            lockout_result = AccountLockoutService.record_failed_login(
+                username=form_data.username,
+                ip=client_ip,
+                user_agent=user_agent,
+                reason="wrong_password",
+                db=db
+            )
+            
+            # 构建错误消息
+            error_detail = {
+                "error_code": "WRONG_PASSWORD",
+                "message": "用户名或密码错误",  # 统一错误消息，不泄露信息
+            }
+            
+            # 如果账户被锁定，更新错误消息
+            if lockout_result["locked"]:
+                error_detail["error_code"] = "ACCOUNT_LOCKED"
+                error_detail["message"] = f"登录失败次数过多，账户已被锁定{AccountLockoutService.LOCKOUT_DURATION_MINUTES}分钟"
+                error_detail["locked_until"] = lockout_result["locked_until"]
+                logger.warning(f"账户已锁定: {form_data.username}, IP: {client_ip}, 失败次数: {lockout_result['attempts']}")
+                status_code = status.HTTP_423_LOCKED
+            else:
+                # 提示剩余尝试次数
+                remaining = AccountLockoutService.LOCKOUT_THRESHOLD - lockout_result["attempts"]
+                if remaining <= 2:
+                    error_detail["message"] += f"，剩余尝试次数: {remaining}"
+                status_code = status.HTTP_401_UNAUTHORIZED
+            
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={
-                    "error_code": "WRONG_PASSWORD",
-                    "message": "密码错误，忘记密码请联系管理员重置",
-                },
+                status_code=status_code,
+                detail=error_detail,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -188,10 +218,6 @@ def login(
             refresh_expires=refresh_token_expires,
         )
         
-        # 获取客户端信息
-        client_ip = request.client.host if request.client else None
-        user_agent = request.headers.get("User-Agent")
-        
         # 创建会话记录
         try:
             SessionService.create_session(
@@ -206,14 +232,13 @@ def login(
         except Exception as e:
             logger.warning(f"创建会话记录失败: {e}")
         
-        # 登录成功，清除失败计数
-        try:
-            from app.utils.redis_client import get_redis_client as get_redis_success
-            redis_success = get_redis_success()
-            if redis_success:
-                redis_success.delete(f"login:attempts:{form_data.username}")
-        except Exception:
-            pass
+        # 登录成功，清除失败计数和记录成功登录
+        AccountLockoutService.record_successful_login(
+            username=form_data.username,
+            ip=client_ip,
+            user_agent=user_agent,
+            db=db
+        )
 
         # 显式回滚任何可能的更改，确保不触发数据库写入
         db.rollback()
@@ -274,6 +299,7 @@ def logout(
 
 
 @router.post("/refresh", response_model=RefreshTokenResponse, status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")  # 每分钟最多10次刷新，防止滥用
 def refresh_token(
     request: Request,
     refresh_data: RefreshTokenRequest,

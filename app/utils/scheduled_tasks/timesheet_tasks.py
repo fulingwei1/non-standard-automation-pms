@@ -62,15 +62,49 @@ def timesheet_anomaly_alert_task():
     异常工时预警任务
     每天下午14:00执行，检测并提醒异常工时记录
     """
-    from app.services.timesheet_reminder import notify_timesheet_anomaly
+    from app.services.timesheet_reminder.anomaly_detector import TimesheetAnomalyDetector
+    from app.services.timesheet_reminder.notification_sender import NotificationSender
+    from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
+    from app.models.timesheet_reminder import ReminderTypeEnum
 
     try:
         with get_db_session() as db:
-            count = notify_timesheet_anomaly(db, days=1)
-            logger.info(f"[{datetime.now()}] 异常工时预警完成: 发送 {count} 条提醒")
+            # 使用新的异常检测器
+            detector = TimesheetAnomalyDetector(db)
+            anomalies = detector.detect_all_anomalies(
+                start_date=date.today() - timedelta(days=1),
+                end_date=date.today()
+            )
+
+            # 为每个异常创建提醒
+            manager = TimesheetReminderManager(db)
+            sender = NotificationSender(db)
+            reminder_count = 0
+
+            for anomaly in anomalies:
+                # 创建提醒记录
+                reminder = manager.create_reminder_record(
+                    reminder_type=ReminderTypeEnum.ANOMALY_TIMESHEET,
+                    user_id=anomaly.user_id,
+                    user_name=anomaly.user_name,
+                    title=f"异常工时预警：{anomaly.anomaly_type.value}",
+                    content=anomaly.description,
+                    source_type='anomaly',
+                    source_id=anomaly.id,
+                    extra_data=anomaly.anomaly_data,
+                    priority='HIGH',
+                )
+
+                # 发送通知
+                sender.send_reminder_notification(reminder)
+                manager.mark_reminder_sent(reminder.id, ['SYSTEM'])
+                reminder_count += 1
+
+            logger.info(f"[{datetime.now()}] 异常工时预警完成: 检测到 {len(anomalies)} 条异常，发送 {reminder_count} 条提醒")
 
             return {
-                'alert_count': count,
+                'anomaly_count': len(anomalies),
+                'reminder_count': reminder_count,
                 'timestamp': datetime.now().isoformat()
             }
     except Exception as e:

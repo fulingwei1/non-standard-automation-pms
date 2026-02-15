@@ -51,6 +51,9 @@ from app.api.v1.endpoints.pitfalls import router as pitfalls_router
 # 统一审批路由
 from app.api.v1.endpoints.approvals import router as approvals_router
 
+# AI报价单生成路由
+from app.api.v1.presale_ai_quotation import router as presale_ai_quotation_router
+
 api_router = APIRouter()
 
 api_router.include_router(approvals_router, prefix="/approvals", tags=["approvals"])
@@ -66,7 +69,14 @@ api_router.include_router(organization.router, prefix="/org", tags=["organizatio
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(sessions.router, prefix="/auth", tags=["sessions"])
 api_router.include_router(two_factor.router, prefix="/auth/2fa", tags=["2fa"])
+
+# 账户锁定管理（管理员功能）
+from app.api.v1.endpoints.account_unlock import router as account_unlock_router
+api_router.include_router(account_unlock_router, prefix="/admin/account-lockout", tags=["admin", "security"])
 api_router.include_router(budget.router, prefix="/budgets", tags=["budgets"])
+# 标准成本库模块
+from app.api.v1.endpoints.standard_costs import router as standard_costs_router
+api_router.include_router(standard_costs_router, prefix="/standard-costs", tags=["standard-costs"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 
@@ -91,8 +101,14 @@ from app.api.v1.endpoints.shortage import router as shortage_router
 api_router.include_router(shortage_router, prefix="/shortage", tags=["shortage"])
 # 销售模块已拆分为子模块，从sales包导入
 from app.api.v1.endpoints.sales import router as sales_router
+from app.api.v1.endpoints.sales_teams import router as sales_teams_router
+from app.api.v1.endpoints.sales_targets import router as sales_targets_router
+from app.api.v1.endpoints.sales_regions import router as sales_regions_router
 
 api_router.include_router(sales_router, prefix="/sales", tags=["sales"])
+api_router.include_router(sales_teams_router, prefix="/sales-teams", tags=["sales-teams"])
+api_router.include_router(sales_targets_router, prefix="/sales-targets", tags=["sales-targets"])
+api_router.include_router(sales_regions_router, prefix="/sales-regions", tags=["sales-regions"])
 api_router.include_router(
     notifications.router, prefix="/notifications", tags=["notifications"]
 )
@@ -120,6 +136,24 @@ api_router.include_router(task_center_router, prefix="", tags=["task-center"])
 from app.api.v1.endpoints.timesheet import router as timesheet_router
 
 api_router.include_router(timesheet_router, prefix="", tags=["timesheet"])
+
+# 工时提醒管理模块
+from app.api.v1.endpoints.timesheet_reminders import router as timesheet_reminders_router
+
+api_router.include_router(
+    timesheet_reminders_router,
+    prefix="/timesheet/reminders",
+    tags=["timesheet-reminders"]
+)
+
+# 工时报表自动生成系统
+from app.api.v1.endpoints.report import router as report_router
+
+api_router.include_router(
+    report_router,
+    prefix="/reports",
+    tags=["reports"]
+)
 # PMO模块已拆分为pmo包
 from app.api.v1.endpoints.pmo import router as pmo_router
 
@@ -127,7 +161,30 @@ api_router.include_router(pmo_router, prefix="", tags=["pmo"])
 # 售前模块已拆分为presale包
 from app.api.v1.endpoints.presale import router as presale_router
 
+# 注册AI报价单生成路由
+api_router.include_router(presale_ai_quotation_router, tags=["AI报价单生成"])
+
 api_router.include_router(presale_router, prefix="", tags=["presale"])
+
+# AI需求理解模块
+from app.api.v1.endpoints.presale_ai_requirement import router as presale_ai_requirement_router
+from app.api.v1 import presale_ai_cost, presale_ai_win_rate, presale_ai_knowledge, presale_ai_quotation
+
+api_router.include_router(presale_ai_requirement_router, prefix="", tags=["presale-ai"])
+api_router.include_router(presale_ai_cost.router, prefix="/api/v1", tags=["presale-ai-cost"])
+api_router.include_router(presale_ai_win_rate.router, prefix="/api/v1", tags=["presale-ai-win-rate"])
+api_router.include_router(presale_ai_knowledge.router, prefix="/api/v1", tags=["presale-ai-knowledge"])
+api_router.include_router(presale_ai_quotation.router, prefix="/api/v1", tags=["presale-ai-quotation"])
+
+# AI实时销售助手（移动端）模块
+from app.api.v1.endpoints.presale_mobile import router as presale_mobile_router
+
+api_router.include_router(presale_mobile_router, prefix="/api/v1/presale/mobile", tags=["presale-mobile"])
+
+# AI赢率预测模块
+from app.api.v1.presale_ai_win_rate import router as presale_ai_win_rate_router
+
+api_router.include_router(presale_ai_win_rate_router, prefix="/api/v1", tags=["presale-ai-win-rate"])
 # 绩效管理模块已拆分为performance包
 from app.api.v1.endpoints.performance import router as performance_router
 
@@ -231,6 +288,11 @@ api_router.include_router(
     dashboard_unified.router, prefix="", tags=["dashboard-unified"]
 )
 api_router.include_router(dashboard_stats.router, prefix="", tags=["dashboard-stats"])
+
+# 成本仪表盘模块
+from app.api.v1.endpoints.dashboard import router as dashboard_router
+
+api_router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(hr_management.router, prefix="/hr", tags=["hr-management"])
 # 售前数据分析模块（从 presales_integration 重命名）
 from app.api.v1.endpoints.presale_analytics import router as presale_analytics_router

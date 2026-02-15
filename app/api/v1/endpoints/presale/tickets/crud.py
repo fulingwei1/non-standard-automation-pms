@@ -79,9 +79,13 @@ def create_ticket(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    创建支持申请
+    创建支持申请（已集成PM介入策略判断）
     """
     from datetime import datetime
+    from app.services.pm_involvement_service import PMInvolvementService
+    import logging
+    
+    logger = logging.getLogger(__name__)
 
     if ticket_in.ticket_type == 'SOLUTION_REVIEW':
         if not ticket_in.opportunity_id:
@@ -96,6 +100,8 @@ def create_ticket(
             raise HTTPException(status_code=403, detail="无权限为该商机申请评审")
 
     ticket_status = 'REVIEW' if ticket_in.ticket_type == 'SOLUTION_REVIEW' else 'PENDING'
+    
+    # 创建工单基本信息
     ticket = PresaleSupportTicket(
         ticket_no=generate_ticket_no(db),
         title=ticket_in.title,
@@ -115,7 +121,63 @@ def create_ticket(
         status=ticket_status,
         created_by=current_user.id
     )
-
+    
+    # ========================================
+    # PM介入策略判断（2026-02-15新增）
+    # ========================================
+    try:
+        # 准备项目数据（从工单信息中提取）
+        project_data = {
+            "项目金额": getattr(ticket_in, 'estimated_amount', 0),
+            "项目类型": ticket_in.title or "",  # 从标题推断项目类型
+            "行业": getattr(ticket_in, 'industry', ""),
+            "是否首次做": getattr(ticket_in, 'is_first_time', False),
+            "历史相似项目数": 0,  # 需要从数据库查询（暂时默认0）
+            "失败项目数": 0,  # 需要从数据库查询（暂时默认0）
+            "是否有标准方案": getattr(ticket_in, 'has_standard_solution', False),
+            "技术创新点": getattr(ticket_in, 'innovation_points', [])
+        }
+        
+        # 调用PM介入判断服务
+        pm_result = PMInvolvementService.judge_pm_involvement_timing(project_data)
+        
+        # 保存判断结果到工单
+        ticket.pm_involvement_required = pm_result.get('需要PM审核', False)
+        ticket.pm_involvement_risk_level = pm_result.get('风险等级', '低')
+        ticket.pm_involvement_risk_factors = pm_result.get('原因', [])
+        ticket.pm_involvement_checked_at = datetime.now()
+        
+        # 如果需要PM提前介入，记录日志并发送通知
+        if ticket.pm_involvement_required:
+            logger.warning(
+                f"工单 {ticket.ticket_no} 需要PM提前介入！"
+                f"风险等级: {ticket.pm_involvement_risk_level}, "
+                f"风险因素数: {pm_result.get('风险因素数', 0)}"
+            )
+            
+            # 发送通知给PMO（企业微信/钉钉）
+            try:
+                notification_message = PMInvolvementService.generate_notification_message(
+                    pm_result,
+                    {
+                        "项目名称": ticket.title,
+                        "客户名称": ticket.customer_name or "未知",
+                        "预估金额": project_data.get("项目金额", 0)
+                    }
+                )
+                # TODO: 调用企业微信/钉钉通知接口
+                # send_wechat_notification(notification_message)
+                logger.info(f"PM介入通知已生成（待集成通知渠道）")
+            except Exception as e:
+                logger.error(f"发送PM介入通知失败: {e}")
+    
+    except Exception as e:
+        # PM介入判断失败不影响工单创建
+        logger.error(f"PM介入策略判断失败: {e}", exc_info=True)
+        ticket.pm_involvement_required = False
+        ticket.pm_involvement_risk_level = '低'
+    
+    # 保存工单
     db.add(ticket)
     db.commit()
     db.refresh(ticket)

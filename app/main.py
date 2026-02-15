@@ -6,7 +6,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
-from app.core.rate_limit import limiter
+from app.core.rate_limiting import limiter
 from app.core.security_headers import setup_security_headers
 from app.core.csrf import CSRFMiddleware
 from app.core.logging_config import setup_logging

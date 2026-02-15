@@ -1,0 +1,133 @@
+# Docker Compose - WAF配置
+# 版本: 1.0.0
+# 日期: 2026-02-15
+# 用途: 部署Nginx + ModSecurity WAF
+
+version: '3.8'
+
+services:
+  # Nginx + ModSecurity WAF
+  nginx-waf:
+    image: owasp/modsecurity-crs:nginx-alpine
+    container_name: pms-waf
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx配置
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      
+      # ModSecurity配置
+      - ./docker/nginx/modsecurity/main.conf:/etc/nginx/modsecurity/main.conf:ro
+      - ./docker/nginx/modsecurity/custom-rules.conf:/etc/nginx/modsecurity/custom-rules.conf:ro
+      
+      # SSL证书
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      
+      # 静态文件
+      - ./frontend/dist:/var/www/pms/frontend:ro
+      - ./static:/var/www/pms/static:ro
+      - ./media:/var/www/pms/media:rw
+      
+      # 错误页面
+      - ./docker/nginx/errors:/var/www/pms/errors:ro
+      
+      # 日志
+      - ./logs/nginx:/var/log/nginx
+      
+      # 缓存
+      - nginx-cache:/var/cache/nginx
+    networks:
+      - pms-network
+    depends_on:
+      - backend
+    environment:
+      - TZ=Asia/Shanghai
+      # ModSecurity配置
+      - MODSEC_RULE_ENGINE=On  # On | DetectionOnly | Off
+      - MODSEC_REQ_BODY_ACCESS=On
+      - MODSEC_REQ_BODY_LIMIT=13107200
+      - MODSEC_RESP_BODY_ACCESS=On
+      - MODSEC_AUDIT_LOG=/var/log/nginx/modsec_audit.log
+      - MODSEC_AUDIT_ENGINE=RelevantOnly
+      # OWASP CRS配置
+      - PARANOIA=1  # 1-4，越高越严格
+      - ANOMALY_INBOUND=5
+      - ANOMALY_OUTBOUND=4
+      - BLOCKING_PARANOIA=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # FastAPI后端（已存在，这里仅作参考）
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pms-backend
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - ./app:/app/app:ro
+      - ./data:/app/data:rw
+      - ./uploads:/app/uploads:rw
+    networks:
+      - pms-network
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - TZ=Asia/Shanghai
+    depends_on:
+      - db
+
+  # PostgreSQL数据库（已存在，这里仅作参考）
+  db:
+    image: postgres:15-alpine
+    container_name: pms-db
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - pms-network
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-pms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-pms}
+      - TZ=Asia/Shanghai
+
+  # WAF日志收集器（可选）
+  waf-logger:
+    image: fluent/fluentd:v1.16-1
+    container_name: pms-waf-logger
+    restart: unless-stopped
+    volumes:
+      - ./docker/fluentd/fluent.conf:/fluentd/etc/fluent.conf:ro
+      - ./logs/nginx:/var/log/nginx:ro
+      - ./logs/waf:/fluentd/log
+    networks:
+      - pms-network
+    depends_on:
+      - nginx-waf
+    environment:
+      - TZ=Asia/Shanghai
+
+volumes:
+  postgres-data:
+    driver: local
+  nginx-cache:
+    driver: local
+
+networks:
+  pms-network:
+    driver: bridge

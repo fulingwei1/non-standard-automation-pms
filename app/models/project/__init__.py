@@ -46,6 +46,9 @@ from .resource_plan import (
 # 风险历史
 from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 
+# 成本预测和预警
+from .cost_forecast import CostAlert, CostAlertRule, CostForecast
+
 # 项目复盘（兼容导出）
 from app.models.project_review import ProjectReview  # noqa: F401
 
@@ -89,6 +92,10 @@ __all__ = [
     # 风险历史
     "ProjectRiskHistory",
     "ProjectRiskSnapshot",
+    # 成本预测和预警
+    "CostForecast",
+    "CostAlert",
+    "CostAlertRule",
     # 项目复盘
     "ProjectReview",
     # 枚举兼容

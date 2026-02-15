@@ -45,10 +45,22 @@ def read_projects(
     min_progress: Optional[float] = Query(None, ge=0, le=100, description="最小进度百分比"),
     max_progress: Optional[float] = Query(None, ge=0, le=100, description="最大进度百分比"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
+    # 成本相关参数
+    include_cost: bool = Query(False, description="是否包含成本摘要"),
+    overrun_only: bool = Query(False, description="仅显示超支项目"),
+    sort: Optional[str] = Query(
+        None, 
+        description="排序方式：cost_desc（成本倒序）/ cost_asc（成本正序）/ budget_used_pct（预算使用率倒序）/ created_at_desc（默认）"
+    ),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取项目列表（支持分页、搜索、筛选）
+    获取项目列表（支持分页、搜索、筛选、成本展示）
+    
+    **新增功能**：
+    - `include_cost=true`: 在列表中显示成本摘要（总成本、预算、使用率、是否超支等）
+    - `overrun_only=true`: 仅显示超支项目
+    - `sort=cost_desc/cost_asc/budget_used_pct`: 按成本或预算使用率排序
     """
     query = db.query(Project)
 
@@ -89,6 +101,13 @@ def read_projects(
     if is_active is not None:
         query = query.filter(Project.is_active == is_active)
 
+    # 超支项目筛选（仅当 overrun_only=true 时）
+    if overrun_only:
+        query = query.filter(
+            Project.actual_cost > Project.budget_amount,
+            Project.budget_amount > 0
+        )
+
     # 应用数据权限过滤
     from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
@@ -99,8 +118,32 @@ def read_projects(
         selectinload(Project.manager)
     )
 
-    # 缓存逻辑
-    use_cache = not keyword and not any([customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress])
+    # 排序逻辑
+    if sort == "cost_desc":
+        query = query.order_by(desc(Project.actual_cost))
+    elif sort == "cost_asc":
+        query = query.order_by(Project.actual_cost)
+    elif sort == "budget_used_pct":
+        # 按预算使用率排序（actual_cost / budget_amount）
+        # 使用CASE避免除以0
+        from sqlalchemy import case
+        budget_used_expr = case(
+            (Project.budget_amount > 0, Project.actual_cost / Project.budget_amount),
+            else_=0
+        )
+        query = query.order_by(desc(budget_used_expr))
+    else:
+        # 默认按创建时间倒序
+        query = query.order_by(desc(Project.created_at))
+
+    # 缓存逻辑（如果有成本相关参数，禁用缓存）
+    use_cache = (
+        not keyword 
+        and not any([customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress])
+        and not include_cost
+        and not overrun_only
+        and not sort
+    )
     if use_cache:
         try:
             from app.services.cache_service import CacheService
@@ -125,7 +168,7 @@ def read_projects(
         total = 0
 
     # 分页
-    projects = apply_pagination(query.order_by(desc(Project.created_at)), pagination.offset, pagination.limit).all()
+    projects = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     # 补充冗余字段
     for project in projects:
@@ -133,6 +176,16 @@ def read_projects(
             project.customer_name = project.customer.customer_name
         if not project.pm_name and project.manager:
             project.pm_name = project.manager.real_name or project.manager.username
+
+    # 批量获取成本数据（如果需要）
+    cost_summaries = {}
+    if include_cost and projects:
+        from app.services.project_cost_aggregation_service import ProjectCostAggregationService
+        cost_service = ProjectCostAggregationService(db)
+        project_ids = [p.id for p in projects]
+        cost_summaries = cost_service.get_projects_cost_summary(
+            project_ids, include_breakdown=True
+        )
 
     total = int(total) if total is not None else 0
     pages = pagination.pages_for_total(total)
@@ -152,6 +205,7 @@ def read_projects(
             "pm_id": p.pm_id,
             "sales_id": p.salesperson_id,  # 映射 salesperson_id -> sales_id
             "te_id": getattr(p, "te_id", None),  # 技术负责人ID（如有）
+            "cost_summary": cost_summaries.get(p.id) if include_cost else None,
         }
         project_items.append(ProjectListResponse(**item_dict))
 
@@ -163,7 +217,7 @@ def read_projects(
         pages=pages
     )
 
-    # 存入缓存
+    # 存入缓存（仅在不包含成本数据时）
     if use_cache:
         try:
             from app.core.config import settings

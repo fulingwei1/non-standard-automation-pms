@@ -64,6 +64,9 @@ from ...progress import (
 # 预算管理
 from ...budget import ProjectBudget, ProjectBudgetItem, ProjectCostAllocationRule
 
+# 挣值管理 (EVM)
+from ...earned_value import EarnedValueData, EarnedValueSnapshot
+
 __all__ = [
     # Project
     "Project",
@@ -85,6 +88,9 @@ __all__ = [
     "ProjectBudget",
     "ProjectBudgetItem",
     "ProjectCostAllocationRule",
+    # Earned Value Management (EVM)
+    "EarnedValueData",
+    "EarnedValueSnapshot",
     # Project Evaluation
     "ProjectEvaluation",
     "ProjectEvaluationDimension",

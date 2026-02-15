@@ -24,6 +24,13 @@ class TicketCreate(BaseModel):
     project_id: Optional[int] = Field(None, description="关联项目ID")
     expected_date: Optional[date] = Field(None, description="期望完成日期")
     deadline: Optional[datetime] = Field(None, description="截止时间")
+    
+    # PM介入策略判断所需字段（2026-02-15新增）
+    estimated_amount: Optional[float] = Field(0, description="预估项目金额（万元）")
+    industry: Optional[str] = Field("", description="客户行业")
+    is_first_time: Optional[bool] = Field(False, description="是否首次承接该类型项目")
+    has_standard_solution: Optional[bool] = Field(False, description="是否有标准化方案")
+    innovation_points: Optional[List[str]] = Field(default_factory=list, description="技术创新点")
 
 
 class TicketUpdate(BaseModel):
@@ -88,6 +95,15 @@ class TicketResponse(TimestampSchema):
     actual_hours: Optional[float] = None
     satisfaction_score: Optional[int] = None
     feedback: Optional[str] = None
+    
+    # PM介入策略结果（2026-02-15新增）
+    pm_involvement_required: Optional[bool] = Field(False, description="是否需要PM提前介入")
+    pm_involvement_risk_level: Optional[str] = Field(None, description="风险等级（高/低）")
+    pm_involvement_risk_factors: Optional[List[str]] = Field(default_factory=list, description="风险因素列表")
+    pm_involvement_checked_at: Optional[datetime] = Field(None, description="PM介入检查时间")
+    pm_assigned: Optional[bool] = Field(False, description="PM是否已分配")
+    pm_user_id: Optional[int] = Field(None, description="分配的PM用户ID")
+    pm_assigned_at: Optional[datetime] = Field(None, description="PM分配时间")
 
 
 class DeliverableResponse(TimestampSchema):

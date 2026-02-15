@@ -1,0 +1,54 @@
+# Dockerfile - Nginx + ModSecurity WAF
+# 版本: 1.0.0
+# 日期: 2026-02-15
+# 基础镜像: OWASP ModSecurity CRS
+
+FROM owasp/modsecurity-crs:nginx-alpine
+
+LABEL maintainer="PMS Security Team"
+LABEL description="Nginx + ModSecurity WAF for Non-Standard Automation PMS"
+LABEL version="1.0.0"
+
+# 安装额外工具
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    tzdata \
+    bash
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 创建必要的目录
+RUN mkdir -p \
+    /var/log/nginx \
+    /var/cache/nginx \
+    /var/www/pms/frontend \
+    /var/www/pms/static \
+    /var/www/pms/media \
+    /var/www/pms/errors \
+    /etc/nginx/modsecurity \
+    /etc/nginx/ssl
+
+# 复制自定义配置（这些将通过volume挂载）
+# COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+# COPY docker/nginx/conf.d /etc/nginx/conf.d
+# COPY docker/nginx/modsecurity /etc/nginx/modsecurity
+# COPY docker/nginx/ssl /etc/nginx/ssl
+
+# 复制错误页面
+COPY docker/nginx/errors /var/www/pms/errors
+
+# 设置权限
+RUN chown -R nginx:nginx /var/log/nginx /var/cache/nginx /var/www/pms
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
+# 暴露端口
+EXPOSE 80 443
+
+# 启动Nginx
+CMD ["nginx", "-g", "daemon off;"]

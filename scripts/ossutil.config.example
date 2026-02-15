@@ -1,0 +1,149 @@
+# 阿里云OSS配置示例
+# 用途: 配置ossutil工具，用于备份文件上传到阿里云OSS
+# 使用方法: 
+#   1. 复制此文件: cp ossutil.config.example ~/.ossutilconfig
+#   2. 修改下方配置信息
+#   3. 测试连接: ossutil ls
+
+[Credentials]
+# OSS访问密钥（在阿里云控制台获取）
+# https://ram.console.aliyun.com/manage/ak
+accessKeyID = YOUR_ACCESS_KEY_ID
+accessKeySecret = YOUR_ACCESS_KEY_SECRET
+
+# OSS Endpoint（根据Bucket所在地域选择）
+# 常用地域:
+#   华东1（杭州）: https://oss-cn-hangzhou.aliyuncs.com
+#   华东2（上海）: https://oss-cn-shanghai.aliyuncs.com
+#   华北1（青岛）: https://oss-cn-qingdao.aliyuncs.com
+#   华北2（北京）: https://oss-cn-beijing.aliyuncs.com
+#   华南1（深圳）: https://oss-cn-shenzhen.aliyuncs.com
+endpoint = https://oss-cn-hangzhou.aliyuncs.com
+
+# OSS Bucket名称
+# 注意: 需要先在阿里云控制台创建Bucket
+bucket = pms-backups
+
+# ==================== 可选配置 ====================
+
+# 并发上传数（提高上传速度）
+# parallel = 3
+
+# 分片上传阈值（大于此大小的文件使用分片上传，单位MB）
+# bigfileThreshold = 100
+
+# 分片大小（单位MB）
+# partSize = 10
+
+# 上传失败重试次数
+# retryTimes = 3
+
+# 日志级别（debug/info/warning/error）
+# logLevel = info
+
+# 日志文件路径
+# logPath = ~/.ossutil_log/ossutil.log
+
+# ==================== 安装和使用 ====================
+
+# 1. 安装ossutil工具
+# 
+# Linux/macOS:
+#   wget https://gosspublic.alicdn.com/ossutil/1.7.16/ossutil64
+#   chmod +x ossutil64
+#   sudo mv ossutil64 /usr/local/bin/ossutil
+#
+# 或使用包管理器（如Homebrew）:
+#   brew install ossutil
+
+# 2. 配置ossutil
+#   cp ossutil.config.example ~/.ossutilconfig
+#   vim ~/.ossutilconfig  # 修改配置
+
+# 3. 创建Bucket（如果还没有）
+#   ossutil mb oss://pms-backups
+
+# 4. 测试连接
+#   ossutil ls oss://pms-backups
+
+# 5. 手动上传测试
+#   ossutil cp /var/backups/pms/pms_20260215_020000.sql.gz oss://pms-backups/database/
+
+# 6. 查看Bucket内容
+#   ossutil ls oss://pms-backups/database/
+
+# 7. 下载文件
+#   ossutil cp oss://pms-backups/database/pms_20260215_020000.sql.gz /tmp/
+
+# 8. 删除文件
+#   ossutil rm oss://pms-backups/database/old_backup.sql.gz
+
+# ==================== 目录结构建议 ====================
+#
+# oss://pms-backups/
+# ├── database/          # 数据库备份
+# │   ├── pms_20260215_020000.sql.gz
+# │   └── pms_20260215_020000.sql.gz.md5
+# ├── files/             # 文件备份
+# │   ├── uploads_20260215_030000.tar.gz
+# │   └── uploads_20260215_030000.tar.gz.md5
+# ├── configs/           # 配置文件备份
+# │   ├── configs_20260215_030000.tar.gz
+# │   └── configs_20260215_030000.tar.gz.md5
+# ├── logs/              # 日志备份（可选）
+# │   └── logs_20260215_030000.tar.gz
+# └── full/              # 完整备份归档
+#     └── pms_full_20260216_010000.tar.gz
+
+# ==================== 常用命令 ====================
+#
+# 列出所有Bucket:
+#   ossutil ls
+#
+# 列出Bucket中的文件:
+#   ossutil ls oss://pms-backups/database/
+#
+# 递归列出所有文件:
+#   ossutil ls oss://pms-backups/ -r
+#
+# 上传文件（覆盖）:
+#   ossutil cp local_file.gz oss://pms-backups/database/ --force
+#
+# 批量上传:
+#   ossutil cp /var/backups/pms/ oss://pms-backups/ -r
+#
+# 下载文件:
+#   ossutil cp oss://pms-backups/database/file.gz /tmp/
+#
+# 删除文件:
+#   ossutil rm oss://pms-backups/database/old_file.gz
+#
+# 设置文件过期时间（生命周期）:
+#   ossutil lifecycle --method put oss://pms-backups lifecycle.xml
+#
+# 查看存储用量:
+#   ossutil du oss://pms-backups/
+
+# ==================== 成本优化 ====================
+#
+# 1. 使用存储类型分级:
+#    - 标准存储: 最近7天的备份
+#    - 低频访问: 7-30天的备份
+#    - 归档存储: 30天以上的备份
+#
+# 2. 设置生命周期规则:
+#    - 30天后自动转为低频访问
+#    - 90天后自动转为归档存储
+#    - 365天后自动删除
+#
+# 3. 启用服务端压缩
+#
+# 4. 使用增量备份减少存储
+
+# ==================== 安全建议 ====================
+#
+# 1. 使用RAM子账号，限制权限为最小范围
+# 2. 启用Bucket访问日志
+# 3. 启用服务端加密（SSE-OSS或SSE-KMS）
+# 4. 定期轮换AccessKey
+# 5. 不要将配置文件提交到Git仓库

@@ -1,0 +1,57 @@
+{
+  "presale_ticket_id": 1004,
+  "customer_id": 104,
+  "quotation_type": "standard",
+  "items": [
+    {
+      "name": "生产管理系统",
+      "description": "包含生产计划、工单管理、质量管理、设备管理",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 180000,
+      "total_price": 180000,
+      "category": "软件开发"
+    },
+    {
+      "name": "MES系统集成",
+      "description": "与现有MES系统对接",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 35000,
+      "total_price": 35000,
+      "category": "软件开发"
+    },
+    {
+      "name": "数据采集终端",
+      "description": "车间数据采集设备（含安装）",
+      "quantity": 10,
+      "unit": "台",
+      "unit_price": 3000,
+      "total_price": 30000,
+      "category": "硬件设备"
+    },
+    {
+      "name": "报表开发",
+      "description": "定制化生产报表和看板",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 12000,
+      "total_price": 12000,
+      "category": "软件开发"
+    },
+    {
+      "name": "现场实施服务",
+      "description": "驻场实施和用户培训（20天）",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 25000,
+      "total_price": 25000,
+      "category": "服务"
+    }
+  ],
+  "tax_rate": 0.13,
+  "discount_rate": 0.08,
+  "validity_days": 45,
+  "payment_terms": "总金额: ¥290,760\n付款方式:\n- 首付款: 30% (¥87,228) - 签订合同后7个工作日内\n- 中期款: 40% (¥116,304) - 完成中期验收后7个工作日内\n- 尾款: 30% (¥87,228) - 完成终期验收后7个工作日内",
+  "notes": "专为制造业定制，适合中小型生产企业"
+}

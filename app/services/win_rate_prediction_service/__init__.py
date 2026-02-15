@@ -8,7 +8,9 @@ from .analysis import (
     get_win_rate_distribution,
     validate_model_accuracy,
 )
-from .base import WinRatePredictionService
+from .base import WinRatePredictionService as OldWinRatePredictionService
+from .service import WinRatePredictionService
+from .ai_service import AIWinRatePredictionService
 from .factors import (
     calculate_amount_factor,
     calculate_base_score,

@@ -50,6 +50,8 @@ __all__ = [
     "ProjectBudget",
     "ProjectBudgetItem",
     "ProjectCostAllocationRule",
+    "EarnedValueData",
+    "EarnedValueSnapshot",
     "ProjectEvaluation",
     "ProjectEvaluationDimension",
     "ProjectReview",

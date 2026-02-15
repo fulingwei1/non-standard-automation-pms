@@ -128,6 +128,15 @@ class PresaleSupportTicket(Base, TimestampMixin):
     satisfaction_score = Column(Integer, comment='满意度评分(1-5)')
     feedback = Column(Text, comment='反馈意见')
 
+    # PM介入策略（2026-02-15新增）
+    pm_involvement_required = Column(Boolean, default=False, comment='是否需要PM提前介入')
+    pm_involvement_risk_level = Column(String(20), comment='风险等级（高/低）')
+    pm_involvement_risk_factors = Column(JSON, comment='风险因素列表')
+    pm_involvement_checked_at = Column(DateTime, comment='PM介入检查时间')
+    pm_assigned = Column(Boolean, default=False, comment='PM是否已分配')
+    pm_user_id = Column(Integer, ForeignKey('users.id'), comment='分配的PM用户ID')
+    pm_assigned_at = Column(DateTime, comment='PM分配时间')
+
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
 
     # 关系

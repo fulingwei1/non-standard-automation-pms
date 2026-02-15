@@ -11,6 +11,9 @@ from fastapi import APIRouter
 from . import (
     assessments,
     contracts,
+    customers,
+    contacts,
+    customer_tags,
     cost_management,
     disputes,
     expenses,
@@ -54,6 +57,9 @@ router = APIRouter()
 
 # 注意：优先级路由需要在leads之前注册，避免路径冲突
 # /sales/leads/priority-ranking 需要在 /sales/leads/{lead_id} 之前匹配
+router.include_router(customers.router, tags=["sales-customers"])
+router.include_router(contacts.router, tags=["sales-contacts"])
+router.include_router(customer_tags.router, tags=["sales-customer-tags"])
 router.include_router(priority.router, tags=["sales-priority"])
 router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])

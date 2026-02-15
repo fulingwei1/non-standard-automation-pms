@@ -27,6 +27,8 @@ from .allocation import router as allocation_router
 from .analysis import router as analysis_router
 from .budget import router as budget_router
 from .crud import router as crud_router
+from .evm import router as evm_router
+from .forecast import router as forecast_router
 from .labor import router as labor_router
 from .review import router as review_router
 from .summary import router as summary_router
@@ -40,10 +42,12 @@ router = APIRouter()
 # 先注册自定义端点（静态路径）
 router.include_router(summary_router, tags=["projects-costs-summary"])
 router.include_router(analysis_router, tags=["projects-costs-analysis"])
+router.include_router(forecast_router, tags=["projects-costs-forecast"])
 router.include_router(budget_router, tags=["projects-costs-budget"])
 router.include_router(labor_router, tags=["projects-costs-labor"])
 router.include_router(review_router, tags=["projects-costs-review"])
 router.include_router(alert_router, tags=["projects-costs-alert"])
+router.include_router(evm_router, tags=["projects-costs-evm"])
 
 # 再注册CRUD路由（由基类提供）- 动态路径
 router.include_router(crud_router, tags=["projects-costs-crud"])

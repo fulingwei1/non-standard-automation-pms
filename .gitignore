@@ -47,6 +47,17 @@ data/*.sqlite3
 .env.*.local
 .env.production
 .env.vercel
+.env.secret
+
+# Secrets (密钥文件 - 永远不要提交!)
+secrets/
+!secrets/.gitkeep
+!secrets/*.example
+!secrets/README.md
+*.secret
+*.key
+*_key.txt
+secret_*.txt
 
 # Logs
 *.log

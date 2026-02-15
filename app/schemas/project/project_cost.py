@@ -207,3 +207,28 @@ class ProjectPaymentPlanResponse(TimestampSchema):
 
     class Config:
         from_attributes = True
+
+
+# ==================== 项目成本摘要（用于列表展示）====================
+
+
+class ProjectCostBreakdown(BaseModel):
+    """成本明细"""
+    
+    labor: Decimal = Field(default=Decimal("0"), description="人工成本")
+    material: Decimal = Field(default=Decimal("0"), description="材料成本")
+    equipment: Decimal = Field(default=Decimal("0"), description="设备成本")
+    travel: Decimal = Field(default=Decimal("0"), description="差旅成本")
+    other: Decimal = Field(default=Decimal("0"), description="其他成本")
+
+
+class ProjectCostSummary(BaseModel):
+    """项目成本摘要（用于列表展示）"""
+    
+    total_cost: Decimal = Field(default=Decimal("0"), description="总成本")
+    budget: Decimal = Field(default=Decimal("0"), description="预算")
+    budget_used_pct: Decimal = Field(default=Decimal("0"), description="预算使用率（百分比）")
+    overrun: bool = Field(default=False, description="是否超支")
+    variance: Decimal = Field(default=Decimal("0"), description="成本差异（实际-预算）")
+    variance_pct: Decimal = Field(default=Decimal("0"), description="差异率（百分比）")
+    cost_breakdown: Optional[ProjectCostBreakdown] = Field(default=None, description="成本明细（可选）")

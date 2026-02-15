@@ -157,4 +157,21 @@ TIMESHEET_TASKS = [
             "retry_on_failure": False,
         },
     },
+    {
+        "id": "monthly_report_generation",
+        "name": "每月自动生成工时报表",
+        "module": "app.utils.scheduled_tasks.report_tasks",
+        "callable": "monthly_report_generation_task",
+        "cron": {"day": 1, "hour": 9, "minute": 0},
+        "owner": "Backend Platform",
+        "category": "Timesheet Management",
+        "description": "每月1号上午9点自动生成上月工时报表并归档",
+        "enabled": True,
+        "dependencies_tables": ["timesheet", "report_template", "report_archive", "report_recipient", "users", "departments", "projects"],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 1800,
+            "retry_on_failure": True,
+        },
+    },
 ]

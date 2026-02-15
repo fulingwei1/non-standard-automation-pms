@@ -176,6 +176,8 @@ class Project(Base, TimestampMixin):
     documents = relationship(
         "ProjectDocument", back_populates="project", lazy="dynamic"
     )
+    # EVM - 挣值管理
+    earned_value_data = relationship("EarnedValueData", back_populates="project", lazy="dynamic")
     # 阶段模板化关系
     stage_template = relationship("StageTemplate", foreign_keys=[stage_template_id])
     stage_instances = relationship(
@@ -190,6 +192,8 @@ class Project(Base, TimestampMixin):
     warranty_info = relationship("ProjectWarranty", back_populates="project", uselist=False)
     implementation_info = relationship("ProjectImplementation", back_populates="project", uselist=False)
     presale_info = relationship("ProjectPresale", back_populates="project", uselist=False)
+    # 变更管理关系
+    change_requests = relationship("ChangeRequest", back_populates="project", lazy="dynamic")
 
     __table_args__ = (
         Index("idx_projects_code", "project_code"),

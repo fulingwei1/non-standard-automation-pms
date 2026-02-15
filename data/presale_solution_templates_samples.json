@@ -1,0 +1,349 @@
+[
+  {
+    "name": "汽车零部件装配线方案",
+    "code": "AUTO_ASSEMBLY_001",
+    "industry": "汽车",
+    "equipment_type": "装配",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "针对汽车零部件装配的自动化生产线方案，采用六轴机器人+视觉定位+自动拧紧系统，实现高效精准装配。",
+      "technical_parameters": {
+        "生产节拍": "45秒/件",
+        "自动化程度": "95%",
+        "装配精度": "±0.02mm",
+        "适用产品": "变速箱、发动机组件",
+        "占地面积": "60平方米"
+      },
+      "equipment_list": [
+        {"name": "六轴装配机器人", "model": "KUKA KR 60-3", "quantity": 3, "function": "零件抓取和装配"},
+        {"name": "视觉定位系统", "model": "Cognex In-Sight 9000", "quantity": 2, "function": "零件识别和定位"},
+        {"name": "自动拧紧系统", "model": "Atlas Copco PowerFocus", "quantity": 2, "function": "螺栓自动拧紧"},
+        {"name": "PLC控制系统", "model": "Siemens S7-1500", "quantity": 1, "function": "整线控制"},
+        {"name": "工业平板", "model": "研华TPC-2140WP", "quantity": 2, "function": "人机交互"}
+      ],
+      "process_flow": "1.上料→2.视觉识别→3.机器人抓取→4.精确定位→5.自动装配→6.拧紧检测→7.质量检验→8.下料",
+      "key_features": ["柔性生产", "视觉引导", "力矩监控", "数据追溯"],
+      "technical_advantages": ["提高效率60%", "降低不良率至0.3%", "减少人工70%"]
+    },
+    "architecture_diagram": "graph TB\n    A[上料单元] --> B[视觉定位单元]\n    B --> C[机器人装配单元]\n    C --> D[拧紧检测单元]\n    D --> E[质量检验单元]\n    E --> F[下料单元]\n    G[PLC控制系统] -.控制.-> A\n    G -.控制.-> B\n    G -.控制.-> C\n    G -.控制.-> D\n    G -.控制.-> E\n    H[MES系统] -.数据.-> G",
+    "bom_template": {
+      "categories": ["机器人", "视觉系统", "控制系统", "工装夹具", "安全防护"]
+    },
+    "typical_cost_range_min": 800000.00,
+    "typical_cost_range_max": 1200000.00,
+    "tags": ["汽车", "装配", "机器人", "视觉定位"],
+    "keywords": "汽车 装配 机器人 视觉 自动拧紧 柔性生产"
+  },
+  {
+    "name": "电子产品SMT贴片生产线",
+    "code": "ELECTRONICS_SMT_001",
+    "industry": "电子",
+    "equipment_type": "贴片",
+    "complexity_level": "complex",
+    "solution_content": {
+      "description": "高速SMT贴片生产线，适用于手机主板、笔记本主板等电子产品，配备高速贴片机+AOI检测+回流焊接。",
+      "technical_parameters": {
+        "生产节拍": "15秒/板",
+        "贴片精度": "±0.025mm",
+        "最小元件": "0201",
+        "CPH": "80000",
+        "占地面积": "100平方米"
+      },
+      "equipment_list": [
+        {"name": "高速贴片机", "model": "YAMAHA YSM20", "quantity": 2, "function": "高速元件贴装"},
+        {"name": "多功能贴片机", "model": "YAMAHA YSM10", "quantity": 1, "function": "异形件贴装"},
+        {"name": "锡膏印刷机", "model": "DEK Horizon 03iX", "quantity": 1, "function": "锡膏印刷"},
+        {"name": "回流焊", "model": "BTU Pyramax", "quantity": 1, "function": "焊接"},
+        {"name": "AOI检测", "model": "Koh Young Zenith", "quantity": 2, "function": "贴片检测"}
+      ],
+      "process_flow": "PCB上料→锡膏印刷→SPI检测→高速贴片→多功能贴片→AOI检测→回流焊→AOI检测→下料",
+      "key_features": ["高速贴装", "3D检测", "智能编程", "可追溯"],
+      "technical_advantages": ["UPH提升80%", "首件合格率99%", "换线时间减少50%"]
+    },
+    "architecture_diagram": "graph LR\n    A[上板机] --> B[锡膏印刷机]\n    B --> C[SPI]\n    C --> D[高速贴片机1]\n    D --> E[高速贴片机2]\n    E --> F[多功能贴片机]\n    F --> G[AOI1]\n    G --> H[回流焊]\n    H --> I[AOI2]\n    I --> J[下板机]",
+    "typical_cost_range_min": 5000000.00,
+    "typical_cost_range_max": 8000000.00,
+    "tags": ["电子", "SMT", "贴片", "AOI", "高速"],
+    "keywords": "电子 SMT 贴片 AOI 回流焊 高速贴片机"
+  },
+  {
+    "name": "食品包装自动化生产线",
+    "code": "FOOD_PACKAGING_001",
+    "industry": "食品",
+    "equipment_type": "包装",
+    "complexity_level": "simple",
+    "solution_content": {
+      "description": "食品自动包装生产线，适用于饼干、糖果、坚果等产品，包含自动称重+包装+封口+装箱。",
+      "technical_parameters": {
+        "包装速度": "60-80袋/分钟",
+        "称重精度": "±1g",
+        "包装规格": "50g-500g",
+        "自动化程度": "85%",
+        "占地面积": "40平方米"
+      },
+      "equipment_list": [
+        {"name": "多头组合秤", "model": "Ishida CCW-RV", "quantity": 1, "function": "高精度称重"},
+        {"name": "立式包装机", "model": "Bosch SVE 2520", "quantity": 1, "function": "自动制袋包装"},
+        {"name": "金属检测机", "model": "Mettler-Toledo Safeline", "quantity": 1, "function": "金属异物检测"},
+        {"name": "喷码机", "model": "Videojet 1860", "quantity": 1, "function": "生产日期喷印"},
+        {"name": "自动装箱机", "model": "Schneider IM7000", "quantity": 1, "function": "装箱封箱"}
+      ],
+      "process_flow": "上料→多头秤称重→制袋包装→封口→金属检测→喷码→装箱→封箱→码垛",
+      "key_features": ["称重精准", "速度可调", "卫生清洁", "易维护"],
+      "technical_advantages": ["人工减少80%", "废品率<0.5%", "换产时间<30分钟"]
+    },
+    "architecture_diagram": "graph TB\n    A[提升上料] --> B[多头组合秤]\n    B --> C[立式包装机]\n    C --> D[金属检测]\n    D --> E[喷码机]\n    E --> F[装箱机]\n    F --> G[封箱机]\n    G --> H[码垛机]",
+    "typical_cost_range_min": 400000.00,
+    "typical_cost_range_max": 600000.00,
+    "tags": ["食品", "包装", "称重", "自动装箱"],
+    "keywords": "食品 包装 称重 立式包装机 装箱 码垛"
+  },
+  {
+    "name": "医疗器械清洗消毒生产线",
+    "code": "MEDICAL_CLEANING_001",
+    "industry": "医疗",
+    "equipment_type": "清洗消毒",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "医疗器械自动清洗消毒生产线，符合GMP标准，实现超声波清洗+纯水漂洗+热风干燥+包装。",
+      "technical_parameters": {
+        "清洗节拍": "90秒/批",
+        "清洗洁净度": "10级",
+        "灭菌温度": "121°C",
+        "干燥时间": "30分钟",
+        "洁净等级": "D级"
+      },
+      "equipment_list": [
+        {"name": "超声波清洗机", "model": "Elma X-tra 1200", "quantity": 2, "function": "超声波清洗"},
+        {"name": "纯水漂洗机", "model": "Miele PG 8583", "quantity": 1, "function": "纯水漂洗"},
+        {"name": "热风干燥柜", "model": "Tuttnauer 3870M", "quantity": 1, "function": "热风干燥"},
+        {"name": "无菌包装机", "model": "Nelipak Healthcare", "quantity": 1, "function": "无菌包装"},
+        {"name": "环氧乙烷灭菌柜", "model": "Steris AMSCO Eagle", "quantity": 1, "function": "ETO灭菌"}
+      ],
+      "process_flow": "上料→超声波粗洗→超声波精洗→纯水漂洗→热风干燥→检测→无菌包装→ETO灭菌→解析→出库",
+      "key_features": ["GMP合规", "全程追溯", "无菌保证", "验证记录"],
+      "technical_advantages": ["灭菌保证水平SAL 10^-6", "清洗合格率100%", "批记录自动生成"]
+    },
+    "typical_cost_range_min": 1500000.00,
+    "typical_cost_range_max": 2500000.00,
+    "tags": ["医疗", "清洗", "消毒", "GMP", "无菌"],
+    "keywords": "医疗器械 清洗 消毒 灭菌 GMP 超声波 无菌包装"
+  },
+  {
+    "name": "锂电池PACK生产线",
+    "code": "BATTERY_PACK_001",
+    "industry": "新能源",
+    "equipment_type": "组装",
+    "complexity_level": "complex",
+    "solution_content": {
+      "description": "锂电池模组PACK自动化生产线，包含电芯上料、焊接、测试、装配、老化全流程。",
+      "technical_parameters": {
+        "生产节拍": "12秒/PACK",
+        "焊接良品率": "99.5%",
+        "测试电压范围": "0-60V",
+        "日产能": "2000套",
+        "占地面积": "200平方米"
+      },
+      "equipment_list": [
+        {"name": "电芯分选机", "model": "Hioki BT3562", "quantity": 2, "function": "电芯内阻电压分选"},
+        {"name": "激光焊接机", "model": "IPG YLS-6000", "quantity": 4, "function": "电池极耳焊接"},
+        {"name": "电池测试系统", "model": "Chroma 17040", "quantity": 3, "function": "电性能测试"},
+        {"name": "BMS装配线", "model": "定制", "quantity": 1, "function": "BMS板装配"},
+        {"name": "老化测试柜", "model": "定制", "quantity": 10, "function": "电池老化测试"}
+      ],
+      "process_flow": "电芯上料→分选→串并联焊接→半成品测试→BMS装配→整包测试→老化→OCV测试→包装入库",
+      "key_features": ["激光焊接", "在线测试", "数据追溯", "智能分选"],
+      "technical_advantages": ["良品率>99%", "能量密度提升15%", "生产周期缩短40%"]
+    },
+    "typical_cost_range_min": 3000000.00,
+    "typical_cost_range_max": 5000000.00,
+    "tags": ["新能源", "锂电池", "PACK", "焊接", "测试"],
+    "keywords": "锂电池 PACK 焊接 BMS 老化测试 电芯分选"
+  },
+  {
+    "name": "注塑机机械手自动化改造",
+    "code": "INJECTION_ROBOT_001",
+    "industry": "塑料",
+    "equipment_type": "注塑取件",
+    "complexity_level": "simple",
+    "solution_content": {
+      "description": "注塑机配套机械手自动化改造方案，实现自动取件、水口分离、产品检测、装箱。",
+      "technical_parameters": {
+        "取件节拍": "与注塑机同步",
+        "负载": "3kg",
+        "精度": "±0.5mm",
+        "适用机型": "80-500吨注塑机",
+        "投资回收期": "18个月"
+      },
+      "equipment_list": [
+        {"name": "三轴机械手", "model": "Star Seiki SDX", "quantity": 1, "function": "模内取件"},
+        {"name": "水口分离机", "model": "定制", "quantity": 1, "function": "水口与产品分离"},
+        {"name": "视觉检测系统", "model": "Keyence CV-X", "quantity": 1, "function": "产品外观检测"},
+        {"name": "传送带", "model": "定制", "quantity": 1, "function": "产品输送"},
+        {"name": "装箱机械手", "model": "FANUC M-10iA", "quantity": 1, "function": "自动装箱"}
+      ],
+      "process_flow": "注塑成型→开模→机械手取件→水口分离→产品检测→合格品装箱→不良品分拣",
+      "key_features": ["快速部署", "柔性适配", "安全可靠", "易操作"],
+      "technical_advantages": ["人工成本降低60%", "产能提升30%", "不良品率降低50%"]
+    },
+    "typical_cost_range_min": 150000.00,
+    "typical_cost_range_max": 300000.00,
+    "tags": ["塑料", "注塑", "机械手", "自动取件"],
+    "keywords": "注塑机 机械手 自动取件 水口分离 视觉检测"
+  },
+  {
+    "name": "PCB板自动测试分板生产线",
+    "code": "PCB_TEST_001",
+    "industry": "电子",
+    "equipment_type": "测试分板",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "PCB板自动测试分板生产线，实现FCT功能测试+自动分板+二维码追溯+NG板隔离。",
+      "technical_parameters": {
+        "测试节拍": "20秒/板",
+        "测试项目": "50+",
+        "分板精度": "±0.1mm",
+        "良品率": "98%",
+        "日产能": "1500板"
+      },
+      "equipment_list": [
+        {"name": "FCT测试机", "model": "飞针测试系统", "quantity": 3, "function": "功能测试"},
+        {"name": "自动分板机", "model": "ASYS AMS 02", "quantity": 1, "function": "PCB分板"},
+        {"name": "扫码系统", "model": "Cognex DataMan", "quantity": 2, "function": "二维码追溯"},
+        {"name": "NG板隔离机", "model": "定制", "quantity": 1, "function": "不良板隔离"},
+        {"name": "MES系统", "model": "定制", "quantity": 1, "function": "数据采集分析"}
+      ],
+      "process_flow": "上板→扫码→FCT测试→测试数据上传→合格品分板→NG板隔离→包装",
+      "key_features": ["全自动测试", "数据追溯", "柔性分板", "智能分析"],
+      "technical_advantages": ["测试效率提升70%", "数据100%追溯", "误判率<0.1%"]
+    },
+    "typical_cost_range_min": 600000.00,
+    "typical_cost_range_max": 1000000.00,
+    "tags": ["电子", "PCB", "测试", "分板", "追溯"],
+    "keywords": "PCB FCT测试 自动分板 二维码 追溯 MES"
+  },
+  {
+    "name": "CNC上下料机器人工作站",
+    "code": "CNC_ROBOT_001",
+    "industry": "机械加工",
+    "equipment_type": "上下料",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "CNC加工中心配套上下料机器人工作站，实现24小时无人化加工，适用于批量零件加工。",
+      "technical_parameters": {
+        "机床数量": "2-4台",
+        "料盘容量": "50件",
+        "换刀时间": "8秒",
+        "定位精度": "±0.03mm",
+        "工作时长": "24小时无人值守"
+      },
+      "equipment_list": [
+        {"name": "六轴机器人", "model": "ABB IRB 2600", "quantity": 1, "function": "工件上下料"},
+        {"name": "双工位料盘架", "model": "定制", "quantity": 1, "function": "工件存储"},
+        {"name": "三坐标测量", "model": "海克斯康", "quantity": 1, "function": "首件检测"},
+        {"name": "安全围栏", "model": "SICK", "quantity": 1, "function": "安全防护"},
+        {"name": "工控机", "model": "研华IPC-610", "quantity": 1, "function": "系统控制"}
+      ],
+      "process_flow": "毛坯上料→机器人抓取→上料至CNC→加工→机器人取料→首件检测→合格品入库",
+      "key_features": ["柔性布局", "快速换型", "精准定位", "安全防护"],
+      "technical_advantages": ["设备利用率提升至85%", "人工成本节省2人", "产能提升40%"]
+    },
+    "typical_cost_range_min": 500000.00,
+    "typical_cost_range_max": 800000.00,
+    "tags": ["机械加工", "CNC", "机器人", "上下料", "无人化"],
+    "keywords": "CNC 机器人 上下料 无人化 柔性加工"
+  },
+  {
+    "name": "光伏组件自动串焊生产线",
+    "code": "SOLAR_WELDING_001",
+    "industry": "光伏",
+    "equipment_type": "串焊",
+    "complexity_level": "complex",
+    "solution_content": {
+      "description": "光伏电池片自动串焊生产线，实现电池片自动上料、焊接、EL测试、层压全流程自动化。",
+      "technical_parameters": {
+        "生产节拍": "18秒/串",
+        "焊接良品率": "99.8%",
+        "电池片尺寸": "166mm/182mm/210mm",
+        "日产能": "10000片",
+        "占地面积": "150平方米"
+      },
+      "equipment_list": [
+        {"name": "自动串焊机", "model": "Teamtechnik", "quantity": 2, "function": "电池片串焊"},
+        {"name": "EL测试仪", "model": "Suzhou Maxwell", "quantity": 1, "function": "隐裂检测"},
+        {"name": "层压机", "model": "Bürkle", "quantity": 1, "function": "组件层压"},
+        {"name": "自动排版机", "model": "定制", "quantity": 1, "function": "电池片排列"},
+        {"name": "AGV小车", "model": "仙知", "quantity": 2, "function": "物料配送"}
+      ],
+      "process_flow": "电池片上料→自动排版→串焊→EL测试→铺设背板→层压→装框→测试→包装",
+      "key_features": ["高速串焊", "隐裂检测", "柔性生产", "智能调度"],
+      "technical_advantages": ["碎片率<0.2%", "焊接不良<0.5%", "人工减少70%"]
+    },
+    "typical_cost_range_min": 4000000.00,
+    "typical_cost_range_max": 6000000.00,
+    "tags": ["光伏", "串焊", "EL测试", "层压", "自动化"],
+    "keywords": "光伏 电池片 串焊 EL测试 层压 隐裂检测"
+  },
+  {
+    "name": "药品自动分拣包装生产线",
+    "code": "PHARMA_SORTING_001",
+    "industry": "医药",
+    "equipment_type": "分拣包装",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "药品自动分拣包装生产线，符合GMP标准，实现药品自动称重、分拣、包装、贴标、赋码全流程。",
+      "technical_parameters": {
+        "分拣速度": "120瓶/分钟",
+        "称重精度": "±0.1g",
+        "包装规格": "10-100粒/瓶",
+        "洁净等级": "D级",
+        "占地面积": "80平方米"
+      },
+      "equipment_list": [
+        {"name": "自动数粒机", "model": "Pharma Count PC-36", "quantity": 2, "function": "药片自动数粒"},
+        {"name": "旋盖机", "model": "Norden 903", "quantity": 1, "function": "自动旋盖"},
+        {"name": "贴标机", "model": "Herma 362", "quantity": 1, "function": "瓶身贴标"},
+        {"name": "喷码机", "model": "Domino Ax350i", "quantity": 1, "function": "监管码喷印"},
+        {"name": "装盒机", "model": "Uhlmann C2045", "quantity": 1, "function": "自动装盒"}
+      ],
+      "process_flow": "空瓶上线→自动数粒装瓶→旋盖→贴标→喷码→装盒→装箱→关联赋码→入库",
+      "key_features": ["GMP合规", "一物一码", "全程追溯", "洁净生产"],
+      "technical_advantages": ["准确率100%", "追溯合规", "人工减少80%", "换产时间<1小时"]
+    },
+    "typical_cost_range_min": 1200000.00,
+    "typical_cost_range_max": 2000000.00,
+    "tags": ["医药", "分拣", "包装", "GMP", "追溯"],
+    "keywords": "药品 分拣 包装 数粒 贴标 喷码 GMP 追溯"
+  },
+  {
+    "name": "3C产品自动检测包装线",
+    "code": "3C_INSPECTION_001",
+    "industry": "3C电子",
+    "equipment_type": "检测包装",
+    "complexity_level": "medium",
+    "solution_content": {
+      "description": "3C产品（手机、耳机、充电器等）自动检测包装生产线，包含功能测试、外观检测、自动包装、贴标。",
+      "technical_parameters": {
+        "检测节拍": "10秒/个",
+        "外观检测准确率": "99.5%",
+        "包装速度": "30个/分钟",
+        "适用产品": "手机、耳机、充电器",
+        "占地面积": "60平方米"
+      },
+      "equipment_list": [
+        {"name": "功能测试机", "model": "泰瑞达UltraFlex", "quantity": 3, "function": "产品功能测试"},
+        {"name": "视觉检测系统", "model": "Basler ace", "quantity": 2, "function": "外观缺陷检测"},
+        {"name": "自动包装机", "model": "Autobag", "quantity": 1, "function": "产品自动包装"},
+        {"name": "称重检测", "model": "Mettler XS", "quantity": 1, "function": "重量检测"},
+        {"name": "贴标机", "model": "SATO", "quantity": 1, "function": "标签打印贴付"}
+      ],
+      "process_flow": "产品上料→功能测试→外观检测→称重检测→合格品包装→贴标→装箱→关联SN码",
+      "key_features": ["多工位测试", "AI视觉检测", "柔性包装", "数据追溯"],
+      "technical_advantages": ["检测效率提升80%", "漏检率<0.1%", "人工减少75%"]
+    },
+    "typical_cost_range_min": 800000.00,
+    "typical_cost_range_max": 1500000.00,
+    "tags": ["3C", "检测", "包装", "视觉检测", "功能测试"],
+    "keywords": "3C 手机 耳机 功能测试 视觉检测 自动包装 追溯"
+  }
+]

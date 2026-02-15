@@ -3,6 +3,26 @@
 销售管理 Schema 模块
 """
 
+from .customers import (
+    CustomerCreate,
+    CustomerUpdate,
+    CustomerResponse,
+    CustomerListResponse,
+    CustomerStatsResponse,
+)
+from .contacts import (
+    ContactCreate,
+    ContactUpdate,
+    ContactResponse,
+    ContactListResponse,
+    SetPrimaryRequest,
+)
+from .customer_tags import (
+    CustomerTagCreate,
+    CustomerTagBatchCreate,
+    CustomerTagResponse,
+    PredefinedTagsResponse,
+)
 from .ai_clarifications import (
     AIClarificationCreate,
     AIClarificationResponse,
@@ -152,8 +172,42 @@ from .quote_templates import (
     TemplateVersionDiff,
     TemplateApprovalHistoryRecord,
 )
+from .presale_ai_cost import (
+    CostEstimationInput,
+    CostEstimationResponse,
+    CostOptimizationInput,
+    CostOptimizationResponse,
+    PricingInput,
+    PricingResponse,
+    CostComparisonInput,
+    CostComparisonResponse,
+    CostComparisonItem,
+    HistoricalAccuracyResponse,
+    UpdateActualCostInput,
+    UpdateActualCostResponse,
+    CostBreakdown,
+    PricingRecommendation,
+    OptimizationSuggestion,
+)
 
 __all__ = [
+    # 客户档案相关
+    "CustomerCreate",
+    "CustomerUpdate",
+    "CustomerResponse",
+    "CustomerListResponse",
+    "CustomerStatsResponse",
+    # 联系人相关
+    "ContactCreate",
+    "ContactUpdate",
+    "ContactResponse",
+    "ContactListResponse",
+    "SetPrimaryRequest",
+    # 客户标签相关
+    "CustomerTagCreate",
+    "CustomerTagBatchCreate",
+    "CustomerTagResponse",
+    "PredefinedTagsResponse",
     # AI澄清相关
     "AIClarificationCreate",
     "AIClarificationUpdate",
@@ -295,4 +349,20 @@ __all__ = [
     # 模板通用
     "TemplateVersionDiff",
     "TemplateApprovalHistoryRecord",
+    # AI成本估算相关
+    "CostEstimationInput",
+    "CostEstimationResponse",
+    "CostOptimizationInput",
+    "CostOptimizationResponse",
+    "PricingInput",
+    "PricingResponse",
+    "CostComparisonInput",
+    "CostComparisonResponse",
+    "CostComparisonItem",
+    "HistoricalAccuracyResponse",
+    "UpdateActualCostInput",
+    "UpdateActualCostResponse",
+    "CostBreakdown",
+    "PricingRecommendation",
+    "OptimizationSuggestion",
 ]

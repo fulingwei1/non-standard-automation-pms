@@ -1,0 +1,29 @@
+{
+  "presale_ticket_id": 1001,
+  "customer_id": 101,
+  "quotation_type": "basic",
+  "items": [
+    {
+      "name": "基础ERP系统",
+      "description": "包含进销存管理、基础财务管理功能",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 80000,
+      "total_price": 80000,
+      "category": "软件开发"
+    },
+    {
+      "name": "系统部署与培训",
+      "description": "标准部署和基础用户培训（2天）",
+      "quantity": 1,
+      "unit": "次",
+      "unit_price": 5000,
+      "total_price": 5000,
+      "category": "服务"
+    }
+  ],
+  "tax_rate": 0.13,
+  "discount_rate": 0,
+  "validity_days": 30,
+  "notes": "基础版适合小型企业，满足基本管理需求"
+}

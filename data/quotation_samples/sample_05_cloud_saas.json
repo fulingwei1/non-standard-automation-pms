@@ -1,0 +1,66 @@
+{
+  "presale_ticket_id": 1005,
+  "customer_id": 105,
+  "quotation_type": "standard",
+  "items": [
+    {
+      "name": "云端SaaS系统",
+      "description": "基于云的企业管理系统（100用户）",
+      "quantity": 1,
+      "unit": "年",
+      "unit_price": 120000,
+      "total_price": 120000,
+      "category": "软件许可"
+    },
+    {
+      "name": "移动APP开发",
+      "description": "iOS和Android移动应用",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 35000,
+      "total_price": 35000,
+      "category": "软件开发"
+    },
+    {
+      "name": "微信小程序",
+      "description": "微信小程序端",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 18000,
+      "total_price": 18000,
+      "category": "软件开发"
+    },
+    {
+      "name": "数据存储（云）",
+      "description": "500GB云存储空间/年",
+      "quantity": 1,
+      "unit": "年",
+      "unit_price": 8000,
+      "total_price": 8000,
+      "category": "云服务"
+    },
+    {
+      "name": "系统配置与培训",
+      "description": "远程配置和在线培训（3天）",
+      "quantity": 1,
+      "unit": "次",
+      "unit_price": 6000,
+      "total_price": 6000,
+      "category": "服务"
+    },
+    {
+      "name": "技术支持",
+      "description": "在线技术支持（工作日9-18点）",
+      "quantity": 1,
+      "unit": "年",
+      "unit_price": 10000,
+      "total_price": 10000,
+      "category": "服务"
+    }
+  ],
+  "tax_rate": 0.06,
+  "discount_rate": 0.05,
+  "validity_days": 30,
+  "payment_terms": "总金额: ¥198,170\n付款方式:\n- 首付: 50% (¥99,085) - 签订合同后7个工作日内\n- 尾款: 50% (¥99,085) - 系统上线后7个工作日内\n\n注: 续费价格为首年价格的80%",
+  "notes": "SaaS模式，无需额外硬件投入，快速上线"
+}

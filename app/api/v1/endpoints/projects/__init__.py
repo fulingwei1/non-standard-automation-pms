@@ -35,6 +35,7 @@ from . import (
     overview,
     payment_plans,
     risk_analytics,
+    risks,
     status,
     sync,
     templates,
@@ -54,6 +55,7 @@ from .timesheet import router as timesheet_router
 from .work_logs import router as work_logs_router
 from .workload import router as workload_router
 from .approvals import router as approvals_router
+from .change_requests import router as change_requests_router
 
 # Export gate check functions for use by stage_advance_service
 from .gate_checks import check_gate, check_gate_detailed
@@ -201,5 +203,15 @@ router.include_router(ext_resources.router, tags=["projects-resources"])
 router.include_router(ext_reviews.router, tags=["projects-reviews"])
 router.include_router(ext_risks.router, tags=["projects-risks"])
 
+# 新版风险管理路由（完整功能版）
+router.include_router(risks.router, tags=["projects-risks-v2"])
+
 # 项目审批路由（已废弃，迁移到统一审批）
 router.include_router(approvals_router, tags=["projects-approvals"])
+
+# 变更管理路由（项目内操作）
+router.include_router(
+    change_requests_router,
+    prefix="/{project_id}/changes",
+    tags=["projects-changes"],
+)

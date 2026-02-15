@@ -1,0 +1,75 @@
+{
+  "presale_ticket_id": 1003,
+  "customer_id": 103,
+  "quotation_type": "premium",
+  "items": [
+    {
+      "name": "高级ERP系统",
+      "description": "包含全功能模块：进销存、财务、人力资源、项目管理、BI分析、AI智能推荐",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 250000,
+      "total_price": 250000,
+      "category": "软件开发"
+    },
+    {
+      "name": "定制化开发",
+      "description": "根据企业特定需求定制功能模块",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 50000,
+      "total_price": 50000,
+      "category": "软件开发"
+    },
+    {
+      "name": "系统集成",
+      "description": "与现有系统（财务软件、OA等）无缝集成",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 30000,
+      "total_price": 30000,
+      "category": "软件开发"
+    },
+    {
+      "name": "移动端APP",
+      "description": "iOS、Android、小程序全平台支持",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 40000,
+      "total_price": 40000,
+      "category": "软件开发"
+    },
+    {
+      "name": "系统部署与培训",
+      "description": "高级部署和全员培训（10天）",
+      "quantity": 1,
+      "unit": "次",
+      "unit_price": 20000,
+      "total_price": 20000,
+      "category": "服务"
+    },
+    {
+      "name": "数据迁移与清洗",
+      "description": "专业数据迁移和数据质量优化",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 15000,
+      "total_price": 15000,
+      "category": "服务"
+    },
+    {
+      "name": "一年技术支持",
+      "description": "7x24小时VIP技术支持服务",
+      "quantity": 1,
+      "unit": "年",
+      "unit_price": 20000,
+      "total_price": 20000,
+      "category": "服务"
+    }
+  ],
+  "tax_rate": 0.13,
+  "discount_rate": 0.10,
+  "validity_days": 60,
+  "payment_terms": "总金额: ¥432,450\n付款方式:\n- 首付款: 20% (¥86,490) - 签订合同后7个工作日内\n- 需求确认: 30% (¥129,735) - 完成需求文档签署后7个工作日内\n- 中期款: 30% (¥129,735) - 完成中期验收后7个工作日内\n- 尾款: 20% (¥86,490) - 完成终期验收后7个工作日内",
+  "notes": "高级版适合大型企业，提供完整解决方案和VIP服务"
+}

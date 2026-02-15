@@ -1,0 +1,48 @@
+{
+  "presale_ticket_id": 1002,
+  "customer_id": 102,
+  "quotation_type": "standard",
+  "items": [
+    {
+      "name": "标准ERP系统",
+      "description": "包含进销存、财务管理、人力资源、报表分析功能",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 150000,
+      "total_price": 150000,
+      "category": "软件开发"
+    },
+    {
+      "name": "移动端APP",
+      "description": "iOS和Android移动应用，支持移动办公",
+      "quantity": 1,
+      "unit": "套",
+      "unit_price": 30000,
+      "total_price": 30000,
+      "category": "软件开发"
+    },
+    {
+      "name": "系统部署与培训",
+      "description": "标准部署和用户培训（5天）",
+      "quantity": 1,
+      "unit": "次",
+      "unit_price": 10000,
+      "total_price": 10000,
+      "category": "服务"
+    },
+    {
+      "name": "数据迁移服务",
+      "description": "从旧系统迁移数据",
+      "quantity": 1,
+      "unit": "项",
+      "unit_price": 8000,
+      "total_price": 8000,
+      "category": "服务"
+    }
+  ],
+  "tax_rate": 0.13,
+  "discount_rate": 0.05,
+  "validity_days": 45,
+  "payment_terms": "总金额: ¥187,110\n付款方式:\n- 首付款: 30% (¥56,133) - 签订合同后7个工作日内\n- 中期款: 40% (¥74,844) - 完成中期验收后7个工作日内\n- 尾款: 30% (¥56,133) - 完成终期验收后7个工作日内",
+  "notes": "标准版性价比最高，推荐中型企业使用"
+}

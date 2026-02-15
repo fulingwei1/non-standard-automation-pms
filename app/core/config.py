@@ -52,12 +52,25 @@ class Settings(BaseSettings):
     # 生产环境必须从环境变量设置 SECRET_KEY
     # 开发环境如未设置将自动生成一个临时密钥
     SECRET_KEY: Optional[str] = None
+    OLD_SECRET_KEYS: Optional[str] = None  # 旧密钥列表（逗号分隔），用于密钥轮转
+    SECRET_KEY_FILE: Optional[str] = None  # 密钥文件路径（Docker Secrets）
+    OLD_SECRET_KEYS_FILE: Optional[str] = None  # 旧密钥文件路径
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24小时
+    
+    # 密钥管理配置
+    SECRET_KEY_MIN_LENGTH: int = 32  # 密钥最小长度（字符数）
+    SECRET_KEY_ROTATION_DAYS: int = 90  # 推荐的密钥轮转周期（天）
+    OLD_KEYS_GRACE_PERIOD_DAYS: int = 30  # 旧密钥有效期（天）
+    OLD_KEYS_MAX_COUNT: int = 3  # 最多保留的旧密钥数量
 
     @model_validator(mode="after")
     def validate_secret_key(self) -> "Settings":
-        """验证并设置 SECRET_KEY"""
+        """验证并设置 SECRET_KEY
+        
+        注意: 密钥验证和加载逻辑已移至 SecretKeyManager
+        这里仅做基本检查和开发环境的临时密钥生成
+        """
         if self.SECRET_KEY is None:
             if self.DEBUG:
                 # 开发环境生成临时密钥
@@ -65,13 +78,23 @@ class Settings(BaseSettings):
                 warnings.warn(
                     "使用开发环境临时生成的 SECRET_KEY。"
                     "生产环境请务必通过环境变量 SECRET_KEY 设置安全的密钥。"
+                    "使用 'python scripts/manage_secrets.py generate' 生成安全密钥。"
                 )
             else:
                 # 生产环境必须有密钥
                 raise ValueError(
-                    "生产环境必须设置 SECRET_KEY 环境变量。"
-                    "请使用: python -c 'import secrets; print(secrets.token_urlsafe(32))' 生成安全密钥。"
+                    "生产环境必须设置 SECRET_KEY 环境变量或 SECRET_KEY_FILE。"
+                    "使用 'python scripts/manage_secrets.py generate' 生成安全密钥。"
                 )
+        
+        # 验证密钥长度（基本检查）
+        if len(self.SECRET_KEY) < self.SECRET_KEY_MIN_LENGTH:
+            raise ValueError(
+                f"SECRET_KEY 长度不足 {self.SECRET_KEY_MIN_LENGTH} 字符。"
+                f"当前长度: {len(self.SECRET_KEY)}。"
+                "使用 'python scripts/manage_secrets.py generate' 生成安全密钥。"
+            )
+        
         return self
 
     # CORS配置
@@ -168,6 +191,41 @@ class Settings(BaseSettings):
     KIMI_TEMPERATURE: float = 0.7  # 温度参数，控制随机性
     KIMI_TIMEOUT: int = 30  # 请求超时时间（秒）
     KIMI_ENABLED: bool = False  # 是否启用Kimi AI功能
+
+    # GLM (智谱AI) 配置
+    GLM_API_KEY: Optional[str] = None  # GLM API Key
+    GLM_API_BASE: str = "https://open.bigmodel.cn/api/paas/v4"  # GLM API 基础URL
+    GLM_MODEL: str = "glm-4"  # 默认模型，可选：glm-4, glm-4v, glm-3-turbo
+    GLM_MAX_TOKENS: int = 4000  # 最大生成token数
+    GLM_TEMPERATURE: float = 0.7  # 温度参数，控制随机性
+    GLM_TIMEOUT: int = 30  # 请求超时时间（秒）
+    GLM_ENABLED: bool = False  # 是否启用GLM AI功能
+
+    # API速率限制配置
+    RATE_LIMIT_ENABLED: bool = True  # 是否启用速率限制
+    RATE_LIMIT_STORAGE_URL: Optional[str] = None  # Redis存储URL，未设置则使用内存存储
+    RATE_LIMIT_DEFAULT: str = "100/minute"  # 全局默认速率限制
+    RATE_LIMIT_LOGIN: str = "5/minute"  # 登录端点限制
+    RATE_LIMIT_REGISTER: str = "3/hour"  # 注册端点限制
+    RATE_LIMIT_REFRESH: str = "10/minute"  # Token刷新限制
+    RATE_LIMIT_PASSWORD_CHANGE: str = "3/hour"  # 密码修改限制
+    RATE_LIMIT_DELETE: str = "20/minute"  # 删除操作限制
+    RATE_LIMIT_BATCH: str = "10/minute"  # 批量操作限制
+    
+    @model_validator(mode="after")
+    def validate_rate_limit_storage(self) -> "Settings":
+        """验证速率限制存储配置"""
+        # 如果没有设置专用的速率限制存储URL，尝试使用通用Redis URL
+        if self.RATE_LIMIT_ENABLED and self.RATE_LIMIT_STORAGE_URL is None:
+            if self.REDIS_URL:
+                self.RATE_LIMIT_STORAGE_URL = self.REDIS_URL
+            else:
+                warnings.warn(
+                    "未配置Redis存储，速率限制将使用内存存储。"
+                    "这在分布式部署中可能导致限流不准确。"
+                    "建议设置 REDIS_URL 或 RATE_LIMIT_STORAGE_URL 环境变量。"
+                )
+        return self
 
 
 # 创建全局配置实例

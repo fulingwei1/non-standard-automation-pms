@@ -47,9 +47,24 @@ class Customer(Base, TimestampMixin):
     status = Column(String(20), default="ACTIVE", comment="状态")
     remark = Column(Text, comment="备注")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+    
+    # 销售管理扩展字段
+    website = Column(String(200), comment="公司网址")
+    established_date = Column(String(20), comment="成立日期")  # 使用Date会更好，但为兼容性用String
+    customer_level = Column(String(10), default="D", comment="客户等级：A/B/C/D")
+    account_period = Column(Integer, default=30, comment="账期(天)")
+    customer_source = Column(String(100), comment="客户来源")
+    sales_owner_id = Column(Integer, ForeignKey("users.id"), comment="负责销售人员ID")
+    last_follow_up_at = Column(String(30), comment="最后跟进时间")  # DateTime作为string存储
+    annual_revenue = Column(Numeric(15, 2), default=0, comment="年成交额")
+    cooperation_years = Column(Integer, default=0, comment="合作年限")
 
     # 关系
     projects = relationship("Project", back_populates="customer")
+    sales_owner = relationship("User", foreign_keys=[sales_owner_id])
+    contacts = relationship("Contact", back_populates="customer", cascade="all, delete-orphan")
+    tags = relationship("CustomerTag", back_populates="customer", cascade="all, delete-orphan")
+    opportunities = relationship("Opportunity", back_populates="customer")
 
     # ========================================================================
     # 便捷属性方法
@@ -104,6 +119,28 @@ class Customer(Base, TimestampMixin):
         return self.projects.filter(
             Project.stage.in_(['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'])
         ).all()
+
+    def update_level(self):
+        """
+        根据年成交额和合作年限自动更新客户等级
+        
+        规则：
+        - A级：年成交额>100万，合作>3年
+        - B级：年成交额50-100万，合作1-3年
+        - C级：年成交额10-50万，合作<1年
+        - D级：年成交额<10万或潜在客户
+        """
+        revenue = float(self.annual_revenue or 0)
+        years = self.cooperation_years or 0
+        
+        if revenue > 1000000 and years > 3:
+            self.customer_level = "A"
+        elif revenue >= 500000 and years >= 1:
+            self.customer_level = "B"
+        elif revenue >= 100000:
+            self.customer_level = "C"
+        else:
+            self.customer_level = "D"
 
     def __repr__(self):
         return f"<Customer {self.customer_code}>"

@@ -233,6 +233,12 @@ from ...strategy import (
     StrategyReview,
 )
 
+# 标准成本库
+from ...standard_cost import (
+    StandardCost,
+    StandardCostHistory,
+)
+
 __all__ = [
     # Alert
     "AlertRule",
@@ -406,4 +412,7 @@ __all__ = [
     "StrategyReview",
     "StrategyCalendarEvent",
     "StrategyComparison",
+    # Standard Cost
+    "StandardCost",
+    "StandardCostHistory",
 ]
