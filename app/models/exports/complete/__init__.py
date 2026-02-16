@@ -23,6 +23,10 @@ __all__ = [
     "init_db",
     # State Machine
     "StateTransitionLog",
+    # Tenant
+    "Tenant",
+    "TenantPlan",
+    "TenantStatus",
     # User
     "User",
     "Role",
@@ -31,6 +35,7 @@ __all__ = [
     "UserRole",
     "APIKey",  # API Key认证
     "PermissionAudit",
+    "UserSession",
     # Project (from project_related)
     "Project",
     "Machine",

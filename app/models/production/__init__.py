@@ -42,7 +42,7 @@ from .workshop import Workshop, Workstation
 from .workstation_status import WorkstationStatus
 from .production_schedule import (
     ProductionSchedule,
-    ResourceConflict,
+    ProductionResourceConflict,
     ScheduleAdjustmentLog,
 )
 from .quality_inspection import (
@@ -107,7 +107,7 @@ __all__ = [
     'ProgressAlert',
     # Scheduling
     'ProductionSchedule',
-    'ResourceConflict',
+    'ProductionResourceConflict',
     'ScheduleAdjustmentLog',
     # Quality Management
     'QualityInspection',

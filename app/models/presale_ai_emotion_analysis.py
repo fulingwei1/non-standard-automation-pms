@@ -26,7 +26,7 @@ class PresaleAIEmotionAnalysis(Base):
     __tablename__ = "presale_ai_emotion_analysis"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    presale_ticket_id = Column(Integer, ForeignKey("presale_tickets.id"), nullable=False, index=True, comment="售前工单ID")
+    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), nullable=False, index=True, comment="售前工单ID")
     customer_id = Column(Integer, nullable=False, index=True, comment="客户ID")
     communication_content = Column(Text, comment="沟通内容")
     sentiment = Column(Enum(SentimentType), comment="情绪类型")

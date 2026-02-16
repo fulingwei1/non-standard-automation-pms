@@ -1,0 +1,261 @@
+{
+  "test_time": "2026-02-16T16:13:23.739980",
+  "summary": {
+    "total_tests": 53,
+    "passed": 16,
+    "failed": 37,
+    "success_rate": "30.19%"
+  },
+  "modules": {
+    "用户管理": {
+      "total": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "角色权限": {
+      "total": 3,
+      "passed": 0,
+      "failed": 3
+    },
+    "项目管理": {
+      "total": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "生产管理": {
+      "total": 8,
+      "passed": 1,
+      "failed": 7
+    },
+    "销售管理": {
+      "total": 9,
+      "passed": 1,
+      "failed": 8
+    }
+  },
+  "errors": [
+    {
+      "module": "用户管理",
+      "test": "获取用户列表",
+      "error": "获取用户列表 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：query Field required\",\"detail\":[{\"field\":\"query\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "用户管理",
+      "test": "创建用户",
+      "error": "创建用户 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：query Field required\",\"detail\":[{\"field\":\"query\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "角色权限",
+      "test": "获取角色列表",
+      "error": "获取角色列表 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "角色权限",
+      "test": "获取权限列表",
+      "error": "获取权限列表 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "角色权限",
+      "test": "创建角色",
+      "error": "创建角色 - 期望状态码201, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "项目管理",
+      "test": "获取项目统计",
+      "error": "获取项目统计 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：path Input should be a valid integer, unable to parse string as an integer\",\"detail\":[{\"field\":\"path\",\"message\":\"Input should be a valid integer, unable "
+    },
+    {
+      "module": "项目管理",
+      "test": "创建项目",
+      "error": "创建项目 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "项目管理",
+      "test": "创建测试项目",
+      "error": "创建测试项目 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建工单",
+      "error": "创建工单 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建测试工单",
+      "error": "创建测试工单 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建测试工单",
+      "error": "创建测试工单 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建测试工单",
+      "error": "创建测试工单 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "质量检查列表",
+      "error": "质量检查列表 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建质量检查",
+      "error": "创建质量检查 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "生产管理",
+      "test": "物料跟踪列表",
+      "error": "物料跟踪列表 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "生产管理",
+      "test": "创建测试工单",
+      "error": "创建测试工单 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "生产管理",
+      "test": "产能分析",
+      "error": "产能分析 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "生产管理",
+      "test": "设备状态",
+      "error": "设备状态 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "生产管理",
+      "test": "生产排程",
+      "error": "生产排程 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "销售管理",
+      "test": "客户管理列表",
+      "error": "客户管理列表 - 期望状态码200, 实际500",
+      "response": "Traceback (most recent call last):\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/sqlalchemy/engine/base.py\", line 1967, in _exec_single_context\n    self.diale"
+    },
+    {
+      "module": "销售管理",
+      "test": "创建客户",
+      "error": "创建客户 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "销售管理",
+      "test": "获取客户列表(临时)",
+      "error": "获取客户列表(临时) - 期望状态码200, 实际500",
+      "response": "Traceback (most recent call last):\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/sqlalchemy/engine/base.py\", line 1967, in _exec_single_context\n    self.diale"
+    },
+    {
+      "module": "销售管理",
+      "test": "创建测试客户",
+      "error": "创建测试客户 - 期望状态码201, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"}]}"
+    },
+    {
+      "module": "销售管理",
+      "test": "合同管理列表",
+      "error": "合同管理列表 - 期望状态码200, 实际500",
+      "response": "  + Exception Group Traceback (most recent call last):\n  |   File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/_utils.py\", line 77, in collapse_excgroups\n"
+    },
+    {
+      "module": "销售管理",
+      "test": "创建合同",
+      "error": "创建合同 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：body Field required\",\"detail\":[{\"field\":\"body\",\"message\":\"Field required\"},{\"field\":\"body\",\"message\":\"Input should be a valid integer\"}]}"
+    },
+    {
+      "module": "销售管理",
+      "test": "创建回款记录",
+      "error": "创建回款记录 - 期望状态码200, 实际422",
+      "response": "{\"code\":\"VALIDATION_ERROR\",\"message\":\"请求参数验证失败：query Field required\",\"detail\":[{\"field\":\"query\",\"message\":\"Field required\"},{\"field\":\"query\",\"message\":\"Field required\"},{\"field\":\"query\",\"message\":\"Fie"
+    },
+    {
+      "module": "销售管理",
+      "test": "销售业绩统计",
+      "error": "销售业绩统计 - 期望状态码200, 实际404",
+      "response": "{\"code\":\"HTTP_ERROR\",\"message\":\"Not Found\",\"detail\":\"Not Found\"}"
+    },
+    {
+      "module": "销售管理",
+      "test": "销售机会列表",
+      "error": "销售机会列表 - 期望状态码200, 实际500",
+      "response": "Traceback (most recent call last):\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/sqlalchemy/engine/base.py\", line 1967, in _exec_single_context\n    self.diale"
+    },
+    {
+      "module": "销售管理",
+      "test": "报价单列表",
+      "error": "报价单列表 - 期望状态码200, 实际500",
+      "response": "Traceback (most recent call last):\n  File \"/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/sqlalchemy/engine/base.py\", line 1967, in _exec_single_context\n    self.diale"
+    }
+  ],
+  "warnings": []
+}

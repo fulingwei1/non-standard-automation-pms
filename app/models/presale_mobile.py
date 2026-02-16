@@ -30,7 +30,7 @@ class PresaleMobileAssistantChat(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     presale_ticket_id = Column(
-        Integer, ForeignKey("presale_tickets.id"), nullable=True, comment="售前工单ID"
+        Integer, ForeignKey("presale_support_ticket.id"), nullable=True, comment="售前工单ID"
     )
     question = Column(Text, comment="提问内容")
     answer = Column(Text, comment="AI回答")
@@ -53,7 +53,7 @@ class PresaleVisitRecord(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     presale_ticket_id = Column(
-        Integer, ForeignKey("presale_tickets.id"), nullable=False, comment="售前工单ID"
+        Integer, ForeignKey("presale_support_ticket.id"), nullable=False, comment="售前工单ID"
     )
     customer_id = Column(
         Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID"
@@ -91,7 +91,7 @@ class PresaleMobileQuickEstimate(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     presale_ticket_id = Column(
-        Integer, ForeignKey("presale_tickets.id"), nullable=True, comment="售前工单ID"
+        Integer, ForeignKey("presale_support_ticket.id"), nullable=True, comment="售前工单ID"
     )
     customer_id = Column(
         Integer, ForeignKey("customers.id"), nullable=True, comment="客户ID"

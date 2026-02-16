@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.production import (
     Equipment,
     ProductionSchedule,
-    ResourceConflict,
+    ProductionResourceConflict,
     ScheduleAdjustmentLog,
     Worker,
     WorkerSkill,
@@ -45,7 +45,7 @@ class ProductionScheduleService:
         self,
         request: ScheduleGenerateRequest,
         user_id: int
-    ) -> Tuple[int, List[ProductionSchedule], List[ResourceConflict]]:
+    ) -> Tuple[int, List[ProductionSchedule], List[ProductionResourceConflict]]:
         """
         生成智能排程
         
@@ -439,7 +439,7 @@ class ProductionScheduleService:
     def _detect_conflicts(
         self,
         schedules: List[ProductionSchedule]
-    ) -> List[ResourceConflict]:
+    ) -> List[ProductionResourceConflict]:
         """检测资源冲突"""
         conflicts = []
         detected_at = datetime.now()
@@ -456,7 +456,7 @@ class ProductionScheduleService:
                         schedule2.scheduled_start_time,
                         schedule2.scheduled_end_time
                     )):
-                    conflict = ResourceConflict(
+                    conflict = ProductionResourceConflict(
                         schedule_id=schedule1.id,
                         conflicting_schedule_id=schedule2.id,
                         conflict_type='EQUIPMENT',
@@ -481,7 +481,7 @@ class ProductionScheduleService:
                         schedule2.scheduled_start_time,
                         schedule2.scheduled_end_time
                     )):
-                    conflict = ResourceConflict(
+                    conflict = ProductionResourceConflict(
                         schedule_id=schedule1.id,
                         conflicting_schedule_id=schedule2.id,
                         conflict_type='WORKER',
@@ -640,7 +640,7 @@ class ProductionScheduleService:
         max_delay_hours: float,
         auto_adjust: bool,
         user_id: int
-    ) -> Tuple[Optional[ProductionSchedule], List[ProductionSchedule], List[ResourceConflict]]:
+    ) -> Tuple[Optional[ProductionSchedule], List[ProductionSchedule], List[ProductionResourceConflict]]:
         """
         紧急插单
         

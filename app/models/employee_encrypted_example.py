@@ -13,7 +13,7 @@ from app.models.base import Base
 from app.models.encrypted_types import EncryptedString, EncryptedText, EncryptedNumeric
 
 
-class EmployeeStatus(str, enum.Enum):
+class EmployeeEncryptedExampleStatus(str, enum.Enum):
     """员工状态"""
     ACTIVE = "active"  # 在职
     ON_LEAVE = "on_leave"  # 休假
@@ -21,7 +21,7 @@ class EmployeeStatus(str, enum.Enum):
     PROBATION = "probation"  # 试用期
 
 
-class Employee(Base):
+class EmployeeEncryptedExample(Base):
     """
     员工模型（带加密字段）
     

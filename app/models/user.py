@@ -78,7 +78,10 @@ class User(Base, TimestampMixin):
     )
     # 上下级关系
     manager = relationship(
-        "User", remote_side=[id], foreign_keys=[reporting_to], backref="subordinates"
+        "User", remote_side=[id], foreign_keys=[reporting_to], back_populates="subordinates"
+    )
+    subordinates = relationship(
+        "User", back_populates="manager", foreign_keys=[reporting_to]
     )
     # 项目成员关系（补充缺失的反向关系）
     project_memberships = relationship(
@@ -94,6 +97,10 @@ class User(Base, TimestampMixin):
     # API Key关系
     api_keys = relationship(
         "APIKey", back_populates="user", cascade="all, delete-orphan"
+    )
+    # 积分交易关系
+    credit_transactions = relationship(
+        "SolutionCreditTransaction", back_populates="user", foreign_keys="SolutionCreditTransaction.user_id"
     )
 
     # ========================================================================
@@ -184,7 +191,12 @@ class Role(Base, TimestampMixin):
     api_permissions = relationship(
         "RoleApiPermission", back_populates="role", lazy="dynamic"
     )
-    parent = relationship("Role", remote_side=[id], backref="children")
+    parent = relationship("Role", remote_side=[id], back_populates="children")
+    children = relationship("Role", back_populates="parent", remote_side=[parent_id])
+    
+    # 来自 permission.py 的反向关系
+    data_scopes = relationship("RoleDataScope", back_populates="role")
+    menu_assignments = relationship("RoleMenu", back_populates="role")
 
     def __repr__(self):
         return f"<Role {self.role_code}>"
@@ -226,7 +238,7 @@ class ApiPermission(Base, TimestampMixin):
     is_system = Column(Boolean, default=False, nullable=False, comment="是否系统预置权限")
 
     # 关系
-    tenant = relationship("Tenant", backref="custom_permissions")
+    tenant = relationship("Tenant", back_populates="custom_permissions")
     role_api_permissions = relationship(
         "RoleApiPermission", back_populates="permission", lazy="dynamic"
     )
@@ -361,7 +373,7 @@ class SolutionCreditTransaction(Base):
     created_at = Column(DateTime, default=datetime.now, comment="创建时间")
 
     # 关系
-    user = relationship("User", foreign_keys=[user_id], backref="credit_transactions")
+    user = relationship("User", foreign_keys=[user_id], back_populates="credit_transactions")
     operator = relationship("User", foreign_keys=[operator_id])
 
     def __repr__(self):

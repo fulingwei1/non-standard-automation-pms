@@ -11,7 +11,7 @@ class PresaleEmotionTrend(Base):
     __tablename__ = "presale_emotion_trend"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    presale_ticket_id = Column(Integer, ForeignKey("presale_tickets.id"), nullable=False, index=True, comment="售前工单ID")
+    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), nullable=False, index=True, comment="售前工单ID")
     customer_id = Column(Integer, nullable=False, index=True, comment="客户ID")
     trend_data = Column(JSON, comment="趋势数据 [{date, sentiment, intent_score}]")
     key_turning_points = Column(JSON, comment="关键转折点")

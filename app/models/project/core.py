@@ -194,6 +194,8 @@ class Project(Base, TimestampMixin):
     presale_info = relationship("ProjectPresale", back_populates="project", uselist=False)
     # 变更管理关系
     change_requests = relationship("ChangeRequest", back_populates="project", lazy="dynamic")
+    # 成本预测关系
+    cost_predictions = relationship('CostPrediction', back_populates='project', lazy="dynamic")
 
     __table_args__ = (
         Index("idx_projects_code", "project_code"),

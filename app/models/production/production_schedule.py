@@ -80,12 +80,12 @@ class ProductionSchedule(Base, TimestampMixin):
     equipment = relationship('Equipment', foreign_keys=[equipment_id])
     worker = relationship('Worker', foreign_keys=[worker_id])
     workshop = relationship('Workshop', foreign_keys=[workshop_id])
-    conflicts = relationship('ResourceConflict', back_populates='schedule', foreign_keys='ResourceConflict.schedule_id')
+    conflicts = relationship('ProductionResourceConflict', back_populates='schedule', foreign_keys='ProductionResourceConflict.schedule_id')
     adjustments = relationship('ScheduleAdjustmentLog', back_populates='schedule')
 
 
-class ResourceConflict(Base, TimestampMixin):
-    """资源冲突记录表"""
+class ProductionResourceConflict(Base, TimestampMixin):
+    """生产资源冲突记录表"""
     __tablename__ = 'resource_conflict'
     __table_args__ = (
         Index('idx_conflict_schedule', 'schedule_id'),

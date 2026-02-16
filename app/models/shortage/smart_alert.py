@@ -93,7 +93,7 @@ class ShortageAlert(Base, TimestampMixin):
     material = relationship('Material', foreign_keys=[material_id])
     creator = relationship('User', foreign_keys=[created_by])
     handler = relationship('User', foreign_keys=[handler_id])
-    handling_plan = relationship('ShortageHandlingPlan', back_populates='alerts')
+    handling_plan = relationship('ShortageHandlingPlan', foreign_keys=[handling_plan_id], back_populates='alerts')
     demand_forecast = relationship('MaterialDemandForecast', back_populates='alerts')
     
     __table_args__ = (
@@ -178,7 +178,7 @@ class ShortageHandlingPlan(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
     # 关系
-    alerts = relationship('ShortageAlert', back_populates='handling_plan')
+    alerts = relationship('ShortageAlert', foreign_keys='[ShortageAlert.handling_plan_id]', back_populates='handling_plan')
     target_material = relationship('Material', foreign_keys=[target_material_id])
     creator = relationship('User', foreign_keys=[created_by])
     approver = relationship('User', foreign_keys=[approved_by])

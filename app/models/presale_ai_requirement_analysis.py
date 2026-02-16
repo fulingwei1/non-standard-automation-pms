@@ -14,7 +14,7 @@ class PresaleAIRequirementAnalysis(Base):
     __tablename__ = "presale_ai_requirement_analysis"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    presale_ticket_id = Column(Integer, ForeignKey("presale_tickets.id", ondelete="CASCADE"), nullable=False, index=True)
+    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id", ondelete="CASCADE"), nullable=False, index=True)
     
     # 原始需求
     raw_requirement = Column(Text, nullable=False, comment="客户原始需求描述")
@@ -50,6 +50,8 @@ class PresaleAIRequirementAnalysis(Base):
     # 关系
     # presale_ticket = relationship("PresaleTicket", back_populates="ai_analyses")
     creator = relationship("User", foreign_keys=[created_by])
+    # TODO: 修复循环引用问题后再启用
+    # solutions = relationship('PresaleAISolution', back_populates='requirement_analysis')
 
     def __repr__(self):
         return f"<PresaleAIRequirementAnalysis(id={self.id}, ticket_id={self.presale_ticket_id}, confidence={self.confidence_score})>"

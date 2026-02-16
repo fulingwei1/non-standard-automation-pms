@@ -46,7 +46,6 @@ from ...sales import (
 # AI方案生成
 from ...presale_ai_solution import (
     PresaleAISolution,
-    PresaleSolutionTemplate,
     PresaleAIGenerationLog,
 )
 
@@ -93,6 +92,5 @@ __all__ = [
     "ApprovalHistory",
     # AI Solution Generation
     "PresaleAISolution",
-    "PresaleSolutionTemplate",
     "PresaleAIGenerationLog",
 ]

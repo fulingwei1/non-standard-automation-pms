@@ -61,7 +61,8 @@ class PresaleAISolution(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
     
     # 关联关系
-    requirement_analysis = relationship("PresaleAIRequirementAnalysis", back_populates="solutions")
+    # TODO: 修复循环引用问题后再启用
+    # requirement_analysis = relationship("PresaleAIRequirementAnalysis", back_populates="solutions")
     creator = relationship("User", foreign_keys=[created_by])
     reviewer = relationship("User", foreign_keys=[reviewed_by])
     
@@ -73,7 +74,7 @@ class PresaleAISolution(Base):
     )
 
 
-class PresaleSolutionTemplate(Base):
+class PresaleAISolutionTemplate(Base):
     """方案模板库 (用于相似度匹配)"""
     __tablename__ = "presale_solution_templates"
     

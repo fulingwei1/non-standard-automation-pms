@@ -20,16 +20,55 @@ from .exports.complete import *
 # 枚举补充导出（向后兼容）
 from .enums import ApprovalRecordStatusEnum  # noqa: F401
 
-# AI Knowledge Base
+# AI Knowledge Base & Presale AI System
 from .presale_knowledge_case import PresaleKnowledgeCase  # noqa: F401
 from .presale_ai_qa import PresaleAIQA  # noqa: F401
+from .presale_ai_requirement_analysis import PresaleAIRequirementAnalysis  # noqa: F401
+from .presale_ai_solution import (  # noqa: F401
+    PresaleAISolution,
+    PresaleAISolutionTemplate,
+    PresaleAIGenerationLog,
+)
+from .presale_ai_quotation import (  # noqa: F401
+    PresaleAIQuotation,
+    QuotationTemplate,
+    QuotationApproval,
+    QuotationVersion,
+)
+from .presale_ai_emotion_analysis import PresaleAIEmotionAnalysis  # noqa: F401
+from .presale_emotion_trend import PresaleEmotionTrend  # noqa: F401
+from .presale_ai import (  # noqa: F401
+    PresaleAIUsageStats,
+    PresaleAIFeedback,
+    PresaleAIConfig,
+    PresaleAIWorkflowLog,
+    PresaleAIAuditLog,
+)
+from .presale_mobile import (  # noqa: F401
+    PresaleMobileAssistantChat,
+    PresaleVisitRecord,
+    PresaleMobileQuickEstimate,
+    PresaleMobileOfflineData,
+)
+from .presale_expense import PresaleExpense  # noqa: F401
+from .presale_follow_up_reminder import PresaleFollowUpReminder  # noqa: F401
+from .sales.presale_ai_cost import (  # noqa: F401
+    PresaleAICostEstimation,
+    PresaleCostHistory,
+    PresaleCostOptimizationRecord,
+)
+from .sales.presale_ai_win_rate import (  # noqa: F401
+    PresaleAIWinRate,
+    PresaleWinRateHistory,
+)
 
 # Security & Authentication
 from .login_attempt import LoginAttempt  # noqa: F401
+from .two_factor import User2FASecret, User2FABackupCode  # noqa: F401
 
 # Report System
 from .report import (  # noqa: F401
-    ReportTemplate,
+    TimesheetReportTemplate,
     ReportArchive,
     ReportRecipient,
     ReportTypeEnum,
@@ -58,6 +97,13 @@ from .quality_risk_detection import (  # noqa: F401
     RiskCategoryEnum,
     TestRecommendationStatusEnum,
     TestPriorityEnum,
+)
+
+# Change Request System
+from .change_request import (  # noqa: F401
+    ChangeRequest,
+    ChangeApprovalRecord,
+    ChangeNotification,
 )
 
 # Change Impact Analysis System
@@ -111,6 +157,8 @@ __all__ = [
     "PermissionAudit",
     "UserSession",
     "LoginAttempt",
+    "User2FASecret",
+    "User2FABackupCode",
     # Project
     "Project",
     "Machine",
@@ -523,7 +571,7 @@ __all__ = [
     "PresaleKnowledgeCase",
     "PresaleAIQA",
     # Report System
-    "ReportTemplate",
+    "TimesheetReportTemplate",
     "ReportArchive",
     "ReportRecipient",
     "ReportTypeEnum",

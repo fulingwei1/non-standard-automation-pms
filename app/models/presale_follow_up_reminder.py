@@ -26,7 +26,7 @@ class PresaleFollowUpReminder(Base):
     __tablename__ = "presale_follow_up_reminder"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    presale_ticket_id = Column(Integer, ForeignKey("presale_tickets.id"), nullable=False, index=True, comment="售前工单ID")
+    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), nullable=False, index=True, comment="售前工单ID")
     recommended_time = Column(DateTime, comment="推荐跟进时间")
     priority = Column(Enum(ReminderPriority), comment="优先级")
     follow_up_content = Column(Text, comment="跟进内容建议")

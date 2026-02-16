@@ -215,7 +215,7 @@ class EquityStructure(Base, TimestampMixin):
 
     # 关系
     funding_round = relationship("FundingRound", back_populates="equity_structures")
-    investor = relationship("Investor", foreign_keys=[investor_id])
+    investor = relationship("Investor", foreign_keys=[investor_id], back_populates="equity_structures")
 
     __table_args__ = (
         Index("idx_equity_round", "funding_round_id"),

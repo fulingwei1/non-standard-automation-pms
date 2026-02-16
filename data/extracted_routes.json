@@ -1,0 +1,8598 @@
+[
+  {
+    "path": "/api/v1/openapi.json",
+    "method": "GET",
+    "name": "openapi",
+    "tags": [],
+    "path_params": []
+  },
+  {
+    "path": "/docs",
+    "method": "GET",
+    "name": "swagger_ui_html",
+    "tags": [],
+    "path_params": []
+  },
+  {
+    "path": "/docs/oauth2-redirect",
+    "method": "GET",
+    "name": "swagger_ui_redirect",
+    "tags": [],
+    "path_params": []
+  },
+  {
+    "path": "/redoc",
+    "method": "GET",
+    "name": "redoc_html",
+    "tags": [],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/login",
+    "method": "POST",
+    "name": "login",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/logout",
+    "method": "POST",
+    "name": "logout",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/refresh",
+    "method": "POST",
+    "name": "refresh_token",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "method": "GET",
+    "name": "get_me",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/password",
+    "method": "PUT",
+    "name": "change_password",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/auth/permissions",
+    "method": "GET",
+    "name": "get_permissions",
+    "tags": [
+      "auth"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/",
+    "method": "GET",
+    "name": "read_users",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/",
+    "method": "POST",
+    "name": "create_user",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "method": "GET",
+    "name": "read_user_by_id",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "method": "PUT",
+    "name": "update_user",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}/roles",
+    "method": "PUT",
+    "name": "assign_user_roles",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "method": "DELETE",
+    "name": "delete_user",
+    "tags": [
+      "users",
+      "用户管理"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/sync-from-employees",
+    "method": "POST",
+    "name": "sync_users_from_employees",
+    "tags": [
+      "users",
+      "用户同步"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/create-from-employee/{employee_id}",
+    "method": "POST",
+    "name": "create_user_from_employee",
+    "tags": [
+      "users",
+      "用户同步"
+    ],
+    "path_params": [
+      "employee_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}/toggle-active",
+    "method": "PUT",
+    "name": "toggle_user_active",
+    "tags": [
+      "users",
+      "用户同步"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}/reset-password",
+    "method": "PUT",
+    "name": "reset_user_password",
+    "tags": [
+      "users",
+      "用户同步"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/batch-toggle-active",
+    "method": "POST",
+    "name": "batch_toggle_user_active",
+    "tags": [
+      "users",
+      "用户同步"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/{user_id}/time-allocation",
+    "method": "GET",
+    "name": "get_user_time_allocation",
+    "tags": [
+      "users",
+      "工时分配"
+    ],
+    "path_params": [
+      "user_id"
+    ]
+  },
+  {
+    "path": "/api/v1/users/import",
+    "method": "POST",
+    "name": "import_users",
+    "tags": [
+      "users",
+      "用户批量导入"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/import/template",
+    "method": "GET",
+    "name": "download_import_template",
+    "tags": [
+      "users",
+      "用户批量导入"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/users/import/preview",
+    "method": "POST",
+    "name": "preview_import_data",
+    "tags": [
+      "users",
+      "用户批量导入"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/templates",
+    "method": "GET",
+    "name": "get_project_templates",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/templates",
+    "method": "POST",
+    "name": "create_project_template",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}",
+    "method": "GET",
+    "name": "get_project_template",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}",
+    "method": "PUT",
+    "name": "update_project_template",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/create-project",
+    "method": "POST",
+    "name": "create_project_from_template",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/versions",
+    "method": "GET",
+    "name": "get_template_versions",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/versions",
+    "method": "POST",
+    "name": "create_template_version",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/versions/{version_id}/publish",
+    "method": "PUT",
+    "name": "publish_template_version",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id",
+      "version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/versions/compare",
+    "method": "GET",
+    "name": "compare_template_versions",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/versions/{version_id}/rollback",
+    "method": "POST",
+    "name": "rollback_template_version",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id",
+      "version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/templates/recommend",
+    "method": "GET",
+    "name": "get_recommended_templates",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/templates/{template_id}/usage-statistics",
+    "method": "GET",
+    "name": "get_template_usage_statistics",
+    "tags": [
+      "projects",
+      "projects-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/cache/stats",
+    "method": "GET",
+    "name": "get_cache_stats",
+    "tags": [
+      "projects",
+      "projects-cache"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/cache/clear",
+    "method": "POST",
+    "name": "clear_cache",
+    "tags": [
+      "projects",
+      "projects-cache"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/cache/reset-stats",
+    "method": "POST",
+    "name": "reset_cache_stats",
+    "tags": [
+      "projects",
+      "projects-cache"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/archive",
+    "method": "PUT",
+    "name": "archive_project",
+    "tags": [
+      "projects",
+      "projects-archive"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/unarchive",
+    "method": "PUT",
+    "name": "unarchive_project",
+    "tags": [
+      "projects",
+      "projects-archive"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/archived",
+    "method": "GET",
+    "name": "get_archived_projects",
+    "tags": [
+      "projects",
+      "projects-archive"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/batch/archive",
+    "method": "POST",
+    "name": "batch_archive_projects",
+    "tags": [
+      "projects",
+      "projects-archive"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/overview",
+    "method": "GET",
+    "name": "get_projects_overview",
+    "tags": [
+      "projects",
+      "projects-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/dashboard",
+    "method": "GET",
+    "name": "get_project_dashboard",
+    "tags": [
+      "projects",
+      "projects-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/in-production-summary",
+    "method": "GET",
+    "name": "get_in_production_summary",
+    "tags": [
+      "projects",
+      "projects-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timeline",
+    "method": "GET",
+    "name": "get_project_timeline",
+    "tags": [
+      "projects",
+      "projects-overview"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/views/pipeline",
+    "method": "GET",
+    "name": "get_pipeline_view",
+    "tags": [
+      "projects",
+      "projects-pipeline"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/sync-from-contract",
+    "method": "POST",
+    "name": "sync_project_from_contract",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/sync-to-contract",
+    "method": "POST",
+    "name": "sync_project_to_contract",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/sync-status",
+    "method": "GET",
+    "name": "get_project_sync_status",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/sync-to-erp",
+    "method": "POST",
+    "name": "sync_project_to_erp",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/erp-status",
+    "method": "GET",
+    "name": "get_project_erp_status",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/erp-status",
+    "method": "PUT",
+    "name": "update_project_erp_status",
+    "tags": [
+      "projects",
+      "projects-sync"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/best-practices/popular",
+    "method": "GET",
+    "name": "get_popular_best_practices",
+    "tags": [
+      "projects",
+      "projects-best-practices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/best-practices",
+    "method": "GET",
+    "name": "get_best_practices",
+    "tags": [
+      "projects",
+      "projects-best-practices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/best-practices/{practice_id}",
+    "method": "GET",
+    "name": "get_best_practice_detail",
+    "tags": [
+      "projects",
+      "projects-best-practices"
+    ],
+    "path_params": [
+      "practice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/project-reviews/best-practices/{practice_id}/apply",
+    "method": "POST",
+    "name": "apply_best_practice",
+    "tags": [
+      "projects",
+      "projects-best-practices"
+    ],
+    "path_params": [
+      "practice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/best-practices",
+    "method": "POST",
+    "name": "create_best_practice",
+    "tags": [
+      "projects",
+      "projects-best-practices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/board",
+    "method": "GET",
+    "name": "get_project_board",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/stats",
+    "method": "GET",
+    "name": "get_project_stats",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/clone",
+    "method": "POST",
+    "name": "clone_project",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/",
+    "method": "GET",
+    "name": "read_projects",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/",
+    "method": "POST",
+    "name": "create_project",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}",
+    "method": "GET",
+    "name": "read_project",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}",
+    "method": "PUT",
+    "name": "update_project",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}",
+    "method": "DELETE",
+    "name": "delete_project",
+    "tags": [
+      "projects",
+      "projects-core"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stage",
+    "method": "PUT",
+    "name": "update_project_stage",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目状态"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/status",
+    "method": "GET",
+    "name": "get_project_status",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目状态"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/status",
+    "method": "PUT",
+    "name": "update_project_status",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目状态"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/health",
+    "method": "PUT",
+    "name": "update_project_health",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目状态"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/health/calculate",
+    "method": "POST",
+    "name": "calculate_project_health",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目健康度"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/health/details",
+    "method": "GET",
+    "name": "get_project_health_details",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目健康度"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/health/batch-calculate",
+    "method": "POST",
+    "name": "batch_calculate_project_health",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目健康度"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/init",
+    "method": "POST",
+    "name": "init_project_stages",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目阶段"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/status-history",
+    "method": "GET",
+    "name": "get_project_status_history",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目阶段"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stage-advance",
+    "method": "POST",
+    "name": "advance_project_stage",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目阶段"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/check-auto-transition",
+    "method": "POST",
+    "name": "check_auto_stage_transition",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目阶段"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/gate-check/{target_stage}",
+    "method": "GET",
+    "name": "get_gate_check_result",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目阶段"
+    ],
+    "path_params": [
+      "project_id",
+      "target_stage"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/batch/update-status",
+    "method": "POST",
+    "name": "batch_update_project_status",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目批量操作"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/batch/update-stage",
+    "method": "POST",
+    "name": "batch_update_project_stage",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目批量操作"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/batch/assign-pm",
+    "method": "POST",
+    "name": "batch_assign_project_manager",
+    "tags": [
+      "projects",
+      "projects-status",
+      "项目批量操作"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/payment-plans",
+    "method": "GET",
+    "name": "get_project_payment_plans",
+    "tags": [
+      "projects",
+      "projects-payment-plans"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/payment-plans",
+    "method": "POST",
+    "name": "create_project_payment_plan",
+    "tags": [
+      "projects",
+      "projects-payment-plans"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/payment-plans/{plan_id}",
+    "method": "PUT",
+    "name": "update_project_payment_plan",
+    "tags": [
+      "projects",
+      "projects-payment-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/payment-plans/{plan_id}",
+    "method": "DELETE",
+    "name": "delete_project_payment_plan",
+    "tags": [
+      "projects",
+      "projects-payment-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/extensions/",
+    "method": "GET",
+    "name": "read_project_extensions",
+    "tags": [
+      "projects",
+      "projects-extended"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/extensions/",
+    "method": "POST",
+    "name": "create_project_extension",
+    "tags": [
+      "projects",
+      "projects-extended"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/extensions/statistics",
+    "method": "GET",
+    "name": "get_project_statistics",
+    "tags": [
+      "projects",
+      "projects-extended"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-trend",
+    "method": "GET",
+    "name": "get_project_risk_trend",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-history",
+    "method": "GET",
+    "name": "get_project_risk_history",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-current",
+    "method": "GET",
+    "name": "get_project_current_risk",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-calculate",
+    "method": "POST",
+    "name": "trigger_risk_calculation",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/risk-report/summary",
+    "method": "GET",
+    "name": "get_risk_summary_report",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/risk-report/trend",
+    "method": "GET",
+    "name": "get_global_risk_trend",
+    "tags": [
+      "projects",
+      "projects-risk-analytics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/",
+    "method": "GET",
+    "name": "list_project_milestones",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "项目里程碑"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/",
+    "method": "POST",
+    "name": "create_project_milestone",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "项目里程碑"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+    "method": "GET",
+    "name": "get_project_milestone",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "项目里程碑"
+    ],
+    "path_params": [
+      "project_id",
+      "milestone_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+    "method": "PUT",
+    "name": "update_project_milestone",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "项目里程碑"
+    ],
+    "path_params": [
+      "project_id",
+      "milestone_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+    "method": "DELETE",
+    "name": "delete_project_milestone",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "项目里程碑"
+    ],
+    "path_params": [
+      "project_id",
+      "milestone_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}/complete",
+    "method": "PUT",
+    "name": "complete_project_milestone",
+    "tags": [
+      "projects",
+      "projects-milestones",
+      "里程碑工作流"
+    ],
+    "path_params": [
+      "project_id",
+      "milestone_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/summary",
+    "method": "GET",
+    "name": "get_project_machine_summary",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/recalculate",
+    "method": "POST",
+    "name": "recalculate_project_aggregation",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/progress",
+    "method": "PUT",
+    "name": "update_project_machine_progress",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/bom",
+    "method": "GET",
+    "name": "get_project_machine_bom",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/upload",
+    "method": "POST",
+    "name": "upload_machine_document",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents",
+    "method": "GET",
+    "name": "get_machine_documents",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/{doc_id}/download",
+    "method": "GET",
+    "name": "download_machine_document",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id",
+      "doc_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/{doc_id}/versions",
+    "method": "GET",
+    "name": "get_machine_document_versions",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id",
+      "doc_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}/service-history",
+    "method": "GET",
+    "name": "get_machine_service_history",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/",
+    "method": "GET",
+    "name": "list_project_machines",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/",
+    "method": "POST",
+    "name": "create_project_machine",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+    "method": "GET",
+    "name": "get_project_machine",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+    "method": "PUT",
+    "name": "update_project_machine",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+    "method": "DELETE",
+    "name": "delete_project_machine",
+    "tags": [
+      "projects",
+      "projects-machines"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/summary",
+    "method": "GET",
+    "name": "get_resource_plan_summary",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/",
+    "method": "POST",
+    "name": "create_resource_plan",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+    "method": "DELETE",
+    "name": "delete_resource_plan",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/",
+    "method": "GET",
+    "name": "list_resource_plans",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+    "method": "GET",
+    "name": "get_resource_plan",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+    "method": "PUT",
+    "name": "update_resource_plan",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/assign",
+    "method": "POST",
+    "name": "assign_employee",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/release",
+    "method": "POST",
+    "name": "release_employee",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/check-conflict",
+    "method": "GET",
+    "name": "check_assignment_conflict",
+    "tags": [
+      "projects",
+      "projects-resource-plan"
+    ],
+    "path_params": [
+      "project_id",
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/",
+    "method": "GET",
+    "name": "list_project_members",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/",
+    "method": "POST",
+    "name": "add_project_member",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/{member_id}",
+    "method": "GET",
+    "name": "get_project_member",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/{member_id}",
+    "method": "PUT",
+    "name": "update_project_member",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/{member_id}",
+    "method": "DELETE",
+    "name": "remove_project_member",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/conflicts",
+    "method": "GET",
+    "name": "check_member_conflicts",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/batch",
+    "method": "POST",
+    "name": "batch_add_project_members",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/{member_id}/notify-dept-manager",
+    "method": "POST",
+    "name": "notify_dept_manager",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/members/from-dept/{dept_id}",
+    "method": "GET",
+    "name": "get_dept_users_for_project",
+    "tags": [
+      "projects",
+      "projects-members"
+    ],
+    "path_params": [
+      "project_id",
+      "dept_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/summary",
+    "method": "GET",
+    "name": "get_project_cost_summary",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-summary"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/cost-analysis",
+    "method": "GET",
+    "name": "get_project_cost_analysis",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-analysis"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/revenue-detail",
+    "method": "GET",
+    "name": "get_project_revenue_detail",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-analysis"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/profit-analysis",
+    "method": "GET",
+    "name": "get_project_profit_analysis",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-analysis"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/forecast",
+    "method": "GET",
+    "name": "get_project_cost_forecast",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/trend",
+    "method": "GET",
+    "name": "get_project_cost_trend",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/burn-down",
+    "method": "GET",
+    "name": "get_project_cost_burn_down",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/alerts",
+    "method": "GET",
+    "name": "get_project_cost_alerts",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/forecast-history",
+    "method": "GET",
+    "name": "get_forecast_history",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/compare-methods",
+    "method": "GET",
+    "name": "compare_forecast_methods",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-forecast"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/execution",
+    "method": "GET",
+    "name": "get_budget_execution_analysis",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-budget"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/trend",
+    "method": "GET",
+    "name": "get_budget_trend_analysis",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-budget"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/calculate-labor-cost",
+    "method": "POST",
+    "name": "calculate_project_labor_cost",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-labor"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/generate-cost-review",
+    "method": "POST",
+    "name": "generate_cost_review",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-review"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/check-budget-alert",
+    "method": "POST",
+    "name": "check_project_budget_alert",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-alert"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/evm",
+    "method": "GET",
+    "name": "get_evm_analysis",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-evm"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/evm/trend",
+    "method": "GET",
+    "name": "get_evm_trend",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-evm"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/evm/snapshot",
+    "method": "POST",
+    "name": "create_evm_snapshot",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-evm"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/evm/metrics",
+    "method": "GET",
+    "name": "calculate_evm_metrics",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-evm"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions",
+    "method": "POST",
+    "name": "create_cost_prediction",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}",
+    "method": "GET",
+    "name": "get_prediction_detail",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "prediction_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions/latest",
+    "method": "GET",
+    "name": "get_latest_prediction",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions/history",
+    "method": "GET",
+    "name": "get_prediction_history",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}/approve",
+    "method": "POST",
+    "name": "approve_prediction",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "prediction_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}/suggestions",
+    "method": "GET",
+    "name": "get_optimization_suggestions",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "prediction_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}",
+    "method": "GET",
+    "name": "get_suggestion_detail",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "suggestion_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/review",
+    "method": "POST",
+    "name": "review_suggestion",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "suggestion_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/assign",
+    "method": "POST",
+    "name": "assign_suggestion",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "suggestion_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/complete",
+    "method": "POST",
+    "name": "complete_suggestion",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id",
+      "suggestion_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/cost-health",
+    "method": "GET",
+    "name": "get_project_cost_health",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-prediction-ai"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/",
+    "method": "GET",
+    "name": "list_items",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-crud"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/",
+    "method": "POST",
+    "name": "create_item",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-crud"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+    "method": "GET",
+    "name": "get_item",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-crud"
+    ],
+    "path_params": [
+      "project_id",
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+    "method": "PUT",
+    "name": "update_item",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-crud"
+    ],
+    "path_params": [
+      "project_id",
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+    "method": "DELETE",
+    "name": "delete_item",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-crud"
+    ],
+    "path_params": [
+      "project_id",
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/costs/{cost_id}/allocate",
+    "method": "POST",
+    "name": "allocate_cost",
+    "tags": [
+      "projects",
+      "projects-costs",
+      "projects-costs-allocation"
+    ],
+    "path_params": [
+      "project_id",
+      "cost_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/work-logs/",
+    "method": "GET",
+    "name": "list_project_work_logs",
+    "tags": [
+      "projects",
+      "projects-work-logs"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/work-logs/summary",
+    "method": "GET",
+    "name": "get_project_work_log_summary",
+    "tags": [
+      "projects",
+      "projects-work-logs"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads",
+    "method": "GET",
+    "name": "get_project_leads",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-leads"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads",
+    "method": "POST",
+    "name": "create_project_lead",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-leads"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}",
+    "method": "PUT",
+    "name": "update_project_lead",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-leads"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}",
+    "method": "DELETE",
+    "name": "remove_project_lead",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-leads"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}/team",
+    "method": "GET",
+    "name": "get_team_members",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-team"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}/team",
+    "method": "POST",
+    "name": "add_team_member",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-team"
+    ],
+    "path_params": [
+      "project_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/leads/{lead_id}/team/{member_id}",
+    "method": "DELETE",
+    "name": "remove_team_member",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-team"
+    ],
+    "path_params": [
+      "project_id",
+      "lead_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/configs",
+    "method": "GET",
+    "name": "get_project_role_configs",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-configs"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/configs/init",
+    "method": "POST",
+    "name": "init_project_role_configs",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-configs"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/configs",
+    "method": "PUT",
+    "name": "update_project_role_configs",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-configs"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/roles/overview",
+    "method": "GET",
+    "name": "get_project_role_overview",
+    "tags": [
+      "projects",
+      "projects-roles",
+      "projects-roles-overview"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/latest",
+    "method": "GET",
+    "name": "get_project_latest_evaluation",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}/confirm",
+    "method": "POST",
+    "name": "confirm_project_evaluation",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id",
+      "eval_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/",
+    "method": "POST",
+    "name": "create_project_evaluation",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}",
+    "method": "PUT",
+    "name": "update_project_evaluation",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id",
+      "eval_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/",
+    "method": "GET",
+    "name": "list_project_evaluations",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}",
+    "method": "GET",
+    "name": "get_project_evaluation",
+    "tags": [
+      "projects",
+      "projects-evaluations"
+    ],
+    "path_params": [
+      "project_id",
+      "eval_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/progress/summary",
+    "method": "GET",
+    "name": "get_project_progress_summary",
+    "tags": [
+      "projects",
+      "projects-progress"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/progress/gantt",
+    "method": "GET",
+    "name": "get_project_gantt_data",
+    "tags": [
+      "projects",
+      "projects-progress"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/progress/board",
+    "method": "GET",
+    "name": "get_project_progress_board",
+    "tags": [
+      "projects",
+      "projects-progress"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/progress/machines/{machine_id}/summary",
+    "method": "GET",
+    "name": "get_machine_progress_summary",
+    "tags": [
+      "projects",
+      "projects-progress"
+    ],
+    "path_params": [
+      "project_id",
+      "machine_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/",
+    "method": "GET",
+    "name": "list_project_stages",
+    "tags": [
+      "projects",
+      "projects-stages"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/progress",
+    "method": "GET",
+    "name": "get_project_stages_progress",
+    "tags": [
+      "projects",
+      "projects-stages"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/initialize",
+    "method": "POST",
+    "name": "initialize_project_stages",
+    "tags": [
+      "projects",
+      "projects-stages"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/clear",
+    "method": "DELETE",
+    "name": "clear_project_stages",
+    "tags": [
+      "projects",
+      "projects-stages"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_id}",
+    "method": "GET",
+    "name": "get_project_stage",
+    "tags": [
+      "projects",
+      "projects-stages"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/start",
+    "method": "POST",
+    "name": "start_stage",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/complete",
+    "method": "POST",
+    "name": "complete_stage",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/skip",
+    "method": "POST",
+    "name": "skip_stage",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}",
+    "method": "PUT",
+    "name": "update_stage_instance",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/start",
+    "method": "POST",
+    "name": "start_node",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/complete",
+    "method": "POST",
+    "name": "complete_node",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/skip",
+    "method": "POST",
+    "name": "skip_node",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}",
+    "method": "PUT",
+    "name": "update_node_instance",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/planned-date",
+    "method": "PUT",
+    "name": "update_node_planned_date",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-ops"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/nodes/custom",
+    "method": "POST",
+    "name": "add_custom_node",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-custom"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/assign",
+    "method": "PUT",
+    "name": "assign_node",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-nodes-assignment"
+    ],
+    "path_params": [
+      "project_id",
+      "node_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/status",
+    "method": "PUT",
+    "name": "update_stage_status",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-status"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/review",
+    "method": "POST",
+    "name": "submit_stage_review",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-status"
+    ],
+    "path_params": [
+      "project_id",
+      "stage_instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/views/timeline",
+    "method": "GET",
+    "name": "get_timeline_view",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-views"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/stages/views/tree",
+    "method": "GET",
+    "name": "get_tree_view",
+    "tags": [
+      "projects",
+      "projects-stages",
+      "projects-stages-views"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/summary",
+    "method": "GET",
+    "name": "get_project_timesheet_summary",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/statistics",
+    "method": "GET",
+    "name": "get_project_timesheet_statistics",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/",
+    "method": "POST",
+    "name": "create_item",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/{item_id}",
+    "method": "PUT",
+    "name": "update_item",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id",
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/{item_id}",
+    "method": "DELETE",
+    "name": "delete_item",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id",
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/",
+    "method": "GET",
+    "name": "list_project_timesheets",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/timesheet/{timesheet_id}",
+    "method": "GET",
+    "name": "get_project_timesheet",
+    "tags": [
+      "projects",
+      "projects-timesheet"
+    ],
+    "path_params": [
+      "project_id",
+      "timesheet_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/workload/team",
+    "method": "GET",
+    "name": "get_project_team_workload",
+    "tags": [
+      "projects",
+      "projects-workload"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/workload/gantt",
+    "method": "GET",
+    "name": "get_project_workload_gantt",
+    "tags": [
+      "projects",
+      "projects-workload"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/workload/summary",
+    "method": "GET",
+    "name": "get_project_workload_summary",
+    "tags": [
+      "projects",
+      "projects-workload"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/lessons",
+    "method": "GET",
+    "name": "get_project_lessons",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+    "method": "GET",
+    "name": "get_lesson_detail",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": [
+      "lesson_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/lessons",
+    "method": "POST",
+    "name": "create_project_lesson",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+    "method": "PUT",
+    "name": "update_project_lesson",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": [
+      "lesson_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+    "method": "DELETE",
+    "name": "delete_project_lesson",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": [
+      "lesson_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/lessons/search",
+    "method": "GET",
+    "name": "search_lessons",
+    "tags": [
+      "projects",
+      "projects-lessons"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/relations",
+    "method": "GET",
+    "name": "get_project_relations",
+    "tags": [
+      "projects",
+      "projects-relations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/relations/types",
+    "method": "GET",
+    "name": "get_relation_types",
+    "tags": [
+      "projects",
+      "projects-relations"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/relations",
+    "method": "POST",
+    "name": "create_project_relation",
+    "tags": [
+      "projects",
+      "projects-relations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/relations/{related_project_id}",
+    "method": "DELETE",
+    "name": "delete_project_relation",
+    "tags": [
+      "projects",
+      "projects-relations"
+    ],
+    "path_params": [
+      "project_id",
+      "related_project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/dependency-chain",
+    "method": "GET",
+    "name": "get_dependency_chain",
+    "tags": [
+      "projects",
+      "projects-relations"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/resources",
+    "method": "GET",
+    "name": "get_project_resources",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/resources/summary",
+    "method": "GET",
+    "name": "get_resource_summary",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/resources",
+    "method": "POST",
+    "name": "create_resource_allocation",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/resources/{allocation_id}",
+    "method": "PUT",
+    "name": "update_resource_allocation",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "allocation_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/resources/{allocation_id}/release",
+    "method": "POST",
+    "name": "release_resource",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "allocation_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/resources/{allocation_id}",
+    "method": "DELETE",
+    "name": "delete_resource_allocation",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": [
+      "allocation_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/resources/workload",
+    "method": "GET",
+    "name": "get_resource_workload",
+    "tags": [
+      "projects",
+      "projects-resources"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/reviews",
+    "method": "GET",
+    "name": "get_project_reviews",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/reviews/{review_id}",
+    "method": "GET",
+    "name": "get_review_detail",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "review_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/reviews",
+    "method": "POST",
+    "name": "create_project_review",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/reviews/{review_id}",
+    "method": "PUT",
+    "name": "update_project_review",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "review_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/reviews/{review_id}/publish",
+    "method": "POST",
+    "name": "publish_review",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "review_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/reviews/{review_id}",
+    "method": "DELETE",
+    "name": "delete_project_review",
+    "tags": [
+      "projects",
+      "projects-reviews"
+    ],
+    "path_params": [
+      "review_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks",
+    "method": "GET",
+    "name": "get_project_risks",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/risks/{risk_id}",
+    "method": "GET",
+    "name": "get_risk_detail",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks",
+    "method": "POST",
+    "name": "create_project_risk",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/risks/{risk_id}",
+    "method": "PUT",
+    "name": "update_project_risk",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/risks/{risk_id}/trigger",
+    "method": "POST",
+    "name": "trigger_risk",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/risks/{risk_id}/close",
+    "method": "POST",
+    "name": "close_risk",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/risks/{risk_id}",
+    "method": "DELETE",
+    "name": "delete_project_risk",
+    "tags": [
+      "projects",
+      "projects-risks"
+    ],
+    "path_params": [
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks",
+    "method": "POST",
+    "name": "create_risk",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks",
+    "method": "GET",
+    "name": "get_risks",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+    "method": "GET",
+    "name": "get_risk",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id",
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+    "method": "PUT",
+    "name": "update_risk",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id",
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+    "method": "DELETE",
+    "name": "delete_risk",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id",
+      "risk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-matrix",
+    "method": "GET",
+    "name": "get_risk_matrix",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/projects/{project_id}/risk-summary",
+    "method": "GET",
+    "name": "get_risk_summary",
+    "tags": [
+      "projects",
+      "projects-risks-v2"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/submit",
+    "method": "POST",
+    "name": "submit_project_approval",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/action",
+    "method": "POST",
+    "name": "perform_project_approval_action",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/cancel",
+    "method": "POST",
+    "name": "withdraw_project_approval",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/withdraw",
+    "method": "POST",
+    "name": "withdraw_project_approval",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/status",
+    "method": "GET",
+    "name": "get_project_approval_status",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/history",
+    "method": "GET",
+    "name": "get_project_approval_history",
+    "tags": [
+      "projects",
+      "projects-approvals",
+      "项目审批-已废弃"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/changes/",
+    "method": "POST",
+    "name": "create_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/changes/",
+    "method": "GET",
+    "name": "list_change_requests",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}",
+    "method": "GET",
+    "name": "get_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}",
+    "method": "PUT",
+    "name": "update_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/approve",
+    "method": "POST",
+    "name": "approve_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/approvals",
+    "method": "GET",
+    "name": "get_approval_records",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/status",
+    "method": "POST",
+    "name": "update_change_status",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/implement",
+    "method": "POST",
+    "name": "update_implementation_info",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/verify",
+    "method": "POST",
+    "name": "verify_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/{change_id}/close",
+    "method": "POST",
+    "name": "close_change_request",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": [
+      "change_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/changes/statistics/summary",
+    "method": "GET",
+    "name": "get_change_statistics",
+    "tags": [
+      "projects",
+      "projects-changes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/predict",
+    "method": "POST",
+    "name": "predict_completion_date",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/alerts",
+    "method": "GET",
+    "name": "get_project_alerts",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/alerts/{alert_id}/read",
+    "method": "PUT",
+    "name": "mark_alert_as_read",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id",
+      "alert_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/solutions",
+    "method": "GET",
+    "name": "get_catch_up_solutions",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/solutions/{solution_id}/approve",
+    "method": "POST",
+    "name": "approve_solution",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id",
+      "solution_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/report",
+    "method": "POST",
+    "name": "generate_schedule_report",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/risk-overview",
+    "method": "GET",
+    "name": "get_risk_overview",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/{project_id}/schedule/predictions/history",
+    "method": "GET",
+    "name": "get_prediction_history",
+    "tags": [
+      "projects",
+      "projects-schedule-prediction"
+    ],
+    "path_params": [
+      "project_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/schedule/predict",
+    "method": "POST",
+    "name": "predict_completion_date",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/schedule/alerts",
+    "method": "GET",
+    "name": "get_project_alerts",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/schedule/alerts/{alert_id}/read",
+    "method": "PUT",
+    "name": "mark_alert_as_read",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": [
+      "alert_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/schedule/solutions",
+    "method": "GET",
+    "name": "get_catch_up_solutions",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/schedule/solutions/{solution_id}/approve",
+    "method": "POST",
+    "name": "approve_solution",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": [
+      "solution_id"
+    ]
+  },
+  {
+    "path": "/api/v1/projects/schedule/report",
+    "method": "POST",
+    "name": "generate_schedule_report",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/schedule/risk-overview",
+    "method": "GET",
+    "name": "get_risk_overview",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/projects/schedule/predictions/history",
+    "method": "GET",
+    "name": "get_prediction_history",
+    "tags": [
+      "projects",
+      "projects-schedule-overview"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/production/dashboard",
+    "method": "GET",
+    "name": "dashboard_endpoint",
+    "tags": [
+      "production",
+      "production-dashboard"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/workshops",
+    "method": "GET",
+    "name": "read_workshops",
+    "tags": [
+      "production",
+      "production-workshops"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/workshops",
+    "method": "POST",
+    "name": "create_workshop",
+    "tags": [
+      "production",
+      "production-workshops"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/workshops/{workshop_id}",
+    "method": "GET",
+    "name": "read_workshop",
+    "tags": [
+      "production",
+      "production-workshops"
+    ],
+    "path_params": [
+      "workshop_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/workshops/{workshop_id}/capacity",
+    "method": "GET",
+    "name": "get_workshop_capacity",
+    "tags": [
+      "production",
+      "production-workshops"
+    ],
+    "path_params": [
+      "workshop_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/workshops/{workshop_id}",
+    "method": "PUT",
+    "name": "update_workshop",
+    "tags": [
+      "production",
+      "production-workshops"
+    ],
+    "path_params": [
+      "workshop_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/workshops/{workshop_id}/workstations",
+    "method": "GET",
+    "name": "read_workstations",
+    "tags": [
+      "production",
+      "production-workstations"
+    ],
+    "path_params": [
+      "workshop_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/workshops/{workshop_id}/workstations",
+    "method": "POST",
+    "name": "create_workstation",
+    "tags": [
+      "production",
+      "production-workstations"
+    ],
+    "path_params": [
+      "workshop_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/workstations/{workstation_id}/status",
+    "method": "GET",
+    "name": "get_workstation_status",
+    "tags": [
+      "production",
+      "production-workstations"
+    ],
+    "path_params": [
+      "workstation_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/production-plans",
+    "method": "GET",
+    "name": "read_production_plans",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/production-plans",
+    "method": "POST",
+    "name": "create_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/production-plans/{plan_id}",
+    "method": "GET",
+    "name": "read_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/production-plans/{plan_id}",
+    "method": "PUT",
+    "name": "update_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/production-plans/{plan_id}/submit",
+    "method": "PUT",
+    "name": "submit_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/production-plans/{plan_id}/approve",
+    "method": "PUT",
+    "name": "approve_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/production-plans/{plan_id}/publish",
+    "method": "PUT",
+    "name": "publish_production_plan",
+    "tags": [
+      "production",
+      "production-plans"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders",
+    "method": "GET",
+    "name": "read_work_orders",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-orders",
+    "method": "POST",
+    "name": "create_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}",
+    "method": "GET",
+    "name": "read_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/assign",
+    "method": "PUT",
+    "name": "assign_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/batch-assign",
+    "method": "POST",
+    "name": "batch_assign_work_orders",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/start",
+    "method": "PUT",
+    "name": "start_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/complete",
+    "method": "PUT",
+    "name": "complete_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/pause",
+    "method": "PUT",
+    "name": "pause_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/resume",
+    "method": "PUT",
+    "name": "resume_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/cancel",
+    "method": "PUT",
+    "name": "cancel_work_order",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-orders/{order_id}/progress",
+    "method": "GET",
+    "name": "get_work_order_progress",
+    "tags": [
+      "production",
+      "production-work-orders",
+      "production-work-orders"
+    ],
+    "path_params": [
+      "order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-reports/start",
+    "method": "POST",
+    "name": "start_work_report",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-reports/progress",
+    "method": "POST",
+    "name": "progress_work_report",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-reports/complete",
+    "method": "POST",
+    "name": "complete_work_report",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-reports/{report_id}",
+    "method": "GET",
+    "name": "get_work_report_detail",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": [
+      "report_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-reports",
+    "method": "GET",
+    "name": "read_work_reports",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/work-reports/{report_id}/approve",
+    "method": "PUT",
+    "name": "approve_work_report",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": [
+      "report_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/work-reports/my",
+    "method": "GET",
+    "name": "get_my_work_reports",
+    "tags": [
+      "production",
+      "production-work-reports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/realtime-stock",
+    "method": "GET",
+    "name": "get_realtime_stock",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/consumption",
+    "method": "POST",
+    "name": "create_consumption",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/consumption-analysis",
+    "method": "GET",
+    "name": "get_consumption_analysis",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/alerts",
+    "method": "GET",
+    "name": "get_material_alerts",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/alert-rules",
+    "method": "POST",
+    "name": "create_alert_rule",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/waste-tracing",
+    "method": "GET",
+    "name": "get_waste_tracing",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/batch-tracing",
+    "method": "GET",
+    "name": "get_batch_tracing",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/cost-analysis",
+    "method": "GET",
+    "name": "get_cost_analysis",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/material/inventory-turnover",
+    "method": "GET",
+    "name": "get_inventory_turnover",
+    "tags": [
+      "production",
+      "production-material-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/escalate",
+    "method": "POST",
+    "name": "escalate_exception",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/{exception_id}/flow",
+    "method": "GET",
+    "name": "get_exception_flow",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": [
+      "exception_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/exception/knowledge",
+    "method": "POST",
+    "name": "create_knowledge",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/knowledge/search",
+    "method": "GET",
+    "name": "search_knowledge",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/statistics",
+    "method": "GET",
+    "name": "get_exception_statistics",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/pdca",
+    "method": "POST",
+    "name": "create_pdca",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/exception/pdca/{pdca_id}/advance",
+    "method": "PUT",
+    "name": "advance_pdca_stage",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": [
+      "pdca_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/exception/recurrence",
+    "method": "GET",
+    "name": "analyze_recurrence",
+    "tags": [
+      "production",
+      "production-exception-enhancement"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/progress/realtime",
+    "method": "GET",
+    "name": "get_realtime_progress",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/progress/work-orders/{work_order_id}/timeline",
+    "method": "GET",
+    "name": "get_work_order_timeline",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": [
+      "work_order_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/progress/workstations/{workstation_id}/realtime",
+    "method": "GET",
+    "name": "get_workstation_realtime",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": [
+      "workstation_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/progress/log",
+    "method": "POST",
+    "name": "create_progress_log",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/progress/bottlenecks",
+    "method": "GET",
+    "name": "get_bottleneck_workstations",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/progress/alerts",
+    "method": "GET",
+    "name": "get_progress_alerts",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/progress/alerts/{alert_id}/dismiss",
+    "method": "POST",
+    "name": "dismiss_progress_alert",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": [
+      "alert_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/progress/deviation",
+    "method": "GET",
+    "name": "get_progress_deviation",
+    "tags": [
+      "production",
+      "production-progress-tracking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/generate",
+    "method": "POST",
+    "name": "generate_schedule",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/preview",
+    "method": "GET",
+    "name": "preview_schedule",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/confirm",
+    "method": "POST",
+    "name": "confirm_schedule",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/conflicts",
+    "method": "GET",
+    "name": "check_conflicts",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/adjust",
+    "method": "POST",
+    "name": "adjust_schedule",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/urgent-insert",
+    "method": "POST",
+    "name": "urgent_insert",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/comparison",
+    "method": "GET",
+    "name": "compare_schedules",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/gantt",
+    "method": "GET",
+    "name": "get_gantt_data",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/reset",
+    "method": "DELETE",
+    "name": "reset_schedule",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/schedule/history",
+    "method": "GET",
+    "name": "get_schedule_history",
+    "tags": [
+      "production",
+      "production-schedule"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/inspection",
+    "method": "POST",
+    "name": "create_quality_inspection",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/inspection",
+    "method": "GET",
+    "name": "list_quality_inspections",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/trend",
+    "method": "GET",
+    "name": "get_quality_trend",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/defect-analysis",
+    "method": "POST",
+    "name": "create_defect_analysis",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/defect-analysis/{analysis_id}",
+    "method": "GET",
+    "name": "get_defect_analysis",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": [
+      "analysis_id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/quality/alerts",
+    "method": "GET",
+    "name": "list_quality_alerts",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/alert-rules",
+    "method": "POST",
+    "name": "create_quality_alert_rule",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/alert-rules",
+    "method": "GET",
+    "name": "list_quality_alert_rules",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/spc",
+    "method": "GET",
+    "name": "get_spc_data",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/rework",
+    "method": "POST",
+    "name": "create_rework_order",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/rework/{id}/complete",
+    "method": "PUT",
+    "name": "complete_rework_order",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": [
+      "id"
+    ]
+  },
+  {
+    "path": "/api/v1/production/quality/rework",
+    "method": "GET",
+    "name": "list_rework_orders",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/pareto",
+    "method": "GET",
+    "name": "get_pareto_analysis",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/statistics",
+    "method": "GET",
+    "name": "get_quality_statistics",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/batch-tracing",
+    "method": "GET",
+    "name": "get_batch_tracing",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/quality/corrective-action",
+    "method": "POST",
+    "name": "create_corrective_action",
+    "tags": [
+      "production",
+      "production-quality-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/oee",
+    "method": "GET",
+    "name": "get_oee_analysis",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-OEE"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/worker-efficiency",
+    "method": "GET",
+    "name": "get_worker_efficiency_analysis",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-工人效率"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/bottlenecks",
+    "method": "GET",
+    "name": "identify_bottlenecks",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-分析"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/utilization",
+    "method": "GET",
+    "name": "get_capacity_utilization",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-分析"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/forecast",
+    "method": "GET",
+    "name": "forecast_capacity",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-预测"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/comparison",
+    "method": "GET",
+    "name": "multi_dimensional_comparison",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-对比"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/trend",
+    "method": "GET",
+    "name": "get_capacity_trend",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-趋势"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/oee/calculate",
+    "method": "POST",
+    "name": "calculate_oee",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-计算"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/worker-efficiency/calculate",
+    "method": "POST",
+    "name": "calculate_worker_efficiency",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-计算"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/dashboard",
+    "method": "GET",
+    "name": "get_capacity_dashboard",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-看板"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/production/capacity/report",
+    "method": "GET",
+    "name": "get_capacity_report",
+    "tags": [
+      "production",
+      "production-capacity-analysis",
+      "产能分析-报告"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/customers",
+    "method": "GET",
+    "name": "read_customers",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/customers/stats",
+    "method": "GET",
+    "name": "get_customer_stats",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}",
+    "method": "GET",
+    "name": "read_customer",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers",
+    "method": "POST",
+    "name": "create_customer",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}",
+    "method": "PUT",
+    "name": "update_customer",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}",
+    "method": "DELETE",
+    "name": "delete_customer",
+    "tags": [
+      "sales",
+      "sales-customers"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/contacts",
+    "method": "GET",
+    "name": "read_customer_contacts",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contacts",
+    "method": "GET",
+    "name": "read_contacts",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contacts/{contact_id}",
+    "method": "GET",
+    "name": "read_contact",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "contact_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/contacts",
+    "method": "POST",
+    "name": "create_contact",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contacts/{contact_id}",
+    "method": "PUT",
+    "name": "update_contact",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "contact_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contacts/{contact_id}",
+    "method": "DELETE",
+    "name": "delete_contact",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "contact_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contacts/{contact_id}/set-primary",
+    "method": "POST",
+    "name": "set_primary_contact",
+    "tags": [
+      "sales",
+      "sales-contacts"
+    ],
+    "path_params": [
+      "contact_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customer-tags/predefined",
+    "method": "GET",
+    "name": "get_predefined_tags",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/tags",
+    "method": "GET",
+    "name": "read_customer_tags",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/tags",
+    "method": "POST",
+    "name": "create_customer_tag",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/tags/batch",
+    "method": "POST",
+    "name": "create_customer_tags_batch",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/tags/{tag_id}",
+    "method": "DELETE",
+    "name": "delete_customer_tag",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": [
+      "customer_id",
+      "tag_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/customers/{customer_id}/tags",
+    "method": "DELETE",
+    "name": "delete_customer_tags_by_name",
+    "tags": [
+      "sales",
+      "sales-customer-tags"
+    ],
+    "path_params": [
+      "customer_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/calculate-priority",
+    "method": "POST",
+    "name": "calculate_lead_priority",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/priority-ranking",
+    "method": "GET",
+    "name": "get_lead_priority_ranking",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads/key-leads",
+    "method": "GET",
+    "name": "get_key_leads",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/calculate-priority",
+    "method": "POST",
+    "name": "calculate_opportunity_priority",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/priority-ranking",
+    "method": "GET",
+    "name": "get_opportunity_priority_ranking",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities/key-opportunities",
+    "method": "GET",
+    "name": "get_key_opportunities",
+    "tags": [
+      "sales",
+      "sales-priority"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads",
+    "method": "GET",
+    "name": "read_leads",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads",
+    "method": "POST",
+    "name": "create_lead",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}",
+    "method": "GET",
+    "name": "read_lead",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}",
+    "method": "PUT",
+    "name": "update_lead",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}",
+    "method": "DELETE",
+    "name": "delete_lead",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/follow-ups",
+    "method": "GET",
+    "name": "get_lead_follow_ups",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/follow-ups",
+    "method": "POST",
+    "name": "create_lead_follow_up",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/convert",
+    "method": "POST",
+    "name": "convert_lead_to_opportunity",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/invalid",
+    "method": "PUT",
+    "name": "mark_lead_invalid",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/export",
+    "method": "GET",
+    "name": "export_leads",
+    "tags": [
+      "sales",
+      "sales-leads"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities",
+    "method": "GET",
+    "name": "read_opportunities",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities",
+    "method": "POST",
+    "name": "create_opportunity",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}",
+    "method": "GET",
+    "name": "read_opportunity",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}",
+    "method": "PUT",
+    "name": "update_opportunity",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/gate",
+    "method": "POST",
+    "name": "submit_opportunity_gate",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/stage",
+    "method": "PUT",
+    "name": "update_opportunity_stage",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/score",
+    "method": "PUT",
+    "name": "update_opportunity_score",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/win",
+    "method": "PUT",
+    "name": "win_opportunity",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/lose",
+    "method": "PUT",
+    "name": "lose_opportunity",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/funnel",
+    "method": "GET",
+    "name": "get_opportunity_funnel",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/win-probability",
+    "method": "GET",
+    "name": "get_opportunity_win_probability",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/export",
+    "method": "GET",
+    "name": "export_opportunities",
+    "tags": [
+      "sales",
+      "sales-opportunities"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes",
+    "method": "GET",
+    "name": "read_quotes",
+    "tags": [
+      "sales",
+      "sales-quotes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes",
+    "method": "POST",
+    "name": "create_quote",
+    "tags": [
+      "sales",
+      "sales-quotes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/approve",
+    "method": "POST",
+    "name": "approve_quote",
+    "tags": [
+      "sales",
+      "sales-quotes"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/submit",
+    "method": "POST",
+    "name": "submit_for_approval",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/pending",
+    "method": "GET",
+    "name": "get_pending_approval_tasks",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/action",
+    "method": "POST",
+    "name": "perform_approval_action",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/batch-action",
+    "method": "POST",
+    "name": "perform_batch_approval",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/status/{quote_id}",
+    "method": "GET",
+    "name": "get_approval_status",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/withdraw",
+    "method": "POST",
+    "name": "withdraw_approval",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/approval/history",
+    "method": "GET",
+    "name": "get_approval_history",
+    "tags": [
+      "sales",
+      "sales-quote-approval",
+      "报价审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/enhanced/",
+    "method": "POST",
+    "name": "create_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/enhanced/",
+    "method": "GET",
+    "name": "get_contracts",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}",
+    "method": "GET",
+    "name": "get_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}",
+    "method": "PUT",
+    "name": "update_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}",
+    "method": "DELETE",
+    "name": "delete_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/submit",
+    "method": "POST",
+    "name": "submit_contract_for_approval",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/approvals",
+    "method": "GET",
+    "name": "get_contract_approvals",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/approve",
+    "method": "POST",
+    "name": "approve_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/reject",
+    "method": "POST",
+    "name": "reject_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/approvals/pending",
+    "method": "GET",
+    "name": "get_pending_approvals",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/terms",
+    "method": "POST",
+    "name": "add_contract_term",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/terms",
+    "method": "GET",
+    "name": "get_contract_terms",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/terms/{term_id}",
+    "method": "PUT",
+    "name": "update_contract_term",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "term_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/terms/{term_id}",
+    "method": "DELETE",
+    "name": "delete_contract_term",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "term_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/attachments",
+    "method": "POST",
+    "name": "upload_attachment",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/attachments",
+    "method": "GET",
+    "name": "get_contract_attachments",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/attachments/{attachment_id}",
+    "method": "DELETE",
+    "name": "delete_attachment",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "attachment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/attachments/{attachment_id}/download",
+    "method": "GET",
+    "name": "download_attachment",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "attachment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/sign",
+    "method": "POST",
+    "name": "mark_contract_as_signed",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/execute",
+    "method": "POST",
+    "name": "mark_contract_as_executing",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/complete",
+    "method": "POST",
+    "name": "mark_contract_as_completed",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/{contract_id}/void",
+    "method": "POST",
+    "name": "void_contract",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/enhanced/stats/summary",
+    "method": "GET",
+    "name": "get_contract_statistics",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同增强"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts",
+    "method": "GET",
+    "name": "read_contracts",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts",
+    "method": "POST",
+    "name": "create_contract",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}",
+    "method": "GET",
+    "name": "read_contract",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}",
+    "method": "PUT",
+    "name": "update_contract",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/sign",
+    "method": "POST",
+    "name": "sign_contract",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/project",
+    "method": "POST",
+    "name": "create_contract_project",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/deliverables",
+    "method": "GET",
+    "name": "get_contract_deliverables",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/amendments",
+    "method": "GET",
+    "name": "get_contract_amendments",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/amendments",
+    "method": "POST",
+    "name": "create_contract_amendment",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/payment-plans",
+    "method": "GET",
+    "name": "get_contract_payment_plans",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/submit",
+    "method": "POST",
+    "name": "submit_for_approval",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/pending",
+    "method": "GET",
+    "name": "get_pending_approval_tasks",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/action",
+    "method": "POST",
+    "name": "perform_approval_action",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/batch-action",
+    "method": "POST",
+    "name": "perform_batch_approval",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/status/{contract_id}",
+    "method": "GET",
+    "name": "get_approval_status",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/withdraw",
+    "method": "POST",
+    "name": "withdraw_approval",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/approval/history",
+    "method": "GET",
+    "name": "get_approval_history",
+    "tags": [
+      "sales",
+      "sales-contracts",
+      "合同审批工作流"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/export",
+    "method": "GET",
+    "name": "export_contracts",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/pdf",
+    "method": "GET",
+    "name": "export_contract_pdf",
+    "tags": [
+      "sales",
+      "sales-contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices",
+    "method": "GET",
+    "name": "read_invoices",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}",
+    "method": "GET",
+    "name": "read_invoice",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices",
+    "method": "POST",
+    "name": "create_invoice",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}",
+    "method": "DELETE",
+    "name": "delete_invoice",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/issue",
+    "method": "POST",
+    "name": "issue_invoice",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/receive-payment",
+    "method": "POST",
+    "name": "receive_payment",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/void",
+    "method": "PUT",
+    "name": "void_invoice",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates",
+    "method": "GET",
+    "name": "list_templates",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}",
+    "method": "GET",
+    "name": "get_template",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates",
+    "method": "POST",
+    "name": "create_template",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}",
+    "method": "PUT",
+    "name": "update_template",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}",
+    "method": "DELETE",
+    "name": "delete_template",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}/publish",
+    "method": "POST",
+    "name": "publish_template",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}/flows",
+    "method": "GET",
+    "name": "list_flows",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}/flows",
+    "method": "POST",
+    "name": "create_flow",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/flows/{flow_id}",
+    "method": "PUT",
+    "name": "update_flow",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "flow_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/flows/{flow_id}",
+    "method": "DELETE",
+    "name": "delete_flow",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "flow_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/flows/{flow_id}/nodes",
+    "method": "POST",
+    "name": "create_node",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "flow_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/nodes/{node_id}",
+    "method": "PUT",
+    "name": "update_node",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "node_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/nodes/{node_id}",
+    "method": "DELETE",
+    "name": "delete_node",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "node_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}/rules",
+    "method": "GET",
+    "name": "list_routing_rules",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/{template_id}/rules",
+    "method": "POST",
+    "name": "create_routing_rule",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/templates/rules/{rule_id}",
+    "method": "DELETE",
+    "name": "delete_routing_rule",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批模板"
+    ],
+    "path_params": [
+      "rule_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/instances/submit",
+    "method": "POST",
+    "name": "submit_approval",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/instances/draft",
+    "method": "POST",
+    "name": "save_draft",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/instances",
+    "method": "GET",
+    "name": "list_instances",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/instances/{instance_id}",
+    "method": "GET",
+    "name": "get_instance",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/instances/{instance_id}/withdraw",
+    "method": "POST",
+    "name": "withdraw_instance",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/instances/{instance_id}/terminate",
+    "method": "POST",
+    "name": "terminate_instance",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/instances/by-entity/{entity_type}/{entity_id}",
+    "method": "GET",
+    "name": "get_instances_by_entity",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批实例"
+    ],
+    "path_params": [
+      "entity_type",
+      "entity_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}",
+    "method": "GET",
+    "name": "get_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/approve",
+    "method": "POST",
+    "name": "approve_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/reject",
+    "method": "POST",
+    "name": "reject_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/return",
+    "method": "POST",
+    "name": "return_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/transfer",
+    "method": "POST",
+    "name": "transfer_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/add-approver",
+    "method": "POST",
+    "name": "add_approver",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/{task_id}/remind",
+    "method": "POST",
+    "name": "remind_task",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "task_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/instances/{instance_id}/add-cc",
+    "method": "POST",
+    "name": "add_cc",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/instances/{instance_id}/comments",
+    "method": "POST",
+    "name": "add_comment",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/instances/{instance_id}/comments",
+    "method": "GET",
+    "name": "list_comments",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "instance_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/tasks/comments/{comment_id}",
+    "method": "DELETE",
+    "name": "delete_comment",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "审批任务"
+    ],
+    "path_params": [
+      "comment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/pending/mine",
+    "method": "GET",
+    "name": "get_my_pending_tasks",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/pending/initiated",
+    "method": "GET",
+    "name": "get_my_initiated",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/pending/cc",
+    "method": "GET",
+    "name": "get_my_cc",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/pending/cc/{cc_id}/read",
+    "method": "POST",
+    "name": "mark_cc_as_read",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": [
+      "cc_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/pending/processed",
+    "method": "GET",
+    "name": "get_my_processed",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/pending/counts",
+    "method": "GET",
+    "name": "get_pending_counts",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "待办查询"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/delegates",
+    "method": "GET",
+    "name": "list_my_delegates",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/delegates/delegated-to-me",
+    "method": "GET",
+    "name": "list_delegated_to_me",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/delegates",
+    "method": "POST",
+    "name": "create_delegate",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/delegates/{delegate_id}",
+    "method": "PUT",
+    "name": "update_delegate",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": [
+      "delegate_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/delegates/{delegate_id}",
+    "method": "DELETE",
+    "name": "cancel_delegate",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": [
+      "delegate_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/delegates/active",
+    "method": "GET",
+    "name": "get_active_delegate",
+    "tags": [
+      "sales",
+      "sales-invoices",
+      "代理人管理"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/approval/start",
+    "method": "POST",
+    "name": "start_invoice_approval",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/approval-status",
+    "method": "GET",
+    "name": "get_invoice_approval_status",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/approval/action",
+    "method": "POST",
+    "name": "invoice_approval_action",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/approval-history",
+    "method": "GET",
+    "name": "get_invoice_approval_history",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices/export",
+    "method": "GET",
+    "name": "export_invoices",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/invoices/{invoice_id}/pdf",
+    "method": "GET",
+    "name": "export_invoice_pdf",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/invoices_old",
+    "method": "GET",
+    "name": "read_invoices_old",
+    "tags": [
+      "sales",
+      "sales-invoices"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payment-plans",
+    "method": "GET",
+    "name": "get_payment_plans",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payment-plans/{plan_id}/adjust",
+    "method": "POST",
+    "name": "adjust_payment_plan",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/payment-plans/{plan_id}/adjustment-history",
+    "method": "GET",
+    "name": "get_payment_adjustment_history",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": [
+      "plan_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/payments/statistics",
+    "method": "GET",
+    "name": "get_payment_statistics",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payments/reminders",
+    "method": "GET",
+    "name": "get_payment_reminders",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payments",
+    "method": "GET",
+    "name": "get_payment_records",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payments",
+    "method": "POST",
+    "name": "create_payment_record",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payments/{payment_id}",
+    "method": "GET",
+    "name": "get_payment_detail",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": [
+      "payment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/payments/{payment_id}/match-invoice",
+    "method": "PUT",
+    "name": "match_payment_to_invoice",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": [
+      "payment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/payments/invoices/export",
+    "method": "GET",
+    "name": "export_payment_invoices",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/payments/export",
+    "method": "GET",
+    "name": "export_payments",
+    "tags": [
+      "sales",
+      "sales-payments"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/funnel",
+    "method": "GET",
+    "name": "get_sales_funnel",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/opportunities-by-stage",
+    "method": "GET",
+    "name": "get_opportunities_by_stage",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/summary",
+    "method": "GET",
+    "name": "get_sales_summary",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/revenue-forecast",
+    "method": "GET",
+    "name": "get_revenue_forecast",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/prediction",
+    "method": "GET",
+    "name": "get_sales_prediction",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/prediction/accuracy",
+    "method": "GET",
+    "name": "get_prediction_accuracy",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/statistics/quote-stats",
+    "method": "GET",
+    "name": "get_quote_stats",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/reports/sales-funnel",
+    "method": "GET",
+    "name": "get_sales_funnel_report",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/reports/win-loss",
+    "method": "GET",
+    "name": "get_win_loss_analysis",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/reports/sales-performance",
+    "method": "GET",
+    "name": "get_sales_performance",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/reports/customer-contribution",
+    "method": "GET",
+    "name": "get_customer_contribution",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/reports/o2c-pipeline",
+    "method": "GET",
+    "name": "get_o2c_pipeline",
+    "tags": [
+      "sales",
+      "sales-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/loss-deep-analysis",
+    "method": "GET",
+    "name": "get_loss_deep_analysis",
+    "tags": [
+      "sales",
+      "sales-loss-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/loss-by-stage",
+    "method": "GET",
+    "name": "get_loss_by_stage",
+    "tags": [
+      "sales",
+      "sales-loss-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/loss-patterns",
+    "method": "GET",
+    "name": "get_loss_patterns",
+    "tags": [
+      "sales",
+      "sales-loss-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/loss-by-person",
+    "method": "GET",
+    "name": "get_loss_by_person",
+    "tags": [
+      "sales",
+      "sales-loss-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/expenses/expense-lost-projects",
+    "method": "POST",
+    "name": "expense_lost_projects",
+    "tags": [
+      "sales",
+      "sales-expenses"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/expenses/lost-project-expenses",
+    "method": "GET",
+    "name": "get_lost_project_expenses",
+    "tags": [
+      "sales",
+      "sales-expenses"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/expenses/expense-statistics",
+    "method": "GET",
+    "name": "get_expense_statistics",
+    "tags": [
+      "sales",
+      "sales-expenses"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/assessments/apply",
+    "method": "POST",
+    "name": "apply_lead_assessment",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/assessments/apply",
+    "method": "POST",
+    "name": "apply_opportunity_assessment",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/assessments/{assessment_id}/evaluate",
+    "method": "POST",
+    "name": "evaluate_assessment",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "assessment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/assessments",
+    "method": "GET",
+    "name": "get_lead_assessments",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/assessments",
+    "method": "GET",
+    "name": "get_opportunity_assessments",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/assessments/{assessment_id}",
+    "method": "GET",
+    "name": "get_assessment",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-assessments"
+    ],
+    "path_params": [
+      "assessment_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/failure-cases/similar",
+    "method": "GET",
+    "name": "find_similar_cases",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-failure-cases"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/failure-cases",
+    "method": "GET",
+    "name": "list_failure_cases",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-failure-cases"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/failure-cases",
+    "method": "POST",
+    "name": "create_failure_case",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-failure-cases"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/open-items",
+    "method": "GET",
+    "name": "list_open_items",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-open-items"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/open-items",
+    "method": "POST",
+    "name": "create_open_item",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-open-items"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/open-items",
+    "method": "POST",
+    "name": "create_open_item_for_opportunity",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-open-items"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/open-items/{item_id}",
+    "method": "PUT",
+    "name": "update_open_item",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-open-items"
+    ],
+    "path_params": [
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/open-items/{item_id}/close",
+    "method": "POST",
+    "name": "close_open_item",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-open-items"
+    ],
+    "path_params": [
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/scoring-rules",
+    "method": "GET",
+    "name": "list_scoring_rules",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-scoring-rules"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/scoring-rules",
+    "method": "POST",
+    "name": "create_scoring_rule",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-scoring-rules"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/scoring-rules/{rule_id}/activate",
+    "method": "PUT",
+    "name": "activate_scoring_rule",
+    "tags": [
+      "sales",
+      "sales-assessments",
+      "sales-scoring-rules"
+    ],
+    "path_params": [
+      "rule_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/disputes",
+    "method": "GET",
+    "name": "read_disputes",
+    "tags": [
+      "sales",
+      "sales-disputes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/disputes",
+    "method": "POST",
+    "name": "create_dispute",
+    "tags": [
+      "sales",
+      "sales-disputes"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/targets",
+    "method": "GET",
+    "name": "get_sales_targets",
+    "tags": [
+      "sales",
+      "sales-targets"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/targets",
+    "method": "POST",
+    "name": "create_sales_target",
+    "tags": [
+      "sales",
+      "sales-targets"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/targets/{target_id}",
+    "method": "PUT",
+    "name": "update_sales_target",
+    "tags": [
+      "sales",
+      "sales-targets"
+    ],
+    "path_params": [
+      "target_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/team/ranking/config",
+    "method": "GET",
+    "name": "get_sales_ranking_config",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-ranking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team/ranking/config",
+    "method": "PUT",
+    "name": "update_sales_ranking_config",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-ranking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team/ranking",
+    "method": "GET",
+    "name": "get_sales_team_ranking",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-ranking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team",
+    "method": "GET",
+    "name": "get_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team/export",
+    "method": "GET",
+    "name": "export_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-statistics"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/sales-teams",
+    "method": "GET",
+    "name": "list_sales_teams",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-crud"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/sales-teams",
+    "method": "POST",
+    "name": "create_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-crud"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}",
+    "method": "GET",
+    "name": "get_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-crud"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}",
+    "method": "PUT",
+    "name": "update_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-crud"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}",
+    "method": "DELETE",
+    "name": "delete_sales_team",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-crud"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}/members",
+    "method": "GET",
+    "name": "list_team_members",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-members"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}/members",
+    "method": "POST",
+    "name": "add_team_member",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-members"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}/members/batch",
+    "method": "POST",
+    "name": "batch_add_team_members",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-members"
+    ],
+    "path_params": [
+      "team_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}/members/{member_id}",
+    "method": "PUT",
+    "name": "update_team_member",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-members"
+    ],
+    "path_params": [
+      "team_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/{team_id}/members/{member_id}",
+    "method": "DELETE",
+    "name": "remove_team_member",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-members"
+    ],
+    "path_params": [
+      "team_id",
+      "member_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/team-pk",
+    "method": "GET",
+    "name": "list_team_pks",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-pk"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team-pk",
+    "method": "POST",
+    "name": "create_team_pk",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-pk"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/team-pk/{pk_id}",
+    "method": "GET",
+    "name": "get_team_pk",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-pk"
+    ],
+    "path_params": [
+      "pk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/team-pk/{pk_id}",
+    "method": "PUT",
+    "name": "update_team_pk",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-pk"
+    ],
+    "path_params": [
+      "pk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/team-pk/{pk_id}/complete",
+    "method": "POST",
+    "name": "complete_team_pk",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-team-pk"
+    ],
+    "path_params": [
+      "pk_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/sales-teams/ranking",
+    "method": "GET",
+    "name": "get_sales_teams_ranking",
+    "tags": [
+      "sales",
+      "sales-team",
+      "sales-teams-ranking"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quote-templates",
+    "method": "GET",
+    "name": "list_quote_templates",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quote-templates",
+    "method": "POST",
+    "name": "create_quote_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quote-templates/{template_id}",
+    "method": "PUT",
+    "name": "update_quote_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quote-templates/{template_id}/versions",
+    "method": "POST",
+    "name": "create_quote_template_version",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quote-templates/{template_id}/versions/{version_id}/publish",
+    "method": "POST",
+    "name": "publish_quote_template_version",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id",
+      "version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quote-templates/{template_id}/apply",
+    "method": "POST",
+    "name": "apply_quote_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contract-templates",
+    "method": "GET",
+    "name": "list_contract_templates",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contract-templates",
+    "method": "POST",
+    "name": "create_contract_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contract-templates/{template_id}",
+    "method": "PUT",
+    "name": "update_contract_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contract-templates/{template_id}/versions",
+    "method": "POST",
+    "name": "create_contract_template_version",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contract-templates/{template_id}/versions/{version_id}/publish",
+    "method": "POST",
+    "name": "publish_contract_template_version",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id",
+      "version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/contract-templates/{template_id}/apply",
+    "method": "GET",
+    "name": "apply_contract_template",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/cpq/rule-sets",
+    "method": "GET",
+    "name": "list_cpq_rule_sets",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/cpq/rule-sets",
+    "method": "POST",
+    "name": "create_cpq_rule_set",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/cpq/rule-sets/{rule_set_id}",
+    "method": "PUT",
+    "name": "update_cpq_rule_set",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": [
+      "rule_set_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/cpq/price-preview",
+    "method": "POST",
+    "name": "preview_cpq_price",
+    "tags": [
+      "sales",
+      "sales-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/cost-templates",
+    "method": "GET",
+    "name": "get_cost_templates",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/cost-templates/{template_id}",
+    "method": "GET",
+    "name": "get_cost_template",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/cost-templates",
+    "method": "POST",
+    "name": "create_cost_template",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/cost-templates/{template_id}",
+    "method": "PUT",
+    "name": "update_cost_template",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/cost-templates/{template_id}",
+    "method": "DELETE",
+    "name": "delete_cost_template",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs",
+    "method": "GET",
+    "name": "get_purchase_material_costs",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+    "method": "GET",
+    "name": "get_purchase_material_cost",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "cost_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs",
+    "method": "POST",
+    "name": "create_purchase_material_cost",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+    "method": "PUT",
+    "name": "update_purchase_material_cost",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "cost_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+    "method": "DELETE",
+    "name": "delete_purchase_material_cost",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": [
+      "cost_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/match",
+    "method": "POST",
+    "name": "match_material_cost",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/reminder",
+    "method": "GET",
+    "name": "get_cost_update_reminder",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/reminder",
+    "method": "PUT",
+    "name": "update_cost_update_reminder",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/purchase-material-costs/reminder/acknowledge",
+    "method": "POST",
+    "name": "acknowledge_cost_update_reminder",
+    "tags": [
+      "sales",
+      "sales-cost-management"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/receivables/aging",
+    "method": "GET",
+    "name": "get_receivables_aging",
+    "tags": [
+      "sales",
+      "sales-receivables"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/receivables/overdue",
+    "method": "GET",
+    "name": "get_overdue_receivables",
+    "tags": [
+      "sales",
+      "sales-receivables"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/receivables/summary",
+    "method": "GET",
+    "name": "get_receivables_summary",
+    "tags": [
+      "sales",
+      "sales-receivables"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/approval-workflows",
+    "method": "GET",
+    "name": "list_approval_workflows",
+    "tags": [
+      "sales",
+      "sales-workflows"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/approval-workflows",
+    "method": "POST",
+    "name": "create_approval_workflow",
+    "tags": [
+      "sales",
+      "sales-workflows"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/approval-workflows/{workflow_id}",
+    "method": "GET",
+    "name": "get_approval_workflow",
+    "tags": [
+      "sales",
+      "sales-workflows"
+    ],
+    "path_params": [
+      "workflow_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/approval-workflows/{workflow_id}",
+    "method": "PUT",
+    "name": "update_approval_workflow",
+    "tags": [
+      "sales",
+      "sales-workflows"
+    ],
+    "path_params": [
+      "workflow_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+    "method": "GET",
+    "name": "get_lead_requirement_detail",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+    "method": "POST",
+    "name": "create_lead_requirement_detail",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+    "method": "PUT",
+    "name": "update_lead_requirement_detail",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/requirement-freezes",
+    "method": "GET",
+    "name": "list_lead_requirement_freezes",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/requirement-freezes",
+    "method": "POST",
+    "name": "create_lead_requirement_freeze",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/requirement-freezes",
+    "method": "GET",
+    "name": "list_opportunity_requirement_freezes",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/requirement-freezes",
+    "method": "POST",
+    "name": "create_opportunity_requirement_freeze",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/ai-clarifications",
+    "method": "GET",
+    "name": "list_ai_clarifications",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/leads/{lead_id}/ai-clarifications",
+    "method": "POST",
+    "name": "create_ai_clarification_for_lead",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/opportunities/{opp_id}/ai-clarifications",
+    "method": "POST",
+    "name": "create_ai_clarification_for_opportunity",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/ai-clarifications/{clarification_id}",
+    "method": "PUT",
+    "name": "update_ai_clarification",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "clarification_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/ai-clarifications/{clarification_id}",
+    "method": "GET",
+    "name": "get_ai_clarification",
+    "tags": [
+      "sales",
+      "sales-requirements"
+    ],
+    "path_params": [
+      "clarification_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/analysis/pipeline-breaks",
+    "method": "GET",
+    "name": "get_pipeline_breaks",
+    "tags": [
+      "sales",
+      "sales-pipeline-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/break-reasons",
+    "method": "GET",
+    "name": "get_break_reasons",
+    "tags": [
+      "sales",
+      "sales-pipeline-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/break-patterns",
+    "method": "GET",
+    "name": "get_break_patterns",
+    "tags": [
+      "sales",
+      "sales-pipeline-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/alerts/pipeline-break-warnings",
+    "method": "GET",
+    "name": "get_pipeline_break_warnings",
+    "tags": [
+      "sales",
+      "sales-pipeline-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/accountability/by-stage",
+    "method": "GET",
+    "name": "get_accountability_by_stage",
+    "tags": [
+      "sales",
+      "sales-accountability"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/accountability/by-person",
+    "method": "GET",
+    "name": "get_accountability_by_person",
+    "tags": [
+      "sales",
+      "sales-accountability"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/accountability/by-department",
+    "method": "GET",
+    "name": "get_accountability_by_department",
+    "tags": [
+      "sales",
+      "sales-accountability"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/accountability/cost-impact",
+    "method": "GET",
+    "name": "get_accountability_cost_impact",
+    "tags": [
+      "sales",
+      "sales-accountability"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/health/lead/{lead_id}",
+    "method": "GET",
+    "name": "get_lead_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": [
+      "lead_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/health/opportunity/{opp_id}",
+    "method": "GET",
+    "name": "get_opportunity_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": [
+      "opp_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/health/quote/{quote_id}",
+    "method": "GET",
+    "name": "get_quote_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/health/contract/{contract_id}",
+    "method": "GET",
+    "name": "get_contract_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/health/payment/{invoice_id}",
+    "method": "GET",
+    "name": "get_payment_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": [
+      "invoice_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/health/pipeline",
+    "method": "GET",
+    "name": "get_pipeline_health",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/alerts/health-warnings",
+    "method": "GET",
+    "name": "get_health_warnings",
+    "tags": [
+      "sales",
+      "sales-health"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/delay/root-cause",
+    "method": "GET",
+    "name": "get_delay_root_cause",
+    "tags": [
+      "sales",
+      "sales-delay-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/delay/impact",
+    "method": "GET",
+    "name": "get_delay_impact",
+    "tags": [
+      "sales",
+      "sales-delay-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/delay/trends",
+    "method": "GET",
+    "name": "get_delay_trends",
+    "tags": [
+      "sales",
+      "sales-delay-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/cost-overrun/reasons",
+    "method": "GET",
+    "name": "get_cost_overrun_reasons",
+    "tags": [
+      "sales",
+      "sales-cost-overrun"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/cost-overrun/accountability",
+    "method": "GET",
+    "name": "get_cost_overrun_accountability",
+    "tags": [
+      "sales",
+      "sales-cost-overrun"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/cost-overrun/impact",
+    "method": "GET",
+    "name": "get_cost_overrun_impact",
+    "tags": [
+      "sales",
+      "sales-cost-overrun"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/information-gap/missing",
+    "method": "GET",
+    "name": "get_information_gap_missing",
+    "tags": [
+      "sales",
+      "sales-information-gap"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/information-gap/impact",
+    "method": "GET",
+    "name": "get_information_gap_impact",
+    "tags": [
+      "sales",
+      "sales-information-gap"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/information-gap/quality-score",
+    "method": "GET",
+    "name": "get_information_quality_score",
+    "tags": [
+      "sales",
+      "sales-information-gap"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/analysis/cross-dimension",
+    "method": "GET",
+    "name": "get_cross_dimension_analysis",
+    "tags": [
+      "sales",
+      "sales-cross-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/contracts/{contract_id}/create-project",
+    "method": "POST",
+    "name": "create_project_from_contract",
+    "tags": [
+      "sales",
+      "sales-contracts-projects",
+      "contracts"
+    ],
+    "path_params": [
+      "contract_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/cost-analysis",
+    "method": "GET",
+    "name": "get_cost_analysis",
+    "tags": [
+      "sales",
+      "sales-quote-cost-analysis"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/cost-analysis/benchmark",
+    "method": "GET",
+    "name": "get_cost_benchmark",
+    "tags": [
+      "sales",
+      "sales-quote-cost-analysis"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/cost-breakdown",
+    "method": "GET",
+    "name": "get_cost_breakdown",
+    "tags": [
+      "sales",
+      "sales-quote-cost-breakdown"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/cost-breakdown/items/{item_id}",
+    "method": "PUT",
+    "name": "update_cost_item",
+    "tags": [
+      "sales",
+      "sales-quote-cost-breakdown"
+    ],
+    "path_params": [
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/cost-breakdown/recalculate",
+    "method": "POST",
+    "name": "recalculate_cost",
+    "tags": [
+      "sales",
+      "sales-quote-cost-breakdown"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/cost-calculations",
+    "method": "GET",
+    "name": "get_cost_calculations",
+    "tags": [
+      "sales",
+      "sales-quote-cost-calculations"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/cost-calculations/simulate",
+    "method": "POST",
+    "name": "simulate_cost",
+    "tags": [
+      "sales",
+      "sales-quote-cost-calculations"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/cost-calculations/price-suggestion",
+    "method": "POST",
+    "name": "get_price_suggestion",
+    "tags": [
+      "sales",
+      "sales-quote-cost-calculations"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/cost-calculations/batch-update",
+    "method": "POST",
+    "name": "batch_update_prices",
+    "tags": [
+      "sales",
+      "sales-quote-cost-calculations"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/cost-calculations/margin-analysis",
+    "method": "GET",
+    "name": "get_margin_analysis",
+    "tags": [
+      "sales",
+      "sales-quote-cost-calculations"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/delivery",
+    "method": "GET",
+    "name": "get_quote_delivery",
+    "tags": [
+      "sales",
+      "sales-quote-delivery"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/delivery",
+    "method": "PUT",
+    "name": "update_quote_delivery",
+    "tags": [
+      "sales",
+      "sales-quote-delivery"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/delivery/upcoming",
+    "method": "GET",
+    "name": "get_upcoming_deliveries",
+    "tags": [
+      "sales",
+      "sales-quote-delivery"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/delivery/overdue",
+    "method": "GET",
+    "name": "get_overdue_deliveries",
+    "tags": [
+      "sales",
+      "sales-quote-delivery"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/delivery/calendar",
+    "method": "GET",
+    "name": "get_delivery_calendar",
+    "tags": [
+      "sales",
+      "sales-quote-delivery"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/export/excel",
+    "method": "GET",
+    "name": "export_quote_to_excel",
+    "tags": [
+      "sales",
+      "sales-quote-exports"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/export/pdf",
+    "method": "GET",
+    "name": "export_quote_to_pdf",
+    "tags": [
+      "sales",
+      "sales-quote-exports"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/export/batch",
+    "method": "GET",
+    "name": "batch_export_quotes",
+    "tags": [
+      "sales",
+      "sales-quote-exports"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_version_id}/items",
+    "method": "GET",
+    "name": "get_quote_items",
+    "tags": [
+      "sales",
+      "sales-quote-items"
+    ],
+    "path_params": [
+      "quote_version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_version_id}/items",
+    "method": "POST",
+    "name": "create_quote_item",
+    "tags": [
+      "sales",
+      "sales-quote-items"
+    ],
+    "path_params": [
+      "quote_version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/items/{item_id}",
+    "method": "PUT",
+    "name": "update_quote_item",
+    "tags": [
+      "sales",
+      "sales-quote-items"
+    ],
+    "path_params": [
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/items/{item_id}",
+    "method": "DELETE",
+    "name": "delete_quote_item",
+    "tags": [
+      "sales",
+      "sales-quote-items"
+    ],
+    "path_params": [
+      "item_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}",
+    "method": "GET",
+    "name": "get_quote_detail",
+    "tags": [
+      "sales",
+      "sales-quote-crud"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}",
+    "method": "PUT",
+    "name": "update_quote",
+    "tags": [
+      "sales",
+      "sales-quote-crud"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}",
+    "method": "DELETE",
+    "name": "delete_quote",
+    "tags": [
+      "sales",
+      "sales-quote-crud"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/statuses",
+    "method": "GET",
+    "name": "get_all_statuses",
+    "tags": [
+      "sales",
+      "sales-quote-status"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/status",
+    "method": "GET",
+    "name": "get_quote_status",
+    "tags": [
+      "sales",
+      "sales-quote-status"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/status",
+    "method": "POST",
+    "name": "change_quote_status",
+    "tags": [
+      "sales",
+      "sales-quote-status"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/status/history",
+    "method": "GET",
+    "name": "get_status_history",
+    "tags": [
+      "sales",
+      "sales-quote-status"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/status/summary",
+    "method": "GET",
+    "name": "get_status_summary",
+    "tags": [
+      "sales",
+      "sales-quote-status"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates",
+    "method": "GET",
+    "name": "get_quote_templates",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates/{template_id}",
+    "method": "GET",
+    "name": "get_template_detail",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates",
+    "method": "POST",
+    "name": "create_quote_template",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": []
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates/{template_id}",
+    "method": "PUT",
+    "name": "update_quote_template",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates/{template_id}",
+    "method": "DELETE",
+    "name": "delete_quote_template",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates/{template_id}/versions",
+    "method": "POST",
+    "name": "create_template_version",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/templates/{template_id}/publish",
+    "method": "POST",
+    "name": "publish_template",
+    "tags": [
+      "sales",
+      "sales-quote-templates"
+    ],
+    "path_params": [
+      "template_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/versions",
+    "method": "GET",
+    "name": "get_quote_versions",
+    "tags": [
+      "sales",
+      "sales-quote-versions"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/versions/{version_id}",
+    "method": "GET",
+    "name": "get_quote_version_detail",
+    "tags": [
+      "sales",
+      "sales-quote-versions"
+    ],
+    "path_params": [
+      "quote_id",
+      "version_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/versions",
+    "method": "POST",
+    "name": "create_quote_version",
+    "tags": [
+      "sales",
+      "sales-quote-versions"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/api/v1/sales/quotes/{quote_id}/versions/compare",
+    "method": "GET",
+    "name": "compare_versions",
+    "tags": [
+      "sales",
+      "sales-quote-versions"
+    ],
+    "path_params": [
+      "quote_id"
+    ]
+  },
+  {
+    "path": "/",
+    "method": "GET",
+    "name": "root",
+    "tags": [],
+    "path_params": []
+  },
+  {
+    "path": "/health",
+    "method": "GET",
+    "name": "health_check",
+    "tags": [],
+    "path_params": []
+  }
+]

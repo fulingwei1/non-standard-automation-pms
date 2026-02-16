@@ -1,0 +1,44 @@
+--- a/app/api/v1/endpoints/auth.py
++++ b/app/api/v1/endpoints/auth.py
+@@ -42,8 +42,7 @@ logger = logging.getLogger(__name__)
+ 
+ 
+ @router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
+-# @limiter.limit("5/minute")  # FIXME: slowapi 与 FastAPI 自动响应转换冲突，临时禁用
+-# 注意: 已有 AccountLockoutService 提供账户锁定保护
++@limiter.limit("5/minute")  # IP级别限流，与AccountLockoutService形成双层保护
+ def login(
+     request: Request,  # 用于获取客户端IP和User-Agent
+     db: Session = Depends(deps.get_db),
+@@ -53,6 +52,13 @@ def login(
+     """
+     用户登录，返回 JWT Token
+ 
++    安全机制（双层保护）：
++    1. IP级别速率限制（5次/分钟）
++       - 防止DDoS攻击和分布式暴力破解
++       - 基于来源IP地址限流
++    2. AccountLockoutService（账户锁定）
++       - 防止针对特定账户的暴力破解
++       - 5次失败锁定30分钟
+     - **username**: 用户名
+     - **password**: 密码
+ 
+@@ -300,7 +306,7 @@ def get_me(
+ 
+ 
+ @router.post("/refresh", response_model=RefreshTokenResponse, status_code=status.HTTP_200_OK)
+-# @limiter.limit("10/minute")  # FIXME: slowapi 与 FastAPI 冲突，临时禁用
++@limiter.limit("10/minute")  # 防止token刷新滥用
+ def refresh_token(
+     request: Request,
+     refresh_data: RefreshTokenRequest,
+@@ -465,7 +471,7 @@ def get_me(
+ 
+ 
+ @router.put("/password", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+-# @limiter.limit("5/hour")  # FIXME: slowapi 与 FastAPI 冲突，临时禁用
++@limiter.limit("5/hour")  # 严格限制密码修改频率
+ def change_password(
+     request: Request,
+     password_data: PasswordChange,

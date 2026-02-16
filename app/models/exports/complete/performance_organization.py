@@ -20,6 +20,7 @@ from ...api_key import APIKey
 from ...session import UserSession
 
 # 租户
+from ...tenant import Tenant, TenantPlan, TenantStatus
 
 # 组织架构
 from ...organization import (
@@ -91,6 +92,10 @@ __all__ = [
     "PermissionAudit",
     "UserSession",
     "APIKey",  # API Key认证
+    # Tenant
+    "Tenant",
+    "TenantPlan",
+    "TenantStatus",
     # Organization
     "Department",
     "Employee",

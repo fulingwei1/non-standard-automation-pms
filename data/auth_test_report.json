@@ -1,0 +1,229 @@
+{
+  "timestamp": "2026-02-16T15:02:21.581602",
+  "summary": {
+    "total": 24,
+    "passed": 14,
+    "failed": 10,
+    "pass_rate": "58.3%"
+  },
+  "categories": {
+    "1.1": {
+      "passed": 1,
+      "failed": 0
+    },
+    "1.2": {
+      "passed": 0,
+      "failed": 1
+    },
+    "1.3": {
+      "passed": 0,
+      "failed": 1
+    },
+    "1.4": {
+      "passed": 1,
+      "failed": 0
+    },
+    "1.5": {
+      "passed": 0,
+      "failed": 1
+    },
+    "1.6": {
+      "passed": 0,
+      "failed": 1
+    },
+    "1.7": {
+      "passed": 0,
+      "failed": 1
+    },
+    "2.1": {
+      "passed": 1,
+      "failed": 0
+    },
+    "2.2": {
+      "passed": 1,
+      "failed": 0
+    },
+    "2.3": {
+      "passed": 1,
+      "failed": 0
+    },
+    "2.4": {
+      "passed": 1,
+      "failed": 0
+    },
+    "3.1": {
+      "passed": 1,
+      "failed": 0
+    },
+    "3.2": {
+      "passed": 1,
+      "failed": 0
+    },
+    "3.3": {
+      "passed": 1,
+      "failed": 0
+    },
+    "3.4": {
+      "passed": 1,
+      "failed": 0
+    },
+    "3.5": {
+      "passed": 0,
+      "failed": 1
+    },
+    "4.1": {
+      "passed": 1,
+      "failed": 0
+    },
+    "4.2": {
+      "passed": 0,
+      "failed": 1
+    },
+    "4.3": {
+      "passed": 1,
+      "failed": 0
+    },
+    "4.4": {
+      "passed": 1,
+      "failed": 0
+    },
+    "4.5": {
+      "passed": 1,
+      "failed": 0
+    },
+    "5.1": {
+      "passed": 0,
+      "failed": 1
+    },
+    "5.2": {
+      "passed": 0,
+      "failed": 1
+    },
+    "5.3": {
+      "passed": 0,
+      "failed": 1
+    }
+  },
+  "details": [
+    {
+      "name": "1.1 Admin登录成功",
+      "passed": true,
+      "details": "获取到access_token"
+    },
+    {
+      "name": "1.2 错误密码被拒绝",
+      "passed": false,
+      "details": "响应: {'code': 'HTTP_ERROR', 'message': '密码错误，忘记密码请联系管理员重置'}"
+    },
+    {
+      "name": "1.3 不存在的用户被拒绝",
+      "passed": false,
+      "details": "响应: {'error': 'Rate limit exceeded: 5 per 1 minute'}"
+    },
+    {
+      "name": "1.4 获取当前用户信息",
+      "passed": true,
+      "details": "用户: admin, 角色数: 1"
+    },
+    {
+      "name": "1.5 刷新Token成功",
+      "passed": false,
+      "details": "响应: {'code': 'INTERNAL_ERROR', 'message': '服务器内部错误，请联系管理员'}"
+    },
+    {
+      "name": "1.6 修改密码",
+      "passed": false,
+      "details": "响应: {'code': 'INTERNAL_ERROR', 'message': '服务器内部错误，请联系管理员'}"
+    },
+    {
+      "name": "1.7 登出成功",
+      "passed": false,
+      "details": "响应: {'code': 'INTERNAL_ERROR', 'message': '服务器内部错误，请联系管理员'}"
+    },
+    {
+      "name": "2.1 有效Token访问成功",
+      "passed": true,
+      "details": "访问 /api/v1/auth/me"
+    },
+    {
+      "name": "2.2 无效Token被拒绝",
+      "passed": true,
+      "details": "返回401"
+    },
+    {
+      "name": "2.3 缺少Token被拒绝",
+      "passed": true,
+      "details": "返回401"
+    },
+    {
+      "name": "2.4 Token格式错误被拒绝",
+      "passed": true,
+      "details": "返回401"
+    },
+    {
+      "name": "3.1 Admin用户权限信息",
+      "passed": true,
+      "details": "角色数: 1, 权限数: 125, Superuser: True"
+    },
+    {
+      "name": "3.2 Admin访问用户列表",
+      "passed": true,
+      "details": "返回 0 个用户"
+    },
+    {
+      "name": "3.3 Admin访问角色列表",
+      "passed": true,
+      "details": "返回 20 个角色"
+    },
+    {
+      "name": "3.4 获取权限数据",
+      "passed": true,
+      "details": "权限数: 125"
+    },
+    {
+      "name": "3.5 Admin访问项目列表",
+      "passed": false,
+      "details": "状态码: unknown"
+    },
+    {
+      "name": "4.1 白名单路径 /health 可访问",
+      "passed": true,
+      "details": "无需认证"
+    },
+    {
+      "name": "4.2 白名单路径 /api/v1/auth/login 可访问",
+      "passed": false,
+      "details": "响应: {'error': 'Rate limit exceeded: 5 per 1 minute'}"
+    },
+    {
+      "name": "4.3 Protected路径需要认证",
+      "passed": true,
+      "details": "/api/v1/users 返回401"
+    },
+    {
+      "name": "4.4 Protected路径 /api/v1/projects 需要认证",
+      "passed": true,
+      "details": "返回401"
+    },
+    {
+      "name": "4.5 认证失败返回正确错误码",
+      "passed": true,
+      "details": "错误码: AUTH_FAILED"
+    },
+    {
+      "name": "5.1 SQL注入防护",
+      "passed": false,
+      "details": "响应: {'error': 'Rate limit exceeded: 5 per 1 minute'}"
+    },
+    {
+      "name": "5.2 密码强度验证",
+      "passed": false,
+      "details": "无法登录"
+    },
+    {
+      "name": "5.3 账户锁定机制",
+      "passed": false,
+      "details": "多次错误登录未触发锁定（可能未实现或阈值更高）"
+    }
+  ]
+}

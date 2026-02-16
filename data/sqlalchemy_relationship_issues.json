@@ -1,0 +1,3244 @@
+{
+  "total_models": 496,
+  "total_issues": 358,
+  "issues_by_severity": {
+    "P0": 11,
+    "P1": 347,
+    "P2": 0
+  },
+  "issues": [
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "Investor",
+      "relationship": "equity_structures",
+      "target_model": "EquityStructure",
+      "expected_back_populates": "investor",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/finance.py",
+      "message": "Investor.equity_structures 的 back_populates='investor' 在 EquityStructure 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "RdProject",
+      "relationship": "documents",
+      "target_model": "ProjectDocument",
+      "expected_back_populates": "rd_project",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/rd_project.py",
+      "message": "RdProject.documents 的 back_populates='rd_project' 在 ProjectDocument 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "TimesheetReportTemplate",
+      "relationship": "archives",
+      "target_model": "ReportArchive",
+      "expected_back_populates": "template",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report.py",
+      "message": "TimesheetReportTemplate.archives 的 back_populates='template' 在 ReportArchive 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "TimesheetReportTemplate",
+      "relationship": "recipients",
+      "target_model": "ReportRecipient",
+      "expected_back_populates": "template",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report.py",
+      "message": "TimesheetReportTemplate.recipients 的 back_populates='template' 在 ReportRecipient 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "ReportArchive",
+      "relationship": "template",
+      "target_model": "ReportTemplate",
+      "expected_back_populates": "archives",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report.py",
+      "message": "ReportArchive.template 的 back_populates='archives' 在 ReportTemplate 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "ReportRecipient",
+      "relationship": "template",
+      "target_model": "ReportTemplate",
+      "expected_back_populates": "recipients",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report.py",
+      "message": "ReportRecipient.template 的 back_populates='recipients' 在 ReportTemplate 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "Quote",
+      "relationship": "approvals",
+      "target_model": "QuoteApproval",
+      "expected_back_populates": "quote",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/quotes.py",
+      "message": "Quote.approvals 的 back_populates='quote' 在 QuoteApproval 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "QuoteVersion",
+      "relationship": "cost_approvals",
+      "target_model": "QuoteCostApproval",
+      "expected_back_populates": "quote_version",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/quotes.py",
+      "message": "QuoteVersion.cost_approvals 的 back_populates='quote_version' 在 QuoteCostApproval 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "QuoteVersion",
+      "relationship": "cost_histories",
+      "target_model": "QuoteCostHistory",
+      "expected_back_populates": "quote_version",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/quotes.py",
+      "message": "QuoteVersion.cost_histories 的 back_populates='quote_version' 在 QuoteCostHistory 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "ProjectMember",
+      "relationship": "team_members",
+      "target_model": "ProjectMember",
+      "expected_back_populates": "lead",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/team.py",
+      "message": "ProjectMember.team_members 的 back_populates='lead' 在 ProjectMember 中找不到对应关系"
+    },
+    {
+      "severity": "P0",
+      "type": "back_populates_asymmetry",
+      "model": "Customer",
+      "relationship": "opportunities",
+      "target_model": "Opportunity",
+      "expected_back_populates": "customer",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/customer.py",
+      "message": "Customer.opportunities 的 back_populates='customer' 在 Opportunity 中找不到对应关系"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "User",
+      "foreign_key": "employee_id",
+      "target_table": "employees",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/user.py",
+      "message": "User 有外键 employee_id 指向 employees，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Role",
+      "foreign_key": "source_template_id",
+      "target_table": "role_templates",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/user.py",
+      "message": "Role 有外键 source_template_id 指向 role_templates，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Material",
+      "foreign_key": "default_supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "Material 有外键 default_supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Material",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "Material 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BomHeader",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "BomHeader 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BomHeader",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "BomHeader 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BomItem",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "BomItem 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialShortage",
+      "foreign_key": "bom_item_id",
+      "target_table": "bom_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/material.py",
+      "message": "MaterialShortage 有外键 bom_item_id 指向 bom_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "assignee_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 assignee_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "assigner_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 assigner_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "transfer_from_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 transfer_from_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "delay_reported_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 delay_reported_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskUnified",
+      "foreign_key": "updated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskUnified 有外键 updated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskOperationLog",
+      "foreign_key": "operator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskOperationLog 有外键 operator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskComment",
+      "foreign_key": "commenter_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskComment 有外键 commenter_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskReminder",
+      "foreign_key": "task_id",
+      "target_table": "task_unified",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskReminder 有外键 task_id 指向 task_unified，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskReminder",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskReminder 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskApprovalWorkflow",
+      "foreign_key": "submitted_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskApprovalWorkflow 有外键 submitted_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskApprovalWorkflow",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskApprovalWorkflow 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TaskCompletionProof",
+      "foreign_key": "uploaded_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/task_center.py",
+      "message": "TaskCompletionProof 有外键 uploaded_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleMobileAssistantChat",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_mobile.py",
+      "message": "PresaleMobileAssistantChat 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleVisitRecord",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_mobile.py",
+      "message": "PresaleVisitRecord 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleVisitRecord",
+      "foreign_key": "customer_id",
+      "target_table": "customers",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_mobile.py",
+      "message": "PresaleVisitRecord 有外键 customer_id 指向 customers，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleMobileQuickEstimate",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_mobile.py",
+      "message": "PresaleMobileQuickEstimate 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleMobileQuickEstimate",
+      "foreign_key": "customer_id",
+      "target_table": "customers",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_mobile.py",
+      "message": "PresaleMobileQuickEstimate 有外键 customer_id 指向 customers，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Vendor",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/vendor.py",
+      "message": "Vendor 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportDefinition",
+      "foreign_key": "template_id",
+      "target_table": "report_template",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportDefinition 有外键 template_id 指向 report_template，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportDefinition",
+      "foreign_key": "owner_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportDefinition 有外键 owner_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportGeneration",
+      "foreign_key": "report_definition_id",
+      "target_table": "report_definition",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportGeneration 有外键 report_definition_id 指向 report_definition，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportGeneration",
+      "foreign_key": "template_id",
+      "target_table": "report_template",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportGeneration 有外键 template_id 指向 report_template，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportGeneration",
+      "foreign_key": "generated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportGeneration 有外键 generated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportSubscription",
+      "foreign_key": "subscriber_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportSubscription 有外键 subscriber_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportSubscription",
+      "foreign_key": "report_definition_id",
+      "target_table": "report_definition",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportSubscription 有外键 report_definition_id 指向 report_definition，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportSubscription",
+      "foreign_key": "template_id",
+      "target_table": "report_template",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "ReportSubscription 有外键 template_id 指向 report_template，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DataImportTask",
+      "foreign_key": "imported_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "DataImportTask 有外键 imported_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DataExportTask",
+      "foreign_key": "exported_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report_center.py",
+      "message": "DataExportTask 有外键 exported_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "NewProductRequest",
+      "foreign_key": "lead_id",
+      "target_table": "leads",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/advantage_product.py",
+      "message": "NewProductRequest 有外键 lead_id 指向 leads，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "HrTransaction",
+      "foreign_key": "applicant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/organization.py",
+      "message": "HrTransaction 有外键 applicant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "HrTransaction",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/organization.py",
+      "message": "HrTransaction 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ContractReminder",
+      "foreign_key": "handled_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/organization.py",
+      "message": "ContractReminder 有外键 handled_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "equipment_id",
+      "target_table": "machines",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 equipment_id 指向 machines，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "host_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 host_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "presenter_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 presenter_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "recorder_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 recorder_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TechnicalReview",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "TechnicalReview 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewParticipant",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewParticipant 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewParticipant",
+      "foreign_key": "delegate_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewParticipant 有外键 delegate_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewMaterial",
+      "foreign_key": "upload_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewMaterial 有外键 upload_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewChecklistRecord",
+      "foreign_key": "checker_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewChecklistRecord 有外键 checker_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewIssue",
+      "foreign_key": "assignee_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewIssue 有外键 assignee_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReviewIssue",
+      "foreign_key": "verifier_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/technical_review.py",
+      "message": "ReviewIssue 有外键 verifier_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingOrder",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingOrder 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingDelivery",
+      "foreign_key": "received_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingDelivery 有外键 received_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingDelivery",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingDelivery 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingInspection",
+      "foreign_key": "inspector_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingInspection 有外键 inspector_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingPayment",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingPayment 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingPayment",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingPayment 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingEvaluation",
+      "foreign_key": "order_id",
+      "target_table": "outsourcing_orders",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingEvaluation 有外键 order_id 指向 outsourcing_orders，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingEvaluation",
+      "foreign_key": "evaluator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingEvaluation 有外键 evaluator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingProgress",
+      "foreign_key": "order_item_id",
+      "target_table": "outsourcing_order_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingProgress 有外键 order_item_id 指向 outsourcing_order_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OutsourcingProgress",
+      "foreign_key": "reported_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/outsourcing.py",
+      "message": "OutsourcingProgress 有外键 reported_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceOrder",
+      "foreign_key": "qa_signer_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceOrder 有外键 qa_signer_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceOrder",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceOrder 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceOrderItem",
+      "foreign_key": "category_id",
+      "target_table": "template_categories",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceOrderItem 有外键 category_id 指向 template_categories，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceOrderItem",
+      "foreign_key": "template_item_id",
+      "target_table": "template_check_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceOrderItem 有外键 template_item_id 指向 template_check_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceOrderItem",
+      "foreign_key": "checked_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceOrderItem 有外键 checked_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceIssue",
+      "foreign_key": "order_item_id",
+      "target_table": "acceptance_order_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceIssue 有外键 order_item_id 指向 acceptance_order_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceIssue",
+      "foreign_key": "found_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceIssue 有外键 found_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceIssue",
+      "foreign_key": "assigned_to",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceIssue 有外键 assigned_to 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceIssue",
+      "foreign_key": "resolved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceIssue 有外键 resolved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceIssue",
+      "foreign_key": "verified_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceIssue 有外键 verified_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "IssueFollowUp",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "IssueFollowUp 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceSignature",
+      "foreign_key": "signer_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceSignature 有外键 signer_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AcceptanceReport",
+      "foreign_key": "generated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/acceptance.py",
+      "message": "AcceptanceReport 有外键 generated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ResourceConflictDetection",
+      "foreign_key": "allocation_a_id",
+      "target_table": "pmo_resource_allocation",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/resource_scheduling.py",
+      "message": "ResourceConflictDetection 有外键 allocation_a_id 指向 pmo_resource_allocation，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ResourceConflictDetection",
+      "foreign_key": "allocation_b_id",
+      "target_table": "pmo_resource_allocation",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/resource_scheduling.py",
+      "message": "ResourceConflictDetection 有外键 allocation_b_id 指向 pmo_resource_allocation，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSupportTicket",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSupportTicket 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSupportTicket",
+      "foreign_key": "applicant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSupportTicket 有外键 applicant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSupportTicket",
+      "foreign_key": "assignee_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSupportTicket 有外键 assignee_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSupportTicket",
+      "foreign_key": "pm_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSupportTicket 有外键 pm_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSupportTicket",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSupportTicket 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleTicketDeliverable",
+      "foreign_key": "reviewer_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleTicketDeliverable 有外键 reviewer_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleTicketDeliverable",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleTicketDeliverable 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleTicketProgress",
+      "foreign_key": "operator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleTicketProgress 有外键 operator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSolution",
+      "foreign_key": "ticket_id",
+      "target_table": "presale_support_ticket",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSolution 有外键 ticket_id 指向 presale_support_ticket，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSolution",
+      "foreign_key": "reviewer_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSolution 有外键 reviewer_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSolution",
+      "foreign_key": "author_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSolution 有外键 author_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleSolutionTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleSolutionTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleWorkload",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleWorkload 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleTenderRecord",
+      "foreign_key": "ticket_id",
+      "target_table": "presale_support_ticket",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleTenderRecord 有外键 ticket_id 指向 presale_support_ticket，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleTenderRecord",
+      "foreign_key": "leader_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale.py",
+      "message": "PresaleTenderRecord 有外键 leader_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ManagementRhythmConfig",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "ManagementRhythmConfig 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StrategicMeeting",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "StrategicMeeting 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StrategicMeeting",
+      "foreign_key": "rhythm_config_id",
+      "target_table": "management_rhythm_config",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "StrategicMeeting 有外键 rhythm_config_id 指向 management_rhythm_config，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StrategicMeeting",
+      "foreign_key": "organizer_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "StrategicMeeting 有外键 organizer_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StrategicMeeting",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "StrategicMeeting 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MeetingActionItem",
+      "foreign_key": "owner_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "MeetingActionItem 有外键 owner_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MeetingActionItem",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "MeetingActionItem 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "RhythmDashboardSnapshot",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "RhythmDashboardSnapshot 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MeetingReport",
+      "foreign_key": "generated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "MeetingReport 有外键 generated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MeetingReportConfig",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "MeetingReportConfig 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReportMetricDefinition",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/management_rhythm.py",
+      "message": "ReportMetricDefinition 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PurchaseOrder",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "PurchaseOrder 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PurchaseOrder",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "PurchaseOrder 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PurchaseOrderItem",
+      "foreign_key": "bom_item_id",
+      "target_table": "bom_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "PurchaseOrderItem 有外键 bom_item_id 指向 bom_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "GoodsReceipt",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "GoodsReceipt 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "GoodsReceipt",
+      "foreign_key": "inspected_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "GoodsReceipt 有外键 inspected_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "GoodsReceipt",
+      "foreign_key": "warehoused_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "GoodsReceipt 有外键 warehoused_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "GoodsReceipt",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "GoodsReceipt 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PurchaseRequest",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/purchase.py",
+      "message": "PurchaseRequest 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageDetail",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/assembly_kit.py",
+      "message": "ShortageDetail 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleAIEmotionAnalysis",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_ai_emotion_analysis.py",
+      "message": "PresaleAIEmotionAnalysis 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleAIRequirementAnalysis",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_ai_requirement_analysis.py",
+      "message": "PresaleAIRequirementAnalysis 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallContent",
+      "foreign_key": "related_project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallContent 有外键 related_project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallContent",
+      "foreign_key": "related_department_id",
+      "target_table": "departments",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallContent 有外键 related_department_id 指向 departments，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallContent",
+      "foreign_key": "published_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallContent 有外键 published_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallContent",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallContent 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PersonalGoal",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "PersonalGoal 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PersonalGoal",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "PersonalGoal 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallReadRecord",
+      "foreign_key": "content_id",
+      "target_table": "culture_wall_content",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallReadRecord 有外键 content_id 指向 culture_wall_content，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CultureWallReadRecord",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/culture_wall.py",
+      "message": "CultureWallReadRecord 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnalytics",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnalytics 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnalytics",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnalytics 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetTrend",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetTrend 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetTrend",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetTrend 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetForecast",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetForecast 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetForecast",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetForecast 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnomaly",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnomaly 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnomaly",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnomaly 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnomaly",
+      "foreign_key": "timesheet_id",
+      "target_table": "timesheet",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnomaly 有外键 timesheet_id 指向 timesheet，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetAnomaly",
+      "foreign_key": "resolved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_analytics.py",
+      "message": "TimesheetAnomaly 有外键 resolved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "period_id",
+      "target_table": "performance_period",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 period_id 指向 performance_period，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "milestone_id",
+      "target_table": "project_milestones",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 milestone_id 指向 project_milestones，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "performance_result_id",
+      "target_table": "performance_result",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 performance_result_id 指向 performance_result，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "project_contribution_id",
+      "target_table": "project_contribution",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 project_contribution_id 指向 project_contribution，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusCalculation",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusCalculation 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusDistribution",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusDistribution 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "BonusDistribution",
+      "foreign_key": "paid_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "BonusDistribution 有外键 paid_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TeamBonusAllocation",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "TeamBonusAllocation 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TeamBonusAllocation",
+      "foreign_key": "period_id",
+      "target_table": "performance_period",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "TeamBonusAllocation 有外键 period_id 指向 performance_period，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TeamBonusAllocation",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/bonus.py",
+      "message": "TeamBonusAllocation 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetReminderConfig",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet_reminder.py",
+      "message": "TimesheetReminderConfig 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleFollowUpReminder",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_follow_up_reminder.py",
+      "message": "PresaleFollowUpReminder 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialTransaction",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "MaterialTransaction 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialStock",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "MaterialStock 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialReservation",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "MaterialReservation 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StockAdjustment",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "StockAdjustment 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StockCountTask",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "StockCountTask 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StockCountTask",
+      "foreign_key": "category_id",
+      "target_table": "material_categories",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "StockCountTask 有外键 category_id 指向 material_categories，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "StockCountDetail",
+      "foreign_key": "tenant_id",
+      "target_table": "tenants",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/inventory_tracking.py",
+      "message": "StockCountDetail 有外键 tenant_id 指向 tenants，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Timesheet",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "Timesheet 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Timesheet",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "Timesheet 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Timesheet",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "Timesheet 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Timesheet",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "Timesheet 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetBatch",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetBatch 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetBatch",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetBatch 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetSummary",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetSummary 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetSummary",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetSummary 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OvertimeApplication",
+      "foreign_key": "applicant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "OvertimeApplication 有外键 applicant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OvertimeApplication",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "OvertimeApplication 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "OvertimeApplication",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "OvertimeApplication 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetApprovalLog",
+      "foreign_key": "timesheet_id",
+      "target_table": "timesheet",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetApprovalLog 有外键 timesheet_id 指向 timesheet，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetApprovalLog",
+      "foreign_key": "batch_id",
+      "target_table": "timesheet_batch",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetApprovalLog 有外键 batch_id 指向 timesheet_batch，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetApprovalLog",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/timesheet.py",
+      "message": "TimesheetApprovalLog 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "TimesheetReportTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/report.py",
+      "message": "TimesheetReportTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PresaleEmotionTrend",
+      "foreign_key": "presale_ticket_id",
+      "target_table": "presale_tickets",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/presale_emotion_trend.py",
+      "message": "PresaleEmotionTrend 有外键 presale_ticket_id 指向 presale_tickets，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AlertRule",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "AlertRule 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AlertRecord",
+      "foreign_key": "acknowledged_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "AlertRecord 有外键 acknowledged_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AlertRecord",
+      "foreign_key": "handler_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "AlertRecord 有外键 handler_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AlertRecord",
+      "foreign_key": "escalated_to",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "AlertRecord 有外键 escalated_to 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AlertNotification",
+      "foreign_key": "notify_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "AlertNotification 有外键 notify_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEvent",
+      "foreign_key": "discovered_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEvent 有外键 discovered_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEvent",
+      "foreign_key": "responsible_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEvent 有外键 responsible_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEvent",
+      "foreign_key": "resolved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEvent 有外键 resolved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEvent",
+      "foreign_key": "verified_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEvent 有外键 verified_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEvent",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEvent 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionAction",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionAction 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEscalation",
+      "foreign_key": "escalated_from",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEscalation 有外键 escalated_from 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ExceptionEscalation",
+      "foreign_key": "escalated_to",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/alert.py",
+      "message": "ExceptionEscalation 有外键 escalated_to 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialArrival",
+      "foreign_key": "purchase_order_id",
+      "target_table": "purchase_orders",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/arrivals.py",
+      "message": "MaterialArrival 有外键 purchase_order_id 指向 purchase_orders，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialArrival",
+      "foreign_key": "purchase_order_item_id",
+      "target_table": "purchase_order_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/arrivals.py",
+      "message": "MaterialArrival 有外键 purchase_order_item_id 指向 purchase_order_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialArrival",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/arrivals.py",
+      "message": "MaterialArrival 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialArrival",
+      "foreign_key": "received_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/arrivals.py",
+      "message": "MaterialArrival 有外键 received_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ArrivalFollowUp",
+      "foreign_key": "followed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/arrivals.py",
+      "message": "ArrivalFollowUp 有外键 followed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "shortage_report_id",
+      "target_table": "shortage_reports",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 shortage_report_id 指向 shortage_reports，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "bom_item_id",
+      "target_table": "bom_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 bom_item_id 指向 bom_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "tech_approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 tech_approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "prod_approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 prod_approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "executed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 executed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialSubstitution",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialSubstitution 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialTransfer",
+      "foreign_key": "shortage_report_id",
+      "target_table": "shortage_reports",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialTransfer 有外键 shortage_report_id 指向 shortage_reports，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialTransfer",
+      "foreign_key": "approver_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialTransfer 有外键 approver_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialTransfer",
+      "foreign_key": "executed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialTransfer 有外键 executed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialTransfer",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/handling.py",
+      "message": "MaterialTransfer 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageAlert",
+      "foreign_key": "work_order_id",
+      "target_table": "production_work_orders",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/smart_alert.py",
+      "message": "ShortageAlert 有外键 work_order_id 指向 production_work_orders，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageHandlingPlan",
+      "foreign_key": "target_supplier_id",
+      "target_table": "suppliers",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/smart_alert.py",
+      "message": "ShortageHandlingPlan 有外键 target_supplier_id 指向 suppliers，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageHandlingPlan",
+      "foreign_key": "target_project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/smart_alert.py",
+      "message": "ShortageHandlingPlan 有外键 target_project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageReport",
+      "foreign_key": "work_order_id",
+      "target_table": "work_order",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/reports.py",
+      "message": "ShortageReport 有外键 work_order_id 指向 work_order，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageReport",
+      "foreign_key": "reporter_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/reports.py",
+      "message": "ShortageReport 有外键 reporter_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageReport",
+      "foreign_key": "confirmed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/reports.py",
+      "message": "ShortageReport 有外键 confirmed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ShortageReport",
+      "foreign_key": "handler_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/shortage/reports.py",
+      "message": "ShortageReport 有外键 handler_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EngineerDimensionConfig",
+      "foreign_key": "operator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/engineer_performance/common.py",
+      "message": "EngineerDimensionConfig 有外键 operator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "CollaborationRating",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/engineer_performance/common.py",
+      "message": "CollaborationRating 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "KnowledgeReuseLog",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/engineer_performance/common.py",
+      "message": "KnowledgeReuseLog 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Invoice",
+      "foreign_key": "payment_id",
+      "target_table": "project_payment_plans",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/invoices.py",
+      "message": "Invoice 有外键 payment_id 指向 project_payment_plans，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReceivableDispute",
+      "foreign_key": "payment_id",
+      "target_table": "project_payment_plans",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/invoices.py",
+      "message": "ReceivableDispute 有外键 payment_id 指向 project_payment_plans，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PurchaseMaterialCost",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/quotes.py",
+      "message": "PurchaseMaterialCost 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "SalesRankingConfig",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/workflow.py",
+      "message": "SalesRankingConfig 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "SalesRankingConfig",
+      "foreign_key": "updated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/sales/workflow.py",
+      "message": "SalesRankingConfig 有外键 updated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EcnLog",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ecn/log.py",
+      "message": "EcnLog 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EcnAffectedMaterial",
+      "foreign_key": "bom_item_id",
+      "target_table": "bom_items",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ecn/impact.py",
+      "message": "EcnAffectedMaterial 有外键 bom_item_id 指向 bom_items，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EcnAffectedMaterial",
+      "foreign_key": "old_supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ecn/impact.py",
+      "message": "EcnAffectedMaterial 有外键 old_supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EcnAffectedMaterial",
+      "foreign_key": "new_supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ecn/impact.py",
+      "message": "EcnAffectedMaterial 有外键 new_supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EcnAffectedOrder",
+      "foreign_key": "processed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ecn/impact.py",
+      "message": "EcnAffectedOrder 有外键 processed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectCost",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/cost_meeting.py",
+      "message": "PmoProjectCost 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectCost",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/cost_meeting.py",
+      "message": "PmoProjectCost 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoMeeting",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/cost_meeting.py",
+      "message": "PmoMeeting 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoMeeting",
+      "foreign_key": "organizer_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/cost_meeting.py",
+      "message": "PmoMeeting 有外键 organizer_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoMeeting",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/cost_meeting.py",
+      "message": "PmoMeeting 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectInitiation",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/initiation_phase.py",
+      "message": "PmoProjectInitiation 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectInitiation",
+      "foreign_key": "applicant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/initiation_phase.py",
+      "message": "PmoProjectInitiation 有外键 applicant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectInitiation",
+      "foreign_key": "approved_pm_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/initiation_phase.py",
+      "message": "PmoProjectInitiation 有外键 approved_pm_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectInitiation",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/initiation_phase.py",
+      "message": "PmoProjectInitiation 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectPhase",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/initiation_phase.py",
+      "message": "PmoProjectPhase 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoResourceAllocation",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/resource_closure.py",
+      "message": "PmoResourceAllocation 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoResourceAllocation",
+      "foreign_key": "resource_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/resource_closure.py",
+      "message": "PmoResourceAllocation 有外键 resource_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectClosure",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/resource_closure.py",
+      "message": "PmoProjectClosure 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectClosure",
+      "foreign_key": "reviewed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/resource_closure.py",
+      "message": "PmoProjectClosure 有外键 reviewed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoChangeRequest",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/change_risk.py",
+      "message": "PmoChangeRequest 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoChangeRequest",
+      "foreign_key": "requestor_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/change_risk.py",
+      "message": "PmoChangeRequest 有外键 requestor_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectRisk",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/change_risk.py",
+      "message": "PmoProjectRisk 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PmoProjectRisk",
+      "foreign_key": "owner_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/pmo/change_risk.py",
+      "message": "PmoProjectRisk 有外键 owner_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Project",
+      "foreign_key": "approval_record_id",
+      "target_table": "approval_records",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/core.py",
+      "message": "Project 有外键 approval_record_id 指向 approval_records，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Project",
+      "foreign_key": "dept_id",
+      "target_table": "departments",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/core.py",
+      "message": "Project 有外键 dept_id 指向 departments，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Project",
+      "foreign_key": "template_id",
+      "target_table": "project_templates",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/core.py",
+      "message": "Project 有外键 template_id 指向 project_templates，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Project",
+      "foreign_key": "template_version_id",
+      "target_table": "project_template_versions",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/core.py",
+      "message": "Project 有外键 template_version_id 指向 project_template_versions，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectMilestone",
+      "foreign_key": "machine_id",
+      "target_table": "machines",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/financial.py",
+      "message": "ProjectMilestone 有外键 machine_id 指向 machines，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectMilestone",
+      "foreign_key": "owner_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/financial.py",
+      "message": "ProjectMilestone 有外键 owner_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectCost",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/financial.py",
+      "message": "ProjectCost 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectDocument",
+      "foreign_key": "rd_project_id",
+      "target_table": "rd_project",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/document.py",
+      "message": "ProjectDocument 有外键 rd_project_id 指向 rd_project，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectDocument",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/document.py",
+      "message": "ProjectDocument 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectDocument",
+      "foreign_key": "uploaded_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/document.py",
+      "message": "ProjectDocument 有外键 uploaded_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/project/document.py",
+      "message": "ProjectTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Equipment",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/equipment.py",
+      "message": "Equipment 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Worker",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/worker.py",
+      "message": "Worker 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "QualityInspection",
+      "foreign_key": "work_order_id",
+      "target_table": "work_order",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "QualityInspection 有外键 work_order_id 指向 work_order，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "QualityInspection",
+      "foreign_key": "material_id",
+      "target_table": "materials",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "QualityInspection 有外键 material_id 指向 materials，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DefectAnalysis",
+      "foreign_key": "inspection_id",
+      "target_table": "quality_inspection",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "DefectAnalysis 有外键 inspection_id 指向 quality_inspection，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DefectAnalysis",
+      "foreign_key": "related_equipment_id",
+      "target_table": "equipment",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "DefectAnalysis 有外键 related_equipment_id 指向 equipment，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DefectAnalysis",
+      "foreign_key": "related_worker_id",
+      "target_table": "worker",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "DefectAnalysis 有外键 related_worker_id 指向 worker，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "DefectAnalysis",
+      "foreign_key": "related_material_id",
+      "target_table": "materials",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "DefectAnalysis 有外键 related_material_id 指向 materials，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "QualityAlertRule",
+      "foreign_key": "target_material_id",
+      "target_table": "materials",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "QualityAlertRule 有外键 target_material_id 指向 materials，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "QualityAlertRule",
+      "foreign_key": "target_process_id",
+      "target_table": "process_dict",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "QualityAlertRule 有外键 target_process_id 指向 process_dict，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "QualityAlertRule",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "QualityAlertRule 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReworkOrder",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "ReworkOrder 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReworkOrder",
+      "foreign_key": "workstation_id",
+      "target_table": "workstation",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "ReworkOrder 有外键 workstation_id 指向 workstation，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ReworkOrder",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/quality_inspection.py",
+      "message": "ReworkOrder 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkReport",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_report.py",
+      "message": "WorkReport 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialRequisition",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "MaterialRequisition 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialRequisition",
+      "foreign_key": "applicant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "MaterialRequisition 有外键 applicant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialRequisition",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "MaterialRequisition 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialRequisition",
+      "foreign_key": "issued_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "MaterialRequisition 有外键 issued_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialRequisitionItem",
+      "foreign_key": "material_id",
+      "target_table": "materials",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "MaterialRequisitionItem 有外键 material_id 指向 materials，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionDailyReport",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "ProductionDailyReport 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionDailyReport",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material.py",
+      "message": "ProductionDailyReport 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkerEfficiencyRecord",
+      "foreign_key": "calculated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/worker_efficiency_record.py",
+      "message": "WorkerEfficiencyRecord 有外键 calculated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkerEfficiencyRecord",
+      "foreign_key": "confirmed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/worker_efficiency_record.py",
+      "message": "WorkerEfficiencyRecord 有外键 confirmed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionPlan",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_plan.py",
+      "message": "ProductionPlan 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionPlan",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_plan.py",
+      "message": "ProductionPlan 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionPlan",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_plan.py",
+      "message": "ProductionPlan 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionPlan",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_plan.py",
+      "message": "ProductionPlan 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Workshop",
+      "foreign_key": "manager_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/workshop.py",
+      "message": "Workshop 有外键 manager_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Workstation",
+      "foreign_key": "current_worker_id",
+      "target_table": "worker",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/workshop.py",
+      "message": "Workstation 有外键 current_worker_id 指向 worker，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "Workstation",
+      "foreign_key": "current_work_order_id",
+      "target_table": "work_order",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/workshop.py",
+      "message": "Workstation 有外键 current_work_order_id 指向 work_order，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialBatch",
+      "foreign_key": "supplier_id",
+      "target_table": "vendors",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialBatch 有外键 supplier_id 指向 vendors，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialBatch",
+      "foreign_key": "quality_inspector_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialBatch 有外键 quality_inspector_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialBatch",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialBatch 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialConsumption",
+      "foreign_key": "requisition_id",
+      "target_table": "material_requisition",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialConsumption 有外键 requisition_id 指向 material_requisition，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialConsumption",
+      "foreign_key": "operator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialConsumption 有外键 operator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialConsumption",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialConsumption 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialAlert",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialAlert 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialAlertRule",
+      "foreign_key": "category_id",
+      "target_table": "material_categories",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialAlertRule 有外键 category_id 指向 material_categories，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "MaterialAlertRule",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/material_tracking.py",
+      "message": "MaterialAlertRule 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "EquipmentOEERecord",
+      "foreign_key": "calculated_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/equipment_oee_record.py",
+      "message": "EquipmentOEERecord 有外键 calculated_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "machine_id",
+      "target_table": "machines",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 machine_id 指向 machines，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "workstation_id",
+      "target_table": "workstation",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 workstation_id 指向 workstation，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "material_id",
+      "target_table": "materials",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 material_id 指向 materials，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "assigned_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 assigned_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "WorkOrder",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/work_order.py",
+      "message": "WorkOrder 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionException",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_exception.py",
+      "message": "ProductionException 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionException",
+      "foreign_key": "workshop_id",
+      "target_table": "workshop",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_exception.py",
+      "message": "ProductionException 有外键 workshop_id 指向 workshop，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionException",
+      "foreign_key": "equipment_id",
+      "target_table": "equipment",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_exception.py",
+      "message": "ProductionException 有外键 equipment_id 指向 equipment，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionException",
+      "foreign_key": "reporter_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_exception.py",
+      "message": "ProductionException 有外键 reporter_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionException",
+      "foreign_key": "handler_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_exception.py",
+      "message": "ProductionException 有外键 handler_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionSchedule",
+      "foreign_key": "process_id",
+      "target_table": "process_dict",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ProductionSchedule 有外键 process_id 指向 process_dict，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionSchedule",
+      "foreign_key": "adjusted_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ProductionSchedule 有外键 adjusted_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionSchedule",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ProductionSchedule 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionSchedule",
+      "foreign_key": "confirmed_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ProductionSchedule 有外键 confirmed_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProductionResourceConflict",
+      "foreign_key": "resolved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ProductionResourceConflict 有外键 resolved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ScheduleAdjustmentLog",
+      "foreign_key": "adjusted_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ScheduleAdjustmentLog 有外键 adjusted_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ScheduleAdjustmentLog",
+      "foreign_key": "approved_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/production/production_schedule.py",
+      "message": "ScheduleAdjustmentLog 有外键 approved_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceResult",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/result_evaluation.py",
+      "message": "PerformanceResult 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceResult",
+      "foreign_key": "adjusted_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/result_evaluation.py",
+      "message": "PerformanceResult 有外键 adjusted_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceEvaluation",
+      "foreign_key": "evaluator_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/result_evaluation.py",
+      "message": "PerformanceEvaluation 有外键 evaluator_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceAppeal",
+      "foreign_key": "result_id",
+      "target_table": "performance_result",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/appeal_adjustment.py",
+      "message": "PerformanceAppeal 有外键 result_id 指向 performance_result，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceAppeal",
+      "foreign_key": "appellant_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/appeal_adjustment.py",
+      "message": "PerformanceAppeal 有外键 appellant_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceAppeal",
+      "foreign_key": "handler_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/appeal_adjustment.py",
+      "message": "PerformanceAppeal 有外键 handler_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectContribution",
+      "foreign_key": "period_id",
+      "target_table": "performance_period",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/contribution_ranking.py",
+      "message": "ProjectContribution 有外键 period_id 指向 performance_period，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectContribution",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/contribution_ranking.py",
+      "message": "ProjectContribution 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ProjectContribution",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/contribution_ranking.py",
+      "message": "ProjectContribution 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "PerformanceRankingSnapshot",
+      "foreign_key": "period_id",
+      "target_table": "performance_period",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/performance/contribution_ranking.py",
+      "message": "PerformanceRankingSnapshot 有外键 period_id 指向 performance_period，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "wbs_suggestion_id",
+      "target_table": "ai_wbs_suggestions",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 wbs_suggestion_id 指向 ai_wbs_suggestions，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "task_id",
+      "target_table": "task_unified",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 task_id 指向 task_unified，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "actual_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 actual_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIResourceAllocation",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/resource_allocation.py",
+      "message": "AIResourceAllocation 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIWbsSuggestion",
+      "foreign_key": "project_id",
+      "target_table": "projects",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/wbs_suggestion.py",
+      "message": "AIWbsSuggestion 有外键 project_id 指向 projects，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIWbsSuggestion",
+      "foreign_key": "template_id",
+      "target_table": "ai_project_plan_templates",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/wbs_suggestion.py",
+      "message": "AIWbsSuggestion 有外键 template_id 指向 ai_project_plan_templates，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIWbsSuggestion",
+      "foreign_key": "parent_wbs_id",
+      "target_table": "ai_wbs_suggestions",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/wbs_suggestion.py",
+      "message": "AIWbsSuggestion 有外键 parent_wbs_id 指向 ai_wbs_suggestions，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIWbsSuggestion",
+      "foreign_key": "actual_task_id",
+      "target_table": "task_unified",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/wbs_suggestion.py",
+      "message": "AIWbsSuggestion 有外键 actual_task_id 指向 task_unified，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIWbsSuggestion",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/wbs_suggestion.py",
+      "message": "AIWbsSuggestion 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIProjectPlanTemplate",
+      "foreign_key": "verified_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/plan_template.py",
+      "message": "AIProjectPlanTemplate 有外键 verified_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "AIProjectPlanTemplate",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/ai_planning/plan_template.py",
+      "message": "AIProjectPlanTemplate 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalCountersignResult",
+      "foreign_key": "instance_id",
+      "target_table": "approval_instances",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/task.py",
+      "message": "ApprovalCountersignResult 有外键 instance_id 指向 approval_instances，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalCountersignResult",
+      "foreign_key": "node_id",
+      "target_table": "approval_node_definitions",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/task.py",
+      "message": "ApprovalCountersignResult 有外键 node_id 指向 approval_node_definitions，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalActionLog",
+      "foreign_key": "task_id",
+      "target_table": "approval_tasks",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/log.py",
+      "message": "ApprovalActionLog 有外键 task_id 指向 approval_tasks，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalActionLog",
+      "foreign_key": "node_id",
+      "target_table": "approval_node_definitions",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/log.py",
+      "message": "ApprovalActionLog 有外键 node_id 指向 approval_node_definitions，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalComment",
+      "foreign_key": "instance_id",
+      "target_table": "approval_instances",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/log.py",
+      "message": "ApprovalComment 有外键 instance_id 指向 approval_instances，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalFlowDefinition",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/flow.py",
+      "message": "ApprovalFlowDefinition 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalRoutingRule",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/flow.py",
+      "message": "ApprovalRoutingRule 有外键 created_by 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalDelegateLog",
+      "foreign_key": "delegate_config_id",
+      "target_table": "approval_delegates",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/delegate.py",
+      "message": "ApprovalDelegateLog 有外键 delegate_config_id 指向 approval_delegates，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalDelegateLog",
+      "foreign_key": "task_id",
+      "target_table": "approval_tasks",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/delegate.py",
+      "message": "ApprovalDelegateLog 有外键 task_id 指向 approval_tasks，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalDelegateLog",
+      "foreign_key": "instance_id",
+      "target_table": "approval_instances",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/delegate.py",
+      "message": "ApprovalDelegateLog 有外键 instance_id 指向 approval_instances，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalDelegateLog",
+      "foreign_key": "original_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/delegate.py",
+      "message": "ApprovalDelegateLog 有外键 original_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalDelegateLog",
+      "foreign_key": "delegate_user_id",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/delegate.py",
+      "message": "ApprovalDelegateLog 有外键 delegate_user_id 指向 users，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalTemplateVersion",
+      "foreign_key": "template_id",
+      "target_table": "approval_templates",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/template.py",
+      "message": "ApprovalTemplateVersion 有外键 template_id 指向 approval_templates，但没有对应的 relationship"
+    },
+    {
+      "severity": "P1",
+      "type": "missing_relationship",
+      "model": "ApprovalTemplateVersion",
+      "foreign_key": "created_by",
+      "target_table": "users",
+      "file": "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/app/models/approval/template.py",
+      "message": "ApprovalTemplateVersion 有外键 created_by 指向 users，但没有对应的 relationship"
+    }
+  ]
+}

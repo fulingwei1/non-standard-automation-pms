@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.models.production import (
     ProductionSchedule,
-    ResourceConflict,
+    ProductionResourceConflict,
     ScheduleAdjustmentLog,
     WorkOrder,
 )
@@ -142,9 +142,9 @@ async def preview_schedule(
         
         # 获取冲突
         schedule_ids = [s.id for s in schedules]
-        conflicts = db.query(ResourceConflict).filter(
-            ResourceConflict.schedule_id.in_(schedule_ids),
-            ResourceConflict.status == 'UNRESOLVED'
+        conflicts = db.query(ProductionResourceConflict).filter(
+            ProductionResourceConflict.schedule_id.in_(schedule_ids),
+            ProductionResourceConflict.status == 'UNRESOLVED'
         ).all()
         
         # 统计信息
@@ -216,10 +216,10 @@ async def confirm_schedule(
         
         # 检查是否有未解决的冲突
         schedule_ids = [s.id for s in schedules]
-        unresolved_conflicts = db.query(ResourceConflict).filter(
-            ResourceConflict.schedule_id.in_(schedule_ids),
-            ResourceConflict.status == 'UNRESOLVED',
-            ResourceConflict.severity.in_(['HIGH', 'CRITICAL'])
+        unresolved_conflicts = db.query(ProductionResourceConflict).filter(
+            ProductionResourceConflict.schedule_id.in_(schedule_ids),
+            ProductionResourceConflict.status == 'UNRESOLVED',
+            ProductionResourceConflict.severity.in_(['HIGH', 'CRITICAL'])
         ).count()
         
         if unresolved_conflicts > 0:
@@ -263,7 +263,7 @@ async def check_conflicts(
 ):
     """资源冲突检测"""
     try:
-        query = db.query(ResourceConflict)
+        query = db.query(ProductionResourceConflict)
         
         if plan_id:
             # 获取该方案的所有排程ID
@@ -271,13 +271,13 @@ async def check_conflicts(
                 ProductionSchedule.schedule_plan_id == plan_id
             ).all()
             schedule_ids = [sid[0] for sid in schedule_ids]
-            query = query.filter(ResourceConflict.schedule_id.in_(schedule_ids))
+            query = query.filter(ProductionResourceConflict.schedule_id.in_(schedule_ids))
         
         if schedule_id:
-            query = query.filter(ResourceConflict.schedule_id == schedule_id)
+            query = query.filter(ProductionResourceConflict.schedule_id == schedule_id)
         
         if status:
-            query = query.filter(ResourceConflict.status == status)
+            query = query.filter(ProductionResourceConflict.status == status)
         
         conflicts = query.all()
         
@@ -642,8 +642,8 @@ async def reset_schedule(
         ).delete()
         
         # 删除相关冲突记录
-        db.query(ResourceConflict).filter(
-            ResourceConflict.schedule_id.in_(
+        db.query(ProductionResourceConflict).filter(
+            ProductionResourceConflict.schedule_id.in_(
                 db.query(ProductionSchedule.id).filter(
                     ProductionSchedule.schedule_plan_id == plan_id
                 )

@@ -4,7 +4,7 @@
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
-from app.models.presale_ai_solution import PresaleSolutionTemplate
+from app.models.presale_ai_solution import PresaleAISolutionTemplate
 
 
 class PresaleAITemplateService:
@@ -17,9 +17,9 @@ class PresaleAITemplateService:
         self,
         data: Dict[str, Any],
         user_id: int
-    ) -> PresaleSolutionTemplate:
+    ) -> PresaleAISolutionTemplate:
         """创建方案模板"""
-        template = PresaleSolutionTemplate(
+        template = PresaleAISolutionTemplate(
             **data,
             created_by=user_id,
             created_at=datetime.utcnow()
@@ -35,9 +35,9 @@ class PresaleAITemplateService:
         self,
         template_id: int,
         data: Dict[str, Any]
-    ) -> PresaleSolutionTemplate:
+    ) -> PresaleAISolutionTemplate:
         """更新方案模板"""
-        template = self.db.query(PresaleSolutionTemplate).filter_by(id=template_id).first()
+        template = self.db.query(PresaleAISolutionTemplate).filter_by(id=template_id).first()
         
         if not template:
             raise ValueError(f"Template {template_id} not found")
@@ -52,9 +52,9 @@ class PresaleAITemplateService:
         
         return template
     
-    def get_template(self, template_id: int) -> Optional[PresaleSolutionTemplate]:
+    def get_template(self, template_id: int) -> Optional[PresaleAISolutionTemplate]:
         """获取模板"""
-        return self.db.query(PresaleSolutionTemplate).filter_by(id=template_id).first()
+        return self.db.query(PresaleAISolutionTemplate).filter_by(id=template_id).first()
     
     def delete_template(self, template_id: int) -> bool:
         """删除模板（软删除）"""

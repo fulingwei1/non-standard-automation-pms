@@ -1,0 +1,7628 @@
+{
+  "total_routes": 740,
+  "tested_routes": 191,
+  "timestamp": "2026-02-16 15:07:04",
+  "categories": {
+    "✅ 正常 (2xx)": [
+      {
+        "method": "GET",
+        "path": "/api/v1/openapi.json",
+        "tags": [],
+        "status_code": 200,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "tags": [],
+        "status_code": 200,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/health",
+        "tags": [],
+        "status_code": 200,
+        "reason": null
+      }
+    ],
+    "🔒 需要权限 (401/403)": [
+      {
+        "method": "GET",
+        "path": "/api/v1/auth/me",
+        "tags": [
+          "auth"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/auth/permissions",
+        "tags": [
+          "auth"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/users/",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/users/import/template",
+        "tags": [
+          "users",
+          "用户批量导入"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates/recommend",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/cache/stats",
+        "tags": [
+          "projects",
+          "projects-cache"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/archived",
+        "tags": [
+          "projects",
+          "projects-archive"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/overview",
+        "tags": [
+          "projects",
+          "projects-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/dashboard",
+        "tags": [
+          "projects",
+          "projects-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/in-production-summary",
+        "tags": [
+          "projects",
+          "projects-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/views/pipeline",
+        "tags": [
+          "projects",
+          "projects-pipeline"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/best-practices/popular",
+        "tags": [
+          "projects",
+          "projects-best-practices"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/best-practices",
+        "tags": [
+          "projects",
+          "projects-best-practices"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/board",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/stats",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/extensions/",
+        "tags": [
+          "projects",
+          "projects-extended"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/extensions/statistics",
+        "tags": [
+          "projects",
+          "projects-extended"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/risk-report/summary",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/risk-report/trend",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/lessons/search",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/relations/types",
+        "tags": [
+          "projects",
+          "projects-relations"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/resources/workload",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/status",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/history",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/changes/",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/changes/statistics/summary",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/schedule/alerts",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/schedule/solutions",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/schedule/risk-overview",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/schedule/predictions/history",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/production/dashboard",
+        "tags": [
+          "production",
+          "production-dashboard"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/workshops",
+        "tags": [
+          "production",
+          "production-workshops"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/production-plans",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-orders",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-reports",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-reports/my",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/realtime-stock",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/consumption-analysis",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/alerts",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/waste-tracing",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/batch-tracing",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/cost-analysis",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/material/inventory-turnover",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/exception/knowledge/search",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/exception/statistics",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/exception/recurrence",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/realtime",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/bottlenecks",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/alerts",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/deviation",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/schedule/preview",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/schedule/conflicts",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/schedule/comparison",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/schedule/gantt",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/schedule/history",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/inspection",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/trend",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/alerts",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/alert-rules",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/spc",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/rework",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/pareto",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/statistics",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/batch-tracing",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/oee",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-OEE"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/worker-efficiency",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-工人效率"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/bottlenecks",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-分析"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/utilization",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-分析"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/forecast",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-预测"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/comparison",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-对比"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/trend",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-趋势"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/dashboard",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-看板"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/capacity/report",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-报告"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customers",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customers/stats",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contacts",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customer-tags/predefined",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/priority-ranking",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/key-leads",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/priority-ranking",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/key-opportunities",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/export",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/funnel",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/export",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes",
+        "tags": [
+          "sales",
+          "sales-quotes"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/approval/pending",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/approval/history",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/approvals/pending",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/stats/summary",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/approval/pending",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/approval/history",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/export",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/templates",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/instances",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/pending/mine",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/pending/initiated",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/pending/cc",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/pending/processed",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/pending/counts",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/delegates",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/delegates/delegated-to-me",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/delegates/active",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices/export",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices_old",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payment-plans",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments/statistics",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments/reminders",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments/invoices/export",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments/export",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/funnel",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/opportunities-by-stage",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/summary",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/revenue-forecast",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/prediction",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/prediction/accuracy",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/statistics/quote-stats",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/reports/sales-funnel",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/reports/win-loss",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/reports/sales-performance",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/reports/customer-contribution",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/reports/o2c-pipeline",
+        "tags": [
+          "sales",
+          "sales-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/loss-deep-analysis",
+        "tags": [
+          "sales",
+          "sales-loss-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/loss-by-stage",
+        "tags": [
+          "sales",
+          "sales-loss-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/loss-patterns",
+        "tags": [
+          "sales",
+          "sales-loss-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/loss-by-person",
+        "tags": [
+          "sales",
+          "sales-loss-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/expenses/lost-project-expenses",
+        "tags": [
+          "sales",
+          "sales-expenses"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/expenses/expense-statistics",
+        "tags": [
+          "sales",
+          "sales-expenses"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/failure-cases/similar",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-failure-cases"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/failure-cases",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-failure-cases"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/open-items",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-open-items"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/scoring-rules",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-scoring-rules"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/disputes",
+        "tags": [
+          "sales",
+          "sales-disputes"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/targets",
+        "tags": [
+          "sales",
+          "sales-targets"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team/ranking/config",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-ranking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team/ranking",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-ranking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team/export",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-statistics"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/sales-teams",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-crud"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team-pk",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-pk"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/sales-teams/ranking",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-teams-ranking"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quote-templates",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contract-templates",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/cpq/rule-sets",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/cost-templates",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/purchase-material-costs",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/purchase-material-costs/reminder",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/receivables/aging",
+        "tags": [
+          "sales",
+          "sales-receivables"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/receivables/overdue",
+        "tags": [
+          "sales",
+          "sales-receivables"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/receivables/summary",
+        "tags": [
+          "sales",
+          "sales-receivables"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/approval-workflows",
+        "tags": [
+          "sales",
+          "sales-workflows"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/ai-clarifications",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/pipeline-breaks",
+        "tags": [
+          "sales",
+          "sales-pipeline-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/break-reasons",
+        "tags": [
+          "sales",
+          "sales-pipeline-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/break-patterns",
+        "tags": [
+          "sales",
+          "sales-pipeline-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/alerts/pipeline-break-warnings",
+        "tags": [
+          "sales",
+          "sales-pipeline-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/accountability/by-stage",
+        "tags": [
+          "sales",
+          "sales-accountability"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/accountability/by-person",
+        "tags": [
+          "sales",
+          "sales-accountability"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/accountability/by-department",
+        "tags": [
+          "sales",
+          "sales-accountability"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/accountability/cost-impact",
+        "tags": [
+          "sales",
+          "sales-accountability"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/pipeline",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/alerts/health-warnings",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/delay/root-cause",
+        "tags": [
+          "sales",
+          "sales-delay-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/delay/impact",
+        "tags": [
+          "sales",
+          "sales-delay-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/delay/trends",
+        "tags": [
+          "sales",
+          "sales-delay-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/cost-overrun/reasons",
+        "tags": [
+          "sales",
+          "sales-cost-overrun"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/cost-overrun/accountability",
+        "tags": [
+          "sales",
+          "sales-cost-overrun"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/cost-overrun/impact",
+        "tags": [
+          "sales",
+          "sales-cost-overrun"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/information-gap/missing",
+        "tags": [
+          "sales",
+          "sales-information-gap"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/information-gap/impact",
+        "tags": [
+          "sales",
+          "sales-information-gap"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/information-gap/quality-score",
+        "tags": [
+          "sales",
+          "sales-information-gap"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/analysis/cross-dimension",
+        "tags": [
+          "sales",
+          "sales-cross-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/cost-analysis/benchmark",
+        "tags": [
+          "sales",
+          "sales-quote-cost-analysis"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/cost-calculations/margin-analysis",
+        "tags": [
+          "sales",
+          "sales-quote-cost-calculations"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/delivery/upcoming",
+        "tags": [
+          "sales",
+          "sales-quote-delivery"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/delivery/overdue",
+        "tags": [
+          "sales",
+          "sales-quote-delivery"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/delivery/calendar",
+        "tags": [
+          "sales",
+          "sales-quote-delivery"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/export/batch",
+        "tags": [
+          "sales",
+          "sales-quote-exports"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/statuses",
+        "tags": [
+          "sales",
+          "sales-quote-status"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/status/summary",
+        "tags": [
+          "sales",
+          "sales-quote-status"
+        ],
+        "status_code": 401,
+        "reason": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/templates",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": 401,
+        "reason": null
+      }
+    ],
+    "⚠️ 路径参数缺失": [
+      {
+        "method": "GET",
+        "path": "/api/v1/users/{user_id}",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/users/{user_id}",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/users/{user_id}/roles",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/users/{user_id}",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/create-from-employee/{employee_id}",
+        "tags": [
+          "users",
+          "用户同步"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/users/{user_id}/toggle-active",
+        "tags": [
+          "users",
+          "用户同步"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/users/{user_id}/reset-password",
+        "tags": [
+          "users",
+          "用户同步"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/users/{user_id}/time-allocation",
+        "tags": [
+          "users",
+          "工时分配"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates/{template_id}",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/templates/{template_id}",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/templates/{template_id}/create-project",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates/{template_id}/versions",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/templates/{template_id}/versions",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/templates/{template_id}/versions/{version_id}/publish",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates/{template_id}/versions/compare",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/templates/{template_id}/versions/{version_id}/rollback",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/templates/{template_id}/usage-statistics",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/archive",
+        "tags": [
+          "projects",
+          "projects-archive"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/unarchive",
+        "tags": [
+          "projects",
+          "projects-archive"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/timeline",
+        "tags": [
+          "projects",
+          "projects-overview"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/sync-from-contract",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/sync-to-contract",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/sync-status",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/sync-to-erp",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/erp-status",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/erp-status",
+        "tags": [
+          "projects",
+          "projects-sync"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/best-practices/{practice_id}",
+        "tags": [
+          "projects",
+          "projects-best-practices"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/project-reviews/best-practices/{practice_id}/apply",
+        "tags": [
+          "projects",
+          "projects-best-practices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/clone",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stage",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目状态"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/status",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目状态"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/status",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目状态"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/health",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目状态"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/health/calculate",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目健康度"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/health/details",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目健康度"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/init",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目阶段"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/status-history",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目阶段"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stage-advance",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目阶段"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/check-auto-transition",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目阶段"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/gate-check/{target_stage}",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目阶段"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/payment-plans",
+        "tags": [
+          "projects",
+          "projects-payment-plans"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/payment-plans",
+        "tags": [
+          "projects",
+          "projects-payment-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/payment-plans/{plan_id}",
+        "tags": [
+          "projects",
+          "projects-payment-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/payment-plans/{plan_id}",
+        "tags": [
+          "projects",
+          "projects-payment-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risk-trend",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risk-history",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risk-current",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/risk-calculate",
+        "tags": [
+          "projects",
+          "projects-risk-analytics"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/milestones/",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "项目里程碑"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/milestones/",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "项目里程碑"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "项目里程碑"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "项目里程碑"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "项目里程碑"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/milestones/{milestone_id}/complete",
+        "tags": [
+          "projects",
+          "projects-milestones",
+          "里程碑工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/summary",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/machines/recalculate",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/progress",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/bom",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/upload",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/{doc_id}/download",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/documents/{doc_id}/versions",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}/service-history",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/machines/",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/machines/{machine_id}",
+        "tags": [
+          "projects",
+          "projects-machines"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/resource-plan/summary",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/resource-plan/",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/resource-plan/",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/assign",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/release",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/resource-plan/{plan_id}/check-conflict",
+        "tags": [
+          "projects",
+          "projects-resource-plan"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/members/",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/members/",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/members/{member_id}",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/members/{member_id}",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/members/{member_id}",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/members/conflicts",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/members/batch",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/members/{member_id}/notify-dept-manager",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/members/from-dept/{dept_id}",
+        "tags": [
+          "projects",
+          "projects-members"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/summary",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-summary"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/cost-analysis",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-analysis"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/revenue-detail",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-analysis"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/profit-analysis",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-analysis"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/forecast",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/trend",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/burn-down",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/alerts",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/forecast-history",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/compare-methods",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-forecast"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/execution",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-budget"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/trend",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-budget"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/calculate-labor-cost",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-labor"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/generate-cost-review",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-review"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/check-budget-alert",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-alert"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/evm",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-evm"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/evm/trend",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-evm"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/evm/snapshot",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-evm"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/evm/metrics",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-evm"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/predictions",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/predictions/latest",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/predictions/history",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}/approve",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/predictions/{prediction_id}/suggestions",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/review",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/assign",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/suggestions/{suggestion_id}/complete",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/cost-health",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-prediction-ai"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-crud"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-crud"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/costs/{item_id}",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/costs/{cost_id}/allocate",
+        "tags": [
+          "projects",
+          "projects-costs",
+          "projects-costs-allocation"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/work-logs/",
+        "tags": [
+          "projects",
+          "projects-work-logs"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/work-logs/summary",
+        "tags": [
+          "projects",
+          "projects-work-logs"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/roles/leads",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-leads"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/roles/leads",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}/team",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-team"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/roles/leads/{member_id}/team",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-team"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/roles/leads/{lead_id}/team/{member_id}",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-team"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/roles/configs",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-configs"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/roles/configs/init",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-configs"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/roles/configs",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-configs"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/roles/overview",
+        "tags": [
+          "projects",
+          "projects-roles",
+          "projects-roles-overview"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/evaluations/latest",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}/confirm",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/evaluations/",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/evaluations/",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/evaluations/{eval_id}",
+        "tags": [
+          "projects",
+          "projects-evaluations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/progress/summary",
+        "tags": [
+          "projects",
+          "projects-progress"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/progress/gantt",
+        "tags": [
+          "projects",
+          "projects-progress"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/progress/board",
+        "tags": [
+          "projects",
+          "projects-progress"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/progress/machines/{machine_id}/summary",
+        "tags": [
+          "projects",
+          "projects-progress"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/stages/",
+        "tags": [
+          "projects",
+          "projects-stages"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/stages/progress",
+        "tags": [
+          "projects",
+          "projects-stages"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/initialize",
+        "tags": [
+          "projects",
+          "projects-stages"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/stages/clear",
+        "tags": [
+          "projects",
+          "projects-stages"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_id}",
+        "tags": [
+          "projects",
+          "projects-stages"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/start",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/complete",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/skip",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/start",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/complete",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/skip",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/planned-date",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-ops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/nodes/custom",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-custom"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stages/nodes/{node_instance_id}/assign",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-nodes-assignment"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/status",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-status"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/stages/{stage_instance_id}/review",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-status"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/stages/views/timeline",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-views"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/stages/views/tree",
+        "tags": [
+          "projects",
+          "projects-stages",
+          "projects-stages-views"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/timesheet/summary",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/timesheet/statistics",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/timesheet/",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/timesheet/{item_id}",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/{project_id}/timesheet/{item_id}",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/timesheet/",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/timesheet/{timesheet_id}",
+        "tags": [
+          "projects",
+          "projects-timesheet"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/workload/team",
+        "tags": [
+          "projects",
+          "projects-workload"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/workload/gantt",
+        "tags": [
+          "projects",
+          "projects-workload"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/workload/summary",
+        "tags": [
+          "projects",
+          "projects-workload"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/lessons",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/lessons",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/lessons/{lesson_id}",
+        "tags": [
+          "projects",
+          "projects-lessons"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/relations",
+        "tags": [
+          "projects",
+          "projects-relations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/relations",
+        "tags": [
+          "projects",
+          "projects-relations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/{project_id}/relations/{related_project_id}",
+        "tags": [
+          "projects",
+          "projects-relations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/dependency-chain",
+        "tags": [
+          "projects",
+          "projects-relations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/resources",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/resources/summary",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/resources",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/projects/resources/{allocation_id}",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/resources/{allocation_id}/release",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/resources/{allocation_id}",
+        "tags": [
+          "projects",
+          "projects-resources"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/reviews",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/reviews/{review_id}",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/reviews",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/projects/reviews/{review_id}",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/reviews/{review_id}/publish",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/reviews/{review_id}",
+        "tags": [
+          "projects",
+          "projects-reviews"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risks",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/risks",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/projects/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/risks/{risk_id}/trigger",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/risks/{risk_id}/close",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/projects/{project_id}/risks",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risks",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/projects/projects/{project_id}/risks/{risk_id}",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risk-matrix",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/projects/{project_id}/risk-summary",
+        "tags": [
+          "projects",
+          "projects-risks-v2"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/changes/{change_id}",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/changes/{change_id}",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/{change_id}/approve",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/changes/{change_id}/approvals",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/{change_id}/status",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/{change_id}/implement",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/{change_id}/verify",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/{change_id}/close",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/schedule/predict",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/schedule/alerts",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/{project_id}/schedule/alerts/{alert_id}/read",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/schedule/solutions",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/schedule/solutions/{solution_id}/approve",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/{project_id}/schedule/report",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/schedule/risk-overview",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/projects/{project_id}/schedule/predictions/history",
+        "tags": [
+          "projects",
+          "projects-schedule-prediction"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/projects/schedule/alerts/{alert_id}/read",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/schedule/solutions/{solution_id}/approve",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/workshops/{workshop_id}",
+        "tags": [
+          "production",
+          "production-workshops"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/workshops/{workshop_id}/capacity",
+        "tags": [
+          "production",
+          "production-workshops"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/workshops/{workshop_id}",
+        "tags": [
+          "production",
+          "production-workshops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/workshops/{workshop_id}/workstations",
+        "tags": [
+          "production",
+          "production-workstations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/workshops/{workshop_id}/workstations",
+        "tags": [
+          "production",
+          "production-workstations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/workstations/{workstation_id}/status",
+        "tags": [
+          "production",
+          "production-workstations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/production-plans/{plan_id}",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/production-plans/{plan_id}",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/production-plans/{plan_id}/submit",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/production-plans/{plan_id}/approve",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/production-plans/{plan_id}/publish",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-orders/{order_id}",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/assign",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/start",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/complete",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/pause",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/resume",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-orders/{order_id}/cancel",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-orders/{order_id}/progress",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/work-reports/{report_id}",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/work-reports/{report_id}/approve",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/exception/{exception_id}/flow",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/exception/pdca/{pdca_id}/advance",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/work-orders/{work_order_id}/timeline",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/progress/workstations/{workstation_id}/realtime",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/progress/alerts/{alert_id}/dismiss",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/production/quality/defect-analysis/{analysis_id}",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/production/quality/rework/{id}/complete",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customers/{customer_id}",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/customers/{customer_id}",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/customers/{customer_id}",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customers/{customer_id}/contacts",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contacts/{contact_id}",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/customers/{customer_id}/contacts",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/contacts/{contact_id}",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/contacts/{contact_id}",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contacts/{contact_id}/set-primary",
+        "tags": [
+          "sales",
+          "sales-contacts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/customers/{customer_id}/tags",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/customers/{customer_id}/tags",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/customers/{customer_id}/tags/batch",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/customers/{customer_id}/tags/{tag_id}",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/customers/{customer_id}/tags",
+        "tags": [
+          "sales",
+          "sales-customer-tags"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/calculate-priority",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/calculate-priority",
+        "tags": [
+          "sales",
+          "sales-priority"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/{lead_id}",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/leads/{lead_id}",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/leads/{lead_id}",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/{lead_id}/follow-ups",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/follow-ups",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/convert",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/leads/{lead_id}/invalid",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/{opp_id}",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/opportunities/{opp_id}",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/gate",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/opportunities/{opp_id}/stage",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/opportunities/{opp_id}/score",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/opportunities/{opp_id}/win",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/opportunities/{opp_id}/lose",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/{opp_id}/win-probability",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_id}/approve",
+        "tags": [
+          "sales",
+          "sales-quotes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/approval/status/{quote_id}",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/enhanced/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/enhanced/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/submit",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/{contract_id}/approvals",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/approve",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/reject",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/terms",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/{contract_id}/terms",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/enhanced/terms/{term_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/enhanced/terms/{term_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/attachments",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/{contract_id}/attachments",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/enhanced/attachments/{attachment_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/enhanced/attachments/{attachment_id}/download",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/sign",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/execute",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/complete",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/{contract_id}/void",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/contracts/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/{contract_id}/sign",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/{contract_id}/project",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/{contract_id}/deliverables",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/{contract_id}/amendments",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/{contract_id}/amendments",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/{contract_id}/payment-plans",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/approval/status/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contracts/{contract_id}/pdf",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices/{invoice_id}",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/invoices/{invoice_id}",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/invoices/{invoice_id}/issue",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/invoices/{invoice_id}/receive-payment",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/invoices/{invoice_id}/void",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/templates/{template_id}/publish",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/templates/{template_id}/flows",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/templates/{template_id}/flows",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/templates/flows/{flow_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/templates/flows/{flow_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/templates/flows/{flow_id}/nodes",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/templates/nodes/{node_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/templates/nodes/{node_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/templates/{template_id}/rules",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/templates/{template_id}/rules",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/templates/rules/{rule_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/instances/{instance_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/instances/{instance_id}/withdraw",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/instances/{instance_id}/terminate",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/instances/by-entity/{entity_type}/{entity_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/tasks/{task_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/approve",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/reject",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/return",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/transfer",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/add-approver",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/{task_id}/remind",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/instances/{instance_id}/add-cc",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/tasks/instances/{instance_id}/comments",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/tasks/instances/{instance_id}/comments",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/tasks/comments/{comment_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批任务"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/pending/cc/{cc_id}/read",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "待办查询"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/delegates/{delegate_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/delegates/{delegate_id}",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/invoices/{invoice_id}/approval/start",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices/{invoice_id}/approval-status",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/invoices/{invoice_id}/approval/action",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices/{invoice_id}/approval-history",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/invoices/{invoice_id}/pdf",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/payment-plans/{plan_id}/adjust",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payment-plans/{plan_id}/adjustment-history",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/payments/{payment_id}",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/payments/{payment_id}/match-invoice",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/assessments/apply",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/assessments/apply",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/assessments/{assessment_id}/evaluate",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/{lead_id}/assessments",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/{opp_id}/assessments",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/assessments/{assessment_id}",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-assessments"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/open-items",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-open-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/open-items",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-open-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/open-items/{item_id}",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-open-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/open-items/{item_id}/close",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-open-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/scoring-rules/{rule_id}/activate",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-scoring-rules"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/targets/{target_id}",
+        "tags": [
+          "sales",
+          "sales-targets"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/sales-teams/{team_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-crud"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/sales-teams/{team_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/sales-teams/{team_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/sales-teams/{team_id}/members",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-members"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/sales-teams/{team_id}/members",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/sales-teams/{team_id}/members/batch",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/sales-teams/{team_id}/members/{member_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/sales-teams/{team_id}/members/{member_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-members"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/team-pk/{pk_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-pk"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/team-pk/{pk_id}",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-pk"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/team-pk/{pk_id}/complete",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-pk"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quote-templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quote-templates/{template_id}/versions",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quote-templates/{template_id}/versions/{version_id}/publish",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quote-templates/{template_id}/apply",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/contract-templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contract-templates/{template_id}/versions",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contract-templates/{template_id}/versions/{version_id}/publish",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/contract-templates/{template_id}/apply",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/cpq/rule-sets/{rule_set_id}",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/cost-templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/cost-templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/cost-templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/purchase-material-costs/{cost_id}",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/approval-workflows/{workflow_id}",
+        "tags": [
+          "sales",
+          "sales-workflows"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/approval-workflows/{workflow_id}",
+        "tags": [
+          "sales",
+          "sales-workflows"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/leads/{lead_id}/requirement-detail",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/leads/{lead_id}/requirement-freezes",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/requirement-freezes",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/opportunities/{opp_id}/requirement-freezes",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/requirement-freezes",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads/{lead_id}/ai-clarifications",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities/{opp_id}/ai-clarifications",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/ai-clarifications/{clarification_id}",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/ai-clarifications/{clarification_id}",
+        "tags": [
+          "sales",
+          "sales-requirements"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/lead/{lead_id}",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/opportunity/{opp_id}",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/quote/{quote_id}",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/contract/{contract_id}",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/health/payment/{invoice_id}",
+        "tags": [
+          "sales",
+          "sales-health"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/{contract_id}/create-project",
+        "tags": [
+          "sales",
+          "sales-contracts-projects",
+          "contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/cost-analysis",
+        "tags": [
+          "sales",
+          "sales-quote-cost-analysis"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/cost-breakdown",
+        "tags": [
+          "sales",
+          "sales-quote-cost-breakdown"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quotes/cost-breakdown/items/{item_id}",
+        "tags": [
+          "sales",
+          "sales-quote-cost-breakdown"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_id}/cost-breakdown/recalculate",
+        "tags": [
+          "sales",
+          "sales-quote-cost-breakdown"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/cost-calculations",
+        "tags": [
+          "sales",
+          "sales-quote-cost-calculations"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_id}/cost-calculations/batch-update",
+        "tags": [
+          "sales",
+          "sales-quote-cost-calculations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/delivery",
+        "tags": [
+          "sales",
+          "sales-quote-delivery"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quotes/{quote_id}/delivery",
+        "tags": [
+          "sales",
+          "sales-quote-delivery"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/export/excel",
+        "tags": [
+          "sales",
+          "sales-quote-exports"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/export/pdf",
+        "tags": [
+          "sales",
+          "sales-quote-exports"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_version_id}/items",
+        "tags": [
+          "sales",
+          "sales-quote-items"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_version_id}/items",
+        "tags": [
+          "sales",
+          "sales-quote-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quotes/items/{item_id}",
+        "tags": [
+          "sales",
+          "sales-quote-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/quotes/items/{item_id}",
+        "tags": [
+          "sales",
+          "sales-quote-items"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}",
+        "tags": [
+          "sales",
+          "sales-quote-crud"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quotes/{quote_id}",
+        "tags": [
+          "sales",
+          "sales-quote-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/quotes/{quote_id}",
+        "tags": [
+          "sales",
+          "sales-quote-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/status",
+        "tags": [
+          "sales",
+          "sales-quote-status"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_id}/status",
+        "tags": [
+          "sales",
+          "sales-quote-status"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/status/history",
+        "tags": [
+          "sales",
+          "sales-quote-status"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/quotes/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/sales/quotes/templates/{template_id}",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/templates/{template_id}/versions",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/templates/{template_id}/publish",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/versions",
+        "tags": [
+          "sales",
+          "sales-quote-versions"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/versions/{version_id}",
+        "tags": [
+          "sales",
+          "sales-quote-versions"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/{quote_id}/versions",
+        "tags": [
+          "sales",
+          "sales-quote-versions"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/sales/quotes/{quote_id}/versions/compare",
+        "tags": [
+          "sales",
+          "sales-quote-versions"
+        ],
+        "status_code": null,
+        "reason": "需要路径参数"
+      }
+    ],
+    "❌ 404 Not Found": [],
+    "❌ 422 Validation Error": [],
+    "❌ 500 Server Error": [],
+    "⏭️ 跳过测试": [
+      {
+        "method": "GET",
+        "path": "/docs",
+        "tags": [],
+        "status_code": null,
+        "reason": "文档路径"
+      },
+      {
+        "method": "GET",
+        "path": "/docs/oauth2-redirect",
+        "tags": [],
+        "status_code": null,
+        "reason": "文档路径"
+      },
+      {
+        "method": "GET",
+        "path": "/redoc",
+        "tags": [],
+        "status_code": null,
+        "reason": "文档路径"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/login",
+        "tags": [
+          "auth"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/logout",
+        "tags": [
+          "auth"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/auth/refresh",
+        "tags": [
+          "auth"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/auth/password",
+        "tags": [
+          "auth"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/",
+        "tags": [
+          "users",
+          "用户管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/sync-from-employees",
+        "tags": [
+          "users",
+          "用户同步"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/batch-toggle-active",
+        "tags": [
+          "users",
+          "用户同步"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/import",
+        "tags": [
+          "users",
+          "用户批量导入"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/users/import/preview",
+        "tags": [
+          "users",
+          "用户批量导入"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/templates",
+        "tags": [
+          "projects",
+          "projects-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/cache/clear",
+        "tags": [
+          "projects",
+          "projects-cache"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/cache/reset-stats",
+        "tags": [
+          "projects",
+          "projects-cache"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/batch/archive",
+        "tags": [
+          "projects",
+          "projects-archive"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/best-practices",
+        "tags": [
+          "projects",
+          "projects-best-practices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/",
+        "tags": [
+          "projects",
+          "projects-core"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/health/batch-calculate",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目健康度"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/batch/update-status",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目批量操作"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/batch/update-stage",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目批量操作"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/batch/assign-pm",
+        "tags": [
+          "projects",
+          "projects-status",
+          "项目批量操作"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/extensions/",
+        "tags": [
+          "projects",
+          "projects-extended"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/submit",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/action",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/cancel",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/withdraw",
+        "tags": [
+          "projects",
+          "projects-approvals",
+          "项目审批-已废弃"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/changes/",
+        "tags": [
+          "projects",
+          "projects-changes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/schedule/predict",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/projects/schedule/report",
+        "tags": [
+          "projects",
+          "projects-schedule-overview"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/workshops",
+        "tags": [
+          "production",
+          "production-workshops"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/production-plans",
+        "tags": [
+          "production",
+          "production-plans"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/work-orders",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/work-orders/batch-assign",
+        "tags": [
+          "production",
+          "production-work-orders",
+          "production-work-orders"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/work-reports/start",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/work-reports/progress",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/work-reports/complete",
+        "tags": [
+          "production",
+          "production-work-reports"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/material/consumption",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/material/alert-rules",
+        "tags": [
+          "production",
+          "production-material-tracking"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/exception/escalate",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/exception/knowledge",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/exception/pdca",
+        "tags": [
+          "production",
+          "production-exception-enhancement"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/progress/log",
+        "tags": [
+          "production",
+          "production-progress-tracking"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/schedule/generate",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/schedule/confirm",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/schedule/adjust",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/schedule/urgent-insert",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/production/schedule/reset",
+        "tags": [
+          "production",
+          "production-schedule"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: DELETE"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/quality/inspection",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/quality/defect-analysis",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/quality/alert-rules",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/quality/rework",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/quality/corrective-action",
+        "tags": [
+          "production",
+          "production-quality-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/capacity/oee/calculate",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-计算"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/production/capacity/worker-efficiency/calculate",
+        "tags": [
+          "production",
+          "production-capacity-analysis",
+          "产能分析-计算"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/customers",
+        "tags": [
+          "sales",
+          "sales-customers"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/leads",
+        "tags": [
+          "sales",
+          "sales-leads"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/opportunities",
+        "tags": [
+          "sales",
+          "sales-opportunities"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes",
+        "tags": [
+          "sales",
+          "sales-quotes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/approval/submit",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/approval/action",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/approval/batch-action",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/approval/withdraw",
+        "tags": [
+          "sales",
+          "sales-quote-approval",
+          "报价审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/enhanced/",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同增强"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts",
+        "tags": [
+          "sales",
+          "sales-contracts"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/approval/submit",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/approval/action",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/approval/batch-action",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contracts/approval/withdraw",
+        "tags": [
+          "sales",
+          "sales-contracts",
+          "合同审批工作流"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/invoices",
+        "tags": [
+          "sales",
+          "sales-invoices"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/templates",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批模板"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/instances/submit",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/instances/draft",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "审批实例"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/delegates",
+        "tags": [
+          "sales",
+          "sales-invoices",
+          "代理人管理"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/payments",
+        "tags": [
+          "sales",
+          "sales-payments"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/expenses/expense-lost-projects",
+        "tags": [
+          "sales",
+          "sales-expenses"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/failure-cases",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-failure-cases"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/scoring-rules",
+        "tags": [
+          "sales",
+          "sales-assessments",
+          "sales-scoring-rules"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/disputes",
+        "tags": [
+          "sales",
+          "sales-disputes"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/targets",
+        "tags": [
+          "sales",
+          "sales-targets"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/team/ranking/config",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-ranking"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/sales-teams",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-crud"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/team-pk",
+        "tags": [
+          "sales",
+          "sales-team",
+          "sales-team-pk"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quote-templates",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/contract-templates",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/cpq/rule-sets",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/cpq/price-preview",
+        "tags": [
+          "sales",
+          "sales-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/cost-templates",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/purchase-material-costs",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/purchase-material-costs/match",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/sales/purchase-material-costs/reminder",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: PUT"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/purchase-material-costs/reminder/acknowledge",
+        "tags": [
+          "sales",
+          "sales-cost-management"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/approval-workflows",
+        "tags": [
+          "sales",
+          "sales-workflows"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/cost-calculations/simulate",
+        "tags": [
+          "sales",
+          "sales-quote-cost-calculations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/cost-calculations/price-suggestion",
+        "tags": [
+          "sales",
+          "sales-quote-cost-calculations"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/sales/quotes/templates",
+        "tags": [
+          "sales",
+          "sales-quote-templates"
+        ],
+        "status_code": null,
+        "reason": "非GET方法: POST"
+      }
+    ],
+    "❓ 其他错误": []
+  }
+}

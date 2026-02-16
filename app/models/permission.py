@@ -76,8 +76,8 @@ class DataScopeRule(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment="是否启用")
     is_system = Column(Boolean, default=False, comment="是否系统预置")
 
-    # 关系 (使用延迟导入避免循环依赖)
-    # tenant = relationship("Tenant", backref="custom_data_scope_rules")  # FIXME: Circular import
+    # 关系
+    tenant = relationship("Tenant", back_populates="data_scope_rules")
     role_data_scopes = relationship("RoleDataScope", back_populates="scope_rule")
 
     __table_args__ = (
@@ -104,7 +104,7 @@ class RoleDataScope(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
 
-    role = relationship("Role", backref="data_scopes")
+    role = relationship("Role", back_populates="data_scopes")
     scope_rule = relationship("DataScopeRule", back_populates="role_data_scopes")
 
     __table_args__ = (
@@ -125,7 +125,8 @@ class PermissionGroup(Base, TimestampMixin):
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
 
-    parent = relationship("PermissionGroup", remote_side=[id], backref="children")
+    parent = relationship("PermissionGroup", remote_side=[id], back_populates="children")
+    children = relationship("PermissionGroup", back_populates="parent", remote_side=[parent_id])
 
 
 class MenuPermission(Base, TimestampMixin):
@@ -155,9 +156,10 @@ class MenuPermission(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment="是否启用")
     is_system = Column(Boolean, default=False, comment="是否系统预置菜单")
 
-    # 关系 (FIXME: Tenant relationship 循环依赖，临时禁用)
-    # tenant = relationship("Tenant", backref="custom_menus")
-    parent = relationship("MenuPermission", remote_side=[id], backref="children")
+    # 关系
+    tenant = relationship("Tenant", back_populates="menu_permissions")
+    parent = relationship("MenuPermission", remote_side=[id], back_populates="children")
+    children = relationship("MenuPermission", back_populates="parent", remote_side=[parent_id])
     role_menus = relationship("RoleMenu", back_populates="menu")
 
     __table_args__ = (
@@ -182,7 +184,7 @@ class RoleMenu(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
 
-    role = relationship("Role", backref="menu_assignments")
+    role = relationship("Role", back_populates="menu_assignments")
     menu = relationship("MenuPermission", back_populates="role_menus")
 
     __table_args__ = (UniqueConstraint("role_id", "menu_id", name="uk_role_menu"),)

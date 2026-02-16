@@ -11,6 +11,7 @@ from .auth import (
     check_permission,
     create_access_token,
     create_token_pair,  # Token刷新功能
+    extract_jti_from_token,  # 从token提取JTI
     get_current_active_superuser,
     get_current_active_user,
     get_current_user,
@@ -22,6 +23,7 @@ from .auth import (
     require_permission,
     revoke_token,
     verify_password,
+    verify_refresh_token,  # 验证refresh token
 )
 
 # 从销售权限模块导入
@@ -48,6 +50,8 @@ __all__ = [
     "get_password_hash",
     "create_access_token",
     "create_token_pair",  # Token刷新功能
+    "verify_refresh_token",  # 验证refresh token
+    "extract_jti_from_token",  # 从token提取JTI
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",

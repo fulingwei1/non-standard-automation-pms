@@ -70,7 +70,7 @@ class QualityInspection(Base, TimestampMixin):
 
     # 关系
     inspector = relationship('User', foreign_keys=[inspector_id])
-    rework_order = relationship('ReworkOrder', back_populates='inspections')
+    rework_order = relationship('ReworkOrder', foreign_keys=[rework_order_id], back_populates='inspections')
 
 
 class DefectAnalysis(Base, TimestampMixin):
@@ -215,4 +215,4 @@ class ReworkOrder(Base, TimestampMixin):
     # 关系
     original_work_order = relationship('WorkOrder', foreign_keys=[original_work_order_id])
     assigned_worker = relationship('Worker', foreign_keys=[assigned_to])
-    inspections = relationship('QualityInspection', back_populates='rework_order')
+    inspections = relationship('QualityInspection', foreign_keys='QualityInspection.rework_order_id', back_populates='rework_order')

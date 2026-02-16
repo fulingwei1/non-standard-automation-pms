@@ -77,7 +77,7 @@ class DeliveryMethodEnum(str, Enum):
 
 # ==================== 报表模板表 ====================
 
-class ReportTemplate(Base, TimestampMixin):
+class TimesheetReportTemplate(Base, TimestampMixin):
     """报表模板"""
     __tablename__ = 'report_template'
 
@@ -158,7 +158,7 @@ class ReportArchive(Base, TimestampMixin):
     download_count = Column(Integer, default=0, comment='下载次数')
 
     # 关系
-    template = relationship('ReportTemplate', back_populates='archives')
+    template = relationship('TimesheetReportTemplate', back_populates='archives')
 
     __table_args__ = (
         Index('idx_template_period', 'template_id', 'period'),
@@ -195,7 +195,7 @@ class ReportRecipient(Base, TimestampMixin):
     created_at = Column(DateTime, default=datetime.utcnow, comment='创建时间')
 
     # 关系
-    template = relationship('ReportTemplate', back_populates='recipients')
+    template = relationship('TimesheetReportTemplate', back_populates='recipients')
 
     __table_args__ = (
         Index('idx_template_id', 'template_id'),
