@@ -211,9 +211,10 @@ router.include_router(risks.router, tags=["projects-risks-v2"])
 router.include_router(approvals_router, tags=["projects-approvals"])
 
 # 变更管理路由（项目内操作）
+# Note: project_id is handled as query parameter in change_requests endpoints
 router.include_router(
     change_requests_router,
-    prefix="/{project_id}/changes",
+    prefix="/changes",  # Removed /{project_id} - handled as Query param instead
     tags=["projects-changes"],
 )
 

@@ -64,7 +64,7 @@ class SolutionApprovalRequest(BaseModel):
 
 # ==================== API Endpoints ====================
 
-@router.post("/{project_id}/predict")
+@router.post("/predict")
 def predict_completion_date(
     project_id: int,
     request: PredictionRequest,
@@ -135,7 +135,7 @@ def predict_completion_date(
         raise HTTPException(status_code=500, detail=f"预测失败: {str(e)}")
 
 
-@router.get("/{project_id}/alerts")
+@router.get("/alerts")
 def get_project_alerts(
     project_id: int,
     severity: Optional[str] = Query(None, description="严重程度过滤"),
@@ -191,7 +191,7 @@ def get_project_alerts(
         raise HTTPException(status_code=500, detail=f"获取预警失败: {str(e)}")
 
 
-@router.put("/{project_id}/alerts/{alert_id}/read")
+@router.put("/alerts/{alert_id}/read")
 def mark_alert_as_read(
     project_id: int,
     alert_id: int,
@@ -218,7 +218,7 @@ def mark_alert_as_read(
     return success_response(message="已标记为已读")
 
 
-@router.get("/{project_id}/solutions")
+@router.get("/solutions")
 def get_catch_up_solutions(
     project_id: int,
     status: Optional[str] = Query(None, description="方案状态过滤"),
@@ -274,7 +274,7 @@ def get_catch_up_solutions(
     )
 
 
-@router.post("/{project_id}/solutions/{solution_id}/approve")
+@router.post("/solutions/{solution_id}/approve")
 def approve_solution(
     project_id: int,
     solution_id: int,
@@ -316,7 +316,7 @@ def approve_solution(
     )
 
 
-@router.post("/{project_id}/report")
+@router.post("/report")
 def generate_schedule_report(
     project_id: int,
     request: ReportRequest,
@@ -407,7 +407,7 @@ def get_risk_overview(
         raise HTTPException(status_code=500, detail=f"获取风险概览失败: {str(e)}")
 
 
-@router.get("/{project_id}/predictions/history")
+@router.get("/predictions/history")
 def get_prediction_history(
     project_id: int,
     limit: int = Query(10, ge=1, le=50, description="返回数量"),

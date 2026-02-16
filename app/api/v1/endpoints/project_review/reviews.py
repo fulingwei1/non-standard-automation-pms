@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.project_review import ProjectReview
 from app.schemas.project_review import (

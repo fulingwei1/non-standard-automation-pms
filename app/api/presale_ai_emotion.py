@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from app.core.deps import get_db
+from app.api.deps import get_db
 from app.services.ai_emotion_service import AIEmotionService
 from app.schemas.presale_ai_emotion import (
     EmotionAnalysisRequest,

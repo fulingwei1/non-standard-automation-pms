@@ -16,7 +16,9 @@ from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
 from app.models.material import Material
 from app.models.project import Project
 from app.models.production.work_order import WorkOrder
-from app.models.inventory import Inventory
+# from app.models.inventory_tracking import Inventory  # FIXME: Class does not exist
+# Use MaterialStock instead if needed
+from app.models.inventory_tracking import MaterialStock
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.core.exceptions import BusinessException
 

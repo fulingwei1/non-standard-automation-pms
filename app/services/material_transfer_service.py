@@ -11,7 +11,9 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.inventory import InventoryStock, InventoryTransaction
+# from app.models.inventory_tracking import InventoryStock, InventoryTransaction  # FIXME: Classes do not exist
+# Use correct class names:
+from app.models.inventory_tracking import MaterialStock, MaterialTransaction
 from app.models.material import Material, ProjectMaterial
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer

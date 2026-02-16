@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 
-from app.core.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.models.shortage.smart_alert import (
     ShortageAlert,
