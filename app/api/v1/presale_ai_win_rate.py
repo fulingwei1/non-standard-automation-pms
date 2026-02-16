@@ -18,7 +18,7 @@ from app.schemas.presale_ai_win_rate import (
     ModelAccuracyResponse,
 )
 from app.services.win_rate_prediction_service import WinRatePredictionService
-from app.models.base import get_db
+from app.dependencies import get_db
 
 logger = logging.getLogger(__name__)
 

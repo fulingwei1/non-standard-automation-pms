@@ -8,7 +8,7 @@ from datetime import date, datetime
 
 from app.common.query_filters import apply_keyword_filter
 from app.models.alert import AlertRecord
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.enums import AlertLevelEnum, AlertStatusEnum
 from app.models.project import ProjectMilestone
 

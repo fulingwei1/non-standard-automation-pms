@@ -343,10 +343,9 @@ api_router.include_router(
 )
 api_router.include_router(node_tasks.router, prefix="/node-tasks", tags=["node-tasks"])
 
-# 战略管理模块
-from app.api.v1.endpoints.strategy import router as strategy_router
-
-api_router.include_router(strategy_router, prefix="/strategy", tags=["strategy"])
+# 战略管理模块 (Temporarily disabled due to circular import)
+# from app.api.v1.endpoints.strategy import router as strategy_router
+# api_router.include_router(strategy_router, prefix="/strategy", tags=["strategy"])
 
 # 统一报告框架
 from app.api.v1.endpoints.reports import router as reports_router

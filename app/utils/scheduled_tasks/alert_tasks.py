@@ -9,7 +9,7 @@ from datetime import datetime
 from sqlalchemy import or_
 
 from app.models.alert import AlertNotification, AlertRecord
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 

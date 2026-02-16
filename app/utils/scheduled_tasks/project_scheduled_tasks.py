@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import case, func
 
 from app.models.alert import ProjectHealthSnapshot
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.material import BomHeader, BomItem
 from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem

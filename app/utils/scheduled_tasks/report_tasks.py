@@ -7,7 +7,7 @@ import logging
 import os
 from datetime import datetime
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.report import GeneratedByEnum, ArchiveStatusEnum
 from app.models import OutputFormatEnum
 from app.services.report_service import ReportService

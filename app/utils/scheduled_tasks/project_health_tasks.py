@@ -6,7 +6,7 @@
 import logging
 from datetime import date, datetime
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.project import Project
 
 logger = logging.getLogger(__name__)

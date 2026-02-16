@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from app.models.base import get_db
+from app.dependencies import get_db
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.schemas.presale_ai_solution import (

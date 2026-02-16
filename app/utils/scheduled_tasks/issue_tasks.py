@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 
 from app.common.query_filters import apply_like_filter
 from app.models.alert import AlertRecord, AlertRule
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.issue import Issue
 from app.models.project import Project

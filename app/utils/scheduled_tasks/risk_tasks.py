@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from typing import Dict, Any
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.common.query_filters import apply_keyword_filter
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.assembly_kit import KitRateSnapshot
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.material import BomHeader
 from app.models.project import Machine, Project
 

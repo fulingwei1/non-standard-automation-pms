@@ -8,7 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.models.alert import AlertRecord, AlertRule
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 
 logger = logging.getLogger(__name__)

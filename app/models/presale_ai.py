@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 
-from app.core.database import Base
+from app.models.base import Base
 
 
 class AIFunctionEnum(str, enum.Enum):

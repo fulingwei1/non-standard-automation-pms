@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 
 
@@ -138,7 +138,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
     """
     发送超时提醒通知
     """
-    from app.models.base import get_db_session
+    from app.dependencies import get_db_session
     from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
     from app.services.ecn_notification import notify_overdue_alert
 

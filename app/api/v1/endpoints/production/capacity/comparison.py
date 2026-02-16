@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from app.models.base import get_db
+from app.dependencies import get_db
 from app.models.production import (
     Equipment,
     EquipmentOEERecord,

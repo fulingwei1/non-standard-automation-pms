@@ -10,7 +10,7 @@ from typing import Optional
 
 
 from app.models.alert import AlertRecord
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.enums import AlertLevelEnum
 from app.services.alert_rule_engine import AlertRuleEngine
 from app.services.notification_service import AlertNotificationService

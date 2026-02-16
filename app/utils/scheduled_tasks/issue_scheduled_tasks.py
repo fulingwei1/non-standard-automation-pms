@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import func
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.issue import Issue, IssueStatisticsSnapshot
 
 # 模块级 logger

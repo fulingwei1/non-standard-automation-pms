@@ -6,7 +6,7 @@
 from datetime import date, datetime, timedelta
 
 
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.services.debug_issue_sync_service import DebugIssueSyncService
 from app.services.design_review_sync_service import DesignReviewSyncService
 from app.services.knowledge_auto_identification_service import (

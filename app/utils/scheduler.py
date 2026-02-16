@@ -17,7 +17,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings  # noqa: F401
-from app.models.base import get_db_session  # noqa: F401
+from app.dependencies import get_db_session  # noqa: F401
 from app.utils.scheduler_config import SCHEDULER_TASKS
 from app.utils.scheduler_metrics import (
     record_job_failure,
@@ -135,7 +135,7 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
 def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
     """从数据库加载任务配置"""
     try:
-        from app.models.base import get_db_session
+        from app.dependencies import get_db_session
         from app.models.scheduler_config import SchedulerTaskConfig
 
         with get_db_session() as db:

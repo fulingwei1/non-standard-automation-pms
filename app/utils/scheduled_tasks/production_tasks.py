@@ -7,7 +7,7 @@ import logging
 from datetime import date, datetime, timedelta
 
 from app.models.alert import AlertRecord, AlertRule
-from app.models.base import get_db_session
+from app.dependencies import get_db_session
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 
 from .base import send_notification_for_alert
