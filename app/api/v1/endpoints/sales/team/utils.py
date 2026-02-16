@@ -72,14 +72,14 @@ def collect_sales_team_members(
         opp_query = opp_query.filter(Opportunity.created_at <= end_datetime)
         opp_count = opp_query.count()
 
-        contract_query = db.query(Contract).filter(Contract.owner_id == user.id)
+        contract_query = db.query(Contract).filter(Contract.sales_owner_id == user.id)
         contract_query = contract_query.filter(Contract.created_at >= start_datetime)
         contract_query = contract_query.filter(Contract.created_at <= end_datetime)
         contracts = contract_query.all()
         contract_count = len(contracts)
         contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
 
-        invoice_query = db.query(Invoice).join(Contract).filter(Contract.owner_id == user.id)
+        invoice_query = db.query(Invoice).join(Contract).filter(Contract.sales_owner_id == user.id)
         invoice_query = invoice_query.filter(Invoice.paid_date.isnot(None))
         invoice_query = invoice_query.filter(Invoice.paid_date >= start_date_value)
         invoice_query = invoice_query.filter(Invoice.paid_date <= end_date_value)

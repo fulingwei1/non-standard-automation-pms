@@ -54,11 +54,12 @@ def read_contracts(
         joinedload(Contract.customer),
         joinedload(Contract.project),
         joinedload(Contract.opportunity),
-        joinedload(Contract.owner)
+        joinedload(Contract.sales_owner),
+        joinedload(Contract.contract_manager)
     )
 
     # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Contract, 'owner_id')
+    query = security.filter_sales_data_by_scope(query, current_user, db, Contract, 'sales_owner_id')
 
     query = apply_keyword_filter(query, Contract, keyword, "contract_code")
 
@@ -79,7 +80,7 @@ def read_contracts(
             "opportunity_code": contract.opportunity.opp_code if contract.opportunity else None,
             "customer_name": contract.customer.customer_name if contract.customer else None,
             "project_code": contract.project.project_code if contract.project else None,
-            "owner_name": contract.owner.real_name if contract.owner else None,
+            "owner_name": contract.sales_owner.real_name if contract.sales_owner else None,
             "deliverables": [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables],
         }
         contract_responses.append(ContractResponse(**contract_dict))
@@ -174,7 +175,7 @@ def create_contract(
         "opportunity_code": opportunity.opp_code,
         "customer_name": customer.customer_name,
         "project_code": contract.project.project_code if contract.project else None,
-        "owner_name": contract.owner.real_name if contract.owner else None,
+        "owner_name": contract.sales_owner.real_name if contract.sales_owner else None,
         "deliverables": [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables],
     }
     return ContractResponse(**contract_dict)
@@ -194,7 +195,7 @@ def read_contract(
         joinedload(Contract.customer),
         joinedload(Contract.project),
         joinedload(Contract.opportunity),
-        joinedload(Contract.owner)
+        joinedload(Contract.sales_owner)
     ).filter(Contract.id == contract_id).first()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
@@ -205,7 +206,7 @@ def read_contract(
         "opportunity_code": contract.opportunity.opp_code if contract.opportunity else None,
         "customer_name": contract.customer.customer_name if contract.customer else None,
         "project_code": contract.project.project_code if contract.project else None,
-        "owner_name": contract.owner.real_name if contract.owner else None,
+        "owner_name": contract.sales_owner.real_name if contract.sales_owner else None,
         "deliverables": [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables],
     }
     return ContractResponse(**contract_dict)
@@ -232,7 +233,7 @@ def update_contract(
         current_user,
         db,
         get_entity_creator_id(contract),
-        contract.owner_id,
+        contract.sales_owner_id,
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此合同")
 
@@ -265,7 +266,7 @@ def update_contract(
         "opportunity_code": contract.opportunity.opp_code if contract.opportunity else None,
         "customer_name": contract.customer.customer_name if contract.customer else None,
         "project_code": contract.project.project_code if contract.project else None,
-        "owner_name": contract.owner.real_name if contract.owner else None,
+        "owner_name": contract.sales_owner.real_name if contract.sales_owner else None,
         "deliverables": [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables],
     }
     return ContractResponse(**contract_dict)

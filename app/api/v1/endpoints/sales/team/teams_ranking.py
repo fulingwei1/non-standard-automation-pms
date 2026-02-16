@@ -101,7 +101,7 @@ def get_sales_teams_ranking(
 
             # 合同数量和金额
             contracts = db.query(Contract).filter(
-                Contract.owner_id.in_(member_ids),
+                Contract.sales_owner_id.in_(member_ids),
                 Contract.created_at >= start_datetime,
                 Contract.created_at <= end_datetime,
             ).all()
@@ -110,7 +110,7 @@ def get_sales_teams_ranking(
 
             # 回款金额
             invoices = db.query(Invoice).join(Contract).filter(
-                Contract.owner_id.in_(member_ids),
+                Contract.sales_owner_id.in_(member_ids),
                 Invoice.paid_date.isnot(None),
                 Invoice.paid_date >= start_date_value,
                 Invoice.paid_date <= end_date_value,

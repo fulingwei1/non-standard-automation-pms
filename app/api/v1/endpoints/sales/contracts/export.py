@@ -48,7 +48,7 @@ def export_contracts(
     if customer_id:
         query = query.filter(Contract.customer_id == customer_id)
     if owner_id:
-        query = query.filter(Contract.owner_id == owner_id)
+        query = query.filter(Contract.sales_owner_id == owner_id)
 
     contracts = query.order_by(Contract.created_at.desc()).all()
     export_service = ExcelExportService()
@@ -74,7 +74,7 @@ def export_contracts(
         "delivery_deadline": contract.delivery_deadline,
         "status": contract.status,
         "project_code": contract.project.project_code if contract.project else '',
-        "owner_name": contract.owner.real_name if contract.owner else '',
+        "owner_name": contract.sales_owner.real_name if contract.sales_owner else '',
         "created_at": contract.created_at,
     } for contract in contracts]
 

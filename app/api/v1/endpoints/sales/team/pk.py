@@ -149,14 +149,14 @@ def get_team_pk(
 
         if member_ids:
             contracts = db.query(Contract).filter(
-                Contract.owner_id.in_(member_ids),
+                Contract.sales_owner_id.in_(member_ids),
                 Contract.created_at >= pk.start_date,
                 Contract.created_at <= pk.end_date,
             ).all()
             contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
 
             invoices = db.query(Invoice).join(Contract).filter(
-                Contract.owner_id.in_(member_ids),
+                Contract.sales_owner_id.in_(member_ids),
                 Invoice.paid_date.isnot(None),
                 Invoice.paid_date >= pk.start_date.date(),
                 Invoice.paid_date <= pk.end_date.date(),
@@ -273,14 +273,14 @@ def complete_team_pk(
         if member_ids:
             if pk.pk_type == "CONTRACT_AMOUNT":
                 contracts = db.query(Contract).filter(
-                    Contract.owner_id.in_(member_ids),
+                    Contract.sales_owner_id.in_(member_ids),
                     Contract.created_at >= pk.start_date,
                     Contract.created_at <= pk.end_date,
                 ).all()
                 value = sum(float(c.contract_amount or 0) for c in contracts)
             elif pk.pk_type == "COLLECTION_AMOUNT":
                 invoices = db.query(Invoice).join(Contract).filter(
-                    Contract.owner_id.in_(member_ids),
+                    Contract.sales_owner_id.in_(member_ids),
                     Invoice.paid_date.isnot(None),
                     Invoice.paid_date >= pk.start_date.date(),
                     Invoice.paid_date <= pk.end_date.date(),

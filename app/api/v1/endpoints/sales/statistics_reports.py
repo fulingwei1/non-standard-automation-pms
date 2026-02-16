@@ -120,7 +120,7 @@ def get_sales_performance(
 
     if owner_id:
         query_opps = query_opps.filter(Opportunity.owner_id == owner_id)
-        query_contracts = query_contracts.filter(Contract.owner_id == owner_id)
+        query_contracts = query_contracts.filter(Contract.sales_owner_id == owner_id)
 
     won_opps = query_opps.filter(Opportunity.stage == "WON").all()
     signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
