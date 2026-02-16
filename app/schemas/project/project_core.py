@@ -14,11 +14,8 @@ from ..common import BaseSchema, TimestampSchema
 from .machine import MachineResponse
 from .milestone import MilestoneResponse
 
-# Import for forward reference
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .project_cost import ProjectCostSummary
+# Import at runtime - __init__.py ensures project_cost is loaded first
+from .project_cost import ProjectCostSummary
 
 
 ZERO_DECIMAL = Decimal("0")
@@ -174,7 +171,7 @@ class ProjectListResponse(BaseSchema):
     sales_id: Optional[int] = None  # 对应 salesperson_id
     te_id: Optional[int] = None  # 技术负责人ID（如有）
     # 成本摘要（可选，通过include_cost=true参数启用）
-    cost_summary: Optional["ProjectCostSummary"] = None
+    cost_summary: Optional[ProjectCostSummary] = None
 
     class Config:
         from_attributes = True

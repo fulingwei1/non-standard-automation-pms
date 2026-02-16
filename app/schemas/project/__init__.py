@@ -78,19 +78,7 @@ from .project_config import (
     ProjectTemplateVersionResponse,
     ProjectTemplateVersionUpdate,
 )
-from .project_core import (
-    ProjectCreate,
-    ProjectDetailResponse,
-    ProjectDocumentCreate,
-    ProjectDocumentResponse,
-    ProjectDocumentUpdate,
-    ProjectListResponse,
-    ProjectMemberCreate,
-    ProjectMemberResponse,
-    ProjectMemberUpdate,
-    ProjectResponse,
-    ProjectUpdate,
-)
+# Import project_cost before project_core to resolve forward reference
 from .project_cost import (
     FinancialProjectCostCreate,
     FinancialProjectCostResponse,
@@ -103,6 +91,19 @@ from .project_cost import (
     ProjectPaymentPlanCreate,
     ProjectPaymentPlanResponse,
     ProjectPaymentPlanUpdate,
+)
+from .project_core import (
+    ProjectCreate,
+    ProjectDetailResponse,
+    ProjectDocumentCreate,
+    ProjectDocumentResponse,
+    ProjectDocumentUpdate,
+    ProjectListResponse,
+    ProjectMemberCreate,
+    ProjectMemberResponse,
+    ProjectMemberUpdate,
+    ProjectResponse,
+    ProjectUpdate,
 )
 
 # 导出所有公共类，使其可以通过 `from app.schemas.project import *` 导入

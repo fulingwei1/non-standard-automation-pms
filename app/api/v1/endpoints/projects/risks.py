@@ -15,7 +15,7 @@ from app.core.security import get_current_active_user, require_permission
 from app.models.project_risk import ProjectRisk, RiskTypeEnum, RiskStatusEnum
 from app.models.project import Project
 from app.models.user import User
-from app.models.audit_log import AuditLog
+# from app.models.audit_log import AuditLog  # FIXME: AuditLog model does not exist
 from app.schemas.project_risk import (
     ProjectRiskCreate,
     ProjectRiskUpdate,
@@ -39,19 +39,21 @@ def create_audit_log(
     resource_id: int,
     details: dict
 ):
-    """创建审计日志"""
-    audit = AuditLog(
-        user_id=user.id,
-        username=user.username,
-        action=action,
-        resource_type=resource_type,
-        resource_id=resource_id,
-        details=details,
-        ip_address="",  # 可以从请求中获取
-        user_agent="",  # 可以从请求中获取
-    )
-    db.add(audit)
-    db.commit()
+    """创建审计日志 (DISABLED - AuditLog model does not exist)"""
+    # FIXME: AuditLog model does not exist, temporarily disabled
+    # audit = AuditLog(
+    #     user_id=user.id,
+    #     username=user.username,
+    #     action=action,
+    #     resource_type=resource_type,
+    #     resource_id=resource_id,
+    #     details=details,
+    #     ip_address="",  # 可以从请求中获取
+    #     user_agent="",  # 可以从请求中获取
+    # )
+    # db.add(audit)
+    # db.commit()
+    pass  # Temporarily disabled
 
 
 @router.post("/projects/{project_id}/risks", response_model=ResponseModel)

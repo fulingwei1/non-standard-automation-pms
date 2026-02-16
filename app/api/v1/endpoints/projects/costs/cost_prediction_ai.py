@@ -259,9 +259,9 @@ def get_prediction_detail(
     return prediction
 
 
-@router.get("/predictions/project/{project_id}/latest", response_model=PredictionDetailSchema)
+@router.get("/predictions/latest", response_model=PredictionDetailSchema)
 def get_latest_prediction(
-    project_id: int,
+    project_id: int,  # from path prefix /{project_id}/costs
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -269,6 +269,7 @@ def get_latest_prediction(
     获取项目最新预测
     
     返回指定项目的最新成本预测结果。
+    project_id is provided from the path prefix: /{project_id}/costs
     """
     service = CostPredictionService(db)
     prediction = service.get_latest_prediction(project_id)
@@ -282,9 +283,9 @@ def get_latest_prediction(
     return prediction
 
 
-@router.get("/predictions/project/{project_id}/history", response_model=List[PredictionResultSchema])
+@router.get("/predictions/history", response_model=List[PredictionResultSchema])
 def get_prediction_history(
-    project_id: int,
+    project_id: int,  # from path prefix /{project_id}/costs
     limit: int = Query(default=10, ge=1, le=50, description="返回数量限制"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -293,6 +294,7 @@ def get_prediction_history(
     获取预测历史
     
     返回项目的历史预测记录，用于趋势分析。
+    project_id is provided from the path prefix: /{project_id}/costs
     """
     service = CostPredictionService(db)
     predictions = service.get_prediction_history(project_id, limit=limit)
@@ -503,9 +505,9 @@ def complete_suggestion(
     return suggestion
 
 
-@router.get("/projects/{project_id}/cost-health", response_model=dict)
+@router.get("/cost-health", response_model=dict)
 def get_project_cost_health(
-    project_id: int,
+    project_id: int,  # from path prefix /{project_id}/costs
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -517,6 +519,8 @@ def get_project_cost_health(
     - 超支风险等级
     - 待处理的优化建议
     - 成本趋势
+    
+    project_id is provided from the path prefix: /{project_id}/costs
     """
     service = CostPredictionService(db)
     prediction = service.get_latest_prediction(project_id)

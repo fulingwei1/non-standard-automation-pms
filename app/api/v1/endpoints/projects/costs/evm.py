@@ -13,7 +13,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db, require_permission
+from app.api.deps import get_current_user, get_db
+from app.core.auth import require_permission
 from app.models import EarnedValueData, EarnedValueSnapshot, Project, User
 from app.services.evm_service import EVMService
 

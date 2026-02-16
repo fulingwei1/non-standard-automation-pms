@@ -52,6 +52,8 @@ __all__ = [
     "ProjectCostAllocationRule",
     "EarnedValueData",
     "EarnedValueSnapshot",
+    "CostPrediction",
+    "CostOptimizationSuggestion",
     "ProjectEvaluation",
     "ProjectEvaluationDimension",
     "ProjectReview",
