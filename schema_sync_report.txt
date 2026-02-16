@@ -1,0 +1,220 @@
+Schema同步报告
+============================================================
+
+执行时间: 1771237335.3099432
+数据库: data/app.db
+总共检查: 456 个表
+需要修复: 31 个表
+缺失列数: 145 个
+成功添加: 145 个
+添加失败: 0 个
+
+详细列表:
+------------------------------------------------------------
+
+acceptance_order_items:
+  - category_id
+
+alert_records:
+  - severity
+
+alert_rules:
+  - is_active
+
+bom_items:
+  - bom_id
+  - is_key_item
+  - purchased_qty
+  - sort_order
+
+contract_approvals:
+  - approval_status
+
+data_scope_rules:
+  - is_system
+  - tenant_id
+
+employees:
+  - employment_status
+  - employment_type
+
+evaluation_weight_config:
+  - updated_at
+
+goods_receipt_items:
+  - delivery_qty
+  - inspect_note
+  - inspect_qty
+  - inspect_result
+  - order_item_id
+  - warehouse_location
+  - warehoused_qty
+
+goods_receipts:
+  - created_by
+  - delivery_note_no
+  - inspect_status
+  - inspected_at
+  - inspected_by
+  - logistics_company
+  - status
+  - warehoused_at
+  - warehoused_by
+
+material_categories:
+  - full_path
+
+materials:
+  - category_id
+  - currency
+  - current_stock
+  - is_active
+  - is_key_material
+  - last_price
+  - source_type
+  - standard_price
+
+menu_permissions:
+  - is_system
+  - perm_code
+  - tenant_id
+
+node_definitions:
+  - deliverables
+  - owner_role_code
+  - participant_role_codes
+
+opportunities:
+  - expected_close_date
+  - updated_by
+
+permission_audits:
+  - ip_address
+  - user_agent
+
+presale_support_ticket:
+  - pm_assigned
+  - pm_assigned_at
+  - pm_involvement_checked_at
+  - pm_involvement_required
+  - pm_involvement_risk_factors
+  - pm_involvement_risk_level
+  - pm_user_id
+
+project_milestones:
+  - is_key
+  - remark
+  - reminder_days
+
+project_node_instances:
+  - assignee_id
+  - auto_complete_on_tasks
+  - deliverables
+  - owner_id
+  - owner_role_code
+  - participant_ids
+  - participant_role_codes
+  - progress
+
+project_payment_plans:
+  - contract_id
+  - invoice_id
+  - milestone_id
+
+project_stage_instances:
+  - category
+  - entry_check_result
+  - entry_criteria
+  - exit_check_result
+  - exit_criteria
+  - is_milestone
+  - is_parallel
+  - progress
+  - review_date
+  - review_notes
+  - review_required
+  - review_result
+
+project_templates:
+  - default_health
+  - default_stage
+  - default_status
+  - industry
+  - product_category
+  - project_type
+  - template_config
+  - usage_count
+
+purchase_order_items:
+  - amount_with_tax
+  - promised_date
+  - tax_amount
+  - tax_rate
+
+purchase_orders:
+  - amount_with_tax
+  - approval_note
+  - contract_no
+  - order_title
+  - paid_amount
+  - payment_status
+  - promised_date
+  - submitted_at
+
+purchase_requests:
+  - submitted_at
+
+report_template:
+  - config
+  - enabled
+  - frequency
+  - name
+  - output_format
+
+shortage_handling_plans:
+  - advantages
+  - ai_score
+  - cost_score
+  - disadvantages
+  - execution_result
+  - feasibility_score
+  - is_recommended
+  - proposed_date
+  - proposed_qty
+  - recommendation_rank
+  - risk_score
+  - risks
+  - score_explanation
+  - score_weights
+  - solution_description
+  - solution_name
+  - target_material_id
+  - target_project_id
+  - time_score
+
+stage_definitions:
+  - category
+  - is_milestone
+  - is_parallel
+
+supplier_quotations:
+  - attachments
+  - created_by
+  - inquiry_id
+  - is_selected
+  - material_code
+  - material_name
+  - min_order_qty
+  - payment_terms
+  - quotation_no
+  - specification
+  - status
+  - tax_rate
+  - tenant_id
+  - warranty_period
+
+tasks:
+  - task_code
+
+work_logs:
+  - timesheet_id
