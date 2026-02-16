@@ -76,8 +76,8 @@ class DataScopeRule(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment="是否启用")
     is_system = Column(Boolean, default=False, comment="是否系统预置")
 
-    # 关系
-    tenant = relationship("Tenant", backref="custom_data_scope_rules")
+    # 关系 (使用延迟导入避免循环依赖)
+    # tenant = relationship("Tenant", backref="custom_data_scope_rules")  # FIXME: Circular import
     role_data_scopes = relationship("RoleDataScope", back_populates="scope_rule")
 
     __table_args__ = (
