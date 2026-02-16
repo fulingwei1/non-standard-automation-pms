@@ -34,7 +34,7 @@ router = APIRouter()
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/timesheet/monthly", tags=["monthly"])
+router = APIRouter(prefix="/monthly", tags=["monthly"])
 
 # 共 1 个路由
 

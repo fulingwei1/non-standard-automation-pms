@@ -30,12 +30,7 @@ from app.schemas.timesheet import (
     TimesheetStatisticsResponse,
 )
 
-router = APIRouter()
-
-
-from fastapi import APIRouter
-
-router = APIRouter(prefix="/timesheet/statistics", tags=["statistics"])
+router = APIRouter(prefix="/statistics", tags=["statistics"])
 
 # 共 3 个路由
 

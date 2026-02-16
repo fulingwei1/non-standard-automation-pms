@@ -26,7 +26,7 @@ from app.models.approval import ApprovalInstance, ApprovalTask
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
 
-router = APIRouter(prefix="/timesheet/workflow", tags=["timesheet-workflow"])
+router = APIRouter(prefix="/workflow", tags=["timesheet-workflow"])
 
 
 # ==================== Request/Response Models ====================

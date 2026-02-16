@@ -34,7 +34,7 @@ from app.schemas.timesheet import (
     TimesheetUpdate,
 )
 
-router = APIRouter(prefix="/timesheet/records", tags=["records"])
+router = APIRouter(prefix="/records", tags=["records"])
 
 # 共 6 个路由
 

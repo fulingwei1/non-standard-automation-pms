@@ -35,7 +35,7 @@ router = APIRouter()
 from fastapi import APIRouter
 from app.common.query_filters import apply_pagination
 
-router = APIRouter(prefix="/timesheet/pending", tags=["pending"])
+router = APIRouter(prefix="/pending", tags=["pending"])
 
 # 共 1 个路由
 

@@ -36,7 +36,7 @@ router = APIRouter()
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/timesheets", tags=["timesheets"])
+router = APIRouter(prefix="/weekly", tags=["timesheets"])
 
 # 共 1 个路由
 
