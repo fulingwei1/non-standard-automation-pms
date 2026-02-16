@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.dependencies import get_db
 from app.models import (
     GoodsReceipt,
     GoodsReceiptItem,

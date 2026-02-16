@@ -255,6 +255,13 @@ def list_response(
     return ListResponse(items=items, total=total)
 
 
+# Aliases for backward compatibility
+create_success_response = success_response
+create_error_response = error_response
+create_pagination_response = paginated_response
+ApiResponse = BaseResponse
+
+
 __all__ = [
     "BaseResponse",
     "SuccessResponse",

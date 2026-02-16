@@ -10,7 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.dependencies import get_db
 from app.core.auth import get_current_user, require_permission
 from app.models.user import User
 from app.services.timesheet_analytics_service import TimesheetAnalyticsService

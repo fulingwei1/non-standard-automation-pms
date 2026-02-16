@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 
-from app.core.database import get_db
+from app.dependencies import get_db
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.models.quality_risk_detection import (

@@ -8,7 +8,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.dependencies import get_db
 from app.core.auth import get_current_user
 from app.models import User
 from app.models.ai_planning import AIProjectPlanTemplate, AIWbsSuggestion, AIResourceAllocation
