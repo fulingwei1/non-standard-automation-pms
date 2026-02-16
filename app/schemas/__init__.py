@@ -114,13 +114,21 @@ from .project import (
     ProjectResponse,
     ProjectUpdate,
 )
-from .project_review import (
+# FIXME: Naming conflict between project_review.py and project_review/ package
+# from .project_review import (
+#     BestPracticeRecommendationRequest,
+#     BestPracticeRecommendationResponse,
+#     LessonStatisticsResponse,
+#     ProjectBestPracticeCreate,
+#     ProjectBestPracticeResponse,
+
+from .project_review import (  # Import from package instead of file
     BestPracticeRecommendationRequest,
     BestPracticeRecommendationResponse,
-    LessonStatisticsResponse,
-    ProjectBestPracticeCreate,
-    ProjectBestPracticeResponse,
-    ProjectBestPracticeUpdate,
+    # LessonStatisticsResponse,  # Not exported from package
+    # ProjectBestPracticeCreate,  # Not exported from package
+    # ProjectBestPracticeResponse,  # Not exported from package
+    # ProjectBestPracticeUpdate,  # Not exported from package
     ProjectLessonCreate,
     ProjectLessonResponse,
     ProjectLessonUpdate,
@@ -346,10 +354,10 @@ __all__ = [
     "ProjectLessonCreate",
     "ProjectLessonUpdate",
     "ProjectLessonResponse",
-    "ProjectBestPracticeCreate",
-    "ProjectBestPracticeUpdate",
-    "ProjectBestPracticeResponse",
-    "LessonStatisticsResponse",
+    # "ProjectBestPracticeCreate",  # FIXME: Not exported from package
+    # "ProjectBestPracticeUpdate",  # FIXME: Not exported from package
+    # "ProjectBestPracticeResponse",  # FIXME: Not exported from package
+    # "LessonStatisticsResponse",  # FIXME: Not exported from package
     "BestPracticeRecommendationRequest",
     "BestPracticeRecommendationResponse",
     # Technical Review

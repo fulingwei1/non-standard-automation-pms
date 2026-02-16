@@ -15,7 +15,8 @@ from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.auth import get_current_user
+# Delayed import to avoid circular dependency
+# from app.core.auth import get_current_user
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,9 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         # 验证token并获取用户（只在认证过程捕获异常）
         # 获取数据库会话
         from app.models.base import get_session
+        # Delayed import to avoid circular dependency
+        from app.core.auth import get_current_user
+        
         db = get_session()
         try:
             try:
