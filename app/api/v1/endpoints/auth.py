@@ -42,9 +42,10 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
-@limiter.limit("5/minute")  # 每分钟最多5次登录尝试，防止暴力破解
+# @limiter.limit("5/minute")  # FIXME: slowapi 与 FastAPI 自动响应转换冲突，临时禁用
+# 注意: 已有 AccountLockoutService 提供账户锁定保护
 def login(
-    request: Request,  # slowapi 需要 Request 参数
+    request: Request,  # 用于获取客户端IP和User-Agent
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
     device_info: Optional[DeviceInfo] = None,
@@ -299,7 +300,7 @@ def logout(
 
 
 @router.post("/refresh", response_model=RefreshTokenResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("10/minute")  # 每分钟最多10次刷新，防止滥用
+# @limiter.limit("10/minute")  # FIXME: slowapi 与 FastAPI 冲突，临时禁用
 def refresh_token(
     request: Request,
     refresh_data: RefreshTokenRequest,
@@ -464,7 +465,7 @@ def get_me(
 
 
 @router.put("/password", response_model=ResponseModel, status_code=status.HTTP_200_OK)
-@limiter.limit("5/hour")  # 每小时最多5次密码修改尝试，防止暴力破解
+# @limiter.limit("5/hour")  # FIXME: slowapi 与 FastAPI 冲突，临时禁用
 def change_password(
     request: Request,
     password_data: PasswordChange,

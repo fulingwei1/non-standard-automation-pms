@@ -155,8 +155,8 @@ class MenuPermission(Base, TimestampMixin):
     is_active = Column(Boolean, default=True, comment="是否启用")
     is_system = Column(Boolean, default=False, comment="是否系统预置菜单")
 
-    # 关系
-    tenant = relationship("Tenant", backref="custom_menus")
+    # 关系 (FIXME: Tenant relationship 循环依赖，临时禁用)
+    # tenant = relationship("Tenant", backref="custom_menus")
     parent = relationship("MenuPermission", remote_side=[id], backref="children")
     role_menus = relationship("RoleMenu", back_populates="menu")
 
