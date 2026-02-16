@@ -42,6 +42,7 @@ __all__ = [
     "create_refresh_token",
     "create_token_pair",
     "verify_refresh_token",
+    "verify_token_and_get_user",
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",
@@ -405,6 +406,70 @@ def is_token_revoked(token: Optional[str]) -> bool:
         # 如果无法解析token，检查内存黑名单
         with _token_blacklist_lock:
             return token in _token_blacklist
+
+
+async def verify_token_and_get_user(token: str, db: Session) -> User:
+    """
+    验证Token并获取用户（供中间件使用，不使用Depends）
+    
+    Args:
+        token: JWT token字符串
+        db: 数据库会话
+    
+    Returns:
+        User对象
+    
+    Raises:
+        HTTPException: 认证失败时抛出
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="无效的认证凭据",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    logger.debug(f"中间件验证token，长度: {len(token) if token else 0}")
+    
+    if is_token_revoked(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token已失效，请重新登录",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        user_id_str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+        
+        try:
+            user_id = int(user_id_str)
+        except (ValueError, TypeError):
+            raise credentials_exception
+    except JWTError as e:
+        logger.warning(f"JWT解析失败: {e}")
+        raise credentials_exception
+
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            logger.warning(f"用户不存在: user_id={user_id}")
+            raise credentials_exception
+
+        # 设置审计上下文
+        set_audit_context(operator_id=user.id, tenant_id=user.tenant_id)
+        
+        logger.debug(f"中间件认证成功: user_id={user.id}, username={user.username}")
+        return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询用户失败: {e}", exc_info=True)
+        raise credentials_exception
 
 
 async def get_current_user(

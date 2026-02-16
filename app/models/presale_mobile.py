@@ -80,7 +80,7 @@ class PresaleVisitRecord(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="创建人ID")
 
     # 关系
-    presale_ticket = relationship("PresaleTicket", foreign_keys=[presale_ticket_id])
+    presale_ticket = relationship("PresaleSupportTicket", foreign_keys=[presale_ticket_id])
     created_by_user = relationship("User", foreign_keys=[created_by])
 
 

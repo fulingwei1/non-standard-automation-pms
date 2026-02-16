@@ -93,12 +93,12 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         # 获取数据库会话
         from app.models.base import get_session
         # Delayed import to avoid circular dependency
-        from app.core.auth import get_current_user
+        from app.core.auth import verify_token_and_get_user
         
         db = get_session()
         try:
             try:
-                user = await get_current_user(token=token, db=db)
+                user = await verify_token_and_get_user(token=token, db=db)
 
                 # 将用户信息存入request.state供后续使用
                 request.state.user = user
