@@ -66,6 +66,14 @@ from .change_impact import (  # noqa: F401
     ChangeResponseSuggestion,
 )
 
+# Purchase Intelligence System
+from .purchase_intelligence import (  # noqa: F401
+    PurchaseSuggestion,
+    SupplierQuotation,
+    SupplierPerformance,
+    PurchaseOrderTracking,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -511,4 +519,9 @@ __all__ = [
     # Change Impact Analysis System
     "ChangeImpactAnalysis",
     "ChangeResponseSuggestion",
+    # Purchase Intelligence System
+    "PurchaseSuggestion",
+    "SupplierQuotation",
+    "SupplierPerformance",
+    "PurchaseOrderTracking",
 ]

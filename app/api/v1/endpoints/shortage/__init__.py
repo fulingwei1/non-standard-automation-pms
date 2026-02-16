@@ -18,8 +18,13 @@ from fastapi import APIRouter
 from .detection import router as detection_router
 from .handling import router as handling_router
 from .analytics import router as analytics_router
+from .smart_alerts import router as smart_alerts_router
 
 router = APIRouter()
+
+# Smart Alerts 层 - 智能预警系统 (Team 3)
+# 路由: /alerts, /scan, /forecast, /analysis
+router.include_router(smart_alerts_router, prefix="/smart", tags=["智能缺料预警"])
 
 # Detection 层 - 预警检测
 # 路由: /alerts, /inventory-warnings

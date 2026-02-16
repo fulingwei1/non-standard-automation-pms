@@ -31,3 +31,4 @@ export * from "./api/stageViews.js";
 export * from "./api/taskCenter.js";
 export * from "./api/workload.js";
 export * from "./api/strategy.js";
+export * from "./api/shortage.js";
