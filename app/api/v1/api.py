@@ -38,15 +38,22 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 用户组织模块加载失败: {e}")
     
-    # ==================== 权限管理 ====================
+    # ==================== 角色管理 ====================
     try:
         from app.api.v1.endpoints.roles import router as roles_router
-        from app.api.v1.endpoints.permissions import router as permissions_router
-        api_router.include_router(roles_router, prefix="/roles", tags=["roles"])
-        api_router.include_router(permissions_router, prefix="/permissions", tags=["permissions"])
-        print("✓ 权限管理模块加载成功")
+        api_router.include_router(roles_router, tags=["roles"])  # 移除prefix（已在roles.py定义）
+        print("✓ 角色管理模块加载成功")
     except Exception as e:
-        print(f"✗ 权限管理模块加载失败: {e}")
+        print(f"✗ 角色管理模块加载失败: {e}")
+    
+    # ==================== 权限管理 ====================
+    # 注意: permissions.py文件不存在，暂时禁用
+    # try:
+    #     from app.api.v1.endpoints.permissions import router as permissions_router
+    #     api_router.include_router(permissions_router, tags=["permissions"])
+    #     print("✓ 权限管理模块加载成功")
+    # except Exception as e:
+    #     print(f"✗ 权限管理模块加载失败: {e}")
     
     # ==================== 项目管理 ====================
     try:
@@ -136,7 +143,7 @@ def create_api_router() -> APIRouter:
     # ==================== 库存管理 ====================
     try:
         from app.api.v1.endpoints.inventory.inventory_router import router as inventory_router
-        api_router.include_router(inventory_router, prefix="/inventory", tags=["inventory"])
+        api_router.include_router(inventory_router, tags=["inventory"])  # 移除prefix（已在inventory_router.py定义）
         print("✓ 库存管理模块加载成功")
     except Exception as e:
         print(f"✗ 库存管理模块加载失败: {e}")

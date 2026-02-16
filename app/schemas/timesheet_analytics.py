@@ -7,7 +7,7 @@ from datetime import date, datetime
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 # ==================== 基础枚举 ====================
@@ -92,13 +92,13 @@ class ChartDataPoint(BaseModel):
     label: str = Field(..., description="标签")
     value: float = Field(..., description="值")
     date: Optional[date] = Field(None, description="日期")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="元数据")
+    metadata: Optional[dict] = Field(None, description="元数据")
 
 
 class TrendChartData(BaseModel):
     """趋势图数据"""
     labels: List[str] = Field(..., description="X轴标签")
-    datasets: List[Dict[str, Any]] = Field(..., description="数据集")
+    datasets: List[dict] = Field(..., description="数据集")
 
 
 class PieChartData(BaseModel):
@@ -139,8 +139,8 @@ class WorkloadHeatmapResponse(BaseModel):
     start_date: date
     end_date: date
     heatmap_data: HeatmapData
-    statistics: Dict[str, Any] = Field(..., description="统计信息")
-    overload_users: List[Dict[str, Any]] = Field(..., description="超负荷人员")
+    statistics: dict = Field(..., description="统计信息")
+    overload_users: List[dict] = Field(..., description="超负荷人员")
     
     class Config:
         from_attributes = True
@@ -156,7 +156,7 @@ class EfficiencyComparisonResponse(BaseModel):
     variance_hours: Decimal
     variance_rate: Decimal
     efficiency_rate: Decimal
-    chart_data: Dict[str, Any]
+    chart_data: dict
     insights: List[str] = Field(..., description="洞察建议")
     
     class Config:
@@ -173,7 +173,7 @@ class OvertimeStatisticsResponse(BaseModel):
     holiday_hours: Decimal
     overtime_rate: Decimal = Field(..., description="加班率(%)")
     avg_overtime_per_person: Decimal
-    top_overtime_users: List[Dict[str, Any]]
+    top_overtime_users: List[dict]
     overtime_trend: TrendChartData
     
     class Config:
@@ -185,9 +185,9 @@ class DepartmentComparisonResponse(BaseModel):
     period_type: str
     start_date: date
     end_date: date
-    departments: List[Dict[str, Any]] = Field(..., description="部门数据")
-    chart_data: Dict[str, Any]
-    rankings: List[Dict[str, Any]] = Field(..., description="排名")
+    departments: List[dict] = Field(..., description="部门数据")
+    chart_data: dict
+    rankings: List[dict] = Field(..., description="排名")
     
     class Config:
         from_attributes = True
@@ -201,7 +201,7 @@ class ProjectDistributionResponse(BaseModel):
     total_projects: int
     total_hours: Decimal
     pie_chart: PieChartData
-    project_details: List[Dict[str, Any]]
+    project_details: List[dict]
     concentration_index: Decimal = Field(..., description="集中度指数(0-1)")
     
     class Config:
@@ -219,8 +219,8 @@ class ProjectForecastResponse(BaseModel):
     predicted_hours_max: Decimal
     confidence_level: Decimal
     historical_projects_count: int
-    similar_projects: List[Dict[str, Any]]
-    algorithm_params: Dict[str, Any]
+    similar_projects: List[dict]
+    algorithm_params: dict
     recommendations: List[str]
     
     class Config:
@@ -272,10 +272,10 @@ class GapAnalysisResponse(BaseModel):
     available_hours: Decimal
     gap_hours: Decimal
     gap_rate: Decimal
-    departments: List[Dict[str, Any]] = Field(..., description="部门缺口")
-    projects: List[Dict[str, Any]] = Field(..., description="项目缺口")
+    departments: List[dict] = Field(..., description="部门缺口")
+    projects: List[dict] = Field(..., description="项目缺口")
     recommendations: List[str]
-    chart_data: Dict[str, Any]
+    chart_data: dict
     
     class Config:
         from_attributes = True
