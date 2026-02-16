@@ -79,20 +79,11 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 销售管理模块加载失败: {e}")
     
-    # ==================== 工时管理 (跳过analytics) ====================
+    # ==================== 工时管理 ====================
     try:
-        from fastapi import APIRouter as SubRouter
-        timesheet_router = SubRouter()
-        
-        # 只加载基础工时功能，跳过analytics
-        from app.api.v1.endpoints.timesheet.records import router as records_router
-        from app.api.v1.endpoints.timesheet.monthly import router as monthly_router
-        
-        timesheet_router.include_router(records_router, tags=["timesheet"])
-        timesheet_router.include_router(monthly_router, tags=["timesheet"])
-        
+        from app.api.v1.endpoints.timesheet import router as timesheet_router
         api_router.include_router(timesheet_router, prefix="/timesheet", tags=["timesheet"])
-        print("✓ 工时管理模块加载成功 (跳过analytics)")
+        print("✓ 工时管理模块加载成功 (analytics已禁用)")
     except Exception as e:
         print(f"✗ 工时管理模块加载失败: {e}")
     

@@ -42,13 +42,15 @@ class ForecastMethod(str):
 
 class TimesheetAnalyticsQuery(BaseModel):
     """工时分析查询参数"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str = Field(..., description="周期类型:DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY")
     start_date: date = Field(..., description="开始日期")
     end_date: date = Field(..., description="结束日期")
     dimension: Optional[str] = Field(None, description="分析维度")
-    user_ids: Optional[List[int]] = Field(None, description="用户ID列表")
-    project_ids: Optional[List[int]] = Field(None, description="项目ID列表")
-    department_ids: Optional[List[int]] = Field(None, description="部门ID列表")
+    user_ids: Optional[list[int]] = Field(None, description="用户ID列表")
+    project_ids: Optional[list[int]] = Field(None, description="项目ID列表")
+    department_ids: Optional[list[int]] = Field(None, description="部门ID列表")
     
     @field_validator('period_type')
     @classmethod
@@ -61,6 +63,8 @@ class TimesheetAnalyticsQuery(BaseModel):
 
 class ProjectForecastRequest(BaseModel):
     """项目工时预测请求"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     project_id: Optional[int] = Field(None, description="项目ID(已存在项目)")
     project_name: Optional[str] = Field(None, description="项目名称(新项目)")
     project_type: Optional[str] = Field(None, description="项目类型")
@@ -68,19 +72,23 @@ class ProjectForecastRequest(BaseModel):
     team_size: Optional[int] = Field(None, description="团队规模")
     duration_days: Optional[int] = Field(None, description="计划周期(天)")
     forecast_method: str = Field('HISTORICAL_AVERAGE', description="预测方法")
-    similar_project_ids: Optional[List[int]] = Field(None, description="相似项目ID列表")
+    similar_project_ids: Optional[list[int]] = Field(None, description="相似项目ID列表")
 
 
 class CompletionForecastQuery(BaseModel):
     """完工时间预测查询"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     project_id: int = Field(..., description="项目ID")
     forecast_method: str = Field('TREND_FORECAST', description="预测方法")
 
 
 class WorkloadAlertQuery(BaseModel):
     """负荷预警查询"""
-    user_ids: Optional[List[int]] = Field(None, description="用户ID列表")
-    department_ids: Optional[List[int]] = Field(None, description="部门ID列表")
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    user_ids: Optional[list[int]] = Field(None, description="用户ID列表")
+    department_ids: Optional[list[int]] = Field(None, description="部门ID列表")
     alert_level: Optional[str] = Field(None, description="预警级别:LOW/MEDIUM/HIGH/CRITICAL")
     forecast_days: int = Field(30, description="预测天数")
 
@@ -89,6 +97,8 @@ class WorkloadAlertQuery(BaseModel):
 
 class ChartDataPoint(BaseModel):
     """图表数据点"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     label: str = Field(..., description="标签")
     value: float = Field(..., description="值")
     date: Optional[date] = Field(None, description="日期")
@@ -97,26 +107,34 @@ class ChartDataPoint(BaseModel):
 
 class TrendChartData(BaseModel):
     """趋势图数据"""
-    labels: List[str] = Field(..., description="X轴标签")
-    datasets: List[dict] = Field(..., description="数据集")
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
+    labels: list[str] = Field(..., description="X轴标签")
+    datasets: list[dict] = Field(..., description="数据集")
 
 
 class PieChartData(BaseModel):
     """饼图数据"""
-    labels: List[str] = Field(..., description="标签")
-    values: List[float] = Field(..., description="值")
-    colors: Optional[List[str]] = Field(None, description="颜色")
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    labels: list[str] = Field(..., description="标签")
+    values: list[float] = Field(..., description="值")
+    colors: Optional[list[str]] = Field(None, description="颜色")
 
 
 class HeatmapData(BaseModel):
     """热力图数据"""
-    rows: List[str] = Field(..., description="行标签")
-    columns: List[str] = Field(..., description="列标签")
-    data: List[List[float]] = Field(..., description="数据矩阵")
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    rows: list[str] = Field(..., description="行标签")
+    columns: list[str] = Field(..., description="列标签")
+    data: list[list[float]] = Field(..., description="数据矩阵")
 
 
 class TimesheetTrendResponse(BaseModel):
     """工时趋势响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
@@ -135,12 +153,14 @@ class TimesheetTrendResponse(BaseModel):
 
 class WorkloadHeatmapResponse(BaseModel):
     """人员负荷热力图响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
     heatmap_data: HeatmapData
     statistics: dict = Field(..., description="统计信息")
-    overload_users: List[dict] = Field(..., description="超负荷人员")
+    overload_users: list[dict] = Field(..., description="超负荷人员")
     
     class Config:
         from_attributes = True
@@ -148,6 +168,8 @@ class WorkloadHeatmapResponse(BaseModel):
 
 class EfficiencyComparisonResponse(BaseModel):
     """效率对比响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
@@ -157,7 +179,7 @@ class EfficiencyComparisonResponse(BaseModel):
     variance_rate: Decimal
     efficiency_rate: Decimal
     chart_data: dict
-    insights: List[str] = Field(..., description="洞察建议")
+    insights: list[str] = Field(..., description="洞察建议")
     
     class Config:
         from_attributes = True
@@ -165,6 +187,8 @@ class EfficiencyComparisonResponse(BaseModel):
 
 class OvertimeStatisticsResponse(BaseModel):
     """加班统计响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
@@ -173,7 +197,7 @@ class OvertimeStatisticsResponse(BaseModel):
     holiday_hours: Decimal
     overtime_rate: Decimal = Field(..., description="加班率(%)")
     avg_overtime_per_person: Decimal
-    top_overtime_users: List[dict]
+    top_overtime_users: list[dict]
     overtime_trend: TrendChartData
     
     class Config:
@@ -182,12 +206,14 @@ class OvertimeStatisticsResponse(BaseModel):
 
 class DepartmentComparisonResponse(BaseModel):
     """部门对比响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
-    departments: List[dict] = Field(..., description="部门数据")
+    departments: list[dict] = Field(..., description="部门数据")
     chart_data: dict
-    rankings: List[dict] = Field(..., description="排名")
+    rankings: list[dict] = Field(..., description="排名")
     
     class Config:
         from_attributes = True
@@ -195,13 +221,15 @@ class DepartmentComparisonResponse(BaseModel):
 
 class ProjectDistributionResponse(BaseModel):
     """项目分布响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
     total_projects: int
     total_hours: Decimal
     pie_chart: PieChartData
-    project_details: List[dict]
+    project_details: list[dict]
     concentration_index: Decimal = Field(..., description="集中度指数(0-1)")
     
     class Config:
@@ -210,6 +238,8 @@ class ProjectDistributionResponse(BaseModel):
 
 class ProjectForecastResponse(BaseModel):
     """项目工时预测响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     forecast_no: str
     project_id: Optional[int] = None
     project_name: str
@@ -219,9 +249,9 @@ class ProjectForecastResponse(BaseModel):
     predicted_hours_max: Decimal
     confidence_level: Decimal
     historical_projects_count: int
-    similar_projects: List[dict]
+    similar_projects: list[dict]
     algorithm_params: dict
-    recommendations: List[str]
+    recommendations: list[str]
     
     class Config:
         from_attributes = True
@@ -229,6 +259,8 @@ class ProjectForecastResponse(BaseModel):
 
 class CompletionForecastResponse(BaseModel):
     """完工时间预测响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     forecast_no: str
     project_id: int
     project_name: str
@@ -240,7 +272,7 @@ class CompletionForecastResponse(BaseModel):
     predicted_days_remaining: int
     confidence_level: Decimal
     forecast_curve: TrendChartData
-    risk_factors: List[str]
+    risk_factors: list[str]
     
     class Config:
         from_attributes = True
@@ -248,6 +280,8 @@ class CompletionForecastResponse(BaseModel):
 
 class WorkloadAlertResponse(BaseModel):
     """负荷预警响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     user_id: int
     user_name: str
     department_name: str
@@ -257,7 +291,7 @@ class WorkloadAlertResponse(BaseModel):
     current_hours: Decimal
     available_hours: Decimal
     gap_hours: Decimal
-    recommendations: List[str]
+    recommendations: list[str]
     
     class Config:
         from_attributes = True
@@ -265,6 +299,8 @@ class WorkloadAlertResponse(BaseModel):
 
 class GapAnalysisResponse(BaseModel):
     """缺口分析响应"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     period_type: str
     start_date: date
     end_date: date
@@ -272,9 +308,9 @@ class GapAnalysisResponse(BaseModel):
     available_hours: Decimal
     gap_hours: Decimal
     gap_rate: Decimal
-    departments: List[dict] = Field(..., description="部门缺口")
-    projects: List[dict] = Field(..., description="项目缺口")
-    recommendations: List[str]
+    departments: list[dict] = Field(..., description="部门缺口")
+    projects: list[dict] = Field(..., description="项目缺口")
+    recommendations: list[str]
     chart_data: dict
     
     class Config:
@@ -285,6 +321,8 @@ class GapAnalysisResponse(BaseModel):
 
 class TimesheetAnalyticsSummary(BaseModel):
     """工时分析汇总"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: int
     period_type: str
     dimension: str
@@ -305,6 +343,8 @@ class TimesheetAnalyticsSummary(BaseModel):
 
 class ForecastValidationResult(BaseModel):
     """预测验证结果"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     forecast_id: int
     predicted_hours: Decimal
     actual_hours: Decimal

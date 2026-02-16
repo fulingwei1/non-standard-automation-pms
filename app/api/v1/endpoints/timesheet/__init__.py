@@ -15,7 +15,8 @@ from .statistics import router as statistics_router
 from .reports import router as reports_router
 from .reports_unified import router as reports_unified_router
 from .workflow import router as workflow_router
-from .analytics import router as analytics_router
+# 暂时禁用analytics（Pydantic递归错误）
+# from .analytics import router as analytics_router
 
 router = APIRouter()
 
@@ -28,6 +29,6 @@ router.include_router(statistics_router)
 router.include_router(reports_router)
 router.include_router(reports_unified_router)
 router.include_router(workflow_router)
-router.include_router(analytics_router, prefix="/analytics", tags=["工时分析与预测"])
+# router.include_router(analytics_router, prefix="/analytics", tags=["工时分析与预测"])
 
 __all__ = ["router"]
