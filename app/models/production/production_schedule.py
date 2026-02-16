@@ -177,7 +177,7 @@ class ScheduleAdjustmentLog(Base, TimestampMixin):
     
     # 其他
     remark = Column(Text, nullable=True, comment='备注')
-    metadata = Column(JSON, nullable=True, comment='元数据')
+    extra_metadata = Column(JSON, nullable=True, comment='元数据')  # Renamed from 'metadata' (SQLAlchemy reserved)
     
     # 关系
     schedule = relationship('ProductionSchedule', back_populates='adjustments')

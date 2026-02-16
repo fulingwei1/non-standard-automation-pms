@@ -74,6 +74,23 @@ from .purchase_intelligence import (  # noqa: F401
     PurchaseOrderTracking,
 )
 
+# Inventory Tracking System
+from .inventory_tracking import (  # noqa: F401
+    MaterialTransaction,
+    MaterialStock,
+    MaterialReservation,
+    StockCountTask,
+    StockCountDetail,
+    StockAdjustment,
+)
+
+# Smart Shortage Alert System
+from .shortage.smart_alert import (  # noqa: F401
+    ShortageAlert as ShortageAlertEnhanced,  # Alias for consistency
+    ShortageHandlingPlan,
+    MaterialDemandForecast,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -524,4 +541,15 @@ __all__ = [
     "SupplierQuotation",
     "SupplierPerformance",
     "PurchaseOrderTracking",
+    # Inventory Tracking System
+    "MaterialTransaction",
+    "MaterialStock",
+    "MaterialReservation",
+    "StockCountTask",
+    "StockCountDetail",
+    "StockAdjustment",
+    # Smart Shortage Alert System
+    "ShortageAlertEnhanced",
+    "ShortageHandlingPlan",
+    "MaterialDemandForecast",
 ]

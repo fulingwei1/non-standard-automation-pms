@@ -15,7 +15,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from ..models.base import get_db
+from ..dependencies import get_db  # Moved to break circular import
 from ..common.context import set_audit_context
 from ..models.user import User
 from ..utils.redis_client import get_redis_client

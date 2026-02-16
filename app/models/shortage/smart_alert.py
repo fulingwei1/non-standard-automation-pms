@@ -81,7 +81,7 @@ class ShortageAlert(Base, TimestampMixin):
     # 扩展信息
     alert_source = Column(String(50), default='AUTO', comment='预警来源: AUTO/MANUAL/SYSTEM')
     priority_boost = Column(Integer, default=0, comment='优先级加成')
-    metadata = Column(JSON, comment='扩展数据')
+    extra_metadata = Column(JSON, comment='扩展数据')  # Renamed from 'metadata' (SQLAlchemy reserved)
     remark = Column(Text, comment='备注')
     
     # 创建人
@@ -173,7 +173,7 @@ class ShortageHandlingPlan(Base, TimestampMixin):
     effectiveness_rating = Column(Integer, comment='方案有效性评分 1-5')
     
     # 扩展信息
-    metadata = Column(JSON, comment='扩展数据')
+    extra_metadata = Column(JSON, comment='扩展数据')  # Renamed from 'metadata' (SQLAlchemy reserved)
     remark = Column(Text, comment='备注')
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     
@@ -253,7 +253,7 @@ class MaterialDemandForecast(Base, TimestampMixin):
     influencing_factors = Column(JSON, comment='影响因素 {"project_count": 5, "season": "high", ...}')
     
     # 扩展信息
-    metadata = Column(JSON, comment='扩展数据')
+    extra_metadata = Column(JSON, comment='扩展数据')  # Renamed from 'metadata' (SQLAlchemy reserved)
     remark = Column(Text, comment='备注')
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
     

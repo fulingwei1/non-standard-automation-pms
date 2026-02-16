@@ -19,10 +19,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from .base import Base, TimestampMixin, TenantMixin
+from .base import Base, TimestampMixin
 
 
-class PurchaseSuggestion(Base, TimestampMixin, TenantMixin):
+class PurchaseSuggestion(Base, TimestampMixin):
     """采购建议表"""
     __tablename__ = 'purchase_suggestions'
     __table_args__ = (
@@ -98,7 +98,7 @@ class PurchaseSuggestion(Base, TimestampMixin, TenantMixin):
         return f'<PurchaseSuggestion {self.suggestion_no}>'
 
 
-class SupplierQuotation(Base, TimestampMixin, TenantMixin):
+class SupplierQuotation(Base, TimestampMixin):
     """供应商报价表"""
     __tablename__ = 'supplier_quotations'
     __table_args__ = (
@@ -160,7 +160,7 @@ class SupplierQuotation(Base, TimestampMixin, TenantMixin):
         return f'<SupplierQuotation {self.quotation_no}>'
 
 
-class SupplierPerformance(Base, TimestampMixin, TenantMixin):
+class SupplierPerformance(Base, TimestampMixin):
     """供应商绩效评估表"""
     __tablename__ = 'supplier_performances'
     __table_args__ = (
@@ -243,7 +243,7 @@ class SupplierPerformance(Base, TimestampMixin, TenantMixin):
         return f'<SupplierPerformance {self.supplier_code} {self.evaluation_period}>'
 
 
-class PurchaseOrderTracking(Base, TimestampMixin, TenantMixin):
+class PurchaseOrderTracking(Base, TimestampMixin):
     """采购订单跟踪记录表"""
     __tablename__ = 'purchase_order_trackings'
     __table_args__ = (
