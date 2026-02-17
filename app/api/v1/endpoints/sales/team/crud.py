@@ -18,6 +18,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 from .utils import build_team_response
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -109,9 +110,7 @@ def create_sales_team(
         sort_order=request.sort_order,
         created_by=current_user.id,
     )
-    db.add(team)
-    db.commit()
-    db.refresh(team)
+    save_obj(db, team)
 
     # 如果指定了负责人，自动添加为团队成员
     if request.leader_id:

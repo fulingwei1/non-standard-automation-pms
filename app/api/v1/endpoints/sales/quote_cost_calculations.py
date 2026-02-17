@@ -15,6 +15,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -52,17 +53,13 @@ def get_cost_calculations(
     Returns:
         ResponseModel: 成本计算结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     vid = version_id or quote.current_version_id
     if not vid:
         raise HTTPException(status_code=400, detail="请指定报价版本")
 
-    version = db.query(QuoteVersion).filter(QuoteVersion.id == vid).first()
-    if not version:
-        raise HTTPException(status_code=404, detail="版本不存在")
+    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).all()
 
@@ -254,9 +251,7 @@ def batch_update_prices(
     Returns:
         ResponseModel: 更新结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     version_id = update_data.get("version_id") or quote.current_version_id
     if not version_id:

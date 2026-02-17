@@ -17,6 +17,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.sales import ReceivableDisputeCreate, ReceivableDisputeResponse
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -67,9 +68,7 @@ def create_dispute(
     创建回款争议
     """
     dispute = ReceivableDispute(**dispute_in.model_dump())
-    db.add(dispute)
-    db.commit()
-    db.refresh(dispute)
+    save_obj(db, dispute)
 
     dispute_dict = {
         **{c.name: getattr(dispute, c.name) for c in dispute.__table__.columns},

@@ -18,6 +18,7 @@ from app.models.project import ProjectPaymentPlan
 from app.models.sales import Contract
 from app.models.user import User
 from app.schemas.project import ProjectPaymentPlanResponse
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ def get_contract_payment_plans(
     获取合同的收款计划列表
     """
 
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 查询收款计划
     payment_plans = db.query(ProjectPaymentPlan).filter(

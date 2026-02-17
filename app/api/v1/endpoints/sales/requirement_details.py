@@ -18,6 +18,7 @@ from app.schemas.sales import (
     LeadRequirementDetailCreate,
     LeadRequirementDetailResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -32,9 +33,7 @@ def get_lead_requirement_detail(
     """
     获取线索需求详情
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     detail = db.query(LeadRequirementDetail).filter(
         LeadRequirementDetail.lead_id == lead_id
@@ -68,9 +67,7 @@ def create_lead_requirement_detail(
     """
     创建线索需求详情
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查是否已存在
     existing = db.query(LeadRequirementDetail).filter(
@@ -85,9 +82,7 @@ def create_lead_requirement_detail(
         **detail_in.model_dump()
     )
 
-    db.add(detail)
-    db.commit()
-    db.refresh(detail)
+    save_obj(db, detail)
 
     return LeadRequirementDetailResponse.model_validate(detail)
 
@@ -103,9 +98,7 @@ def update_lead_requirement_detail(
     """
     更新线索需求详情
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     detail = db.query(LeadRequirementDetail).filter(
         LeadRequirementDetail.lead_id == lead_id
@@ -119,8 +112,6 @@ def update_lead_requirement_detail(
     for field, value in update_data.items():
         setattr(detail, field, value)
 
-    db.add(detail)
-    db.commit()
-    db.refresh(detail)
+    save_obj(db, detail)
 
     return LeadRequirementDetailResponse.model_validate(detail)

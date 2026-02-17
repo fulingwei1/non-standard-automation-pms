@@ -24,6 +24,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import decimal_value, generate_receipt_no
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -65,9 +66,7 @@ def create_goods_receipt(
 ):
     """创建收货单"""
     order_id = payload.get("order_id")
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
 
     receipt_date = date.fromisoformat(payload.get("receipt_date") or date.today().isoformat())
     receipt = GoodsReceipt(
@@ -89,9 +88,7 @@ def create_goods_receipt(
 
     for item in items_payload:
         order_item_id = item.get("order_item_id")
-        order_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == order_item_id).first()
-        if not order_item:
-            raise HTTPException(status_code=404, detail="订单明细不存在")
+        order_item = get_or_404(db, PurchaseOrderItem, order_item_id, "订单明细不存在")
 
         delivery_qty = decimal_value(item.get("delivery_qty"), "0")
         received_qty = decimal_value(item.get("received_qty"), "0")

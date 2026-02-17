@@ -18,6 +18,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.sales import TeamPKCreateRequest, TeamPKUpdateRequest
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -100,9 +101,7 @@ def create_team_pk(
         status="PENDING" if request.start_date > datetime.now() else "ONGOING",
         created_by=current_user.id,
     )
-    db.add(pk)
-    db.commit()
-    db.refresh(pk)
+    save_obj(db, pk)
 
     return ResponseModel(
         code=201,

@@ -21,6 +21,7 @@ from app.schemas.sales import (
     ApprovalWorkflowStepResponse,
     ApprovalWorkflowUpdate,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -156,9 +157,7 @@ def update_approval_workflow(
     """
     更新审批工作流
     """
-    workflow = db.query(ApprovalWorkflow).filter(ApprovalWorkflow.id == workflow_id).first()
-    if not workflow:
-        raise HTTPException(status_code=404, detail="审批工作流不存在")
+    workflow = get_or_404(db, ApprovalWorkflow, workflow_id, detail="审批工作流不存在")
 
     update_data = workflow_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():

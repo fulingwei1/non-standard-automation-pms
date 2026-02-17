@@ -49,9 +49,7 @@ def sign_contract(
     """
     合同签订（自动生成收款计划）
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     contract.signed_date = sign_request.signed_date
     contract.status = "SIGNED"
@@ -122,9 +120,7 @@ def create_contract_project(
     """
     合同生成项目（G4阶段门验证）
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 获取交付物清单
     deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
@@ -147,6 +143,7 @@ def create_contract_project(
     lead_id = None
     if contract.opportunity_id:
         from app.models.sales import Opportunity
+from app.utils.db_helpers import get_or_404
         opportunity = db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
         if opportunity and hasattr(opportunity, "lead_id"):
             lead_id = opportunity.lead_id

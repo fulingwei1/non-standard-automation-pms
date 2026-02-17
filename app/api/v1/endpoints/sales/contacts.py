@@ -36,9 +36,7 @@ def read_customer_contacts(
     获取指定客户的联系人列表
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         raise HTTPException(status_code=403, detail="无权访问该客户的联系人")
@@ -84,6 +82,7 @@ def read_contacts(
     # 关键词搜索
     if keyword:
         from sqlalchemy import or_
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
         query = query.filter(
             or_(
                 Contact.name.contains(keyword),
@@ -164,9 +163,7 @@ def create_contact(
     为指定客户添加联系人
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         raise HTTPException(status_code=403, detail="无权为该客户添加联系人")
@@ -183,9 +180,7 @@ def create_contact(
         ).update({"is_primary": False})
 
     contact = Contact(**contact_data)
-    db.add(contact)
-    db.commit()
-    db.refresh(contact)
+    save_obj(db, contact)
 
     # 加载客户信息
     db.refresh(contact, attribute_names=['customer'])
@@ -271,8 +266,7 @@ def delete_contact(
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该联系人")
 
-    db.delete(contact)
-    db.commit()
+    delete_obj(db, contact)
 
 
 @router.post("/contacts/{contact_id}/set-primary", response_model=ContactResponse)

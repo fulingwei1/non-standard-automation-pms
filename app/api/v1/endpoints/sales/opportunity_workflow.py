@@ -19,6 +19,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
 
 from .utils import validate_g2_opportunity_to_quote
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -43,9 +44,7 @@ def submit_opportunity_gate(
     """
     提交商机阶段门（带自动验证）
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     if not can_set_opportunity_gate(db, current_user, opportunity):
         raise HTTPException(status_code=403, detail="无权限设置商机阶段门")
@@ -88,9 +87,7 @@ def update_opportunity_stage(
     """
     更新商机阶段
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     valid_stages = ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     if stage not in valid_stages:
@@ -128,9 +125,7 @@ def update_opportunity_score(
     商机评分（准入评估）
     评分范围：0-100分
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     opportunity.score = score
 
@@ -170,9 +165,7 @@ def win_opportunity(
     """
     赢单
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
@@ -206,9 +199,7 @@ def lose_opportunity(
     """
     输单
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     opportunity.stage = "LOST"
     if lose_reason:

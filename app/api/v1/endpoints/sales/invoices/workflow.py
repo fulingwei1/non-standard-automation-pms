@@ -28,6 +28,7 @@ from app.schemas.sales import (
     ApprovalStatusResponse,
 )
 from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,7 @@ def start_invoice_approval(
     """
     启动发票审批流程
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     if invoice.status != InvoiceStatusEnum.APPLIED:
         raise HTTPException(status_code=400, detail="只有已申请状态的发票才能启动审批流程")
@@ -173,9 +172,7 @@ def invoice_approval_action(
     if not record:
         raise HTTPException(status_code=404, detail="审批记录不存在")
 
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     try:
         if action_request.action == ApprovalActionEnum.APPROVE:

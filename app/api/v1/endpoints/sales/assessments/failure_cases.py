@@ -72,6 +72,7 @@ def list_failure_cases(
 
     # 应用关键词过滤（项目名称/核心失败原因）
     from app.common.query_filters import apply_keyword_filter
+from app.utils.db_helpers import save_obj
     query = apply_keyword_filter(query, FailureCase, keyword, ["project_name", "core_failure_reason"])
 
     total = query.count()
@@ -132,9 +133,7 @@ def create_failure_case(
         created_by=current_user.id
     )
 
-    db.add(case)
-    db.commit()
-    db.refresh(case)
+    save_obj(db, case)
 
     return FailureCaseResponse(
         id=case.id,

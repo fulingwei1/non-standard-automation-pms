@@ -106,9 +106,7 @@ def update_quote(
     Returns:
         ResponseModel: 更新结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 可更新字段
     updatable_fields = ["valid_until", "owner_id"]
@@ -117,6 +115,7 @@ def update_quote(
             value = quote_data[field]
             if field == "valid_until" and isinstance(value, str):
                 from datetime import date
+from app.utils.db_helpers import get_or_404, delete_obj
                 value = date.fromisoformat(value)
             setattr(quote, field, value)
 
@@ -141,16 +140,13 @@ def delete_quote(
     Returns:
         ResponseModel: 删除结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 检查状态，已审批的不允许删除
     if quote.status in ["APPROVED", "CONTRACTED"]:
         raise HTTPException(status_code=400, detail="已审批或已签约的报价不能删除")
 
     # 硬删除（级联删除版本和明细）
-    db.delete(quote)
-    db.commit()
+    delete_obj(db, quote)
 
     return ResponseModel(code=200, message="报价删除成功")

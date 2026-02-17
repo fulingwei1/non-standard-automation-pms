@@ -21,6 +21,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import get_user_role_code
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -174,9 +175,7 @@ def create_sales_target(
         created_by=current_user.id,
     )
 
-    db.add(target)
-    db.commit()
-    db.refresh(target)
+    save_obj(db, target)
 
     # 获取用户/部门名称
     user_name = None
@@ -222,9 +221,7 @@ def update_sales_target(
     """
     Issue 6.5: 更新销售目标
     """
-    target = db.query(SalesTarget).filter(SalesTarget.id == target_id).first()
-    if not target:
-        raise HTTPException(status_code=404, detail="目标不存在")
+    target = get_or_404(db, SalesTarget, target_id, detail="目标不存在")
 
     # 权限检查：只能修改自己创建的目标或自己部门的目标
     if target.created_by != current_user.id:

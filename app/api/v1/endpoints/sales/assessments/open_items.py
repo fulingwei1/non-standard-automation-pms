@@ -21,6 +21,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import OpenItemCreate, OpenItemResponse
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -94,9 +95,7 @@ def create_open_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建未决事项（线索）"""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 生成编号
     item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{lead_id:03d}"
@@ -113,9 +112,7 @@ def create_open_item(
         blocks_quotation=request.blocks_quotation
     )
 
-    db.add(open_item)
-    db.commit()
-    db.refresh(open_item)
+    save_obj(db, open_item)
 
     responsible_person_name = None
     if open_item.responsible_person_id:
@@ -151,9 +148,7 @@ def create_open_item_for_opportunity(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建未决事项（商机）"""
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 生成编号
     item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{opp_id:03d}"
@@ -170,9 +165,7 @@ def create_open_item_for_opportunity(
         blocks_quotation=request.blocks_quotation
     )
 
-    db.add(open_item)
-    db.commit()
-    db.refresh(open_item)
+    save_obj(db, open_item)
 
     responsible_person_name = None
     if open_item.responsible_person_id:
@@ -208,9 +201,7 @@ def update_open_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新未决事项"""
-    open_item = db.query(OpenItem).filter(OpenItem.id == item_id).first()
-    if not open_item:
-        raise HTTPException(status_code=404, detail="未决事项不存在")
+    open_item = get_or_404(db, OpenItem, item_id, detail="未决事项不存在")
 
     open_item.item_type = request.item_type
     open_item.description = request.description
@@ -256,9 +247,7 @@ def close_open_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """关闭未决事项"""
-    open_item = db.query(OpenItem).filter(OpenItem.id == item_id).first()
-    if not open_item:
-        raise HTTPException(status_code=404, detail="未决事项不存在")
+    open_item = get_or_404(db, OpenItem, item_id, detail="未决事项不存在")
 
     open_item.status = OpenItemStatusEnum.CLOSED.value
     open_item.close_evidence = close_evidence

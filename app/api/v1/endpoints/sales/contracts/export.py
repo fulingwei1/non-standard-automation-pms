@@ -94,10 +94,9 @@ def export_contract_pdf(
     Issue 4.5: 导出合同 PDF
     """
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
+from app.utils.db_helpers import get_or_404
 
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
 

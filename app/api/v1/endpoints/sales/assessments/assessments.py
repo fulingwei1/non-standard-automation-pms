@@ -24,6 +24,7 @@ from app.schemas.sales import (
 )
 from app.services.ai_assessment_service import AIAssessmentService
 from app.services.technical_assessment_service import TechnicalAssessmentService
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -37,9 +38,7 @@ def apply_lead_assessment(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """申请技术评估（线索）"""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 创建评估申请
     assessment = TechnicalAssessment(
@@ -70,9 +69,7 @@ def apply_opportunity_assessment(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """申请技术评估（商机）"""
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 创建评估申请
     assessment = TechnicalAssessment(
@@ -103,9 +100,7 @@ async def evaluate_assessment(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """执行技术评估"""
-    assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == assessment_id).first()
-    if not assessment:
-        raise HTTPException(status_code=404, detail="技术评估不存在")
+    assessment = get_or_404(db, TechnicalAssessment, assessment_id, detail="技术评估不存在")
 
     if assessment.status != AssessmentStatusEnum.PENDING.value:
         raise HTTPException(status_code=400, detail="评估状态不正确")
@@ -259,9 +254,7 @@ def get_assessment(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取技术评估详情"""
-    assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == assessment_id).first()
-    if not assessment:
-        raise HTTPException(status_code=404, detail="技术评估不存在")
+    assessment = get_or_404(db, TechnicalAssessment, assessment_id, detail="技术评估不存在")
 
     evaluator_name = None
     if assessment.evaluator_id:

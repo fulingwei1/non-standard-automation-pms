@@ -22,6 +22,7 @@ from app.schemas.sales import (
     MaterialCostMatchResponse,
     PurchaseMaterialCostResponse,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -103,9 +104,7 @@ def match_material_cost(
     if matched_cost:
         matched_cost.usage_count = (matched_cost.usage_count or 0) + 1
         matched_cost.last_used_at = datetime.now()
-        db.add(matched_cost)
-        db.commit()
-        db.refresh(matched_cost)
+        save_obj(db, matched_cost)
 
     # 构建响应
     matched_cost_dict = None

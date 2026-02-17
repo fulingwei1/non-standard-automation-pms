@@ -17,6 +17,7 @@ from app.models.sales import ScoringRule
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ScoringRuleCreate, ScoringRuleResponse
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -71,9 +72,7 @@ def create_scoring_rule(
         created_by=current_user.id
     )
 
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
+    save_obj(db, rule)
 
     return ScoringRuleResponse(
         id=rule.id,
@@ -95,9 +94,7 @@ def activate_scoring_rule(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """激活评分规则版本"""
-    rule = db.query(ScoringRule).filter(ScoringRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="评分规则不存在")
+    rule = get_or_404(db, ScoringRule, rule_id, detail="评分规则不存在")
 
     # 取消其他规则的激活状态
     db.query(ScoringRule).update({ScoringRule.is_active: False})

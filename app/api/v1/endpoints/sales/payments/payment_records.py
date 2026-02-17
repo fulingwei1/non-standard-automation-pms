@@ -17,6 +17,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -110,9 +111,7 @@ def create_payment_record(
     """
     登记回款
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     if invoice.status != "ISSUED":
         raise HTTPException(status_code=400, detail="只有已开票的发票才能登记回款")
@@ -224,9 +223,7 @@ def match_payment_to_invoice(
     核销发票（将回款记录与发票关联）
     注意：这里 payment_id 实际上是发票ID，用于保持API路径一致性
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     if invoice.status != "ISSUED":
         raise HTTPException(status_code=400, detail="只有已开票的发票才能核销")

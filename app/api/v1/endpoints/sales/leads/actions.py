@@ -43,13 +43,9 @@ def convert_lead_to_opportunity(
     from app.models.sales import Opportunity, OpportunityRequirement
     from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
 
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     # G1验证
     requirement = None
@@ -119,9 +115,7 @@ def mark_lead_invalid(
     """
     标记线索无效
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     if lead.status == LeadStatusEnum.CONVERTED:
         raise HTTPException(status_code=400, detail="已转商机的线索不能标记为无效")
@@ -159,6 +153,7 @@ def export_leads(
         ExcelExportService,
         create_excel_response,
     )
+from app.utils.db_helpers import get_or_404
 
     query = db.query(Lead)
     query = apply_keyword_filter(query, Lead, keyword, ["lead_code", "customer_name", "contact_name"])

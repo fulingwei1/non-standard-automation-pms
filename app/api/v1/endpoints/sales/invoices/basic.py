@@ -192,16 +192,14 @@ def delete_invoice(
     """
     删除发票（仅限草稿状态）
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     # 只有草稿状态才能删除
     if invoice.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的发票才能删除")
 
-    db.delete(invoice)
-    db.commit()
+    delete_obj(db, invoice)
 
     from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, delete_obj
     return ResponseModel(code=200, message="发票已删除")

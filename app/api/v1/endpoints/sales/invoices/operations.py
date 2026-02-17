@@ -40,9 +40,7 @@ def issue_invoice(
     """
     开票
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     # 检查是否已通过审批（如果启用了审批工作流）
     workflow_service = ApprovalWorkflowService(db)
@@ -89,9 +87,7 @@ def receive_payment(
     """
     记录发票收款
     """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     if invoice.status != "ISSUED":
         raise HTTPException(status_code=400, detail="只有已开票的发票才能记录收款")
@@ -135,10 +131,9 @@ def void_invoice(
     作废发票
     """
     from app.models.enums import InvoiceStatusEnum
+from app.utils.db_helpers import get_or_404
 
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     # 只有已开票或已审批的发票才能作废
     if invoice.status not in [InvoiceStatusEnum.ISSUED, InvoiceStatusEnum.APPROVED]:

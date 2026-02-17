@@ -29,6 +29,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
 
 from .common import _serialize_rule_set
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -94,9 +95,7 @@ def create_cpq_rule_set(
         is_default=rule_set_in.is_default or False,
         owner_role=rule_set_in.owner_role or (current_user.department or "SALES"),
     )
-    db.add(rule_set)
-    db.commit()
-    db.refresh(rule_set)
+    save_obj(db, rule_set)
     return _serialize_rule_set(rule_set)
 
 
@@ -109,9 +108,7 @@ def update_cpq_rule_set(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新CPQ规则集"""
-    rule_set = db.query(CpqRuleSet).filter(CpqRuleSet.id == rule_set_id).first()
-    if not rule_set:
-        raise HTTPException(status_code=404, detail="规则集不存在")
+    rule_set = get_or_404(db, CpqRuleSet, rule_set_id, detail="规则集不存在")
 
     update_data = rule_set_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():

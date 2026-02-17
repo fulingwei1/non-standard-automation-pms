@@ -24,6 +24,7 @@ from app.schemas.sales import (
 )
 
 from ..utils import generate_amendment_no
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -38,9 +39,7 @@ def get_contract_deliverables(
     """
     获取合同交付物清单
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
     return [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables]
@@ -57,9 +56,7 @@ def get_contract_amendments(
     """
     获取合同变更记录列表
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     query = db.query(ContractAmendment).filter(ContractAmendment.contract_id == contract_id)
 
@@ -110,9 +107,7 @@ def create_contract_amendment(
     """
     创建合同变更记录
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 生成变更编号
     amendment_no = generate_amendment_no(db, contract.contract_code)
@@ -135,9 +130,7 @@ def create_contract_amendment(
         attachments=amendment_in.attachments,
     )
 
-    db.add(amendment)
-    db.commit()
-    db.refresh(amendment)
+    save_obj(db, amendment)
 
     return {
         "id": amendment.id,

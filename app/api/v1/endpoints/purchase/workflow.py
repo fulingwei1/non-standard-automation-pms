@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/workflow", tags=["采购审批工作流"])
 
@@ -301,9 +302,7 @@ def get_approval_status(
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
 
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
 
     instance = (
         db.query(ApprovalInstance)
@@ -386,9 +385,7 @@ def withdraw_approval(
     """
     from app.models.approval import ApprovalInstance
 
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == request.order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, request.order_id, "采购订单不存在")
 
     instance = (
         db.query(ApprovalInstance)

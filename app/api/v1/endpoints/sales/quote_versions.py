@@ -14,6 +14,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -35,9 +36,7 @@ def get_quote_versions(
     Returns:
         ResponseModel: 版本列表
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     versions = db.query(QuoteVersion).filter(
         QuoteVersion.quote_id == quote_id
@@ -147,9 +146,7 @@ def create_quote_version(
     Returns:
         ResponseModel: 创建结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 生成版本号
     existing_count = db.query(QuoteVersion).filter(

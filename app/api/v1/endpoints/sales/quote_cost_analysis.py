@@ -16,6 +16,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -37,9 +38,7 @@ def get_cost_analysis(
     Returns:
         ResponseModel: 成本分析结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     versions = db.query(QuoteVersion).filter(
         QuoteVersion.quote_id == quote_id

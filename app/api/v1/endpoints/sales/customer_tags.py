@@ -20,6 +20,7 @@ from app.schemas.sales import (
     CustomerTagResponse,
     PredefinedTagsResponse,
 )
+from app.utils.db_helpers import get_or_404, delete_obj
 
 router = APIRouter()
 
@@ -42,9 +43,7 @@ def read_customer_tags(
     获取指定客户的标签列表
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         raise HTTPException(status_code=403, detail="无权访问该客户的标签")
@@ -75,9 +74,7 @@ def create_customer_tag(
     为指定客户添加单个标签
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         raise HTTPException(status_code=403, detail="无权为该客户添加标签")
@@ -121,9 +118,7 @@ def create_customer_tags_batch(
     为指定客户批量添加标签
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         raise HTTPException(status_code=403, detail="无权为该客户添加标签")
@@ -170,9 +165,7 @@ def delete_customer_tag(
     删除客户标签
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         if not security.is_admin(current_user):
@@ -187,8 +180,7 @@ def delete_customer_tag(
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
 
-    db.delete(tag)
-    db.commit()
+    delete_obj(db, tag)
 
 
 @router.delete("/customers/{customer_id}/tags", status_code=204)
@@ -202,9 +194,7 @@ def delete_customer_tags_by_name(
     根据标签名称删除客户标签
     """
     # 检查客户是否存在及权限
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
         if not security.is_admin(current_user):
@@ -219,5 +209,4 @@ def delete_customer_tags_by_name(
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
 
-    db.delete(tag)
-    db.commit()
+    delete_obj(db, tag)

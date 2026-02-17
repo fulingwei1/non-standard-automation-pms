@@ -82,9 +82,7 @@ def get_cost_template(
     """
     获取成本模板详情
     """
-    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="成本模板不存在")
+    template = get_or_404(db, QuoteCostTemplate, template_id, detail="成本模板不存在")
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
@@ -107,9 +105,7 @@ def create_cost_template(
         **template_in.model_dump(),
         created_by=current_user.id
     )
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
@@ -129,18 +125,14 @@ def update_cost_template(
     """
     更新成本模板
     """
-    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="成本模板不存在")
+    template = get_or_404(db, QuoteCostTemplate, template_id, detail="成本模板不存在")
 
     update_data = template_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(template, field):
             setattr(template, field, value)
 
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
@@ -159,12 +151,10 @@ def delete_cost_template(
     """
     删除成本模板
     """
-    template = db.query(QuoteCostTemplate).filter(QuoteCostTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="成本模板不存在")
+    template = get_or_404(db, QuoteCostTemplate, template_id, detail="成本模板不存在")
 
-    db.delete(template)
-    db.commit()
+    delete_obj(db, template)
 
     from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
     return ResponseModel(code=200, message="删除成功")

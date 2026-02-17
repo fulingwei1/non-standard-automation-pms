@@ -25,6 +25,7 @@ from app.schemas.sales import (
     CustomerResponse,
     CustomerStatsResponse,
 )
+from app.utils.db_helpers import save_obj, delete_obj
 
 router = APIRouter()
 
@@ -239,9 +240,7 @@ def create_customer(
     # 自动更新客户等级
     customer.update_level()
     
-    db.add(customer)
-    db.commit()
-    db.refresh(customer)
+    save_obj(db, customer)
 
     # 加载关联数据
     db.refresh(customer, attribute_names=['sales_owner', 'tags', 'contacts'])
@@ -320,5 +319,4 @@ def delete_customer(
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该客户")
 
-    db.delete(customer)
-    db.commit()
+    delete_obj(db, customer)

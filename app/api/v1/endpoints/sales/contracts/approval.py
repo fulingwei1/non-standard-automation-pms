@@ -340,9 +340,7 @@ def get_approval_status(
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
 
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     instance = (
         db.query(ApprovalInstance)
@@ -480,6 +478,7 @@ def get_approval_history(
     获取当前用户处理过的合同审批历史。
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
+from app.utils.db_helpers import get_or_404
 
     query = (
         db.query(ApprovalTask)

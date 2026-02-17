@@ -26,6 +26,7 @@ from app.services.data_scope_service import DataScopeService
 from app.common.pagination import PaginationParams, get_pagination_query
 
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 from .utils import (
     decimal_value,
     generate_order_no,
@@ -185,8 +186,7 @@ def create_purchase_order(
         db.add(order_item)
 
     order.total_amount = total_amount
-    db.commit()
-    db.refresh(order)
+    save_obj(db, order)
     
     # 使用统一响应格式
     return success_response(
@@ -202,9 +202,7 @@ def get_purchase_order_detail(
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购订单详情"""
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     
     # 使用统一响应格式
     return success_response(
@@ -220,9 +218,7 @@ def get_purchase_order_items(
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购订单明细"""
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     
     try:
         items = [serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()]
@@ -244,9 +240,7 @@ def update_purchase_order(
     current_user: User = Depends(get_current_active_user),
 ):
     """更新采购订单"""
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     if order.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可更新")
 
@@ -256,8 +250,7 @@ def update_purchase_order(
                 setattr(order, field, date.fromisoformat(payload[field]))
             else:
                 setattr(order, field, payload[field])
-    db.commit()
-    db.refresh(order)
+    save_obj(db, order)
     
     # 使用统一响应格式
     return success_response(
@@ -273,9 +266,7 @@ def submit_purchase_order(
     current_user: User = Depends(get_current_active_user),
 ):
     """提交采购订单"""
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     if order.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可提交")
     try:
@@ -304,9 +295,7 @@ def approve_purchase_order(
     current_user: User = Depends(get_current_active_user),
 ):
     """审批采购订单"""
-    order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="采购订单不存在")
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     if order.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只有已提交的订单可审批")
 

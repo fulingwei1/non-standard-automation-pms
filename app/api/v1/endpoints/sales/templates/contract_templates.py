@@ -35,6 +35,7 @@ from .common import (
     _get_previous_version,
     _serialize_contract_template,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -195,9 +196,7 @@ def create_contract_template_version(
         status="DRAFT",
         created_by=current_user.id,
     )
-    db.add(version)
-    db.commit()
-    db.refresh(version)
+    save_obj(db, version)
     return ContractTemplateVersionResponse(
         id=version.id,
         template_id=version.template_id,

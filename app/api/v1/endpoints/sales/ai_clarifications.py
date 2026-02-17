@@ -23,6 +23,7 @@ from app.schemas.sales import (
     AIClarificationResponse,
     AIClarificationUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -86,9 +87,7 @@ def create_ai_clarification_for_lead(
     """
     为线索创建AI澄清
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 获取当前最大轮次
     max_round = db.query(func.max(AIClarification.round)).filter(
@@ -106,9 +105,7 @@ def create_ai_clarification_for_lead(
         answers=clarification_in.answers
     )
 
-    db.add(clarification)
-    db.commit()
-    db.refresh(clarification)
+    save_obj(db, clarification)
 
     return AIClarificationResponse(
         id=clarification.id,
@@ -133,9 +130,7 @@ def create_ai_clarification_for_opportunity(
     """
     为商机创建AI澄清
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 获取当前最大轮次
     max_round = db.query(func.max(AIClarification.round)).filter(
@@ -153,9 +148,7 @@ def create_ai_clarification_for_opportunity(
         answers=clarification_in.answers
     )
 
-    db.add(clarification)
-    db.commit()
-    db.refresh(clarification)
+    save_obj(db, clarification)
 
     return AIClarificationResponse(
         id=clarification.id,

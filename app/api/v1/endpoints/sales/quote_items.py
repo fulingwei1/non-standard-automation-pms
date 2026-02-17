@@ -15,6 +15,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -123,9 +124,7 @@ def create_quote_item(
             specification=item_data.get("specification"),
             unit=item_data.get("unit")
         )
-        db.add(item)
-        db.commit()
-        db.refresh(item)
+        save_obj(db, item)
 
         return ResponseModel(
             code=200,
@@ -159,9 +158,7 @@ def update_quote_item(
         ResponseModel: 更新结果
     """
     try:
-        item = db.query(QuoteItem).filter(QuoteItem.id == item_id).first()
-        if not item:
-            raise HTTPException(status_code=404, detail="报价明细不存在")
+        item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
 
         # 更新字段
         for field in ["item_type", "item_name", "qty", "unit_price", "cost",
@@ -196,12 +193,9 @@ def delete_quote_item(
         ResponseModel: 删除结果
     """
     try:
-        item = db.query(QuoteItem).filter(QuoteItem.id == item_id).first()
-        if not item:
-            raise HTTPException(status_code=404, detail="报价明细不存在")
+        item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
 
-        db.delete(item)
-        db.commit()
+        delete_obj(db, item)
         return ResponseModel(code=200, message="报价明细删除成功")
     except HTTPException:
         raise

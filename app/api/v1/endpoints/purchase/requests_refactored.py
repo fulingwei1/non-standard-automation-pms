@@ -23,6 +23,7 @@ from app.models.user import User
 
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 from .utils import (
     decimal_value,
     generate_request_no,
@@ -115,8 +116,7 @@ def create_purchase_request(
         db.add(request_item)
 
     request.total_amount = total_amount
-    db.commit()
-    db.refresh(request)
+    save_obj(db, request)
     
     # 使用统一响应格式
     return success_response(
@@ -132,9 +132,7 @@ def get_purchase_request_detail(
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购申请详情"""
-    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
-    if not request:
-        raise HTTPException(status_code=404, detail="采购申请不存在")
+    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
     
     # 使用统一响应格式
     return success_response(
@@ -150,9 +148,7 @@ def submit_purchase_request(
     current_user: User = Depends(get_current_active_user),
 ):
     """提交采购申请"""
-    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
-    if not request:
-        raise HTTPException(status_code=404, detail="采购申请不存在")
+    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
     if request.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可提交")
     if request.items.count() == 0:
@@ -177,9 +173,7 @@ def approve_purchase_request(
     current_user: User = Depends(get_current_active_user),
 ):
     """审批采购申请"""
-    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
-    if not request:
-        raise HTTPException(status_code=404, detail="采购申请不存在")
+    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
     if request.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只有已提交的申请可审批")
     request.approved_by = current_user.id
@@ -202,13 +196,10 @@ def delete_purchase_request(
     current_user: User = Depends(get_current_active_user),
 ):
     """删除采购申请"""
-    request = db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
-    if not request:
-        raise HTTPException(status_code=404, detail="采购申请不存在")
+    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
     if request.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可删除")
-    db.delete(request)
-    db.commit()
+    delete_obj(db, request)
     
     # 使用统一响应格式
     return success_response(

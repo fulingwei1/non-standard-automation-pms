@@ -29,6 +29,7 @@ from ..utils import (
     generate_lead_code,
     get_entity_creator_id,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -151,9 +152,7 @@ def create_lead(
         lead_data["product_match_type"] = "UNKNOWN"
 
     lead = Lead(**lead_data)
-    db.add(lead)
-    db.commit()
-    db.refresh(lead)
+    save_obj(db, lead)
 
     # 构造响应，包含优势产品详情
     lead_dict = {
@@ -193,9 +192,7 @@ def read_lead(
     """
     获取线索详情
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     lead_dict = {
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
@@ -236,9 +233,7 @@ def update_lead(
     更新线索
     Issue 7.2: 已集成操作权限检查
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # Issue 7.2: 检查编辑权限
     if not security.check_sales_edit_permission(
@@ -274,9 +269,7 @@ def delete_lead(
     删除线索
     Issue 7.2: 已集成操作权限检查（仅创建人、销售总监、管理员可以删除）
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # Issue 7.2: 检查删除权限
     if not security.check_sales_delete_permission(
@@ -286,7 +279,6 @@ def delete_lead(
     ):
         raise HTTPException(status_code=403, detail="您没有权限删除此线索")
 
-    db.delete(lead)
-    db.commit()
+    delete_obj(db, lead)
 
     return ResponseModel(code=200, message="线索已删除")

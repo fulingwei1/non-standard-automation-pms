@@ -21,6 +21,7 @@ from app.schemas.sales import (
     MaterialCostUpdateReminderResponse,
     MaterialCostUpdateReminderUpdate,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -50,9 +51,7 @@ def get_cost_update_reminder(
             notify_roles=["procurement", "procurement_manager", "采购工程师", "采购专员", "采购部经理"],
             reminder_count=0
         )
-        db.add(reminder)
-        db.commit()
-        db.refresh(reminder)
+        save_obj(db, reminder)
 
     # 计算距离下次提醒的天数
     days_until_next = None
@@ -108,9 +107,7 @@ def update_cost_update_reminder(
     reminder.last_updated_by = current_user.id
     reminder.last_updated_at = datetime.now()
 
-    db.add(reminder)
-    db.commit()
-    db.refresh(reminder)
+    save_obj(db, reminder)
 
     # 计算距离下次提醒的天数
     days_until_next = None

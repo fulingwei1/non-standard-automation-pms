@@ -365,9 +365,7 @@ def get_approval_status(
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
 
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     instance = (
         db.query(ApprovalInstance)
@@ -514,6 +512,7 @@ def get_approval_history(
     获取当前用户处理过的报价审批历史。
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
+from app.utils.db_helpers import get_or_404
 
     query = (
         db.query(ApprovalTask)

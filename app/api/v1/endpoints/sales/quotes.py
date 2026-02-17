@@ -23,6 +23,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 # 导入重构后的服务
 from app.services.sales.quotes_service import QuotesService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -64,9 +65,7 @@ def create_quote(
     if not opportunity_id or not customer_id:
         raise HTTPException(status_code=422, detail="opportunity_id / customer_id 必填")
 
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opportunity_id, detail="商机不存在")
 
     version_payload = quote_data.get("version") or {}
     if not version_payload:
@@ -134,9 +133,7 @@ def approve_quote(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ):
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # Minimal approval flow: mark current version approved when requested.
     approved = bool(payload.get("approved", True))

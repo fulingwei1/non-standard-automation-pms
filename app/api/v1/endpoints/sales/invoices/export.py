@@ -102,10 +102,9 @@ def export_invoice_pdf(
     Issue 4.5: 导出发票 PDF
     """
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
+from app.utils.db_helpers import get_or_404
 
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     # 准备数据
     total_amount = float(invoice.total_amount or invoice.amount or 0)

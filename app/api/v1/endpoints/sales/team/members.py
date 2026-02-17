@@ -18,6 +18,7 @@ from app.schemas.sales import (
     TeamMemberBatchAddRequest,
     TeamMemberUpdateRequest,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -123,9 +124,7 @@ def add_team_member(
             is_primary=request.is_primary,
             remark=request.remark,
         )
-        db.add(member)
-        db.commit()
-        db.refresh(member)
+        save_obj(db, member)
 
     # 如果设为主团队，清除其他团队的主团队标记
     if request.is_primary:

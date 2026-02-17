@@ -224,9 +224,7 @@ def update_contract(
     更新合同
     Issue 7.2: 已集成操作权限检查
     """
-    contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # Issue 7.2: 检查编辑权限
     if not security.check_sales_edit_permission(
@@ -249,6 +247,7 @@ def update_contract(
     if need_sync and contract.project_id:
         try:
             from app.services.data_sync_service import DataSyncService
+from app.utils.db_helpers import get_or_404
             sync_service = DataSyncService(db)
             sync_result = sync_service.sync_contract_to_project(contract_id)
             if sync_result.get("success"):

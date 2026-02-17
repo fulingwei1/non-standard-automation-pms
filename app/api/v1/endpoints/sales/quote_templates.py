@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -207,9 +208,7 @@ def update_quote_template(
     Returns:
         ResponseModel: 更新结果
     """
-    template = db.query(QuoteTemplate).filter(QuoteTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, QuoteTemplate, template_id, detail="模板不存在")
 
     if template.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="无权限修改此模板")
@@ -241,9 +240,7 @@ def delete_quote_template(
     Returns:
         ResponseModel: 删除结果
     """
-    template = db.query(QuoteTemplate).filter(QuoteTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, QuoteTemplate, template_id, detail="模板不存在")
 
     if template.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="无权限删除此模板")
@@ -251,8 +248,7 @@ def delete_quote_template(
     if template.status == "PUBLISHED":
         raise HTTPException(status_code=400, detail="已发布的模板不能删除")
 
-    db.delete(template)
-    db.commit()
+    delete_obj(db, template)
 
     return ResponseModel(code=200, message="模板删除成功", data={"id": template_id})
 
@@ -276,9 +272,7 @@ def create_template_version(
     Returns:
         ResponseModel: 创建结果
     """
-    template = db.query(QuoteTemplate).filter(QuoteTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, QuoteTemplate, template_id, detail="模板不存在")
 
     if template.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="无权限操作此模板")
@@ -297,9 +291,7 @@ def create_template_version(
         content_json=version_data.get("content_json", "{}"),
         created_by=current_user.id,
     )
-    db.add(version)
-    db.commit()
-    db.refresh(version)
+    save_obj(db, version)
 
     return ResponseModel(
         code=200,
@@ -325,9 +317,7 @@ def publish_template(
     Returns:
         ResponseModel: 发布结果
     """
-    template = db.query(QuoteTemplate).filter(QuoteTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, QuoteTemplate, template_id, detail="模板不存在")
 
     if template.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="无权限操作此模板")

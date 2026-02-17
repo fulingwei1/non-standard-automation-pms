@@ -23,6 +23,7 @@ from app.schemas.sales import (
     PurchaseMaterialCostResponse,
     PurchaseMaterialCostUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -81,9 +82,7 @@ def get_purchase_material_cost(
     """
     获取采购物料成本详情
     """
-    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
@@ -106,9 +105,7 @@ def create_purchase_material_cost(
         **cost_in.model_dump(),
         submitted_by=current_user.id
     )
-    db.add(cost)
-    db.commit()
-    db.refresh(cost)
+    save_obj(db, cost)
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
@@ -128,18 +125,14 @@ def update_purchase_material_cost(
     """
     更新采购物料成本
     """
-    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
     update_data = cost_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(cost, field):
             setattr(cost, field, value)
 
-    db.add(cost)
-    db.commit()
-    db.refresh(cost)
+    save_obj(db, cost)
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
@@ -158,11 +151,8 @@ def delete_purchase_material_cost(
     """
     删除采购物料成本
     """
-    cost = db.query(PurchaseMaterialCost).filter(PurchaseMaterialCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="采购物料成本不存在")
+    cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
-    db.delete(cost)
-    db.commit()
+    delete_obj(db, cost)
 
     return ResponseModel(code=200, message="删除成功")

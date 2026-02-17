@@ -15,6 +15,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -38,17 +39,13 @@ def get_cost_breakdown(
     Returns:
         ResponseModel: 成本明细
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     vid = version_id or quote.current_version_id
     if not vid:
         raise HTTPException(status_code=400, detail="请指定报价版本")
 
-    version = db.query(QuoteVersion).filter(QuoteVersion.id == vid).first()
-    if not version:
-        raise HTTPException(status_code=404, detail="版本不存在")
+    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
     items = db.query(QuoteItem).filter(
         QuoteItem.quote_version_id == vid
@@ -128,9 +125,7 @@ def update_cost_item(
     Returns:
         ResponseModel: 更新结果
     """
-    item = db.query(QuoteItem).filter(QuoteItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="明细项不存在")
+    item = get_or_404(db, QuoteItem, item_id, detail="明细项不存在")
 
     # 可更新字段
     updatable = ["cost", "cost_category", "cost_source", "unit_price", "qty", "remark"]
@@ -162,14 +157,10 @@ def recalculate_cost(
     Returns:
         ResponseModel: 计算结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     vid = version_id or quote.current_version_id
-    version = db.query(QuoteVersion).filter(QuoteVersion.id == vid).first()
-    if not version:
-        raise HTTPException(status_code=404, detail="版本不存在")
+    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).all()
 

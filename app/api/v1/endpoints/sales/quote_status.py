@@ -14,6 +14,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteApproval
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -95,9 +96,7 @@ def get_quote_status(
     Returns:
         ResponseModel: 状态信息
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     current_status = quote.status
     status_info = QUOTE_STATUSES.get(current_status, {"name": current_status, "color": "gray"})
@@ -138,9 +137,7 @@ def change_quote_status(
     Returns:
         ResponseModel: 变更结果
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     new_status = status_data.get("new_status")
     if not new_status:
@@ -191,9 +188,7 @@ def get_status_history(
     Returns:
         ResponseModel: 状态历史
     """
-    quote = db.query(Quote).filter(Quote.id == quote_id).first()
-    if not quote:
-        raise HTTPException(status_code=404, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 从审批记录获取状态变更
     approvals = db.query(QuoteApproval).filter(

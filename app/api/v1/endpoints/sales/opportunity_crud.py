@@ -28,6 +28,7 @@ from .utils import (
     generate_opportunity_code,
     get_entity_creator_id,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -199,9 +200,7 @@ def update_opportunity(
     更新商机
     Issue 7.2: 已集成操作权限检查
     """
-    opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
-    if not opportunity:
-        raise HTTPException(status_code=404, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # Issue 7.2: 检查编辑权限
     if not security.check_sales_edit_permission(
