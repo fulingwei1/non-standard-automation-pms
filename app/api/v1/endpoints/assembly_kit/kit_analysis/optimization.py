@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.models import MaterialReadiness
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -20,9 +21,7 @@ async def get_optimization_suggestions(
     """获取齐套分析优化建议"""
     from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-    readiness = db.query(MaterialReadiness).filter(MaterialReadiness.id == readiness_id).first()
-    if not readiness:
-        raise HTTPException(status_code=404, detail="齐套分析记录不存在")
+    readiness = get_or_404(db, MaterialReadiness, readiness_id, "齐套分析记录不存在")
 
     suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db, readiness)
     optimized_date = AssemblyKitOptimizer.optimize_estimated_ready_date(db, readiness)

@@ -21,6 +21,7 @@ from app.schemas.budget import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -80,9 +81,7 @@ def get_allocation_rule(
     """
     获取成本分摊规则详情
     """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
+    rule = get_or_404(db, ProjectCostAllocationRule, rule_id, "分摊规则不存在")
 
     return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
 
@@ -98,9 +97,7 @@ def update_allocation_rule(
     """
     更新成本分摊规则
     """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
+    rule = get_or_404(db, ProjectCostAllocationRule, rule_id, "分摊规则不存在")
 
     update_data = rule_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -124,9 +121,7 @@ def delete_allocation_rule(
     """
     删除成本分摊规则
     """
-    rule = db.query(ProjectCostAllocationRule).filter(ProjectCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
+    rule = get_or_404(db, ProjectCostAllocationRule, rule_id, "分摊规则不存在")
 
     db.delete(rule)
     db.commit()

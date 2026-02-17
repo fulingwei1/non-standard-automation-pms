@@ -38,6 +38,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/assembly-kit/templates",
@@ -103,9 +104,7 @@ async def update_assembly_template(
     current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """更新装配模板"""
-    template = db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, AssemblyTemplate, template_id, "模板不存在")
 
     update_data = template_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -125,9 +124,7 @@ async def delete_assembly_template(
     current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """删除装配模板"""
-    template = db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, AssemblyTemplate, template_id, "模板不存在")
 
     # 软删除
     template.is_active = False

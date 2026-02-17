@@ -21,6 +21,7 @@ from app.schemas.project import (
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -87,9 +88,7 @@ def get_project_documents(
     """
     获取项目的文档列表
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.project_id == project_id)
 
@@ -119,9 +118,7 @@ def read_document(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
 
-    document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="文档记录不存在")
+    document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # IDOR 防护：验证用户对该文档所属项目的访问权限
     if document.project_id:
@@ -186,9 +183,7 @@ def create_project_document(
     """
     为项目创建文档记录
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     # 确保project_id一致
     doc_data = doc_in.model_dump()

@@ -23,6 +23,7 @@ from app.schemas.business_support import (
     AcceptanceTrackingUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .tracking_helpers import build_tracking_response
 
@@ -182,9 +183,7 @@ async def get_acceptance_tracking_detail(
 ):
     """获取验收单跟踪详情"""
     try:
-        tracking = db.query(AcceptanceTracking).filter(AcceptanceTracking.id == tracking_id).first()
-        if not tracking:
-            raise HTTPException(status_code=404, detail="验收单跟踪记录不存在")
+        tracking = get_or_404(db, AcceptanceTracking, tracking_id, "验收单跟踪记录不存在")
 
         return ResponseModel(
             code=200,
@@ -206,9 +205,7 @@ async def update_acceptance_tracking(
 ):
     """更新验收单跟踪记录"""
     try:
-        tracking = db.query(AcceptanceTracking).filter(AcceptanceTracking.id == tracking_id).first()
-        if not tracking:
-            raise HTTPException(status_code=404, detail="验收单跟踪记录不存在")
+        tracking = get_or_404(db, AcceptanceTracking, tracking_id, "验收单跟踪记录不存在")
 
         # 更新字段
         update_data = tracking_data.dict(exclude_unset=True)

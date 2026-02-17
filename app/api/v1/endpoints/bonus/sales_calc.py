@@ -48,6 +48,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/bonus/sales-calc",
@@ -238,9 +239,7 @@ def get_bonus_calculation(
     """
     获取奖金计算详情
     """
-    calculation = db.query(BonusCalculation).filter(BonusCalculation.id == calc_id).first()
-    if not calculation:
-        raise HTTPException(status_code=404, detail="计算记录不存在")
+    calculation = get_or_404(db, BonusCalculation, calc_id, "计算记录不存在")
 
     return ResponseModel(code=200, data=calculation)
 
@@ -256,9 +255,7 @@ def approve_bonus_calculation(
     """
     审批奖金计算
     """
-    calculation = db.query(BonusCalculation).filter(BonusCalculation.id == calc_id).first()
-    if not calculation:
-        raise HTTPException(status_code=404, detail="计算记录不存在")
+    calculation = get_or_404(db, BonusCalculation, calc_id, "计算记录不存在")
 
     if approve_in.approved:
         calculation.status = 'APPROVED'

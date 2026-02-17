@@ -24,6 +24,7 @@ from app.schemas.acceptance import (
 
 from .order_crud import read_acceptance_order
 from .utils import validate_completion_rules, validate_edit_rules
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -39,9 +40,7 @@ def submit_acceptance_order(
     """
     提交验收单（草稿→待验收）
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR006: 客户签字后验收单不可修改
     validate_edit_rules(db, order_id)
@@ -72,9 +71,7 @@ def start_acceptance(
     """
     开始验收（待验收→验收中）
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if order.status not in ["DRAFT", "PENDING"]:
         raise HTTPException(status_code=400, detail="只能开始草稿或待验收状态的验收单")
@@ -117,9 +114,7 @@ def complete_acceptance(
         validate_required_check_items,
     )
 
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if order.status != "IN_PROGRESS":
         raise HTTPException(status_code=400, detail="只能完成进行中状态的验收单")

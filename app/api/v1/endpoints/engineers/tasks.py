@@ -25,6 +25,7 @@ from app.models.task_center import (
 from app.models.user import User
 from app.schemas import engineer as schemas
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -262,9 +263,7 @@ def get_task_detail(
     """
     获取任务详情
     """
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证权限（任务相关人员可查看）
     if task.assignee_id != current_user.id and task.created_by != current_user.id:

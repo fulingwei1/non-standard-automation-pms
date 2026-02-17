@@ -27,6 +27,7 @@ from app.schemas.business_support import (
     InvoiceRequestUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .utils import (
     _serialize_attachments,
@@ -129,9 +130,7 @@ async def create_invoice_request(
         )
         if not customer_id:
             raise HTTPException(status_code=400, detail="缺少客户信息")
-        customer = db.query(Customer).filter(Customer.id == customer_id).first()
-        if not customer:
-            raise HTTPException(status_code=404, detail="客户不存在")
+        customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
         tax_amount = invoice_request_data.tax_amount
         if tax_amount is None and invoice_request_data.tax_rate is not None:
@@ -192,9 +191,7 @@ async def get_invoice_request(
     current_user: User = Depends(deps.get_current_user)
 ):
     """获取开票申请详情"""
-    invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
-    if not invoice_request:
-        raise HTTPException(status_code=404, detail="开票申请不存在")
+    invoice_request = get_or_404(db, InvoiceRequest, request_id, "开票申请不存在")
     return ResponseModel(
         code=200,
         message="获取开票申请详情成功",
@@ -211,9 +208,7 @@ async def update_invoice_request(
 ):
     """更新开票申请"""
     try:
-        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
-        if not invoice_request:
-            raise HTTPException(status_code=404, detail="开票申请不存在")
+        invoice_request = get_or_404(db, InvoiceRequest, request_id, "开票申请不存在")
         if invoice_request.status not in ("PENDING", "REJECTED"):
             raise HTTPException(status_code=400, detail="当前状态下不可编辑开票申请")
 
@@ -260,9 +255,7 @@ async def approve_invoice_request(
 ):
     """审批通过开票申请并生成发票"""
     try:
-        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
-        if not invoice_request:
-            raise HTTPException(status_code=404, detail="开票申请不存在")
+        invoice_request = get_or_404(db, InvoiceRequest, request_id, "开票申请不存在")
         if invoice_request.status != "PENDING":
             raise HTTPException(status_code=400, detail="当前状态不可审批")
 
@@ -334,9 +327,7 @@ async def reject_invoice_request(
 ):
     """驳回开票申请"""
     try:
-        invoice_request = db.query(InvoiceRequest).filter(InvoiceRequest.id == request_id).first()
-        if not invoice_request:
-            raise HTTPException(status_code=404, detail="开票申请不存在")
+        invoice_request = get_or_404(db, InvoiceRequest, request_id, "开票申请不存在")
         if invoice_request.status != "PENDING":
             raise HTTPException(status_code=400, detail="当前状态不可驳回")
 

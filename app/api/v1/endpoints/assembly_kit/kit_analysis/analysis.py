@@ -32,6 +32,7 @@ from app.schemas.assembly_kit import (
 from app.schemas.common import ResponseModel
 
 from .utils import (
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
     calculate_available_qty,
     calculate_estimated_ready_date,
     generate_readiness_no,
@@ -203,9 +204,7 @@ async def get_analysis_detail(
     db: Session = Depends(deps.get_db)
 ):
     """获取齐套分析详情"""
-    readiness = db.query(MaterialReadiness).filter(MaterialReadiness.id == readiness_id).first()
-    if not readiness:
-        raise HTTPException(status_code=404, detail="齐套分析记录不存在")
+    readiness = get_or_404(db, MaterialReadiness, readiness_id, "齐套分析记录不存在")
 
     # 获取关联信息
     project = db.query(Project).filter(Project.id == readiness.project_id).first()

@@ -17,6 +17,7 @@ from app.core import security
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
 from app.models.user import User
 from app.schemas.acceptance import (
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
     CheckItemResultResponse,
     CheckItemResultUpdate,
 )
@@ -33,9 +34,7 @@ def read_acceptance_order_items(
     """
     获取验收检查项列表
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     items = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.order_id == order_id).order_by(
         AcceptanceOrderItem.category_code, AcceptanceOrderItem.sort_order
@@ -87,9 +86,7 @@ def update_check_item_result(
     """
     更新检查项结果
     """
-    item = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="检查项不存在")
+    item = get_or_404(db, AcceptanceOrderItem, item_id, "检查项不存在")
 
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == item.order_id).first()
     if order.status != "IN_PROGRESS":

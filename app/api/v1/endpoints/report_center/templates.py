@@ -38,6 +38,7 @@ router = APIRouter()
 
 from fastapi import APIRouter
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/report-center/templates",
@@ -101,9 +102,7 @@ def apply_report_template(
     """
     应用报表模板（套用模板）
     """
-    template = db.query(ReportTemplate).filter(ReportTemplate.id == apply_in.template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ReportTemplate, apply_in.template_id, "模板不存在")
 
     if not template.is_active:
         raise HTTPException(status_code=400, detail="模板已停用")

@@ -21,6 +21,7 @@ from app.schemas.acceptance import (
 )
 
 from .utils import build_issue_response
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -36,9 +37,7 @@ def assign_acceptance_issue(
     """
     指派问题
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     # 验证被指派人是否存在
     assigned_user = db.query(User).filter(User.id == assign_in.assigned_to).first()
@@ -84,9 +83,7 @@ def resolve_acceptance_issue(
     """
     解决问题
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     if issue.status == "CLOSED":
         raise HTTPException(status_code=400, detail="问题已经关闭，无法解决")
@@ -142,9 +139,7 @@ def verify_acceptance_issue(
     - VERIFIED: 验证通过，问题已解决
     - REJECTED: 验证不通过，问题需要重新处理
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     if issue.status != "RESOLVED":
         raise HTTPException(status_code=400, detail="只能验证已解决的问题")
@@ -201,9 +196,7 @@ def defer_acceptance_issue(
     """
     延期问题
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     if issue.status == "CLOSED":
         raise HTTPException(status_code=400, detail="已关闭的问题不能延期")

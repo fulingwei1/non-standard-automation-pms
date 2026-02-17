@@ -16,6 +16,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnLog, EcnTask
 from app.models.user import User
 from app.schemas.ecn import EcnClose, EcnResponse, EcnStartExecution, EcnVerify
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .utils import build_ecn_response
 
@@ -33,9 +34,7 @@ def start_ecn_execution(
     """
     开始执行ECN
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只能开始执行已审批的ECN")
@@ -73,9 +72,7 @@ def verify_ecn(
     """
     验证ECN执行结果
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "EXECUTING":
         raise HTTPException(status_code=400, detail="只能验证执行中的ECN")
@@ -127,9 +124,7 @@ def close_ecn(
     """
     关闭ECN
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="只能关闭已完成的ECN")

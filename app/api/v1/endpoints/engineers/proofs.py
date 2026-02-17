@@ -19,6 +19,7 @@ from app.models.project import Project
 from app.models.task_center import TaskCompletionProof, TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +71,7 @@ async def upload_completion_proof(
     上传任务完成证明材料
     """
     # 验证任务
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     if task.assignee_id != current_user.id:
         raise HTTPException(status_code=403, detail="只能为自己的任务上传证明")
@@ -134,9 +133,7 @@ def get_task_completion_proofs(
     获取任务的所有完成证明材料
     """
     # 验证任务存在
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证权限（任务相关人员可查看）
     if task.assignee_id != current_user.id and task.created_by != current_user.id:
@@ -181,9 +178,7 @@ def delete_completion_proof(
         raise HTTPException(status_code=404, detail="证明材料不存在")
 
     # 验证任务
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证权限（只有上传者和任务执行人可以删除）
     if proof.uploaded_by != current_user.id and task.assignee_id != current_user.id:

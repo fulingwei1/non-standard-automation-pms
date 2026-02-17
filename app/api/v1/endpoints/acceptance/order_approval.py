@@ -20,6 +20,7 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -364,9 +365,7 @@ def get_approval_status(
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
 
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     instance = (
         db.query(ApprovalInstance)

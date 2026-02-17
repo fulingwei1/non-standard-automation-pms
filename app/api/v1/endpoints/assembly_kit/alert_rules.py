@@ -37,6 +37,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/assembly-kit/alert-rules",
@@ -99,9 +100,7 @@ async def update_alert_rule(
     current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新预警规则"""
-    rule = db.query(ShortageAlertRule).filter(ShortageAlertRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="预警规则不存在")
+    rule = get_or_404(db, ShortageAlertRule, rule_id, "预警规则不存在")
 
     update_data = rule_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():

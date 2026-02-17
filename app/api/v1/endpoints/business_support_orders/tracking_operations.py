@@ -21,6 +21,7 @@ from app.schemas.business_support import (
     ReminderRequest,
 )
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .tracking_helpers import build_tracking_response
 from .utils import _send_department_notification
@@ -37,9 +38,7 @@ async def check_acceptance_condition(
 ):
     """验收条件检查"""
     try:
-        tracking = db.query(AcceptanceTracking).filter(AcceptanceTracking.id == tracking_id).first()
-        if not tracking:
-            raise HTTPException(status_code=404, detail="验收单跟踪记录不存在")
+        tracking = get_or_404(db, AcceptanceTracking, tracking_id, "验收单跟踪记录不存在")
 
         # 更新验收条件检查状态
         tracking.condition_check_status = check_data.condition_check_status
@@ -84,9 +83,7 @@ async def remind_acceptance_signature(
 ):
     """催签验收单"""
     try:
-        tracking = db.query(AcceptanceTracking).filter(AcceptanceTracking.id == tracking_id).first()
-        if not tracking:
-            raise HTTPException(status_code=404, detail="验收单跟踪记录不存在")
+        tracking = get_or_404(db, AcceptanceTracking, tracking_id, "验收单跟踪记录不存在")
 
         # 更新催签信息
         tracking.reminder_count = (tracking.reminder_count or 0) + 1

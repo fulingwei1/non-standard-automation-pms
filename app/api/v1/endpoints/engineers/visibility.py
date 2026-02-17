@@ -18,6 +18,7 @@ from app.models.project import Project, ProjectMember, ProjectStage
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +135,7 @@ def get_project_progress_visibility(
     解决痛点：各部门可以看到彼此的工作进度
     """
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     # 验证权限（项目成员可查看）
     is_member = db.query(ProjectMember).filter(

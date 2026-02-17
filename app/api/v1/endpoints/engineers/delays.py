@@ -18,6 +18,7 @@ from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
 from app.services.progress_aggregation_service import aggregate_task_progress
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,7 @@ def report_task_delay(
     报告任务延期（创建异常事件，自动通知相关方）
     """
     # 获取任务
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证权限
     if task.assignee_id != current_user.id:

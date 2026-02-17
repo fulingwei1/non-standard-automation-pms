@@ -41,6 +41,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/bonus/team",
@@ -97,9 +98,7 @@ def get_team_bonus_allocation(
     """
     获取团队奖金分配详情
     """
-    allocation = db.query(TeamBonusAllocation).filter(TeamBonusAllocation.id == allocation_id).first()
-    if not allocation:
-        raise HTTPException(status_code=404, detail="团队奖金分配记录不存在")
+    allocation = get_or_404(db, TeamBonusAllocation, allocation_id, "团队奖金分配记录不存在")
 
     return ResponseModel(code=200, data=allocation)
 
@@ -115,9 +114,7 @@ def approve_team_bonus_allocation(
     """
     审批团队奖金分配
     """
-    allocation = db.query(TeamBonusAllocation).filter(TeamBonusAllocation.id == allocation_id).first()
-    if not allocation:
-        raise HTTPException(status_code=404, detail="团队奖金分配记录不存在")
+    allocation = get_or_404(db, TeamBonusAllocation, allocation_id, "团队奖金分配记录不存在")
 
     if approve_in.approved:
         allocation.status = 'APPROVED'

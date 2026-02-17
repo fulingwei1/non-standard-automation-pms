@@ -25,6 +25,7 @@ from app.schemas.ecn import (
     EcnAffectedOrderResponse,
     EcnAffectedOrderUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -40,9 +41,7 @@ def read_ecn_affected_materials(
     """
     获取受影响物料列表
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     affected_materials = db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id).all()
 
@@ -75,9 +74,7 @@ def create_ecn_affected_material(
     """
     添加受影响物料
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     # 验证物料是否存在（如果提供了material_id）
     if material_in.material_id:
@@ -205,9 +202,7 @@ def read_ecn_affected_orders(
     """
     获取受影响订单列表
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     affected_orders = db.query(EcnAffectedOrder).filter(EcnAffectedOrder.ecn_id == ecn_id).all()
 
@@ -237,9 +232,7 @@ def create_ecn_affected_order(
     """
     添加受影响订单
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     # 验证订单是否存在
     if order_in.order_type == "PURCHASE":

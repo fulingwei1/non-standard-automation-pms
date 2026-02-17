@@ -17,6 +17,7 @@ from app.models.sales import Contract
 from app.models.user import User
 from app.schemas.business_support import SalesOrderCreate, SalesOrderResponse, SalesOrderUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..utils import generate_order_no
 from .utils import build_sales_order_response
@@ -170,9 +171,7 @@ async def get_sales_order(
 ):
     """获取销售订单详情"""
     try:
-        sales_order = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
-        if not sales_order:
-            raise HTTPException(status_code=404, detail="销售订单不存在")
+        sales_order = get_or_404(db, SalesOrder, order_id, "销售订单不存在")
 
         return ResponseModel(
             code=200,
@@ -194,9 +193,7 @@ async def update_sales_order(
 ):
     """更新销售订单"""
     try:
-        sales_order = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
-        if not sales_order:
-            raise HTTPException(status_code=404, detail="销售订单不存在")
+        sales_order = get_or_404(db, SalesOrder, order_id, "销售订单不存在")
 
         # 更新字段
         update_data = order_data.dict(exclude_unset=True)

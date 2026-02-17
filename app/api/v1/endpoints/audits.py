@@ -16,6 +16,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import PermissionAudit, User
 from app.schemas.common import PaginatedResponse
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -136,9 +137,7 @@ def read_audit(
 
     - **audit_id**: 审计日志ID
     """
-    audit = db.query(PermissionAudit).filter(PermissionAudit.id == audit_id).first()
-    if not audit:
-        raise HTTPException(status_code=404, detail="审计日志不存在")
+    audit = get_or_404(db, PermissionAudit, audit_id, "审计日志不存在")
 
     operator_name = None
     if audit.operator:

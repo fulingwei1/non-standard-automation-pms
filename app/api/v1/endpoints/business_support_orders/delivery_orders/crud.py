@@ -21,6 +21,7 @@ from app.schemas.business_support import (
     DeliveryOrderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..utils import generate_delivery_no
 
@@ -222,9 +223,7 @@ async def get_delivery_order(
 ):
     """获取发货单详情"""
     try:
-        delivery_order = db.query(DeliveryOrder).filter(DeliveryOrder.id == delivery_id).first()
-        if not delivery_order:
-            raise HTTPException(status_code=404, detail="发货单不存在")
+        delivery_order = get_or_404(db, DeliveryOrder, delivery_id, "发货单不存在")
 
         return ResponseModel(
             code=200,
@@ -279,9 +278,7 @@ async def update_delivery_order(
 ):
     """更新发货单"""
     try:
-        delivery_order = db.query(DeliveryOrder).filter(DeliveryOrder.id == delivery_id).first()
-        if not delivery_order:
-            raise HTTPException(status_code=404, detail="发货单不存在")
+        delivery_order = get_or_404(db, DeliveryOrder, delivery_id, "发货单不存在")
 
         # 更新字段
         update_data = delivery_data.dict(exclude_unset=True)

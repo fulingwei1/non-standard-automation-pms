@@ -19,6 +19,7 @@ from app.core import security
 from app.models.acceptance import AcceptanceOrder, AcceptanceReport
 from app.models.user import User
 from app.schemas.acceptance import (
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
     AcceptanceReportGenerateRequest,
     AcceptanceReportResponse,
 )
@@ -46,9 +47,7 @@ def generate_acceptance_report(
     from app.services.report_framework import ConfigError
     from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if order.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="只有已完成的验收单才能生成报告")
@@ -162,9 +161,7 @@ def download_acceptance_report(
     from fastapi.responses import Response
     from app.core.config import settings
 
-    report = db.query(AcceptanceReport).filter(AcceptanceReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="验收报告不存在")
+    report = get_or_404(db, AcceptanceReport, report_id, "验收报告不存在")
 
     if not report.file_path:
         raise HTTPException(status_code=404, detail="报告文件不存在")
@@ -212,9 +209,7 @@ def read_acceptance_reports(
     """
     获取验收报告列表
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     reports = db.query(AcceptanceReport).filter(AcceptanceReport.order_id == order_id).order_by(desc(AcceptanceReport.created_at)).all()
 

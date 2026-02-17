@@ -22,6 +22,7 @@ from app.schemas.business_support import (
     BiddingProjectUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -238,9 +239,7 @@ async def get_bidding_project(
 ):
     """获取投标项目详情"""
     try:
-        bidding_project = db.query(BiddingProject).filter(BiddingProject.id == bidding_id).first()
-        if not bidding_project:
-            raise HTTPException(status_code=404, detail="投标项目不存在")
+        bidding_project = get_or_404(db, BiddingProject, bidding_id, "投标项目不存在")
 
         return ResponseModel(
             code=200,
@@ -297,9 +296,7 @@ async def update_bidding_project(
 ):
     """更新投标项目"""
     try:
-        bidding_project = db.query(BiddingProject).filter(BiddingProject.id == bidding_id).first()
-        if not bidding_project:
-            raise HTTPException(status_code=404, detail="投标项目不存在")
+        bidding_project = get_or_404(db, BiddingProject, bidding_id, "投标项目不存在")
 
         # 更新字段
         update_data = bidding_data.dict(exclude_unset=True)

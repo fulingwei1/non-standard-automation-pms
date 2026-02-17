@@ -18,6 +18,7 @@ from app.models.outsourcing import (
 )
 from app.models.project import Machine, Project
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -34,9 +35,7 @@ def print_outsourcing_order(
     """
     from app.models.vendor import Vendor
 
-    order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="外协订单不存在")
+    order = get_or_404(db, OutsourcingOrder, order_id, "外协订单不存在")
 
     vendor = db.query(Vendor).filter(
         Vendor.id == order.vendor_id,

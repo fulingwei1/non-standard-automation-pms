@@ -47,6 +47,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/assembly-kit/bom-attributes",
@@ -66,9 +67,7 @@ async def get_bom_assembly_attrs(
 ):
     """获取BOM装配属性列表"""
     # 验证BOM存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     query = db.query(BomItemAssemblyAttrs).filter(BomItemAssemblyAttrs.bom_id == bom_id)
     if stage_code:
@@ -106,9 +105,7 @@ async def batch_set_assembly_attrs(
 ):
     """批量设置BOM装配属性"""
     # 验证BOM存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     created_count = 0
     updated_count = 0
@@ -150,9 +147,7 @@ async def update_assembly_attr(
     current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新单个物料装配属性"""
-    attr = db.query(BomItemAssemblyAttrs).filter(BomItemAssemblyAttrs.id == attr_id).first()
-    if not attr:
-        raise HTTPException(status_code=404, detail="装配属性不存在")
+    attr = get_or_404(db, BomItemAssemblyAttrs, attr_id, "装配属性不存在")
 
     update_data = attr_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -174,9 +169,7 @@ async def auto_assign_assembly_attrs(
 ):
     """自动分配装配属性（基于物料分类映射）"""
     # 验证BOM存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
     bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -251,9 +244,7 @@ async def get_assembly_attr_recommendations(
     from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
     # 验证BOM存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
     bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -301,9 +292,7 @@ async def smart_recommend_assembly_attrs(
     from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
     # 验证BOM存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
     bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -384,9 +373,7 @@ async def apply_assembly_template(
 ):
     """套用装配模板"""
     # 验证BOM和模板存在
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     template = db.query(AssemblyTemplate).filter(AssemblyTemplate.id == request.template_id).first()
     if not template:

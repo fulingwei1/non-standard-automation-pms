@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.common.query_filters import apply_like_filter
 from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
 from app.models.project import Machine, Project
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 # ==================== 验收约束规则验证 ====================
 
@@ -42,18 +43,14 @@ def validate_acceptance_rules(
     Raises:
         HTTPException: 如果违反约束规则
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     if acceptance_type == "FAT":
         # AR001: FAT验收必须在设备调试完成后
         if not machine_id:
             raise HTTPException(status_code=400, detail="FAT验收必须指定设备")
 
-        machine = db.query(Machine).filter(Machine.id == machine_id).first()
-        if not machine:
-            raise HTTPException(status_code=404, detail="设备不存在")
+        machine = get_or_404(db, Machine, machine_id, "设备不存在")
 
         # 检查设备是否在S5（装配调试）阶段之后
         # S5是装配调试，S6是出厂验收，所以设备应该在S5或S6阶段
@@ -75,9 +72,7 @@ def validate_acceptance_rules(
         if not machine_id:
             raise HTTPException(status_code=400, detail="SAT验收必须指定设备")
 
-        machine = db.query(Machine).filter(Machine.id == machine_id).first()
-        if not machine:
-            raise HTTPException(status_code=404, detail="设备不存在")
+        machine = get_or_404(db, Machine, machine_id, "设备不存在")
 
         # 检查该设备是否有通过的FAT验收
         fat_orders = db.query(AcceptanceOrder).filter(
@@ -151,9 +146,7 @@ def validate_completion_rules(
     Raises:
         HTTPException: 如果违反约束规则
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR004: 检查是否存在未闭环的阻塞问题
     blocking_issues = db.query(AcceptanceIssue).filter(
@@ -197,9 +190,7 @@ def validate_edit_rules(
     Raises:
         HTTPException: 如果违反约束规则
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR006: 检查是否有客户签字
     if order.customer_signed_at or order.customer_signer:

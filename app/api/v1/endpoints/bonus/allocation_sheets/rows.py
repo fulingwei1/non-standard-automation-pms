@@ -16,6 +16,7 @@ from app.models.bonus import BonusAllocationSheet
 from app.models.user import User
 from app.schemas.bonus import BonusAllocationRow
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..rules import paginate_items
 
@@ -38,9 +39,7 @@ def get_allocation_sheet_rows(
     """
     查看已解析的分配明细表数据，支持分页查看有效行或错误行
     """
-    sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
-    if not sheet:
-        raise HTTPException(status_code=404, detail="分配明细表不存在")
+    sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
     normalized_type = row_type.lower()
     if normalized_type not in {"valid", "error"}:

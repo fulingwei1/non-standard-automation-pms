@@ -36,6 +36,7 @@ from app.services.ecn_notification import (
 )
 
 from .utils import build_ecn_list_response, build_ecn_response, generate_ecn_no
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -99,9 +100,7 @@ def read_ecn(
     """
     获取ECN详情
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     return build_ecn_response(db, ecn)
 
@@ -170,9 +169,7 @@ def update_ecn(
     """
     更新ECN
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能修改草稿状态的ECN")
@@ -201,9 +198,7 @@ def submit_ecn(
     """
     提交ECN
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能提交草稿状态的ECN")
@@ -291,9 +286,7 @@ def cancel_ecn(
     """
     取消ECN
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status in ["APPROVED", "EXECUTING", "COMPLETED", "CANCELLED"]:
         raise HTTPException(status_code=400, detail="该状态的ECN不能取消")

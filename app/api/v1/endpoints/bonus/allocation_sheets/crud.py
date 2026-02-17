@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.bonus import BonusAllocationSheetResponse
 from app.schemas.common import ResponseModel
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -63,9 +64,7 @@ def get_allocation_sheet(
     """
     获取分配明细表详情
     """
-    sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
-    if not sheet:
-        raise HTTPException(status_code=404, detail="分配明细表不存在")
+    sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
     return ResponseModel(
         code=200,

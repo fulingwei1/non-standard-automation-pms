@@ -23,6 +23,7 @@ from app.schemas.business_support import (
     ReconciliationUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .utils import _send_department_notification, generate_reconciliation_no
 
@@ -238,9 +239,7 @@ async def get_reconciliation(
 ):
     """获取客户对账单详情"""
     try:
-        reconciliation = db.query(Reconciliation).filter(Reconciliation.id == reconciliation_id).first()
-        if not reconciliation:
-            raise HTTPException(status_code=404, detail="客户对账单不存在")
+        reconciliation = get_or_404(db, Reconciliation, reconciliation_id, "客户对账单不存在")
 
         return ResponseModel(
             code=200,
@@ -285,9 +284,7 @@ async def update_reconciliation(
 ):
     """更新客户对账单"""
     try:
-        reconciliation = db.query(Reconciliation).filter(Reconciliation.id == reconciliation_id).first()
-        if not reconciliation:
-            raise HTTPException(status_code=404, detail="客户对账单不存在")
+        reconciliation = get_or_404(db, Reconciliation, reconciliation_id, "客户对账单不存在")
 
         # 更新字段
         update_data = reconciliation_data.dict(exclude_unset=True)
@@ -345,9 +342,7 @@ async def send_reconciliation(
 ):
     """发送对账单给客户"""
     try:
-        reconciliation = db.query(Reconciliation).filter(Reconciliation.id == reconciliation_id).first()
-        if not reconciliation:
-            raise HTTPException(status_code=404, detail="客户对账单不存在")
+        reconciliation = get_or_404(db, Reconciliation, reconciliation_id, "客户对账单不存在")
 
         if reconciliation.status != "draft":
             raise HTTPException(status_code=400, detail="对账单已发送，无法重复发送")

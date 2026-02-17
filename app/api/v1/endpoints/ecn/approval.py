@@ -20,6 +20,7 @@ from app.models.ecn import Ecn, EcnEvaluation
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -353,9 +354,7 @@ def get_approval_status(
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
 
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     instance = (
         db.query(ApprovalInstance)

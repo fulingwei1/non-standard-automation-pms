@@ -18,6 +18,7 @@ from app.schemas.project_review import (
 )
 from app.services.project_review_ai import ProjectLessonExtractor
 from datetime import datetime
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -115,9 +116,7 @@ async def get_lesson(
     current_user: User = Depends(get_current_user)
 ):
     """获取经验教训详情"""
-    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
-    if not lesson:
-        raise HTTPException(status_code=404, detail="经验教训不存在")
+    lesson = get_or_404(db, ProjectLesson, lesson_id, "经验教训不存在")
     
     return ProjectLessonResponse.from_orm(lesson)
 
@@ -130,9 +129,7 @@ async def update_lesson(
     current_user: User = Depends(get_current_user)
 ):
     """更新经验教训"""
-    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
-    if not lesson:
-        raise HTTPException(status_code=404, detail="经验教训不存在")
+    lesson = get_or_404(db, ProjectLesson, lesson_id, "经验教训不存在")
     
     # 更新字段
     update_dict = update_data.dict(exclude_unset=True)

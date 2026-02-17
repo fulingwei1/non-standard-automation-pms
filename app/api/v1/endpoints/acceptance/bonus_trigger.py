@@ -17,6 +17,7 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -34,9 +35,7 @@ def trigger_bonus_calculation_endpoint(
 
     只有正式完成的验收单（已上传客户签署文件）才能触发奖金计算
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # 验证验收单状态
     if not order.is_officially_completed:

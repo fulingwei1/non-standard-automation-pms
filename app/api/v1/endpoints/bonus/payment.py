@@ -43,6 +43,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/bonus/payment",
@@ -154,9 +155,7 @@ def get_bonus_distribution(
     """
     获取奖金发放记录详情
     """
-    distribution = db.query(BonusDistribution).filter(BonusDistribution.id == dist_id).first()
-    if not distribution:
-        raise HTTPException(status_code=404, detail="发放记录不存在")
+    distribution = get_or_404(db, BonusDistribution, dist_id, "发放记录不存在")
 
     return ResponseModel(code=200, data=distribution)
 
@@ -172,9 +171,7 @@ def pay_bonus_distribution(
     """
     确认发放奖金
     """
-    distribution = db.query(BonusDistribution).filter(BonusDistribution.id == dist_id).first()
-    if not distribution:
-        raise HTTPException(status_code=404, detail="发放记录不存在")
+    distribution = get_or_404(db, BonusDistribution, dist_id, "发放记录不存在")
 
     if distribution.status == 'PAID':
         raise HTTPException(

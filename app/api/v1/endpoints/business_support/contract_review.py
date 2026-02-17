@@ -19,6 +19,7 @@ from app.schemas.business_support import (
     ContractReviewUpdate,
 )
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ async def create_contract_review(
     """创建合同审核记录"""
     try:
         # 检查合同是否存在
-        contract = db.query(Contract).filter(Contract.id == contract_id).first()
-        if not contract:
-            raise HTTPException(status_code=404, detail="合同不存在")
+        contract = get_or_404(db, Contract, contract_id, "合同不存在")
 
         # 创建审核记录
         contract_review = ContractReview(

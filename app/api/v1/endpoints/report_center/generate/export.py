@@ -15,6 +15,7 @@ from app.models.report_center import ReportGeneration
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.report_center import ReportExportRequest
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ def export_report(
 
     from app.services.report_framework.engine import ReportEngine
 
-    generation = db.query(ReportGeneration).filter(ReportGeneration.id == export_in.report_id).first()
-    if not generation:
-        raise HTTPException(status_code=404, detail="报表不存在")
+    generation = get_or_404(db, ReportGeneration, export_in.report_id, "报表不存在")
 
     # 准备导出数据
     report_data = generation.report_data or {}

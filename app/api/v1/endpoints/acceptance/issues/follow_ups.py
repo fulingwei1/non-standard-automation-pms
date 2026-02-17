@@ -16,6 +16,7 @@ from app.schemas.acceptance import (
     IssueFollowUpResponse,
 )
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -29,9 +30,7 @@ def read_issue_follow_ups(
     """
     获取问题跟进记录
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     follow_ups = db.query(IssueFollowUp).filter(IssueFollowUp.issue_id == issue_id).order_by(IssueFollowUp.created_at).all()
 
@@ -69,9 +68,7 @@ def add_issue_follow_up(
     """
     添加跟进记录
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     follow_up = IssueFollowUp(
         issue_id=issue_id,

@@ -24,6 +24,7 @@ from app.schemas.qualification import (
     QualificationLevelResponse,
     QualificationLevelUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -93,9 +94,7 @@ def get_qualification_level(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取任职资格等级详情"""
-    level = db.query(QualificationLevel).filter(QualificationLevel.id == level_id).first()
-    if not level:
-        raise HTTPException(status_code=404, detail="等级不存在")
+    level = get_or_404(db, QualificationLevel, level_id, "等级不存在")
 
     return ResponseModel(code=200, message="获取成功", data=level)
 
@@ -109,9 +108,7 @@ def update_qualification_level(
     current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """更新任职资格等级"""
-    level = db.query(QualificationLevel).filter(QualificationLevel.id == level_id).first()
-    if not level:
-        raise HTTPException(status_code=404, detail="等级不存在")
+    level = get_or_404(db, QualificationLevel, level_id, "等级不存在")
 
     update_data = level_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -131,9 +128,7 @@ def delete_qualification_level(
     current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """删除任职资格等级"""
-    level = db.query(QualificationLevel).filter(QualificationLevel.id == level_id).first()
-    if not level:
-        raise HTTPException(status_code=404, detail="等级不存在")
+    level = get_or_404(db, QualificationLevel, level_id, "等级不存在")
 
     # 检查是否有关联数据
     competency_count = db.query(PositionCompetencyModel).filter(

@@ -23,6 +23,7 @@ from app.schemas.acceptance import (
     AcceptanceTemplateResponse,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -83,9 +84,7 @@ def read_acceptance_template(
     """
     获取验收模板详情（含分类和检查项）
     """
-    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="验收模板不存在")
+    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     # 获取分类
     categories_data = []
@@ -227,9 +226,7 @@ def update_acceptance_template(
     """
     更新验收模板
     """
-    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="验收模板不存在")
+    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     # 系统预置模板不能修改
     if template.is_system:
@@ -279,9 +276,7 @@ def delete_acceptance_template(
     """
     删除验收模板（软删除）
     """
-    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="验收模板不存在")
+    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     # 系统预置模板不能删除
     if template.is_system:

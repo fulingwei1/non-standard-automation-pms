@@ -23,6 +23,7 @@ from app.schemas.alert import (
 )
 from app.schemas.common import PaginatedResponse
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(tags=["records"])
 
@@ -187,9 +188,7 @@ def acknowledge_alert(
     """
     确认预警
     """
-    alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="预警记录不存在")
+    alert = get_or_404(db, AlertRecord, alert_id, "预警记录不存在")
 
     if alert.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能确认待处理状态的预警")
@@ -217,9 +216,7 @@ def resolve_alert(
     """
     处理预警
     """
-    alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="预警记录不存在")
+    alert = get_or_404(db, AlertRecord, alert_id, "预警记录不存在")
 
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="预警已处理")
@@ -252,9 +249,7 @@ def close_alert(
     """
     关闭预警
     """
-    alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="预警记录不存在")
+    alert = get_or_404(db, AlertRecord, alert_id, "预警记录不存在")
 
     if alert.status == "CLOSED":
         raise HTTPException(status_code=400, detail="预警已关闭")
@@ -282,9 +277,7 @@ def ignore_alert(
     """
     忽略预警
     """
-    alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="预警记录不存在")
+    alert = get_or_404(db, AlertRecord, alert_id, "预警记录不存在")
 
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="已处理的预警不能忽略")

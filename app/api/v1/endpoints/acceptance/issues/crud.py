@@ -25,6 +25,7 @@ from app.schemas.acceptance import (
 
 from ..utils import generate_issue_no
 from .utils import build_issue_response
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -38,9 +39,7 @@ def read_acceptance_issue(
     """
     获取问题详情
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     return build_issue_response(issue, db)
 
@@ -55,9 +54,7 @@ def read_acceptance_issues(
     """
     获取验收问题列表
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     query = db.query(AcceptanceIssue).filter(AcceptanceIssue.order_id == order_id)
 
@@ -84,9 +81,7 @@ def create_acceptance_issue(
     """
     创建验收问题
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if issue_in.order_id != order_id:
         raise HTTPException(status_code=400, detail="问题所属验收单ID不匹配")
@@ -135,9 +130,7 @@ def update_acceptance_issue(
     """
     更新问题状态
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     update_data = issue_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -166,9 +159,7 @@ def close_acceptance_issue(
     """
     关闭问题
     """
-    issue = db.query(AcceptanceIssue).filter(AcceptanceIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="验收问题不存在")
+    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     if issue.status == "CLOSED":
         raise HTTPException(status_code=400, detail="问题已经关闭")

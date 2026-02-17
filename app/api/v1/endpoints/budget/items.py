@@ -18,6 +18,7 @@ from app.schemas.budget import (
     ProjectBudgetItemUpdate,
 )
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -32,9 +33,7 @@ def get_budget_items(
     """
     获取预算明细列表
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     items = db.query(ProjectBudgetItem).filter(
         ProjectBudgetItem.budget_id == budget_id
@@ -55,9 +54,7 @@ def create_budget_item(
     """
     创建预算明细
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能为草稿状态的预算添加明细")
@@ -86,9 +83,7 @@ def update_budget_item(
     """
     更新预算明细
     """
-    item = db.query(ProjectBudgetItem).filter(ProjectBudgetItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="预算明细不存在")
+    item = get_or_404(db, ProjectBudgetItem, item_id, "预算明细不存在")
 
     if item.budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能更新草稿状态预算的明细")
@@ -122,9 +117,7 @@ def delete_budget_item(
     """
     删除预算明细
     """
-    item = db.query(ProjectBudgetItem).filter(ProjectBudgetItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="预算明细不存在")
+    item = get_or_404(db, ProjectBudgetItem, item_id, "预算明细不存在")
 
     if item.budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态预算的明细")

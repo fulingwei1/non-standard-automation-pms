@@ -18,6 +18,7 @@ from app.schemas.common import ResponseModel
 from app.services.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -47,9 +48,7 @@ def get_project_workspace(
     # 检查项目访问权限
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     # 构建各类信息
     project_info = build_project_basic_info(project)

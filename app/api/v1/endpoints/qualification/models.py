@@ -25,6 +25,7 @@ from app.schemas.qualification import (
     PositionCompetencyModelUpdate,
 )
 from app.services.qualification_service import QualificationService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -38,9 +39,7 @@ def create_competency_model(
 ) -> Any:
     """创建岗位能力模型"""
     # 检查等级是否存在
-    level = db.query(QualificationLevel).filter(QualificationLevel.id == model_in.level_id).first()
-    if not level:
-        raise HTTPException(status_code=404, detail="等级不存在")
+    level = get_or_404(db, QualificationLevel, model_in.level_id, "等级不存在")
 
     model = PositionCompetencyModel(**model_in.model_dump())
     db.add(model)
@@ -115,9 +114,7 @@ def update_competency_model(
     current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """更新岗位能力模型"""
-    model = db.query(PositionCompetencyModel).filter(PositionCompetencyModel.id == model_id).first()
-    if not model:
-        raise HTTPException(status_code=404, detail="能力模型不存在")
+    model = get_or_404(db, PositionCompetencyModel, model_id, "能力模型不存在")
 
     update_data = model_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():

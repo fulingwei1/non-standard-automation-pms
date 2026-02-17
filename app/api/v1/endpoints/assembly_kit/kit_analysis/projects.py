@@ -12,6 +12,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models import BomHeader, Machine, MaterialReadiness, Project
 from app.schemas.assembly_kit import MaterialReadinessResponse
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -23,9 +24,7 @@ async def get_project_readiness_list(
     pagination: PaginationParams = Depends(get_pagination_query)
 ):
     """获取项目齐套分析列表"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(MaterialReadiness).filter(MaterialReadiness.project_id == project_id)
     total = query.count()

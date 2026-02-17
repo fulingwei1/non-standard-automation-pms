@@ -41,6 +41,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/assembly-kit/scheduling",
@@ -122,9 +123,7 @@ async def accept_suggestion(
     current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """接受排产建议"""
-    suggestion = db.query(SchedulingSuggestion).filter(SchedulingSuggestion.id == suggestion_id).first()
-    if not suggestion:
-        raise HTTPException(status_code=404, detail="排产建议不存在")
+    suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")
 
     if suggestion.status != "pending":
         raise HTTPException(status_code=400, detail="该建议已处理")
@@ -150,9 +149,7 @@ async def reject_suggestion(
     current_user: User = Depends(security.require_permission("assembly_kit:read"))
 ):
     """拒绝排产建议"""
-    suggestion = db.query(SchedulingSuggestion).filter(SchedulingSuggestion.id == suggestion_id).first()
-    if not suggestion:
-        raise HTTPException(status_code=404, detail="排产建议不存在")
+    suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")
 
     if suggestion.status != "pending":
         raise HTTPException(status_code=400, detail="该建议已处理")

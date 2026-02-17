@@ -17,6 +17,7 @@ from app.schemas.bonus import BonusAllocationSheetConfirm, BonusAllocationSheetR
 from app.schemas.common import ResponseModel
 
 from ..payment import generate_distribution_code
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -34,9 +35,7 @@ def confirm_allocation_sheet(
 
     记录财务部、人力资源部、总经理的线下确认状态
     """
-    sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
-    if not sheet:
-        raise HTTPException(status_code=404, detail="分配明细表不存在")
+    sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
     if sheet.status == 'DISTRIBUTED':
         raise HTTPException(status_code=400, detail="该明细表已发放，无法修改确认状态")
@@ -80,9 +79,7 @@ def distribute_bonus_from_sheet(
         validate_sheet_for_distribution,
     )
 
-    sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
-    if not sheet:
-        raise HTTPException(status_code=404, detail="分配明细表不存在")
+    sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
     # 验证明细表
     is_valid, error_msg = validate_sheet_for_distribution(sheet)

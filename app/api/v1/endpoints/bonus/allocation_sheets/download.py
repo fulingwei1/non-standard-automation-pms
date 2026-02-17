@@ -14,6 +14,7 @@ from app.core import security
 from app.core.config import settings
 from app.models.bonus import BonusAllocationSheet
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ def download_allocation_sheet(
     """
     下载已上传的分配明细表Excel文件，便于复核和留档
     """
-    sheet = db.query(BonusAllocationSheet).filter(BonusAllocationSheet.id == sheet_id).first()
-    if not sheet:
-        raise HTTPException(status_code=404, detail="分配明细表不存在")
+    sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
     if not sheet.file_path:
         raise HTTPException(status_code=404, detail="明细表文件不存在")

@@ -25,6 +25,7 @@ from app.schemas.alert import (
     AlertRuleUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(tags=["rules"])
 
@@ -107,9 +108,7 @@ def read_alert_rule(
     """
     获取预警规则详情
     """
-    rule = db.query(AlertRule).filter(AlertRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="预警规则不存在")
+    rule = get_or_404(db, AlertRule, rule_id, "预警规则不存在")
 
     return rule
 
@@ -179,11 +178,7 @@ def create_alert_rule(
         )
 
     rule = AlertRule(**rule_in.model_dump(), created_by=current_user.id)
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
-
-    return rule
+    return save_obj(db, rule)
 
 
 @router.put("/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)
@@ -197,9 +192,7 @@ def update_alert_rule(
     """
     更新预警规则
     """
-    rule = db.query(AlertRule).filter(AlertRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="预警规则不存在")
+    rule = get_or_404(db, AlertRule, rule_id, "预警规则不存在")
 
     # 系统预置规则不允许修改某些字段
     if rule.is_system:
@@ -209,11 +202,7 @@ def update_alert_rule(
     for field, value in update_data.items():
         setattr(rule, field, value)
 
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
-
-    return rule
+    return save_obj(db, rule)
 
 
 @router.put("/alert-rules/{rule_id}/toggle", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)
@@ -226,17 +215,11 @@ def toggle_alert_rule(
     """
     启用/禁用预警规则
     """
-    rule = db.query(AlertRule).filter(AlertRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="预警规则不存在")
+    rule = get_or_404(db, AlertRule, rule_id, "预警规则不存在")
 
     # 系统预置规则可以启用/禁用，但不能删除
     rule.is_enabled = not rule.is_enabled
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
-
-    return rule
+    return save_obj(db, rule)
 
 
 @router.delete("/alert-rules/{rule_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -249,9 +232,7 @@ def delete_alert_rule(
     """
     删除预警规则
     """
-    rule = db.query(AlertRule).filter(AlertRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="预警规则不存在")
+    rule = get_or_404(db, AlertRule, rule_id, "预警规则不存在")
 
     # 系统预置规则不允许删除
     if rule.is_system:

@@ -21,6 +21,7 @@ from app.schemas.culture_wall import (
     CultureWallContentCreate,
     CultureWallContentResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -154,9 +155,7 @@ def read_culture_wall_content(
     """
     获取文化墙内容详情（自动记录阅读）
     """
-    content = db.query(CultureWallContent).filter(CultureWallContent.id == content_id).first()
-    if not content:
-        raise HTTPException(status_code=404, detail="内容不存在")
+    content = get_or_404(db, CultureWallContent, content_id, "内容不存在")
 
     # 增加浏览次数
     content.view_count = (content.view_count or 0) + 1

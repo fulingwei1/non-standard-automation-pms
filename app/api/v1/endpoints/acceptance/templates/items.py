@@ -17,6 +17,7 @@ from app.models.acceptance import (
 from app.models.user import User
 from app.schemas.acceptance import TemplateCheckItemCreate
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -30,9 +31,7 @@ def read_template_items(
     """
     获取模板检查项列表
     """
-    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="验收模板不存在")
+    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).order_by(TemplateCategory.sort_order).all()
 
@@ -73,9 +72,7 @@ def add_template_items(
     """
     添加模板检查项
     """
-    template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="验收模板不存在")
+    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     category = db.query(TemplateCategory).filter(
         TemplateCategory.id == category_id,

@@ -27,6 +27,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 
 from .utils import generate_budget_no, generate_budget_version
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -83,9 +84,7 @@ def get_project_budgets(
     """
     获取项目的预算列表
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id)
     if budget_status:
@@ -173,9 +172,7 @@ def get_budget(
     """
     获取预算详情
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
@@ -201,9 +198,7 @@ def update_budget(
     """
     更新预算（只能更新草稿状态的预算）
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能更新草稿状态的预算")
@@ -238,9 +233,7 @@ def submit_budget(
     """
     提交预算审批
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能提交草稿状态的预算")
@@ -275,9 +268,7 @@ def approve_budget(
     """
     审批预算
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     if budget.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只���审批已提交的预算")
@@ -335,9 +326,7 @@ def delete_budget(
     """
     删除预算（只能删除草稿状态的预算）
     """
-    budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="预算不存在")
+    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态的预算")

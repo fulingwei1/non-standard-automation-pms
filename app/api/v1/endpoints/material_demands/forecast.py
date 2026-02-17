@@ -14,6 +14,7 @@ from app.core import security
 from app.models.material import Material
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ def get_material_lead_time_forecast(
     """
     物料交期预测（基于历史）
     """
-    material = db.query(Material).filter(Material.id == material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, material_id, "物料不存在")
 
     # 查询历史采购订单的到货时间
     cutoff_date = datetime.now() - timedelta(days=days)

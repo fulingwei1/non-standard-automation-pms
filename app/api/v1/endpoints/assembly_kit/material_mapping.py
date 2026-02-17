@@ -40,6 +40,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/assembly-kit/material-mapping",
@@ -112,9 +113,7 @@ async def update_category_mapping(
     current_user: User = Depends(security.require_permission("assembly_kit:update"))
 ):
     """更新物料分类映射"""
-    mapping = db.query(CategoryStageMapping).filter(CategoryStageMapping.id == mapping_id).first()
-    if not mapping:
-        raise HTTPException(status_code=404, detail="映射配置不存在")
+    mapping = get_or_404(db, CategoryStageMapping, mapping_id, "映射配置不存在")
 
     update_data = mapping_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -134,9 +133,7 @@ async def delete_category_mapping(
     current_user: User = Depends(security.require_permission("assembly_kit:delete"))
 ):
     """删除物料分类映射"""
-    mapping = db.query(CategoryStageMapping).filter(CategoryStageMapping.id == mapping_id).first()
-    if not mapping:
-        raise HTTPException(status_code=404, detail="映射配置不存在")
+    mapping = get_or_404(db, CategoryStageMapping, mapping_id, "映射配置不存在")
 
     db.delete(mapping)
     db.commit()

@@ -42,6 +42,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(
     prefix="/bonus/rules",
@@ -121,9 +122,7 @@ def get_bonus_rule(
     """
     获取奖金规则详情
     """
-    rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, BonusRule, rule_id, "规则不存在")
 
     return ResponseModel(code=200, data=rule)
 
@@ -139,9 +138,7 @@ def update_bonus_rule(
     """
     更新奖金规则（仅人力资源经理可配置）
     """
-    rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, BonusRule, rule_id, "规则不存在")
 
     update_data = rule_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -163,9 +160,7 @@ def delete_bonus_rule(
     """
     删除奖金规则（仅人力资源经理可配置）
     """
-    rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, BonusRule, rule_id, "规则不存在")
 
     # 检查是否有计算记录
     calc_count = db.query(BonusCalculation).filter(BonusCalculation.rule_id == rule_id).count()
@@ -191,9 +186,7 @@ def activate_bonus_rule(
     """
     启用奖金规则（仅人力资源经理可配置）
     """
-    rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, BonusRule, rule_id, "规则不存在")
 
     rule.is_active = True
     db.commit()
@@ -211,9 +204,7 @@ def deactivate_bonus_rule(
     """
     停用奖金规则（仅人力资源经理可配置）
     """
-    rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, BonusRule, rule_id, "规则不存在")
 
     rule.is_active = False
     db.commit()

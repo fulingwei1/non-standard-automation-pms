@@ -23,6 +23,7 @@ from app.services.project_review_ai import (
     ProjectLessonExtractor,
     ProjectKnowledgeSyncer
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -150,9 +151,7 @@ async def get_review(
     current_user: User = Depends(get_current_user)
 ):
     """获取复盘报告详情"""
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, "复盘报告不存在")
     
     return ProjectReviewResponse.from_orm(review)
 
@@ -165,9 +164,7 @@ async def update_review(
     current_user: User = Depends(get_current_user)
 ):
     """更新复盘报告"""
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, "复盘报告不存在")
     
     # 更新字段
     update_dict = update_data.dict(exclude_unset=True)
@@ -187,9 +184,7 @@ async def delete_review(
     current_user: User = Depends(get_current_user)
 ):
     """删除复盘报告"""
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, "复盘报告不存在")
     
     db.delete(review)
     db.commit()

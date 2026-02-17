@@ -23,6 +23,7 @@ from app.models.user import User
 from app.schemas.acceptance import AcceptanceOrderResponse
 
 from .order_crud import read_acceptance_order
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -41,9 +42,7 @@ async def upload_customer_signed_document(
     上传后，验收单将被标记为正式完成（is_officially_completed=True）
     只有状态为COMPLETED且验收结果为PASSED的验收单才能上传签署文件
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # 验证验收单状态
     if order.status != "COMPLETED":
@@ -98,9 +97,7 @@ def download_customer_signed_document(
     """
     下载客户签署的验收单文件
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if not order.customer_signed_file_path:
         raise HTTPException(status_code=404, detail="客户签署文件不存在")

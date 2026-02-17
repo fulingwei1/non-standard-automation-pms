@@ -28,6 +28,7 @@ from app.services.ecn_notification import (
 )
 
 from .utils import get_user_display_name
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -41,9 +42,7 @@ def read_ecn_evaluations(
     """
     获取评估列表
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     evaluations = db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).order_by(EcnEvaluation.created_at).all()
 
@@ -85,9 +84,7 @@ def create_ecn_evaluation(
     """
     创建评估
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "SUBMITTED" and ecn.current_step != "EVALUATION":
         raise HTTPException(status_code=400, detail="ECN当前不在评估阶段")
@@ -139,9 +136,7 @@ def read_ecn_evaluation(
     """
     获取评估详情
     """
-    eval = db.query(EcnEvaluation).filter(EcnEvaluation.id == eval_id).first()
-    if not eval:
-        raise HTTPException(status_code=404, detail="评估记录不存在")
+    eval = get_or_404(db, EcnEvaluation, eval_id, "评估记录不存在")
 
     return _build_evaluation_response(db, eval)
 
@@ -156,9 +151,7 @@ def submit_ecn_evaluation(
     """
     提交评估结果
     """
-    eval = db.query(EcnEvaluation).filter(EcnEvaluation.id == eval_id).first()
-    if not eval:
-        raise HTTPException(status_code=404, detail="评估记录不存在")
+    eval = get_or_404(db, EcnEvaluation, eval_id, "评估记录不存在")
 
     if eval.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能提交草稿状态的评估")
@@ -295,9 +288,7 @@ def get_ecn_evaluation_summary(
     """
     获取评估汇总
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     evaluations = db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).all()
 

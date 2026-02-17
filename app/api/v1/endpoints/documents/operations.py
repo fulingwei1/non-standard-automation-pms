@@ -21,6 +21,7 @@ from app.schemas.project import (
     ProjectDocumentUpdate,
 )
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -40,9 +41,7 @@ def update_document(
     """
     更新文档记录
     """
-    document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="文档记录不存在")
+    document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # IDOR 防护：验证用户对该文档所属项目的访问权限
     if document.project_id:
@@ -53,10 +52,7 @@ def update_document(
         if hasattr(document, field):
             setattr(document, field, value)
 
-    db.add(document)
-    db.commit()
-    db.refresh(document)
-    return document
+    return save_obj(db, document)
 
 
 @router.get("/{doc_id}/download")
@@ -69,9 +65,7 @@ def download_document(
     """
     下载文档文件
     """
-    document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="文档记录不存在")
+    document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # IDOR 防护：验证用户对该文档所属项目的访问权限
     if document.project_id:
@@ -115,9 +109,7 @@ def get_document_versions(
     获取文档的所有版本
     注意：当前实现基于doc_no和doc_name匹配，后续可以优化为更精确的版本管理
     """
-    document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="文档记录不存在")
+    document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # 根据文档编号或名称查找所有版本
     query = db.query(ProjectDocument).filter(
@@ -149,9 +141,7 @@ def delete_document(
     删除文档记录
     注意：这里只删除数据库记录，不删除实际文件。如需删除文件，需要额外处理。
     """
-    document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
-    if not document:
-        raise HTTPException(status_code=404, detail="文档记录不存在")
+    document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # IDOR 防护：验证用户对该文档所属项目的访问权限
     if document.project_id:

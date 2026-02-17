@@ -19,6 +19,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import SalespersonPerformance, SalespersonRanking
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -39,9 +40,7 @@ async def get_salesperson_performance(
 ) -> Any:
     """获取销售人员绩效分析"""
 
-    salesperson = db.query(User).filter(User.id == salesperson_id).first()
-    if not salesperson:
-        raise HTTPException(status_code=404, detail="销售人员不存在")
+    salesperson = get_or_404(db, User, salesperson_id, "销售人员不存在")
 
     query = db.query(Project).filter(Project.salesperson_id == salesperson_id)
 

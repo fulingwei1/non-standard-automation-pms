@@ -13,6 +13,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.business_support import AssignProjectRequest, SalesOrderResponse, SendNoticeRequest
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..utils import _send_project_department_notifications
 from .utils import build_sales_order_response
@@ -29,9 +30,7 @@ async def assign_project_to_order(
 ):
     """为销售订单分配项目号"""
     try:
-        sales_order = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
-        if not sales_order:
-            raise HTTPException(status_code=404, detail="销售订单不存在")
+        sales_order = get_or_404(db, SalesOrder, order_id, "销售订单不存在")
 
         # 检查项目是否存在
         project = db.query(Project).filter(Project.id == assign_data.project_id).first()
@@ -68,9 +67,7 @@ async def send_project_notice(
 ):
     """发送项目通知单"""
     try:
-        sales_order = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
-        if not sales_order:
-            raise HTTPException(status_code=404, detail="销售订单不存在")
+        sales_order = get_or_404(db, SalesOrder, order_id, "销售订单不存在")
 
         if not sales_order.project_no_assigned:
             raise HTTPException(status_code=400, detail="订单尚未分配项目号，无法发送通知单")

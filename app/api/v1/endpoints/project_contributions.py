@@ -19,6 +19,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project_contribution_service import ProjectContributionService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -87,9 +88,7 @@ def rate_member_contribution(
     check_project_access_or_raise(db, current_user, project_id)
 
     # 验证当前用户是否为项目经理
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     if project.pm_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="只有项目经理可以评分")

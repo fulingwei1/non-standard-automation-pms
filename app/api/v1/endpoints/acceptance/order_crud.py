@@ -42,6 +42,7 @@ from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
 
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -133,9 +134,7 @@ def read_acceptance_order(
     """
     from decimal import Decimal
 
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
@@ -294,9 +293,7 @@ def update_acceptance_order(
 
     只能更新草稿状态的验收单，且客户签字后不可修改（AR006）
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR006: 客户签字后验收单不可修改
     validate_edit_rules(db, order_id)
@@ -327,9 +324,7 @@ def delete_acceptance_order(
     """
     删除验收单（仅草稿状态）
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if order.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态的验收单")

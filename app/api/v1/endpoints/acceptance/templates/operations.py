@@ -16,6 +16,7 @@ from app.models.acceptance import (
 )
 from app.models.user import User
 from app.schemas.acceptance import AcceptanceTemplateResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -32,9 +33,7 @@ def copy_acceptance_template(
     """
     复制验收模板
     """
-    source_template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == template_id).first()
-    if not source_template:
-        raise HTTPException(status_code=404, detail="源模板不存在")
+    source_template = get_or_404(db, AcceptanceTemplate, template_id, "源模板不存在")
 
     # 检查新编码是否已存在
     existing = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.template_code == new_code).first()

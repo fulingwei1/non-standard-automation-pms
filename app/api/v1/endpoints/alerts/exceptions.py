@@ -29,6 +29,7 @@ from app.schemas.alert import (
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 from .notifications import generate_exception_no
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(tags=["exceptions"])
 
@@ -181,9 +182,7 @@ def read_exception_event(
     """
     获取异常事件详情
     """
-    event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="异常事件不存在")
+    event = get_or_404(db, ExceptionEvent, event_id, "异常事件不存在")
 
     # 获取发现人姓名
     discovered_by_name = None
@@ -261,9 +260,7 @@ def update_exception_status(
     """
     更新异常状态
     """
-    event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="异常事件不存在")
+    event = get_or_404(db, ExceptionEvent, event_id, "异常事件不存在")
 
     event.status = status
 
@@ -291,9 +288,7 @@ def add_exception_action(
     """
     添加处理记录
     """
-    event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="异常事件不存在")
+    event = get_or_404(db, ExceptionEvent, event_id, "异常事件不存在")
 
     action = ExceptionAction(
         event_id=event_id,
@@ -329,9 +324,7 @@ def escalate_exception(
     """
     异常升级
     """
-    event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="异常事件不存在")
+    event = get_or_404(db, ExceptionEvent, event_id, "异常事件不存在")
 
     # 创建升级记录
     escalation = ExceptionEscalation(
@@ -375,9 +368,7 @@ def create_exception_from_issue(
     """
     从问题创建异常事件
     """
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="问题不存在")
+    issue = get_or_404(db, Issue, issue_id, "问题不存在")
 
     # 生成异常编号
     event_no = generate_exception_no(db)

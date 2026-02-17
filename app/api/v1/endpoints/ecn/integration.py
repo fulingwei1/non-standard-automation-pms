@@ -25,6 +25,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.ecn import EcnTaskCreate
 from app.services.ecn_auto_assign_service import auto_assign_task
 from app.services.ecn_notification import notify_task_assigned
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -40,9 +41,7 @@ def sync_ecn_to_bom(
     将ECN变更同步到BOM
     根据受影响物料自动更新BOM
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status != "APPROVED" and ecn.status != "EXECUTING":
         raise HTTPException(status_code=400, detail="只能同步已审批或执行中的ECN")
@@ -93,9 +92,7 @@ def sync_ecn_to_project(
     将ECN变更同步到项目
     更新项目成本和工期
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if not ecn.project_id:
         raise HTTPException(status_code=400, detail="ECN未关联项目")
@@ -139,9 +136,7 @@ def sync_ecn_to_purchase(
     将ECN变更同步到采购订单
     根据受影响订单自动更新采购订单状态
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     affected_orders = db.query(EcnAffectedOrder).filter(
         EcnAffectedOrder.ecn_id == ecn_id,
@@ -409,9 +404,7 @@ def batch_create_ecn_tasks(
     """
     批量创建ECN执行任务
     """
-    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    if not ecn:
-        raise HTTPException(status_code=404, detail="ECN不存在")
+    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     if ecn.status not in ["APPROVED", "EXECUTING"]:
         raise HTTPException(status_code=400, detail="ECN当前不在执行阶段")

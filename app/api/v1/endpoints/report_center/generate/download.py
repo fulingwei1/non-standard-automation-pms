@@ -13,6 +13,7 @@ from app.core import security
 from app.core.config import settings
 from app.models.report_center import ReportGeneration
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -27,9 +28,7 @@ def download_report(
     """
     下载已导出的报表文件
     """
-    generation = db.query(ReportGeneration).filter(ReportGeneration.id == report_id).first()
-    if not generation:
-        raise HTTPException(status_code=404, detail="报表不存在")
+    generation = get_or_404(db, ReportGeneration, report_id, "报表不存在")
 
     if not generation.export_path:
         raise HTTPException(status_code=404, detail="报表文件不存在，请先导出")

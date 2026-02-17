@@ -15,6 +15,7 @@ from app.core import security
 from app.models.acceptance import AcceptanceOrder, AcceptanceSignature
 from app.models.user import User
 from app.schemas.acceptance import (
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
     AcceptanceSignatureCreate,
     AcceptanceSignatureResponse,
 )
@@ -31,9 +32,7 @@ def read_acceptance_signatures(
     """
     获取验收签字列表
     """
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     signatures = db.query(AcceptanceSignature).filter(AcceptanceSignature.order_id == order_id).order_by(AcceptanceSignature.signed_at).all()
 
@@ -69,9 +68,7 @@ def add_acceptance_signature(
     """
     from datetime import datetime
 
-    order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="验收单不存在")
+    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     if order.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="只能为已完成状态的验收单添加签字")
