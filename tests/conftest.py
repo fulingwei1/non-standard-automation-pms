@@ -523,7 +523,8 @@ def db_session() -> Generator[Session, None, None]:
     多会话场景下不支持跨会话的 savepoint。测试隔离通过 session 级别的
     init_db(drop_all=True) 保证。
     """
-    session: Session = SessionLocal()
+    from app.models.base import SessionLocal as _SL
+    session: Session = _SL()
 
     try:
         yield session

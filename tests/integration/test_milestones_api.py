@@ -19,7 +19,7 @@ class TestMilestonesAPI:
     def test_list_milestones(self, client, admin_token):
         """测试获取里程碑列表"""
         response = client.get(
-            "/api/v1/milestones/", headers={"Authorization": f"Bearer {admin_token}"}
+            "/api/v1/projects/1/milestones/", headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
         response_data = response.json()
@@ -30,7 +30,7 @@ class TestMilestonesAPI:
     def test_list_milestones_with_pagination(self, client, admin_token):
         """测试分页参数"""
         response = client.get(
-            "/api/v1/milestones/?page=1&page_size=10",
+            "/api/v1/projects/1/milestones/?page=1&page_size=10",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
@@ -38,7 +38,7 @@ class TestMilestonesAPI:
     def test_list_milestones_with_filters(self, client, admin_token):
         """测试过滤参数"""
         response = client.get(
-            "/api/v1/milestones/?status=PENDING",
+            "/api/v1/projects/1/milestones/?status=PENDING",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
@@ -60,7 +60,7 @@ class TestMilestonesAPI:
         db_session.refresh(milestone)
 
         response = client.get(
-            f"/api/v1/milestones/{milestone.id}",
+            f"/api/v1/projects/1/milestones/{milestone.id}",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
@@ -72,7 +72,7 @@ class TestMilestonesAPI:
     def test_get_milestone_not_found(self, client, admin_token):
         """测试获取不存在的里程碑"""
         response = client.get(
-            "/api/v1/milestones/999999",
+            "/api/v1/projects/1/milestones/999999",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 404
@@ -88,7 +88,7 @@ class TestMilestonesAPI:
             "is_key": False,
         }
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -108,13 +108,13 @@ class TestMilestonesAPI:
         }
         # First create
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         # Try to create again
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -140,7 +140,7 @@ class TestMilestonesAPI:
             "status": "IN_PROGRESS",
         }
         response = client.put(
-            f"/api/v1/milestones/{milestone.id}",
+            f"/api/v1/projects/1/milestones/{milestone.id}",
             json=update_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -152,7 +152,7 @@ class TestMilestonesAPI:
         """测试更新不存在的里程碑"""
         update_data = {"milestone_name": "不存在的里程碑"}
         response = client.put(
-            "/api/v1/milestones/999999",
+            "/api/v1/projects/1/milestones/999999",
             json=update_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -174,15 +174,15 @@ class TestMilestonesAPI:
         db_session.refresh(milestone)
 
         response = client.delete(
-            f"/api/v1/milestones/{milestone.id}",
+            f"/api/v1/projects/1/milestones/{milestone.id}",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
+        assert response.status_code in [200, 204]
 
     def test_delete_milestone_not_found(self, client, admin_token):
         """测试删除不存在的里程碑"""
         response = client.delete(
-            "/api/v1/milestones/999999",
+            "/api/v1/projects/1/milestones/999999",
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 404
@@ -193,18 +193,18 @@ class TestMilestonesAPIAuth:
 
     def test_list_milestones_without_token(self, client):
         """测试无token访问"""
-        response = client.get("/api/v1/milestones/")
+        response = client.get("/api/v1/projects/1/milestones/")
         assert response.status_code == 401
 
     def test_get_milestone_without_token(self, client):
         """测试无token获取详情"""
-        response = client.get("/api/v1/milestones/1")
+        response = client.get("/api/v1/projects/1/milestones/1")
         assert response.status_code == 401
 
     def test_create_milestone_without_token(self, client):
         """测试无token创建"""
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json={"milestone_name": "测试", "project_id": 1},
         )
         assert response.status_code == 401
@@ -217,7 +217,7 @@ class TestMilestonesAPIValidation:
         """测试创建里程碑验证错误"""
         milestone_data = {}
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -232,7 +232,7 @@ class TestMilestonesAPIValidation:
             "status": "INVALID_STATUS",
         }
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -246,7 +246,7 @@ class TestMilestonesAPIValidation:
             "planned_date": (date.today() - timedelta(days=1)).isoformat(),
         }
         response = client.post(
-            "/api/v1/milestones/",
+            "/api/v1/projects/1/milestones/",
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )

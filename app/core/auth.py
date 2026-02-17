@@ -753,19 +753,50 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
 
 def require_permission(permission_code: str):
     """
-    权限检查装饰器（用于FastAPI路由）
-    
-    用法：
-        @router.get("/")
-        @require_permission("some:permission")
-        async def endpoint(...):
-            ...
-    
-    Note: 这是一个兼容性实现，实际上不做权限检查
+    权限检查 - 兼容两种用法:
+    1. 作为装饰器: @require_permission("some:permission")
+    2. 作为依赖:   Depends(require_permission("some:permission"))
+
+    Note: 兼容性实现，暂不做真正的权限校验，仅校验登录状态
     TODO: 实现真正的权限检查逻辑
     """
+    import functools
+    from fastapi import Depends as _Depends
+
+    # When called as Depends(), FastAPI will introspect this function's signature.
+    # We return a dependency function that accepts the same args as get_current_active_user.
+    def permission_dependency(
+        current_user: "User" = _Depends(get_current_active_user),
+    ) -> "User":
+        # TODO: check current_user has permission_code
+        return current_user
+
+    # Support use as a plain decorator too: @require_permission("x")
     def decorator(func):
-        # 直接返回原函数，不做权限检查
-        # FIXME: 应该实现真正的权限检查逻辑
-        return func
-    return decorator
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+    # Make the returned object work as both a Depends-callable AND a decorator.
+    # FastAPI calls it with keyword arguments; decorator usage calls it with a function.
+    class _PermissionGuard:
+        """Callable that works as Depends-dependency and as decorator."""
+
+        def __call__(self, *args, **kwargs):
+            # If called with a single callable argument (decorator use): return wrapped func
+            if len(args) == 1 and callable(args[0]) and not kwargs:
+                return decorator(args[0])
+            # Otherwise behave as the dependency (should not be called directly)
+            return permission_dependency(*args, **kwargs)
+
+        # FastAPI inspects __call__'s signature for Depends resolution;
+        # copy signature from permission_dependency so it sees (current_user) not (*args, **kwargs).
+        __wrapped__ = permission_dependency
+        __signature__ = permission_dependency.__code__
+
+    guard = _PermissionGuard()
+    # Copy the signature so FastAPI can resolve the dependency correctly
+    import inspect
+    guard.__signature__ = inspect.signature(permission_dependency)
+    return guard
