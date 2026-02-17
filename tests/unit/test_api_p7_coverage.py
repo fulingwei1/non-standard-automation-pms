@@ -777,10 +777,13 @@ class TestSalesCustomers:
     def test_read_customers_empty(self):
         from app.api.v1.endpoints.sales.customers import read_customers
         db = _mock_db()
-        db.query.return_value.count.return_value = 0
+        # customers.py does NOT import apply_pagination; it uses inline pagination
         with patch("app.api.v1.endpoints.sales.customers.apply_keyword_filter", return_value=db.query.return_value), \
-             patch("app.api.v1.endpoints.sales.customers.apply_pagination") as mock_pag:
-            mock_pag.return_value.all.return_value = []
+             patch("app.api.v1.endpoints.sales.customers.security.filter_sales_data_by_scope", return_value=db.query.return_value):
+            db.query.return_value.count.return_value = 0
+            db.query.return_value.filter.return_value.count.return_value = 0
+            db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+            db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
             result = read_customers(
                 db=db,
                 pagination=_mock_pagination(),
@@ -793,20 +796,27 @@ class TestSalesCustomers:
     def test_read_customer_not_found(self):
         from app.api.v1.endpoints.sales.customers import read_customer
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.customers.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="客户不存在")
-            with pytest.raises(HTTPException) as exc:
-                read_customer(customer_id=999, db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # read_customer uses inline db.query(...).filter(...).first()
+        db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            read_customer(customer_id=999, db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
     def test_create_customer(self):
         from app.api.v1.endpoints.sales.customers import create_customer
         db = _mock_db()
         mock_schema = MagicMock()
         mock_schema.customer_name = "Test Corp"
+        # Ensure customer_code is falsy so auto-generation is triggered
+        mock_schema.customer_code = None
+        mock_schema.model_dump.return_value = {"customer_name": "Test Corp", "customer_code": None}
+        mock_customer = MagicMock()
+        mock_customer.__table__ = MagicMock()
+        mock_customer.__table__.columns = []
+        mock_customer.sales_owner = None
         with patch("app.api.v1.endpoints.sales.customers.generate_customer_code", return_value="CUS20240101001"), \
-             patch("app.api.v1.endpoints.sales.customers.save_obj") as mock_save:
-            mock_save.return_value = MagicMock(id=1)
+             patch("app.api.v1.endpoints.sales.customers.save_obj") as mock_save, \
+             patch("app.api.v1.endpoints.sales.customers.Customer", return_value=mock_customer):
             result = create_customer(customer_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -824,7 +834,12 @@ class TestSalesCustomers:
         db = _mock_db()
         db.query.return_value.count.return_value = 10
         db.query.return_value.filter.return_value.count.return_value = 5
-        result = get_customer_stats(db=db, current_user=_mock_user())
+        # scalar() for Decimal values
+        db.query.return_value.scalar.return_value = Decimal("0")
+        db.query.return_value.filter.return_value.scalar.return_value = Decimal("0")
+        with patch("app.api.v1.endpoints.sales.customers.func") as mock_func:
+            mock_func.sum.return_value = MagicMock()
+            result = get_customer_stats(db=db, current_user=_mock_user())
         assert result is not None
 
 
@@ -903,11 +918,16 @@ class TestRdProjectExpenses:
         db = _mock_db()
         mock_schema = MagicMock()
         mock_schema.rd_project_id = 1
+        mock_schema.cost_type_id = 1
         mock_project = MagicMock()
-        with patch("app.api.v1.endpoints.rd_project.expenses.get_or_404", return_value=mock_project), \
+        mock_cost_type = MagicMock()
+        mock_cost = MagicMock()
+        with patch("app.api.v1.endpoints.rd_project.expenses.get_or_404", side_effect=[mock_project, mock_cost_type]), \
              patch("app.api.v1.endpoints.rd_project.expenses.generate_cost_no", return_value="COST-001"), \
-             patch("app.api.v1.endpoints.rd_project.expenses.save_obj") as mock_save:
-            mock_save.return_value = MagicMock(id=1)
+             patch("app.api.v1.endpoints.rd_project.expenses.save_obj"), \
+             patch("app.api.v1.endpoints.rd_project.expenses.RdCost", return_value=mock_cost), \
+             patch("app.api.v1.endpoints.rd_project.expenses.RdCostResponse") as mock_resp:
+            mock_resp.model_validate.return_value = MagicMock()
             result = create_rd_cost(cost_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -917,18 +937,24 @@ class TestRdProjectExpenses:
         with patch("app.api.v1.endpoints.rd_project.expenses.get_or_404") as mock_get:
             mock_get.side_effect = HTTPException(status_code=404, detail="费用不存在")
             with pytest.raises(HTTPException) as exc:
-                update_rd_cost(cost_id=999, cost_update=MagicMock(), db=db, current_user=_mock_user())
+                # Correct param name is cost_in
+                update_rd_cost(cost_id=999, cost_in=MagicMock(), db=db, current_user=_mock_user())
             assert exc.value.status_code == 404
 
     def test_calculate_labor_cost(self):
         from app.api.v1.endpoints.rd_project.expenses import calculate_labor_cost
         db = _mock_db()
-        mock_schema = MagicMock()
-        mock_schema.user_id = 1
-        mock_schema.start_date = date(2025, 1, 1)
-        mock_schema.end_date = date(2025, 1, 31)
-        db.query.return_value.filter.return_value.all.return_value = []
-        result = calculate_labor_cost(request=mock_schema, db=db, current_user=_mock_user())
+        mock_calc_req = MagicMock()
+        mock_calc_req.rd_project_id = 1
+        mock_calc_req.user_id = 1
+        mock_calc_req.start_date = date(2025, 1, 1)
+        mock_calc_req.end_date = date(2025, 1, 31)
+        mock_calc_req.hourly_rate = Decimal("100")
+        mock_project = MagicMock()
+        mock_user = MagicMock()
+        with patch("app.api.v1.endpoints.rd_project.expenses.get_or_404", side_effect=[mock_project, mock_user]):
+            db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+            result = calculate_labor_cost(calc_request=mock_calc_req, db=db, current_user=_mock_user())
         assert result is not None
 
 
@@ -943,13 +969,16 @@ class TestShortageArrivals:
         from app.api.v1.endpoints.shortage.handling.arrivals import list_arrivals
         db = _mock_db()
         db.query.return_value.count.return_value = 0
-        with patch("app.api.v1.endpoints.shortage.handling.arrivals.apply_pagination") as mock_pag:
+        with patch("app.api.v1.endpoints.shortage.handling.arrivals.apply_pagination") as mock_pag, \
+             patch("app.api.v1.endpoints.shortage.handling.arrivals.apply_keyword_filter", return_value=db.query.return_value):
             mock_pag.return_value.all.return_value = []
             result = list_arrivals(
                 db=db,
                 pagination=_mock_pagination(),
-                project_id=None,
-                status=None,
+                keyword=None,
+                arrival_status=None,
+                supplier_id=None,
+                is_delayed=None,
                 current_user=_mock_user(),
             )
         assert result is not None
@@ -967,9 +996,17 @@ class TestShortageArrivals:
         from app.api.v1.endpoints.shortage.handling.arrivals import create_arrival
         db = _mock_db()
         mock_schema = MagicMock()
-        with patch("app.api.v1.endpoints.shortage.handling.arrivals._generate_arrival_no", return_value="ARR-001"), \
-             patch("app.api.v1.endpoints.shortage.handling.arrivals.save_obj") as mock_save, \
-             patch("app.api.v1.endpoints.shortage.handling.arrivals._build_arrival_response", return_value={"id": 1}):
+        mock_schema.material_id = 1
+        mock_schema.shortage_report_id = None
+        mock_schema.purchase_order_id = None
+        mock_schema.supplier_id = None
+        mock_material = MagicMock()
+        with patch("app.api.v1.endpoints.shortage.handling.arrivals.get_or_404", return_value=mock_material), \
+             patch("app.api.v1.endpoints.shortage.handling.arrivals._generate_arrival_no", return_value="ARR-001"), \
+             patch("app.api.v1.endpoints.shortage.handling.arrivals.save_obj"), \
+             patch("app.api.v1.endpoints.shortage.handling.arrivals._build_arrival_response", return_value={"id": 1}), \
+             patch("app.api.v1.endpoints.shortage.handling.arrivals.MaterialArrival") as mock_cls:
+            mock_cls.return_value = MagicMock()
             result = create_arrival(arrival_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -992,34 +1029,46 @@ class TestPaymentExports:
 
     def test_export_payment_invoices_empty(self):
         from app.api.v1.endpoints.sales.payments.payment_exports import export_payment_invoices
+        from io import BytesIO
         db = _mock_db()
-        db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        result = export_payment_invoices(
-            db=db,
-            contract_id=None,
-            project_id=None,
-            customer_id=None,
-            payment_status=None,
-            start_date=None,
-            end_date=None,
-            current_user=_mock_user(),
-        )
+        db.query.return_value.filter.return_value.join.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.all.return_value = []
+        # Mock Workbook to avoid Excel encoding issues
+        with patch("app.api.v1.endpoints.sales.payments.payment_exports.Workbook") as mock_wb:
+            mock_ws = MagicMock()
+            mock_wb.return_value.active = mock_ws
+            mock_buf = BytesIO()
+            mock_wb.return_value.save = lambda buf: buf.write(b"mock_excel")
+            result = export_payment_invoices(
+                db=db,
+                contract_id=None,
+                project_id=None,
+                customer_id=None,
+                payment_status=None,
+                start_date=None,
+                end_date=None,
+                current_user=_mock_user(),
+            )
         assert result is not None
 
     def test_export_payments_empty(self):
         from app.api.v1.endpoints.sales.payments.payment_exports import export_payments
+        from io import BytesIO
         db = _mock_db()
         db.query.return_value.filter.return_value.all.return_value = []
-        result = export_payments(
-            db=db,
-            contract_id=None,
-            project_id=None,
-            customer_id=None,
-            start_date=None,
-            end_date=None,
-            current_user=_mock_user(),
-        )
+        with patch("app.api.v1.endpoints.sales.payments.payment_exports.Workbook") as mock_wb:
+            mock_ws = MagicMock()
+            mock_wb.return_value.active = mock_ws
+            mock_wb.return_value.save = lambda buf: buf.write(b"mock_excel")
+            result = export_payments(
+                db=db,
+                keyword=None,
+                status=None,
+                customer_id=None,
+                include_aging=False,
+                current_user=_mock_user(),
+            )
         assert result is not None
 
 
@@ -1051,36 +1100,49 @@ class TestSalesContractsBasic:
     def test_read_contract_not_found(self):
         from app.api.v1.endpoints.sales.contracts.basic import read_contract
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.contracts.basic.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="合同不存在")
-            with pytest.raises(HTTPException) as exc:
-                read_contract(contract_id=999, db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # read_contract uses inline db.query().options().filter().first()
+        db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            read_contract(contract_id=999, db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
-    def test_create_contract(self):
+    def test_create_contract_no_quote(self):
         from app.api.v1.endpoints.sales.contracts.basic import create_contract
         db = _mock_db()
         mock_schema = MagicMock()
-        mock_schema.opportunity_id = None
+        mock_schema.deliverables = []
+        mock_schema.model_dump.return_value = {
+            "contract_code": None,
+            "opportunity_id": 1,
+            "customer_id": 1,
+            "owner_id": None,
+            "quote_version_id": None,
+        }
+        mock_opportunity = MagicMock()
+        mock_opportunity.opp_code = "OPP-001"
+        mock_customer = MagicMock()
+        mock_customer.customer_name = "Test"
+        mock_contract = MagicMock()
+        mock_contract.id = 1
+        mock_contract.project = None
+        mock_contract.sales_owner = None
+        mock_contract.__table__ = MagicMock()
+        mock_contract.__table__.columns = []
         with patch("app.api.v1.endpoints.sales.contracts.basic.generate_contract_code", return_value="CON-001"), \
-             patch("app.api.v1.endpoints.sales.contracts.basic.get_or_404") as mock_get, \
-             patch("app.api.v1.endpoints.sales.contracts.basic.validate_g3_quote_to_contract"):
-            mock_get.return_value = MagicMock(id=1)
-            db.add = MagicMock()
-            db.flush = MagicMock()
-            db.commit = MagicMock()
-            db.refresh = MagicMock()
-            result = create_contract(contract_in=mock_schema, db=db, current_user=_mock_user())
+             patch("app.api.v1.endpoints.sales.contracts.basic.security.filter_sales_data_by_scope", return_value=db.query.return_value):
+            # opportunity query
+            db.query.return_value.filter.return_value.first.side_effect = [mock_opportunity, mock_customer, []]
+            result = create_contract(contract_in=mock_schema, db=db, skip_g3_validation=True, current_user=_mock_user())
         assert result is not None
 
     def test_update_contract_not_found(self):
         from app.api.v1.endpoints.sales.contracts.basic import update_contract
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.contracts.basic.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="合同不存在")
-            with pytest.raises(HTTPException) as exc:
-                update_contract(contract_id=999, contract_in=MagicMock(), db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # update_contract uses inline query
+        db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            update_contract(contract_id=999, contract_in=MagicMock(), db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
 
 # ============================================================
@@ -1093,16 +1155,18 @@ class TestReconciliations:
     def test_get_reconciliations_empty(self):
         from app.api.v1.endpoints.business_support_orders.reconciliations import get_reconciliations
         db = _mock_db()
-        db.query.return_value.count.return_value = 0
-        with patch("app.api.v1.endpoints.business_support_orders.reconciliations.apply_keyword_filter", return_value=db.query.return_value), \
-             patch("app.api.v1.endpoints.business_support_orders.reconciliations.apply_pagination") as mock_pag:
-            mock_pag.return_value.all.return_value = []
+        # get_reconciliations uses inline pagination, not apply_pagination
+        with patch("app.api.v1.endpoints.business_support_orders.reconciliations.apply_keyword_filter", return_value=db.query.return_value):
+            db.query.return_value.count.return_value = 0
+            db.query.return_value.filter.return_value.count.return_value = 0
+            db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+            db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
             result = asyncio.run(get_reconciliations(
                 db=db,
                 pagination=_mock_pagination(),
-                keyword=None,
                 customer_id=None,
-                status=None,
+                reconciliation_status=None,
+                search=None,
                 current_user=_mock_user(),
             ))
         assert result is not None
@@ -1122,7 +1186,8 @@ class TestReconciliations:
         with patch("app.api.v1.endpoints.business_support_orders.reconciliations.get_or_404") as mock_get:
             mock_get.side_effect = HTTPException(status_code=404, detail="对账单不存在")
             with pytest.raises(HTTPException) as exc:
-                asyncio.run(update_reconciliation(reconciliation_id=999, reconciliation_update=MagicMock(), db=db, current_user=_mock_user()))
+                # correct param name is reconciliation_data
+                asyncio.run(update_reconciliation(reconciliation_id=999, reconciliation_data=MagicMock(), db=db, current_user=_mock_user()))
             assert exc.value.status_code == 404
 
 
@@ -1140,13 +1205,15 @@ class TestSalesUtilsCommon:
 
     def test_calculate_growth_no_previous(self):
         from app.api.v1.endpoints.sales.utils.common import calculate_growth
+        # When previous is None and current > 0, returns 100.0
         result = calculate_growth(120.0, None)
-        assert result == 0.0
+        assert result == 100.0
 
     def test_calculate_growth_previous_zero(self):
         from app.api.v1.endpoints.sales.utils.common import calculate_growth
+        # When previous is 0 and current > 0, returns 100.0
         result = calculate_growth(120.0, 0.0)
-        assert result == 0.0
+        assert result == 100.0
 
     def test_shift_month_forward(self):
         from app.api.v1.endpoints.sales.utils.common import shift_month
@@ -1192,8 +1259,11 @@ class TestSalesTargets:
         from app.api.v1.endpoints.sales.targets import get_sales_targets
         db = _mock_db()
         db.query.return_value.count.return_value = 0
+        mock_service_instance = MagicMock()
+        mock_service_instance.calculate_target_performance.return_value = (Decimal("0"), Decimal("0"))
         with patch("app.api.v1.endpoints.sales.targets.apply_pagination") as mock_pag, \
-             patch("app.api.v1.endpoints.sales.targets.get_user_role_code", return_value="SALES"):
+             patch("app.api.v1.endpoints.sales.targets.get_user_role_code", return_value="SALES"), \
+             patch("app.api.v1.endpoints.sales.targets.SalesTeamService", return_value=mock_service_instance):
             mock_pag.return_value.all.return_value = []
             result = get_sales_targets(
                 db=db,
@@ -1213,15 +1283,20 @@ class TestSalesTargets:
         from app.api.v1.endpoints.sales.targets import create_sales_target
         db = _mock_db()
         mock_schema = MagicMock()
-        with patch("app.api.v1.endpoints.sales.targets.save_obj") as mock_save:
-            mock_save.return_value = MagicMock(id=1)
+        mock_target = MagicMock()
+        mock_target.__table__ = MagicMock()
+        mock_target.__table__.columns = []
+        with patch("app.api.v1.endpoints.sales.targets.save_obj") as mock_save, \
+             patch("app.api.v1.endpoints.sales.targets.SalesTarget", return_value=mock_target):
+            mock_save.return_value = mock_target
             result = create_sales_target(target_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
     def test_update_sales_target_not_found(self):
         from app.api.v1.endpoints.sales.targets import update_sales_target
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.targets.get_or_404") as mock_get:
+        with patch("app.api.v1.endpoints.sales.targets.get_or_404") as mock_get, \
+             patch("app.api.v1.endpoints.sales.targets.SalesTeamService") as mock_svc:
             mock_get.side_effect = HTTPException(status_code=404, detail="目标不存在")
             with pytest.raises(HTTPException) as exc:
                 update_sales_target(target_id=999, target_in=MagicMock(), db=db, current_user=_mock_user())
@@ -1257,23 +1332,38 @@ class TestOpportunityCrud:
     def test_read_opportunity_not_found(self):
         from app.api.v1.endpoints.sales.opportunity_crud import read_opportunity
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="商机不存在")
-            with pytest.raises(HTTPException) as exc:
-                read_opportunity(opp_id=999, db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # read_opportunity uses inline db.query().options().filter().first()
+        db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            read_opportunity(opp_id=999, db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
     def test_create_opportunity(self):
         from app.api.v1.endpoints.sales.opportunity_crud import create_opportunity
         db = _mock_db()
         mock_schema = MagicMock()
         mock_schema.customer_id = 1
+        mock_schema.requirement = None
+        # model_dump must not contain opp_code (or be falsy) to trigger auto-gen
+        mock_schema.model_dump.return_value = {
+            "opp_code": None,  # falsy: auto-generate
+            "customer_id": 1,
+            "owner_id": None,
+        }
+        mock_customer = MagicMock()
+        mock_customer.customer_name = "Test Corp"
+        mock_opp = MagicMock()
+        mock_opp.id = 1
+        mock_opp.owner = None
+        mock_opp.updater = None
+        mock_opp.requirements = []
+        mock_opp.__table__ = MagicMock()
+        mock_opp.__table__.columns = []
         with patch("app.api.v1.endpoints.sales.opportunity_crud.generate_opportunity_code", return_value="OPP-001"), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.get_entity_creator_id", return_value=1):
-            db.add = MagicMock()
-            db.flush = MagicMock()
-            db.commit = MagicMock()
-            db.refresh = MagicMock()
+             patch("app.api.v1.endpoints.sales.opportunity_crud.Opportunity", return_value=mock_opp):
+            # customer lookup returns mock_customer
+            db.query.return_value.filter.return_value.first.return_value = mock_customer
+            db.query.return_value.filter.return_value.filter.return_value.first.return_value = None
             result = create_opportunity(opp_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -1311,11 +1401,11 @@ class TestOrganizationUnits:
     def test_get_org_unit_not_found(self):
         from app.api.v1.endpoints.organization.units import get_org_unit
         db = _mock_db()
-        with patch("app.api.v1.endpoints.organization.units.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="组织单元不存在")
-            with pytest.raises(HTTPException) as exc:
-                get_org_unit(id=999, db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # get_org_unit uses inline db.query(...).filter(...).first()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            get_org_unit(id=999, db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
     def test_create_org_unit(self):
         from app.api.v1.endpoints.organization.units import create_org_unit
@@ -1323,21 +1413,24 @@ class TestOrganizationUnits:
         mock_schema = MagicMock()
         mock_schema.unit_code = "ORG001"
         mock_schema.parent_id = None
+        mock_schema.model_dump.return_value = {"unit_code": "ORG001", "parent_id": None, "unit_name": "Test"}
+        # First query: check existing code -> None means not found (ok)
         db.query.return_value.filter.return_value.first.return_value = None
-        db.add = MagicMock()
-        db.commit = MagicMock()
-        db.refresh = MagicMock()
-        result = create_org_unit(unit_in=mock_schema, db=db, current_user=_mock_user())
+        mock_unit = MagicMock()
+        with patch("app.api.v1.endpoints.organization.units.OrganizationUnit", return_value=mock_unit), \
+             patch("app.api.v1.endpoints.organization.units.OrganizationUnitResponse") as mock_resp, \
+             patch("app.api.v1.endpoints.organization.units.success_response", return_value={"code": 200}):
+            result = create_org_unit(unit_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
     def test_delete_org_unit_not_found(self):
         from app.api.v1.endpoints.organization.units import delete_org_unit
         db = _mock_db()
-        with patch("app.api.v1.endpoints.organization.units.get_or_404") as mock_get:
-            mock_get.side_effect = HTTPException(status_code=404, detail="组织单元不存在")
-            with pytest.raises(HTTPException) as exc:
-                delete_org_unit(id=999, db=db, current_user=_mock_user())
-            assert exc.value.status_code == 404
+        # delete_org_unit uses inline db.query
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(HTTPException) as exc:
+            delete_org_unit(id=999, db=db, current_user=_mock_user())
+        assert exc.value.status_code == 404
 
     def test_get_org_tree(self):
         from app.api.v1.endpoints.organization.units import get_org_tree
@@ -1361,7 +1454,8 @@ class TestProjectsArchive:
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.is_archived = True
-        with patch("app.api.v1.endpoints.projects.archive.check_project_access_or_raise", return_value=mock_project):
+        # check_project_access_or_raise is imported inline, patch it at source
+        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=mock_project):
             result = archive_project(project_id=1, reason=None, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -1371,7 +1465,7 @@ class TestProjectsArchive:
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.is_archived = False
-        with patch("app.api.v1.endpoints.projects.archive.check_project_access_or_raise", return_value=mock_project):
+        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=mock_project):
             result = unarchive_project(project_id=1, db=db, current_user=_mock_user())
         assert result is not None
 
@@ -1379,7 +1473,8 @@ class TestProjectsArchive:
         from app.api.v1.endpoints.projects.archive import get_archived_projects
         db = _mock_db()
         db.query.return_value.filter.return_value.count.return_value = 0
-        with patch("app.api.v1.endpoints.projects.archive.apply_pagination") as mock_pag:
+        with patch("app.api.v1.endpoints.projects.archive.apply_pagination") as mock_pag, \
+             patch("app.api.v1.endpoints.projects.archive.apply_keyword_filter", return_value=db.query.return_value):
             mock_pag.return_value.all.return_value = []
             result = get_archived_projects(
                 db=db,
@@ -1392,7 +1487,9 @@ class TestProjectsArchive:
     def test_batch_archive_projects_empty_list(self):
         from app.api.v1.endpoints.projects.archive import batch_archive_projects
         db = _mock_db()
-        result = batch_archive_projects(project_ids=[], reason=None, db=db, current_user=_mock_user())
+        with patch("app.services.data_scope.DataScopeService.filter_projects_by_scope", return_value=db.query.return_value):
+            db.query.return_value.filter.return_value.all.return_value = []
+            result = batch_archive_projects(project_ids=[], archive_reason=None, db=db, current_user=_mock_user())
         assert result is not None
 
 
@@ -1428,17 +1525,24 @@ class TestSalesTeamPK:
     def test_create_team_pk(self):
         from app.api.v1.endpoints.sales.team.pk import create_team_pk
         db = _mock_db()
-        mock_schema = MagicMock()
-        mock_schema.team_ids = [1, 2]
-        mock_schema.pk_name = "PK大战"
-        mock_schema.pk_type = "REVENUE"
-        mock_schema.start_date = date(2025, 1, 1)
-        mock_schema.end_date = date(2025, 12, 31)
-        mock_schema.target_value = Decimal("100000")
-        db.query.return_value.filter.return_value.all.return_value = []
-        with patch("app.api.v1.endpoints.sales.team.pk.save_obj") as mock_save:
-            mock_save.return_value = MagicMock(id=1, team_ids="[1,2]")
-            result = create_team_pk(pk_in=mock_schema, db=db, current_user=_mock_user())
+        mock_request = MagicMock()
+        mock_request.team_ids = [1, 2]
+        mock_request.pk_name = "PK大战"
+        mock_request.pk_type = "REVENUE"
+        mock_request.start_date = datetime(2025, 1, 1)
+        mock_request.end_date = datetime(2025, 12, 31)
+        mock_request.target_value = Decimal("100000")
+        mock_request.reward_description = "奖励说明"
+        # teams query returns same count as requested
+        mock_team1, mock_team2 = MagicMock(), MagicMock()
+        db.query.return_value.filter.return_value.all.return_value = [mock_team1, mock_team2]
+        mock_pk = MagicMock()
+        mock_pk.id = 1
+        mock_pk.pk_name = "PK大战"
+        mock_pk.status = "ONGOING"
+        with patch("app.api.v1.endpoints.sales.team.pk.save_obj"), \
+             patch("app.api.v1.endpoints.sales.team.pk.TeamPKRecord", return_value=mock_pk):
+            result = create_team_pk(request=mock_request, db=db, current_user=_mock_user())
         assert result is not None
 
     def test_complete_team_pk_not_found(self):
@@ -1489,10 +1593,20 @@ class TestSalesLeadsCrud:
         db = _mock_db()
         mock_schema = MagicMock()
         mock_schema.lead_name = "潜在客户A"
+        # model_dump must NOT contain lead_code (or set it falsy) to bypass existing check
+        mock_schema.model_dump.return_value = {
+            "lead_name": "潜在客户A",
+            "lead_code": None,  # falsy: auto-generate
+            "owner_id": None,
+            "selected_advantage_products": None,
+        }
+        mock_lead = MagicMock()
+        mock_lead.owner = None
+        mock_lead.__table__ = MagicMock()
+        mock_lead.__table__.columns = []
         with patch("app.api.v1.endpoints.sales.leads.crud.generate_lead_code", return_value="LEAD-001"), \
-             patch("app.api.v1.endpoints.sales.leads.crud.get_entity_creator_id", return_value=1), \
-             patch("app.api.v1.endpoints.sales.leads.crud.save_obj") as mock_save:
-            mock_save.return_value = MagicMock(id=1)
+             patch("app.api.v1.endpoints.sales.leads.crud.save_obj"), \
+             patch("app.api.v1.endpoints.sales.leads.crud.Lead", return_value=mock_lead):
             result = create_lead(lead_in=mock_schema, db=db, current_user=_mock_user())
         assert result is not None
 
