@@ -31,22 +31,71 @@ from fastapi.testclient import TestClient
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
-from app.services.permission_cache_service import get_permission_cache_service
 
-from app.core.config import settings
-from app.core.security import get_password_hash, verify_password
-from app.main import app
-from app.models.base import SessionLocal, get_engine
-from app.models.organization import Employee
-from app.models.project import Customer, Machine, Project, ProjectMember
-from app.models.task_center import TaskApprovalWorkflow, TaskUnified
-from app.models.user import (
-    ApiPermission,
-    Role,
-    RoleApiPermission,
-    User,
-    UserRole,
-)
+# ---------------------------------------------------------------------------
+# LAZY IMPORTS: These heavy app imports are deferred to fixtures so that
+# unit tests (tests/unit/) can run WITHOUT loading the entire FastAPI app.
+# This prevents OOM kills during coverage runs and speeds up unit test startup.
+# ---------------------------------------------------------------------------
+def _get_app():
+    from app.main import app as _app
+    return _app
+
+def _get_settings():
+    from app.core.config import settings as _settings
+    return _settings
+
+def _get_security():
+    from app.core.security import get_password_hash, verify_password
+    return get_password_hash, verify_password
+
+def _get_session_local():
+    from app.models.base import SessionLocal, get_engine
+    return SessionLocal, get_engine
+
+def _get_permission_cache_service():
+    from app.services.permission_cache_service import get_permission_cache_service
+    return get_permission_cache_service
+
+# Keep these as module-level for code that reads them directly
+# but guard with a try to avoid breaking unit tests
+try:
+    import os as _os
+    if _os.environ.get("CONFTEST_EAGER_LOAD", "0") == "1":
+        from app.services.permission_cache_service import get_permission_cache_service
+        from app.core.config import settings
+        from app.core.security import get_password_hash, verify_password
+        from app.main import app
+        from app.models.base import SessionLocal, get_engine
+        from app.models.organization import Employee
+        from app.models.project import Customer, Machine, Project, ProjectMember
+        from app.models.task_center import TaskApprovalWorkflow, TaskUnified
+        from app.models.user import (
+            ApiPermission, Role, RoleApiPermission, User, UserRole,
+        )
+    else:
+        # Lazy stubs — will be set properly inside fixtures when needed
+        app = None
+        settings = None
+        get_password_hash = None
+        verify_password = None
+        SessionLocal = None
+        get_engine = None
+        Employee = None
+        Customer = None
+        Machine = None
+        Project = None
+        ProjectMember = None
+        TaskApprovalWorkflow = None
+        TaskUnified = None
+        ApiPermission = None
+        Role = None
+        RoleApiPermission = None
+        User = None
+        UserRole = None
+        get_permission_cache_service = None
+except Exception:
+    pass
 
 
 def _ensure_login_user(
@@ -103,13 +152,16 @@ def _init_test_database() -> None:
     from app.models.vendor import Vendor
 
     # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
+    from app.core.config import settings as _settings
+    from app.models.base import get_engine as _get_engine
+
     def _resolve_sqlite_path() -> Optional[Path]:
-        db_url = os.getenv("DATABASE_URL") or settings.DATABASE_URL
+        db_url = os.getenv("DATABASE_URL") or _settings.DATABASE_URL
         if db_url and db_url.startswith("sqlite:///"):
             raw_path = db_url.replace("sqlite:///", "", 1)
             return Path(raw_path)
 
-        sqlite_path = os.getenv("SQLITE_DB_PATH", settings.SQLITE_DB_PATH)
+        sqlite_path = os.getenv("SQLITE_DB_PATH", _settings.SQLITE_DB_PATH)
         if not sqlite_path or sqlite_path.startswith(":memory:") or sqlite_path.startswith("file:"):
             return None
         return Path(sqlite_path)
@@ -121,7 +173,7 @@ def _init_test_database() -> None:
 
     init_db(drop_all=True)
 
-    engine = get_engine()
+    engine = _get_engine()
     inspector = inspect(engine)
     cols = [col["name"] for col in inspector.get_columns("api_permissions")]
     print("api_permissions columns before patch:", cols)
@@ -269,11 +321,15 @@ def _init_test_database() -> None:
 
 @pytest.fixture(scope="module")
 def client() -> Generator:
+    # Lazy import to avoid loading the full app during unit test collection
+    from app.main import app as _fastapi_app
+    from app.core.config import settings as _settings  # noqa: F401
+    from app.models.base import SessionLocal, get_engine  # noqa: F401
     # Disable rate limiting during tests to avoid flaky 429 responses from slowapi
     # when multiple fixtures log in repeatedly.
-    if getattr(app.state, "limiter", None) is not None:
-        app.state.limiter.enabled = False
-    with TestClient(app) as c:
+    if getattr(_fastapi_app.state, "limiter", None) is not None:
+        _fastapi_app.state.limiter.enabled = False
+    with TestClient(_fastapi_app) as c:
         yield c
 
 
@@ -470,10 +526,15 @@ def db_session() -> Generator[Session, None, None]:
 @pytest.fixture(scope="function", autouse=True)
 def cleanup_permission_cache():
     """每个测试前后清理权限缓存，防止 ID 重复导致的测试污染"""
-    cache_service = get_permission_cache_service()
-    cache_service.invalidate_all()
-    yield
-    cache_service.invalidate_all()
+    try:
+        from app.services.permission_cache_service import get_permission_cache_service as _gpcs
+        cache_service = _gpcs()
+        cache_service.invalidate_all()
+        yield
+        cache_service.invalidate_all()
+    except Exception:
+        # Unit tests don't need permission cache cleanup
+        yield
 
 
 _token_cache: Dict[str, str] = {}
