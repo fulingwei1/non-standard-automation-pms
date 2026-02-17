@@ -266,7 +266,7 @@ class MaterialDemandForecast(Base, TimestampMixin):
     __table_args__ = (
         Index('idx_forecast_no', 'forecast_no'),
         Index('idx_forecast_material', 'material_id'),
-        Index('idx_forecast_project', 'project_id'),
+        Index('idx_demand_forecast_project', 'project_id'),
         Index('idx_forecast_status', 'status'),
         Index('idx_forecast_date', 'forecast_date'),
         Index('idx_forecast_period', 'forecast_start_date', 'forecast_end_date'),

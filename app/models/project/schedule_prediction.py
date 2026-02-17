@@ -270,7 +270,7 @@ class ScheduleAlert(Base):
         Index("idx_alert_type", "alert_type"),
         Index("idx_is_read", "is_read"),
         Index("idx_is_resolved", "is_resolved"),
-        Index("idx_created_at", "created_at"),
+        Index("idx_sched_alert_created_at", "created_at"),
     )
 
     def __repr__(self):

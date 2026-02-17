@@ -127,10 +127,10 @@ class AIResourceAllocation(Base, TimestampMixin):
     
     # 索引
     __table_args__ = (
-        Index('idx_project_id', 'project_id'),
+        Index('idx_res_alloc_project', 'project_id'),
         Index('idx_wbs_suggestion_id', 'wbs_suggestion_id'),
         Index('idx_user_id', 'user_id'),
-        Index('idx_status', 'status'),
+        Index('idx_res_alloc_status', 'status'),
         Index('idx_match_score', 'overall_match_score'),
         Index('idx_start_date', 'planned_start_date'),
         Index('idx_end_date', 'planned_end_date'),

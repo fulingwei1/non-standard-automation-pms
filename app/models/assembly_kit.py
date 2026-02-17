@@ -401,8 +401,8 @@ class SchedulingSuggestion(Base, TimestampMixin):
         Index('idx_suggestion_no', 'suggestion_no'),
         Index('idx_suggestion_project', 'project_id'),
         Index('idx_suggestion_machine', 'machine_id'),
-        Index('idx_suggestion_status', 'status'),
-        Index('idx_suggestion_type', 'suggestion_type'),
+        Index('idx_sched_sugg_status', 'status'),
+        Index('idx_sched_sugg_type', 'suggestion_type'),
     )
 
     def __repr__(self):

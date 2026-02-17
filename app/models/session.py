@@ -156,7 +156,7 @@ class UserSession(Base, TimestampMixin):
     
     # 索引
     __table_args__ = (
-        Index("idx_user_active", "user_id", "is_active"),
+        Index("idx_session_user_active", "user_id", "is_active"),
         Index("idx_expires_at", "expires_at"),
         Index("idx_ip_address", "ip_address"),
     )

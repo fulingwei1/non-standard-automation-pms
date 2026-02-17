@@ -8,7 +8,7 @@ import functools
 import logging
 from typing import Callable, Optional
 
-from fastapi import Request
+from fastapi import Request, Response
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
@@ -42,15 +42,10 @@ def rate_limit(
         if not settings.RATE_LIMIT_ENABLED:
             return func
         
-        # 使用slowapi的装饰器
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
-        
-        @limiter.limit(actual_limit, key_func=key_func, per_method=per_method, methods=methods)
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            return await func(*args, **kwargs)
-        
-        return wrapper
+        # 直接应用 slowapi 装饰器，要求端点函数自身包含 response: Response 参数
+        return limiter.limit(actual_limit, key_func=key_func, per_method=per_method, methods=methods)(func)
+    
     return decorator
 
 
@@ -76,13 +71,8 @@ def user_rate_limit(
             return func
         
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
-        
-        @user_limiter.limit(actual_limit, per_method=per_method, methods=methods)
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            return await func(*args, **kwargs)
-        
-        return wrapper
+        return user_limiter.limit(actual_limit, per_method=per_method, methods=methods)(func)
+    
     return decorator
 
 
@@ -108,13 +98,8 @@ def strict_rate_limit(
             return func
         
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
-        
-        @strict_limiter.limit(actual_limit, per_method=per_method, methods=methods)
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            return await func(*args, **kwargs)
-        
-        return wrapper
+        return strict_limiter.limit(actual_limit, per_method=per_method, methods=methods)(func)
+    
     return decorator
 
 

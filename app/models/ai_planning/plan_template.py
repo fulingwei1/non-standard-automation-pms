@@ -80,8 +80,8 @@ class AIProjectPlanTemplate(Base, TimestampMixin):
     # 索引
     __table_args__ = (
         Index('idx_project_type', 'project_type'),
-        Index('idx_complexity', 'complexity_level'),
-        Index('idx_active', 'is_active'),
+        Index('idx_plan_tmpl_complexity', 'complexity_level'),
+        Index('idx_plan_tmpl_active', 'is_active'),
         Index('idx_confidence', 'confidence_score'),
         {'comment': 'AI项目计划模板表'}
     )

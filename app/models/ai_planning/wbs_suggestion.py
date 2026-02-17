@@ -106,11 +106,11 @@ class AIWbsSuggestion(Base, TimestampMixin):
     
     # 索引
     __table_args__ = (
-        Index('idx_project_id', 'project_id'),
-        Index('idx_template_id', 'template_id'),
+        Index('idx_wbs_project', 'project_id'),
+        Index('idx_wbs_template_id', 'template_id'),
         Index('idx_wbs_level', 'wbs_level'),
         Index('idx_parent_wbs', 'parent_wbs_id'),
-        Index('idx_status', 'status'),
+        Index('idx_wbs_status', 'status'),
         Index('idx_critical_path', 'is_critical_path'),
         {'comment': 'AI WBS分解建议表'}
     )

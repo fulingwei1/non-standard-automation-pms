@@ -69,8 +69,8 @@ class PresaleAISolution(Base):
     # 索引
     __table_args__ = (
         Index('idx_presale_ticket', 'presale_ticket_id'),
-        Index('idx_status', 'status'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_ai_solution_status', 'status'),
+        Index('idx_ai_solution_created_at', 'created_at'),
     )
 
 
@@ -127,8 +127,8 @@ class PresaleAISolutionTemplate(Base):
     # 索引
     __table_args__ = (
         Index('idx_industry_equipment', 'industry', 'equipment_type'),
-        Index('idx_complexity', 'complexity_level'),
-        Index('idx_active', 'is_active'),
+        Index('idx_sol_tmpl_complexity', 'complexity_level'),
+        Index('idx_sol_tmpl_active', 'is_active'),
         Index('idx_usage', 'usage_count'),
     )
 
@@ -164,7 +164,7 @@ class PresaleAIGenerationLog(Base):
     __table_args__ = (
         Index('idx_solution_id', 'solution_id'),
         Index('idx_request_type', 'request_type'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_ai_sol_tmpl_created_at', 'created_at'),
     )
 
 # Backward-compatible alias

@@ -120,7 +120,7 @@ class TimesheetReportTemplate(Base, TimestampMixin):
     recipients = relationship('ReportRecipient', back_populates='template', cascade='all, delete-orphan')
 
     __table_args__ = (
-        Index('idx_report_type', 'report_type'),
+        Index('idx_ts_report_type', 'report_type'),
         Index('idx_enabled', 'enabled'),
         {'comment': '报表模板表', 'extend_existing': True}
     )
@@ -162,9 +162,9 @@ class ReportArchive(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_template_period', 'template_id', 'period'),
-        Index('idx_report_type', 'report_type'),
-        Index('idx_period', 'period'),
-        Index('idx_status', 'status'),
+        Index('idx_archive_report_type', 'report_type'),
+        Index('idx_report_period', 'period'),
+        Index('idx_report_status', 'status'),
         {'comment': '报表归档表', 'extend_existing': True}
     )
 
@@ -198,7 +198,7 @@ class ReportRecipient(Base, TimestampMixin):
     template = relationship('TimesheetReportTemplate', back_populates='recipients')
 
     __table_args__ = (
-        Index('idx_template_id', 'template_id'),
+        Index('idx_report_template_id', 'template_id'),
         Index('idx_recipient_type', 'recipient_type'),
         {'comment': '报表收件人表', 'extend_existing': True}
     )

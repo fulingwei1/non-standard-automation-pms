@@ -37,7 +37,7 @@ class User2FASecret(Base, TimestampMixin):
     user = relationship("User", back_populates="two_factor_secrets")
     
     __table_args__ = (
-        Index("idx_user_active", "user_id", "is_active"),
+        Index("idx_2fa_user_active", "user_id", "is_active"),
     )
     
     def __repr__(self):

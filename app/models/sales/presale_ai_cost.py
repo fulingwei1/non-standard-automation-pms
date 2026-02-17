@@ -40,7 +40,7 @@ class PresaleAICostEstimation(Base):
     # 索引
     __table_args__ = (
         Index('idx_presale_ticket_id', 'presale_ticket_id'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_cost_est_created_at', 'created_at'),
     )
 
 
@@ -70,8 +70,8 @@ class PresaleCostHistory(Base):
     
     # 索引
     __table_args__ = (
-        Index('idx_project_id', 'project_id'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_cost_hist_project', 'project_id'),
+        Index('idx_cost_hist_created_at', 'created_at'),
     )
 
 

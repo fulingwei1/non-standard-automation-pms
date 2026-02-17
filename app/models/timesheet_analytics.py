@@ -290,7 +290,7 @@ class TimesheetForecast(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_forecast_type', 'forecast_type', 'forecast_date'),
-        Index('idx_forecast_project', 'project_id', 'forecast_date'),
+        Index('idx_ts_forecast_project', 'project_id', 'forecast_date'),
         Index('idx_forecast_user', 'user_id', 'forecast_date'),
         Index('idx_forecast_method', 'forecast_method'),
         Index('idx_forecast_alert', 'alert_level', 'forecast_date'),
@@ -336,8 +336,8 @@ class TimesheetAnomaly(Base, TimestampMixin):
     resolution_notes = Column(Text, comment='处理说明')
 
     __table_args__ = (
-        Index('idx_anomaly_type', 'anomaly_type', 'detected_date'),
-        Index('idx_anomaly_user', 'user_id', 'detected_date'),
-        Index('idx_anomaly_resolved', 'is_resolved'),
+        Index('idx_ts_anomaly_type', 'anomaly_type', 'detected_date'),
+        Index('idx_ts_anomaly_user', 'user_id', 'detected_date'),
+        Index('idx_ts_anomaly_resolved', 'is_resolved'),
         {'comment': '工时异常记录表'}
     )

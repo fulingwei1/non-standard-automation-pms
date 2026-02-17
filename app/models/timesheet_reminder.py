@@ -284,9 +284,9 @@ class TimesheetAnomalyRecord(Base, TimestampMixin):
 
     __table_args__ = (
         Index('idx_anomaly_timesheet', 'timesheet_id'),
-        Index('idx_anomaly_user', 'user_id'),
-        Index('idx_anomaly_type', 'anomaly_type'),
-        Index('idx_anomaly_resolved', 'is_resolved'),
+        Index('idx_reminder_anomaly_user', 'user_id'),
+        Index('idx_reminder_anomaly_type', 'anomaly_type'),
+        Index('idx_reminder_anomaly_resolved', 'is_resolved'),
         Index('idx_anomaly_detected', 'detected_at'),
         {'comment': '异常工时检测记录表'}
     )

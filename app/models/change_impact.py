@@ -208,8 +208,8 @@ class ChangeResponseSuggestion(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_suggestion_change", "change_request_id"),
         Index("idx_suggestion_impact", "impact_analysis_id"),
-        Index("idx_suggestion_status", "status"),
-        Index("idx_suggestion_type", "suggestion_type"),
+        Index("idx_change_sugg_status", "status"),
+        Index("idx_change_sugg_type", "suggestion_type"),
         Index("idx_suggestion_priority", "suggestion_priority"),
         Index("idx_suggestion_created_at", "created_at"),
     )

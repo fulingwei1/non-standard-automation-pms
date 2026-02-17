@@ -95,7 +95,7 @@ class PresaleAIFeedback(Base):
     __table_args__ = (
         Index('idx_user_function', 'user_id', 'ai_function'),
         Index('idx_rating', 'rating'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_ai_usage_created_at', 'created_at'),
         {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
     )
 
@@ -141,7 +141,7 @@ class PresaleAIWorkflowLog(Base):
 
     __table_args__ = (
         Index('idx_ticket_step', 'presale_ticket_id', 'workflow_step'),
-        Index('idx_status', 'status'),
+        Index('idx_ai_workflow_status', 'status'),
         {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
     )
 
@@ -166,6 +166,6 @@ class PresaleAIAuditLog(Base):
 
     __table_args__ = (
         Index('idx_user_action', 'user_id', 'action'),
-        Index('idx_created_at', 'created_at'),
+        Index('idx_ai_feedback_created_at', 'created_at'),
         {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
     )

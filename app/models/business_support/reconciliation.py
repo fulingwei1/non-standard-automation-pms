@@ -64,7 +64,7 @@ class Reconciliation(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_reconciliation_no", "reconciliation_no"),
         Index("idx_customer_reconciliation", "customer_id"),
-        Index("idx_period", "period_start", "period_end"),
+        Index("idx_recon_period", "period_start", "period_end"),
         Index("idx_reconciliation_status", "status"),
     )
 

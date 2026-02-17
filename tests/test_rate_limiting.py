@@ -9,7 +9,7 @@
 """
 import pytest
 import time
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.testclient import TestClient
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -78,7 +78,7 @@ class TestGlobalRateLimiting:
         
         @app.get("/test")
         @test_limiter.limit("10/minute")
-        async def test_endpoint(request: Request):
+        async def test_endpoint(request: Request, response: Response):
             return {"status": "ok"}
         
         client = TestClient(app)
@@ -102,7 +102,7 @@ class TestLoginRateLimiting:
         
         @app.post("/login")
         @login_rate_limit()
-        async def login(request: Request):
+        async def login(request: Request, response: Response):
             return {"access_token": "test_token"}
         
         client = TestClient(app)
@@ -120,7 +120,7 @@ class TestLoginRateLimiting:
         
         @app.post("/login")
         @test_limiter.limit("3/minute")  # 设置为3次方便测试
-        async def login(request: Request):
+        async def login(request: Request, response: Response):
             return {"access_token": "test_token"}
         
         client = TestClient(app)
@@ -143,7 +143,7 @@ class TestLoginRateLimiting:
         
         @app.post("/refresh")
         @refresh_token_rate_limit()
-        async def refresh(request: Request):
+        async def refresh(request: Request, response: Response):
             return {"access_token": "new_token"}
         
         client = TestClient(app)
@@ -159,7 +159,7 @@ class TestLoginRateLimiting:
         
         @app.post("/change-password")
         @password_change_rate_limit()
-        async def change_password(request: Request):
+        async def change_password(request: Request, response: Response):
             return {"message": "Password changed"}
         
         client = TestClient(app)
@@ -211,7 +211,7 @@ class TestCustomRateLimiting:
         
         @app.get("/custom")
         @rate_limit("20/minute")
-        async def custom_endpoint(request: Request):
+        async def custom_endpoint(request: Request, response: Response):
             return {"status": "ok"}
         
         client = TestClient(app)
@@ -225,7 +225,7 @@ class TestCustomRateLimiting:
         
         @app.post("/batch-import")
         @user_rate_limit("5/minute")
-        async def batch_import(request: Request):
+        async def batch_import(request: Request, response: Response):
             return {"imported": 100}
         
         client = TestClient(app)
