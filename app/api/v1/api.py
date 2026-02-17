@@ -47,13 +47,12 @@ def create_api_router() -> APIRouter:
         print(f"✗ 角色管理模块加载失败: {e}")
     
     # ==================== 权限管理 ====================
-    # 注意: permissions.py文件不存在，暂时禁用
-    # try:
-    #     from app.api.v1.endpoints.permissions import router as permissions_router
-    #     api_router.include_router(permissions_router, tags=["permissions"])
-    #     print("✓ 权限管理模块加载成功")
-    # except Exception as e:
-    #     print(f"✗ 权限管理模块加载失败: {e}")
+    try:
+        from app.api.v1.endpoints.permissions import router as permissions_router
+        api_router.include_router(permissions_router, tags=["permissions"])
+        print("✓ 权限管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 权限管理模块加载失败: {e}")
     
     # ==================== 项目管理 ====================
     try:
