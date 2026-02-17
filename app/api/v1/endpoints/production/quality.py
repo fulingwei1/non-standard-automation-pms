@@ -517,12 +517,7 @@ def create_corrective_action(
     - 跟踪措施执行和验证
     """
     # 更新DefectAnalysis中的纠正措施信息
-    analysis = db.query(DefectAnalysis).filter(
-        DefectAnalysis.id == action_data.defect_analysis_id
-    ).first()
-    
-    if not analysis:
-        raise HTTPException(status_code=404, detail="不良品分析记录不存在")
+    analysis = get_or_404(db, DefectAnalysis, action_data.defect_analysis_id, "不良品分析记录不存在")
     
     if action_data.action_type == "CORRECTIVE":
         analysis.corrective_action = action_data.action_description

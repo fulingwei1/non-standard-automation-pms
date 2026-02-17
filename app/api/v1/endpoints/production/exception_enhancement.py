@@ -57,12 +57,7 @@ def escalate_exception(
     - LEVEL_3: 生产经理处理（严重异常超过1小时）
     """
     # 查询异常
-    exception = db.query(ProductionException).filter(
-        ProductionException.id == request.exception_id
-    ).first()
-    
-    if not exception:
-        raise HTTPException(status_code=404, detail="异常不存在")
+    exception = get_or_404(db, ProductionException, request.exception_id, "异常不存在")
     
     # 查询或创建处理流程
     flow = db.query(ExceptionHandlingFlow).filter(
@@ -456,12 +451,7 @@ def create_pdca(
 ):
     """创建PDCA记录"""
     # 检查异常是否存在
-    exception = db.query(ProductionException).filter(
-        ProductionException.id == request.exception_id
-    ).first()
-    
-    if not exception:
-        raise HTTPException(status_code=404, detail="异常不存在")
+    exception = get_or_404(db, ProductionException, request.exception_id, "异常不存在")
     
     # 生成PDCA编号
     pdca_no = f"PDCA-{datetime.now().strftime('%Y%m%d%H%M%S')}-{request.exception_id}"

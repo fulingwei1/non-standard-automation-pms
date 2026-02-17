@@ -71,11 +71,7 @@ def create_bonus_distribution(
     创建奖金发放记录
     """
     # 检查计算记录是否存在且已审批
-    calculation = db.query(BonusCalculation).filter(
-        BonusCalculation.id == dist_in.calculation_id
-    ).first()
-    if not calculation:
-        raise HTTPException(status_code=404, detail="计算记录不存在")
+    calculation = get_or_404(db, BonusCalculation, dist_in.calculation_id, "计算记录不存在")
 
     if calculation.status != 'APPROVED':
         raise HTTPException(

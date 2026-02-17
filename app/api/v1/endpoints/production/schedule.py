@@ -35,6 +35,7 @@ from app.schemas.production_schedule import (
     UrgentInsertResponse,
 )
 from app.services.production_schedule_service import ProductionScheduleService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -317,12 +318,7 @@ async def adjust_schedule(
     """手动调整排程"""
     try:
         # 获取排程
-        schedule = db.query(ProductionSchedule).filter(
-            ProductionSchedule.id == request.schedule_id
-        ).first()
-        
-        if not schedule:
-            raise HTTPException(status_code=404, detail="排程不存在")
+        schedule = get_or_404(db, ProductionSchedule, request.schedule_id, "排程不存在")
         
         # 记录调整前的数据
         before_data = {

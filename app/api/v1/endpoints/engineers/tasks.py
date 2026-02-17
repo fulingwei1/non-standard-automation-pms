@@ -44,9 +44,7 @@ def create_task(
     - GENERAL 任务：直接创建
     """
     # 验证项目存在且用户是成员
-    project = db.query(Project).filter(Project.id == task_data.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, task_data.project_id, "项目不存在")
 
     # 检查用户是否是项目成员
     is_member = db.query(ProjectMember).filter(
