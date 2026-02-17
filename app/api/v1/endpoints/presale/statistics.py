@@ -93,7 +93,7 @@ def generate_tender_no(db: Session) -> str:
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/presale/statistics",
+    prefix="/statistics",
     tags=["statistics"]
 )
 
@@ -101,7 +101,7 @@ router = APIRouter(
 
 # ==================== 售前统计 ====================
 
-@router.get("/presale/stats/workload", response_model=ResponseModel)
+@router.get("/stats/workload", response_model=ResponseModel)
 def get_workload_stats(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -168,7 +168,7 @@ def get_workload_stats(
     )
 
 
-@router.get("/presale/stats/response-time", response_model=ResponseModel)
+@router.get("/stats/response-time", response_model=ResponseModel)
 def get_response_time_stats(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -232,7 +232,7 @@ def get_response_time_stats(
     )
 
 
-@router.get("/presale/stats/conversion", response_model=ResponseModel)
+@router.get("/stats/conversion", response_model=ResponseModel)
 def get_conversion_stats(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -297,7 +297,7 @@ def get_conversion_stats(
     )
 
 
-@router.get("/presale/stats/performance", response_model=ResponseModel)
+@router.get("/stats/performance", response_model=ResponseModel)
 def get_performance_stats(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),
