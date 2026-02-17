@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404
 from app.core import security
 from app.models.project import Customer, Project
 from app.models.user import User
@@ -31,9 +32,7 @@ def get_customer_projects(
     """
     获取客户的项目列表
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
     query = db.query(Project).filter(Project.customer_id == customer_id)
     total = query.count()

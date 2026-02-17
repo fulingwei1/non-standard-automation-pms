@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
+from app.utils.db_helpers import get_or_404
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
@@ -36,9 +37,7 @@ def get_material_alternatives(
     获取物料的替代关系
     返回该物料可以作为替代物料的所有原物料，以及该物料的所有替代物料
     """
-    material = db.query(Material).filter(Material.id == material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, material_id, "物料不存在")
 
     # 查询该物料作为替代物料的所有替代记录（即哪些物料可以用该物料替代）
     as_substitute = (

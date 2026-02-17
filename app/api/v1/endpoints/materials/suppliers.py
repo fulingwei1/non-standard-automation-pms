@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.material import Material, MaterialSupplier
+from app.utils.db_helpers import get_or_404
 from app.models.user import User
 
 router = APIRouter()
@@ -46,9 +47,7 @@ def get_material_suppliers(
         如需查询供应商列表，请使用 GET /suppliers 端点
     """
     # 验证物料是否存在
-    material = db.query(Material).filter(Material.id == material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, material_id, "物料不存在")
 
     # 查询物料供应商关联
     material_suppliers = (
