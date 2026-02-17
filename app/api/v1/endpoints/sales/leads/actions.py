@@ -23,6 +23,7 @@ from ..utils import (
     validate_g1_lead_to_opportunity,
 )
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -153,7 +154,6 @@ def export_leads(
         ExcelExportService,
         create_excel_response,
     )
-from app.utils.db_helpers import get_or_404
 
     query = db.query(Lead)
     query = apply_keyword_filter(query, Lead, keyword, ["lead_code", "customer_name", "contact_name"])

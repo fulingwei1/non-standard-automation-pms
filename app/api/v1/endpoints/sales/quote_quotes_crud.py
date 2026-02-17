@@ -15,6 +15,7 @@ from app.models.sales import Quote, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
+from app.utils.db_helpers import delete_obj, get_or_404
 router = APIRouter()
 
 
@@ -115,7 +116,6 @@ def update_quote(
             value = quote_data[field]
             if field == "valid_until" and isinstance(value, str):
                 from datetime import date
-from app.utils.db_helpers import get_or_404, delete_obj
                 value = date.fromisoformat(value)
             setattr(quote, field, value)
 

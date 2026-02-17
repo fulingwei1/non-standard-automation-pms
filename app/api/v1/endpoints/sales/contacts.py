@@ -22,6 +22,7 @@ from app.schemas.sales import (
     SetPrimaryRequest,
 )
 
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 router = APIRouter()
 
 
@@ -82,7 +83,6 @@ def read_contacts(
     # 关键词搜索
     if keyword:
         from sqlalchemy import or_
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
         query = query.filter(
             or_(
                 Contact.name.contains(keyword),

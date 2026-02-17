@@ -26,6 +26,7 @@ from app.services.approval_engine import ApprovalEngineService as ApprovalWorkfl
 
 logger = logging.getLogger(__name__)
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -131,7 +132,6 @@ def void_invoice(
     作废发票
     """
     from app.models.enums import InvoiceStatusEnum
-from app.utils.db_helpers import get_or_404
 
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 

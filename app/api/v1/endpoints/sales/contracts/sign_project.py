@@ -22,6 +22,7 @@ from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
 
 from ..utils import validate_g4_contract_to_project
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -143,7 +144,6 @@ def create_contract_project(
     lead_id = None
     if contract.opportunity_id:
         from app.models.sales import Opportunity
-from app.utils.db_helpers import get_or_404
         opportunity = db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
         if opportunity and hasattr(opportunity, "lead_id"):
             lead_id = opportunity.lead_id

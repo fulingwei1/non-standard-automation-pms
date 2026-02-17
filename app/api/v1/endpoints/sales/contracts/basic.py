@@ -34,6 +34,7 @@ from ..utils import (
     validate_g3_quote_to_contract,
 )
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -247,7 +248,6 @@ def update_contract(
     if need_sync and contract.project_id:
         try:
             from app.services.data_sync_service import DataSyncService
-from app.utils.db_helpers import get_or_404
             sync_service = DataSyncService(db)
             sync_result = sync_service.sync_contract_to_project(contract_id)
             if sync_result.get("success"):

@@ -19,6 +19,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.sales import FailureCaseCreate, FailureCaseResponse
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -72,7 +73,6 @@ def list_failure_cases(
 
     # 应用关键词过滤（项目名称/核心失败原因）
     from app.common.query_filters import apply_keyword_filter
-from app.utils.db_helpers import save_obj
     query = apply_keyword_filter(query, FailureCase, keyword, ["project_name", "core_failure_reason"])
 
     total = query.count()

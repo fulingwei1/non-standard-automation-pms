@@ -28,6 +28,7 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 logger = logging.getLogger(__name__)
 
+from app.utils.db_helpers import delete_obj, get_or_404
 router = APIRouter()
 
 
@@ -201,5 +202,4 @@ def delete_invoice(
     delete_obj(db, invoice)
 
     from app.schemas.common import ResponseModel
-from app.utils.db_helpers import get_or_404, delete_obj
     return ResponseModel(code=200, message="发票已删除")

@@ -23,6 +23,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 
 logger = logging.getLogger(__name__)
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter(prefix="/quotes/approval", tags=["报价审批工作流"])
 
 
@@ -512,7 +513,6 @@ def get_approval_history(
     获取当前用户处理过的报价审批历史。
     """
     from app.models.approval import ApprovalInstance, ApprovalTask
-from app.utils.db_helpers import get_or_404
 
     query = (
         db.query(ApprovalTask)

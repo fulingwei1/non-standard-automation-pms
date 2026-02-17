@@ -18,6 +18,7 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -102,7 +103,6 @@ def export_invoice_pdf(
     Issue 4.5: 导出发票 PDF
     """
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
-from app.utils.db_helpers import get_or_404
 
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 

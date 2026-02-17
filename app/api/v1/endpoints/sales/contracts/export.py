@@ -19,6 +19,7 @@ from app.core import security
 from app.models.sales import Contract, ContractDeliverable, Opportunity
 from app.models.user import User
 
+from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -94,7 +95,6 @@ def export_contract_pdf(
     Issue 4.5: 导出合同 PDF
     """
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
-from app.utils.db_helpers import get_or_404
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
