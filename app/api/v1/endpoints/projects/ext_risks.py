@@ -37,7 +37,7 @@ RISK_LEVEL_MATRIX = {
 }
 
 
-@router.get("/projects/{project_id}/risks", response_model=ResponseModel)
+@router.get("/{project_id}/risks", response_model=ResponseModel)
 def get_project_risks(
     project_id: int,
     db: Session = Depends(get_db),
@@ -109,7 +109,7 @@ def get_project_risks(
     )
 
 
-@router.get("/projects/risks/{risk_id}", response_model=ResponseModel)
+@router.get("/risks/{risk_id}", response_model=ResponseModel)
 def get_risk_detail(
     risk_id: int,
     db: Session = Depends(get_db),
@@ -160,7 +160,7 @@ def get_risk_detail(
     )
 
 
-@router.post("/projects/{project_id}/risks", response_model=ResponseModel)
+@router.post("/{project_id}/risks", response_model=ResponseModel)
 def create_project_risk(
     project_id: int,
     risk_data: dict,
@@ -220,7 +220,7 @@ def create_project_risk(
     )
 
 
-@router.put("/projects/risks/{risk_id}", response_model=ResponseModel)
+@router.put("/risks/{risk_id}", response_model=ResponseModel)
 def update_project_risk(
     risk_id: int,
     risk_data: dict,
@@ -268,7 +268,7 @@ def update_project_risk(
     return ResponseModel(code=200, message="风险更新成功", data={"id": risk.id, "risk_level": risk.risk_level})
 
 
-@router.post("/projects/risks/{risk_id}/trigger", response_model=ResponseModel)
+@router.post("/risks/{risk_id}/trigger", response_model=ResponseModel)
 def trigger_risk(
     risk_id: int,
     db: Session = Depends(get_db),
@@ -300,7 +300,7 @@ def trigger_risk(
     return ResponseModel(code=200, message="风险已触发", data={"id": risk.id})
 
 
-@router.post("/projects/risks/{risk_id}/close", response_model=ResponseModel)
+@router.post("/risks/{risk_id}/close", response_model=ResponseModel)
 def close_risk(
     risk_id: int,
     close_data: dict,
@@ -334,7 +334,7 @@ def close_risk(
     return ResponseModel(code=200, message="风险已关闭", data={"id": risk.id})
 
 
-@router.delete("/projects/risks/{risk_id}", response_model=ResponseModel)
+@router.delete("/risks/{risk_id}", response_model=ResponseModel)
 def delete_project_risk(
     risk_id: int,
     db: Session = Depends(get_db),

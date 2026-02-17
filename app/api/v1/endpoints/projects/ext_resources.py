@@ -23,7 +23,7 @@ from app.common.query_filters import apply_pagination
 router = APIRouter()
 
 
-@router.get("/projects/{project_id}/resources", response_model=ResponseModel)
+@router.get("/{project_id}/resources", response_model=ResponseModel)
 def get_project_resources(
     project_id: int,
     db: Session = Depends(get_db),
@@ -88,7 +88,7 @@ def get_project_resources(
     )
 
 
-@router.get("/projects/{project_id}/resources/summary", response_model=ResponseModel)
+@router.get("/{project_id}/resources/summary", response_model=ResponseModel)
 def get_resource_summary(
     project_id: int,
     db: Session = Depends(get_db),
@@ -146,7 +146,7 @@ def get_resource_summary(
     )
 
 
-@router.post("/projects/{project_id}/resources", response_model=ResponseModel)
+@router.post("/{project_id}/resources", response_model=ResponseModel)
 def create_resource_allocation(
     project_id: int,
     resource_data: dict,
@@ -202,7 +202,7 @@ def create_resource_allocation(
     )
 
 
-@router.put("/projects/resources/{allocation_id}", response_model=ResponseModel)
+@router.put("/resources/{allocation_id}", response_model=ResponseModel)
 def update_resource_allocation(
     allocation_id: int,
     resource_data: dict,
@@ -243,7 +243,7 @@ def update_resource_allocation(
     return ResponseModel(code=200, message="资源分配更新成功", data={"id": allocation.id})
 
 
-@router.post("/projects/resources/{allocation_id}/release", response_model=ResponseModel)
+@router.post("/resources/{allocation_id}/release", response_model=ResponseModel)
 def release_resource(
     allocation_id: int,
     db: Session = Depends(get_db),
@@ -274,7 +274,7 @@ def release_resource(
     return ResponseModel(code=200, message="资源已释放", data={"id": allocation.id})
 
 
-@router.delete("/projects/resources/{allocation_id}", response_model=ResponseModel)
+@router.delete("/resources/{allocation_id}", response_model=ResponseModel)
 def delete_resource_allocation(
     allocation_id: int,
     db: Session = Depends(get_db),

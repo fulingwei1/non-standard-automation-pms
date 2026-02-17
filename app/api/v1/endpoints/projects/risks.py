@@ -56,7 +56,7 @@ def create_audit_log(
     pass  # Temporarily disabled
 
 
-@router.post("/projects/{project_id}/risks", response_model=ResponseModel)
+@router.post("/{project_id}/risks", response_model=ResponseModel)
 def create_risk(
     project_id: int,
     risk_data: ProjectRiskCreate,
@@ -130,7 +130,7 @@ def create_risk(
     )
 
 
-@router.get("/projects/{project_id}/risks", response_model=ResponseModel)
+@router.get("/{project_id}/risks", response_model=ResponseModel)
 def get_risks(
     project_id: int,
     risk_type: Optional[str] = Query(None, description="风险类型筛选"),
@@ -192,7 +192,7 @@ def get_risks(
     )
 
 
-@router.get("/projects/{project_id}/risks/{risk_id}", response_model=ResponseModel)
+@router.get("/{project_id}/risks/{risk_id}", response_model=ResponseModel)
 def get_risk(
     project_id: int,
     risk_id: int,
@@ -221,7 +221,7 @@ def get_risk(
     )
 
 
-@router.put("/projects/{project_id}/risks/{risk_id}", response_model=ResponseModel)
+@router.put("/{project_id}/risks/{risk_id}", response_model=ResponseModel)
 def update_risk(
     project_id: int,
     risk_id: int,
@@ -303,7 +303,7 @@ def update_risk(
     )
 
 
-@router.delete("/projects/{project_id}/risks/{risk_id}", response_model=ResponseModel)
+@router.delete("/{project_id}/risks/{risk_id}", response_model=ResponseModel)
 def delete_risk(
     project_id: int,
     risk_id: int,
@@ -353,7 +353,7 @@ def delete_risk(
     )
 
 
-@router.get("/projects/{project_id}/risk-matrix", response_model=ResponseModel)
+@router.get("/{project_id}/risk-matrix", response_model=ResponseModel)
 def get_risk_matrix(
     project_id: int,
     db: Session = Depends(get_db),
@@ -430,7 +430,7 @@ def get_risk_matrix(
     )
 
 
-@router.get("/projects/{project_id}/risk-summary", response_model=ResponseModel)
+@router.get("/{project_id}/risk-summary", response_model=ResponseModel)
 def get_risk_summary(
     project_id: int,
     db: Session = Depends(get_db),

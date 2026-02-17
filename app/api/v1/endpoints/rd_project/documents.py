@@ -43,7 +43,7 @@ router = APIRouter()
 
 # ==================== 研发项目文档管理 ====================
 
-@router.get("/rd-projects/{project_id}/documents", response_model=ResponseModel)
+@router.get("/{project_id}/documents", response_model=ResponseModel)
 def get_rd_project_documents(
     *,
     db: Session = Depends(deps.get_db),
@@ -86,7 +86,7 @@ def get_rd_project_documents(
     )
 
 
-@router.post("/rd-projects/{project_id}/documents", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/documents", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def create_rd_project_document(
     *,
     db: Session = Depends(deps.get_db),
@@ -118,7 +118,7 @@ def create_rd_project_document(
     )
 
 
-@router.post("/rd-projects/{project_id}/documents/upload", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/documents/upload", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 async def upload_rd_project_document(
     *,
     db: Session = Depends(deps.get_db),
@@ -183,7 +183,7 @@ async def upload_rd_project_document(
     )
 
 
-@router.get("/rd-projects/{project_id}/documents/{doc_id}/download")
+@router.get("/{project_id}/documents/{doc_id}/download")
 def download_rd_project_document(
     *,
     db: Session = Depends(deps.get_db),

@@ -23,7 +23,7 @@ from app.common.query_filters import apply_pagination
 router = APIRouter()
 
 
-@router.get("/projects/{project_id}/reviews", response_model=ResponseModel)
+@router.get("/{project_id}/reviews", response_model=ResponseModel)
 def get_project_reviews(
     project_id: int,
     db: Session = Depends(get_db),
@@ -79,7 +79,7 @@ def get_project_reviews(
     )
 
 
-@router.get("/projects/reviews/{review_id}", response_model=ResponseModel)
+@router.get("/reviews/{review_id}", response_model=ResponseModel)
 def get_review_detail(
     review_id: int,
     db: Session = Depends(get_db),
@@ -154,7 +154,7 @@ def get_review_detail(
     )
 
 
-@router.post("/projects/{project_id}/reviews", response_model=ResponseModel)
+@router.post("/{project_id}/reviews", response_model=ResponseModel)
 def create_project_review(
     project_id: int,
     review_data: dict,
@@ -218,7 +218,7 @@ def create_project_review(
     )
 
 
-@router.put("/projects/reviews/{review_id}", response_model=ResponseModel)
+@router.put("/reviews/{review_id}", response_model=ResponseModel)
 def update_project_review(
     review_id: int,
     review_data: dict,
@@ -262,7 +262,7 @@ def update_project_review(
     return ResponseModel(code=200, message="复盘报告更新成功", data={"id": review.id})
 
 
-@router.post("/projects/reviews/{review_id}/publish", response_model=ResponseModel)
+@router.post("/reviews/{review_id}/publish", response_model=ResponseModel)
 def publish_review(
     review_id: int,
     db: Session = Depends(get_db),
@@ -292,7 +292,7 @@ def publish_review(
     return ResponseModel(code=200, message="复盘报告已发布", data={"id": review.id})
 
 
-@router.delete("/projects/reviews/{review_id}", response_model=ResponseModel)
+@router.delete("/reviews/{review_id}", response_model=ResponseModel)
 def delete_project_review(
     review_id: int,
     db: Session = Depends(get_db),

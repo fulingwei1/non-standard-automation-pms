@@ -32,7 +32,7 @@ router = APIRouter()
 
 # ==================== 研发项目立项 ====================
 
-@router.get("/rd-projects", response_model=PaginatedResponse)
+@router.get("/", response_model=PaginatedResponse)
 def get_rd_projects(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -81,7 +81,7 @@ def get_rd_projects(
     )
 
 
-@router.post("/rd-projects", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def create_rd_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -134,7 +134,7 @@ def create_rd_project(
     )
 
 
-@router.get("/rd-projects/{project_id}", response_model=ResponseModel)
+@router.get("/{project_id}", response_model=ResponseModel)
 def get_rd_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -155,7 +155,7 @@ def get_rd_project(
     )
 
 
-@router.put("/rd-projects/{project_id}", response_model=ResponseModel)
+@router.put("/{project_id}", response_model=ResponseModel)
 def update_rd_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -197,7 +197,7 @@ def update_rd_project(
     )
 
 
-@router.put("/rd-projects/{project_id}/approve", response_model=ResponseModel)
+@router.put("/{project_id}/approve", response_model=ResponseModel)
 def approve_rd_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -237,7 +237,7 @@ def approve_rd_project(
     )
 
 
-@router.put("/rd-projects/{project_id}/close", response_model=ResponseModel)
+@router.put("/{project_id}/close", response_model=ResponseModel)
 def close_rd_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -272,7 +272,7 @@ def close_rd_project(
     )
 
 
-@router.put("/rd-projects/{project_id}/link-project", response_model=ResponseModel)
+@router.put("/{project_id}/link-project", response_model=ResponseModel)
 def link_rd_project(
     *,
     db: Session = Depends(deps.get_db),

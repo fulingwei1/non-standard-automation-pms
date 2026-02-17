@@ -184,7 +184,7 @@ def update_rd_cost(
     )
 
 
-@router.get("/rd-projects/{project_id}/cost-summary", response_model=ResponseModel)
+@router.get("/{project_id}/cost-summary", response_model=ResponseModel)
 def get_rd_project_cost_summary(
     *,
     db: Session = Depends(deps.get_db),

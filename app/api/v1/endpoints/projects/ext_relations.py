@@ -29,7 +29,7 @@ RELATION_TYPES = {
 }
 
 
-@router.get("/projects/{project_id}/relations", response_model=ResponseModel)
+@router.get("/{project_id}/relations", response_model=ResponseModel)
 def get_project_relations(
     project_id: int,
     db: Session = Depends(get_db),
@@ -97,7 +97,7 @@ def get_project_relations(
     )
 
 
-@router.get("/projects/relations/types", response_model=ResponseModel)
+@router.get("/relations/types", response_model=ResponseModel)
 def get_relation_types(
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -123,7 +123,7 @@ def get_relation_types(
     )
 
 
-@router.post("/projects/{project_id}/relations", response_model=ResponseModel)
+@router.post("/{project_id}/relations", response_model=ResponseModel)
 def create_project_relation(
     project_id: int,
     relation_data: dict,
@@ -182,7 +182,7 @@ def create_project_relation(
     )
 
 
-@router.delete("/projects/{project_id}/relations/{related_project_id}", response_model=ResponseModel)
+@router.delete("/{project_id}/relations/{related_project_id}", response_model=ResponseModel)
 def delete_project_relation(
     project_id: int,
     related_project_id: int,
@@ -221,7 +221,7 @@ def delete_project_relation(
     )
 
 
-@router.get("/projects/{project_id}/dependency-chain", response_model=ResponseModel)
+@router.get("/{project_id}/dependency-chain", response_model=ResponseModel)
 def get_dependency_chain(
     project_id: int,
     direction: str = Query("both", description="方向：upstream/downstream/both"),

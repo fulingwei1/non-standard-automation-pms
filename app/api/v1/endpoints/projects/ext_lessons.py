@@ -22,7 +22,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 router = APIRouter()
 
 
-@router.get("/projects/{project_id}/lessons", response_model=ResponseModel)
+@router.get("/{project_id}/lessons", response_model=ResponseModel)
 def get_project_lessons(
     project_id: int,
     db: Session = Depends(get_db),
@@ -86,7 +86,7 @@ def get_project_lessons(
     )
 
 
-@router.get("/projects/lessons/{lesson_id}", response_model=ResponseModel)
+@router.get("/lessons/{lesson_id}", response_model=ResponseModel)
 def get_lesson_detail(
     lesson_id: int,
     db: Session = Depends(get_db),
@@ -132,7 +132,7 @@ def get_lesson_detail(
     )
 
 
-@router.post("/projects/{project_id}/lessons", response_model=ResponseModel)
+@router.post("/{project_id}/lessons", response_model=ResponseModel)
 def create_project_lesson(
     project_id: int,
     lesson_data: dict,
@@ -178,7 +178,7 @@ def create_project_lesson(
     )
 
 
-@router.put("/projects/lessons/{lesson_id}", response_model=ResponseModel)
+@router.put("/lessons/{lesson_id}", response_model=ResponseModel)
 def update_project_lesson(
     lesson_id: int,
     lesson_data: dict,
@@ -221,7 +221,7 @@ def update_project_lesson(
     return ResponseModel(code=200, message="经验教训更新成功", data={"id": lesson.id})
 
 
-@router.delete("/projects/lessons/{lesson_id}", response_model=ResponseModel)
+@router.delete("/lessons/{lesson_id}", response_model=ResponseModel)
 def delete_project_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
@@ -248,7 +248,7 @@ def delete_project_lesson(
     return ResponseModel(code=200, message="经验教训删除成功", data={"id": lesson_id})
 
 
-@router.get("/projects/lessons/search", response_model=ResponseModel)
+@router.get("/lessons/search", response_model=ResponseModel)
 def search_lessons(
     keyword: str = Query(..., min_length=1, description="搜索关键词"),
     lesson_type: Optional[str] = Query(None),

@@ -32,7 +32,7 @@ router = APIRouter()
 
 # ==================== 研发项目工作日志 ====================
 
-@router.get("/rd-projects/{project_id}/worklogs", response_model=ResponseModel)
+@router.get("/{project_id}/worklogs", response_model=ResponseModel)
 def get_rd_project_worklogs(
     *,
     db: Session = Depends(deps.get_db),
@@ -100,7 +100,7 @@ def get_rd_project_worklogs(
     )
 
 
-@router.post("/rd-projects/{project_id}/worklogs", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/worklogs", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def create_rd_project_worklog(
     *,
     db: Session = Depends(deps.get_db),

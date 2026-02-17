@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/projects/{project_id}/risk-trend",
+    "/{project_id}/risk-trend",
     response_model=ResponseModel,
     status_code=status.HTTP_200_OK,
 )
@@ -75,7 +75,7 @@ def get_project_risk_trend(
 
 
 @router.get(
-    "/projects/{project_id}/risk-history",
+    "/{project_id}/risk-history",
     response_model=ResponseModel,
     status_code=status.HTTP_200_OK,
 )
@@ -151,7 +151,7 @@ def get_project_risk_history(
 
 
 @router.get(
-    "/projects/{project_id}/risk-current",
+    "/{project_id}/risk-current",
     response_model=ResponseModel,
     status_code=status.HTTP_200_OK,
 )
@@ -193,7 +193,7 @@ def get_project_current_risk(
 
 
 @router.post(
-    "/projects/{project_id}/risk-calculate",
+    "/{project_id}/risk-calculate",
     response_model=ResponseModel,
     status_code=status.HTTP_200_OK,
 )

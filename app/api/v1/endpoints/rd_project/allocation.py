@@ -124,7 +124,7 @@ def apply_cost_allocation(
     )
 
 
-@router.get("/rd-projects/{project_id}/timesheet-summary", response_model=ResponseModel)
+@router.get("/{project_id}/timesheet-summary", response_model=ResponseModel)
 def get_rd_project_timesheet_summary(
     *,
     db: Session = Depends(deps.get_db),
