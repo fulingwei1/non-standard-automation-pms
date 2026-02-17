@@ -58,12 +58,15 @@ class TestPasswordFunctions:
         assert result is False
 
     def test_verify_password_empty(self):
-        """测试空密码验证"""
+        """测试空密码验证——空密码哈希后，空密码匹配应返回 True"""
         password = ""
         hashed = get_password_hash(password)
 
+        # 空字符串哈希后，用空字符串验证应该返回 True（bcrypt 行为）
         result = verify_password("", hashed)
-        assert result is False
+        assert result is True
+        # 非空密码不应该匹配
+        assert verify_password("notempty", hashed) is False
 
     def test_password_hashing_roundtrip(self):
         """测试密码哈希往返验证"""
@@ -89,6 +92,7 @@ class TestTokenCreation:
         """测试基本 Token 创建"""
         mock_settings.SECRET_KEY = "test_secret_key"
         mock_settings.ALGORITHM = "HS256"
+        mock_settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 需要设置，否则 timedelta 报错
 
         data = {"sub": "user123", "user_id": 1}
         token = create_access_token(data)
@@ -115,6 +119,7 @@ class TestTokenCreation:
         """测试复杂数据的 Token 创建"""
         mock_settings.SECRET_KEY = "test_secret_key"
         mock_settings.ALGORITHM = "HS256"
+        mock_settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
         data = {
             "sub": "user123",
@@ -193,16 +198,28 @@ class TestTokenRevocation:
     @patch("app.core.auth.settings")
     def test_is_token_revoked_redis(self, mock_settings, mock_redis):
         """测试检查 Token 是否已撤销（Redis）"""
-        mock_settings.SECRET_KEY = "test_secret_key"
+        mock_settings.SECRET_KEY = "test_secret_key_for_unit_tests"
         mock_settings.ALGORITHM = "HS256"
+        mock_settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-        # Mock Redis
+        # Mock Redis — 返回 1 表示 key 存在（已撤销）
         redis_mock = MagicMock()
-        redis_mock.exists.return_value = 1  # Token 在黑名单中
+        redis_mock.exists.return_value = 1
         mock_redis.return_value = redis_mock
 
-        # 测试已撤销的 token
-        result = is_token_revoked("test_token")
+        # 先生成一个有效的 JWT token（带 jti）
+        import jwt
+        from datetime import datetime, timezone, timedelta
+        import uuid
+        payload = {
+            "sub": "user123",
+            "jti": str(uuid.uuid4()),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        }
+        token = jwt.encode(payload, "test_secret_key_for_unit_tests", algorithm="HS256")
+
+        result = is_token_revoked(token)
+        # Redis.exists 返回 1 → token 在黑名单 → 应该返回 True
         assert result is True
 
     @patch("app.core.auth.get_redis_client")

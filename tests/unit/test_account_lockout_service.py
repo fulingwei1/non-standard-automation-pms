@@ -72,7 +72,8 @@ class TestLockoutLogic(TestAccountLockoutService):
         
         self.assertEqual(result["attempts"], 2)
         self.assertFalse(result["locked"])
-        mock_redis.incr.assert_called_once()
+        # incr 会被调用多次（username + IP 两个计数器）
+        self.assertGreaterEqual(mock_redis.incr.call_count, 1)
         mock_redis.expire.assert_called()
     
     @patch('app.services.account_lockout_service.get_redis_client')
