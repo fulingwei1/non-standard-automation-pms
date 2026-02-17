@@ -34,7 +34,6 @@ from app.schemas.presale import (
     SolutionUpdate,
 )
 
-router = APIRouter()
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
@@ -47,7 +46,7 @@ generate_tender_no = presale_codes.generate_tender_no
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/presale/proposals",
+    prefix="/proposals",
     tags=["proposals"]
 )
 
@@ -55,7 +54,7 @@ router = APIRouter(
 
 # ==================== 技术方案管理 ====================
 
-@router.get("/presale/solutions", response_model=PaginatedResponse)
+@router.get("/solutions", response_model=PaginatedResponse)
 def read_solutions(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -122,7 +121,7 @@ def read_solutions(
     return pagination.to_response(items, total)
 
 
-@router.post("/presale/solutions", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/solutions", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)
 def create_solution(
     *,
     db: Session = Depends(deps.get_db),
@@ -188,7 +187,7 @@ def create_solution(
     )
 
 
-@router.get("/presale/solutions/{solution_id}", response_model=SolutionResponse)
+@router.get("/solutions/{solution_id}", response_model=SolutionResponse)
 def read_solution(
     *,
     db: Session = Depends(deps.get_db),
@@ -232,7 +231,7 @@ def read_solution(
     )
 
 
-@router.put("/presale/solutions/{solution_id}", response_model=SolutionResponse)
+@router.put("/solutions/{solution_id}", response_model=SolutionResponse)
 def update_solution(
     *,
     db: Session = Depends(deps.get_db),
@@ -261,7 +260,7 @@ def update_solution(
     return read_solution(db=db, solution_id=solution_id, current_user=current_user)
 
 
-@router.get("/presale/solutions/{solution_id}/cost", response_model=SolutionCostResponse)
+@router.get("/solutions/{solution_id}/cost", response_model=SolutionCostResponse)
 def get_solution_cost(
     *,
     db: Session = Depends(deps.get_db),
@@ -309,7 +308,7 @@ def get_solution_cost(
     )
 
 
-@router.put("/presale/solutions/{solution_id}/review", response_model=SolutionResponse)
+@router.put("/solutions/{solution_id}/review", response_model=SolutionResponse)
 def review_solution(
     *,
     db: Session = Depends(deps.get_db),
@@ -342,7 +341,7 @@ def review_solution(
 
 
 
-@router.get("/presale/solutions/{solution_id}/versions", response_model=List[SolutionResponse])
+@router.get("/solutions/{solution_id}/versions", response_model=List[SolutionResponse])
 def get_solution_versions(
     *,
     db: Session = Depends(deps.get_db),

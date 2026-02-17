@@ -69,7 +69,7 @@ class BaseDashboardEndpoint(BaseDashboardService):
 
         # 主dashboard端点
         self.router.add_api_route(
-            f"/{self.module_name}/dashboard",
+            "/dashboard",
             dashboard_endpoint,
             methods=["GET"],
             summary=f"获取{self.module_name}模块仪表板数据",
@@ -86,7 +86,7 @@ class BaseDashboardEndpoint(BaseDashboardService):
                 return self._get_stats_handler(db, current_user)
 
             self.router.add_api_route(
-                f"/{self.module_name}/dashboard/stats",
+                "/dashboard/stats",
                 stats_endpoint,
                 methods=["GET"],
                 summary=f"获取{self.module_name}模块统计数据",

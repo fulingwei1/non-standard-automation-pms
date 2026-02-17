@@ -20,7 +20,7 @@ from .machine_bom import router as machine_bom_router
 router = APIRouter()
 
 router.include_router(list_router)
-router.include_router(machine_bom_router, prefix="/machines/{machine_id}/bom")
+router.include_router(machine_bom_router, prefix="/machines/{machine_id}")
 router.include_router(bom_detail_router)
 router.include_router(bom_items_router)
 router.include_router(bom_release_router)

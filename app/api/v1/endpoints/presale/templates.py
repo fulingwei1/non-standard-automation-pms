@@ -36,7 +36,7 @@ generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
 router = APIRouter(
-    prefix="/presale/templates",
+    prefix="/templates",
     tags=["templates"]
 )
 
