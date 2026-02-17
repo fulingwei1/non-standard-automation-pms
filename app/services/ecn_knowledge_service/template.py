@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Dict, List
 from app.models.ecn import Ecn, EcnSolutionTemplate
 
 from .solution_extraction import _extract_keywords
+from app.utils.db_helpers import save_obj
 
 if TYPE_CHECKING:
     from app.services.ecn_knowledge_service import EcnKnowledgeService
@@ -109,9 +110,7 @@ def create_solution_template(
         created_by=created_by
     )
 
-    service.db.add(template)
-    service.db.commit()
-    service.db.refresh(template)
+    save_obj(service.db, template)
 
     return template
 

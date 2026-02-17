@@ -22,6 +22,7 @@ from app.models.project import (
     Project,
     ProjectCost,
 )
+from app.utils.db_helpers import save_obj
 
 
 class CostForecastService:
@@ -868,8 +869,6 @@ class CostForecastService:
             created_by=created_by,
         )
 
-        self.db.add(forecast)
-        self.db.commit()
-        self.db.refresh(forecast)
+        save_obj(self.db, forecast)
 
         return forecast

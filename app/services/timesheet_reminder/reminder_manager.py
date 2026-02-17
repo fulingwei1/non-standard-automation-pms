@@ -20,6 +20,7 @@ from app.models.timesheet_reminder import (
     TimesheetReminderConfig,
     TimesheetReminderRecord,
 )
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +67,7 @@ class TimesheetReminderManager:
             created_by=created_by,
         )
 
-        self.db.add(config)
-        self.db.commit()
-        self.db.refresh(config)
+        save_obj(self.db, config)
 
         logger.info(f"创建提醒规则配置: {rule_code} - {rule_name}")
         return config
@@ -178,9 +177,7 @@ class TimesheetReminderManager:
             notification_channels=notification_channels or ['SYSTEM'],
         )
 
-        self.db.add(record)
-        self.db.commit()
-        self.db.refresh(record)
+        save_obj(self.db, record)
 
         logger.info(f"创建提醒记录: {reminder_no} - {title}")
         return record
@@ -371,9 +368,7 @@ class TimesheetReminderManager:
             reminder_id=reminder_id,
         )
 
-        self.db.add(record)
-        self.db.commit()
-        self.db.refresh(record)
+        save_obj(self.db, record)
 
         logger.info(f"创建异常记录: {anomaly_type.value} - {description}")
         return record

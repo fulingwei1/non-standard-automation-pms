@@ -19,6 +19,7 @@ from app.schemas.sales_team import (
     SalesRegionCreate,
     SalesRegionUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 
 class SalesTeamService:
@@ -34,9 +35,7 @@ class SalesTeamService:
         
         # 创建团队
         team = SalesTeam(**team_data.model_dump(), created_by=created_by)
-        db.add(team)
-        db.commit()
-        db.refresh(team)
+        save_obj(db, team)
         return team
     
     @staticmethod
@@ -68,9 +67,7 @@ class SalesTeamService:
     @staticmethod
     def update_team(db: Session, team_id: int, team_data: SalesTeamUpdate) -> SalesTeam:
         """更新团队"""
-        team = db.query(SalesTeam).filter(SalesTeam.id == team_id).first()
-        if not team:
-            raise HTTPException(status_code=404, detail="团队不存在")
+        team = get_or_404(db, SalesTeam, team_id, detail="团队不存在")
         
         update_data = team_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -83,17 +80,14 @@ class SalesTeamService:
     @staticmethod
     def delete_team(db: Session, team_id: int) -> bool:
         """删除团队"""
-        team = db.query(SalesTeam).filter(SalesTeam.id == team_id).first()
-        if not team:
-            raise HTTPException(status_code=404, detail="团队不存在")
+        team = get_or_404(db, SalesTeam, team_id, detail="团队不存在")
         
         # 检查是否有子团队
         sub_teams = db.query(SalesTeam).filter(SalesTeam.parent_team_id == team_id).count()
         if sub_teams > 0:
             raise HTTPException(status_code=400, detail="存在子团队，无法删除")
         
-        db.delete(team)
-        db.commit()
+        delete_obj(db, team)
         return True
     
     @staticmethod
@@ -137,9 +131,7 @@ class SalesTeamService:
             raise HTTPException(status_code=400, detail="用户已在该团队中")
         
         member = SalesTeamMember(**member_data.model_dump())
-        db.add(member)
-        db.commit()
-        db.refresh(member)
+        save_obj(db, member)
         return member
     
     @staticmethod
@@ -209,9 +201,7 @@ class SalesRegionService:
             raise HTTPException(status_code=400, detail=f"区域编码 {region_data.region_code} 已存在")
         
         region = SalesRegion(**region_data.model_dump(), created_by=created_by)
-        db.add(region)
-        db.commit()
-        db.refresh(region)
+        save_obj(db, region)
         return region
     
     @staticmethod
@@ -237,9 +227,7 @@ class SalesRegionService:
     @staticmethod
     def update_region(db: Session, region_id: int, region_data: SalesRegionUpdate) -> SalesRegion:
         """更新区域"""
-        region = db.query(SalesRegion).filter(SalesRegion.id == region_id).first()
-        if not region:
-            raise HTTPException(status_code=404, detail="区域不存在")
+        region = get_or_404(db, SalesRegion, region_id, detail="区域不存在")
         
         update_data = region_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -252,14 +240,10 @@ class SalesRegionService:
     @staticmethod
     def assign_team(db: Session, region_id: int, team_id: int, leader_id: Optional[int] = None) -> SalesRegion:
         """分配团队"""
-        region = db.query(SalesRegion).filter(SalesRegion.id == region_id).first()
-        if not region:
-            raise HTTPException(status_code=404, detail="区域不存在")
+        region = get_or_404(db, SalesRegion, region_id, detail="区域不存在")
         
         # 检查团队是否存在
-        team = db.query(SalesTeam).filter(SalesTeam.id == team_id).first()
-        if not team:
-            raise HTTPException(status_code=404, detail="团队不存在")
+        team = get_or_404(db, SalesTeam, team_id, detail="团队不存在")
         
         region.team_id = team_id
         if leader_id:

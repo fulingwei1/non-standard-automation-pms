@@ -16,6 +16,7 @@ from app.models.outsourcing import OutsourcingOrder
 from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder
 from app.services.cost_alert_service import CostAlertService
+from app.utils.db_helpers import delete_obj
 
 
 class CostCollectionService:
@@ -392,8 +393,7 @@ class CostCollectionService:
                 if project:
                     project.actual_cost = max(0, (project.actual_cost or 0) - float(existing_cost.amount or 0))
                     db.add(project)
-                db.delete(existing_cost)
-                db.commit()
+                delete_obj(db, existing_cost)
             return None
 
         # 使用BOM的总金额（如果BOM表头有total_amount字段）

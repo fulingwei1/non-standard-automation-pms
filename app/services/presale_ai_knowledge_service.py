@@ -19,6 +19,7 @@ from app.schemas.presale_ai_knowledge import (
     KnowledgeExtractionRequest,
     AIQARequest,
 )
+from app.utils.db_helpers import save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +54,7 @@ class PresaleAIKnowledgeService:
             embedding = self._generate_embedding(case_data.project_summary)
             case.embedding = self._serialize_embedding(embedding)
         
-        self.db.add(case)
-        self.db.commit()
-        self.db.refresh(case)
+        save_obj(self.db, case)
         
         logger.info(f"创建案例成功: {case.id} - {case.case_name}")
         return case
@@ -92,8 +91,7 @@ class PresaleAIKnowledgeService:
         if not case:
             return False
         
-        self.db.delete(case)
-        self.db.commit()
+        delete_obj(self.db, case)
         
         logger.info(f"删除案例成功: {case_id}")
         return True

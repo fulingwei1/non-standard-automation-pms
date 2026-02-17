@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.organization import Department
 from app.models.performance import PerformanceAdjustmentHistory, PerformanceResult
 from app.models.user import User
+from app.utils.db_helpers import save_obj
 
 
 class ManagerEvaluationService:
@@ -158,9 +159,7 @@ class ManagerEvaluationService:
         history.adjusted_level = result.level
 
         self.db.add(history)
-        self.db.add(result)
-        self.db.commit()
-        self.db.refresh(result)
+        save_obj(self.db, result)
 
         return result
 

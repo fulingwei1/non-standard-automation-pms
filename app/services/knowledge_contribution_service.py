@@ -22,6 +22,7 @@ from app.schemas.engineer_performance import (
     KnowledgeContributionUpdate,
     KnowledgeReuseCreate,
 )
+from app.utils.db_helpers import save_obj, delete_obj
 
 
 class KnowledgeContributionService:
@@ -48,9 +49,7 @@ class KnowledgeContributionService:
             tags=data.tags,
             status='draft'
         )
-        self.db.add(contribution)
-        self.db.commit()
-        self.db.refresh(contribution)
+        save_obj(self.db, contribution)
         return contribution
 
     def get_contribution(self, contribution_id: int) -> Optional[KnowledgeContribution]:
@@ -164,8 +163,7 @@ class KnowledgeContributionService:
         if contribution.status == 'approved':
             raise ValueError("已审核通过的贡献不能删除")
 
-        self.db.delete(contribution)
-        self.db.commit()
+        delete_obj(self.db, contribution)
         return True
 
     # ==================== 复用记录 ====================

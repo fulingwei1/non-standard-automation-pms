@@ -23,6 +23,7 @@ from app.schemas.service import (
     ServiceDashboardStatistics,
     ServiceTicketResponse,
 )
+from app.utils.db_helpers import save_obj
 
 
 logger = logging.getLogger(__name__)
@@ -292,9 +293,7 @@ class ServiceTicketsService:
             status="PENDING"
         )
 
-        self.db.add(service_ticket)
-        self.db.commit()
-        self.db.refresh(service_ticket)
+        save_obj(self.db, service_ticket)
 
         # 自动分配处理人
         self._auto_assign_ticket(service_ticket)

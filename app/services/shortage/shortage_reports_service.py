@@ -26,6 +26,7 @@ from app.schemas.shortage import (
     ShortageReportCreate,
     ShortageReportResponse,
 )
+from app.utils.db_helpers import save_obj
 
 
 class ShortageReportsService:
@@ -108,9 +109,7 @@ class ShortageReportsService:
             status="pending"
         )
 
-        self.db.add(shortage_report)
-        self.db.commit()
-        self.db.refresh(shortage_report)
+        save_obj(self.db, shortage_report)
 
         return shortage_report
 

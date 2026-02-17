@@ -20,6 +20,7 @@ from app.models.qualification import (
     QualificationLevel,
     QualificationStatusEnum,
 )
+from app.utils.db_helpers import save_obj
 
 
 class QualificationService:
@@ -162,9 +163,7 @@ class QualificationService:
             assessed_at=datetime.now()
         )
 
-        db.add(assessment)
-        db.commit()
-        db.refresh(assessment)
+        save_obj(db, assessment)
 
         return assessment
 

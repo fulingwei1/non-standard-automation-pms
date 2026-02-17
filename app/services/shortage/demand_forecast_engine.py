@@ -18,6 +18,7 @@ from app.models.material import Material
 from app.models.production.work_order import WorkOrder
 from app.models.purchase import PurchaseOrderItem
 from app.core.exceptions import BusinessException
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -127,9 +128,7 @@ class DemandForecastEngine:
             forecast_date=datetime.now().date()
         )
         
-        self.db.add(forecast)
-        self.db.commit()
-        self.db.refresh(forecast)
+        save_obj(self.db, forecast)
         
         logger.info(
             f"预测完成: forecast_no={forecast.forecast_no}, "

@@ -12,6 +12,7 @@ from app.common.query_filters import apply_keyword_filter
 from app.models.issue import SolutionTemplate
 from app.models.service import KnowledgeBase, ServiceTicket
 from app.utils.number_generator import generate_sequential_no
+from app.utils.db_helpers import save_obj
 
 
 def auto_extract_knowledge_from_ticket(
@@ -119,9 +120,7 @@ def auto_extract_knowledge_from_ticket(
         author_name=ticket.assigned_to_name or "系统",
     )
 
-    db.add(article)
-    db.commit()
-    db.refresh(article)
+    save_obj(db, article)
 
     # 同时创建解决方案模板
     create_solution_template_from_ticket(db, ticket, article)
@@ -193,9 +192,7 @@ def create_solution_template_from_ticket(
         is_public=True,
     )
 
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     return template
 

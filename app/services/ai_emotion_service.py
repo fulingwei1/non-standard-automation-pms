@@ -14,6 +14,7 @@ from sqlalchemy import and_, desc
 from app.models.presale_ai_emotion_analysis import PresaleAIEmotionAnalysis, SentimentType, ChurnRiskLevel
 from app.models.presale_follow_up_reminder import PresaleFollowUpReminder, ReminderPriority, ReminderStatus
 from app.models.presale_emotion_trend import PresaleEmotionTrend
+from app.utils.db_helpers import save_obj
 
 
 class AIEmotionService:
@@ -54,9 +55,7 @@ class AIEmotionService:
             analysis_result=json.dumps(analysis_result, ensure_ascii=False)
         )
         
-        self.db.add(emotion_analysis)
-        self.db.commit()
-        self.db.refresh(emotion_analysis)
+        save_obj(self.db, emotion_analysis)
         
         # 更新情绪趋势
         await self._update_emotion_trend(presale_ticket_id, customer_id, sentiment, purchase_intent_score)
@@ -151,9 +150,7 @@ class AIEmotionService:
             status=ReminderStatus.PENDING
         )
         
-        self.db.add(reminder)
-        self.db.commit()
-        self.db.refresh(reminder)
+        save_obj(self.db, reminder)
         
         return reminder
     

@@ -15,6 +15,7 @@ from app.models.assembly_kit import KitRateSnapshot
 from app.models.material import BomHeader, BomItem
 from app.models.project import Machine, Project
 from app.models.purchase import PurchaseOrderItem
+from app.utils.db_helpers import get_or_404
 
 
 class KitRateService:
@@ -24,15 +25,11 @@ class KitRateService:
         self.db = db
 
     def _get_project(self, project_id: int) -> Project:
-        project = self.db.query(Project).filter(Project.id == project_id).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="项目不存在")
+        project = get_or_404(self.db, Project, project_id, detail="项目不存在")
         return project
 
     def _get_machine(self, machine_id: int) -> Machine:
-        machine = self.db.query(Machine).filter(Machine.id == machine_id).first()
-        if not machine:
-            raise HTTPException(status_code=404, detail="机台不存在")
+        machine = get_or_404(self.db, Machine, machine_id, detail="机台不存在")
         return machine
 
     def _get_latest_bom(self, machine_id: int) -> Optional[BomHeader]:

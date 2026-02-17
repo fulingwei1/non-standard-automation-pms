@@ -25,6 +25,7 @@ from app.schemas.sales.contract_enhanced import (
     ContractTermCreate,
     ContractUpdate,
 )
+from app.utils.db_helpers import save_obj, delete_obj
 
 
 class ContractEnhancedService:
@@ -169,8 +170,7 @@ class ContractEnhancedService:
         if contract.status != 'draft':
             raise ValueError("只能删除草稿状态的合同")
         
-        db.delete(contract)
-        db.commit()
+        delete_obj(db, contract)
         return True
 
     # ========== 合同审批流程 ==========
@@ -345,9 +345,7 @@ class ContractEnhancedService:
     def add_term(db: Session, contract_id: int, term_data: ContractTermCreate) -> ContractTerm:
         """添加条款"""
         term = ContractTerm(contract_id=contract_id, **term_data.model_dump())
-        db.add(term)
-        db.commit()
-        db.refresh(term)
+        save_obj(db, term)
         return term
 
     @staticmethod
@@ -370,8 +368,7 @@ class ContractEnhancedService:
         """删除条款"""
         term = db.query(ContractTerm).filter(ContractTerm.id == term_id).first()
         if term:
-            db.delete(term)
-            db.commit()
+            delete_obj(db, term)
             return True
         return False
 
@@ -386,9 +383,7 @@ class ContractEnhancedService:
             uploaded_by=user_id,
             **attachment_data.model_dump()
         )
-        db.add(attachment)
-        db.commit()
-        db.refresh(attachment)
+        save_obj(db, attachment)
         return attachment
 
     @staticmethod
@@ -401,8 +396,7 @@ class ContractEnhancedService:
         """删除附件"""
         attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
         if attachment:
-            db.delete(attachment)
-            db.commit()
+            delete_obj(db, attachment)
             return True
         return False
 

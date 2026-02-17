@@ -25,6 +25,7 @@ from app.models.report import (
     GeneratedByEnum,
     ArchiveStatusEnum,
 )
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -480,9 +481,7 @@ class ReportService:
             download_count=0,
         )
         
-        db.add(archive)
-        db.commit()
-        db.refresh(archive)
+        save_obj(db, archive)
         
         logger.info(f"✅ 报表归档成功: {template.name} - {period}")
         

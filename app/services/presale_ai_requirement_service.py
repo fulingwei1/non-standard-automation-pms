@@ -23,6 +23,7 @@ from app.schemas.presale_ai_requirement import (
 )
 from app.core.config import settings
 import httpx
+from app.utils.db_helpers import save_obj
 
 
 class AIRequirementAnalyzer:
@@ -485,9 +486,7 @@ class PresaleAIRequirementService:
             created_by=user_id
         )
         
-        self.db.add(db_record)
-        self.db.commit()
-        self.db.refresh(db_record)
+        save_obj(self.db, db_record)
         
         return db_record
     

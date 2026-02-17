@@ -11,6 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Machine, Project
+from app.utils.db_helpers import save_obj
 
 
 # 阶段优先级映射（数值越小优先级越高，表示越靠前）
@@ -223,9 +224,7 @@ class ProjectAggregationService:
         project.stage = self.calculate_project_stage(project_id)
         project.health = self.calculate_project_health(project_id)
 
-        self.db.add(project)
-        self.db.commit()
-        self.db.refresh(project)
+        save_obj(self.db, project)
 
         return project
 

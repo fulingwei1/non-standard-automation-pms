@@ -16,6 +16,7 @@ from app.schemas.engineer_performance import (
     EngineerProfileCreate,
     EngineerProfileUpdate,
 )
+from app.utils.db_helpers import save_obj
 
 
 class ProfileService:
@@ -47,9 +48,7 @@ class ProfileService:
             job_start_date=data.job_start_date,
             level_start_date=data.level_start_date
         )
-        self.db.add(profile)
-        self.db.commit()
-        self.db.refresh(profile)
+        save_obj(self.db, profile)
         return profile
 
     def update_profile(

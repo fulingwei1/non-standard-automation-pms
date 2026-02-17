@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.user import User
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -204,9 +205,7 @@ class StatusUpdateService:
 
         # 10. 提交数据库
         try:
-            self.db.add(entity)
-            self.db.commit()
-            self.db.refresh(entity)
+            save_obj(self.db, entity)
         except Exception as e:
             self.db.rollback()
             errors.append(f"数据库提交失败: {str(e)}")

@@ -21,6 +21,7 @@ from app.models import (
     Project,
 )
 from app.services.evm_service import EVMCalculator
+from app.utils.db_helpers import save_obj
 
 
 class GLM5CostPredictor:
@@ -661,9 +662,7 @@ class CostPredictionService:
             notes=notes
         )
         
-        self.db.add(prediction)
-        self.db.commit()
-        self.db.refresh(prediction)
+        save_obj(self.db, prediction)
         
         # 如果使用AI且超支风险高，自动生成优化建议
         if use_ai and self.ai_predictor and risk_analysis['risk_level'] in ['HIGH', 'CRITICAL']:

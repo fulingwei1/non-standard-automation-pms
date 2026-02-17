@@ -26,6 +26,7 @@ from app.schemas.resource_plan import (
     ResourceConflict,
     ResourcePlanCreate,
 )
+from app.utils.db_helpers import save_obj
 
 
 class ResourcePlanService:
@@ -117,9 +118,7 @@ class ResourcePlanService:
     ) -> ProjectStageResourcePlan:
         """创建资源计划"""
         plan = ProjectStageResourcePlan(project_id=project_id, **plan_in.model_dump())
-        db.add(plan)
-        db.commit()
-        db.refresh(plan)
+        save_obj(db, plan)
         return plan
 
     @staticmethod

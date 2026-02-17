@@ -31,6 +31,7 @@ from app.schemas.presale_ai import (
     WorkflowStatusResponse,
     HealthCheckResponse
 )
+from app.utils.db_helpers import save_obj
 
 
 class PresaleAIIntegrationService:
@@ -202,9 +203,7 @@ class PresaleAIIntegrationService:
             user_id=user_id,
             **feedback_data.dict()
         )
-        self.db.add(feedback)
-        self.db.commit()
-        self.db.refresh(feedback)
+        save_obj(self.db, feedback)
         return feedback
 
     def get_feedbacks(
@@ -249,9 +248,7 @@ class PresaleAIIntegrationService:
                 max_tokens=2000,
                 timeout_seconds=30
             )
-            self.db.add(config)
-            self.db.commit()
-            self.db.refresh(config)
+            save_obj(self.db, config)
 
         return config
 
@@ -404,9 +401,7 @@ class PresaleAIIntegrationService:
             ip_address=ip_address,
             user_agent=user_agent
         )
-        self.db.add(log)
-        self.db.commit()
-        self.db.refresh(log)
+        save_obj(self.db, log)
         return log
 
     def get_audit_logs(

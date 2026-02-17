@@ -30,6 +30,7 @@ from app.schemas.service import (
     ServiceRecordCreate,
     ServiceRecordResponse,
 )
+from app.utils.db_helpers import save_obj
 
 
 logger = logging.getLogger(__name__)
@@ -183,9 +184,7 @@ class ServiceRecordsService:
             created_by=current_user.id
         )
 
-        self.db.add(service_record)
-        self.db.commit()
-        self.db.refresh(service_record)
+        save_obj(self.db, service_record)
 
         # 更新工单状态
         self._update_ticket_status(service_record)

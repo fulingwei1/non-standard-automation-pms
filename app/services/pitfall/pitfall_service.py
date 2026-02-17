@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_pagination, apply_like_filter
 from app.models.pitfall import Pitfall
+from app.utils.db_helpers import save_obj
 
 
 class PitfallService:
@@ -97,9 +98,7 @@ class PitfallService:
             status="DRAFT",
         )
 
-        self.db.add(pitfall)
-        self.db.commit()
-        self.db.refresh(pitfall)
+        save_obj(self.db, pitfall)
 
         return pitfall
 

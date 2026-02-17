@@ -19,6 +19,7 @@ from app.models.project.schedule_prediction import (
     ScheduleAlert,
 )
 from app.services.ai_client_service import AIClientService
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +88,7 @@ class SchedulePredictionService:
                 prediction_details=prediction.get("details"),
                 model_version="glm-5" if use_ai else "linear-v1",
             )
-            self.db.add(prediction_record)
-            self.db.commit()
-            self.db.refresh(prediction_record)
+            save_obj(self.db, prediction_record)
 
             return {
                 "prediction_id": prediction_record.id,
@@ -656,9 +655,7 @@ class SchedulePredictionService:
             is_resolved=False,
         )
 
-        self.db.add(alert)
-        self.db.commit()
-        self.db.refresh(alert)
+        save_obj(self.db, alert)
 
         return alert
 

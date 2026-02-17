@@ -18,6 +18,7 @@ from app.schemas.presale_ai_quotation import (
     QuotationGenerateRequest, QuotationUpdateRequest, 
     QuotationItem, ThreeTierQuotationRequest
 )
+from app.utils.db_helpers import save_obj
 
 
 class AIQuotationGeneratorService:
@@ -91,9 +92,7 @@ class AIQuotationGeneratorService:
             notes=request.notes
         )
         
-        self.db.add(quotation)
-        self.db.commit()
-        self.db.refresh(quotation)
+        save_obj(self.db, quotation)
         
         # 创建版本快照
         self._create_version_snapshot(quotation, user_id, "初始创建")

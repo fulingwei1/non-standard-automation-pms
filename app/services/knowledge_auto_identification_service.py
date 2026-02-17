@@ -16,6 +16,7 @@ from app.models.engineer_performance import (
 )
 from app.models.service import KnowledgeBase, ServiceTicket
 from app.services.knowledge_extraction_service import auto_extract_knowledge_from_ticket
+from app.utils.db_helpers import save_obj
 
 
 class KnowledgeAutoIdentificationService:
@@ -103,9 +104,7 @@ class KnowledgeAutoIdentificationService:
             approved_at=datetime.now() if auto_publish else None
         )
 
-        self.db.add(contribution)
-        self.db.commit()
-        self.db.refresh(contribution)
+        save_obj(self.db, contribution)
 
         return contribution
 
@@ -171,9 +170,7 @@ class KnowledgeAutoIdentificationService:
             approved_at=article.approved_at
         )
 
-        self.db.add(contribution)
-        self.db.commit()
-        self.db.refresh(contribution)
+        save_obj(self.db, contribution)
 
         return contribution
 
@@ -219,9 +216,7 @@ class KnowledgeAutoIdentificationService:
             status='active'
         )
 
-        self.db.add(code_module)
-        self.db.commit()
-        self.db.refresh(code_module)
+        save_obj(self.db, code_module)
 
         return code_module
 

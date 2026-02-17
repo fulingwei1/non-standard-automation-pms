@@ -13,6 +13,7 @@ from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.models import EarnedValueData, Project
+from app.utils.db_helpers import save_obj
 
 
 class EVMCalculator:
@@ -430,9 +431,7 @@ class EVMService:
             notes=notes
         )
         
-        self.db.add(evm_data)
-        self.db.commit()
-        self.db.refresh(evm_data)
+        save_obj(self.db, evm_data)
         
         return evm_data
     

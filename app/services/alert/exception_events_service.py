@@ -27,6 +27,7 @@ from app.schemas.alert import (
     ExceptionEventVerify,
 )
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import save_obj
 
 
 logger = logging.getLogger(__name__)
@@ -133,9 +134,7 @@ class ExceptionEventsService:
             status="pending"
         )
 
-        self.db.add(exception_event)
-        self.db.commit()
-        self.db.refresh(exception_event)
+        save_obj(self.db, exception_event)
 
         # 自动分配处理人
         self._auto_assign_handler(exception_event)
@@ -250,9 +249,7 @@ class ExceptionEventsService:
             status="pending"
         )
 
-        self.db.add(exception_action)
-        self.db.commit()
-        self.db.refresh(exception_action)
+        save_obj(self.db, exception_action)
 
         return exception_action
 
@@ -316,9 +313,7 @@ class ExceptionEventsService:
             status="pending"
         )
 
-        self.db.add(exception_event)
-        self.db.commit()
-        self.db.refresh(exception_event)
+        save_obj(self.db, exception_event)
 
         return exception_event
 

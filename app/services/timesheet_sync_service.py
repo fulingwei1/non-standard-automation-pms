@@ -16,6 +16,7 @@ from app.models.timesheet import Timesheet
 from app.services.hourly_rate_service import HourlyRateService
 from app.services.labor_cost_service import LaborCostService
 from app.common.date_range import get_month_range_by_ym
+from app.utils.db_helpers import save_obj
 
 
 class TimesheetSyncService:
@@ -149,9 +150,7 @@ class TimesheetSyncService:
                 verified_at=timesheet.approve_time
             )
 
-            self.db.add(cost)
-            self.db.commit()
-            self.db.refresh(cost)
+            save_obj(self.db, cost)
 
             return {'success': True, 'created': True, 'updated': False, 'cost_id': cost.id}
 
@@ -329,9 +328,7 @@ class TimesheetSyncService:
                 status='APPROVED'  # 已审批的工时自动创建已审批的费用
             )
 
-            self.db.add(cost)
-            self.db.commit()
-            self.db.refresh(cost)
+            save_obj(self.db, cost)
 
             return {'success': True, 'created': True, 'updated': False, 'cost_id': cost.id}
 

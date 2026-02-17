@@ -24,6 +24,7 @@ from app.schemas.presale_ai_solution import (
     BOMItem
 )
 from app.services.ai_client_service import AIClientService
+from app.utils.db_helpers import save_obj
 
 
 class PresaleAIService:
@@ -192,9 +193,7 @@ class PresaleAIService:
             created_by=user_id
         )
         
-        self.db.add(ai_solution)
-        self.db.commit()
-        self.db.refresh(ai_solution)
+        save_obj(self.db, ai_solution)
         
         # 9. 记录生成日志
         self._log_generation(

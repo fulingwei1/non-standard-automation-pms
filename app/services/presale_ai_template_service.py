@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.presale_ai_solution import PresaleAISolutionTemplate
+from app.utils.db_helpers import save_obj
 
 
 class PresaleAITemplateService:
@@ -25,9 +26,7 @@ class PresaleAITemplateService:
             created_at=datetime.utcnow()
         )
         
-        self.db.add(template)
-        self.db.commit()
-        self.db.refresh(template)
+        save_obj(self.db, template)
         
         return template
     

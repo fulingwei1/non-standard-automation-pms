@@ -27,6 +27,7 @@ from app.models.project import Project, ProjectStage
 from app.models.task_center import TaskUnified
 from app.schemas.progress import DependencyIssue, TaskForecastItem
 from app.services.sales_reminder import create_notification
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -130,9 +131,7 @@ def update_task_progress(
         enforce_assignee=True,
     )
 
-    db.add(task)
-    db.commit()
-    db.refresh(task)
+    save_obj(db, task)
 
     aggregation_result: Dict[str, Any] = {}
 
@@ -359,9 +358,7 @@ def create_progress_log_entry(
             updated_by=updater_id,
             updated_at=datetime.now()
         )
-        db.add(progress_log)
-        db.commit()
-        db.refresh(progress_log)
+        save_obj(db, progress_log)
         return progress_log
     except Exception as e:
         db.rollback()

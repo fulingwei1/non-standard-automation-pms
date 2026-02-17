@@ -21,6 +21,7 @@ from app.models.resource_scheduling import (
 from app.models.project import Project
 from app.models.user import User
 from app.services.ai_client_service import AIClientService
+from app.utils.db_helpers import save_obj
 
 
 class ResourceSchedulingAIService:
@@ -204,9 +205,7 @@ class ResourceSchedulingAIService:
             is_resolved=False,
         )
         
-        self.db.add(conflict)
-        self.db.commit()
-        self.db.refresh(conflict)
+        save_obj(self.db, conflict)
         
         return conflict
     
@@ -534,9 +533,7 @@ class ResourceSchedulingAIService:
             status="PENDING",
         )
         
-        self.db.add(suggestion)
-        self.db.commit()
-        self.db.refresh(suggestion)
+        save_obj(self.db, suggestion)
         
         return suggestion
     
@@ -717,9 +714,7 @@ class ResourceSchedulingAIService:
             status="ACTIVE",
         )
         
-        self.db.add(forecast)
-        self.db.commit()
-        self.db.refresh(forecast)
+        save_obj(self.db, forecast)
         
         return forecast
     
@@ -799,9 +794,7 @@ class ResourceSchedulingAIService:
             ai_insights=json.dumps(ai_insights, ensure_ascii=False),
         )
         
-        self.db.add(analysis)
-        self.db.commit()
-        self.db.refresh(analysis)
+        save_obj(self.db, analysis)
         
         return analysis
     

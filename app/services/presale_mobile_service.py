@@ -21,6 +21,7 @@ from app.models.presale_mobile import (
     PresaleVisitRecord,
 )
 from app.schemas.presale_mobile import QuestionType, SyncStatus, VisitType
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +77,7 @@ class PresaleMobileService:
             context=context or {},
             response_time=response_time,
         )
-        self.db.add(chat_record)
-        self.db.commit()
-        self.db.refresh(chat_record)
+        save_obj(self.db, chat_record)
 
         return {
             "id": chat_record.id,
@@ -343,9 +342,7 @@ class PresaleMobileService:
             confidence_score=confidence_score,
             created_by=user_id,
         )
-        self.db.add(estimate_record)
-        self.db.commit()
-        self.db.refresh(estimate_record)
+        save_obj(self.db, estimate_record)
 
         return {
             "id": estimate_record.id,
@@ -429,9 +426,7 @@ class PresaleMobileService:
             next_steps=next_steps,
             created_by=user_id,
         )
-        self.db.add(visit_record)
-        self.db.commit()
-        self.db.refresh(visit_record)
+        save_obj(self.db, visit_record)
 
         return self._format_visit_record(visit_record)
 
@@ -478,9 +473,7 @@ class PresaleMobileService:
             ai_generated_summary=extracted_info.get("summary"),
             created_by=user_id,
         )
-        self.db.add(visit_record)
-        self.db.commit()
-        self.db.refresh(visit_record)
+        save_obj(self.db, visit_record)
 
         return self._format_visit_record(visit_record)
 

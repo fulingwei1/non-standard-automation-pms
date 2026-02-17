@@ -18,6 +18,7 @@ from app.models.management_rhythm import (
 )
 from app.services.comparison_calculation_service import ComparisonCalculationService
 from app.services.metric_calculation_service import MetricCalculationService
+from app.utils.db_helpers import save_obj
 
 if TYPE_CHECKING:
     from app.models.management_rhythm import MeetingReport
@@ -424,8 +425,6 @@ def create_report_record(
         generated_at=datetime.now()
     )
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return report

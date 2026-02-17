@@ -18,6 +18,7 @@ from .models import (
     ApprovalDecision,
     ApprovalNodeRole,
 )
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +74,7 @@ class WorkflowEngine:
             + timedelta(hours=self._get_first_node_timeout(flow)),
         )
 
-        self.db.add(instance)
-        self.db.commit()
-        self.db.refresh(instance)
+        save_obj(self.db, instance)
 
         return instance
 

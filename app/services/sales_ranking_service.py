@@ -23,6 +23,7 @@ from app.models.sales import (
 )
 from app.models.user import User
 from app.services.sales_team_service import SalesTeamService
+from app.utils.db_helpers import save_obj
 
 
 class SalesRankingService:
@@ -123,9 +124,7 @@ class SalesRankingService:
             return config
 
         config = SalesRankingConfig(metrics=self.DEFAULT_METRICS)
-        self.db.add(config)
-        self.db.commit()
-        self.db.refresh(config)
+        save_obj(self.db, config)
         return config
 
     def save_config(
@@ -140,9 +139,7 @@ class SalesRankingService:
             created_by=operator_id,
             updated_by=operator_id,
         )
-        self.db.add(config)
-        self.db.commit()
-        self.db.refresh(config)
+        save_obj(self.db, config)
         return config
 
     def _validate_metrics(self, metrics: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

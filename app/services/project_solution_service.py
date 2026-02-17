@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
 from app.models.issue import Issue, SolutionTemplate
+from app.utils.db_helpers import save_obj
 
 
 class ProjectSolutionService:
@@ -162,9 +163,7 @@ class ProjectSolutionService:
             is_active=True
         )
 
-        self.db.add(template)
-        self.db.commit()
-        self.db.refresh(template)
+        save_obj(self.db, template)
 
         return template
 

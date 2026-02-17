@@ -22,6 +22,7 @@ from app.schemas.alert import (
     AlertRuleUpdate,
 )
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import save_obj, delete_obj
 
 
 class AlertRulesService:
@@ -100,9 +101,7 @@ class AlertRulesService:
             created_by=current_user.id
         )
 
-        self.db.add(alert_rule)
-        self.db.commit()
-        self.db.refresh(alert_rule)
+        save_obj(self.db, alert_rule)
 
         return alert_rule
 
@@ -152,8 +151,7 @@ class AlertRulesService:
         if not alert_rule:
             return False
 
-        self.db.delete(alert_rule)
-        self.db.commit()
+        delete_obj(self.db, alert_rule)
 
         return True
 

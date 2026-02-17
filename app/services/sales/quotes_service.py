@@ -15,6 +15,7 @@ from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import QuoteCreate
+from app.utils.db_helpers import save_obj
 
 
 class QuotesService:
@@ -108,9 +109,7 @@ class QuotesService:
             created_by=current_user.id
         )
 
-        self.db.add(quote)
-        self.db.commit()
-        self.db.refresh(quote)
+        save_obj(self.db, quote)
 
         return quote
 

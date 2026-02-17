@@ -14,6 +14,7 @@ from app.models.engineer_performance import EngineerDimensionConfig
 from app.models.organization import Department, Employee
 from app.models.user import User, UserRole
 from app.schemas.engineer_performance import DimensionConfigCreate
+from app.utils.db_helpers import save_obj
 
 
 class DimensionConfigService:
@@ -148,9 +149,7 @@ class DimensionConfigService:
             operator_id=operator_id,
             approval_status='APPROVED' if not require_approval or department_id is None else 'PENDING'
         )
-        self.db.add(config)
-        self.db.commit()
-        self.db.refresh(config)
+        save_obj(self.db, config)
         return config
 
     def _validate_department_manager_permission(

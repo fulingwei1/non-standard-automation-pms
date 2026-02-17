@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.user import SolutionCreditConfig, SolutionCreditTransaction, User
+from app.utils.db_helpers import save_obj
 
 
 class CreditTransactionType:
@@ -141,9 +142,7 @@ class SolutionCreditService:
         user.solution_credits = balance_after
         user.credits_updated_at = datetime.now()
 
-        self.db.add(transaction)
-        self.db.commit()
-        self.db.refresh(transaction)
+        save_obj(self.db, transaction)
 
         return True, f"扣除 {generate_cost} 积分，剩余 {balance_after} 积分", transaction
 
@@ -192,9 +191,7 @@ class SolutionCreditService:
         user.solution_credits = balance_after
         user.credits_updated_at = datetime.now()
 
-        self.db.add(transaction)
-        self.db.commit()
-        self.db.refresh(transaction)
+        save_obj(self.db, transaction)
 
         return True, f"退还 {actual_amount} 积分，当前余额 {balance_after} 积分", transaction
 
@@ -248,9 +245,7 @@ class SolutionCreditService:
         user.solution_credits = balance_after
         user.credits_updated_at = datetime.now()
 
-        self.db.add(transaction)
-        self.db.commit()
-        self.db.refresh(transaction)
+        save_obj(self.db, transaction)
 
         return True, f"充值成功，增加 {actual_amount} 积分，当前余额 {balance_after} 积分", transaction
 
@@ -303,9 +298,7 @@ class SolutionCreditService:
         user.solution_credits = balance_after
         user.credits_updated_at = datetime.now()
 
-        self.db.add(transaction)
-        self.db.commit()
-        self.db.refresh(transaction)
+        save_obj(self.db, transaction)
 
         return True, f"扣除成功，减少 {actual_amount} 积分，当前余额 {balance_after} 积分", transaction
 

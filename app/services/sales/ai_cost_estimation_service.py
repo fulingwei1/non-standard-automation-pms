@@ -27,6 +27,7 @@ from app.schemas.sales.presale_ai_cost import (
     UpdateActualCostInput,
     HistoricalAccuracyResponse
 )
+from app.utils.db_helpers import save_obj
 
 
 class AICostEstimationService:
@@ -112,9 +113,7 @@ class AICostEstimationService:
             created_by=self.user_id
         )
         
-        self.db.add(estimation)
-        self.db.commit()
-        self.db.refresh(estimation)
+        save_obj(self.db, estimation)
         
         # 7. 构建响应
         return CostEstimationResponse(
@@ -531,9 +530,7 @@ class AICostEstimationService:
             project_features=estimation.input_parameters
         )
         
-        self.db.add(history)
-        self.db.commit()
-        self.db.refresh(history)
+        save_obj(self.db, history)
         
         return {
             "history_id": history.id,

@@ -11,6 +11,7 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
+from app.utils.db_helpers import save_obj
 
 
 class SystemChannelHandler(ChannelHandler):
@@ -28,9 +29,7 @@ class SystemChannelHandler(ChannelHandler):
             priority=request.priority,
             extra_data=request.extra_data or {},
         )
-        self.db.add(notification)
-        self.db.commit()
-        self.db.refresh(notification)
+        save_obj(self.db, notification)
         return NotificationResult(
             channel=self.channel, success=True, sent_at=datetime.now().isoformat()
         )

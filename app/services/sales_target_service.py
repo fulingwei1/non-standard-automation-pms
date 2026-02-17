@@ -20,6 +20,7 @@ from app.schemas.sales_target import (
     TargetBreakdownRequest,
     AutoBreakdownRequest,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 
 class SalesTargetService:
@@ -51,9 +52,7 @@ class SalesTargetService:
             raise HTTPException(status_code=400, detail="该期间的目标已存在")
         
         target = SalesTargetV2(**target_data.model_dump(), created_by=created_by)
-        db.add(target)
-        db.commit()
-        db.refresh(target)
+        save_obj(db, target)
         return target
     
     @staticmethod
@@ -94,9 +93,7 @@ class SalesTargetService:
     @staticmethod
     def update_target(db: Session, target_id: int, target_data: SalesTargetV2Update) -> SalesTargetV2:
         """更新目标"""
-        target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not target:
-            raise HTTPException(status_code=404, detail="目标不存在")
+        target = get_or_404(db, SalesTargetV2, target_id, detail="目标不存在")
         
         update_data = target_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -112,17 +109,14 @@ class SalesTargetService:
     @staticmethod
     def delete_target(db: Session, target_id: int) -> bool:
         """删除目标"""
-        target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not target:
-            raise HTTPException(status_code=404, detail="目标不存在")
+        target = get_or_404(db, SalesTargetV2, target_id, detail="目标不存在")
         
         # 检查是否有子目标
         sub_targets = db.query(SalesTargetV2).filter(SalesTargetV2.parent_target_id == target_id).count()
         if sub_targets > 0:
             raise HTTPException(status_code=400, detail="存在子目标，无法删除")
         
-        db.delete(target)
-        db.commit()
+        delete_obj(db, target)
         return True
     
     # ============= 目标分解 =============
@@ -135,9 +129,7 @@ class SalesTargetService:
         created_by: int
     ) -> List[SalesTargetV2]:
         """手动分解目标"""
-        parent_target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not parent_target:
-            raise HTTPException(status_code=404, detail="上级目标不存在")
+        parent_target = get_or_404(db, SalesTargetV2, target_id, detail="上级目标不存在")
         
         created_targets = []
         breakdown_details = []
@@ -194,9 +186,7 @@ class SalesTargetService:
         created_by: int
     ) -> List[SalesTargetV2]:
         """自动分解目标"""
-        parent_target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not parent_target:
-            raise HTTPException(status_code=404, detail="上级目标不存在")
+        parent_target = get_or_404(db, SalesTargetV2, target_id, detail="上级目标不存在")
         
         # 根据上级目标类型确定分解对象
         if parent_target.target_type == 'company':
@@ -273,9 +263,7 @@ class SalesTargetService:
     @staticmethod
     def get_breakdown_tree(db: Session, target_id: int) -> Dict[str, Any]:
         """获取目标分解树"""
-        target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not target:
-            raise HTTPException(status_code=404, detail="目标不存在")
+        target = get_or_404(db, SalesTargetV2, target_id, detail="目标不存在")
         
         def build_tree(target_obj: SalesTargetV2) -> Dict[str, Any]:
             sub_targets = db.query(SalesTargetV2).filter(
@@ -365,9 +353,7 @@ class SalesTargetService:
         target_id: int
     ) -> List[Dict[str, Any]]:
         """获取完成趋势（简化版，实际应该记录历史快照）"""
-        target = db.query(SalesTargetV2).filter(SalesTargetV2.id == target_id).first()
-        if not target:
-            raise HTTPException(status_code=404, detail="目标不存在")
+        target = get_or_404(db, SalesTargetV2, target_id, detail="目标不存在")
         
         # 简化版：只返回当前状态
         return [{

@@ -24,6 +24,7 @@ from app.schemas.alert import (
     AlertRecordResponse,
 )
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import save_obj
 
 
 class AlertRecordsService:
@@ -309,9 +310,7 @@ class AlertRecordsService:
         if getattr(rule, "notification_config", None) and rule.notification_config.get("assignee_id"):
             alert_record.handler_id = rule.notification_config["assignee_id"]
 
-        self.db.add(alert_record)
-        self.db.commit()
-        self.db.refresh(alert_record)
+        save_obj(self.db, alert_record)
 
         # 发送通知
         self._send_alert_notification(alert_record, "created")
@@ -337,9 +336,7 @@ class AlertRecordsService:
             triggered_at=datetime.now(timezone.utc),
         )
 
-        self.db.add(alert_record)
-        self.db.commit()
-        self.db.refresh(alert_record)
+        save_obj(self.db, alert_record)
         return alert_record
 
     def get_alert(self, alert_id: int) -> Optional[AlertRecord]:

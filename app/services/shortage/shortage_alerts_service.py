@@ -18,6 +18,7 @@ from app.models.shortage import (
 )
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import save_obj
 
 
 class ShortageAlertsService:
@@ -196,9 +197,7 @@ class ShortageAlertsService:
             status="pending"
         )
 
-        self.db.add(follow_up)
-        self.db.commit()
-        self.db.refresh(follow_up)
+        save_obj(self.db, follow_up)
 
         return {
             "follow_up_id": follow_up.id,

@@ -22,6 +22,7 @@ from app.schemas.tenant import (
     TenantUpdate,
     TenantInitRequest,
 )
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +73,7 @@ class TenantService:
             expired_at=tenant_in.expired_at,
         )
 
-        self.db.add(tenant)
-        self.db.commit()
-        self.db.refresh(tenant)
+        save_obj(self.db, tenant)
 
         logger.info(f"创建租户成功: {tenant.tenant_code} - {tenant.tenant_name}")
         return tenant

@@ -21,6 +21,7 @@ from app.models.production.work_order import WorkOrder
 from app.models.inventory_tracking import MaterialStock
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.core.exceptions import BusinessException
+from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -380,9 +381,7 @@ class SmartAlertEngine:
             alert_source='AUTO'
         )
         
-        self.db.add(alert)
-        self.db.commit()
-        self.db.refresh(alert)
+        save_obj(self.db, alert)
         
         return alert
     

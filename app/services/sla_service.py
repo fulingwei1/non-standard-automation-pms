@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.service import ServiceTicket
 from app.models.sla import SLAMonitor, SLAPolicy
+from app.utils.db_helpers import save_obj
 
 
 def match_sla_policy(
@@ -99,9 +100,7 @@ def create_sla_monitor(
         resolve_status='ON_TIME',
     )
 
-    db.add(monitor)
-    db.commit()
-    db.refresh(monitor)
+    save_obj(db, monitor)
 
     return monitor
 

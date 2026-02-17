@@ -17,6 +17,7 @@ from app.models.project import Project
 from app.models.shortage import ShortageReport
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import save_obj
 
 
 class ShortageManagementService:
@@ -165,9 +166,7 @@ class ShortageManagementService:
             remark=data.get("remark"),
         )
 
-        self.db.add(record)
-        self.db.commit()
-        self.db.refresh(record)
+        save_obj(self.db, record)
 
         return {
             "success": True,

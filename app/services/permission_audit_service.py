@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models.user import PermissionAudit
+from app.utils.db_helpers import save_obj
 
 
 class PermissionAuditService:
@@ -74,9 +75,7 @@ class PermissionAuditService:
             user_agent=user_agent
         )
 
-        db.add(audit)
-        db.commit()
-        db.refresh(audit)
+        save_obj(db, audit)
 
         return audit
 

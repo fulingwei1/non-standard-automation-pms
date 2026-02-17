@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.engineer_performance import CollaborationRating, EngineerProfile
 from app.models.user import User
 from app.schemas.engineer_performance import CollaborationRatingCreate
+from app.utils.db_helpers import save_obj
 
 
 class CollaborationService:
@@ -85,9 +86,7 @@ class CollaborationService:
             project_id=data.project_id
         )
 
-        self.db.add(rating)
-        self.db.commit()
-        self.db.refresh(rating)
+        save_obj(self.db, rating)
         return rating
 
     def get_rating(self, rating_id: int) -> Optional[CollaborationRating]:

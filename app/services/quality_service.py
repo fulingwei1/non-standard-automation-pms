@@ -30,6 +30,7 @@ from app.schemas.production.quality import (
     SPCControlLimits,
     SPCDataPoint,
 )
+from app.utils.db_helpers import save_obj
 
 
 class QualityService:
@@ -68,9 +69,7 @@ class QualityService:
             **inspection_data.model_dump()
         )
         
-        db.add(inspection)
-        db.commit()
-        db.refresh(inspection)
+        save_obj(db, inspection)
         
         # 检查是否触发质量预警
         QualityService._check_quality_alerts(db, inspection)
@@ -391,9 +390,7 @@ class QualityService:
             **analysis_data.model_dump()
         )
         
-        db.add(analysis)
-        db.commit()
-        db.refresh(analysis)
+        save_obj(db, analysis)
         
         return analysis
 
@@ -549,9 +546,7 @@ class QualityService:
             **rework_data
         )
         
-        db.add(rework_order)
-        db.commit()
-        db.refresh(rework_order)
+        save_obj(db, rework_order)
         
         return rework_order
 
