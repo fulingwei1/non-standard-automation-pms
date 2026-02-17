@@ -22,6 +22,7 @@ from app.schemas.production import (
     WorkshopResponse,
     WorkshopUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -97,9 +98,7 @@ def create_workshop(
             raise HTTPException(status_code=404, detail="车间主管不存在")
 
     workshop = Workshop(**workshop_in.model_dump())
-    db.add(workshop)
-    db.commit()
-    db.refresh(workshop)
+    save_obj(db, workshop)
 
     manager_name = None
     if workshop.manager_id:
@@ -132,9 +131,7 @@ def read_workshop(
     """
     获取车间详情（含产能/人员）
     """
-    workshop = db.query(Workshop).filter(Workshop.id == workshop_id).first()
-    if not workshop:
-        raise HTTPException(status_code=404, detail="车间不存在")
+    workshop = get_or_404(db, Workshop, workshop_id, detail="车间不存在")
 
     manager_name = None
     if workshop.manager_id:
@@ -170,9 +167,7 @@ def get_workshop_capacity(
     车间产能统计
     统计车间的产能、实际负荷、利用率等信息
     """
-    workshop = db.query(Workshop).filter(Workshop.id == workshop_id).first()
-    if not workshop:
-        raise HTTPException(status_code=404, detail="车间不存在")
+    workshop = get_or_404(db, Workshop, workshop_id, detail="车间不存在")
 
     # 基础产能信息
     capacity_hours = float(workshop.capacity_hours) if workshop.capacity_hours else 0.0
@@ -254,9 +249,7 @@ def update_workshop(
     """
     更新车间
     """
-    workshop = db.query(Workshop).filter(Workshop.id == workshop_id).first()
-    if not workshop:
-        raise HTTPException(status_code=404, detail="车间不存在")
+    workshop = get_or_404(db, Workshop, workshop_id, detail="车间不存在")
 
     # 检查车间主管是否存在
     if workshop_in.manager_id is not None:
@@ -269,9 +262,7 @@ def update_workshop(
     for field, value in update_data.items():
         setattr(workshop, field, value)
 
-    db.add(workshop)
-    db.commit()
-    db.refresh(workshop)
+    save_obj(db, workshop)
 
     manager_name = None
     if workshop.manager_id:

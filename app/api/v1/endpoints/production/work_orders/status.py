@@ -20,6 +20,7 @@ from app.services.status_update_service import StatusUpdateService
 from fastapi import APIRouter
 
 from .utils import get_work_order_response
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -40,9 +41,7 @@ def start_work_order(
     - 自动记录开始时间
     - 关联工位状态更新
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 准备关联实体更新（工位）
     related_entities = []
@@ -98,9 +97,7 @@ def complete_work_order(
     - 自动设置进度为100%
     - 关联工位状态更新
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 准备关联实体更新（工位）
     related_entities = []
@@ -162,9 +159,7 @@ def pause_work_order(
     - 记录暂停原因
     - 关联工位状态更新
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 准备关联实体更新（工位）
     related_entities = []
@@ -219,9 +214,7 @@ def resume_work_order(
     - 状态转换规则验证（只能从PAUSED转换到STARTED）
     - 关联工位状态更新
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 准备关联实体更新（工位）
     related_entities = []
@@ -274,9 +267,7 @@ def cancel_work_order(
     - 记录取消原因
     - 关联工位状态更新
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 准备关联实体更新（工位）
     related_entities = []

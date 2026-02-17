@@ -18,6 +18,7 @@ from app.schemas.production import WorkOrderAssignRequest, WorkOrderResponse
 from fastapi import APIRouter
 
 from .utils import get_work_order_response
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ def assign_work_order(
     """
     任务派工（指派人员/工位）
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     if order.status != "PENDING":
         raise HTTPException(status_code=400, detail="只有待派工状态的工单才能派工")
@@ -61,9 +60,7 @@ def assign_work_order(
     if assign_in.workstation_id:
         order.workstation_id = assign_in.workstation_id
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    save_obj(db, order)
 
     return get_work_order_response(db, order)
 

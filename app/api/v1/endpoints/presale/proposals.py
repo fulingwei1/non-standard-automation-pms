@@ -37,6 +37,7 @@ from app.schemas.presale import (
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
+from app.utils.db_helpers import get_or_404, save_obj
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
@@ -153,9 +154,7 @@ def create_solution(
         author_name=current_user.real_name or current_user.username
     )
 
-    db.add(solution)
-    db.commit()
-    db.refresh(solution)
+    save_obj(db, solution)
 
     return SolutionResponse(
         id=solution.id,
@@ -197,9 +196,7 @@ def read_solution(
     """
     方案详情
     """
-    solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-    if not solution:
-        raise HTTPException(status_code=404, detail="方案不存在")
+    solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
     return SolutionResponse(
         id=solution.id,
@@ -242,9 +239,7 @@ def update_solution(
     """
     更新方案
     """
-    solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-    if not solution:
-        raise HTTPException(status_code=404, detail="方案不存在")
+    solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
     if solution.status not in ['DRAFT', 'REJECTED']:
         raise HTTPException(status_code=400, detail="只有草稿或已驳回状态的方案才能修改")
@@ -253,9 +248,7 @@ def update_solution(
     for field, value in update_data.items():
         setattr(solution, field, value)
 
-    db.add(solution)
-    db.commit()
-    db.refresh(solution)
+    save_obj(db, solution)
 
     return read_solution(db=db, solution_id=solution_id, current_user=current_user)
 
@@ -270,9 +263,7 @@ def get_solution_cost(
     """
     成本估算
     """
-    solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-    if not solution:
-        raise HTTPException(status_code=404, detail="方案不存在")
+    solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
     # 获取成本明细
     cost_items = db.query(PresaleSolutionCost).filter(
@@ -319,9 +310,7 @@ def review_solution(
     """
     方案审核
     """
-    solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-    if not solution:
-        raise HTTPException(status_code=404, detail="方案不存在")
+    solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
     solution.review_status = review_request.review_status
     solution.review_comment = review_request.review_comment
@@ -333,9 +322,7 @@ def review_solution(
     elif review_request.review_status == 'REJECTED':
         solution.status = 'REJECTED'
 
-    db.add(solution)
-    db.commit()
-    db.refresh(solution)
+    save_obj(db, solution)
 
     return read_solution(db=db, solution_id=solution_id, current_user=current_user)
 
@@ -351,9 +338,7 @@ def get_solution_versions(
     """
     方案版本历史
     """
-    solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-    if not solution:
-        raise HTTPException(status_code=404, detail="方案不存在")
+    solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
     # 获取所有版本（包括当前版本和子版本）
     versions = []

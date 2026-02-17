@@ -20,6 +20,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.presale import TicketCreate, TicketResponse
 
 from .utils import build_ticket_response, generate_ticket_no
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -178,9 +179,7 @@ def create_ticket(
         ticket.pm_involvement_risk_level = '低'
     
     # 保存工单
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    save_obj(db, ticket)
 
     return build_ticket_response(ticket)
 
@@ -195,8 +194,6 @@ def read_ticket(
     """
     工单详情
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     return build_ticket_response(ticket)

@@ -16,6 +16,7 @@ from app.models.production import (
     Worker,
     WorkerEfficiencyRecord,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -137,9 +138,7 @@ async def calculate_oee(
         calculated_at=datetime.now(),
     )
     
-    db.add(oee_record)
-    db.commit()
-    db.refresh(oee_record)
+    save_obj(db, oee_record)
     
     return {
         "code": 200,
@@ -217,9 +216,7 @@ async def calculate_worker_efficiency(
         calculated_at=datetime.now(),
     )
     
-    db.add(efficiency_record)
-    db.commit()
-    db.refresh(efficiency_record)
+    save_obj(db, efficiency_record)
     
     return {
         "code": 200,

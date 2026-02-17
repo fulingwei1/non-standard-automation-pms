@@ -35,6 +35,7 @@ from app.schemas.presale import (
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
+from app.utils.db_helpers import get_or_404, save_obj
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
@@ -129,9 +130,7 @@ def create_tender(
         team_members=tender_in.team_members
     )
 
-    db.add(tender)
-    db.commit()
-    db.refresh(tender)
+    save_obj(db, tender)
 
     return TenderResponse(
         id=tender.id,
@@ -166,9 +165,7 @@ def read_tender(
     """
     投标详情
     """
-    tender = db.query(PresaleTenderRecord).filter(PresaleTenderRecord.id == tender_id).first()
-    if not tender:
-        raise HTTPException(status_code=404, detail="投标记录不存在")
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
 
     return TenderResponse(
         id=tender.id,
@@ -204,9 +201,7 @@ def update_tender_result(
     """
     更新投标结果
     """
-    tender = db.query(PresaleTenderRecord).filter(PresaleTenderRecord.id == tender_id).first()
-    if not tender:
-        raise HTTPException(status_code=404, detail="投标记录不存在")
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
 
     tender.result = result_request.result
     tender.result_reason = result_request.result_reason
@@ -217,9 +212,7 @@ def update_tender_result(
     if result_request.total_score:
         tender.total_score = result_request.total_score
 
-    db.add(tender)
-    db.commit()
-    db.refresh(tender)
+    save_obj(db, tender)
 
     return TenderResponse(
         id=tender.id,

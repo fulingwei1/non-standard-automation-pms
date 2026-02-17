@@ -28,6 +28,7 @@ from app.models.production.material_tracking import (
 from app.models.production.work_order import WorkOrder
 from app.models.project import Project
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -164,12 +165,7 @@ def create_consumption(
         )
     
     # 查询物料
-    material = db.query(Material).filter(Material.id == material_id).first()
-    if not material:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"物料 ID {material_id} 不存在"
-        )
+    material = get_or_404(db, Material, material_id)
     
     # 条码/二维码扫描支持
     barcode = consumption_data.get("barcode")
@@ -478,9 +474,7 @@ def create_alert_rule(
         created_by=current_user.id,
     )
     
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
+    save_obj(db, rule)
     
     return create_success_response(
         data={"id": rule.id, "rule_name": rule.rule_name},

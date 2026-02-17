@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.presale import DeliverableCreate, DeliverableResponse, TicketAcceptRequest, TicketProgressUpdate, TicketRatingRequest, TicketResponse
 
 from .crud import read_ticket
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -31,26 +32,20 @@ def accept_ticket(
     """
     接单确认
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     if ticket.status != 'PENDING':
         raise HTTPException(status_code=400, detail="只有待处理状态的工单才能接单")
 
     assignee_id = accept_request.assignee_id or current_user.id
-    assignee = db.query(User).filter(User.id == assignee_id).first()
-    if not assignee:
-        raise HTTPException(status_code=404, detail="处理人不存在")
+    assignee = get_or_404(db, User, assignee_id, detail="处理人不存在")
 
     ticket.assignee_id = assignee_id
     ticket.assignee_name = assignee.real_name or assignee.username
     ticket.accept_time = datetime.now()
     ticket.status = 'ACCEPTED'
 
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    save_obj(db, ticket)
 
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
@@ -66,9 +61,7 @@ def update_ticket_progress(
     """
     更新进度
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     if ticket.status not in ['ACCEPTED', 'IN_PROGRESS']:
         raise HTTPException(status_code=400, detail="只有已接单或进行中的工单才能更新进度")
@@ -85,9 +78,7 @@ def update_ticket_progress(
     )
     db.add(progress)
 
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    save_obj(db, ticket)
 
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
@@ -103,9 +94,7 @@ def create_deliverable(
     """
     提交交付物
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     deliverable = PresaleTicketDeliverable(
         ticket_id=ticket_id,
@@ -117,9 +106,7 @@ def create_deliverable(
         created_by=current_user.id
     )
 
-    db.add(deliverable)
-    db.commit()
-    db.refresh(deliverable)
+    save_obj(db, deliverable)
 
     return DeliverableResponse(
         id=deliverable.id,
@@ -145,18 +132,14 @@ def complete_ticket(
     """
     完成工单
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     ticket.status = 'COMPLETED'
     ticket.complete_time = datetime.now()
     if actual_hours:
         ticket.actual_hours = Decimal(str(actual_hours))
 
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    save_obj(db, ticket)
 
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
@@ -172,9 +155,7 @@ def rate_ticket(
     """
     满意度评价
     """
-    ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     if ticket.applicant_id != current_user.id:
         raise HTTPException(status_code=403, detail="只有申请人才能评价")
@@ -182,8 +163,6 @@ def rate_ticket(
     ticket.satisfaction_score = rating_request.satisfaction_score
     ticket.feedback = rating_request.feedback
 
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    save_obj(db, ticket)
 
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)

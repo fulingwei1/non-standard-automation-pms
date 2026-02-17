@@ -30,6 +30,7 @@ from app.schemas.presale import (
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
+from app.utils.db_helpers import get_or_404, save_obj
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
@@ -132,9 +133,7 @@ def create_template(
         created_by=current_user.id
     )
 
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     return TemplateResponse(
         id=template.id,
@@ -236,9 +235,7 @@ def read_template(
     """
     模板详情
     """
-    template = db.query(PresaleSolutionTemplate).filter(PresaleSolutionTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, PresaleSolutionTemplate, template_id, detail="模板不存在")
 
     return TemplateResponse(
         id=template.id,
@@ -267,9 +264,7 @@ def apply_template(
     """
     从模板创建方案
     """
-    template = db.query(PresaleSolutionTemplate).filter(PresaleSolutionTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, PresaleSolutionTemplate, template_id, detail="模板不存在")
 
     if not template.is_active:
         raise HTTPException(status_code=400, detail="模板已禁用")

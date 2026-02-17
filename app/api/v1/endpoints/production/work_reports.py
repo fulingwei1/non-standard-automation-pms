@@ -26,6 +26,7 @@ from app.schemas.production import (
 
 from .utils import generate_report_no
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -251,9 +252,7 @@ def get_work_report_detail(
     """
     获取报工详情
     """
-    report = db.query(WorkReport).filter(WorkReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="报工记录不存在")
+    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
 
     return _get_work_report_response(db, report)
 
@@ -305,9 +304,7 @@ def approve_work_report(
     """
     报工审批（车间主管）
     """
-    report = db.query(WorkReport).filter(WorkReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="报工记录不存在")
+    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
 
     if report.status != "PENDING":
         raise HTTPException(status_code=400, detail="只有待审核的报工记录才能审批")

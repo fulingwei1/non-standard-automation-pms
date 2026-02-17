@@ -41,6 +41,7 @@ from app.schemas.production.quality import (
     SPCDataResponse,
 )
 from app.services.quality_service import QualityService
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -190,9 +191,7 @@ def get_defect_analysis(
     current_user: dict = Depends(deps.get_current_user)
 ):
     """获取不良品分析详情"""
-    analysis = db.query(DefectAnalysis).filter(DefectAnalysis.id == analysis_id).first()
-    if not analysis:
-        raise HTTPException(status_code=404, detail="不良品分析记录不存在")
+    analysis = get_or_404(db, DefectAnalysis, analysis_id, detail="不良品分析记录不存在")
     return analysis
 
 
@@ -286,9 +285,7 @@ def create_quality_alert_rule(
         **rule_data.model_dump()
     )
     
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
+    save_obj(db, rule)
     
     return rule
 

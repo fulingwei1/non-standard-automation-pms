@@ -18,6 +18,7 @@ from app.schemas.production import (
     WorkstationResponse,
     WorkstationStatusResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -34,9 +35,7 @@ def read_workstations(
     """
     获取工位列表
     """
-    workshop = db.query(Workshop).filter(Workshop.id == workshop_id).first()
-    if not workshop:
-        raise HTTPException(status_code=404, detail="车间不存在")
+    workshop = get_or_404(db, Workshop, workshop_id, detail="车间不存在")
 
     workstations = db.query(Workstation).filter(Workstation.workshop_id == workshop_id).all()
 
@@ -78,9 +77,7 @@ def create_workstation(
     """
     创建工位
     """
-    workshop = db.query(Workshop).filter(Workshop.id == workshop_id).first()
-    if not workshop:
-        raise HTTPException(status_code=404, detail="车间不存在")
+    workshop = get_or_404(db, Workshop, workshop_id, detail="车间不存在")
 
     # 检查工位编码是否已存在
     existing = db.query(Workstation).filter(Workstation.workstation_code == workstation_in.workstation_code).first()
@@ -92,9 +89,7 @@ def create_workstation(
         status="IDLE",
         **workstation_in.model_dump()
     )
-    db.add(workstation)
-    db.commit()
-    db.refresh(workstation)
+    save_obj(db, workstation)
 
     equipment_name = None
     if workstation.equipment_id:
@@ -129,9 +124,7 @@ def get_workstation_status(
     """
     获取工位状态（空闲/工作中）
     """
-    workstation = db.query(Workstation).filter(Workstation.id == workstation_id).first()
-    if not workstation:
-        raise HTTPException(status_code=404, detail="工位不存在")
+    workstation = get_or_404(db, Workstation, workstation_id, detail="工位不存在")
 
     current_worker_name = None
     if workstation.current_worker_id:

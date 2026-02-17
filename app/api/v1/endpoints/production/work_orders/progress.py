@@ -14,6 +14,7 @@ from app.models.user import User
 from fastapi import APIRouter
 
 from app.schemas.production import WorkOrderProgressResponse
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ def get_work_order_progress(
     """
     获取工单进度
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     # 计算效率
     efficiency = None

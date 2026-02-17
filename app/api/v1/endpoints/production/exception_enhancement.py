@@ -35,6 +35,7 @@ from app.schemas.production.exception_enhancement import (
     PDCAListResponse,
     RecurrenceAnalysisResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -222,9 +223,7 @@ def create_knowledge(
         creator_id=current_user.id,
     )
     
-    db.add(knowledge)
-    db.commit()
-    db.refresh(knowledge)
+    save_obj(db, knowledge)
     
     return _build_knowledge_response(knowledge, db)
 
@@ -480,9 +479,7 @@ def create_pdca(
         plan_completed_at=datetime.now(),
     )
     
-    db.add(pdca)
-    db.commit()
-    db.refresh(pdca)
+    save_obj(db, pdca)
     
     return _build_pdca_response(pdca, db)
 
@@ -495,10 +492,7 @@ def advance_pdca_stage(
     current_user: User = Depends(get_current_user),
 ):
     """推进PDCA阶段"""
-    pdca = db.query(ExceptionPDCA).filter(ExceptionPDCA.id == pdca_id).first()
-    
-    if not pdca:
-        raise HTTPException(status_code=404, detail="PDCA记录不存在")
+    pdca = get_or_404(db, ExceptionPDCA, pdca_id, detail="PDCA记录不存在")
     
     stage_map = {
         "DO": PDCAStage.DO,

@@ -22,6 +22,7 @@ from fastapi import APIRouter
 from ..utils import generate_work_order_no
 from .utils import get_work_order_response
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -121,9 +122,7 @@ def create_work_order(
         created_by=current_user.id,
         **order_in.model_dump()
     )
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    save_obj(db, order)
 
     return get_work_order_response(db, order)
 
@@ -138,8 +137,6 @@ def read_work_order(
     """
     获取工单详情
     """
-    order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
     return get_work_order_response(db, order)

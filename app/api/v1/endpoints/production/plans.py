@@ -26,6 +26,7 @@ from app.schemas.production import (
 
 from .utils import generate_plan_no
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -131,9 +132,7 @@ def create_production_plan(
         created_by=current_user.id,
         **plan_in.model_dump()
     )
-    db.add(plan)
-    db.commit()
-    db.refresh(plan)
+    save_obj(db, plan)
 
     project_name = None
     if plan.project_id:
@@ -177,9 +176,7 @@ def read_production_plan(
     """
     获取生产计划详情
     """
-    plan = db.query(ProductionPlan).filter(ProductionPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="生产计划不存在")
+    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
 
     project_name = None
     if plan.project_id:
@@ -225,9 +222,7 @@ def update_production_plan(
     """
     更新生产计划
     """
-    plan = db.query(ProductionPlan).filter(ProductionPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="生产计划不存在")
+    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
 
     # 只有草稿状态才能更新
     if plan.status != "DRAFT":
@@ -237,9 +232,7 @@ def update_production_plan(
     for field, value in update_data.items():
         setattr(plan, field, value)
 
-    db.add(plan)
-    db.commit()
-    db.refresh(plan)
+    save_obj(db, plan)
 
     project_name = None
     if plan.project_id:
@@ -284,9 +277,7 @@ def submit_production_plan(
     """
     提交计划审批
     """
-    plan = db.query(ProductionPlan).filter(ProductionPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="生产计划不存在")
+    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
 
     if plan.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的计划才能提交")
@@ -313,9 +304,7 @@ def approve_production_plan(
     """
     审批通过生产计划
     """
-    plan = db.query(ProductionPlan).filter(ProductionPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="生产计划不存在")
+    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
 
     if plan.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只有已提交的计划才能审批")
@@ -349,9 +338,7 @@ def publish_production_plan(
     """
     计划发布
     """
-    plan = db.query(ProductionPlan).filter(ProductionPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="生产计划不存在")
+    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
 
     if plan.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只有已审批的计划才能发布")
