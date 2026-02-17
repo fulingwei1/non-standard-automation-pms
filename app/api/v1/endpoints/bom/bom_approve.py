@@ -13,7 +13,7 @@ from app.core.security import require_permission
 from app.models.user import User
 
 
-router = APIRouter(prefix="/bom/headers", tags=["bom"])
+router = APIRouter(prefix="/headers", tags=["bom"])
 
 
 @router.post("/{bom_id}/approve")

@@ -303,7 +303,7 @@ def create_dashboard_router(
         user_dep = security.get_current_active_user
     
     # 主dashboard端点
-    @router.get(f"/{module_name}/dashboard", response_model=ResponseModel[Dict[str, Any]])
+    @router.get("/dashboard", response_model=ResponseModel[Dict[str, Any]])
     def get_dashboard(
         db: Session = Depends(deps.get_db),
         current_user: User = Depends(user_dep),

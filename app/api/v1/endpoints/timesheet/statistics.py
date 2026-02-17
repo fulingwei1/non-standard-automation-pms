@@ -38,7 +38,7 @@ router = APIRouter(prefix="/statistics", tags=["statistics"])
 
 
 @router.get(
-    "/statistics",
+    "",
     response_model=TimesheetStatisticsResponse,
     status_code=status.HTTP_200_OK,
 )
