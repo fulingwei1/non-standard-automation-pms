@@ -18,6 +18,7 @@ from app.schemas.stage_template import (
     TimelineStage,
     TimelineViewResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -35,9 +36,7 @@ def get_timeline_view(
     返回单个项目的阶段和节点时间线，用于查看项目时间规划。
     """
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     stages = (
         db.query(ProjectStageInstance)

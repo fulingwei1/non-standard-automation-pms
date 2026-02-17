@@ -42,6 +42,7 @@ from app.schemas.shortage import (
     MaterialArrivalCreate,
     MaterialArrivalResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -143,28 +144,20 @@ def create_arrival(
 ) -> Any:
     """创建到货跟踪（从采购订单或缺料上报创建）"""
     # 验证物料
-    material = db.query(Material).filter(Material.id == arrival_in.material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, arrival_in.material_id, "物料不存在")
 
     # 如果关联缺料上报，验证上报存在
     if arrival_in.shortage_report_id:
-        report = db.query(ShortageReport).filter(ShortageReport.id == arrival_in.shortage_report_id).first()
-        if not report:
-            raise HTTPException(status_code=404, detail="缺料上报不存在")
+        report = get_or_404(db, ShortageReport, arrival_in.shortage_report_id, "缺料上报不存在")
 
     # 如果关联采购订单，验证订单存在
     if arrival_in.purchase_order_id:
-        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == arrival_in.purchase_order_id).first()
-        if not po:
-            raise HTTPException(status_code=404, detail="采购订单不存在")
+        po = get_or_404(db, PurchaseOrder, arrival_in.purchase_order_id, "采购订单不存在")
 
     # 如果提供了供应商ID，验证供应商存在
     supplier = None
     if arrival_in.supplier_id:
-        supplier = db.query(Vendor).filter(Vendor.id == arrival_in.supplier_id, Vendor.vendor_type == 'MATERIAL').first()
-        if not supplier:
-            raise HTTPException(status_code=404, detail="供应商不存在")
+        supplier = get_or_404(db, Vendor, arrival_in.supplier_id, Vendor.vendor_type == 'MATERIAL', "供应商不存在")
 
     arrival = MaterialArrival(
         arrival_no=_generate_arrival_no(db),
@@ -182,9 +175,7 @@ def create_arrival(
         remark=arrival_in.remark
     )
 
-    db.add(arrival)
-    db.commit()
-    db.refresh(arrival)
+    save_obj(db, arrival)
 
     return _build_arrival_response(arrival)
 
@@ -229,9 +220,7 @@ def get_arrival(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """到货详情"""
-    arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
-    if not arrival:
-        raise HTTPException(status_code=404, detail="到货跟踪不存在")
+    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     return _build_arrival_response(arrival)
 
@@ -249,9 +238,7 @@ def update_arrival_status(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新到货状态"""
-    arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
-    if not arrival:
-        raise HTTPException(status_code=404, detail="到货跟踪不存在")
+    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     valid_statuses = ['PENDING', 'IN_TRANSIT', 'DELAYED', 'RECEIVED', 'CANCELLED']
     if status not in valid_statuses:
@@ -267,9 +254,7 @@ def update_arrival_status(
             arrival.delay_days = (today - arrival.expected_date).days
             arrival.status = 'DELAYED'
 
-    db.add(arrival)
-    db.commit()
-    db.refresh(arrival)
+    save_obj(db, arrival)
 
     return _build_arrival_response(arrival)
 
@@ -283,9 +268,7 @@ def receive_arrival(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """确认收货"""
-    arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
-    if not arrival:
-        raise HTTPException(status_code=404, detail="到货跟踪不存在")
+    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     arrival.status = 'RECEIVED'
     arrival.received_qty = received_qty
@@ -298,9 +281,7 @@ def receive_arrival(
         arrival.is_delayed = True
         arrival.delay_days = (arrival.actual_date - arrival.expected_date).days
 
-    db.add(arrival)
-    db.commit()
-    db.refresh(arrival)
+    save_obj(db, arrival)
 
     return _build_arrival_response(arrival)
 
@@ -318,9 +299,7 @@ def list_arrival_follow_ups(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """到货跟踪的跟催记录列表"""
-    arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
-    if not arrival:
-        raise HTTPException(status_code=404, detail="到货跟踪不存在")
+    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     query = db.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id == arrival_id)
 
@@ -362,9 +341,7 @@ def create_follow_up(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建跟催记录"""
-    arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
-    if not arrival:
-        raise HTTPException(status_code=404, detail="到货跟踪不存在")
+    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     follow_up = ArrivalFollowUp(
         arrival_id=arrival_id,

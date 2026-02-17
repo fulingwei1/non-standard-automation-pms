@@ -17,6 +17,7 @@ from app.models.material import BomHeader, BomItem
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -56,9 +57,7 @@ def generate_purchase_request_from_bom(
     current_user: User = Depends(security.get_current_active_user),
 ) -> ResponseModel:
     """从BOM生成采购需求/采购申请"""
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
     bom_items = db.query(BomItem).filter(

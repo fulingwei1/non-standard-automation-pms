@@ -22,6 +22,7 @@ from app.models.approval import (
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +49,7 @@ def get_project_approval_history(
     """
     获取项目审批历史（使用统一审批系统）
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     try:
         instance = (

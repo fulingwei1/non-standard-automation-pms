@@ -27,6 +27,7 @@ from app.schemas.rd_project import (
 )
 
 from .utils import generate_project_no
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -123,9 +124,7 @@ def create_rd_project(
         remark=project_in.remark,
     )
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     return ResponseModel(
         code=201,
@@ -144,9 +143,7 @@ def get_rd_project(
     """
     获取研发项目详情
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     return ResponseModel(
         code=200,
@@ -166,9 +163,7 @@ def update_rd_project(
     """
     更新研发项目
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 只有草稿状态才能更新
     if project.status != 'DRAFT':
@@ -186,9 +181,7 @@ def update_rd_project(
     for field, value in update_data.items():
         setattr(project, field, value)
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     return ResponseModel(
         code=200,
@@ -208,9 +201,7 @@ def approve_rd_project(
     """
     研发项目审批
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     if project.approval_status != 'PENDING':
         raise HTTPException(status_code=400, detail="只有待审批状态的研发项目才能审批")
@@ -226,9 +217,7 @@ def approve_rd_project(
 
     project.approval_remark = approve_request.approval_remark
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     return ResponseModel(
         code=200,
@@ -248,9 +237,7 @@ def close_rd_project(
     """
     研发项目结项
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     if project.status in ['COMPLETED', 'CANCELLED']:
         raise HTTPException(status_code=400, detail="项目已结项或已取消")
@@ -261,9 +248,7 @@ def close_rd_project(
     project.close_result = close_request.close_result
     project.closed_by = current_user.id
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     return ResponseModel(
         code=200,
@@ -283,20 +268,14 @@ def link_rd_project(
     """
     关联非标项目
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 验证关联的非标项目是否存在
-    linked_project = db.query(Project).filter(Project.id == link_request.linked_project_id).first()
-    if not linked_project:
-        raise HTTPException(status_code=404, detail="关联的非标项目不存在")
+    linked_project = get_or_404(db, Project, link_request.linked_project_id, "关联的非标项目不存在")
 
     project.linked_project_id = link_request.linked_project_id
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     return ResponseModel(
         code=200,

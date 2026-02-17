@@ -21,6 +21,7 @@ from app.schemas.approval.task import (
     TransferRequest,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -31,9 +32,7 @@ def get_task(
     db: Session = Depends(deps.get_db),
 ):
     """获取审批任务详情"""
-    task = db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
 
     result = ApprovalTaskResponse.model_validate(task)
 
@@ -304,9 +303,7 @@ def delete_comment(
     """删除评论（软删除）"""
     from datetime import datetime
 
-    comment = db.query(ApprovalComment).filter(ApprovalComment.id == comment_id).first()
-    if not comment:
-        raise HTTPException(status_code=404, detail="评论不存在")
+    comment = get_or_404(db, ApprovalComment, comment_id, "评论不存在")
 
     if comment.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权删除此评论")

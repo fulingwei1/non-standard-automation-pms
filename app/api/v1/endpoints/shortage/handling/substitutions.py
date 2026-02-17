@@ -34,6 +34,7 @@ from app.models.shortage import MaterialSubstitution
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.shortage import MaterialSubstitutionCreate, MaterialSubstitutionResponse
+from app.utils.db_helpers import get_or_404, save_obj
 
 logger = logging.getLogger(__name__)
 
@@ -142,19 +143,13 @@ def create_substitution(
 ) -> Any:
     """创建替代申请"""
     # 验证项目
-    project = db.query(Project).filter(Project.id == sub_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, sub_in.project_id, "项目不存在")
 
     # 验证原物料
-    original_material = db.query(Material).filter(Material.id == sub_in.original_material_id).first()
-    if not original_material:
-        raise HTTPException(status_code=404, detail="原物料不存在")
+    original_material = get_or_404(db, Material, sub_in.original_material_id, "原物料不存在")
 
     # 验证替代物料
-    substitute_material = db.query(Material).filter(Material.id == sub_in.substitute_material_id).first()
-    if not substitute_material:
-        raise HTTPException(status_code=404, detail="替代物料不存在")
+    substitute_material = get_or_404(db, Material, sub_in.substitute_material_id, "替代物料不存在")
 
     if sub_in.original_material_id == sub_in.substitute_material_id:
         raise HTTPException(status_code=400, detail="原物料和替代物料不能相同")
@@ -180,9 +175,7 @@ def create_substitution(
         remark=sub_in.remark
     )
 
-    db.add(substitution)
-    db.commit()
-    db.refresh(substitution)
+    save_obj(db, substitution)
 
     return _build_substitution_response(substitution, db)
 
@@ -195,9 +188,7 @@ def get_substitution(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """替代申请详情"""
-    sub = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
-    if not sub:
-        raise HTTPException(status_code=404, detail="替代申请不存在")
+    sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
     return _build_substitution_response(sub, db)
 
@@ -216,9 +207,7 @@ def tech_approve_substitution(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """技术审批"""
-    sub = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
-    if not sub:
-        raise HTTPException(status_code=404, detail="替代申请不存在")
+    sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
     if sub.status != 'DRAFT':
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能进行技术审批")
@@ -232,9 +221,7 @@ def tech_approve_substitution(
     else:
         sub.status = 'REJECTED'
 
-    db.add(sub)
-    db.commit()
-    db.refresh(sub)
+    save_obj(db, sub)
 
     return _build_substitution_response(sub, db)
 
@@ -249,9 +236,7 @@ def prod_approve_substitution(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """生产审批"""
-    sub = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
-    if not sub:
-        raise HTTPException(status_code=404, detail="替代申请不存在")
+    sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
     if sub.status != 'PROD_PENDING':
         raise HTTPException(status_code=400, detail="只有待生产审批状态的申请才能进行生产审批")
@@ -265,9 +250,7 @@ def prod_approve_substitution(
     else:
         sub.status = 'REJECTED'
 
-    db.add(sub)
-    db.commit()
-    db.refresh(sub)
+    save_obj(db, sub)
 
     return _build_substitution_response(sub, db)
 
@@ -281,9 +264,7 @@ def execute_substitution(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """执行替代"""
-    sub = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
-    if not sub:
-        raise HTTPException(status_code=404, detail="替代申请不存在")
+    sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
     if sub.status != 'APPROVED':
         raise HTTPException(status_code=400, detail="只能执行已批准的申请")
@@ -327,9 +308,7 @@ def execute_substitution(
             except Exception:
                 logger.debug("MaterialChangeHistory 写入失败，已忽略", exc_info=True)
 
-    db.add(sub)
-    db.commit()
-    db.refresh(sub)
+    save_obj(db, sub)
 
     # 发送通知
     try:

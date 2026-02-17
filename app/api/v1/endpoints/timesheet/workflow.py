@@ -25,6 +25,7 @@ from app.models.user import User
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/workflow", tags=["timesheet-workflow"])
 
@@ -237,9 +238,7 @@ def process_approval_action(
     - REJECT: 审批驳回（需要填写意见）
     """
     # 验证任务存在
-    task = db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="审批任务不存在")
+    task = get_or_404(db, ApprovalTask, task_id, "审批任务不存在")
 
     # 验证任务状态
     if task.status != "PENDING":
@@ -384,9 +383,7 @@ def get_timesheet_approval_status(
     查询指定工时记录的审批进度。
     """
     # 验证工时存在
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 查找审批实例
     instance = (
@@ -460,9 +457,7 @@ def withdraw_timesheet_approval(
     发起人可以在审批未完成前撤回审批申请。
     """
     # 验证工时存在
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 验证权限：只能撤回自己的工时
     if timesheet.user_id != current_user.id:
@@ -514,9 +509,7 @@ def get_timesheet_approval_history(
     返回指定工时记录的完整审批历史记录。
     """
     # 验证工时存在
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 查找审批实例
     instance = (

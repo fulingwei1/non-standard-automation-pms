@@ -20,6 +20,7 @@ from app.schemas.project import (
     ProjectTemplateCreate,
     ProjectTemplateUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -98,9 +99,7 @@ def create_project_template(
         is_active=template_in.is_active if template_in.is_active is not None else True,
     )
 
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     return ResponseModel(
         code=200,
@@ -123,9 +122,7 @@ def get_project_template(
     """
     获取项目模板详情
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     return ResponseModel(
         code=200,
@@ -155,9 +152,7 @@ def update_project_template(
     """
     更新项目模板
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     update_data = template_in.model_dump(exclude_unset=True)
 
@@ -165,9 +160,7 @@ def update_project_template(
         if hasattr(template, field):
             setattr(template, field, value)
 
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     return ResponseModel(
         code=200,

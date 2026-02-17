@@ -23,6 +23,7 @@ from app.schemas.resource_plan import (
 )
 from app.services.resource_plan_service import ResourcePlanService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 
 def filter_by_stage(query, stage_code: str):
@@ -63,9 +64,7 @@ def create_resource_plan(
         db, current_user, project_id, "您没有权限为该项目创建资源计划"
     )
     
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     plan = ResourcePlanService.create_resource_plan(db, project_id, plan_in)
     return plan
@@ -96,8 +95,7 @@ def delete_resource_plan(
             detail="该资源计划已分配人员，请先释放人员后再删除",
         )
     
-    db.delete(plan)
-    db.commit()
+    delete_obj(db, plan)
 
 
 # 覆盖列表端点，使用服务层获取资源计划
@@ -162,8 +160,6 @@ def update_resource_plan(
         if hasattr(plan, field):
             setattr(plan, field, value)
     
-    db.add(plan)
-    db.commit()
-    db.refresh(plan)
+    save_obj(db, plan)
     
     return plan

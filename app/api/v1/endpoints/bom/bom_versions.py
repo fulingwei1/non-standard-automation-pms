@@ -13,6 +13,7 @@ from app.core import security
 from app.models.material import BomHeader
 from app.models.user import User
 from app.schemas.material import BomResponse
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -27,9 +28,7 @@ def get_bom_versions(
     """获取BOM的所有版本列表
     基于BOM编号查找所有版本
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 查找相同BOM编号的所有版本
     versions = (
@@ -77,9 +76,7 @@ def compare_bom_versions(
     """对比BOM的两个版本
     如果不提供version1_id和version2_id，则对比当前版本和最新发布版本
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 确定要对比的两个版本
     if version1_id and version2_id:

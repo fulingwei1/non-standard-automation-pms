@@ -19,6 +19,7 @@ from app.schemas.stage_template import (
     TreeTask,
     TreeViewResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -36,9 +37,7 @@ def get_tree_view(
     返回项目的阶段-节点-任务三级分解结构，用于查看工作分解详情。
     """
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     stages = (
         db.query(ProjectStageInstance)

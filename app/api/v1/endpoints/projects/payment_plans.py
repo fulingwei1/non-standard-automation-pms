@@ -24,6 +24,7 @@ from app.schemas.project import (
 from .utils import _sync_invoice_request_receipt_status
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -105,9 +106,7 @@ def create_project_payment_plan(
         status="PENDING",
     )
 
-    db.add(plan)
-    db.commit()
-    db.refresh(plan)
+    save_obj(db, plan)
 
     return ResponseModel(
         code=200,
@@ -135,9 +134,7 @@ def update_project_payment_plan(
     """
     更新项目付款计划
     """
-    plan = db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="付款计划不存在")
+    plan = get_or_404(db, ProjectPaymentPlan, plan_id, detail="付款计划不存在")
 
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, plan.project_id)
@@ -161,9 +158,7 @@ def update_project_payment_plan(
         elif plan.actual_amount > 0:
             plan.status = "PARTIAL"
 
-    db.add(plan)
-    db.commit()
-    db.refresh(plan)
+    save_obj(db, plan)
 
     return ResponseModel(
         code=200,
@@ -192,9 +187,7 @@ def delete_project_payment_plan(
     """
     删除项目付款计划
     """
-    plan = db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.id == plan_id).first()
-    if not plan:
-        raise HTTPException(status_code=404, detail="付款计划不存在")
+    plan = get_or_404(db, ProjectPaymentPlan, plan_id, detail="付款计划不存在")
 
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, plan.project_id)
@@ -206,8 +199,7 @@ def delete_project_payment_plan(
             detail="该付款计划已有回款记录，无法删除"
         )
 
-    db.delete(plan)
-    db.commit()
+    delete_obj(db, plan)
 
     return ResponseModel(
         code=200,

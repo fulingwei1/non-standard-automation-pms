@@ -22,6 +22,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.workload import TeamWorkloadItem, TeamWorkloadResponse
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -50,9 +51,7 @@ def get_project_team_workload(
     """获取项目团队负荷"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 默认使用当前月
     today = date.today()
@@ -179,9 +178,7 @@ def get_project_workload_gantt(
     """获取项目资源甘特图"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 默认使用当前月
     today = date.today()
@@ -266,9 +263,7 @@ def get_project_workload_summary(
     """获取项目工作量汇总"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 默认使用当前月
     today = date.today()

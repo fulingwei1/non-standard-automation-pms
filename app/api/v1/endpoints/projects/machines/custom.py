@@ -28,6 +28,7 @@ from app.schemas.project import MachineResponse, ProjectDocumentResponse
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -80,9 +81,7 @@ def get_project_machine_summary(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     aggregation_service = ProjectAggregationService(db)
     summary = aggregation_service.get_project_machine_summary(project_id)
@@ -118,9 +117,7 @@ def recalculate_project_aggregation(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     aggregation_service = ProjectAggregationService(db)
     updated_project = aggregation_service.update_project_aggregation(project_id)
@@ -164,9 +161,7 @@ def update_project_machine_progress(
         raise HTTPException(status_code=404, detail="机台不存在")
 
     machine.progress_pct = progress_pct
-    db.add(machine)
-    db.commit()
-    db.refresh(machine)
+    save_obj(db, machine)
 
     # 更新项目聚合数据
     aggregation_service = ProjectAggregationService(db)
@@ -286,9 +281,7 @@ async def upload_machine_document(
     }
 
     document = ProjectDocument(**doc_data)
-    db.add(document)
-    db.commit()
-    db.refresh(document)
+    save_obj(db, document)
 
     return ResponseModel(
         code=201,

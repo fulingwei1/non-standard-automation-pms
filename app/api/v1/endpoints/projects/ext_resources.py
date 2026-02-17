@@ -19,6 +19,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -165,9 +166,7 @@ def create_resource_allocation(
     Returns:
         ResponseModel: 创建结果
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 检查是否已分配
     existing = db.query(PmoResourceAllocation).filter(
@@ -191,9 +190,7 @@ def create_resource_allocation(
         planned_hours=resource_data.get("planned_hours"),
         status="PLANNED",
     )
-    db.add(allocation)
-    db.commit()
-    db.refresh(allocation)
+    save_obj(db, allocation)
 
     return ResponseModel(
         code=200,
@@ -221,9 +218,7 @@ def update_resource_allocation(
     Returns:
         ResponseModel: 更新结果
     """
-    allocation = db.query(PmoResourceAllocation).filter(PmoResourceAllocation.id == allocation_id).first()
-    if not allocation:
-        raise HTTPException(status_code=404, detail="资源分配不存在")
+    allocation = get_or_404(db, PmoResourceAllocation, allocation_id, detail="资源分配不存在")
 
     updatable = [
         "resource_role", "allocation_percent", "planned_hours",
@@ -260,9 +255,7 @@ def release_resource(
     Returns:
         ResponseModel: 释放结果
     """
-    allocation = db.query(PmoResourceAllocation).filter(PmoResourceAllocation.id == allocation_id).first()
-    if not allocation:
-        raise HTTPException(status_code=404, detail="资源分配不存在")
+    allocation = get_or_404(db, PmoResourceAllocation, allocation_id, detail="资源分配不存在")
 
     if allocation.status == "RELEASED":
         raise HTTPException(status_code=400, detail="该资源已释放")
@@ -291,15 +284,12 @@ def delete_resource_allocation(
     Returns:
         ResponseModel: 删除结果
     """
-    allocation = db.query(PmoResourceAllocation).filter(PmoResourceAllocation.id == allocation_id).first()
-    if not allocation:
-        raise HTTPException(status_code=404, detail="资源分配不存在")
+    allocation = get_or_404(db, PmoResourceAllocation, allocation_id, detail="资源分配不存在")
 
     if allocation.actual_hours and allocation.actual_hours > 0:
         raise HTTPException(status_code=400, detail="已有实际工时记录，不能删除")
 
-    db.delete(allocation)
-    db.commit()
+    delete_obj(db, allocation)
 
     return ResponseModel(code=200, message="资源分配删除成功", data={"id": allocation_id})
 

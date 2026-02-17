@@ -17,6 +17,7 @@ from app.schemas.project_role import (
     ProjectRoleConfigListResponse,
     ProjectRoleConfigResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -30,9 +31,7 @@ async def get_project_role_configs(
     current_user: User = Depends(security.require_permission("project_role:read")),
 ):
     """获取项目的角色配置列表"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     configs = (
         db.query(ProjectRoleConfig)
@@ -58,9 +57,7 @@ async def init_project_role_configs(
     current_user: User = Depends(security.require_permission("project_role:create")),
 ):
     """从系统默认配置初始化项目角色配置"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     existing = (
         db.query(ProjectRoleConfig)
@@ -109,9 +106,7 @@ async def update_project_role_configs(
     current_user: User = Depends(security.require_permission("project_role:update")),
 ):
     """批量更新项目角色配置"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     configs = []
     for config_data in data.configs:

@@ -22,6 +22,7 @@ from app.schemas.approval.instance import (
 from app.services.approval_engine import ApprovalEngineService
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -127,9 +128,7 @@ def get_instance(
     db: Session = Depends(deps.get_db),
 ):
     """获取审批实例详情"""
-    instance = db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
-    if not instance:
-        raise HTTPException(status_code=404, detail="审批实例不存在")
+    instance = get_or_404(db, ApprovalInstance, instance_id, "审批实例不存在")
 
     # 获取任务列表
     tasks = (

@@ -28,6 +28,7 @@ from app.schemas.timesheet import (
     TimesheetListResponse,
 )
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 
 def filter_by_user(query, user_id: int):
@@ -132,9 +133,7 @@ def list_project_timesheets(
     check_project_access_or_raise(db, current_user, project_id)
 
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     query = db.query(Timesheet).filter(Timesheet.project_id == project_id)
 
@@ -176,9 +175,7 @@ def get_project_timesheet(
     check_project_access_or_raise(db, current_user, project_id)
     
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     timesheet = db.query(Timesheet).filter(
         Timesheet.id == timesheet_id,

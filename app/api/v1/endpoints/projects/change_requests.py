@@ -41,6 +41,7 @@ from app.schemas.change_request import (
     ChangeCloseRequest,
     ChangeRequestStatistics,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -49,9 +50,7 @@ def generate_change_code(db: Session, project_id: int) -> str:
     """生成变更编号"""
     # 获取项目编号
     from app.models.project import Project
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 获取当前项目的变更数量
     count = db.query(func.count(ChangeRequest.id))\
@@ -90,9 +89,7 @@ def create_change_request(
     """提交变更请求"""
     # 验证项目是否存在
     from app.models.project import Project
-    project = db.query(Project).filter(Project.id == change_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, change_in.project_id, detail="项目不存在")
     
     # 生成变更编号
     change_code = generate_change_code(db, change_in.project_id)
@@ -108,9 +105,7 @@ def create_change_request(
         approval_decision=ApprovalDecisionEnum.PENDING,
     )
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     # 创建通知记录（后续可以扩展发送通知）
     if change_request.notify_team:
@@ -175,9 +170,7 @@ def get_change_request(
     current_user: User = Depends(security.require_permission("change:read")),
 ) -> Any:
     """获取变更请求详情"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="获取变更请求详情成功")
@@ -192,9 +185,7 @@ def update_change_request(
     current_user: User = Depends(security.require_permission("change:update")),
 ) -> Any:
     """更新变更请求"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 检查状态：已批准、已拒绝、已关闭的变更不能修改
     if change_request.status in [
@@ -213,9 +204,7 @@ def update_change_request(
     for field, value in update_data.items():
         setattr(change_request, field, value)
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更请求更新成功")
@@ -230,9 +219,7 @@ def approve_change_request(
     current_user: User = Depends(security.require_permission("change:approve")),
 ) -> Any:
     """审批变更请求"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 检查状态：只有待审批状态才能审批
     if change_request.status != ChangeStatusEnum.PENDING_APPROVAL:
@@ -288,9 +275,7 @@ def get_approval_records(
     current_user: User = Depends(security.require_permission("change:read")),
 ) -> Any:
     """获取审批记录"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     records = db.query(ChangeApprovalRecord)\
         .filter(ChangeApprovalRecord.change_request_id == change_id)\
@@ -310,9 +295,7 @@ def update_change_status(
     current_user: User = Depends(security.require_permission("change:update")),
 ) -> Any:
     """更新变更状态"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 验证状态转换是否合法
     if not validate_status_transition(change_request.status, status_in.new_status):
@@ -336,9 +319,7 @@ def update_change_status(
         change_request.close_date = datetime.utcnow()
         change_request.close_notes = status_in.notes
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(
@@ -356,9 +337,7 @@ def update_implementation_info(
     current_user: User = Depends(security.require_permission("change:update")),
 ) -> Any:
     """更新实施信息"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 只有已批准或实施中状态才能更新实施信息
     if change_request.status not in [ChangeStatusEnum.APPROVED, ChangeStatusEnum.IMPLEMENTING]:
@@ -376,9 +355,7 @@ def update_implementation_info(
     if change_request.status == ChangeStatusEnum.APPROVED and impl_in.implementation_start_date:
         change_request.status = ChangeStatusEnum.IMPLEMENTING
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="实施信息更新成功")
@@ -393,9 +370,7 @@ def verify_change_request(
     current_user: User = Depends(security.require_permission("change:verify")),
 ) -> Any:
     """验证变更"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 只有验证中状态才能验证
     if change_request.status != ChangeStatusEnum.VERIFYING:
@@ -412,9 +387,7 @@ def verify_change_request(
     change_request.status = ChangeStatusEnum.CLOSED
     change_request.close_date = datetime.utcnow()
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更验证完成")
@@ -429,9 +402,7 @@ def close_change_request(
     current_user: User = Depends(security.require_permission("change:close")),
 ) -> Any:
     """关闭变更"""
-    change_request = db.query(ChangeRequest).filter(ChangeRequest.id == change_id).first()
-    if not change_request:
-        raise HTTPException(status_code=404, detail="变更请求不存在")
+    change_request = get_or_404(db, ChangeRequest, change_id, detail="变更请求不存在")
     
     # 检查状态
     if change_request.status in [ChangeStatusEnum.CLOSED, ChangeStatusEnum.CANCELLED]:
@@ -445,9 +416,7 @@ def close_change_request(
     change_request.close_date = datetime.utcnow()
     change_request.close_notes = close_in.close_notes
     
-    db.add(change_request)
-    db.commit()
-    db.refresh(change_request)
+    save_obj(db, change_request)
     
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更已关闭")

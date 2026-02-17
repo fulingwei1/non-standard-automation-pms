@@ -33,6 +33,7 @@ from app.schemas.approval.template import (
     ApprovalTemplateResponse,
     ApprovalTemplateUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -73,9 +74,7 @@ def get_template(
     db: Session = Depends(deps.get_db),
 ):
     """获取审批模板详情"""
-    template = db.query(ApprovalTemplate).filter(ApprovalTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
     return ApprovalTemplateResponse.model_validate(template)
 
 
@@ -91,9 +90,7 @@ def create_template(
         raise HTTPException(status_code=400, detail=f"模板编码已存在: {data.template_code}")
 
     template = ApprovalTemplate(**data.model_dump())
-    db.add(template)
-    db.commit()
-    db.refresh(template)
+    save_obj(db, template)
 
     return ApprovalTemplateResponse.model_validate(template)
 
@@ -105,9 +102,7 @@ def update_template(
     db: Session = Depends(deps.get_db),
 ):
     """更新审批模板"""
-    template = db.query(ApprovalTemplate).filter(ApprovalTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
 
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -125,9 +120,7 @@ def delete_template(
     db: Session = Depends(deps.get_db),
 ):
     """删除审批模板（软删除）"""
-    template = db.query(ApprovalTemplate).filter(ApprovalTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
 
     template.is_active = False
     db.commit()
@@ -141,9 +134,7 @@ def publish_template(
     db: Session = Depends(deps.get_db),
 ):
     """发布审批模板"""
-    template = db.query(ApprovalTemplate).filter(ApprovalTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
 
     # 检查是否有默认流程
     default_flow = (
@@ -210,9 +201,7 @@ def create_flow(
 ):
     """创建审批流程"""
     # 检查模板是否存在
-    template = db.query(ApprovalTemplate).filter(ApprovalTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
 
     # 如果设置为默认，取消其他默认
     if data.is_default:
@@ -258,9 +247,7 @@ def update_flow(
     db: Session = Depends(deps.get_db),
 ):
     """更新审批流程"""
-    flow = db.query(ApprovalFlowDefinition).filter(ApprovalFlowDefinition.id == flow_id).first()
-    if not flow:
-        raise HTTPException(status_code=404, detail="流程不存在")
+    flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
 
     # 如果设置为默认，取消其他默认
     if data.is_default:
@@ -286,9 +273,7 @@ def delete_flow(
     db: Session = Depends(deps.get_db),
 ):
     """删除审批流程（软删除）"""
-    flow = db.query(ApprovalFlowDefinition).filter(ApprovalFlowDefinition.id == flow_id).first()
-    if not flow:
-        raise HTTPException(status_code=404, detail="流程不存在")
+    flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
 
     flow.is_active = False
     db.commit()
@@ -305,17 +290,13 @@ def create_node(
     db: Session = Depends(deps.get_db),
 ):
     """创建审批节点"""
-    flow = db.query(ApprovalFlowDefinition).filter(ApprovalFlowDefinition.id == flow_id).first()
-    if not flow:
-        raise HTTPException(status_code=404, detail="流程不存在")
+    flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
 
     node = ApprovalNodeDefinition(
         flow_id=flow_id,
         **data.model_dump(exclude={"flow_id"}),
     )
-    db.add(node)
-    db.commit()
-    db.refresh(node)
+    save_obj(db, node)
 
     return ApprovalNodeResponse.model_validate(node)
 
@@ -327,9 +308,7 @@ def update_node(
     db: Session = Depends(deps.get_db),
 ):
     """更新审批节点"""
-    node = db.query(ApprovalNodeDefinition).filter(ApprovalNodeDefinition.id == node_id).first()
-    if not node:
-        raise HTTPException(status_code=404, detail="节点不存在")
+    node = get_or_404(db, ApprovalNodeDefinition, node_id, "节点不存在")
 
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -347,9 +326,7 @@ def delete_node(
     db: Session = Depends(deps.get_db),
 ):
     """删除审批节点（软删除）"""
-    node = db.query(ApprovalNodeDefinition).filter(ApprovalNodeDefinition.id == node_id).first()
-    if not node:
-        raise HTTPException(status_code=404, detail="节点不存在")
+    node = get_or_404(db, ApprovalNodeDefinition, node_id, "节点不存在")
 
     node.is_active = False
     db.commit()
@@ -389,9 +366,7 @@ def create_routing_rule(
         template_id=template_id,
         **data.model_dump(exclude={"template_id"}),
     )
-    db.add(rule)
-    db.commit()
-    db.refresh(rule)
+    save_obj(db, rule)
 
     return ApprovalRoutingRuleResponse.model_validate(rule)
 
@@ -402,9 +377,7 @@ def delete_routing_rule(
     db: Session = Depends(deps.get_db),
 ):
     """删除路由规则（软删除）"""
-    rule = db.query(ApprovalRoutingRule).filter(ApprovalRoutingRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="规则不存在")
+    rule = get_or_404(db, ApprovalRoutingRule, rule_id, "规则不存在")
 
     rule.is_active = False
     db.commit()

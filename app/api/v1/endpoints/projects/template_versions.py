@@ -22,6 +22,7 @@ from app.common.query_filters import apply_pagination
 from app.schemas.project import (
     ProjectTemplateVersionCreate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -37,9 +38,7 @@ def get_template_versions(
     """
     获取模板版本列表
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     query = db.query(ProjectTemplateVersion).filter(
         ProjectTemplateVersion.template_id == template_id
@@ -80,9 +79,7 @@ def create_template_version(
     """
     创建模板版本
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     # 获取最新版本号
     latest_version = db.query(ProjectTemplateVersion).filter(
@@ -102,9 +99,7 @@ def create_template_version(
         created_by=current_user.id,
     )
 
-    db.add(version)
-    db.commit()
-    db.refresh(version)
+    save_obj(db, version)
 
     return ResponseModel(
         code=200,
@@ -261,9 +256,7 @@ def rollback_template_version(
         created_by=current_user.id,
     )
 
-    db.add(new_version)
-    db.commit()
-    db.refresh(new_version)
+    save_obj(db, new_version)
 
     return ResponseModel(
         code=200,

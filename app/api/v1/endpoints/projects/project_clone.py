@@ -16,6 +16,7 @@ from app.models.project import Machine, Project, ProjectMilestone
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.project import ProjectCloneRequest
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -59,9 +60,7 @@ def clone_project(
         is_active=True,
     )
 
-    db.add(new_project)
-    db.commit()
-    db.refresh(new_project)
+    save_obj(db, new_project)
 
     # 克隆机台（如果需要）
     if clone_request.clone_machines:

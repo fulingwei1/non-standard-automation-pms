@@ -24,6 +24,7 @@ from app.schemas.project import (
 )
 from app.services.data_scope import DataScopeService
 from app.utils.batch_operations import BatchOperationExecutor, create_scope_filter
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -156,9 +157,7 @@ def batch_assign_project_manager(
     """
     批量分配项目经理
     """
-    pm = db.query(User).filter(User.id == batch_request.pm_id).first()
-    if not pm:
-        raise HTTPException(status_code=404, detail="项目经理不存在")
+    pm = get_or_404(db, User, batch_request.pm_id, detail="项目经理不存在")
 
     pm_name = pm.real_name or pm.username
 

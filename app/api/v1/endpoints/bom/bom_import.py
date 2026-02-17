@@ -15,6 +15,7 @@ from app.services.import_export_engine import ImportExportEngine
 from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 # 尝试导入Excel处理库
 try:
@@ -43,9 +44,7 @@ async def import_bom_from_excel(
             status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
         )
 
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 只有草稿状态才能导入
     if bom.status != "DRAFT":

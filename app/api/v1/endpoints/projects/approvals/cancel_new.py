@@ -20,6 +20,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,7 @@ def withdraw_project_approval(
 
     仅发起人可以撤回
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 检查项目审批状态（旧系统的字段）
     if project.approval_status not in ["PENDING"]:

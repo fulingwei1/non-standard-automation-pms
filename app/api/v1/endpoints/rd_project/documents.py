@@ -30,6 +30,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 # 文档上传目录
 DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
@@ -57,9 +58,7 @@ def get_rd_project_documents(
     """
     获取研发项目文档列表
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.rd_project_id == project_id)
 
@@ -97,9 +96,7 @@ def create_rd_project_document(
     """
     创建研发项目文档记录
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     doc_data = doc_in.model_dump()
     doc_data["rd_project_id"] = project_id
@@ -107,9 +104,7 @@ def create_rd_project_document(
     doc_data["uploaded_by"] = current_user.id
 
     document = ProjectDocument(**doc_data)
-    db.add(document)
-    db.commit()
-    db.refresh(document)
+    save_obj(db, document)
 
     return ResponseModel(
         code=201,
@@ -135,9 +130,7 @@ async def upload_rd_project_document(
     """
     上传研发项目文档（包含文件上传）
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 生成唯一文件名
     file_ext = Path(file.filename).suffix
@@ -172,9 +165,7 @@ async def upload_rd_project_document(
     }
 
     document = ProjectDocument(**doc_data)
-    db.add(document)
-    db.commit()
-    db.refresh(document)
+    save_obj(db, document)
 
     return ResponseModel(
         code=201,
@@ -194,9 +185,7 @@ def download_rd_project_document(
     """
     下载研发项目文档
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     document = db.query(ProjectDocument).filter(
         ProjectDocument.id == doc_id,

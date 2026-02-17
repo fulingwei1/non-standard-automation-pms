@@ -19,6 +19,7 @@ from app.schemas.resource_plan import (
 )
 from app.services.resource_plan_service import ResourcePlanService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -45,9 +46,7 @@ def get_resource_plan_summary(
     """获取项目资源计划汇总"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 获取所有资源计划
     all_plans = ResourcePlanService.get_project_resource_plans(db, project_id)

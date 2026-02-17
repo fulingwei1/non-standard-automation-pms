@@ -14,6 +14,7 @@ from app.core import security
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -48,9 +49,7 @@ def get_project_relations(
     Returns:
         ResponseModel: 关联列表
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 从项目的 related_projects 字段获取关联（假设是 JSON 格式存储）
     relations = []
@@ -142,9 +141,7 @@ def create_project_relation(
     Returns:
         ResponseModel: 创建结果
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     related_project_id = relation_data.get("related_project_id")
     relation_type = relation_data.get("relation_type", "RELATED")
@@ -152,9 +149,7 @@ def create_project_relation(
     if project_id == related_project_id:
         raise HTTPException(status_code=400, detail="不能关联自身")
 
-    related_project = db.query(Project).filter(Project.id == related_project_id).first()
-    if not related_project:
-        raise HTTPException(status_code=404, detail="关联项目不存在")
+    related_project = get_or_404(db, Project, related_project_id, detail="关联项目不存在")
 
     if relation_type not in RELATION_TYPES:
         raise HTTPException(status_code=400, detail="无效的关联类型")
@@ -203,9 +198,7 @@ def delete_project_relation(
     Returns:
         ResponseModel: 删除结果
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 处理父子关系删除
     if relation_type == "PARENT_CHILD":
@@ -242,9 +235,7 @@ def get_dependency_chain(
     Returns:
         ResponseModel: 依赖链
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     chain = {
         "project_id": project_id,

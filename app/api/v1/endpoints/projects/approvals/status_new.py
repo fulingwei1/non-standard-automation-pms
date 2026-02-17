@@ -24,6 +24,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.approval_engine.engine.__init__ import ApprovalEngineService
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,7 @@ def get_project_approval_status(
     - 通过引擎的查询能力获取审批任务和日志
     - 保持与原有响应格式的兼容性
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     try:
         # 使用统一审批引擎获取审批记录

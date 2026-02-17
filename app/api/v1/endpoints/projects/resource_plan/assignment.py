@@ -21,6 +21,7 @@ from app.schemas.resource_plan import (
 )
 from app.services.resource_plan_service import ResourcePlanService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -64,9 +65,7 @@ def assign_employee(
         )
 
     # 验证员工存在
-    employee = db.query(User).filter(User.id == assignment.employee_id).first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="员工不存在")
+    employee = get_or_404(db, User, assignment.employee_id, detail="员工不存在")
 
     try:
         updated_plan, conflict = ResourcePlanService.assign_employee(

@@ -13,6 +13,7 @@ from app.api import deps
 from app.models.approval import ApprovalDelegate
 from app.schemas.approval.task import DelegateCreate, DelegateResponse, DelegateUpdate
 from app.services.approval_engine import ApprovalDelegateService
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -164,9 +165,7 @@ def update_delegate(
     current_user=Depends(deps.get_current_user),
 ):
     """更新代理人配置"""
-    delegate = db.query(ApprovalDelegate).filter(ApprovalDelegate.id == delegate_id).first()
-    if not delegate:
-        raise HTTPException(status_code=404, detail="配置不存在")
+    delegate = get_or_404(db, ApprovalDelegate, delegate_id, "配置不存在")
 
     if delegate.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权修改此配置")
@@ -214,9 +213,7 @@ def cancel_delegate(
     current_user=Depends(deps.get_current_user),
 ):
     """取消代理人配置"""
-    delegate = db.query(ApprovalDelegate).filter(ApprovalDelegate.id == delegate_id).first()
-    if not delegate:
-        raise HTTPException(status_code=404, detail="配置不存在")
+    delegate = get_or_404(db, ApprovalDelegate, delegate_id, "配置不存在")
 
     if delegate.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权取消此配置")

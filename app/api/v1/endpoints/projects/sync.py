@@ -16,6 +16,7 @@ from app.core import security
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 from .utils import _sync_to_erp_system
 
@@ -45,9 +46,7 @@ def sync_project_from_contract(
     if contract_id:
         result = sync_service.sync_contract_to_project(contract_id)
     else:
-        project = db.query(Project).filter(Project.id == project_id).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="项目不存在")
+        project = get_or_404(db, Project, project_id, detail="项目不存在")
 
         from app.models.sales import Contract
         contracts = db.query(Contract).filter(Contract.project_id == project_id).all()
@@ -158,9 +157,7 @@ def sync_project_to_erp(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     sync_result = _sync_to_erp_system(project, erp_order_no)
 
@@ -209,9 +206,7 @@ def get_project_erp_status(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     return ResponseModel(
         code=200,
@@ -244,9 +239,7 @@ def update_project_erp_status(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     if erp_synced is not None:
         project.erp_synced = erp_synced

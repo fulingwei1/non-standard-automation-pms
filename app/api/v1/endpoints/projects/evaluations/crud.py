@@ -27,6 +27,7 @@ from app.services.project_evaluation_service import ProjectEvaluationService
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 
 def filter_by_status(query, status: str):
@@ -67,9 +68,7 @@ def create_project_evaluation(
         db, current_user, project_id, "您没有权限为该项目创建评价"
     )
     
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     eval_service = ProjectEvaluationService(db)
     
@@ -102,9 +101,7 @@ def create_project_evaluation(
             for k, v in evaluation.weights.items()
         }
     
-    db.add(evaluation)
-    db.commit()
-    db.refresh(evaluation)
+    save_obj(db, evaluation)
     
     return ResponseModel(code=200, message="创建成功", data=evaluation)
 

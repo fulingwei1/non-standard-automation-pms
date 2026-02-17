@@ -18,6 +18,7 @@ from app.models.project_review import ProjectLesson
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -103,9 +104,7 @@ def get_lesson_detail(
     Returns:
         ResponseModel: 经验教训详情
     """
-    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
-    if not lesson:
-        raise HTTPException(status_code=404, detail="经验教训不存在")
+    lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
 
     return ResponseModel(
         code=200,
@@ -167,9 +166,7 @@ def create_project_lesson(
         priority=lesson_data.get("priority", "MEDIUM"),
         status="OPEN",
     )
-    db.add(lesson)
-    db.commit()
-    db.refresh(lesson)
+    save_obj(db, lesson)
 
     return ResponseModel(
         code=200,
@@ -197,9 +194,7 @@ def update_project_lesson(
     Returns:
         ResponseModel: 更新结果
     """
-    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
-    if not lesson:
-        raise HTTPException(status_code=404, detail="经验教训不存在")
+    lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
 
     updatable = [
         "lesson_type", "title", "description", "root_cause", "impact",
@@ -238,12 +233,9 @@ def delete_project_lesson(
     Returns:
         ResponseModel: 删除结果
     """
-    lesson = db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
-    if not lesson:
-        raise HTTPException(status_code=404, detail="经验教训不存在")
+    lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
 
-    db.delete(lesson)
-    db.commit()
+    delete_obj(db, lesson)
 
     return ResponseModel(code=200, message="经验教训删除成功", data={"id": lesson_id})
 

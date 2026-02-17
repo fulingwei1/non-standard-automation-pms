@@ -22,6 +22,7 @@ from app.schemas.project_role import (
     TeamMemberResponse,
     UserBrief,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -37,9 +38,7 @@ async def get_project_role_overview(
     current_user: User = Depends(security.require_permission("project_role:read")),
 ):
     """获取项目角色概览（包含角色类型、配置、负责人信息）"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     role_types = (
         db.query(ProjectRoleType)

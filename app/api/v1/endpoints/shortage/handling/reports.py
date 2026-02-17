@@ -35,6 +35,7 @@ from app.models.shortage import ShortageReport
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.shortage import ShortageReportCreate, ShortageReportResponse
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -147,9 +148,7 @@ def create_shortage_report(
 ) -> Any:
     """创建缺料上报（车间扫码上报）"""
     # 验证项目
-    project = db.query(Project).filter(Project.id == report_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, report_in.project_id, "项目不存在")
 
     # 验证机台（如果提供）
     if report_in.machine_id:
@@ -158,9 +157,7 @@ def create_shortage_report(
             raise HTTPException(status_code=400, detail="机台不存在或不属于该项目")
 
     # 验证物料
-    material = db.query(Material).filter(Material.id == report_in.material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, report_in.material_id, "物料不存在")
 
     report = ShortageReport(
         report_no=_generate_report_no(db),
@@ -180,9 +177,7 @@ def create_shortage_report(
         remark=report_in.remark
     )
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return _build_report_response(report, db)
 
@@ -195,9 +190,7 @@ def get_shortage_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """上报详情"""
-    report = db.query(ShortageReport).filter(ShortageReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="缺料上报不存在")
+    report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
     return _build_report_response(report, db)
 
@@ -214,9 +207,7 @@ def confirm_shortage_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """确认上报（仓管确认）"""
-    report = db.query(ShortageReport).filter(ShortageReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="缺料上报不存在")
+    report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
     if report.status != 'REPORTED':
         raise HTTPException(status_code=400, detail="只有已上报状态的记录才能确认")
@@ -225,9 +216,7 @@ def confirm_shortage_report(
     report.confirmed_by = current_user.id
     report.confirmed_at = datetime.now()
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return _build_report_response(report, db)
 
@@ -243,9 +232,7 @@ def handle_shortage_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """处理上报"""
-    report = db.query(ShortageReport).filter(ShortageReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="缺料上报不存在")
+    report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
     if report.status not in ['CONFIRMED', 'HANDLING']:
         raise HTTPException(status_code=400, detail="只有已确认或处理中的记录才能处理")
@@ -255,9 +242,7 @@ def handle_shortage_report(
     report.solution_type = solution_type
     report.solution_note = solution_note
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return _build_report_response(report, db)
 
@@ -270,9 +255,7 @@ def resolve_shortage_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """解决上报"""
-    report = db.query(ShortageReport).filter(ShortageReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="缺料上报不存在")
+    report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
     if report.status != 'HANDLING':
         raise HTTPException(status_code=400, detail="只有处理中的记录才能标记为已解决")
@@ -282,9 +265,7 @@ def resolve_shortage_report(
     if not report.handler_id:
         report.handler_id = current_user.id
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return _build_report_response(report, db)
 
@@ -298,9 +279,7 @@ def reject_shortage_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """驳回上报（用于驳回无效或错误的缺料上报）"""
-    report = db.query(ShortageReport).filter(ShortageReport.id == report_id).first()
-    if not report:
-        raise HTTPException(status_code=404, detail="缺料上报不存在")
+    report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
     if report.status in ['RESOLVED', 'REJECTED']:
         raise HTTPException(status_code=400, detail="已解决或已驳回的记录不能再次驳回")
@@ -309,8 +288,6 @@ def reject_shortage_report(
     if reject_reason:
         report.solution_note = f"驳回原因：{reject_reason}"
 
-    db.add(report)
-    db.commit()
-    db.refresh(report)
+    save_obj(db, report)
 
     return _build_report_response(report, db)

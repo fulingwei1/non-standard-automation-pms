@@ -16,6 +16,7 @@ from app.core import security
 from app.models.project import Project, ProjectTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -67,9 +68,7 @@ def get_template_usage_statistics(
     """
     获取模板使用统计
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     # 统计使用该模板创建的项目
     projects = db.query(Project).filter(Project.template_id == template_id).all()

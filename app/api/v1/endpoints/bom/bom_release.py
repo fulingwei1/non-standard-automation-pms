@@ -17,6 +17,7 @@ from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.material import BomResponse
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +35,7 @@ def release_bom(
     """发布BOM版本
     将BOM状态从DRAFT改为RELEASED，并标记为最新版本
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 只有草稿状态才能发布
     if bom.status != "DRAFT":

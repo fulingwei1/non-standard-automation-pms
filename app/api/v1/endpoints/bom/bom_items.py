@@ -15,6 +15,7 @@ from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.material import BomItemCreate, BomItemResponse
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ def add_bom_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """添加BOM明细"""
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 只有草稿状态才能添加明细
     if bom.status != "DRAFT":
@@ -154,9 +153,7 @@ def update_bom_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新BOM明细"""
-    item = db.query(BomItem).filter(BomItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="BOM明细不存在")
+    item = get_or_404(db, BomItem, item_id, "BOM明细不存在")
 
     bom = item.header
     # 只有草稿状态才能更新明细
@@ -195,9 +192,7 @@ def update_bom_item(
     # 更新BOM总金额
     bom.total_amount = (bom.total_amount or 0) - old_amount + new_amount
 
-    db.add(item)
-    db.commit()
-    db.refresh(item)
+    save_obj(db, item)
 
     return BomItemResponse(
         id=item.id,
@@ -226,9 +221,7 @@ def delete_bom_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """删除BOM明细"""
-    item = db.query(BomItem).filter(BomItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="BOM明细不存在")
+    item = get_or_404(db, BomItem, item_id, "BOM明细不存在")
 
     bom = item.header
     # 只有草稿状态才能删除明细

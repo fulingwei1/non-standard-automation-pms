@@ -18,6 +18,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.project_evaluation import ProjectEvaluationResponse
 from app.services.project_evaluation_service import ProjectEvaluationService
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -31,9 +32,7 @@ def get_project_latest_evaluation(
     """获取项目最新评价"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     eval_service = ProjectEvaluationService(db)
     evaluation = eval_service.get_latest_evaluation(project_id)

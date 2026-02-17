@@ -19,6 +19,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -173,9 +174,7 @@ def create_project_review(
     Returns:
         ResponseModel: 创建结果
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 生成复盘编号
     count = db.query(ProjectReview).filter(ProjectReview.project_id == project_id).count()
@@ -207,9 +206,7 @@ def create_project_review(
         participant_names=review_data.get("participant_names"),
         status="DRAFT",
     )
-    db.add(review)
-    db.commit()
-    db.refresh(review)
+    save_obj(db, review)
 
     return ResponseModel(
         code=200,
@@ -237,9 +234,7 @@ def update_project_review(
     Returns:
         ResponseModel: 更新结果
     """
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, detail="复盘报告不存在")
 
     if review.status == "ARCHIVED":
         raise HTTPException(status_code=400, detail="已归档的复盘报告不能修改")
@@ -279,9 +274,7 @@ def publish_review(
     Returns:
         ResponseModel: 发布结果
     """
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, detail="复盘报告不存在")
 
     if review.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的复盘报告可以发布")
@@ -309,14 +302,11 @@ def delete_project_review(
     Returns:
         ResponseModel: 删除结果
     """
-    review = db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="复盘报告不存在")
+    review = get_or_404(db, ProjectReview, review_id, detail="复盘报告不存在")
 
     if review.status == "PUBLISHED":
         raise HTTPException(status_code=400, detail="已发布的复盘报告不能删除")
 
-    db.delete(review)
-    db.commit()
+    delete_obj(db, review)
 
     return ResponseModel(code=200, message="复盘报告删除成功", data={"id": review_id})

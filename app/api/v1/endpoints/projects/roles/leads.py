@@ -21,6 +21,7 @@ from app.schemas.project_role import (
     ProjectRoleTypeResponse,
     UserBrief,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ async def get_project_leads(
     current_user: User = Depends(security.require_permission("project_role:read")),
 ):
     """获取项目所有负责人"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     query = (
         db.query(ProjectMember)
@@ -95,9 +94,7 @@ async def create_project_lead(
     current_user: User = Depends(security.require_permission("project_role:assign")),
 ):
     """为项目指定负责人"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     role_type = (
         db.query(ProjectRoleType).filter(ProjectRoleType.id == data.role_type_id).first()
@@ -105,9 +102,7 @@ async def create_project_lead(
     if not role_type:
         raise HTTPException(status_code=404, detail="角色类型不存在")
 
-    user = db.query(User).filter(User.id == data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, data.user_id, detail="用户不存在")
 
     existing = (
         db.query(ProjectMember)
@@ -135,9 +130,7 @@ async def create_project_lead(
         remark=data.remark,
         created_by=current_user.id,
     )
-    db.add(lead)
-    db.commit()
-    db.refresh(lead)
+    save_obj(db, lead)
 
     db.refresh(lead)
     lead.user

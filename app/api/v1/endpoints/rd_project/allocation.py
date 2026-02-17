@@ -19,6 +19,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.rd_project import RdCostAllocationRuleResponse
 
 from .utils import generate_cost_no
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -67,9 +68,7 @@ def apply_cost_allocation(
     )
 
     # 验证分摊规则是否存在
-    rule = db.query(RdCostAllocationRule).filter(RdCostAllocationRule.id == rule_id).first()
-    if not rule:
-        raise HTTPException(status_code=404, detail="分摊规则不存在")
+    rule = get_or_404(db, RdCostAllocationRule, rule_id, "分摊规则不存在")
 
     if not rule.is_active:
         raise HTTPException(status_code=400, detail="分摊规则未启用")
@@ -136,9 +135,7 @@ def get_rd_project_timesheet_summary(
     """
     获取研发项目工时汇总
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 查询关联的非标项目
     linked_project_ids = []

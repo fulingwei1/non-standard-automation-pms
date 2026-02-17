@@ -26,6 +26,7 @@ from app.schemas.project import (
     ProjectResponse,
     ProjectUpdate,
 )
+from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -273,9 +274,7 @@ def create_project(
         if pm:
             project.pm_name = pm.real_name or pm.username
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     # Initialize standard stages
     from app.utils.project_utils import init_project_stages

@@ -27,6 +27,7 @@ from app.schemas.project_risk import (
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -69,9 +70,7 @@ def create_risk(
     需要权限：risk:create
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 生成风险编号
     count = db.query(ProjectRisk).filter(ProjectRisk.project_id == project_id).count()
@@ -104,9 +103,7 @@ def create_risk(
     # 计算风险评分
     risk.calculate_risk_score()
     
-    db.add(risk)
-    db.commit()
-    db.refresh(risk)
+    save_obj(db, risk)
     
     # 创建审计日志
     create_audit_log(
@@ -148,9 +145,7 @@ def get_risks(
     需要权限：risk:read
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 构建查询
     query = db.query(ProjectRisk).filter(ProjectRisk.project_id == project_id)
@@ -333,8 +328,7 @@ def delete_risk(
         "risk_score": risk.risk_score,
     }
     
-    db.delete(risk)
-    db.commit()
+    delete_obj(db, risk)
     
     # 创建审计日志
     create_audit_log(
@@ -367,9 +361,7 @@ def get_risk_matrix(
     返回5x5矩阵，每个单元格包含该概率和影响组合的风险数量和列表
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 获取所有风险
     risks = db.query(ProjectRisk).filter(
@@ -444,9 +436,7 @@ def get_risk_summary(
     包含：总数、按类型统计、按等级统计、按状态统计等
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 获取所有风险
     risks = db.query(ProjectRisk).filter(ProjectRisk.project_id == project_id).all()

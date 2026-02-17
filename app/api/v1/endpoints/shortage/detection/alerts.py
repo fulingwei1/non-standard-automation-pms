@@ -30,6 +30,7 @@ from app.models.material import MaterialShortage
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -206,9 +207,7 @@ def get_alert(
     """
     获取缺料预警详情
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     return ResponseModel(code=200, message="success", data=_build_alert_detail_response(alert))
 
@@ -226,9 +225,7 @@ def acknowledge_alert(
     """
     确认缺料预警（PMC确认）
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     if alert.status != "OPEN":
         raise HTTPException(status_code=400, detail="只有OPEN状态的预警才能确认")
@@ -255,9 +252,7 @@ def update_alert(
     """
     更新缺料预警
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     old_alert_level = alert.alert_level
 
@@ -265,9 +260,7 @@ def update_alert(
         alert.solution = solution
 
     if handler_id is not None:
-        handler = db.query(User).filter(User.id == handler_id).first()
-        if not handler:
-            raise HTTPException(status_code=404, detail="处理人不存在")
+        handler = get_or_404(db, User, handler_id, "处理人不存在")
         alert.handler_id = handler_id
 
     if alert_level is not None:
@@ -300,9 +293,7 @@ def resolve_alert(
     """
     解决缺料预警（结案）
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="预警已解决")
@@ -341,9 +332,7 @@ def add_follow_up(
     """
     添加缺料预警跟进记录
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     # 解析现有跟进记录
     follow_ups = _parse_follow_ups(alert.remark, alert.created_at, alert.handler_id)
@@ -384,9 +373,7 @@ def list_follow_ups(
     """
     获取缺料预警的跟进记录列表
     """
-    alert = db.query(MaterialShortage).filter(MaterialShortage.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="缺料预警不存在")
+    alert = get_or_404(db, MaterialShortage, alert_id, "缺料预警不存在")
 
     follow_ups = _parse_follow_ups(alert.remark, alert.created_at, alert.handler_id)
 

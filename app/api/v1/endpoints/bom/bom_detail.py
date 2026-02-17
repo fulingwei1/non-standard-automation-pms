@@ -11,6 +11,7 @@ from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
 from app.schemas.material import BomResponse, BomUpdate
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -120,9 +121,7 @@ def update_bom(
     """
     更新BOM（仅草稿状态可更新）
     """
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 只有草稿状态才能更新
     if bom.status != "DRAFT":
@@ -132,9 +131,7 @@ def update_bom(
     for field, value in update_data.items():
         setattr(bom, field, value)
 
-    db.add(bom)
-    db.commit()
-    db.refresh(bom)
+    save_obj(db, bom)
 
     bom = (
         db.query(BomHeader)

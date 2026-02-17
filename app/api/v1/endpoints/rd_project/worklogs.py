@@ -23,6 +23,7 @@ from app.schemas.timesheet import (
     TimesheetListResponse,
     TimesheetResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -47,9 +48,7 @@ def get_rd_project_worklogs(
     """
     获取研发项目工作日志列表
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     query = db.query(Timesheet).filter(Timesheet.rd_project_id == project_id)
 
@@ -111,9 +110,7 @@ def create_rd_project_worklog(
     """
     创建研发项目工作日志
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 检查同一天是否已有记录
     existing = db.query(Timesheet).filter(
@@ -140,9 +137,7 @@ def create_rd_project_worklog(
         created_by=current_user.id
     )
 
-    db.add(timesheet)
-    db.commit()
-    db.refresh(timesheet)
+    save_obj(db, timesheet)
 
     return ResponseModel(
         code=201,

@@ -22,6 +22,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project.project_risk_service import ProjectRiskService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,7 @@ def get_project_risk_trend(
         days: 查询天数（默认30天）
     """
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     service = ProjectRiskService(db)
     trend_data = service.get_risk_trend(project_id, days)
@@ -96,9 +95,7 @@ def get_project_risk_history(
         page_size: 每页数量
     """
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 查询总数
     total = (
@@ -169,9 +166,7 @@ def get_project_current_risk(
         project_id: 项目ID
     """
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     service = ProjectRiskService(db)
     try:
@@ -212,9 +207,7 @@ def trigger_risk_calculation(
         project_id: 项目ID
     """
     # 验证项目存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     service = ProjectRiskService(db)
     try:

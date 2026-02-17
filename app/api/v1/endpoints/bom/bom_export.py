@@ -15,6 +15,7 @@ from app.core import security
 from app.services.import_export_engine import ExcelExportEngine
 from app.models.material import BomHeader, BomItem
 from app.models.user import User
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -27,9 +28,7 @@ def export_bom_to_excel(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """导出BOM明细到Excel"""
-    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
-    if not bom:
-        raise HTTPException(status_code=404, detail="BOM不存在")
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
     items = bom.items.order_by(BomItem.item_no).all()

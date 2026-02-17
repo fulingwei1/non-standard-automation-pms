@@ -29,6 +29,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
     TimesheetStatisticsResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/statistics", tags=["statistics"])
 
@@ -231,9 +232,7 @@ def get_department_timesheet_summary(
     部门工时汇总
     """
     # 验证部门是否存在
-    department = db.query(Department).filter(Department.id == dept_id).first()
-    if not department:
-        raise HTTPException(status_code=404, detail="部门不存在")
+    department = get_or_404(db, Department, dept_id, "部门不存在")
 
     # 获取部门成员
     dept_users = db.query(User).filter(User.department_id == dept_id).all()

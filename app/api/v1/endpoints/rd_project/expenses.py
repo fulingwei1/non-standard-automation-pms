@@ -27,6 +27,7 @@ from app.schemas.rd_project import (
 
 from .utils import generate_cost_no
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -87,14 +88,10 @@ def create_rd_cost(
     录入研发费用
     """
     # 验证研发项目是否存在
-    project = db.query(RdProject).filter(RdProject.id == cost_in.rd_project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, cost_in.rd_project_id, "研发项目不存在")
 
     # 验证费用类型是否存在
-    cost_type = db.query(RdCostType).filter(RdCostType.id == cost_in.cost_type_id).first()
-    if not cost_type:
-        raise HTTPException(status_code=404, detail="费用类型不存在")
+    cost_type = get_or_404(db, RdCostType, cost_in.cost_type_id, "费用类型不存在")
 
     # 生成费用编号
     cost_no = generate_cost_no(db)
@@ -151,9 +148,7 @@ def update_rd_cost(
     """
     更新研发费用
     """
-    cost = db.query(RdCost).filter(RdCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="研发费用不存在")
+    cost = get_or_404(db, RdCost, cost_id, "研发费用不存在")
 
     # 只有草稿状态才能更新
     if cost.status != 'DRAFT':
@@ -173,9 +168,7 @@ def update_rd_cost(
     for field, value in update_data.items():
         setattr(cost, field, value)
 
-    db.add(cost)
-    db.commit()
-    db.refresh(cost)
+    save_obj(db, cost)
 
     return ResponseModel(
         code=200,
@@ -194,9 +187,7 @@ def get_rd_project_cost_summary(
     """
     获取项目费用汇总
     """
-    project = db.query(RdProject).filter(RdProject.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 查询所有费用
     costs = db.query(RdCost).filter(
@@ -277,14 +268,10 @@ def calculate_labor_cost(
     人工费用自动计算（工时×时薪）
     """
     # 验证研发项目是否存在
-    project = db.query(RdProject).filter(RdProject.id == calc_request.rd_project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="研发项目不存在")
+    project = get_or_404(db, RdProject, calc_request.rd_project_id, "研发项目不存在")
 
     # 验证用户是否存在
-    user = db.query(User).filter(User.id == calc_request.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, calc_request.user_id, "用户不存在")
 
     # 查询工时记录（从timesheet表）
     timesheets = db.query(Timesheet).filter(

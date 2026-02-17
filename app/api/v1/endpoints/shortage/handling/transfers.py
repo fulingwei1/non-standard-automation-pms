@@ -33,6 +33,7 @@ from app.models.shortage import MaterialTransfer
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.shortage import MaterialTransferCreate, MaterialTransferResponse
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -140,20 +141,14 @@ def create_transfer(
 ) -> Any:
     """创建调拨申请"""
     # 验证调入项目
-    to_project = db.query(Project).filter(Project.id == transfer_in.to_project_id).first()
-    if not to_project:
-        raise HTTPException(status_code=404, detail="调入项目不存在")
+    to_project = get_or_404(db, Project, transfer_in.to_project_id, "调入项目不存在")
 
     # 验证调出项目（如果有）
     if transfer_in.from_project_id:
-        from_project = db.query(Project).filter(Project.id == transfer_in.from_project_id).first()
-        if not from_project:
-            raise HTTPException(status_code=404, detail="调出项目不存在")
+        from_project = get_or_404(db, Project, transfer_in.from_project_id, "调出项目不存在")
 
     # 验证物料
-    material = db.query(Material).filter(Material.id == transfer_in.material_id).first()
-    if not material:
-        raise HTTPException(status_code=404, detail="物料不存在")
+    material = get_or_404(db, Material, transfer_in.material_id, "物料不存在")
 
     # 检查可调拨数量
     available_qty = Decimal("0")
@@ -195,9 +190,7 @@ def create_transfer(
         remark=transfer_in.remark
     )
 
-    db.add(transfer)
-    db.commit()
-    db.refresh(transfer)
+    save_obj(db, transfer)
 
     return _build_transfer_response(transfer, db)
 
@@ -210,9 +203,7 @@ def get_transfer(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """调拨申请详情"""
-    transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
-    if not transfer:
-        raise HTTPException(status_code=404, detail="调拨申请不存在")
+    transfer = get_or_404(db, MaterialTransfer, transfer_id, "调拨申请不存在")
 
     return _build_transfer_response(transfer, db)
 
@@ -231,9 +222,7 @@ def approve_transfer(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """调拨审批"""
-    transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
-    if not transfer:
-        raise HTTPException(status_code=404, detail="调拨申请不存在")
+    transfer = get_or_404(db, MaterialTransfer, transfer_id, "调拨申请不存在")
 
     if transfer.status not in ['DRAFT', 'PENDING']:
         raise HTTPException(status_code=400, detail="只有草稿或待审批状态的申请才能审批")
@@ -247,9 +236,7 @@ def approve_transfer(
     else:
         transfer.status = 'REJECTED'
 
-    db.add(transfer)
-    db.commit()
-    db.refresh(transfer)
+    save_obj(db, transfer)
 
     return _build_transfer_response(transfer, db)
 
@@ -264,9 +251,7 @@ def execute_transfer(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """执行调拨"""
-    transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
-    if not transfer:
-        raise HTTPException(status_code=404, detail="调拨申请不存在")
+    transfer = get_or_404(db, MaterialTransfer, transfer_id, "调拨申请不存在")
 
     if transfer.status != 'APPROVED':
         raise HTTPException(status_code=400, detail="只有已批准的申请才能执行")
@@ -279,8 +264,6 @@ def execute_transfer(
 
     # Note: 更新库存记录需要与库存管理系统集成
 
-    db.add(transfer)
-    db.commit()
-    db.refresh(transfer)
+    save_obj(db, transfer)
 
     return _build_transfer_response(transfer, db)

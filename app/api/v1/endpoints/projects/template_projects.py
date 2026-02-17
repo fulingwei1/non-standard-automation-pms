@@ -14,6 +14,7 @@ from app.core import security
 from app.models.project import Machine, Project, ProjectMilestone, ProjectTemplate, ProjectTemplateVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -33,9 +34,7 @@ def create_project_from_template(
     """
     从模板创建项目
     """
-    template = db.query(ProjectTemplate).filter(ProjectTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="模板不存在")
+    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     if not template.is_active:
         raise HTTPException(status_code=400, detail="模板已停用")
@@ -85,9 +84,7 @@ def create_project_from_template(
     if pm:
         project.pm_name = pm.real_name or pm.username
 
-    db.add(project)
-    db.commit()
-    db.refresh(project)
+    save_obj(db, project)
 
     # 从模板版本复制配置（如果有）
     if version and version.config:

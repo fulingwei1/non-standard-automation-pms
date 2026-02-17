@@ -29,6 +29,7 @@ from app.schemas.project import (
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 
 def filter_by_role(query, role: str):
@@ -130,13 +131,9 @@ def add_project_member(
         db, current_user, project_id, "您没有权限在该项目中添加成员"
     )
     
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
     
-    user = db.query(User).filter(User.id == member_in.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, member_in.user_id, detail="用户不存在")
     
     # 检查是否已是项目成员
     existing = db.query(ProjectMember).filter(
@@ -151,9 +148,7 @@ def add_project_member(
     member_data["project_id"] = project_id
     
     member = ProjectMember(**member_data)
-    db.add(member)
-    db.commit()
-    db.refresh(member)
+    save_obj(db, member)
     
     # 填充用户信息
     return enrich_member_response(member)
@@ -207,9 +202,7 @@ def update_project_member(
         if hasattr(member, field):
             setattr(member, field, value)
     
-    db.add(member)
-    db.commit()
-    db.refresh(member)
+    save_obj(db, member)
     
     # 填充用户信息
     return enrich_member_response(member)
@@ -234,8 +227,7 @@ def remove_project_member(
     if not member:
         raise HTTPException(status_code=404, detail="项目成员不存在")
 
-    db.delete(member)
-    db.commit()
+    delete_obj(db, member)
 
 
 # ==================== 冲突检查 ====================
@@ -333,9 +325,7 @@ def batch_add_project_members(
     """批量添加项目成员"""
     check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中添加成员")
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     added_count = 0
     skipped_count = 0
@@ -427,9 +417,7 @@ def get_dept_users_for_project(
     """获取部门用户列表（用于批量添加成员）"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    dept = db.query(Department).filter(Department.id == dept_id).first()
-    if not dept:
-        raise HTTPException(status_code=404, detail="部门不存在")
+    dept = get_or_404(db, Department, dept_id, detail="部门不存在")
 
     employees = db.query(Employee).filter(
         Employee.department == dept.dept_name,

@@ -16,6 +16,7 @@ from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.material import BomCreate, BomItemResponse, BomResponse
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -30,9 +31,7 @@ def get_machine_bom_list(
     """
     获取机台的BOM列表
     """
-    machine = db.query(Machine).filter(Machine.id == machine_id).first()
-    if not machine:
-        raise HTTPException(status_code=404, detail="机台不存在")
+    machine = get_or_404(db, Machine, machine_id, "机台不存在")
 
     bom_headers = (
         db.query(BomHeader)
@@ -95,9 +94,7 @@ def get_machine_bom_list(
 
 def generate_bom_no(db: Session, project_id: int) -> str:
     """生成BOM编号：BOM-PJxxx-xxx"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
 
     # 使用项目编码的前缀
     project_prefix = (
@@ -140,14 +137,10 @@ def create_bom(
     """
     为机台创建BOM
     """
-    machine = db.query(Machine).filter(Machine.id == machine_id).first()
-    if not machine:
-        raise HTTPException(status_code=404, detail="机台不存在")
+    machine = get_or_404(db, Machine, machine_id, "机台不存在")
 
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == bom_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, bom_in.project_id, "项目不存在")
 
     # 检查机台是否属于该项目
     if machine.project_id != bom_in.project_id:

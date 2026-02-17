@@ -33,6 +33,7 @@ from app.schemas.timesheet import (
     TimesheetResponse,
     TimesheetUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(prefix="/records", tags=["records"])
 
@@ -138,11 +139,7 @@ def create_timesheet(
         raise HTTPException(status_code=400, detail="必须指定项目ID或研发项目ID")
 
     if timesheet_in.project_id:
-        project = (
-            db.query(Project).filter(Project.id == timesheet_in.project_id).first()
-        )
-        if not project:
-            raise HTTPException(status_code=404, detail="项目不存在")
+        project = get_or_404(db, Project, timesheet_in.project_id, "项目不存在")
 
     if timesheet_in.rd_project_id:
         from app.models.rd_project import RdProject
@@ -214,9 +211,7 @@ def create_timesheet(
         created_by=current_user.id,
     )
 
-    db.add(timesheet)
-    db.commit()
-    db.refresh(timesheet)
+    save_obj(db, timesheet)
 
     return get_timesheet_detail(timesheet.id, db, current_user)
 
@@ -332,9 +327,7 @@ def get_timesheet_detail(
     """
     获取工时记录详情
     """
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 权限检查
     if timesheet.user_id != current_user.id:
@@ -391,9 +384,7 @@ def update_timesheet(
     """
     更新工时记录
     """
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 权限检查：只能修改自己的草稿状态记录
     if timesheet.user_id != current_user.id:
@@ -411,9 +402,7 @@ def update_timesheet(
     if timesheet_in.description is not None:
         timesheet.work_content = timesheet_in.description
 
-    db.add(timesheet)
-    db.commit()
-    db.refresh(timesheet)
+    save_obj(db, timesheet)
 
     return get_timesheet_detail(timesheet_id, db, current_user)
 
@@ -430,9 +419,7 @@ def delete_timesheet(
     """
     删除工时记录（仅草稿）
     """
-    timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
-    if not timesheet:
-        raise HTTPException(status_code=404, detail="工时记录不存在")
+    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     if timesheet.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权删除此记录")
@@ -440,7 +427,6 @@ def delete_timesheet(
     if timesheet.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态的记录")
 
-    db.delete(timesheet)
-    db.commit()
+    delete_obj(db, timesheet)
 
     return ResponseModel(message="工时记录已删除")

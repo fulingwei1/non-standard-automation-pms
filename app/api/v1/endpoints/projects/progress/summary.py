@@ -26,6 +26,7 @@ from app.schemas.progress import (
     ProgressSummaryResponse,
 )
 from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -42,9 +43,7 @@ def get_project_progress_summary(
     """获取项目进度汇总"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 获取所有任务
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
@@ -128,9 +127,7 @@ def get_project_gantt_data(
     """获取项目甘特图数据"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 获取所有任务
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
@@ -184,9 +181,7 @@ def get_project_progress_board(
     """获取项目进度看板数据"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 获取所有任务
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
