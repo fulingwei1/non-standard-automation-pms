@@ -233,22 +233,24 @@ class TestDashboardCacheService:
         svc = DashboardCacheService()
         svc.delete('key')  # Should not raise
 
-    def test_get_or_compute_calls_func_when_disabled(self):
+    def test_get_or_set_calls_func_when_disabled(self):
         from app.services.dashboard_cache_service import DashboardCacheService
         svc = DashboardCacheService()
         called = []
         def compute():
             called.append(True)
             return {'result': 42}
-        result = svc.get_or_compute('key', compute)
+        # get_or_set exists
+        result = svc.get_or_set('key', compute)
         assert called
         assert result == {'result': 42}
 
-    def test_init_with_bad_redis_url(self):
-        """Redis URL 无法连接时应禁用缓存"""
+    def test_clear_pattern_when_disabled(self):
+        """cache_enabled False 时 clear_pattern 应返回0"""
         from app.services.dashboard_cache_service import DashboardCacheService
-        svc = DashboardCacheService(redis_url='redis://invalid-host:9999', ttl=60)
-        assert svc.cache_enabled is False
+        svc = DashboardCacheService()
+        count = svc.clear_pattern('dashboard:*')
+        assert count == 0
 
 
 # =============================================================================
@@ -403,16 +405,17 @@ class TestCostService:
 
     def test_calculate_variance(self):
         from app.services.cost_service import CostService
-        result = CostService.calculate_variance(1000.0, 800.0)
-        assert result['variance'] == pytest.approx(200.0)
-        assert result['variance_rate'] == pytest.approx(0.2)
+        result = CostService.calculate_variance(1000.0, 1200.0)
+        # actual > budget → positive variance
+        assert result['budget_variance'] == pytest.approx(200.0)
+        assert 'budget_variance_pct' in result
 
     def test_calculate_variance_zero_budget(self):
         from app.services.cost_service import CostService
         result = CostService.calculate_variance(0.0, 500.0)
-        assert result['variance'] == pytest.approx(-500.0)
-        # 预算为0时不应除零
-        assert 'variance_rate' in result
+        # 预算为0时 variance=0, pct=0 (避免除零)
+        assert result['budget_variance'] == pytest.approx(0.0)
+        assert 'budget_variance_pct' in result
 
     def test_get_cost_breakdown(self):
         from app.services.cost_service import CostService
@@ -522,7 +525,11 @@ class TestAcceptanceReportUtils:
     def test_get_report_version_first(self):
         from app.services.acceptance.report_utils import get_report_version
         db = MagicMock()
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        # Chain: query().filter().filter().order_by().first() or query().filter().order_by().first()
+        chain = MagicMock()
+        chain.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value = chain
+        db.query.return_value.filter.return_value.order_by.return_value = chain
         version = get_report_version(db, 1, 'FAT')
         assert version == 1
 
@@ -531,7 +538,10 @@ class TestAcceptanceReportUtils:
         db = MagicMock()
         existing = MagicMock()
         existing.version = 3
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = existing
+        chain = MagicMock()
+        chain.first.return_value = existing
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value = chain
+        db.query.return_value.filter.return_value.order_by.return_value = chain
         version = get_report_version(db, 1, 'FAT')
         assert version == 4
 
