@@ -71,6 +71,11 @@ app.add_middleware(TenantContextMiddleware)
 # 注意：FastAPI中间件是后进先出(LIFO)，后添加的先执行
 app.add_middleware(GlobalAuthMiddleware)
 
+# 全局 IP 速率限制中间件（in-memory，无 Redis 依赖）
+# 位于 GlobalAuthMiddleware 之后 → 执行顺序最靠前，优先拒绝高频请求
+from app.core.middleware.rate_limiting import RateLimitMiddleware as InMemoryRateLimitMiddleware  # noqa: E402
+app.add_middleware(InMemoryRateLimitMiddleware)
+
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # 初始化进度跟踪定时任务调度器（如果启用）
