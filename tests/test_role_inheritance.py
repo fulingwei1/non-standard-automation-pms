@@ -39,10 +39,18 @@ def db_session():
     session.close()
 
 
+@pytest.fixture(autouse=True)
+def clear_inheritance_cache():
+    """每个测试前后清除角色继承缓存，防止测试间污染"""
+    RoleInheritanceUtils.clear_cache()
+    yield
+    RoleInheritanceUtils.clear_cache()
+
+
 @pytest.fixture(scope="function")
 def test_tenant(db_session):
     """创建测试租户"""
-    tenant = Tenant(id=1, name="测试租户", code="test_tenant", is_active=True)
+    tenant = Tenant(id=1, tenant_name="测试租户", tenant_code="test_tenant", status="active")
     db_session.add(tenant)
     db_session.commit()
     return tenant
@@ -397,7 +405,7 @@ class TestRoleInheritanceAdvanced:
     ):
         """测试10：多租户权限隔离"""
         # 创建另一个租户
-        tenant2 = Tenant(id=2, name="租户2", code="tenant2", is_active=True)
+        tenant2 = Tenant(id=2, tenant_name="租户2", tenant_code="tenant2", status="active")
         db_session.add(tenant2)
 
         # 租户2的权限

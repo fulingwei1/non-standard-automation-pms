@@ -124,7 +124,8 @@ def _ensure_login_user(
         employee_role=employee_role,
     )
     if user.is_superuser != is_superuser:
-        db.query(User).filter(User.id == user.id).update({"is_superuser": is_superuser})
+        from app.models.user import User as _U
+        db.query(_U).filter(_U.id == user.id).update({"is_superuser": is_superuser})
         db.commit()
     return user
 
@@ -150,6 +151,10 @@ def _init_test_database() -> None:
     )
     from app.models.base import get_session, init_db
     from app.models.vendor import Vendor
+    from app.models.project import Customer, Machine, Project, ProjectMember
+    from app.models.task_center import TaskApprovalWorkflow, TaskUnified
+    from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
+    from app.models.organization import Employee
 
     # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
     from app.core.config import settings as _settings
@@ -594,11 +599,12 @@ ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
 
 
 def _ensure_permission(db: Session, code: str, name: str) -> ApiPermission:
-    permission = db.query(ApiPermission).filter(ApiPermission.perm_code == code).first()
+    from app.models.user import ApiPermission as _Perm
+    permission = db.query(_Perm).filter(_Perm.perm_code == code).first()
     if permission:
         return permission
 
-    permission = ApiPermission(
+    permission = _Perm(
         perm_code=code,
         perm_name=name,
         module="engineer",
@@ -619,7 +625,8 @@ def _get_or_create_employee(
     department: str,
     role: str = "ENGINEER",
 ) -> Employee:
-    employee = db.query(Employee).filter(Employee.employee_code == code).first()
+    from app.models.organization import Employee as _Emp
+    employee = db.query(_Emp).filter(_Emp.employee_code == code).first()
     if employee:
         updated = False
         if not employee.is_active:
@@ -639,7 +646,7 @@ def _get_or_create_employee(
             db.refresh(employee)
         return employee
 
-    employee = Employee(
+    employee = _Emp(
         employee_code=code,
         name=name,
         department=department,
@@ -659,7 +666,9 @@ def _get_or_create_user(
     department: str,
     employee_role: str = "ENGINEER",
 ) -> User:
-    user = db.query(User).filter(User.username == username).first()
+    from app.models.user import User as _User
+    from app.core.security import get_password_hash as _gph, verify_password as _vp
+    user = db.query(_User).filter(_User.username == username).first()
     if user:
         updated = False
         if not user.is_active:
@@ -671,8 +680,8 @@ def _get_or_create_user(
         if department and user.department != department:
             user.department = department
             updated = True
-        if not user.password_hash or not verify_password(password, user.password_hash):
-            user.password_hash = get_password_hash(password)
+        if not user.password_hash or not _vp(password, user.password_hash):
+            user.password_hash = _gph(password)
             updated = True
         if updated:
             db.commit()
@@ -687,10 +696,10 @@ def _get_or_create_user(
         role=employee_role,
     )
 
-    user = User(
+    user = _User(
         employee_id=employee.id,
         username=username,
-        password_hash=get_password_hash(password),
+        password_hash=_gph(password),
         real_name=real_name,
         department=department,
         is_active=True,
@@ -704,10 +713,11 @@ def _get_or_create_user(
 
 def _ensure_role(db: Session, role_code: str, role_name: str) -> Role:
     """确保角色字典中存在指定角色编码"""
-    role = db.query(Role).filter(Role.role_code == role_code).first()
+    from app.models.user import Role as _Role
+    role = db.query(_Role).filter(_Role.role_code == role_code).first()
     if role:
         return role
-    role = Role(
+    role = _Role(
         role_code=role_code,
         role_name=role_name,
         description=f"{role_name}（测试自动创建）",
@@ -723,33 +733,35 @@ def _ensure_role(db: Session, role_code: str, role_name: str) -> Role:
 def _ensure_role_permissions(
     db: Session, role: Role, permission_specs: Iterable[Tuple[str, str]]
 ) -> None:
+    from app.models.user import RoleApiPermission as _RAP
     changed = False
     for code, name in permission_specs:
         permission = _ensure_permission(db, code, name)
         exists = (
-            db.query(RoleApiPermission)
+            db.query(_RAP)
             .filter(
-                RoleApiPermission.role_id == role.id,
-                RoleApiPermission.permission_id == permission.id,
+                _RAP.role_id == role.id,
+                _RAP.permission_id == permission.id,
             )
             .first()
         )
         if not exists:
-            db.add(RoleApiPermission(role_id=role.id, permission_id=permission.id))
+            db.add(_RAP(role_id=role.id, permission_id=permission.id))
             changed = True
     if changed:
         db.commit()
 
 
 def _assign_role_to_user(db: Session, user: User, role: Role) -> None:
+    from app.models.user import UserRole as _UR
     exists = (
-        db.query(UserRole)
-        .filter(UserRole.user_id == user.id, UserRole.role_id == role.id)
+        db.query(_UR)
+        .filter(_UR.user_id == user.id, _UR.role_id == role.id)
         .first()
     )
     if exists:
         return
-    db.add(UserRole(user_id=user.id, role_id=role.id))
+    db.add(_UR(user_id=user.id, role_id=role.id))
     db.commit()
 
 
