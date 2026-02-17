@@ -470,3 +470,206 @@ class TestPipelineHealthService:
         assert "overall" in result
         assert "health_status" in result["lead"]
         assert "health_score" in result["lead"]
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestPipelineHealthServiceMock:
+    """使用 MagicMock 进行快速单元测试（无需数据库）"""
+
+    def _make_service(self):
+        db = MagicMock()
+        from app.services.pipeline_health_service import PipelineHealthService
+        return PipelineHealthService(db), db
+
+    # ---- calculate_lead_health ----
+
+    def test_lead_not_found_raises(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(ValueError, match="线索"):
+            svc.calculate_lead_health(999)
+
+    def test_lead_converted_returns_h4(self):
+        svc, db = self._make_service()
+        lead = MagicMock()
+        lead.status = "CONVERTED"
+        db.query.return_value.filter.return_value.first.return_value = lead
+
+        result = svc.calculate_lead_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_lead_invalid_returns_h4(self):
+        svc, db = self._make_service()
+        lead = MagicMock()
+        lead.status = "INVALID"
+        db.query.return_value.filter.return_value.first.return_value = lead
+
+        result = svc.calculate_lead_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_lead_fresh_follow_up_returns_h1(self):
+        from datetime import date, datetime
+        svc, db = self._make_service()
+        lead = MagicMock()
+        lead.status = "OPEN"
+        lead.lead_code = "LEAD-001"
+        lead.next_action_at = datetime.now()
+        lead.follow_ups = []
+        lead.created_at = datetime.now()
+        db.query.return_value.filter.return_value.first.return_value = lead
+
+        result = svc.calculate_lead_health(1)
+        assert result["health_status"] == "H1"
+
+    def test_lead_overdue_returns_h3(self):
+        from datetime import date, datetime, timedelta
+        svc, db = self._make_service()
+        lead = MagicMock()
+        lead.status = "OPEN"
+        lead.lead_code = "LEAD-002"
+        lead.next_action_at = datetime.now() - timedelta(days=35)
+        lead.follow_ups = []
+        lead.created_at = datetime.now() - timedelta(days=35)
+        db.query.return_value.filter.return_value.first.return_value = lead
+
+        result = svc.calculate_lead_health(1)
+        assert result["health_status"] == "H3"
+
+    # ---- calculate_opportunity_health ----
+
+    def test_opportunity_not_found_raises(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(ValueError, match="商机"):
+            svc.calculate_opportunity_health(999)
+
+    def test_opportunity_won_returns_h4(self):
+        svc, db = self._make_service()
+        opp = MagicMock()
+        opp.stage = "WON"
+        db.query.return_value.filter.return_value.first.return_value = opp
+
+        result = svc.calculate_opportunity_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_opportunity_lost_returns_h4(self):
+        svc, db = self._make_service()
+        opp = MagicMock()
+        opp.stage = "LOST"
+        db.query.return_value.filter.return_value.first.return_value = opp
+
+        result = svc.calculate_opportunity_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_opportunity_stale_returns_h3(self):
+        from datetime import date, datetime, timedelta
+        svc, db = self._make_service()
+        opp = MagicMock()
+        opp.stage = "NEGOTIATION"
+        opp.opp_code = "OPP-001"
+        opp.updated_at = datetime.now() - timedelta(days=65)
+        opp.created_at = datetime.now() - timedelta(days=65)
+        opp.gate_status = None
+        db.query.return_value.filter.return_value.first.return_value = opp
+
+        result = svc.calculate_opportunity_health(1)
+        assert result["health_status"] == "H3"
+
+    def test_opportunity_gate_rejected_forces_h3(self):
+        from datetime import datetime
+        svc, db = self._make_service()
+        opp = MagicMock()
+        opp.stage = "PROPOSAL"
+        opp.opp_code = "OPP-002"
+        opp.updated_at = datetime.now()
+        opp.created_at = datetime.now()
+        opp.gate_status = "REJECTED"
+        db.query.return_value.filter.return_value.first.return_value = opp
+
+        result = svc.calculate_opportunity_health(1)
+        assert result["health_status"] == "H3"
+
+    # ---- calculate_quote_health ----
+
+    def test_quote_not_found_raises(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(ValueError, match="报价"):
+            svc.calculate_quote_health(999)
+
+    def test_quote_approved_returns_h4(self):
+        svc, db = self._make_service()
+        quote = MagicMock()
+        quote.status = "APPROVED"
+        db.query.return_value.filter.return_value.first.return_value = quote
+        result = svc.calculate_quote_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_quote_expired_returns_h3(self):
+        from datetime import date, datetime, timedelta
+        svc, db = self._make_service()
+        quote = MagicMock()
+        quote.status = "PENDING"
+        quote.quote_code = "Q-001"
+        quote.created_at = datetime.now() - timedelta(days=10)
+        quote.valid_until = date.today() - timedelta(days=1)  # expired
+        db.query.return_value.filter.return_value.first.return_value = quote
+
+        result = svc.calculate_quote_health(1)
+        assert result["health_status"] == "H3"
+
+    # ---- calculate_payment_health ----
+
+    def test_payment_not_found_raises(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(ValueError, match="发票"):
+            svc.calculate_payment_health(999)
+
+    def test_payment_fully_paid_returns_h4(self):
+        svc, db = self._make_service()
+        invoice = MagicMock()
+        invoice.total_amount = 1000.0
+        invoice.amount = 1000.0
+        invoice.paid_amount = 1000.0
+        invoice.invoice_code = "INV-001"
+        db.query.return_value.filter.return_value.first.return_value = invoice
+
+        result = svc.calculate_payment_health(1)
+        assert result["health_status"] == "H4"
+
+    def test_payment_overdue_returns_h3(self):
+        from datetime import date, timedelta
+        svc, db = self._make_service()
+        invoice = MagicMock()
+        invoice.total_amount = 1000.0
+        invoice.amount = 1000.0
+        invoice.paid_amount = 0.0
+        invoice.invoice_code = "INV-002"
+        invoice.due_date = date.today() - timedelta(days=35)
+        invoice.issue_date = date.today() - timedelta(days=35)
+        db.query.return_value.filter.return_value.first.return_value = invoice
+
+        result = svc.calculate_payment_health(1)
+        assert result["health_status"] == "H3"
+
+    # ---- calculate_pipeline_health ----
+
+    def test_pipeline_health_overall_worst(self):
+        svc, db = self._make_service()
+
+        with patch.object(svc, "calculate_lead_health", return_value={"health_status": "H2", "health_score": 50}), \
+             patch.object(svc, "calculate_opportunity_health", return_value={"health_status": "H3", "health_score": 20}):
+            result = svc.calculate_pipeline_health(lead_id=1, opportunity_id=2)
+
+        assert "lead" in result
+        assert "opportunity" in result
+        assert result["overall"]["health_status"] == "H3"
+
+    def test_pipeline_health_empty_returns_empty(self):
+        svc, db = self._make_service()
+        result = svc.calculate_pipeline_health()
+        assert result == {}

@@ -29,7 +29,7 @@ class ShortageAlert(Base, TimestampMixin):
     # 关联信息
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     material_id = Column(Integer, ForeignKey('materials.id'), nullable=False, comment='物料ID')
-    work_order_id = Column(Integer, ForeignKey('production_work_orders.id'), nullable=True, comment='工单ID')
+    work_order_id = Column(Integer, ForeignKey('work_order.id'), nullable=True, comment='工单ID')
     
     # 物料信息快照
     material_code = Column(String(50), nullable=False, comment='物料编码')
@@ -130,7 +130,7 @@ class ShortageHandlingPlan(Base, TimestampMixin):
     
     # 方案详情
     target_material_id = Column(Integer, ForeignKey('materials.id'), comment='目标物料ID（替代料）')
-    target_supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='目标供应商ID')
+    target_supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='目标供应商ID')
     target_project_id = Column(Integer, ForeignKey('projects.id'), comment='目标项目ID（调拨）')
     
     # 方案参数

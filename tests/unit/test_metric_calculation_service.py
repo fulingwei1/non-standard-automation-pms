@@ -160,3 +160,182 @@ class TestFormatMetricValue:
 
     def test_unknown_format(self, service):
         assert service.format_metric_value(42, "UNKNOWN") == "42"
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestCalculateByTypeAdditional:
+    def setup_method(self):
+        self.db = MagicMock()
+        from app.services.metric_calculation_service import MetricCalculationService
+        self.svc = MetricCalculationService(self.db)
+
+    def test_sum_calculates_value(self):
+        query = MagicMock()
+        metric_def = MagicMock(
+            calculation_type="SUM",
+            data_field="total_amount",
+            metric_code="TEST_SUM"
+        )
+        query.with_entities.return_value.scalar.return_value = 50000.0
+        from app.services.metric_calculation_service import MetricCalculationService
+        from app.models.sales import Contract
+
+        result = self.svc._calculate_by_type(query, Contract, metric_def)
+        assert result == 50000.0
+
+    def test_sum_returns_zero_when_none(self):
+        query = MagicMock()
+        metric_def = MagicMock(
+            calculation_type="SUM",
+            data_field="total_amount",
+            metric_code="TEST_SUM"
+        )
+        query.with_entities.return_value.scalar.return_value = None
+        from app.models.sales import Contract
+        result = self.svc._calculate_by_type(query, Contract, metric_def)
+        assert result == 0.0
+
+    def test_avg_calculates_value(self):
+        query = MagicMock()
+        metric_def = MagicMock(
+            calculation_type="AVG",
+            data_field="progress",
+            metric_code="TEST_AVG"
+        )
+        query.with_entities.return_value.scalar.return_value = 75.0
+        from app.models.project import Project
+        result = self.svc._calculate_by_type(query, Project, metric_def)
+        assert result == 75.0
+
+    def test_count_type_returns_count(self):
+        query = MagicMock()
+        query.count.return_value = 10
+        metric_def = MagicMock(calculation_type="COUNT")
+        from app.models.project import Project
+        result = self.svc._calculate_by_type(query, Project, metric_def)
+        assert result == 10
+
+    def test_unknown_calculation_type_raises(self):
+        query = MagicMock()
+        metric_def = MagicMock(
+            calculation_type="INVALID",
+            metric_code="BAD"
+        )
+        from app.models.project import Project
+        with pytest.raises(ValueError, match="不支持的计算类型"):
+            self.svc._calculate_by_type(query, Project, metric_def)
+
+    def test_sum_requires_data_field(self):
+        query = MagicMock()
+        metric_def = MagicMock(
+            calculation_type="SUM",
+            data_field=None,
+            metric_code="TEST_NO_FIELD"
+        )
+        from app.models.project import Project
+        with pytest.raises(ValueError, match="需要指定data_field"):
+            self.svc._calculate_by_type(query, Project, metric_def)
+
+
+class TestApplyFilterConditions:
+    def setup_method(self):
+        self.db = MagicMock()
+        from app.services.metric_calculation_service import MetricCalculationService
+        self.svc = MetricCalculationService(self.db)
+
+    def test_returns_query_unchanged_when_no_filters_key(self):
+        from app.models.project import Project
+        query = MagicMock()
+        result = self.svc._apply_filter_conditions(
+            query, Project, {"other": "data"},
+            date(2026, 1, 1), date(2026, 1, 31)
+        )
+        # query returned unchanged
+        assert result is query
+
+    def test_filter_eq_operator(self):
+        from app.models.project import Project
+        query = MagicMock()
+        query.filter.return_value = query
+
+        filter_conditions = {
+            "filters": [
+                {"field": "status", "operator": "=", "value": "ACTIVE"}
+            ]
+        }
+        result = self.svc._apply_filter_conditions(
+            query, Project, filter_conditions,
+            date(2026, 1, 1), date(2026, 1, 31)
+        )
+        # At minimum, no exception should be raised
+        assert result is not None
+
+    def test_filter_in_operator_list(self):
+        from app.models.project import Project
+        query = MagicMock()
+        query.filter.return_value = query
+
+        filter_conditions = {
+            "filters": [
+                {"field": "status", "operator": "IN", "value": ["ACTIVE", "PENDING"]}
+            ]
+        }
+        result = self.svc._apply_filter_conditions(
+            query, Project, filter_conditions,
+            date(2026, 1, 1), date(2026, 1, 31)
+        )
+        assert result is not None
+
+    def test_filter_period_start_substituted(self):
+        from app.models.project import Project
+        query = MagicMock()
+        query.filter.return_value = query
+
+        period_start = date(2026, 1, 1)
+        period_end = date(2026, 1, 31)
+        filter_conditions = {
+            "filters": [
+                {"field": "created_at", "operator": ">=", "value": "period_start"}
+            ]
+        }
+        # Should not raise
+        result = self.svc._apply_filter_conditions(
+            query, Project, filter_conditions,
+            period_start, period_end
+        )
+        assert result is not None
+
+
+class TestCalculateMetricsBatch:
+    def setup_method(self):
+        self.db = MagicMock()
+        from app.services.metric_calculation_service import MetricCalculationService
+        self.svc = MetricCalculationService(self.db)
+
+    def test_batch_partial_failure(self):
+        with patch.object(self.svc, "calculate_metric") as mock:
+            mock.side_effect = [
+                {"metric_code": "M1", "value": 100},
+                ValueError("指标定义不存在"),
+            ]
+            results = self.svc.calculate_metrics_batch(
+                ["M1", "M2"], date(2026, 1, 1), date(2026, 1, 31)
+            )
+        assert results["M1"]["value"] == 100
+        assert results["M2"]["value"] is None
+        assert "error" in results["M2"]
+
+    def test_batch_all_success(self):
+        with patch.object(self.svc, "calculate_metric") as mock:
+            mock.side_effect = [
+                {"metric_code": "A", "value": 5},
+                {"metric_code": "B", "value": 10},
+            ]
+            results = self.svc.calculate_metrics_batch(
+                ["A", "B"], date(2026, 1, 1), date(2026, 1, 31)
+            )
+        assert len(results) == 2
+        assert results["A"]["value"] == 5

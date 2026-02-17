@@ -513,3 +513,134 @@ class TestConditionEvaluator:
         context = {"user": User()}
         result = self.parser._get_field_value("user.name", context)
         assert result == "测试用户"
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestConditionEvaluatorAdditional:
+    """额外的边界情况测试"""
+
+    def setup_method(self):
+        self.evaluator = ConditionEvaluator()
+
+    # ---- evaluate 分支 ----
+
+    def test_evaluate_empty_expression_returns_none(self):
+        result = self.evaluator.evaluate("", {})
+        assert result is None
+
+    def test_evaluate_json_condition_and_all_true(self):
+        expr = '{"operator": "AND", "items": [{"field": "a", "op": "==", "value": 1}, {"field": "b", "op": "==", "value": 2}]}'
+        result = self.evaluator.evaluate(expr, {"a": 1, "b": 2})
+        assert result is True
+
+    def test_evaluate_json_condition_or_one_true(self):
+        expr = '{"operator": "OR", "items": [{"field": "a", "op": "==", "value": 99}, {"field": "b", "op": "==", "value": 2}]}'
+        result = self.evaluator.evaluate(expr, {"a": 1, "b": 2})
+        assert result is True
+
+    def test_evaluate_json_invalid_raises(self):
+        with pytest.raises(Exception):
+            self.evaluator.evaluate("{bad json}", {})
+
+    # ---- _compare_values 细节 ----
+
+    def test_compare_in_operator(self):
+        assert self.evaluator._compare_values("A", "in", ["A", "B", "C"]) is True
+        assert self.evaluator._compare_values("D", "in", ["A", "B"]) is False
+
+    def test_compare_not_in(self):
+        assert self.evaluator._compare_values("X", "not_in", ["A", "B"]) is True
+        assert self.evaluator._compare_values("A", "not_in", ["A", "B"]) is False
+
+    def test_compare_between(self):
+        assert self.evaluator._compare_values(5, "between", [1, 10]) is True
+        assert self.evaluator._compare_values(15, "between", [1, 10]) is False
+        assert self.evaluator._compare_values(None, "between", [1, 10]) is False
+
+    def test_compare_contains(self):
+        assert self.evaluator._compare_values("hello world", "contains", "world") is True
+        assert self.evaluator._compare_values(None, "contains", "x") is False
+
+    def test_compare_starts_with(self):
+        assert self.evaluator._compare_values("foobar", "starts_with", "foo") is True
+        assert self.evaluator._compare_values("foobar", "starts_with", "bar") is False
+
+    def test_compare_ends_with(self):
+        assert self.evaluator._compare_values("foobar", "ends_with", "bar") is True
+        assert self.evaluator._compare_values("foobar", "ends_with", "foo") is False
+
+    def test_compare_is_null_true(self):
+        assert self.evaluator._compare_values(None, "is_null", True) is True
+        assert self.evaluator._compare_values("x", "is_null", True) is False
+
+    def test_compare_regex(self):
+        assert self.evaluator._compare_values("abc123", "regex", r"\w+\d+") is True
+        assert self.evaluator._compare_values("abc", "regex", r"^\d+$") is False
+
+    def test_compare_unknown_op_returns_false(self):
+        assert self.evaluator._compare_values(1, "xyz", 1) is False
+
+    # ---- _get_field_value 深路径 ----
+
+    def test_get_nested_value_three_levels(self):
+        ctx = {"a": {"b": {"c": 42}}}
+        result = self.evaluator._get_field_value("a.b.c", ctx)
+        assert result == 42
+
+    def test_get_field_value_missing_returns_none(self):
+        result = self.evaluator._get_field_value("x.y.z", {})
+        assert result is None
+
+    def test_get_field_value_now_function(self):
+        result = self.evaluator._get_field_value("now()", {})
+        assert result is not None
+
+    # ---- _parse_value ----
+
+    def test_parse_value_integer(self):
+        assert self.evaluator._parse_value("42") == 42
+
+    def test_parse_value_float(self):
+        assert self.evaluator._parse_value("3.14") == 3.14
+
+    def test_parse_value_bool_true(self):
+        assert self.evaluator._parse_value("true") is True
+
+    def test_parse_value_bool_false(self):
+        assert self.evaluator._parse_value("false") is False
+
+    def test_parse_value_single_quoted_string(self):
+        assert self.evaluator._parse_value("'hello'") == "hello"
+
+    def test_parse_value_double_quoted_string(self):
+        assert self.evaluator._parse_value('"world"') == "world"
+
+    # ---- SQL-like 表达式 ----
+
+    def test_sql_like_simple_gt(self):
+        result = self.evaluator._evaluate_sql_like("amount > 100", {"amount": 200})
+        assert result is True
+
+    def test_sql_like_and_conditions(self):
+        result = self.evaluator._evaluate_sql_like(
+            "amount > 100 AND days <= 30",
+            {"amount": 200, "days": 15}
+        )
+        assert result is True
+
+    def test_sql_like_is_null(self):
+        result = self.evaluator._parse_sql_condition("field IS NULL", {"field": None})
+        assert result is True
+
+    def test_sql_like_is_not_null(self):
+        result = self.evaluator._parse_sql_condition("field IS NOT NULL", {"field": "x"})
+        assert result is True
+
+    def test_sql_like_in_list(self):
+        result = self.evaluator._parse_sql_condition(
+            "status IN (ACTIVE, PENDING)", {"status": "ACTIVE"}
+        )
+        assert result is True

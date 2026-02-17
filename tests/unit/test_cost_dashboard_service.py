@@ -381,3 +381,102 @@ class TestEdgeCases:
         project_data = result["top_cost_projects"][0]
         assert project_data["budget_amount"] == 999999999.99
         assert project_data["actual_cost"] == 888888888.88
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# G4 补充测试 - CostDashboardService
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestCostDashboardServiceG4:
+    """G4 补充：CostDashboardService 额外覆盖"""
+
+    @pytest.fixture
+    def mock_db(self):
+        return MagicMock(spec=Session)
+
+    @pytest.fixture
+    def service(self, mock_db):
+        return CostDashboardService(mock_db)
+
+    # ---- get_cost_overview: 预算执行率计算 ----
+
+    def test_budget_execution_rate_correct(self, service, mock_db):
+        """预算执行率 = actual / budget * 100"""
+        mock_db.query.return_value.filter.return_value.count.return_value = 5
+        stats = MagicMock()
+        stats.total_budget = Decimal("200000")
+        stats.total_actual_cost = Decimal("100000")
+        stats.total_contract_amount = Decimal("250000")
+
+        # first() 用于 budget_cost_stats，其余 count() 用于超支/正常/预警
+        mock_db.query.return_value.filter.return_value.first.return_value = stats
+        # 本月成本聚合
+        month_agg = MagicMock()
+        month_agg.total = None
+
+        result = service.get_cost_overview()
+        assert result["budget_execution_rate"] == 50.0
+
+    # ---- get_cost_overview: 成本超支数量 ----
+
+    def test_cost_overrun_count_in_overview(self, service, mock_db):
+        """总览中包含 cost_overrun_count 字段"""
+        mock_db.query.return_value.filter.return_value.count.return_value = 3
+        stats = MagicMock()
+        stats.total_budget = Decimal("100000")
+        stats.total_actual_cost = Decimal("120000")
+        stats.total_contract_amount = Decimal("130000")
+        mock_db.query.return_value.filter.return_value.first.return_value = stats
+
+        result = service.get_cost_overview()
+        assert "cost_overrun_count" in result
+
+    # ---- get_cost_trend: 返回 months 字段 ----
+
+    def test_get_cost_trend_returns_months(self, service, mock_db):
+        """get_cost_trend 结果包含 months 字段"""
+        # 模拟月度查询全部返回 None
+        agg = MagicMock()
+        agg.total = None
+        mock_db.query.return_value.filter.return_value.first.return_value = agg
+
+        result = service.get_cost_trend(months=6)
+        assert "months" in result
+        assert isinstance(result["months"], list)
+
+    def test_get_cost_trend_months_count(self, service, mock_db):
+        """get_cost_trend 的 months 长度 == 请求月数"""
+        agg = MagicMock()
+        agg.total = None
+        mock_db.query.return_value.filter.return_value.first.return_value = agg
+
+        result = service.get_cost_trend(months=3)
+        assert len(result["months"]) == 3
+
+    # ---- get_top_projects ----
+
+    def test_get_top_projects_returns_list(self, service, mock_db):
+        """get_top_projects 返回包含 top_cost_projects 的字典"""
+        p = MagicMock()
+        p.id = 1
+        p.project_code = "P-001"
+        p.project_name = "测试项目"
+        p.budget_amount = Decimal("100000")
+        p.actual_cost = Decimal("80000")
+        p.contract_amount = Decimal("120000")
+        p.stage = "S3"
+        p.status = "ST03"
+        p.health = "H1"
+        mock_db.query.return_value.filter.return_value.all.return_value = [p]
+
+        result = service.get_top_projects(limit=5)
+        assert "top_cost_projects" in result
+        assert len(result["top_cost_projects"]) >= 1
+
+    # ---- get_cost_distribution ----
+
+    def test_get_cost_distribution_returns_dict(self, service, mock_db):
+        """get_cost_distribution 返回字典"""
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        result = service.get_cost_distribution()
+        assert isinstance(result, dict)

@@ -291,3 +291,112 @@ def db_session():
         session.close()
     except Exception:
         yield MagicMock()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# G4 补充测试（纯 MagicMock，不依赖真实数据库）
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestLossDeepAnalysisServiceG4:
+    """G4 补充：LossDeepAnalysisService 额外覆盖"""
+
+    def _make_service(self):
+        from app.services.loss_deep_analysis_service import LossDeepAnalysisService
+        db = MagicMock()
+        with patch(
+            "app.services.loss_deep_analysis_service.HourlyRateService"
+        ) as MockHRS:
+            MockHRS.return_value = MagicMock()
+            service = LossDeepAnalysisService(db)
+        return service, db
+
+    # ---- analyze_lost_projects: 无项目时返回空 ----
+
+    def test_analyze_lost_projects_empty(self):
+        """无未中标项目时返回空汇总"""
+        service, db = self._make_service()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = []
+        db.query.return_value = q
+
+        result = service.analyze_lost_projects()
+
+        assert isinstance(result, dict)
+        assert result["summary"]["total_projects"] == 0
+
+    # ---- analyze_lost_projects: 日期过滤 ----
+
+    def test_analyze_lost_projects_with_dates(self):
+        """传入 start_date/end_date 时正常运行"""
+        service, db = self._make_service()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = []
+        db.query.return_value = q
+
+        result = service.analyze_lost_projects(
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 12, 31)
+        )
+        assert isinstance(result, dict)
+
+    # ---- _determine_investment_stage: s2=design ----
+
+    def test_determine_investment_stage_s2(self):
+        """S2 阶段判定为 design"""
+        service, db = self._make_service()
+        project = MagicMock()
+        project.stage = "S2"
+        result = service._determine_investment_stage(project)
+        assert result == "design"
+
+    # ---- _determine_investment_stage: 高工时走 detailed_design ----
+
+    def test_determine_investment_stage_high_hours(self):
+        """工时 > 100h 时判断为 detailed_design"""
+        service, db = self._make_service()
+        project = MagicMock()
+        project.stage = None
+        project.id = 1
+
+        with patch.object(service, '_get_project_hours', return_value=150.0):
+            result = service._determine_investment_stage(project)
+        assert result == "detailed_design"
+
+    # ---- _identify_patterns: 单项目 ----
+
+    def test_identify_patterns_single_project(self):
+        """单个项目不产生 patterns"""
+        service, db = self._make_service()
+        projects = [{"salesperson_id": 1, "salesperson_name": "张三", "cost": 10000}]
+        result = service._identify_patterns(projects)
+        assert isinstance(result, dict)
+
+    # ---- analyze_by_stage: requirement_only 阶段 ----
+
+    def test_analyze_by_stage_requirement_only(self):
+        """analyze_by_stage 对 requirement_only 阶段也能正常返回"""
+        service, db = self._make_service()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.all.return_value = []
+        db.query.return_value = q
+
+        result = service.analyze_by_stage("requirement_only")
+        assert result["stage"] == "requirement_only"
+        assert result["total_projects"] == 0
+
+    # ---- _calculate_project_cost ----
+
+    def test_calculate_project_cost_no_timesheets(self):
+        """无工时记录时成本为 0"""
+        service, db = self._make_service()
+        q = MagicMock()
+        q.join.return_value = q
+        q.filter.return_value = q
+        q.all.return_value = []
+        db.query.return_value = q
+
+        result = service._calculate_project_cost(project_id=1)
+        assert result == 0 or result == 0.0

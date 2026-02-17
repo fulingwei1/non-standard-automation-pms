@@ -678,3 +678,202 @@ class TestEdgeCases:
                     decision=ApprovalDecision.APPROVE,
                     comment="同意",
                 )
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestWorkflowEngineAdditional:
+    """WorkflowEngine 额外单元测试（MagicMock 版本）"""
+
+    def _make_engine(self):
+        db = MagicMock()
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        return WorkflowEngine(db), db
+
+    def test_generate_instance_no_format(self):
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        no = WorkflowEngine._generate_instance_no()
+        assert no.startswith("AP")
+        assert len(no) > 5
+
+    def test_create_instance_raises_when_flow_not_found(self):
+        engine, db = self._make_engine()
+        db.query.return_value.filter.return_value.first.return_value = None
+        with pytest.raises(ValueError, match="不存在或未启用"):
+            engine.create_instance(
+                flow_code="UNKNOWN",
+                business_type="ECN",
+                business_id=1,
+                business_title="Test",
+                submitted_by=1,
+            )
+
+    def test_create_instance_success(self):
+        engine, db = self._make_engine()
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        from app.services.approval_engine.models import LegacyApprovalFlow as ApprovalFlow
+
+        flow = MagicMock()
+        flow.id = 1
+        flow.flow_code = "ECN_FLOW"
+        flow.nodes = [MagicMock(), MagicMock()]
+
+        db.query.return_value.filter.return_value.first.return_value = flow
+
+        with patch("app.services.approval_engine.workflow_engine.save_obj"):
+            with patch.object(WorkflowEngine, "_get_first_node_timeout", return_value=48):
+                instance = engine.create_instance(
+                    flow_code="ECN_FLOW",
+                    business_type="ECN",
+                    business_id=10,
+                    business_title="测试ECN",
+                    submitted_by=5,
+                )
+
+        assert instance is not None
+
+    def test_get_current_node_returns_none_for_approved_status(self):
+        engine, db = self._make_engine()
+        from app.services.approval_engine.models import ApprovalStatus
+
+        instance = MagicMock()
+        instance.current_status = ApprovalStatus.APPROVED.value
+        instance.current_node_id = None
+
+        result = engine.get_current_node(instance)
+        assert result is None
+
+    def test_get_current_node_by_node_id(self):
+        engine, db = self._make_engine()
+        from app.services.approval_engine.models import ApprovalStatus
+
+        instance = MagicMock()
+        instance.current_status = ApprovalStatus.PENDING.value
+        instance.current_node_id = 5
+
+        node = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = node
+
+        result = engine.get_current_node(instance)
+        assert result is node
+
+    def test_get_current_node_finds_first_when_no_node_id(self):
+        engine, db = self._make_engine()
+        from app.services.approval_engine.models import ApprovalStatus
+
+        instance = MagicMock()
+        instance.current_status = ApprovalStatus.IN_PROGRESS.value
+        instance.current_node_id = None
+        instance.flow_id = 1
+
+        first_node = MagicMock()
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = first_node
+
+        result = engine.get_current_node(instance)
+        assert result is first_node
+
+    def test_evaluate_node_conditions_returns_true_when_no_condition(self):
+        engine, _ = self._make_engine()
+        node = MagicMock()
+        node.condition_expression = None
+        node.condition_expr = None
+
+        instance = MagicMock()
+        result = engine.evaluate_node_conditions(node, instance)
+        assert result is True
+
+    def test_evaluate_node_conditions_with_jinja2(self):
+        engine, db = self._make_engine()
+        node = MagicMock()
+        node.condition_expression = "{{ form.amount > 1000 }}"
+        node.id = 1
+
+        instance = MagicMock()
+        instance.submitted_by = None
+        instance.business_type = "UNKNOWN"
+        instance.business_id = 1
+        instance.form_data = {"amount": 2000}
+
+        db.query.return_value.filter.return_value.first.return_value = None
+
+        # Should not raise
+        result = engine.evaluate_node_conditions(node, instance)
+        # Result may be True or False, just check it's a bool
+        assert isinstance(result, bool)
+
+    def test_is_expired_with_due_date_past(self):
+        engine, _ = self._make_engine()
+        from datetime import datetime, timedelta
+
+        instance = MagicMock()
+        instance.due_date = datetime.now() - timedelta(hours=1)
+
+        assert engine.is_expired(instance) is True
+
+    def test_is_expired_with_due_date_future(self):
+        engine, _ = self._make_engine()
+        from datetime import datetime, timedelta
+
+        instance = MagicMock()
+        instance.due_date = datetime.now() + timedelta(hours=24)
+
+        assert engine.is_expired(instance) is False
+
+    def test_is_expired_without_due_date(self):
+        engine, db = self._make_engine()
+        instance = MagicMock()
+        instance.due_date = None
+        instance.created_at = None  # not a datetime
+        # Expect False (no valid date)
+        result = engine.is_expired(instance)
+        assert result is False
+
+    def test_get_first_node_timeout_default(self):
+        engine, _ = self._make_engine()
+        flow = MagicMock()
+        flow.first_node_timeout = None
+        assert engine._get_first_node_timeout(flow) == 48
+
+    def test_get_first_node_timeout_custom(self):
+        engine, _ = self._make_engine()
+        flow = MagicMock()
+        flow.first_node_timeout = 72
+        assert engine._get_first_node_timeout(flow) == 72
+
+
+class TestApprovalFlowResolverAdditional:
+    def test_determine_flow_known_type(self):
+        db = MagicMock()
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        resolver = WorkflowEngine.ApprovalFlowResolver(db)
+        result = resolver.determine_approval_flow("ECN")
+        assert result == "ECN_FLOW"
+
+    def test_determine_flow_unknown_type(self):
+        db = MagicMock()
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        resolver = WorkflowEngine.ApprovalFlowResolver(db)
+        result = resolver.determine_approval_flow("UNKNOWN_TYPE")
+        assert result is None
+
+    def test_get_approval_flow_raises_when_not_found(self):
+        db = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = None
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        resolver = WorkflowEngine.ApprovalFlowResolver(db)
+        with pytest.raises(ValueError, match="不存在或未启用"):
+            resolver.get_approval_flow("NO_FLOW")
+
+    def test_get_approval_flow_returns_flow(self):
+        db = MagicMock()
+        flow = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = flow
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+        resolver = WorkflowEngine.ApprovalFlowResolver(db)
+        result = resolver.get_approval_flow("ECN_FLOW")
+        assert result is flow
+
+
+import pytest

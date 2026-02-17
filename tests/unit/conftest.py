@@ -5,9 +5,22 @@ Unit tests fixtures - 不依赖完整应用程序
 
 import os
 import tempfile
+from typing import Optional
 
 import pytest
 from sqlalchemy import create_engine, text
+
+
+# ============================================================
+# Override the broken session-level autouse fixture from
+# tests/conftest.py that calls Base.metadata.create_all()
+# and fails due to NoReferencedTableError for unit tests.
+# Unit tests use MagicMock; they do NOT need the real DB.
+# ============================================================
+@pytest.fixture(scope="session", autouse=True)
+def _init_test_database():
+    """No-op override: unit tests use MagicMock, not real DB."""
+    yield
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 

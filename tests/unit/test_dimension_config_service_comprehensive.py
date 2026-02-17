@@ -761,3 +761,130 @@ class TestGetPendingApprovals:
         result = service.get_pending_approvals()
 
         assert result == []
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# G4 补充测试 - DimensionConfigService
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestDimensionConfigServiceG4:
+    """G4 补充：dimension_config_service 额外覆盖"""
+
+    def setup_method(self):
+        self.mock_db = MagicMock()
+
+    # ---- get_config: 无部门时走全局配置 ----
+
+    def test_get_config_no_dept_uses_global(self):
+        """不传 department_id 时应直接查全局配置"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
+        mock_config = MagicMock()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.first.return_value = mock_config
+        self.mock_db.query.return_value = q
+
+        service = DimensionConfigService(self.mock_db)
+        result = service.get_config(job_type="mechanical")
+        assert result == mock_config
+
+    # ---- create_config: 权重不为100 抛异常 ----
+
+    def test_create_config_invalid_weight_raises(self):
+        """五维权重之和不等于100时应抛出 ValueError"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
+        service = DimensionConfigService(self.mock_db)
+        data = MagicMock()
+        data.technical_weight = 30
+        data.execution_weight = 20
+        data.cost_quality_weight = 20
+        data.knowledge_weight = 10
+        data.collaboration_weight = 10  # sum = 90 ≠ 100
+
+        import pytest
+        with pytest.raises(ValueError, match="权重总和必须为100"):
+            service.create_config(data, operator_id=1)
+
+    # ---- create_config: 权重为100 时正常创建 ----
+
+    def test_create_config_valid_weight(self):
+        """权重之和=100 时，db.add/commit 被调用"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from unittest.mock import patch
+
+        service = DimensionConfigService(self.mock_db)
+        data = MagicMock()
+        data.technical_weight = 20
+        data.execution_weight = 20
+        data.cost_quality_weight = 20
+        data.knowledge_weight = 20
+        data.collaboration_weight = 20  # sum = 100
+        data.job_type = "mechanical"
+        data.job_level = None
+        data.effective_date = None
+        data.config_name = "测试配置"
+        data.description = ""
+
+        with patch(
+            "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+        ) as MockConfig, patch(
+            "app.services.engineer_performance.dimension_config_service.save_obj"
+        ) as mock_save:
+            mock_instance = MagicMock()
+            MockConfig.return_value = mock_instance
+            mock_save.return_value = mock_instance
+
+            result = service.create_config(data, operator_id=1)
+            mock_save.assert_called_once()
+
+    # ---- get_config: 有部门优先返回部门级别配置 ----
+
+    def test_get_config_dept_config_found(self):
+        """指定 department_id 且部门配置存在时返回部门配置"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
+        dept_config = MagicMock()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.first.return_value = dept_config
+        self.mock_db.query.return_value = q
+
+        service = DimensionConfigService(self.mock_db)
+        result = service.get_config(job_type="test", department_id=5)
+        assert result == dept_config
+
+    # ---- list_configs ----
+
+    def test_list_configs_returns_all(self):
+        """list_configs 不带过滤时应返回所有配置"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
+        mock_configs = [MagicMock(), MagicMock(), MagicMock()]
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.all.return_value = mock_configs
+        self.mock_db.query.return_value = q
+
+        service = DimensionConfigService(self.mock_db)
+        result = service.list_configs()
+        assert len(result) == 3
+
+    def test_list_configs_by_job_type(self):
+        """传入 job_type 时结果正确"""
+        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
+        mock_configs = [MagicMock()]
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.all.return_value = mock_configs
+        self.mock_db.query.return_value = q
+
+        service = DimensionConfigService(self.mock_db)
+        result = service.list_configs(job_type="electrical")
+        assert len(result) == 1

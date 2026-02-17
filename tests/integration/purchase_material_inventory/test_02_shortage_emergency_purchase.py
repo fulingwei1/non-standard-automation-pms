@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.models.material import Material
-from app.models.shortage.alerts import ShortageAlert
+from app.models.shortage.smart_alert import ShortageAlert
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem, PurchaseOrder
 
 
@@ -31,19 +31,22 @@ class TestShortageEmergencyPurchase:
         # 步骤1: 扫描库存，生成缺料预警
         shortage_alerts = []
         
-        for material in [material_m001, material_m002]:
+        for idx, material in enumerate([material_m001, material_m002]):
             if material.current_stock < material.safety_stock:
                 shortage_qty = material.safety_stock - material.current_stock
                 
                 alert = ShortageAlert(
+                    alert_no=f"ALERT_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{idx}_{material.material_code}",
                     material_id=material.id,
+                    material_code=material.material_code,
+                    material_name=material.material_name,
                     project_id=project.id,
-                    shortage_quantity=shortage_qty,
-                    alert_level="HIGH" if material.is_key_material else "MEDIUM",
-                    alert_type="LOW_STOCK",
+                    required_qty=material.safety_stock,
+                    shortage_qty=shortage_qty,
+                    alert_level="WARNING" if material.is_key_material else "INFO",
                     required_date=(datetime.utcnow() + timedelta(days=material.lead_time_days)).date(),
-                    status="ACTIVE",
-                    description=f"{material.material_name}库存低于安全库存"
+                    status="PENDING",
+                    remark=f"{material.material_name}库存低于安全库存"
                 )
                 db.add(alert)
                 shortage_alerts.append(alert)
@@ -57,7 +60,7 @@ class TestShortageEmergencyPurchase:
             material = db.query(Material).get(alert.material_id)
             
             # 计算采购数量（补足到安全库存 + 考虑最小订购量）
-            suggested_qty = alert.shortage_quantity
+            suggested_qty = alert.shortage_qty
             if suggested_qty < material.min_order_qty:
                 suggested_qty = material.min_order_qty
             
@@ -68,7 +71,7 @@ class TestShortageEmergencyPurchase:
                 project_id=project.id,
                 status="DRAFT",
                 created_by=user.id,
-                remark=f"缺料预警自动生成 - {alert.description}"
+                remark=f"缺料预警自动生成 - {alert.remark}"
             )
             db.add(purchase_request)
             db.flush()
@@ -108,13 +111,13 @@ class TestShortageEmergencyPurchase:
             db.add(purchase_order)
             db.flush()
             
-            # 关联预警
-            alert.status = "HANDLING"
-            alert.handling_note = f"已创建紧急采购订单: {purchase_order.order_no}"
+            # 关联预警 - 更新状态为处理中
+            alert.status = "PROCESSING"
+            alert.resolution_note = f"已创建紧急采购订单: {purchase_order.order_no}"
             
             print(f"✅ 缺料预警处理完成:")
             print(f"   物料: {material.material_name}")
-            print(f"   缺料数量: {alert.shortage_quantity}")
+            print(f"   缺料数量: {alert.shortage_qty}")
             print(f"   采购数量: {suggested_qty}")
             print(f"   采购订单: {purchase_order.order_no}")
             print(f"   预计交期: {purchase_order.required_date}")
@@ -122,11 +125,11 @@ class TestShortageEmergencyPurchase:
         db.commit()
         
         # 验证结果
-        active_alerts = db.query(ShortageAlert).filter(
-            ShortageAlert.status == "HANDLING"
+        processing_alerts = db.query(ShortageAlert).filter(
+            ShortageAlert.status == "PROCESSING"
         ).count()
         
-        assert active_alerts == 2, "所有预警应处于处理中状态"
+        assert processing_alerts == 2, "所有预警应处于处理中状态"
         
         print(f"\n✅ 缺料预警触发紧急采购流程测试通过")
         print(f"   生成预警: {len(shortage_alerts)}条")
@@ -142,19 +145,24 @@ class TestShortageEmergencyPurchase:
         
         # 创建严重缺料预警
         alert = ShortageAlert(
+            alert_no=f"ALERT_CRITICAL_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             material_id=material_m001.id,
+            material_code=material_m001.material_code,
+            material_name=material_m001.material_name,
             project_id=project.id,
-            shortage_quantity=Decimal("100"),  # 严重缺料
+            required_qty=Decimal("100"),
+            shortage_qty=Decimal("100"),  # 严重缺料
             alert_level="CRITICAL",
-            alert_type="CRITICAL_SHORTAGE",
             required_date=datetime.utcnow().date(),  # 今天就需要
-            status="ACTIVE",
-            description=f"关键物料严重缺料"
+            status="PENDING",
+            remark="关键物料严重缺料",
+            is_critical_path=True
         )
         db.add(alert)
         db.commit()
         
         assert alert.alert_level == "CRITICAL"
-        assert alert.status == "ACTIVE"
+        assert alert.status == "PENDING"
+        assert alert.is_critical_path == True
         
         print(f"✅ 关键物料缺料预警级别测试通过")

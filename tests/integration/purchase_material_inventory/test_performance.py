@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.models.material import Material
-from app.models.shortage.alerts import ShortageAlert
+from app.models.shortage.smart_alert import ShortageAlert
 from app.models.project import Project
 
 

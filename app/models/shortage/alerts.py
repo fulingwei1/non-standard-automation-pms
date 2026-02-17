@@ -113,3 +113,6 @@ class ShortageDailyReport(Base, TimestampMixin):
 #   from app.models.alert import AlertRecord
 #   db.query(AlertRecord).filter(AlertRecord.target_type == 'SHORTAGE')
 # ============================================================
+
+# 向后兼容别名
+from app.models.shortage.smart_alert import ShortageAlert  # noqa: F401

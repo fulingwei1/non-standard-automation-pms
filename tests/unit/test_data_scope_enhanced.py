@@ -615,3 +615,222 @@ def test_suite_summary():
     - 性能优化验证
     """
     pass
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestDataScopeServiceEnhancedMock:
+    """使用 MagicMock 快速单元测试"""
+
+    # ---- normalize_scope_type ----
+
+    def test_normalize_all_scope(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.models.permission import ScopeType
+        from app.models.enums import DataScopeEnum
+        result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.ALL.value)
+        assert result == DataScopeEnum.ALL.value
+
+    def test_normalize_own_scope(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.models.permission import ScopeType
+        from app.models.enums import DataScopeEnum
+        result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.OWN.value)
+        assert result == DataScopeEnum.OWN.value
+
+    def test_normalize_unknown_scope_returns_itself(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        result = DataScopeServiceEnhanced.normalize_scope_type("CUSTOM_SCOPE")
+        assert result == "CUSTOM_SCOPE"
+
+    # ---- get_user_org_units ----
+
+    def test_get_user_org_units_returns_list(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+        assignment = MagicMock()
+        assignment.org_unit_id = 42
+        db.query.return_value.join.return_value.filter.return_value.all.return_value = [assignment]
+
+        result = DataScopeServiceEnhanced.get_user_org_units(db, user_id=1)
+        assert 42 in result
+
+    def test_get_user_org_units_empty_on_exception(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+        db.query.side_effect = Exception("DB Error")
+
+        result = DataScopeServiceEnhanced.get_user_org_units(db, user_id=1)
+        assert result == []
+
+    # ---- _get_subtree_ids_recursive ----
+
+    def test_subtree_recursive_no_children(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+        db.query.return_value.filter.return_value.all.return_value = []
+
+        result = DataScopeServiceEnhanced._get_subtree_ids_recursive(db, org_unit_id=10)
+        assert result == {10}
+
+    def test_subtree_recursive_with_children(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+
+        child1 = MagicMock()
+        child1.id = 20
+        child2 = MagicMock()
+        child2.id = 30
+
+        def children_query(*args, **kwargs):
+            q = MagicMock()
+            # First call for org_id=10 returns 2 children, subsequent calls return []
+            q.filter.return_value.all.side_effect = [[child1, child2], [], []]
+            return q
+
+        # Patch to return children only for first call
+        call_count = [0]
+        def _query(*args, **kwargs):
+            q = MagicMock()
+            if call_count[0] == 0:
+                q.filter.return_value.all.return_value = [child1, child2]
+            else:
+                q.filter.return_value.all.return_value = []
+            call_count[0] += 1
+            return q
+
+        db.query.side_effect = _query
+
+        result = DataScopeServiceEnhanced._get_subtree_ids_recursive(db, org_unit_id=10)
+        assert 10 in result
+
+    # ---- _find_ancestor_by_type ----
+
+    def test_find_ancestor_returns_match(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+
+        org = MagicMock()
+        org.unit_type = "DEPARTMENT"
+        org.parent_id = None
+
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(db, org, "DEPARTMENT")
+        assert result is org
+
+    def test_find_ancestor_traverses_up(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+
+        child = MagicMock()
+        child.unit_type = "TEAM"
+        child.parent_id = 5
+
+        parent = MagicMock()
+        parent.unit_type = "DEPARTMENT"
+        parent.parent_id = None
+
+        db.query.return_value.filter.return_value.first.return_value = parent
+
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(db, child, "DEPARTMENT")
+        assert result is parent
+
+    def test_find_ancestor_returns_none_when_not_found(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+
+        org = MagicMock()
+        org.unit_type = "TEAM"
+        org.parent_id = None
+
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(db, org, "BUSINESS_UNIT")
+        assert result is None
+
+    # ---- can_access_data ----
+
+    def test_superuser_can_access_anything(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+        user = MagicMock()
+        user.is_superuser = True
+        data = MagicMock()
+
+        result = DataScopeServiceEnhanced.can_access_data(db, user, "Project", data)
+        assert result is True
+
+    def test_own_scope_matches_created_by(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.models.permission import ScopeType
+        db = MagicMock()
+
+        user = MagicMock()
+        user.is_superuser = False
+        user.id = 10
+
+        data = MagicMock()
+        data.created_by = 10
+        data.owner_id = None
+        data.pm_id = None
+
+        with patch("app.services.data_scope_service_enhanced.PermissionService") as MockPS:
+            MockPS.get_user_data_scopes.return_value = {"Project": ScopeType.OWN.value}
+            result = DataScopeServiceEnhanced.can_access_data(db, user, "Project", data)
+
+        assert result is True
+
+    def test_own_scope_denies_different_user(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.models.permission import ScopeType
+        db = MagicMock()
+
+        user = MagicMock()
+        user.is_superuser = False
+        user.id = 10
+
+        data = MagicMock()
+        data.created_by = 99  # different user
+        data.owner_id = None
+        data.pm_id = None
+
+        with patch("app.services.data_scope_service_enhanced.PermissionService") as MockPS:
+            MockPS.get_user_data_scopes.return_value = {"Project": ScopeType.OWN.value}
+            result = DataScopeServiceEnhanced.can_access_data(db, user, "Project", data)
+
+        assert result is False
+
+    def test_all_scope_allows_all(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.models.permission import ScopeType
+        db = MagicMock()
+
+        user = MagicMock()
+        user.is_superuser = False
+        user.id = 10
+
+        data = MagicMock()
+
+        with patch("app.services.data_scope_service_enhanced.PermissionService") as MockPS:
+            MockPS.get_user_data_scopes.return_value = {"Project": ScopeType.ALL.value}
+            result = DataScopeServiceEnhanced.can_access_data(db, user, "Project", data)
+
+        assert result is True
+
+    def test_exception_in_permission_check_returns_false(self):
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        db = MagicMock()
+
+        user = MagicMock()
+        user.is_superuser = False
+        user.id = 1
+
+        data = MagicMock()
+
+        with patch("app.services.data_scope_service_enhanced.PermissionService") as MockPS:
+            MockPS.get_user_data_scopes.side_effect = Exception("Unexpected error")
+            result = DataScopeServiceEnhanced.can_access_data(db, user, "Project", data)
+
+        assert result is False
+
+
+from unittest.mock import MagicMock, patch

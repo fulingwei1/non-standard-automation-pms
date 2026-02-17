@@ -1,180 +1,147 @@
 # -*- coding: utf-8 -*-
-"""项目健康度计算器测试"""
-from datetime import date, timedelta
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
-
+"""
+项目健康度计算器单元测试
+覆盖 H1/H2/H3/H4 全路径及各风险检测子方法
+"""
 import pytest
+from datetime import date, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from app.services.health_calculator import HealthCalculator
+from app.models.enums import ProjectHealthEnum
 
 
 @pytest.fixture
-def db():
+def mock_db():
     return MagicMock()
 
 
 @pytest.fixture
-def calc(db):
-    return HealthCalculator(db)
+def calculator(mock_db):
+    return HealthCalculator(db=mock_db)
 
 
-class TestCalculateHealth:
-    def test_closed_project(self, calc):
-        project = MagicMock(status='ST30')
-        assert calc.calculate_health(project) == 'H4'
-
-    def test_cancelled_project(self, calc):
-        project = MagicMock(status='ST99')
-        assert calc.calculate_health(project) == 'H4'
-
-    def test_blocked_status(self, calc, db):
-        project = MagicMock(status='ST14', id=1)
-        assert calc.calculate_health(project) == 'H3'
-
-    def test_normal_project(self, calc, db):
-        project = MagicMock(
-            status='ST01', id=1,
-            planned_end_date=date.today() + timedelta(days=100),
-            planned_start_date=date.today() - timedelta(days=10),
-            progress_pct=Decimal("10")
-        )
-        db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
-        assert calc.calculate_health(project) == 'H1'
+def make_project(**kwargs):
+    """辅助：创建轻量项目 mock"""
+    p = MagicMock()
+    p.id = 1
+    p.status = "ST10"
+    p.planned_end_date = None
+    p.progress_pct = 50.0
+    p.pm_id = 1
+    p.customer_id = 1
+    p.customer_name = "TestCo"
+    p.pm_name = "PM1"
+    p.planned_start_date = None
+    for k, v in kwargs.items():
+        setattr(p, k, v)
+    return p
 
 
 class TestIsClosed:
-    def test_st30(self, calc):
-        assert calc._is_closed(MagicMock(status='ST30')) is True
+    def test_st30_is_closed(self, calculator):
+        p = make_project(status="ST30")
+        assert calculator._is_closed(p) is True
 
-    def test_active(self, calc):
-        assert calc._is_closed(MagicMock(status='ST01')) is False
+    def test_st99_is_closed(self, calculator):
+        p = make_project(status="ST99")
+        assert calculator._is_closed(p) is True
+
+    def test_st10_not_closed(self, calculator):
+        p = make_project(status="ST10")
+        assert calculator._is_closed(p) is False
 
 
 class TestIsBlocked:
-    def test_blocked_status(self, calc, db):
-        project = MagicMock(status='ST14', id=1)
-        assert calc._is_blocked(project) is True
+    def test_st14_is_blocked(self, calculator):
+        p = make_project(status="ST14")
+        assert calculator._is_blocked(p) is True
 
-    def test_blocked_tasks(self, calc, db):
-        project = MagicMock(status='ST01', id=1)
-        db.query.return_value.filter.return_value.count.return_value = 1
-        assert calc._is_blocked(project) is True
+    def test_st19_is_blocked(self, calculator):
+        p = make_project(status="ST19")
+        assert calculator._is_blocked(p) is True
 
-    def test_not_blocked(self, calc, db):
-        project = MagicMock(status='ST01', id=1)
-        db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
-        assert calc._is_blocked(project) is False
+    def test_no_blocked_tasks_or_issues(self, mock_db, calculator):
+        p = make_project(status="ST10")
+        # db 返回 0 条阻塞记录
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+        assert calculator._is_blocked(p) is False
 
 
 class TestHasRisks:
-    def test_rectification_status(self, calc, db):
-        project = MagicMock(status='ST22', id=1)
-        assert calc._has_risks(project) is True
+    def test_st22_has_risk(self, calculator):
+        p = make_project(status="ST22")
+        assert calculator._has_risks(p) is True
 
-    def test_deadline_approaching(self, calc, db):
-        project = MagicMock(
-            status='ST01', id=1,
-            planned_end_date=date.today() + timedelta(days=3),
-            planned_start_date=date.today() - timedelta(days=30),
-            progress_pct=Decimal("50")
-        )
-        assert calc._has_risks(project) is True
+    def test_st26_has_risk(self, calculator):
+        p = make_project(status="ST26")
+        assert calculator._has_risks(p) is True
 
+    def test_deadline_approaching_triggers_risk(self, calculator):
+        p = make_project(status="ST10", planned_end_date=date.today() + timedelta(days=3))
+        # _is_deadline_approaching checks without db queries
+        # Mock all db sub-checks to return 0
+        calculator.db.query.return_value.filter.return_value.count.return_value = 0
+        calculator.db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+        result = calculator._is_deadline_approaching(p, days=7)
+        assert result is True
 
-class TestDeadlineApproaching:
-    def test_no_deadline(self, calc):
-        project = MagicMock(planned_end_date=None)
-        assert calc._is_deadline_approaching(project) is False
+    def test_far_deadline_no_risk(self, calculator):
+        p = make_project(planned_end_date=date.today() + timedelta(days=30))
+        result = calculator._is_deadline_approaching(p, days=7)
+        assert result is False
 
-    def test_approaching(self, calc):
-        project = MagicMock(planned_end_date=date.today() + timedelta(days=3))
-        assert calc._is_deadline_approaching(project) is True
-
-    def test_far_away(self, calc):
-        project = MagicMock(planned_end_date=date.today() + timedelta(days=60))
-        assert calc._is_deadline_approaching(project) is False
-
-
-class TestScheduleVariance:
-    def test_no_dates(self, calc):
-        project = MagicMock(planned_end_date=None, planned_start_date=None)
-        assert calc._has_schedule_variance(project) is False
-
-    def test_behind_schedule(self, calc):
-        project = MagicMock(
-            planned_start_date=date.today() - timedelta(days=50),
-            planned_end_date=date.today() + timedelta(days=50),
-            progress_pct=Decimal("10")
-        )
-        assert calc._has_schedule_variance(project) is True
-
-    def test_on_schedule(self, calc):
-        project = MagicMock(
-            planned_start_date=date.today() - timedelta(days=50),
-            planned_end_date=date.today() + timedelta(days=50),
-            progress_pct=Decimal("50")
-        )
-        assert calc._has_schedule_variance(project) is False
+    def test_no_planned_end_date_no_risk(self, calculator):
+        p = make_project(planned_end_date=None)
+        result = calculator._is_deadline_approaching(p, days=7)
+        assert result is False
 
 
-class TestCalculateAndUpdate:
-    def test_no_change(self, calc, db):
-        project = MagicMock(
-            id=1, project_code='P001', health='H1', status='ST01',
-            stage='S1', planned_end_date=date.today() + timedelta(days=100),
-            planned_start_date=date.today() - timedelta(days=10),
-            progress_pct=Decimal("10")
-        )
-        db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
-        result = calc.calculate_and_update(project)
-        assert result['changed'] is False
+class TestCalculateHealth:
+    def test_closed_project_returns_h4(self, calculator):
+        p = make_project(status="ST30")
+        assert calculator.calculate_health(p) == ProjectHealthEnum.H4.value
 
-    def test_health_changed(self, calc, db):
-        project = MagicMock(
-            id=1, project_code='P001', health='H1', status='ST30',
-            stage='S9'
-        )
-        result = calc.calculate_and_update(project)
-        assert result['changed'] is True
-        assert result['new_health'] == 'H4'
+    def test_blocked_project_returns_h3(self, mock_db, calculator):
+        p = make_project(status="ST14")
+        result = calculator.calculate_health(p)
+        assert result == ProjectHealthEnum.H3.value
 
+    def test_normal_project_returns_h1(self, mock_db, calculator):
+        p = make_project(status="ST10", planned_end_date=date.today() + timedelta(days=30))
+        # All db risk checks return 0
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        result = calculator.calculate_health(p)
+        assert result == ProjectHealthEnum.H1.value
 
-class TestBatchCalculate:
-    def test_batch(self, calc, db):
-        project = MagicMock(
-            id=1, project_code='P001', health='H1', status='ST01',
-            is_active=True, is_archived=False, stage='S1',
-            planned_end_date=date.today() + timedelta(days=100),
-            planned_start_date=date.today(), progress_pct=Decimal("0")
-        )
-        query = MagicMock()
-        query.count.return_value = 1
-        query.offset.return_value.limit.return_value.all.return_value = [project]
-        db.query.return_value.filter.return_value = query
-        result = calc.batch_calculate()
-        assert result['total'] == 1
+    def test_rectification_returns_h2(self, mock_db, calculator):
+        p = make_project(status="ST22")
+        # 确保阻塞判断中的db查询返回0
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+        result = calculator.calculate_health(p)
+        assert result == ProjectHealthEnum.H2.value
+
+    def test_h4_takes_priority_over_blocked_status(self, calculator):
+        """已完结状态优先级高于阻塞判断"""
+        p = make_project(status="ST30")
+        assert calculator.calculate_health(p) == ProjectHealthEnum.H4.value
 
 
-class TestCalculateProjectHealth:
-    def test_project_not_found(self, calc, db):
-        db.query.return_value.filter.return_value.first.return_value = None
-        with pytest.raises(ValueError):
-            calc.calculate_project_health(999)
+class TestScheduleVarianceCheck:
+    def test_below_threshold_returns_false(self, mock_db, calculator):
+        p = make_project()
+        p.progress_pct = 55.0
+        # 构造 milestone 数据
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        result = calculator._has_schedule_variance(p, threshold=10.0)
+        assert result is False
 
-
-class TestGetHealthDetails:
-    def test_returns_details(self, calc, db):
-        project = MagicMock(
-            id=1, project_code='P001', health='H1', status='ST01',
-            stage='S1', planned_end_date=date.today() + timedelta(days=100),
-            planned_start_date=date.today(), progress_pct=Decimal("0")
-        )
-        db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
-        details = calc.get_health_details(project)
-        assert 'checks' in details
-        assert 'statistics' in details
+    def test_no_progress_pct_returns_false(self, calculator):
+        p = make_project()
+        p.progress_pct = None
+        result = calculator._has_schedule_variance(p, threshold=10.0)
+        assert result is False

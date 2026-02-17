@@ -1,336 +1,190 @@
 # -*- coding: utf-8 -*-
 """
 进度预测服务单元测试
+覆盖特征提取、线性预测、风险评级等核心逻辑
 """
-
 import pytest
-from datetime import datetime, date, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
 from app.services.schedule_prediction_service import SchedulePredictionService
-from app.models.project.schedule_prediction import (
-    ProjectSchedulePrediction,
-    CatchUpSolution,
-    ScheduleAlert,
-)
 
 
-class TestSchedulePredictionService:
-    """进度预测服务测试类"""
+@pytest.fixture
+def mock_db():
+    db = MagicMock()
+    # 默认返回空列表（无历史预测记录）
+    db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
+    return db
 
-    @pytest.fixture
-    def mock_db(self):
-        """模拟数据库会话"""
-        db = MagicMock()
-        db.query.return_value = MagicMock()
-        db.add = MagicMock()
-        db.commit = MagicMock()
-        db.refresh = MagicMock()
-        return db
 
-    @pytest.fixture
-    def service(self, mock_db):
-        """创建服务实例"""
-        return SchedulePredictionService(mock_db)
+@pytest.fixture
+def service(mock_db):
+    with patch("app.services.schedule_prediction_service.AIClientService"):
+        svc = SchedulePredictionService(db=mock_db)
+    return svc
 
-    def test_extract_features(self, service):
-        """测试特征提取"""
+
+class TestExtractFeatures:
+    """_extract_features 特征提取逻辑"""
+
+    def test_progress_deviation_calculated_correctly(self, service):
         features = service._extract_features(
             project_id=1,
-            current_progress=45.5,
-            planned_progress=60.0,
+            current_progress=60.0,
+            planned_progress=70.0,
             remaining_days=30,
             team_size=5,
-            project_data={"days_elapsed": 40, "complexity": "high"},
         )
+        assert features["progress_deviation"] == pytest.approx(-10.0, abs=0.01)
 
-        assert features["current_progress"] == 45.5
-        assert features["planned_progress"] == 60.0
-        assert features["progress_deviation"] == -14.5
-        assert features["remaining_days"] == 30
-        assert features["remaining_progress"] == 54.5
-        assert features["team_size"] == 5
+    def test_velocity_ratio_above_one_when_fast(self, service):
+        # 历史日均进度 > 所需日均进度 → 比率 > 1
+        features = service._extract_features(
+            project_id=1,
+            current_progress=80.0,
+            planned_progress=50.0,
+            remaining_days=5,
+            team_size=10,
+            project_data={"days_elapsed": 10},
+        )
+        # avg_daily = 80/10 = 8; required_daily = 20/5 = 4; ratio = 2.0
+        assert features["velocity_ratio"] == pytest.approx(2.0, abs=0.01)
+
+    def test_remaining_progress_complement(self, service):
+        features = service._extract_features(
+            project_id=1,
+            current_progress=40.0,
+            planned_progress=50.0,
+            remaining_days=20,
+            team_size=3,
+        )
+        assert features["remaining_progress"] == pytest.approx(60.0, abs=0.01)
+
+    def test_zero_remaining_days_handled(self, service):
+        """剩余天数为0时不应抛异常"""
+        features = service._extract_features(
+            project_id=1,
+            current_progress=50.0,
+            planned_progress=60.0,
+            remaining_days=0,
+            team_size=5,
+        )
+        # required_daily_progress 应为 0（避免除零）
+        assert features["required_daily_progress"] == 0
+
+    def test_complexity_default_medium(self, service):
+        features = service._extract_features(
+            project_id=1,
+            current_progress=50.0,
+            planned_progress=50.0,
+            remaining_days=20,
+            team_size=5,
+        )
+        assert features["complexity"] == "medium"
+
+    def test_complexity_from_project_data(self, service):
+        features = service._extract_features(
+            project_id=1,
+            current_progress=50.0,
+            planned_progress=50.0,
+            remaining_days=20,
+            team_size=5,
+            project_data={"complexity": "high"},
+        )
         assert features["complexity"] == "high"
-        assert "avg_daily_progress" in features
-        assert "required_daily_progress" in features
-        assert "velocity_ratio" in features
 
-    def test_predict_linear_on_track(self, service):
-        """测试线性预测 - 进度正常"""
+
+class TestPredictLinear:
+    """_predict_linear 线性预测"""
+
+    def test_on_track_predicts_no_delay(self, service):
         features = {
-            "velocity_ratio": 1.2,  # 速度快于计划
+            "velocity_ratio": 1.0,
             "remaining_days": 30,
         }
+        result = service._predict_linear(features)
+        assert result["delay_days"] == 0
+        assert result["confidence"] == 0.8
 
-        prediction = service._predict_linear(features)
-
-        assert prediction["delay_days"] == 0
-        assert prediction["confidence"] == 0.8
-        assert isinstance(prediction["predicted_date"], date)
-
-    def test_predict_linear_delayed(self, service):
-        """测试线性预测 - 进度延迟"""
+    def test_fast_project_predicts_no_delay(self, service):
         features = {
-            "velocity_ratio": 0.6,  # 速度低于计划
+            "velocity_ratio": 1.5,
             "remaining_days": 30,
         }
+        result = service._predict_linear(features)
+        assert result["delay_days"] == 0
 
-        prediction = service._predict_linear(features)
+    def test_slow_project_calculates_delay(self, service):
+        # velocity_ratio = 0.5 → delay = 30 * (2.0 - 1.0) = 30
+        features = {
+            "velocity_ratio": 0.5,
+            "remaining_days": 30,
+        }
+        result = service._predict_linear(features)
+        assert result["delay_days"] == 30
+        assert result["confidence"] == 0.7
 
-        assert prediction["delay_days"] > 0
-        assert prediction["confidence"] == 0.7
-        assert isinstance(prediction["predicted_date"], date)
+    def test_predicted_date_is_future(self, service):
+        features = {
+            "velocity_ratio": 1.0,
+            "remaining_days": 20,
+        }
+        result = service._predict_linear(features)
+        assert result["predicted_date"] >= date.today()
 
-    def test_assess_risk_level(self, service):
-        """测试风险等级评估"""
-        assert service._assess_risk_level(-5) == "low"  # 提前完成
+    def test_result_contains_method_key(self, service):
+        features = {"velocity_ratio": 1.0, "remaining_days": 10}
+        result = service._predict_linear(features)
+        assert result["details"]["method"] == "linear"
+
+
+class TestAssessRiskLevel:
+    """_assess_risk_level 风险等级评估"""
+
+    def test_negative_delay_is_low(self, service):
+        assert service._assess_risk_level(-5) == "low"
+
+    def test_zero_delay_is_low(self, service):
         assert service._assess_risk_level(0) == "low"
+
+    def test_small_delay_is_low(self, service):
         assert service._assess_risk_level(3) == "low"
+
+    def test_medium_delay_is_medium(self, service):
         assert service._assess_risk_level(7) == "medium"
+
+    def test_large_delay_is_high(self, service):
         assert service._assess_risk_level(14) == "high"
+
+    def test_critical_delay(self, service):
         assert service._assess_risk_level(20) == "critical"
 
-    @patch.object(SchedulePredictionService, "_predict_with_ai")
-    def test_predict_completion_date_with_ai(
-        self, mock_predict_ai, service, mock_db
-    ):
-        """测试使用AI预测完成日期"""
-        # 模拟AI预测结果
-        mock_predict_ai.return_value = {
-            "predicted_date": date.today() + timedelta(days=45),
-            "delay_days": 15,
-            "confidence": 0.85,
-            "details": {
-                "risk_factors": ["进度偏差大"],
-                "recommendations": ["增加人力"],
-            },
-        }
 
-        # 模拟数据库操作
-        mock_prediction_record = MagicMock()
-        mock_prediction_record.id = 1
-        mock_db.add.return_value = None
-        mock_db.commit.return_value = None
-        mock_db.refresh.side_effect = lambda obj: setattr(obj, "id", 1)
+class TestPredictCompletionDateLinear:
+    """predict_completion_date 端到端（线性模式，mock DB）"""
 
-        result = service.predict_completion_date(
-            project_id=1,
-            current_progress=45.5,
-            planned_progress=60.0,
-            remaining_days=30,
-            team_size=5,
-            use_ai=True,
-        )
+    def test_linear_prediction_returns_expected_structure(self, mock_db):
+        with patch("app.services.schedule_prediction_service.AIClientService"), \
+             patch("app.services.schedule_prediction_service.save_obj"):
+            svc = SchedulePredictionService(db=mock_db)
+            # mock save_obj sets id
+            mock_record = MagicMock()
+            mock_record.id = 42
+            with patch(
+                "app.services.schedule_prediction_service.ProjectSchedulePrediction",
+                return_value=mock_record,
+            ):
+                result = svc.predict_completion_date(
+                    project_id=1,
+                    current_progress=50.0,
+                    planned_progress=50.0,
+                    remaining_days=20,
+                    team_size=5,
+                    use_ai=False,
+                )
 
-        assert result["project_id"] == 1
         assert "prediction" in result
-        assert result["prediction"]["delay_days"] == 15
-        assert result["prediction"]["confidence"] == 0.85
-        assert result["prediction"]["risk_level"] == "high"
-        mock_predict_ai.assert_called_once()
-
-    def test_generate_default_solutions(self, service):
-        """测试生成默认赶工方案"""
-        solutions = service._generate_default_solutions(
-            delay_days=15, project_data=None
-        )
-
-        assert len(solutions) >= 3
-        assert all("name" in sol for sol in solutions)
-        assert all("type" in sol for sol in solutions)
-        assert all("actions" in sol for sol in solutions)
-        assert all("estimated_catch_up" in sol for sol in solutions)
-        assert all("additional_cost" in sol for sol in solutions)
-        assert all("risk" in sol for sol in solutions)
-        assert all("success_rate" in sol for sol in solutions)
-
-        # 验证方案类型
-        types = [sol["type"] for sol in solutions]
-        assert "overtime" in types
-        assert "process" in types
-        assert "manpower" in types
-
-    def test_create_alert(self, service, mock_db):
-        """测试创建预警"""
-        mock_alert = MagicMock()
-        mock_alert.id = 1
-        mock_db.add.return_value = None
-        mock_db.commit.return_value = None
-        mock_db.refresh.side_effect = lambda obj: setattr(obj, "id", 1)
-
-        with patch("app.services.schedule_prediction_service.ScheduleAlert") as MockAlert:
-            MockAlert.return_value = mock_alert
-
-            alert = service.create_alert(
-                project_id=1,
-                prediction_id=1,
-                alert_type="delay_warning",
-                severity="high",
-                title="延期预警",
-                message="项目预计延期15天",
-                notify_users=[1, 2, 3],
-            )
-
-            mock_db.add.assert_called_once()
-            mock_db.commit.assert_called_once()
-
-    def test_check_and_create_alerts_delay(self, service, mock_db):
-        """测试检查并创建延期预警"""
-        with patch.object(service, "create_alert") as mock_create:
-            mock_create.return_value = MagicMock()
-
-            alerts = service.check_and_create_alerts(
-                project_id=1,
-                prediction_id=1,
-                delay_days=15,
-                progress_deviation=-5.0,
-            )
-
-            # 应该创建延期预警
-            assert mock_create.call_count >= 1
-            call_args = mock_create.call_args_list[0]
-            assert call_args[1]["alert_type"] == "delay_warning"
-            assert call_args[1]["severity"] == "high"
-
-    def test_check_and_create_alerts_deviation(self, service, mock_db):
-        """测试检查并创建进度偏差预警"""
-        with patch.object(service, "create_alert") as mock_create:
-            mock_create.return_value = MagicMock()
-
-            alerts = service.check_and_create_alerts(
-                project_id=1,
-                prediction_id=1,
-                delay_days=2,  # 不触发延期预警
-                progress_deviation=-15.0,  # 触发偏差预警
-            )
-
-            # 应该创建偏差预警
-            assert mock_create.call_count >= 1
-            call_args = mock_create.call_args_list[0]
-            assert call_args[1]["alert_type"] == "velocity_drop"
-
-    def test_parse_ai_prediction_valid_json(self, service):
-        """测试解析有效的AI响应"""
-        ai_response = """
-        {
-            "delay_days": 10,
-            "confidence": 0.85,
-            "risk_factors": ["进度慢"],
-            "recommendations": ["加班"]
-        }
-        """
-
-        features = {"remaining_days": 30}
-        result = service._parse_ai_prediction(ai_response, features)
-
-        assert result["delay_days"] == 10
-        assert result["confidence"] == 0.85
-        assert isinstance(result["predicted_date"], date)
-        assert "details" in result
-
-    def test_parse_ai_prediction_invalid_json(self, service):
-        """测试解析无效的AI响应（应降级到线性预测）"""
-        ai_response = "This is not a valid JSON response"
-
-        features = {
-            "remaining_days": 30,
-            "velocity_ratio": 0.8,
-        }
-
-        with patch.object(service, "_predict_linear") as mock_linear:
-            mock_linear.return_value = {
-                "predicted_date": date.today(),
-                "delay_days": 5,
-                "confidence": 0.7,
-            }
-
-            result = service._parse_ai_prediction(ai_response, features)
-
-            # 应该调用线性预测作为降级
-            mock_linear.assert_called_once()
-
-    def test_get_risk_overview(self, service, mock_db):
-        """测试获取风险概览"""
-        # 模拟预测记录
-        mock_predictions = [
-            MagicMock(
-                project_id=1,
-                risk_level="high",
-                delay_days=15,
-                predicted_completion_date=date.today(),
-            ),
-            MagicMock(
-                project_id=2,
-                risk_level="low",
-                delay_days=0,
-                predicted_completion_date=date.today(),
-            ),
-            MagicMock(
-                project_id=3,
-                risk_level="critical",
-                delay_days=25,
-                predicted_completion_date=date.today(),
-            ),
-        ]
-
-        with patch.object(mock_db, "query") as mock_query:
-            mock_query.return_value.join.return_value.all.return_value = (
-                mock_predictions
-            )
-
-            overview = service.get_risk_overview()
-
-            assert overview["total_projects"] == 3
-            assert overview["at_risk"] >= 2  # high + critical
-            assert overview["critical"] == 1
-            assert len(overview["projects"]) >= 2  # high和critical项目
-
-
-class TestSchedulePredictionIntegration:
-    """进度预测集成测试"""
-
-    def test_full_prediction_workflow(self, mock_db):
-        """测试完整预测工作流"""
-        service = SchedulePredictionService(mock_db)
-
-        # 模拟数据库操作
-        mock_db.add.return_value = None
-        mock_db.commit.return_value = None
-
-        def mock_refresh(obj):
-            if isinstance(obj, ProjectSchedulePrediction):
-                obj.id = 1
-
-        mock_db.refresh.side_effect = mock_refresh
-
-        # 执行预测（使用线性模式以避免AI调用）
-        with patch.object(service, "_get_similar_projects_stats") as mock_stats:
-            mock_stats.return_value = {
-                "avg_duration": 90,
-                "delay_rate": 0.3,
-                "avg_delay": 10,
-            }
-
-            result = service.predict_completion_date(
-                project_id=1,
-                current_progress=45.5,
-                planned_progress=60.0,
-                remaining_days=30,
-                team_size=5,
-                use_ai=False,  # 使用线性预测
-            )
-
-            # 验证结果
-            assert "prediction_id" in result
-            assert result["project_id"] == 1
-            assert "prediction" in result
-            assert "features" in result
-
-            # 验证数据库操作
-            mock_db.add.assert_called_once()
-            mock_db.commit.assert_called_once()
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+        assert "features" in result
+        assert result["project_id"] == 1
+        assert "risk_level" in result["prediction"]

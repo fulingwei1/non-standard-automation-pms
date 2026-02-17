@@ -630,3 +630,109 @@ class TestGradeRules:
 
         assert calculator.calculate_grade(Decimal('0')) == 'D'
         assert calculator.calculate_grade(Decimal('39')) == 'D'
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# G4 补充测试 - PerformanceCalculator
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestPerformanceCalculatorG4:
+    """G4 补充：performance_calculator 额外覆盖"""
+
+    def setup_method(self):
+        self.db = MagicMock()
+
+    def _make_calculator(self):
+        from app.services.engineer_performance.performance_calculator import PerformanceCalculator
+        return PerformanceCalculator(self.db)
+
+    # ---- calculate_grade 边界值 ----
+
+    def test_grade_84_is_A(self):
+        calc = self._make_calculator()
+        from decimal import Decimal
+        assert calc.calculate_grade(Decimal('84')) == 'A'
+
+    def test_grade_85_is_S(self):
+        calc = self._make_calculator()
+        from decimal import Decimal
+        assert calc.calculate_grade(Decimal('85')) == 'S'
+
+    def test_grade_60_is_B(self):
+        calc = self._make_calculator()
+        from decimal import Decimal
+        assert calc.calculate_grade(Decimal('60')) == 'B'
+
+    def test_grade_39_is_D(self):
+        calc = self._make_calculator()
+        from decimal import Decimal
+        assert calc.calculate_grade(Decimal('39')) == 'D'
+
+    # ---- calculate_dimension_score: 未知岗位类型抛异常 ----
+
+    def test_unknown_job_type_raises(self):
+        """传入未知岗位类型时应抛出 ValueError"""
+        calc = self._make_calculator()
+        period = MagicMock()
+        self.db.query.return_value.filter.return_value.first.return_value = period
+
+        import pytest
+        with pytest.raises(ValueError, match="未知的岗位类型"):
+            calc.calculate_dimension_score(
+                engineer_id=1, period_id=1, job_type="unknown_type"
+            )
+
+    # ---- calculate_dimension_score: 周期不存在 ----
+
+    def test_missing_period_raises(self):
+        """考核周期不存在时抛出 ValueError"""
+        calc = self._make_calculator()
+        self.db.query.return_value.filter.return_value.first.return_value = None
+
+        import pytest
+        with pytest.raises(ValueError, match="考核周期不存在"):
+            calc.calculate_dimension_score(
+                engineer_id=1, period_id=999, job_type="mechanical"
+            )
+
+    # ---- calculate_total_score ----
+
+    def test_total_score_weighted(self):
+        """加权总分计算正确"""
+        calc = self._make_calculator()
+        from app.schemas.engineer_performance import EngineerDimensionScore
+        from decimal import Decimal
+
+        scores = EngineerDimensionScore(
+            technical_score=Decimal('80'),
+            execution_score=Decimal('90'),
+            cost_quality_score=Decimal('70'),
+            knowledge_score=Decimal('60'),
+            collaboration_score=Decimal('85'),
+        )
+        config = MagicMock()
+        config.technical_weight = 40
+        config.execution_weight = 20
+        config.cost_quality_weight = 15
+        config.knowledge_weight = 15
+        config.collaboration_weight = 10
+
+        result = calc.calculate_total_score(scores, config)
+        # 80*40 + 90*20 + 70*15 + 60*15 + 85*10 = 3200+1800+1050+900+850 = 7800 / 100 = 78
+        assert result == Decimal('78.00') or float(result) == pytest.approx(78.0, rel=1e-2)
+
+    # ---- _get_collaboration_avg: 无评价时返回默认值 ----
+
+    def test_collaboration_avg_no_data(self):
+        """没有协作评价时返回默认值"""
+        calc = self._make_calculator()
+        q = MagicMock()
+        q.filter.return_value = q
+        q.scalar.return_value = None
+        q.count.return_value = 0
+        self.db.query.return_value = q
+
+        result = calc._get_collaboration_avg(engineer_id=1, period_id=1)
+        # 无评价时应返回某个默认 Decimal 分数
+        from decimal import Decimal
+        assert isinstance(result, (Decimal, int, float))

@@ -450,3 +450,241 @@ class TestRouterServiceIntegration:
         assert hasattr(service, "get_next_nodes")
         assert hasattr(service, "_evaluate_conditions")
         assert hasattr(service, "_compare")
+
+
+# =============================================================================
+# 补充测试 A组覆盖率提升 (2026-02-17)
+# =============================================================================
+
+class TestApprovalRouterServiceMock:
+    """ApprovalRouterService 快速单元测试（MagicMock）"""
+
+    def _make_service(self):
+        db = MagicMock()
+        from app.services.approval_engine.router import ApprovalRouterService
+        return ApprovalRouterService(db), db
+
+    # ---- _compare 操作符 ----
+
+    def test_compare_eq(self):
+        svc, _ = self._make_service()
+        assert svc._compare(5, "==", 5) is True
+        assert svc._compare(5, "==", 6) is False
+
+    def test_compare_neq(self):
+        svc, _ = self._make_service()
+        assert svc._compare(5, "!=", 6) is True
+        assert svc._compare(5, "!=", 5) is False
+
+    def test_compare_gt(self):
+        svc, _ = self._make_service()
+        assert svc._compare(10, ">", 5) is True
+        assert svc._compare(5, ">", 10) is False
+        assert svc._compare(None, ">", 5) is False
+
+    def test_compare_gte(self):
+        svc, _ = self._make_service()
+        assert svc._compare(5, ">=", 5) is True
+        assert svc._compare(4, ">=", 5) is False
+
+    def test_compare_lt_lte(self):
+        svc, _ = self._make_service()
+        assert svc._compare(3, "<", 5) is True
+        assert svc._compare(5, "<=", 5) is True
+
+    def test_compare_in(self):
+        svc, _ = self._make_service()
+        assert svc._compare("A", "in", ["A", "B"]) is True
+        assert svc._compare("C", "in", ["A", "B"]) is False
+        assert svc._compare("A", "in", None) is False
+
+    def test_compare_not_in(self):
+        svc, _ = self._make_service()
+        assert svc._compare("C", "not_in", ["A", "B"]) is True
+        assert svc._compare("A", "not_in", None) is True
+
+    def test_compare_between(self):
+        svc, _ = self._make_service()
+        assert svc._compare(5, "between", [1, 10]) is True
+        assert svc._compare(15, "between", [1, 10]) is False
+        assert svc._compare(None, "between", [1, 10]) is False
+
+    def test_compare_contains(self):
+        svc, _ = self._make_service()
+        assert svc._compare("hello world", "contains", "world") is True
+        assert svc._compare(None, "contains", "x") is False
+
+    def test_compare_starts_with(self):
+        svc, _ = self._make_service()
+        assert svc._compare("foobar", "starts_with", "foo") is True
+        assert svc._compare(None, "starts_with", "foo") is False
+
+    def test_compare_ends_with(self):
+        svc, _ = self._make_service()
+        assert svc._compare("foobar", "ends_with", "bar") is True
+
+    def test_compare_is_null(self):
+        svc, _ = self._make_service()
+        assert svc._compare(None, "is_null", True) is True
+        assert svc._compare("x", "is_null", True) is False
+
+    def test_compare_regex(self):
+        svc, _ = self._make_service()
+        assert svc._compare("abc123", "regex", r"\w+") is True
+
+    def test_compare_unknown_op_returns_false(self):
+        svc, _ = self._make_service()
+        assert svc._compare(1, "weird_op", 1) is False
+
+    def test_compare_type_error_returns_false(self):
+        svc, _ = self._make_service()
+        # Comparing string to int with > should return False (not raise)
+        result = svc._compare("text", ">", 5)
+        assert result is False
+
+    # ---- _get_field_value ----
+
+    def test_get_field_value_empty_returns_none(self):
+        svc, _ = self._make_service()
+        assert svc._get_field_value("", {}) is None
+
+    def test_get_field_value_nested(self):
+        svc, _ = self._make_service()
+        ctx = {"form": {"leave_days": 5}}
+        assert svc._get_field_value("form.leave_days", ctx) == 5
+
+    def test_get_field_value_missing_key(self):
+        svc, _ = self._make_service()
+        assert svc._get_field_value("entity.amount", {}) is None
+
+    # ---- _evaluate_conditions ----
+
+    def test_evaluate_and_conditions_all_true(self):
+        svc, _ = self._make_service()
+        conditions = {
+            "operator": "AND",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 100},
+                {"field": "form.days", "op": "<=", "value": 30},
+            ]
+        }
+        ctx = {"form": {"amount": 500, "days": 15}}
+        assert svc._evaluate_conditions(conditions, ctx) is True
+
+    def test_evaluate_and_conditions_one_false(self):
+        svc, _ = self._make_service()
+        conditions = {
+            "operator": "AND",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 100},
+                {"field": "form.days", "op": "<=", "value": 10},
+            ]
+        }
+        ctx = {"form": {"amount": 500, "days": 20}}
+        assert svc._evaluate_conditions(conditions, ctx) is False
+
+    def test_evaluate_or_conditions_one_true(self):
+        svc, _ = self._make_service()
+        conditions = {
+            "operator": "OR",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 9999},
+                {"field": "form.type", "op": "==", "value": "STANDARD"},
+            ]
+        }
+        ctx = {"form": {"amount": 100, "type": "STANDARD"}}
+        assert svc._evaluate_conditions(conditions, ctx) is True
+
+    def test_evaluate_empty_items_returns_true(self):
+        svc, _ = self._make_service()
+        assert svc._evaluate_conditions({"operator": "AND", "items": []}, {}) is True
+
+    # ---- select_flow ----
+
+    def test_select_flow_returns_default_when_no_rules(self):
+        svc, db = self._make_service()
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+
+        default_flow = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = default_flow
+
+        result = svc.select_flow(template_id=1, context={})
+        assert result is default_flow
+
+    def test_select_flow_matches_rule(self):
+        svc, db = self._make_service()
+
+        rule = MagicMock()
+        rule.conditions = {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]}
+        matched_flow = MagicMock()
+        rule.flow = matched_flow
+
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [rule]
+
+        result = svc.select_flow(template_id=1, context={"form": {"amount": 5000}})
+        assert result is matched_flow
+
+    # ---- resolve_approvers ----
+
+    def test_resolve_fixed_user(self):
+        svc, _ = self._make_service()
+        node = MagicMock()
+        node.approver_type = "FIXED_USER"
+        node.approver_config = {"user_ids": [1, 2, 3]}
+        result = svc.resolve_approvers(node, {})
+        assert result == [1, 2, 3]
+
+    def test_resolve_initiator(self):
+        svc, _ = self._make_service()
+        node = MagicMock()
+        node.approver_type = "INITIATOR"
+        node.approver_config = {}
+        ctx = {"initiator": {"id": 42}}
+        result = svc.resolve_approvers(node, ctx)
+        assert result == [42]
+
+    def test_resolve_form_field(self):
+        svc, _ = self._make_service()
+        node = MagicMock()
+        node.approver_type = "FORM_FIELD"
+        node.approver_config = {"field_name": "approver_id"}
+        ctx = {"form_data": {"approver_id": 7}}
+        result = svc.resolve_approvers(node, ctx)
+        assert result == [7]
+
+    def test_resolve_unknown_type_returns_empty(self):
+        svc, _ = self._make_service()
+        node = MagicMock()
+        node.approver_type = "UNKNOWN_TYPE"
+        node.approver_config = {}
+        result = svc.resolve_approvers(node, {})
+        assert result == []
+
+    # ---- get_next_nodes ----
+
+    def test_get_next_nodes_returns_empty_when_no_next(self):
+        svc, db = self._make_service()
+        node = MagicMock()
+        node.flow_id = 1
+        node.node_order = 5
+
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        result = svc.get_next_nodes(node, {})
+        assert result == []
+
+    def test_get_next_nodes_returns_next_sequential_node(self):
+        svc, db = self._make_service()
+        current_node = MagicMock()
+        current_node.flow_id = 1
+        current_node.node_order = 1
+
+        next_node = MagicMock()
+        next_node.node_type = "APPROVAL"
+
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [next_node]
+        result = svc.get_next_nodes(current_node, {})
+        assert result == [next_node]
+
+
+from unittest.mock import MagicMock, patch
+import pytest

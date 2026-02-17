@@ -166,3 +166,6 @@ class PresaleAIGenerationLog(Base):
         Index('idx_request_type', 'request_type'),
         Index('idx_created_at', 'created_at'),
     )
+
+# Backward-compatible alias
+PresaleSolutionTemplate = PresaleAISolutionTemplate
