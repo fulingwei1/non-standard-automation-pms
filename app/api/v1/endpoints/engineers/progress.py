@@ -21,6 +21,7 @@ from app.services.task_progress_service import (
  progress_error_to_http,
  update_task_progress as update_task_progress_service,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +76,7 @@ def complete_task(
     完成任务（含证明材料验证）
     """
     # 获取任务
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证权限
     if task.assignee_id != current_user.id:

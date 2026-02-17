@@ -78,33 +78,23 @@ def create_work_order(
     """
     # 检查项目是否存在
     if order_in.project_id:
-        project = db.query(Project).filter(Project.id == order_in.project_id).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="项目不存在")
+        project = get_or_404(db, Project, order_in.project_id, "项目不存在")
 
     # 检查机台是否存在
     if order_in.machine_id:
-        machine = db.query(Machine).filter(Machine.id == order_in.machine_id).first()
-        if not machine:
-            raise HTTPException(status_code=404, detail="机台不存在")
+        machine = get_or_404(db, Machine, order_in.machine_id, "机台不存在")
 
     # 检查生产计划是否存在
     if order_in.production_plan_id:
-        plan = db.query(ProductionPlan).filter(ProductionPlan.id == order_in.production_plan_id).first()
-        if not plan:
-            raise HTTPException(status_code=404, detail="生产计划不存在")
+        plan = get_or_404(db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
 
     # 检查车间是否存在
     if order_in.workshop_id:
-        workshop = db.query(Workshop).filter(Workshop.id == order_in.workshop_id).first()
-        if not workshop:
-            raise HTTPException(status_code=404, detail="车间不存在")
+        workshop = get_or_404(db, Workshop, order_in.workshop_id, "车间不存在")
 
     # 检查工位是否存在
     if order_in.workstation_id:
-        workstation = db.query(Workstation).filter(Workstation.id == order_in.workstation_id).first()
-        if not workstation:
-            raise HTTPException(status_code=404, detail="工位不存在")
+        workstation = get_or_404(db, Workstation, order_in.workstation_id, "工位不存在")
         if workstation.workshop_id != order_in.workshop_id:
             raise HTTPException(status_code=400, detail="工位不属于该车间")
 

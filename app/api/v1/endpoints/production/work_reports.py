@@ -71,9 +71,7 @@ def start_work_report(
     """
     开工报告（扫码开工）
     """
-    work_order = db.query(WorkOrder).filter(WorkOrder.id == report_in.work_order_id).first()
-    if not work_order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    work_order = get_or_404(db, WorkOrder, report_in.work_order_id, "工单不存在")
 
     if work_order.status != "ASSIGNED":
         raise HTTPException(status_code=400, detail="只有已派工的工单才能开工")
@@ -127,9 +125,7 @@ def progress_work_report(
     """
     进度上报
     """
-    work_order = db.query(WorkOrder).filter(WorkOrder.id == report_in.work_order_id).first()
-    if not work_order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    work_order = get_or_404(db, WorkOrder, report_in.work_order_id, "工单不存在")
 
     if work_order.status not in ["STARTED", "PAUSED"]:
         raise HTTPException(status_code=400, detail="只有已开始或已暂停的工单才能上报进度")
@@ -176,9 +172,7 @@ def complete_work_report(
     """
     完工报告（数量/合格数）
     """
-    work_order = db.query(WorkOrder).filter(WorkOrder.id == report_in.work_order_id).first()
-    if not work_order:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    work_order = get_or_404(db, WorkOrder, report_in.work_order_id, "工单不存在")
 
     if work_order.status not in ["STARTED", "PAUSED"]:
         raise HTTPException(status_code=400, detail="只有已开始或已暂停的工单才能完工")

@@ -26,6 +26,7 @@ from app.models.user import User
 from app.schemas.task_center import (
     TaskUnifiedResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -53,9 +54,7 @@ def get_task_detail(
     """
     任务详情
     """
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 检查权限（只有执行人可以查看）
     if task.assignee_id != current_user.id:

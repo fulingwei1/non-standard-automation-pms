@@ -14,6 +14,7 @@ from app.core import security
 from app.core.config import settings
 from app.models.service import KnowledgeBase
 from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ async def download_knowledge_document(
     """
     下载知识库文档
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     if not article.file_path:
         raise HTTPException(status_code=404, detail="该文章没有附件")

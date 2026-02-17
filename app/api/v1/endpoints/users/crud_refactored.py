@@ -19,6 +19,7 @@ from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .utils import build_user_response, ensure_employee_unbound, prepare_employee_for_new_user, replace_user_roles
 
@@ -196,9 +197,7 @@ def read_user_by_id(
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """获取指定用户"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, user_id, "用户不存在")
     if user.id != current_user.id and not security.check_permission(current_user, "user:read"):
         raise HTTPException(status_code=403, detail="权限不足")
     
@@ -219,9 +218,7 @@ def update_user(
     current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """更新用户信息"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, user_id, "用户不存在")
 
     old_is_active = user.is_active
     old_data = {"email": user.email, "phone": user.phone, "real_name": user.real_name,
@@ -232,9 +229,7 @@ def update_user(
     new_employee_id = update_data.pop("employee_id", None)
 
     if new_employee_id and new_employee_id != user.employee_id:
-        employee = db.query(Employee).filter(Employee.id == new_employee_id).first()
-        if not employee:
-            raise HTTPException(status_code=404, detail="员工不存在")
+        employee = get_or_404(db, Employee, new_employee_id, "员工不存在")
         ensure_employee_unbound(db, employee.id, user.id)
         user.employee_id = employee.id
         if not update_data.get("employee_no"):
@@ -292,9 +287,7 @@ def assign_user_roles(
     current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """分配用户角色"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, user_id, "用户不存在")
 
     replace_user_roles(db, user.id, role_data.role_ids)
     db.commit()
@@ -322,9 +315,7 @@ def delete_user(
     current_user: User = Depends(security.require_permission("user:delete")),
 ) -> Any:
     """删除/禁用用户（软删除）"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, user_id, "用户不存在")
 
     if user.is_superuser:
         raise HTTPException(status_code=400, detail="不能删除超级管理员")

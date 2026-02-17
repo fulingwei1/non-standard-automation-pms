@@ -24,6 +24,7 @@ from app.schemas.technical_review import (
 from .utils import generate_issue_no, update_review_issue_counts
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -59,9 +60,7 @@ def create_review_issue(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审问题"""
-    review = db.query(TechnicalReview).filter(TechnicalReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="技术评审不存在")
+    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     issue_no = generate_issue_no(db)
 
@@ -95,9 +94,7 @@ def update_review_issue(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新评审问题"""
-    issue = db.query(ReviewIssue).filter(ReviewIssue.id == issue_id).first()
-    if not issue:
-        raise HTTPException(status_code=404, detail="评审问题不存在")
+    issue = get_or_404(db, ReviewIssue, issue_id, "评审问题不存在")
 
     update_data = issue_in.dict(exclude_unset=True)
     for field, value in update_data.items():

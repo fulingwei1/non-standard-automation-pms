@@ -126,31 +126,72 @@ def fix_db_helpers_import(content: str, use_get_or_404: bool, use_save_obj: bool
     return content, True
 
 
+def find_import_end_line(lines: list, start_idx: int) -> int:
+    """
+    找到一个import语句实际结束的行（处理多行括号import）
+    
+    例如:
+        from foo import (   <- start_idx
+            Bar,
+            Baz,
+        )                   <- 返回这行的索引
+    """
+    line = lines[start_idx]
+    # 如果行内括号不平衡，说明是多行导入
+    open_parens = line.count('(') - line.count(')')
+    if open_parens <= 0:
+        return start_idx
+    
+    # 向后找括号闭合
+    idx = start_idx + 1
+    while idx < len(lines) and open_parens > 0:
+        l = lines[idx]
+        open_parens += l.count('(') - l.count(')')
+        if open_parens <= 0:
+            return idx
+        idx += 1
+    return idx - 1
+
+
 def insert_import_line(content: str, import_line: str) -> str:
-    """在合适位置插入import行"""
+    """在合适位置插入import行（只处理顶层无缩进的import，正确处理多行import）"""
     lines = content.split('\n')
     
-    # 找最后一个 'from app.' 导入行
-    last_app_import_idx = -1
-    last_import_idx = -1
+    # 只扫描顶层（无缩进）的import语句
+    last_app_import_end = -1   # from app.* 最后一个顶层import的结束行
+    last_import_end = -1       # 任意顶层import的最后结束行
     
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.startswith('from app.') or stripped.startswith('import app.'):
-            last_app_import_idx = i
-        if stripped.startswith('from ') or stripped.startswith('import '):
-            last_import_idx = i
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # 必须是无缩进的行
+        if line and not line[0].isspace():
+            stripped = line.strip()
+            if stripped.startswith('from ') or stripped.startswith('import '):
+                end = find_import_end_line(lines, i)
+                last_import_end = end
+                if stripped.startswith('from app.') or stripped.startswith('import app.'):
+                    last_app_import_end = end
+                i = end + 1
+                continue
+        i += 1
     
-    insert_after = last_app_import_idx if last_app_import_idx >= 0 else last_import_idx
+    insert_after = last_app_import_end if last_app_import_end >= 0 else last_import_end
     
     if insert_after < 0:
-        # 找到 docstring 结束位置
+        # 找到模块docstring结束位置
         insert_after = 0
-        for i, line in enumerate(lines[:20]):
+        in_doc = False
+        for i, line in enumerate(lines[:30]):
             stripped = line.strip()
-            if stripped.startswith('"""') and i > 0:
+            if not in_doc and (stripped.startswith('"""') or stripped.startswith("'''")):
+                if stripped.count('"""') >= 2 or stripped.count("'''") >= 2:
+                    insert_after = i  # 单行docstring
+                else:
+                    in_doc = True
+            elif in_doc and ('"""' in stripped or "'''" in stripped):
                 insert_after = i
-                break
+                in_doc = False
     
     lines.insert(insert_after + 1, import_line)
     return '\n'.join(lines)
@@ -168,32 +209,28 @@ def apply_rule1_get_or_404(content: str) -> tuple[str, int]:
     
     注意: 只替换 detail 为简单字符串（不含f-string、变量等）
     """
-    count = 0
+    count = [0]
     
-    # 支持单行查询 + 2行if块（精确匹配简单字符串detail）
+    # 使用宽松匹配: detail 是简单字符串（非f-string），status_code 和 detail 顺序不限
     pattern = re.compile(
         r'^(?P<indent>[ \t]*)(?P<var>\w+)\s*=\s*db\.query\((?P<model>\w+)\)\.filter\('
         r'(?P=model)\.id\s*==\s*(?P<id_val>\w+)\)\.first\(\)\s*\n'
         r'(?P=indent)if\s+not\s+(?P=var)\s*:\s*\n'
-        r'(?P=indent)[ \t]+raise\s+HTTPException\s*\('
-        r'(?:\s*status_code\s*=\s*404\s*,\s*detail\s*=\s*(?P<detail>["\'][^"\']*["\'])\s*'
-        r'|\s*detail\s*=\s*(?P<detail2>["\'][^"\']*["\'])\s*,\s*status_code\s*=\s*404\s*)'
-        r'\)',
+        r'(?P=indent)[ \t]+raise\s+HTTPException\s*\([^)]*?detail\s*=\s*(?P<detail>["\'][^"\']*["\'])[^)]*?\)',
         re.MULTILINE
     )
     
     def replacer(m):
-        nonlocal count
+        count[0] += 1
         indent = m.group('indent')
         var = m.group('var')
         model = m.group('model')
         id_val = m.group('id_val')
-        detail = m.group('detail') or m.group('detail2')
-        count += 1
+        detail = m.group('detail')
         return f'{indent}{var} = get_or_404(db, {model}, {id_val}, {detail})'
     
     content = pattern.sub(replacer, content)
-    return content, count
+    return content, count[0]
 
 
 def apply_rule2_save_obj(content: str) -> tuple[str, int]:
@@ -207,7 +244,7 @@ def apply_rule2_save_obj(content: str) -> tuple[str, int]:
     ->
     return save_obj(db, obj)
     """
-    count = 0
+    count = [0]
     
     pattern = re.compile(
         r'^(?P<indent>[ \t]*)db\.add\((?P<obj>\w+)\)\s*\n'
@@ -218,14 +255,13 @@ def apply_rule2_save_obj(content: str) -> tuple[str, int]:
     )
     
     def replacer(m):
-        nonlocal count
+        count[0] += 1
         indent = m.group('indent')
         obj = m.group('obj')
-        count += 1
         return f'{indent}return save_obj(db, {obj})'
     
     content = pattern.sub(replacer, content)
-    return content, count
+    return content, count[0]
 
 
 def process_file(rel_path: str) -> dict:

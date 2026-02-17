@@ -21,6 +21,7 @@ from app.schemas.common import BatchOperationResponse
 from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.task_progress_service import apply_task_progress_update
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .batch_helpers import log_task_operation
 
@@ -39,9 +40,7 @@ def batch_transfer_tasks(
     """
     批量转办任务
     """
-    target_user = db.query(User).filter(User.id == target_user_id).first()
-    if not target_user:
-        raise HTTPException(status_code=404, detail="目标用户不存在")
+    target_user = get_or_404(db, User, target_user_id, "目标用户不存在")
 
     executor = BatchOperationExecutor(
         model=TaskUnified,

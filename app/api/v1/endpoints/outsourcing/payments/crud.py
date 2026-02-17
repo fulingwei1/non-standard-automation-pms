@@ -24,6 +24,7 @@ from app.schemas.outsourcing import (
 
 from .utils import generate_payment_no
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -132,9 +133,7 @@ def create_outsourcing_payment(
 
     # 验证外协订单（如果提供）
     if payment_in.order_id:
-        order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment_in.order_id).first()
-        if not order:
-            raise HTTPException(status_code=404, detail="外协订单不存在")
+        order = get_or_404(db, OutsourcingOrder, payment_in.order_id, "外协订单不存在")
         if order.vendor_id != payment_in.vendor_id:
             raise HTTPException(status_code=400, detail="外协订单不属于该外协商")
 

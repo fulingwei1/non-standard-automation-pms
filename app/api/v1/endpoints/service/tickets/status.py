@@ -17,6 +17,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
 from app.services.status_update_service import StatusUpdateService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from fastapi import APIRouter
 
@@ -41,9 +42,7 @@ def update_service_ticket_status(
     - 历史记录
     - SLA监控同步
     """
-    ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="服务工单不存在")
+    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
 
     # 创建历史记录回调
     def history_callback(entity, old_status, new_status, operator, reason):
@@ -109,9 +108,7 @@ def close_service_ticket(
     - SLA监控同步
     - 知识自动提取
     """
-    ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="服务工单不存在")
+    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
 
     if ticket.status == "CLOSED":
         raise HTTPException(status_code=400, detail="工单已关闭")

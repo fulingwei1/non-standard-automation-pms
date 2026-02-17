@@ -23,6 +23,7 @@ from app.schemas.standard_cost import (
     ProjectCostComparisonResponse,
     ProjectCostComparisonItem,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -80,9 +81,7 @@ def apply_standard_cost_to_project(
     权限要求：cost:manage
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
     
     # 生成预算编号和版本
     budget_no = _generate_budget_no(db)
@@ -175,9 +174,7 @@ def compare_project_cost_with_standard(
     权限要求：cost:read
     """
     # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, "项目不存在")
     
     if comparison_date is None:
         comparison_date = date.today()

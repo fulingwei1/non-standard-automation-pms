@@ -112,15 +112,11 @@ def create_production_plan(
     """
     # 检查项目是否存在
     if plan_in.project_id:
-        project = db.query(Project).filter(Project.id == plan_in.project_id).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="项目不存在")
+        project = get_or_404(db, Project, plan_in.project_id, "项目不存在")
 
     # 检查车间是否存在
     if plan_in.workshop_id:
-        workshop = db.query(Workshop).filter(Workshop.id == plan_in.workshop_id).first()
-        if not workshop:
-            raise HTTPException(status_code=404, detail="车间不存在")
+        workshop = get_or_404(db, Workshop, plan_in.workshop_id, "车间不存在")
 
     # 生成计划编号
     plan_no = generate_plan_no(db)

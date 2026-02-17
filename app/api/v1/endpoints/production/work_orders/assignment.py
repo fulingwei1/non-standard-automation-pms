@@ -40,15 +40,11 @@ def assign_work_order(
         raise HTTPException(status_code=400, detail="只有待派工状态的工单才能派工")
 
     # 检查工人是否存在
-    worker = db.query(Worker).filter(Worker.id == assign_in.assigned_to).first()
-    if not worker:
-        raise HTTPException(status_code=404, detail="工人不存在")
+    worker = get_or_404(db, Worker, assign_in.assigned_to, "工人不存在")
 
     # 检查工位是否存在
     if assign_in.workstation_id:
-        workstation = db.query(Workstation).filter(Workstation.id == assign_in.workstation_id).first()
-        if not workstation:
-            raise HTTPException(status_code=404, detail="工位不存在")
+        workstation = get_or_404(db, Workstation, assign_in.workstation_id, "工位不存在")
         if order.workshop_id and workstation.workshop_id != order.workshop_id:
             raise HTTPException(status_code=400, detail="工位不属于该车间")
 

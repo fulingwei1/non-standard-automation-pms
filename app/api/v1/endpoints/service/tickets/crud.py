@@ -17,6 +17,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..number_utils import generate_ticket_no
 
@@ -214,9 +215,7 @@ def read_service_ticket(
     """
     获取服务工单详情
     """
-    ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="服务工单不存在")
+    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
 
     # 获取项目名称和客户名称
     if ticket.project_id:

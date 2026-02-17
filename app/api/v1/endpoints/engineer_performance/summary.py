@@ -15,6 +15,7 @@ from app.schemas.common import ResponseModel
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(prefix="/summary", tags=["绩效总览"])
 
@@ -37,11 +38,7 @@ async def get_company_summary(
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
         period_id = period.id
     else:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
-        if not period:
-            raise HTTPException(status_code=404, detail="考核周期不存在")
+        period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
 
     summary = service.get_company_summary(period_id)
 

@@ -15,6 +15,7 @@ from app.models.staff_matching import HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -90,10 +91,7 @@ def create_tag(
         raise HTTPException(status_code=400, detail=f"标签编码已存在: {tag_data.tag_code}")
 
     tag = HrTagDict(**tag_data.model_dump())
-    db.add(tag)
-    db.commit()
-    db.refresh(tag)
-    return tag
+    return save_obj(db, tag)
 
 
 @router.put("/{tag_id}", response_model=schemas.TagDictResponse)
@@ -104,9 +102,7 @@ def update_tag(
     current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新标签"""
-    tag = db.query(HrTagDict).filter(HrTagDict.id == tag_id).first()
-    if not tag:
-        raise HTTPException(status_code=404, detail="标签不存在")
+    tag = get_or_404(db, HrTagDict, tag_id, "标签不存在")
 
     for field, value in tag_data.model_dump(exclude_unset=True).items():
         setattr(tag, field, value)
@@ -123,9 +119,7 @@ def delete_tag(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """删除标签（软删除）"""
-    tag = db.query(HrTagDict).filter(HrTagDict.id == tag_id).first()
-    if not tag:
-        raise HTTPException(status_code=404, detail="标签不存在")
+    tag = get_or_404(db, HrTagDict, tag_id, "标签不存在")
 
     tag.is_active = False
     db.commit()

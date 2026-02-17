@@ -204,10 +204,7 @@ def update_contact(
     """
     更新联系人信息
     """
-    contact = db.query(Contact).filter(Contact.id == contact_id).first()
-
-    if not contact:
-        raise HTTPException(status_code=404, detail="联系人不存在")
+    contact = get_or_404(db, Contact, contact_id, "联系人不存在")
 
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()
@@ -253,10 +250,7 @@ def delete_contact(
     """
     删除联系人
     """
-    contact = db.query(Contact).filter(Contact.id == contact_id).first()
-
-    if not contact:
-        raise HTTPException(status_code=404, detail="联系人不存在")
+    contact = get_or_404(db, Contact, contact_id, "联系人不存在")
 
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()
@@ -278,10 +272,7 @@ def set_primary_contact(
     """
     设置为主要联系人
     """
-    contact = db.query(Contact).filter(Contact.id == contact_id).first()
-
-    if not contact:
-        raise HTTPException(status_code=404, detail="联系人不存在")
+    contact = get_or_404(db, Contact, contact_id, "联系人不存在")
 
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()

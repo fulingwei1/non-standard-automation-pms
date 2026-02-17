@@ -16,6 +16,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -29,9 +30,7 @@ def get_ticket_related_issues(
 ) -> Any:
     """获取工单关联的问题列表"""
     # 验证工单是否存在
-    ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="工单不存在")
+    ticket = get_or_404(db, ServiceTicket, ticket_id, "工单不存在")
 
     # 查询关联的问题
     from app.api.v1.endpoints.issues.crud import build_issue_response

@@ -22,6 +22,7 @@ from app.schemas.service import (
     CustomerCommunicationResponse,
     CustomerCommunicationUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .number_utils import generate_communication_no
 
@@ -156,11 +157,7 @@ def create_customer_communication(
         created_by=current_user.id,
         created_by_name=current_user.real_name or current_user.username,
     )
-    db.add(comm)
-    db.commit()
-    db.refresh(comm)
-
-    return comm
+    return save_obj(db, comm)
 
 
 @router.get("/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK)
@@ -173,9 +170,7 @@ def read_customer_communication(
     """
     获取客户沟通记录详情
     """
-    comm = db.query(CustomerCommunication).filter(CustomerCommunication.id == comm_id).first()
-    if not comm:
-        raise HTTPException(status_code=404, detail="沟通记录不存在")
+    comm = get_or_404(db, CustomerCommunication, comm_id, "沟通记录不存在")
 
     return comm
 
@@ -191,9 +186,7 @@ def update_customer_communication(
     """
     更新客户沟通记录
     """
-    comm = db.query(CustomerCommunication).filter(CustomerCommunication.id == comm_id).first()
-    if not comm:
-        raise HTTPException(status_code=404, detail="沟通记录不存在")
+    comm = get_or_404(db, CustomerCommunication, comm_id, "沟通记录不存在")
 
     if comm_in.content is not None:
         comm.content = comm_in.content
@@ -204,8 +197,4 @@ def update_customer_communication(
     if comm_in.tags is not None:
         comm.tags = comm_in.tags
 
-    db.add(comm)
-    db.commit()
-    db.refresh(comm)
-
-    return comm
+    return save_obj(db, comm)

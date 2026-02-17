@@ -23,6 +23,7 @@ from app.schemas.standard_cost import (
     StandardCostUpdate,
     StandardCostSearchRequest,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -180,9 +181,7 @@ def get_standard_cost(
     
     权限要求：cost:read
     """
-    cost = db.query(StandardCost).filter(StandardCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="标准成本不存在")
+    cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     return cost
 
@@ -201,9 +200,7 @@ def update_standard_cost(
     创建新版本，保留历史版本
     权限要求：cost:manage
     """
-    old_cost = db.query(StandardCost).filter(StandardCost.id == cost_id).first()
-    if not old_cost:
-        raise HTTPException(status_code=404, detail="标准成本不存在")
+    old_cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     # 停用旧版本
     old_cost.is_active = False
@@ -263,9 +260,7 @@ def deactivate_standard_cost(
     
     权限要求：cost:manage
     """
-    cost = db.query(StandardCost).filter(StandardCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="标准成本不存在")
+    cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     if not cost.is_active:
         raise HTTPException(status_code=400, detail="标准成本已停用")

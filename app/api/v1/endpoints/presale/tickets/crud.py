@@ -91,9 +91,7 @@ def create_ticket(
     if ticket_in.ticket_type == 'SOLUTION_REVIEW':
         if not ticket_in.opportunity_id:
             raise HTTPException(status_code=400, detail="方案评审必须关联商机")
-        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket_in.opportunity_id).first()
-        if not opportunity:
-            raise HTTPException(status_code=404, detail="商机不存在")
+        opportunity = get_or_404(db, Opportunity, ticket_in.opportunity_id, "商机不存在")
         gate_status = (opportunity.gate_status or "").upper()
         if gate_status not in {"PASS", "PASSED"}:
             raise HTTPException(status_code=400, detail="商机阶段门未通过，无法申请评审")

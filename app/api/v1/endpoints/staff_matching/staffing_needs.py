@@ -15,6 +15,7 @@ from app.models.staff_matching import MesProjectStaffingNeed
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -79,9 +80,7 @@ def get_staffing_need(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """获取人员需求详情"""
-    need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
-    if not need:
-        raise HTTPException(status_code=404, detail="人员需求不存在")
+    need = get_or_404(db, MesProjectStaffingNeed, need_id, "人员需求不存在")
 
     return {
         'id': need.id,
@@ -180,9 +179,7 @@ def update_staffing_need(
     current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新人员需求"""
-    need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
-    if not need:
-        raise HTTPException(status_code=404, detail="人员需求不存在")
+    need = get_or_404(db, MesProjectStaffingNeed, need_id, "人员需求不存在")
 
     update_data = need_data.model_dump(exclude_unset=True)
 
@@ -234,9 +231,7 @@ def cancel_staffing_need(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """取消人员需求"""
-    need = db.query(MesProjectStaffingNeed).filter(MesProjectStaffingNeed.id == need_id).first()
-    if not need:
-        raise HTTPException(status_code=404, detail="人员需求不存在")
+    need = get_or_404(db, MesProjectStaffingNeed, need_id, "人员需求不存在")
 
     need.status = 'CANCELLED'
     db.commit()

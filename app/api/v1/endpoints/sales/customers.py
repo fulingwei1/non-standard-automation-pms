@@ -25,7 +25,7 @@ from app.schemas.sales import (
     CustomerResponse,
     CustomerStatsResponse,
 )
-from app.utils.db_helpers import save_obj, delete_obj
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -266,10 +266,7 @@ def update_customer(
     """
     更新客户信息
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
     # 检查数据权限
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
@@ -309,10 +306,7 @@ def delete_customer(
     """
     删除客户
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
+    customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
     # 检查数据权限（管理员或负责人可删除）
     if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):

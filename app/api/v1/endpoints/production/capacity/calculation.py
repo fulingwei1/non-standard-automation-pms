@@ -72,9 +72,7 @@ async def calculate_oee(
     4. OEE = 可用率 × 性能率 × 合格率
     """
     # 验证设备存在
-    equipment = db.query(Equipment).filter(Equipment.id == request.equipment_id).first()
-    if not equipment:
-        raise HTTPException(status_code=404, detail="设备不存在")
+    equipment = get_or_404(db, Equipment, request.equipment_id, "设备不存在")
     
     # 计算运行时间
     operating_time = request.planned_production_time - request.planned_downtime - request.unplanned_downtime
@@ -171,9 +169,7 @@ async def calculate_worker_efficiency(
     工人效率 = 标准工时 / 实际工时 × 100%
     """
     # 验证工人存在
-    worker = db.query(Worker).filter(Worker.id == request.worker_id).first()
-    if not worker:
-        raise HTTPException(status_code=404, detail="工人不存在")
+    worker = get_or_404(db, Worker, request.worker_id, "工人不存在")
     
     if request.actual_hours <= 0:
         raise HTTPException(status_code=400, detail="实际工时必须大于0")

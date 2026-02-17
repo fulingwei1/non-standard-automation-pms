@@ -18,6 +18,7 @@ from app.models.standard_cost import StandardCost, StandardCostHistory
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.standard_cost import StandardCostHistoryResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -73,9 +74,7 @@ def get_cost_history_by_id(
     权限要求：cost:read
     """
     # 检查成本是否存在
-    cost = db.query(StandardCost).filter(StandardCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="标准成本不存在")
+    cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     history_records = db.query(StandardCostHistory).filter(
         StandardCostHistory.standard_cost_id == cost_id
@@ -98,9 +97,7 @@ def get_cost_versions(
     权限要求：cost:read
     """
     # 获取当前成本
-    cost = db.query(StandardCost).filter(StandardCost.id == cost_id).first()
-    if not cost:
-        raise HTTPException(status_code=404, detail="标准成本不存在")
+    cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     # 获取所有版本（当前成本和其所有父级）
     versions = []

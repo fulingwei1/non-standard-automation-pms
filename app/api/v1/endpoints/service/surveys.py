@@ -22,6 +22,7 @@ from app.schemas.service import (
     CustomerSatisfactionResponse,
     CustomerSatisfactionUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .number_utils import generate_survey_no
 
@@ -139,11 +140,7 @@ def create_customer_satisfaction(
         created_by=current_user.id,
         created_by_name=current_user.real_name or current_user.username,
     )
-    db.add(survey)
-    db.commit()
-    db.refresh(survey)
-
-    return survey
+    return save_obj(db, survey)
 
 
 @router.get("/{survey_id}", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK)
@@ -156,9 +153,7 @@ def read_customer_satisfaction(
     """
     获取满意度调查详情
     """
-    survey = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.id == survey_id).first()
-    if not survey:
-        raise HTTPException(status_code=404, detail="满意度调查不存在")
+    survey = get_or_404(db, CustomerSatisfaction, survey_id, "满意度调查不存在")
 
     return survey
 
@@ -174,9 +169,7 @@ def update_customer_satisfaction(
     """
     更新满意度调查
     """
-    survey = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.id == survey_id).first()
-    if not survey:
-        raise HTTPException(status_code=404, detail="满意度调查不存在")
+    survey = get_or_404(db, CustomerSatisfaction, survey_id, "满意度调查不存在")
 
     if survey_in.status is not None:
         survey.status = survey_in.status
@@ -196,11 +189,7 @@ def update_customer_satisfaction(
     if survey_in.status == "COMPLETED" and survey.overall_score:
         survey.status = "COMPLETED"
 
-    db.add(survey)
-    db.commit()
-    db.refresh(survey)
-
-    return survey
+    return save_obj(db, survey)
 
 
 @router.post("/{survey_id}/send", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK)
@@ -213,9 +202,7 @@ def send_customer_satisfaction(
     """
     发送满意度调查
     """
-    survey = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.id == survey_id).first()
-    if not survey:
-        raise HTTPException(status_code=404, detail="满意度调查不存在")
+    survey = get_or_404(db, CustomerSatisfaction, survey_id, "满意度调查不存在")
 
     if survey.status == "COMPLETED":
         raise HTTPException(status_code=400, detail="调查已完成，无法发送")
@@ -223,8 +210,4 @@ def send_customer_satisfaction(
     survey.status = "SENT"
     survey.send_date = date.today()
 
-    db.add(survey)
-    db.commit()
-    db.refresh(survey)
-
-    return survey
+    return save_obj(db, survey)

@@ -28,6 +28,7 @@ from app.schemas.task_center import (
     TaskCommentResponse,
 )
 from app.services.sales_reminder import create_notification
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -57,9 +58,7 @@ def create_task_comment(
     """
     任务评论（协作沟通）
     """
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     # 验证父评论
     parent_comment = None
@@ -130,9 +129,7 @@ def get_task_comments(
     """
     获取任务评论列表
     """
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     comments = db.query(TaskComment).filter(
         TaskComment.task_id == task_id,

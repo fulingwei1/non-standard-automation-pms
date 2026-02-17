@@ -16,6 +16,7 @@ from app.core import security
 from app.models.service import SatisfactionSurveyTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -64,9 +65,7 @@ def get_satisfaction_template(
     """
     获取满意度调查模板详情
     """
-    template = db.query(SatisfactionSurveyTemplate).filter(SatisfactionSurveyTemplate.id == template_id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="调查模板不存在")
+    template = get_or_404(db, SatisfactionSurveyTemplate, template_id, "调查模板不存在")
 
     return {
         "id": template.id,

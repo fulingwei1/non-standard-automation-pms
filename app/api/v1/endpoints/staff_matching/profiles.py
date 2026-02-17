@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -111,9 +112,7 @@ def get_profile(
 
     if not profile:
         # 尝试创建档案
-        employee = db.query(Employee).filter(Employee.id == employee_id).first()
-        if not employee:
-            raise HTTPException(status_code=404, detail="员工不存在")
+        employee = get_or_404(db, Employee, employee_id, "员工不存在")
 
         profile = StaffMatchingService.aggregate_employee_profile(db, employee_id)
 
@@ -127,9 +126,7 @@ def refresh_profile(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """刷新员工档案聚合数据"""
-    employee = db.query(Employee).filter(Employee.id == employee_id).first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="员工不存在")
+    employee = get_or_404(db, Employee, employee_id, "员工不存在")
 
     # 更新标签聚合
     profile = StaffMatchingService.aggregate_employee_profile(db, employee_id)

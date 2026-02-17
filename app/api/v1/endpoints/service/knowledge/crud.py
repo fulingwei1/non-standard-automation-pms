@@ -20,6 +20,7 @@ from app.schemas.service import (
     KnowledgeBaseResponse,
     KnowledgeBaseUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from ..number_utils import generate_article_no
 
@@ -96,11 +97,7 @@ def create_knowledge_base(
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username,
     )
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
 
 
 @router.get("/{article_id}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
@@ -113,17 +110,11 @@ def read_knowledge_base_article(
     """
     获取知识库文章详情（增加浏览量）
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     # 增加浏览量
     article.view_count = (article.view_count or 0) + 1
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
 
 
 @router.put("/{article_id}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
@@ -137,9 +128,7 @@ def update_knowledge_base(
     """
     更新知识库文章
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     if article_in.title is not None:
         article.title = article_in.title
@@ -156,11 +145,7 @@ def update_knowledge_base(
     if article_in.status is not None:
         article.status = article_in.status
 
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
 
 
 @router.delete("/{article_id}", status_code=status.HTTP_200_OK)
@@ -173,9 +158,7 @@ def delete_knowledge_base(
     """
     删除知识库文章
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     db.delete(article)
     db.commit()

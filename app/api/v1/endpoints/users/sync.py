@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.permission_audit_service import PermissionAuditService
 from app.services.user_sync_service import UserSyncService
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .models import BatchToggleActiveRequest, SyncEmployeesRequest, ToggleActiveRequest
 
@@ -57,9 +58,7 @@ def create_user_from_employee(
     current_user: User = Depends(security.require_permission("system:user:create")),
 ) -> Any:
     """从单个员工创建用户账号"""
-    employee = db.query(Employee).filter(Employee.id == employee_id).first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="员工不存在")
+    employee = get_or_404(db, Employee, employee_id, "员工不存在")
 
     existing_usernames = set(u.username for u in db.query(User.username).all())
 
@@ -99,9 +98,7 @@ def toggle_user_active(
     """切换用户激活状态"""
     target_active = toggle_request.is_active
     if target_active is None:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="用户不存在")
+        user = get_or_404(db, User, user_id, "用户不存在")
         target_active = not bool(user.is_active)
 
     success, message = UserSyncService.toggle_user_active(

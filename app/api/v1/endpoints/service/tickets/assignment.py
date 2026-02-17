@@ -13,6 +13,7 @@ from app.core import security
 from app.models.service import ServiceTicket, ServiceTicketCcUser
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from fastapi import APIRouter
 
@@ -95,9 +96,7 @@ def assign_service_ticket(
     """
     分配服务工单（支持抄送人员）
     """
-    ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(status_code=404, detail="服务工单不存在")
+    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
 
     assignee = db.query(User).filter(User.id == assign_in.assignee_id).first()
     if not assignee:

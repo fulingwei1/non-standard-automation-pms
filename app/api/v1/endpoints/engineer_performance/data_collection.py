@@ -14,6 +14,7 @@ from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.performance_collector import PerformanceDataCollector
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter(prefix="/data-collection", tags=["数据采集"])
 
@@ -32,11 +33,7 @@ async def get_data_collection(
 
     # 获取周期日期
     if period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
-        if not period:
-            raise HTTPException(status_code=404, detail="考核周期不存在")
+        period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
         start_date = period.start_date
         end_date = period.end_date
     elif not start_date or not end_date:
@@ -71,11 +68,7 @@ async def extract_self_evaluation(
     collector = PerformanceDataCollector(db)
 
     if period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
-        if not period:
-            raise HTTPException(status_code=404, detail="考核周期不存在")
+        period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
         start_date = period.start_date
         end_date = period.end_date
     elif not start_date or not end_date:
@@ -108,11 +101,7 @@ async def trigger_collect_all(
     """触发对指定工程师的完整数据采集（增强版：包含统计信息）"""
     collector = PerformanceDataCollector(db)
 
-    period = db.query(PerformancePeriod).filter(
-        PerformancePeriod.id == period_id
-    ).first()
-    if not period:
-        raise HTTPException(status_code=404, detail="考核周期不存在")
+    period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
 
     data = collector.collect_all_data(
         engineer_id, period.start_date, period.end_date
@@ -139,11 +128,7 @@ async def generate_collection_report(
 
     # 获取周期日期
     if period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
-        if not period:
-            raise HTTPException(status_code=404, detail="考核周期不存在")
+        period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
         start_date = period.start_date
         end_date = period.end_date
     elif not start_date or not end_date:

@@ -17,6 +17,7 @@ from app.models.rd_project import RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -30,9 +31,7 @@ def get_user_time_allocation(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取用户工时分配比例（研发/非研发）"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+    user = get_or_404(db, User, user_id, "用户不存在")
 
     if user_id != current_user.id:
         if not security.check_permission(current_user, "USER_VIEW"):

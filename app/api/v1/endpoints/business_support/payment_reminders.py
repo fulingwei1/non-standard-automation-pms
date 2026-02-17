@@ -20,6 +20,7 @@ from app.schemas.business_support import (
     PaymentReminderResponse,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -34,9 +35,7 @@ async def create_payment_reminder(
     try:
         # 检查合同是否存在
         if reminder_data.contract_id:
-            contract = db.query(Contract).filter(Contract.id == reminder_data.contract_id).first()
-            if not contract:
-                raise HTTPException(status_code=404, detail="合同不存在")
+            contract = get_or_404(db, Contract, reminder_data.contract_id, "合同不存在")
 
         # 创建催收记录
         reminder = PaymentReminder(

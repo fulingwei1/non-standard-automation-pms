@@ -93,9 +93,7 @@ def create_workshop(
 
     # 检查车间主管是否存在
     if workshop_in.manager_id:
-        manager = db.query(User).filter(User.id == workshop_in.manager_id).first()
-        if not manager:
-            raise HTTPException(status_code=404, detail="车间主管不存在")
+        manager = get_or_404(db, User, workshop_in.manager_id, "车间主管不存在")
 
     workshop = Workshop(**workshop_in.model_dump())
     save_obj(db, workshop)
@@ -254,9 +252,7 @@ def update_workshop(
     # 检查车间主管是否存在
     if workshop_in.manager_id is not None:
         if workshop_in.manager_id:
-            manager = db.query(User).filter(User.id == workshop_in.manager_id).first()
-            if not manager:
-                raise HTTPException(status_code=404, detail="车间主管不存在")
+            manager = get_or_404(db, User, workshop_in.manager_id, "车间主管不存在")
 
     update_data = workshop_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():

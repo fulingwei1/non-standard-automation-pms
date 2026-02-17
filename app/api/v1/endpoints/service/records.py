@@ -37,6 +37,7 @@ from app.schemas.service import (
 from .number_utils import generate_record_no
 
 from app.core.config import settings
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -215,9 +216,7 @@ async def upload_service_record_photo(
     上传服务记录照片
     """
     # 验证服务记录是否存在
-    record = db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="服务记录不存在")
+    record = get_or_404(db, ServiceRecord, record_id, "服务记录不存在")
 
     # 验证文件类型
     if not file.content_type or not file.content_type.startswith('image/'):
@@ -287,9 +286,7 @@ def delete_service_record_photo(
     删除服务记录照片
     """
     # 验证服务记录是否存在
-    record = db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="服务记录不存在")
+    record = get_or_404(db, ServiceRecord, record_id, "服务记录不存在")
 
     photos = record.photos or []
     if photo_index < 0 or photo_index >= len(photos):

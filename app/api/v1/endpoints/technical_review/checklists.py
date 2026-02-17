@@ -18,6 +18,7 @@ from app.schemas.technical_review import (
     ReviewChecklistRecordResponse,
     ReviewChecklistRecordUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 from .utils import generate_issue_no, update_review_issue_counts
 
@@ -32,9 +33,7 @@ def create_checklist_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审检查项记录"""
-    review = db.query(TechnicalReview).filter(TechnicalReview.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="技术评审不存在")
+    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     record = ReviewChecklistRecord(
         review_id=review_id,
@@ -97,9 +96,7 @@ def update_checklist_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新评审检查项记录"""
-    record = db.query(ReviewChecklistRecord).filter(ReviewChecklistRecord.id == record_id).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="检查项记录不存在")
+    record = get_or_404(db, ReviewChecklistRecord, record_id, "检查项记录不存在")
 
     update_data = record_in.dict(exclude_unset=True)
     for field, value in update_data.items():

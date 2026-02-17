@@ -17,6 +17,7 @@ from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -160,9 +161,7 @@ def update_evaluation(
     current_user: User = Depends(security.require_permission("staff_matching:update"))
 ):
     """更新员工标签评估"""
-    evaluation = db.query(HrEmployeeTagEvaluation).filter(HrEmployeeTagEvaluation.id == eval_id).first()
-    if not evaluation:
-        raise HTTPException(status_code=404, detail="评估记录不存在")
+    evaluation = get_or_404(db, HrEmployeeTagEvaluation, eval_id, "评估记录不存在")
 
     for field, value in eval_data.model_dump(exclude_unset=True).items():
         setattr(evaluation, field, value)
@@ -193,9 +192,7 @@ def delete_evaluation(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """删除评估记录（软删除）"""
-    evaluation = db.query(HrEmployeeTagEvaluation).filter(HrEmployeeTagEvaluation.id == eval_id).first()
-    if not evaluation:
-        raise HTTPException(status_code=404, detail="评估记录不存在")
+    evaluation = get_or_404(db, HrEmployeeTagEvaluation, eval_id, "评估记录不存在")
 
     evaluation.is_valid = False
     db.commit()

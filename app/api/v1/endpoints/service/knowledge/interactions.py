@@ -12,6 +12,7 @@ from app.core import security
 from app.models.service import KnowledgeBase
 from app.models.user import User
 from app.schemas.service import KnowledgeBaseResponse
+from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -26,16 +27,10 @@ def like_knowledge_base(
     """
     点赞知识库文章
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     article.like_count = (article.like_count or 0) + 1
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
 
 
 @router.post("/{article_id}/helpful", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
@@ -48,16 +43,10 @@ def mark_knowledge_base_helpful(
     """
     标记知识库文章为有用
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     article.helpful_count = (article.helpful_count or 0) + 1
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
 
 
 @router.post("/{article_id}/adopt", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
@@ -70,13 +59,7 @@ def adopt_knowledge_base(
     """
     标记采用知识库文章（表示该文档被实际应用到工作中）
     """
-    article = db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
-    if not article:
-        raise HTTPException(status_code=404, detail="文章不存在")
+    article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
 
     article.adopt_count = (article.adopt_count or 0) + 1
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
+    return save_obj(db, article)
