@@ -373,7 +373,7 @@ def _get_auth_token(
         "username": username,
         "password": password,
     }
-    response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    response = client.post("/api/v1/auth/login", data=login_data)
     if response.status_code == 200:
         return response.json()["access_token"]
     else:
@@ -390,8 +390,10 @@ def admin_token(client: TestClient) -> str:
     如果是在隔离的测试环境中，应该先创建 admin 用户。
     由于目前我们没有隔离数据库，这里尝试直接登录。
     """
+    from app.models.base import SessionLocal as _SL
+    from app.core.config import settings as _settings
     # Ensure an admin user exists so API/integration tests can run instead of skipping.
-    db = SessionLocal()
+    db = _SL()
     try:
         _ensure_login_user(
             db,
@@ -409,7 +411,7 @@ def admin_token(client: TestClient) -> str:
         "username": "admin",
         "password": "admin123",  # 假设默认密码
     }
-    r = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    r = client.post("/api/v1/auth/login", data=login_data)
     if r.status_code == 200:
         return r.json()["access_token"]
     else:
@@ -422,7 +424,8 @@ def admin_token(client: TestClient) -> str:
 @pytest.fixture(scope="module")
 def normal_user_token(client: TestClient) -> str:
     """获取普通用户 token"""
-    db = SessionLocal()
+    from app.models.base import SessionLocal as _SL
+    db = _SL()
     try:
         _ensure_login_user(
             db,
@@ -440,7 +443,7 @@ def normal_user_token(client: TestClient) -> str:
         "username": "user",
         "password": "user123",  # 假设默认密码
     }
-    r = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    r = client.post("/api/v1/auth/login", data=login_data)
     if r.status_code == 200:
         return r.json()["access_token"]
     else:
@@ -450,7 +453,8 @@ def normal_user_token(client: TestClient) -> str:
 @pytest.fixture(scope="module")
 def sales_user_token(client: TestClient) -> str:
     """获取销售用户 token"""
-    db = SessionLocal()
+    from app.models.base import SessionLocal as _SL
+    db = _SL()
     try:
         # Sales permission matrix varies across deployments; use superuser to keep
         # permission-filtering tests focused on API behavior rather than role setup.
@@ -470,7 +474,7 @@ def sales_user_token(client: TestClient) -> str:
         "username": "sales",
         "password": "sales123",  # 假设默认密码
     }
-    r = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    r = client.post("/api/v1/auth/login", data=login_data)
     if r.status_code == 200:
         return r.json()["access_token"]
     else:
@@ -480,7 +484,8 @@ def sales_user_token(client: TestClient) -> str:
 @pytest.fixture(scope="module")
 def finance_user_token(client: TestClient) -> str:
     """获取财务用户 token"""
-    db = SessionLocal()
+    from app.models.base import SessionLocal as _SL
+    db = _SL()
     try:
         _ensure_login_user(
             db,
@@ -498,7 +503,7 @@ def finance_user_token(client: TestClient) -> str:
         "username": "finance",
         "password": "finance123",  # 假设默认密码
     }
-    r = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    r = client.post("/api/v1/auth/login", data=login_data)
     if r.status_code == 200:
         return r.json()["access_token"]
     else:
@@ -985,7 +990,7 @@ def mock_important_task(
 def auth_headers(client: TestClient, engineer_user: User) -> Dict[str, str]:
     """Return engineer user Bearer Token"""
     response = client.post(
-        f"{settings.API_V1_PREFIX}/auth/login",
+        "/api/v1/auth/login",
         data={
             "username": ENGINEER_CREDENTIALS["username"],
             "password": ENGINEER_CREDENTIALS["password"],
@@ -1000,7 +1005,7 @@ def auth_headers(client: TestClient, engineer_user: User) -> Dict[str, str]:
 def pm_auth_headers(client: TestClient, pm_user: User) -> Dict[str, str]:
     """Return PM user Bearer Token"""
     response = client.post(
-        f"{settings.API_V1_PREFIX}/auth/login",
+        "/api/v1/auth/login",
         data={
             "username": PM_CREDENTIALS["username"],
             "password": PM_CREDENTIALS["password"],
@@ -1021,7 +1026,7 @@ def admin_auth_headers(client: TestClient, admin_token: str) -> Dict[str, str]:
 def regular_user_token(client: TestClient, regular_user: User) -> str:
     """Get regular user Bearer Token"""
     response = client.post(
-        f"{settings.API_V1_PREFIX}/auth/login",
+        "/api/v1/auth/login",
         data={
             "username": REGULAR_USER_CREDENTIALS["username"],
             "password": REGULAR_USER_CREDENTIALS["password"],

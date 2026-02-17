@@ -235,8 +235,8 @@ class TestPermissionCheckFlow:
         
         # 2. 查询角色权限
         role_perms = [
-            RoleApiPermission(role_id=role.id, api_permission_id=test_permissions[0].id),
-            RoleApiPermission(role_id=role.id, api_permission_id=test_permissions[1].id),
+            RoleApiPermission(role_id=role.id, permission_id=test_permissions[0].id),
+            RoleApiPermission(role_id=role.id, permission_id=test_permissions[1].id),
         ]
         mock_db.query(RoleApiPermission).filter().all.return_value = role_perms
         
@@ -247,7 +247,7 @@ class TestPermissionCheckFlow:
         assert len(perms) == 2
         
         # 3. 检查权限
-        perm_ids = [p.api_permission_id for p in perms]
+        perm_ids = [p.permission_id for p in perms]
         assert test_permissions[0].id in perm_ids  # project:view
         assert test_permissions[1].id in perm_ids  # project:create
         assert test_permissions[2].id not in perm_ids  # user:view (无权限)
@@ -397,7 +397,7 @@ class TestCompleteAuthFlow:
         
         role_perm = RoleApiPermission(
             role_id=role.id,
-            api_permission_id=permission.id
+            permission_id=permission.id
         )
         
         # 4. 登录流程
@@ -431,7 +431,7 @@ class TestCompleteAuthFlow:
             RoleApiPermission.role_id == role.id
         ).all()
         assert len(role_perms) == 1
-        assert role_perms[0].api_permission_id == permission.id
+        assert role_perms[0].permission_id == permission.id
         
         # 6. 数据范围检查
         assert role.data_scope == "PROJECT"

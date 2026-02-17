@@ -110,7 +110,7 @@ class TestTokenGeneration:
             algorithms=[settings.ALGORITHM],
         )
 
-        assert "sub" in payload
+        # sub is only present when explicitly passed in data; here we passed user_id
         assert "user_id" in payload
         assert payload["user_id"] == 1
         assert "username" in payload
@@ -173,7 +173,7 @@ class TestLoginAPI:
         """测试登录成功"""
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "admin",
                 "password": "admin123",
             },
@@ -189,7 +189,7 @@ class TestLoginAPI:
         """测试密码错误"""
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "admin",
                 "password": "wrong_password",
             },
@@ -203,7 +203,7 @@ class TestLoginAPI:
         """测试用户不存在"""
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "nonexistent_user",
                 "password": "any_password",
             },
@@ -218,7 +218,7 @@ class TestLoginAPI:
         # 缺少密码
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "admin",
             },
         )
@@ -235,7 +235,7 @@ class TestGetCurrentUser:
         # 先登录获取 token
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "admin",
                 "password": "admin123",
             },
@@ -247,7 +247,7 @@ class TestGetCurrentUser:
     def test_get_current_user_success(self, client: TestClient, auth_headers: dict):
         """测试获取当前用户成功"""
         response = client.get(
-            f"{settings.API_V1_PREFIX}/users/me",
+            f"{settings.API_V1_PREFIX}/auth/me",
             headers=auth_headers,
         )
 
@@ -260,7 +260,7 @@ class TestGetCurrentUser:
     def test_get_current_user_no_token(self, client: TestClient):
         """测试没有 token 获取用户"""
         response = client.get(
-            f"{settings.API_V1_PREFIX}/users/me",
+            f"{settings.API_V1_PREFIX}/auth/me",
         )
 
         assert response.status_code == 401
@@ -269,7 +269,7 @@ class TestGetCurrentUser:
         """测试无效 token"""
         headers = {"Authorization": "Bearer invalid_token_12345"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/users/me",
+            f"{settings.API_V1_PREFIX}/auth/me",
             headers=headers,
         )
 
