@@ -143,3 +143,13 @@ def batch_generate_pinyin_for_employees(db: Session) -> int:
     return updated_count
 
 
+
+
+# 别名函数（兼容测试和旧代码）
+def to_pinyin(text: str) -> str:
+    """将中文转换为拼音（别名：name_to_pinyin）"""
+    return name_to_pinyin(text)
+
+def get_initials(text: str) -> str:
+    """获取拼音首字母缩写（别名：name_to_pinyin_initials）"""
+    return name_to_pinyin_initials(text)

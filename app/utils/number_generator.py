@@ -462,3 +462,33 @@ def generate_calculation_code(db: Session) -> str:
 
     seq_str = str(seq).zfill(seq_length)
     return f"{pattern_prefix}{seq_str}"
+
+
+class NumberGenerator:
+    """编号生成器类（无状态工具类，封装编号格式化方法，供测试和OOP场景使用）"""
+
+    def generate_project_number(self, prefix: str, date_str: str, sequence: int) -> str:
+        """生成项目编号，格式：{prefix}-{date_str}-{sequence:04d}"""
+        return f"{prefix}-{date_str}-{sequence:04d}"
+
+    def generate_unique_number(self, prefix: str) -> str:
+        """生成唯一编号（基于时间戳），格式：{prefix}-{timestamp}"""
+        import time, random
+        ts = int(time.time() * 1000)
+        rnd = random.randint(0, 999)
+        return f"{prefix}-{ts}-{rnd:03d}"
+
+    def parse_project_number(self, number: str) -> dict:
+        """
+        解析项目编号，返回 {prefix, date_str, sequence}
+
+        示例：'PRJ-20260216-0042' → {'prefix': 'PRJ', 'date_str': '20260216', 'sequence': 42}
+        """
+        parts = number.split('-')
+        if len(parts) >= 3:
+            return {
+                'prefix': parts[0],
+                'date_str': parts[1],
+                'sequence': int(parts[2]),
+            }
+        return {'prefix': number, 'date_str': '', 'sequence': 0}

@@ -124,3 +124,19 @@ def compare_risk_levels(old_level: str, new_level: str) -> str:
         return "DOWNGRADE"
     else:
         return "UNCHANGED"
+
+
+class RiskCalculator:
+    """风险计算器类（封装函数式API，供测试和OOP场景使用）"""
+
+    @staticmethod
+    def calculate_risk_level(probability: Optional[str], impact: Optional[str]) -> Optional[str]:
+        return calculate_risk_level(probability, impact)
+
+    @staticmethod
+    def compare_risk_levels(level1: Optional[str], level2: Optional[str]) -> int:
+        return compare_risk_levels(level1, level2)
+
+    @staticmethod
+    def get_risk_score(risk_level: Optional[str]) -> int:
+        return get_risk_score(risk_level)

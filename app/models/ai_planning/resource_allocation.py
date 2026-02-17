@@ -113,7 +113,7 @@ class AIResourceAllocation(Base, TimestampMixin):
     
     # 元数据
     tags = Column(JSON, comment='标签列表')
-    metadata = Column(JSON, comment='其他元数据')
+    extra_metadata = Column(JSON, comment='其他元数据')  # Renamed: SQLAlchemy reserved
     
     # 创建人
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')

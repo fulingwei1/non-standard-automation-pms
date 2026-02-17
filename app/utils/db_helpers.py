@@ -5,7 +5,6 @@
 消除重复的 CRUD 模板代码，统一错误处理。
 
 使用示例：
-    from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
     # 替代：
     #   obj = db.query(Model).filter(Model.id == id).first()

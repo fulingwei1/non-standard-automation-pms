@@ -137,6 +137,9 @@ from .shortage.smart_alert import (  # noqa: F401
     MaterialDemandForecast,
 )
 
+# Material Shortage (from material.py)
+from .material import MaterialShortage  # noqa: F401
+
 __all__ = [
     # Base
     "Base",

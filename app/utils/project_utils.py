@@ -115,3 +115,38 @@ def init_project_stages(db: Session, project_id: int):
                 db.add(status)
 
     db.commit()
+
+
+class ProjectUtils:
+    """项目工具类（封装项目相关计算工具，供测试和OOP场景使用）"""
+
+    def calculate_health_score(self, metrics: dict) -> float:
+        """
+        计算项目健康度评分（0-100）
+
+        指标权重：
+          - schedule_performance (SPI): 30%
+          - cost_performance (CPI): 30%
+          - quality_score (0-100): 20%
+          - team_satisfaction (0-5): 20%
+        """
+        spi = min(metrics.get('schedule_performance', 1.0), 1.0)
+        cpi = min(metrics.get('cost_performance', 1.0), 1.0)
+        quality = metrics.get('quality_score', 80) / 100
+        satisfaction = metrics.get('team_satisfaction', 4.0) / 5.0
+
+        score = spi * 30 + cpi * 30 + quality * 20 + satisfaction * 20
+        return round(min(max(score, 0), 100), 2)
+
+    def estimate_duration(self, params: dict) -> float:
+        """
+        估算项目工期（周）
+
+        基于工作量、团队规模、复杂度估算。
+        """
+        effort_person_days = params.get('effort_person_days', 30)
+        team_size = max(params.get('team_size', 1), 1)
+        complexity_factor = params.get('complexity_factor', 1.0)
+
+        weeks = (effort_person_days / team_size / 5) * complexity_factor
+        return round(weeks, 1)

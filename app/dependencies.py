@@ -29,3 +29,6 @@ def get_db() -> Generator[Session, None, None]:
         except Exception:
             pass
         db.close()
+
+# 别名，兼容旧代码
+get_db_session = get_db

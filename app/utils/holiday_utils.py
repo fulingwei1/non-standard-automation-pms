@@ -171,3 +171,45 @@ def get_work_type(check_date: date) -> str:
         return "WEEKEND"
 
     return "NORMAL"
+
+
+def get_working_days(start_date: date, end_date: date) -> int:
+    """
+    计算两个日期之间的工作日数量（不含节假日和周末）。
+    
+    Args:
+        start_date: 开始日期（含）
+        end_date: 结束日期（含）
+    
+    Returns:
+        工作日天数
+    """
+    from datetime import timedelta
+    count = 0
+    current = start_date
+    while current <= end_date:
+        if not is_holiday(current):
+            count += 1
+        current += timedelta(days=1)
+    return count
+
+
+def add_working_days(start_date: date, working_days: int) -> date:
+    """
+    从 start_date 起，往后加指定工作日数，返回目标日期。
+    
+    Args:
+        start_date: 起始日期
+        working_days: 要增加的工作日数
+    
+    Returns:
+        目标日期
+    """
+    from datetime import timedelta
+    current = start_date
+    added = 0
+    while added < working_days:
+        current += timedelta(days=1)
+        if not is_holiday(current):
+            added += 1
+    return current

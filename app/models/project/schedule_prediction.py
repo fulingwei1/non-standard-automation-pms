@@ -275,3 +275,37 @@ class ScheduleAlert(Base):
 
     def __repr__(self):
         return f"<ScheduleAlert(id={self.id}, project_id={self.project_id}, severity={self.severity})>"
+
+
+# ──────────────────────────────────────────────
+# 兼容性枚举（供测试和旧代码引用）
+# ──────────────────────────────────────────────
+import enum
+
+class RiskLevelEnum(str, enum.Enum):
+    """风险等级"""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+class SolutionTypeEnum(str, enum.Enum):
+    """追赶方案类型"""
+    OVERTIME = "OVERTIME"
+    ADD_RESOURCE = "ADD_RESOURCE"
+    SCOPE_REDUCTION = "SCOPE_REDUCTION"
+    PROCESS_OPTIMIZATION = "PROCESS_OPTIMIZATION"
+
+class AlertTypeEnum(str, enum.Enum):
+    """预警类型"""
+    SCHEDULE_DELAY = "SCHEDULE_DELAY"
+    COST_OVERRUN = "COST_OVERRUN"
+    RESOURCE_SHORTAGE = "RESOURCE_SHORTAGE"
+    QUALITY_RISK = "QUALITY_RISK"
+
+class SeverityEnum(str, enum.Enum):
+    """严重程度"""
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
