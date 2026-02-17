@@ -3,12 +3,6 @@
 方案模板库 - 自动生成
 从 presale.py 拆分
 """
-
-# -*- coding: utf-8 -*-
-"""
-售前技术支持 API endpoints
-包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
-"""
 from datetime import date, datetime
 from typing import Any, Optional
 
@@ -34,17 +28,12 @@ from app.schemas.presale import (
     TemplateResponse,
 )
 
-router = APIRouter()
-
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
-
-
-from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/presale/templates",
@@ -55,7 +44,7 @@ router = APIRouter(
 
 # ==================== 方案模板库 ====================
 
-@router.get("/presale/templates", response_model=PaginatedResponse)
+@router.get("", response_model=PaginatedResponse)
 def read_templates(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -71,7 +60,6 @@ def read_templates(
     query = db.query(PresaleSolutionTemplate)
 
     # 应用关键词过滤（模板名称）
-    from app.common.query_filters import apply_keyword_filter
     query = apply_keyword_filter(query, PresaleSolutionTemplate, keyword, ["name"])
 
     if industry:
@@ -104,7 +92,7 @@ def read_templates(
     return pagination.to_response(items, total)
 
 
-@router.post("/presale/templates", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
 def create_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -162,7 +150,83 @@ def create_template(
     )
 
 
-@router.get("/presale/templates/{template_id}", response_model=TemplateResponse)
+@router.get("/stats", response_model=ResponseModel)
+def get_template_stats(
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    模板使用统计
+    """
+
+    # 默认使用当前月
+    today = date.today()
+    if not start_date:
+        start_date = date(today.year, today.month, 1)
+    if not end_date:
+        _, end_date = get_month_range(today)
+
+    # 获取所有模板
+    templates = db.query(PresaleSolutionTemplate).all()
+
+    template_stats = []
+    for template in templates:
+        # 统计该模板在此时间段内创建方案的数量
+        solutions_query = db.query(PresaleSolution).filter(
+            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        solutions_query = apply_keyword_filter(
+            solutions_query,
+            PresaleSolution,
+            template.name,
+            "solution_overview",
+            use_ilike=False,
+        )
+        solutions_count = solutions_query.count()
+
+        # 计算复用率（使用次数 / 总方案数）
+        total_solutions = db.query(PresaleSolution).filter(
+            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
+        ).count()
+
+        reuse_rate = (solutions_count / total_solutions * 100) if total_solutions > 0 else 0.0
+
+        template_stats.append({
+            "template_id": template.id,
+            "template_no": template.template_no,
+            "template_name": template.name,
+            "industry": template.industry,
+            "test_type": template.test_type,
+            "total_use_count": template.use_count or 0,
+            "period_use_count": solutions_count,
+            "reuse_rate": round(reuse_rate, 2),
+            "is_active": template.is_active
+        })
+
+    # 按使用次数排序
+    template_stats.sort(key=lambda x: x["period_use_count"], reverse=True)
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "period": {"start": str(start_date), "end": str(end_date)},
+            "templates": template_stats,
+            "summary": {
+                "total_templates": len(templates),
+                "active_templates": len([t for t in templates if t.is_active]),
+                "total_uses": sum(t["period_use_count"] for t in template_stats),
+                "avg_reuse_rate": round(sum(t["reuse_rate"] for t in template_stats) / len(template_stats), 2) if template_stats else 0.0
+            }
+        }
+    )
+
+
+@router.get("/{template_id}", response_model=TemplateResponse)
 def read_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -190,7 +254,7 @@ def read_template(
     )
 
 
-@router.post("/presale/templates/{template_id}/apply", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/{template_id}/apply", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)
 def apply_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -283,80 +347,3 @@ def apply_template(
         created_at=solution.created_at,
         updated_at=solution.updated_at,
     )
-
-
-@router.get("/presale/templates/stats", response_model=ResponseModel)
-def get_template_stats(
-    db: Session = Depends(deps.get_db),
-    start_date: Optional[date] = Query(None, description="开始日期"),
-    end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    模板使用统计
-    """
-
-    # 默认使用当前月
-    today = date.today()
-    if not start_date:
-        start_date = date(today.year, today.month, 1)
-    if not end_date:
-        _, end_date = get_month_range(today)
-
-    # 获取所有模板
-    templates = db.query(PresaleSolutionTemplate).all()
-
-    template_stats = []
-    for template in templates:
-        # 统计该模板在此时间段内创建方案的数量
-        solutions_query = db.query(PresaleSolution).filter(
-            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-        )
-        solutions_query = apply_keyword_filter(
-            solutions_query,
-            PresaleSolution,
-            template.name,
-            "solution_overview",
-            use_ilike=False,
-        )
-        solutions_count = solutions_query.count()
-
-        # 计算复用率（使用次数 / 总方案数）
-        total_solutions = db.query(PresaleSolution).filter(
-            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-        ).count()
-
-        reuse_rate = (solutions_count / total_solutions * 100) if total_solutions > 0 else 0.0
-
-        template_stats.append({
-            "template_id": template.id,
-            "template_no": template.template_no,
-            "template_name": template.name,
-            "industry": template.industry,
-            "test_type": template.test_type,
-            "total_use_count": template.use_count or 0,
-            "period_use_count": solutions_count,
-            "reuse_rate": round(reuse_rate, 2),
-            "is_active": template.is_active
-        })
-
-    # 按使用次数排序
-    template_stats.sort(key=lambda x: x["period_use_count"], reverse=True)
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "period": {"start": str(start_date), "end": str(end_date)},
-            "templates": template_stats,
-            "summary": {
-                "total_templates": len(templates),
-                "active_templates": len([t for t in templates if t.is_active]),
-                "total_uses": sum(t["period_use_count"] for t in template_stats),
-                "avg_reuse_rate": round(sum(t["reuse_rate"] for t in template_stats) / len(template_stats), 2) if template_stats else 0.0
-            }
-        }
-    )
-
