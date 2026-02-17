@@ -19,6 +19,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -126,9 +127,7 @@ def get_risk_detail(
     Returns:
         ResponseModel: 风险详情
     """
-    risk = db.query(PmoProjectRisk).filter(PmoProjectRisk.id == risk_id).first()
-    if not risk:
-        raise HTTPException(status_code=404, detail="风险不存在")
+    risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     return ResponseModel(
         code=200,
@@ -179,9 +178,7 @@ def create_project_risk(
     Returns:
         ResponseModel: 创建结果
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 生成风险编号
     count = db.query(PmoProjectRisk).filter(PmoProjectRisk.project_id == project_id).count()
@@ -209,9 +206,7 @@ def create_project_risk(
         follow_up_date=date.fromisoformat(risk_data["follow_up_date"]) if risk_data.get("follow_up_date") else None,
         status="IDENTIFIED",
     )
-    db.add(risk)
-    db.commit()
-    db.refresh(risk)
+    save_obj(db, risk)
 
     return ResponseModel(
         code=200,
@@ -239,9 +234,7 @@ def update_project_risk(
     Returns:
         ResponseModel: 更新结果
     """
-    risk = db.query(PmoProjectRisk).filter(PmoProjectRisk.id == risk_id).first()
-    if not risk:
-        raise HTTPException(status_code=404, detail="风险不存在")
+    risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     updatable = [
         "risk_category", "risk_name", "description", "response_strategy",
@@ -285,9 +278,7 @@ def trigger_risk(
     Returns:
         ResponseModel: 触发结果
     """
-    risk = db.query(PmoProjectRisk).filter(PmoProjectRisk.id == risk_id).first()
-    if not risk:
-        raise HTTPException(status_code=404, detail="风险不存在")
+    risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     if risk.is_triggered:
         raise HTTPException(status_code=400, detail="该风险已触发")
@@ -319,9 +310,7 @@ def close_risk(
     Returns:
         ResponseModel: 关闭结果
     """
-    risk = db.query(PmoProjectRisk).filter(PmoProjectRisk.id == risk_id).first()
-    if not risk:
-        raise HTTPException(status_code=404, detail="风险不存在")
+    risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     if risk.status == "CLOSED":
         raise HTTPException(status_code=400, detail="该风险已关闭")
@@ -351,14 +340,11 @@ def delete_project_risk(
     Returns:
         ResponseModel: 删除结果
     """
-    risk = db.query(PmoProjectRisk).filter(PmoProjectRisk.id == risk_id).first()
-    if not risk:
-        raise HTTPException(status_code=404, detail="风险不存在")
+    risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     if risk.status not in ["IDENTIFIED", "CLOSED"]:
         raise HTTPException(status_code=400, detail="只能删除已识别或已关闭的风险")
 
-    db.delete(risk)
-    db.commit()
+    delete_obj(db, risk)
 
     return ResponseModel(code=200, message="风险删除成功", data={"id": risk_id})
