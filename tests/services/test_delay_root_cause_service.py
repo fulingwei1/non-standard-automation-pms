@@ -29,13 +29,13 @@ class TestDelayRootCauseService:
         """按 delay_reason 分组统计"""
         svc, db = self._make_service()
         today = date.today()
-        t1 = MagicMock(is_delayed=True, delay_reason="SUPPLIER", task_name="A", id=1, project_id=1,
+        t1 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="SUPPLIER", task_name="A", id=1, project_id=1,
                        plan_start_date=today, plan_end_date=today - timedelta(days=3),
                        actual_end_date=today)
-        t2 = MagicMock(is_delayed=True, delay_reason="SUPPLIER", task_name="B", id=2, project_id=1,
+        t2 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="SUPPLIER", task_name="B", id=2, project_id=1,
                        plan_start_date=today, plan_end_date=today - timedelta(days=2),
                        actual_end_date=today)
-        t3 = MagicMock(is_delayed=True, delay_reason="DESIGN", task_name="C", id=3, project_id=2,
+        t3 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="DESIGN", task_name="C", id=3, project_id=2,
                        plan_start_date=today, plan_end_date=today - timedelta(days=5),
                        actual_end_date=today)
         db.query.return_value.filter.return_value.all.return_value = [t1, t2, t3]
@@ -49,10 +49,11 @@ class TestDelayRootCauseService:
         """root_causes 按 total_delay_days 降序排列"""
         svc, db = self._make_service()
         today = date.today()
-        t1 = MagicMock(is_delayed=True, delay_reason="A", task_name="T1", id=1, project_id=1,
-                       plan_start_date=today, plan_end_date=today - timedelta(days=1), actual_end_date=today)
-        t2 = MagicMock(is_delayed=True, delay_reason="B", task_name="T2", id=2, project_id=1,
-                       plan_start_date=today, plan_end_date=today - timedelta(days=10), actual_end_date=today)
+        # t1: reason A with 5 days delay, t2: reason B with 10 days delay -> B should be first
+        t1 = MagicMock(delay_reason="A", task_name="T1", id=1, project_id=1,
+                       plan_start=today, plan_end=date(2025, 1, 1), actual_end=date(2025, 1, 6))
+        t2 = MagicMock(delay_reason="B", task_name="T2", id=2, project_id=1,
+                       plan_start=today, plan_end=date(2025, 1, 1), actual_end=date(2025, 1, 11))
         db.query.return_value.filter.return_value.all.return_value = [t1, t2]
         result = svc.analyze_root_cause()
         assert result["root_causes"][0]["reason"] == "B"
@@ -64,13 +65,13 @@ class TestDelayRootCauseService:
         svc, _ = self._make_service()
         plan = date(2025, 1, 1)
         actual = date(2025, 1, 11)
-        task = MagicMock(is_delayed=True, plan_end_date=plan, actual_end_date=actual)
+        task = MagicMock(actual_end=actual, plan_end=plan)
         assert svc._calculate_delay_days(task) == 10
 
     def test_calculate_delay_days_not_delayed(self):
         """未标记为延期时返回 0"""
         svc, _ = self._make_service()
-        task = MagicMock(is_delayed=False)
+        task = MagicMock(actual_end=None, plan_end=date(2025, 1, 1))
         assert svc._calculate_delay_days(task) == 0
 
     # ---------- _calculate_trend_direction ----------

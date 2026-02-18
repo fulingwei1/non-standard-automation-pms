@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 class DashboardStatCard(BaseModel):
     """仪表盘统计卡片"""
     
+    key: Optional[str] = Field(None, description="唯一键")
     title: str = Field(..., description="标题")
     value: float = Field(..., description="数值")
     unit: Optional[str] = Field(None, description="单位")

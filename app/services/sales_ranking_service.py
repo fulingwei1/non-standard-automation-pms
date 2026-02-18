@@ -350,35 +350,35 @@ class SalesRankingService:
         # 合同金额
         contract_query = (
             self.db.query(
-                Contract.owner_id.label("owner_id"),
+                Contract.sales_owner_id.label("owner_id"),
                 func.count(Contract.id).label("count"),
-                func.sum(func.coalesce(Contract.contract_amount, 0)).label(
+                func.sum(func.coalesce(Contract.total_amount, 0)).label(
                     "contract_amount"
                 ),
             )
-            .filter(Contract.owner_id.in_(user_ids))
+            .filter(Contract.sales_owner_id.in_(user_ids))
             .filter(Contract.created_at >= start_datetime)
             .filter(Contract.created_at <= end_datetime)
-            .group_by(Contract.owner_id)
+            .group_by(Contract.sales_owner_id)
         )
         for row in contract_query.all():
-            result[row.owner_id]["contract_amount"] = float(row.contract_amount or 0)
+            result[row.owner_id]["contract_amount"] = float(row.total_amount or 0)
             result[row.owner_id]["contract_count"] = int(row.count or 0)
 
         # 回款金额
         invoice_query = (
             self.db.query(
-                Contract.owner_id.label("owner_id"),
+                Contract.sales_owner_id.label("owner_id"),
                 func.sum(func.coalesce(Invoice.paid_amount, 0)).label("paid_amount"),
             )
             .join(Contract, Invoice.contract_id == Contract.id)
-            .filter(Contract.owner_id.in_(user_ids))
+            .filter(Contract.sales_owner_id.in_(user_ids))
             .filter(Invoice.payment_status.in_(["PAID", "PARTIAL"]))
             .filter(Invoice.paid_date.isnot(None))
         )
         invoice_query = invoice_query.filter(Invoice.paid_date >= start_datetime.date())
         invoice_query = invoice_query.filter(Invoice.paid_date <= end_datetime.date())
-        invoice_query = invoice_query.group_by(Contract.owner_id)
+        invoice_query = invoice_query.group_by(Contract.sales_owner_id)
 
         for row in invoice_query.all():
             result[row.owner_id]["collection_amount"] = float(row.paid_amount or 0)
@@ -396,11 +396,11 @@ class SalesRankingService:
 
         query = (
             self.db.query(
-                Contract.owner_id.label("owner_id"),
+                Contract.sales_owner_id.label("owner_id"),
                 func.sum(func.coalesce(Invoice.amount, 0)).label("acceptance_amount"),
             )
             .join(Invoice, Invoice.contract_id == Contract.id)
-            .filter(Contract.owner_id.in_(user_ids))
+            .filter(Contract.sales_owner_id.in_(user_ids))
             .filter(
                 Invoice.status.in_(
                     [InvoiceStatusEnum.APPROVED.value, InvoiceStatusEnum.ISSUED.value]
@@ -408,7 +408,7 @@ class SalesRankingService:
             )
             .filter(Invoice.created_at >= start_datetime)
             .filter(Invoice.created_at <= end_datetime)
-            .group_by(Contract.owner_id)
+            .group_by(Contract.sales_owner_id)
         )
 
         return {

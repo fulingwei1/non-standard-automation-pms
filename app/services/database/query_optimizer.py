@@ -265,23 +265,23 @@ class QueryOptimizer:
         # 合同统计
         contract_stats = self.db.query(
             func.count(Contract.id).label('total_contracts'),
-            func.sum(Contract.contract_amount).label('total_amount'),
-            func.avg(Contract.contract_amount).label('avg_amount')
+            func.sum(Contract.total_amount).label('total_amount'),
+            func.avg(Contract.total_amount).label('avg_amount')
         ).filter(
-            Contract.signed_date >= start_date
+            Contract.signing_date >= start_date
         ).first()
 
         # 按月份分组的趋势
         monthly_stats = self.db.query(
-            func.date_trunc('month', Contract.signed_date).label('month'),
+            func.date_trunc('month', Contract.signing_date).label('month'),
             func.count(Contract.id).label('count'),
-            func.sum(Contract.contract_amount).label('amount')
+            func.sum(Contract.total_amount).label('amount')
         ).filter(
-            Contract.signed_date >= start_date
+            Contract.signing_date >= start_date
         ).group_by(
-            func.date_trunc('month', Contract.signed_date)
+            func.date_trunc('month', Contract.signing_date)
         ).order_by(
-            func.date_trunc('month', Contract.signed_date)
+            func.date_trunc('month', Contract.signing_date)
         ).all()
 
         return {
@@ -309,7 +309,7 @@ class QueryOptimizer:
             "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_issue_project_type ON issue(project_id, issue_type);",
             "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_shortage_urgency ON shortage_report(urgency_level, report_date);",
             "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_contract_signed_date ON contract(signed_date);",
-            "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_contract_customer_amount ON contract(customer_id, contract_amount);",
+            "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_contract_customer_amount ON contract(customer_id, total_amount);",
             "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_active_role ON user(is_active, role);",
         ]
 

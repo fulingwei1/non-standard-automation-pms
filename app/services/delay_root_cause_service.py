@@ -34,15 +34,15 @@ class DelayRootCauseService:
         """延期根因分析"""
         # 查询延期任务
         query = self.db.query(Task).filter(
-            Task.is_delayed
+            (Task.actual_end > Task.plan_end)
         )
 
         if project_id:
             query = query.filter(Task.project_id == project_id)
         if start_date:
-            query = query.filter(Task.plan_start_date >= start_date)
+            query = query.filter(Task.plan_start >= start_date)
         if end_date:
-            query = query.filter(Task.plan_start_date <= end_date)
+            query = query.filter(Task.plan_start <= end_date)
 
         delayed_tasks = query.all()
 
@@ -163,15 +163,15 @@ class DelayRootCauseService:
 
         # 查询任务
         tasks = self.db.query(Task).filter(
-            Task.plan_start_date >= start_date,
-            Task.plan_start_date <= end_date
+            Task.plan_start >= start_date,
+            Task.plan_start <= end_date
         ).all()
 
         for task in tasks:
-            month_key = task.plan_start_date.strftime('%Y-%m') if task.plan_start_date else None
+            month_key = task.plan_start.strftime('%Y-%m') if task.plan_start else None
             if month_key:
                 monthly_stats[month_key]['total_tasks'] += 1
-                if task.is_delayed:
+                if task.actual_end and task.plan_end and task.actual_end > task.plan_end:
                     monthly_stats[month_key]['delayed_tasks'] += 1
                     delay_days = self._calculate_delay_days(task)
                     monthly_stats[month_key]['total_delay_days'] += delay_days
@@ -205,11 +205,11 @@ class DelayRootCauseService:
 
     def _calculate_delay_days(self, task: Task) -> int:
         """计算任务延期天数"""
-        if not task.is_delayed:
+        if not bool(task.actual_end and task.plan_end and task.actual_end > task.plan_end):
             return 0
 
-        plan_end = task.plan_end_date
-        actual_end = task.actual_end_date
+        plan_end = task.plan_end
+        actual_end = task.actual_end
 
         if plan_end and actual_end:
             return (actual_end - plan_end).days

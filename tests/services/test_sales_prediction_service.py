@@ -33,8 +33,8 @@ def _make_svc(db=None, **config):
 
 def _make_contract(signed_date, amount):
     c = MagicMock()
-    c.signed_date = signed_date
-    c.contract_amount = Decimal(str(amount))
+    c.signing_date = signed_date
+    c.total_amount = Decimal(str(amount))
     return c
 
 
@@ -329,8 +329,8 @@ class TestGetMonthlyRevenue(unittest.TestCase):
     def test_contract_without_signed_date_skipped(self):
         """无签约日期的合同跳过"""
         c = MagicMock()
-        c.signed_date = None
-        c.contract_amount = Decimal("100000")
+        c.signing_date = None
+        c.total_amount = Decimal("100000")
 
         result = self.svc._get_monthly_revenue([c])
         self.assertEqual(result, [])

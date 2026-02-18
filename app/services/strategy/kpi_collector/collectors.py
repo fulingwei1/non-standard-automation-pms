@@ -34,7 +34,7 @@ def collect_project_metrics(
 
     filters = filters or {}
 
-    query = db.query(Project).filter(Project.is_active)
+    query = db.query(Project).filter(Project.status.isnot(None))
 
     # 应用筛选条件
     if "status" in filters:
@@ -42,7 +42,7 @@ def collect_project_metrics(
     if "year" in filters:
         query = query.filter(func.year(Project.created_at) == filters["year"])
     if "health_status" in filters:
-        query = query.filter(Project.health_status == filters["health_status"])
+        query = query.filter(Project.health == filters["health_status"])
 
     if metric == "PROJECT_COUNT":
         # 项目数量
@@ -70,7 +70,7 @@ def collect_project_metrics(
         total = query.count()
         if total == 0:
             return Decimal(0)
-        healthy = query.filter(Project.health_status == "H1").count()
+        healthy = query.filter(Project.health == "H1").count()
         return Decimal(str(healthy / total * 100))
 
     elif metric == "PROJECT_TOTAL_VALUE":
@@ -116,7 +116,7 @@ def collect_finance_metrics(
 
     if metric == "CONTRACT_TOTAL_AMOUNT":
         # 合同总金额
-        query = db.query(func.sum(Contract.contract_amount))
+        query = db.query(func.sum(Contract.total_amount))
         if "year" in filters:
             query = query.filter(func.year(Contract.signed_date) == filters["year"])
         if "customer_id" in filters:
@@ -214,7 +214,7 @@ def collect_purchase_metrics(
 
     filters = filters or {}
 
-    query = db.query(PurchaseOrder).filter(PurchaseOrder.is_active)
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.status != "CANCELLED")
 
     # 应用筛选条件
     if "year" in filters:

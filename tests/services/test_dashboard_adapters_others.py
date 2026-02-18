@@ -229,8 +229,8 @@ class TestStaffMatchingDashboardAdapter:
         chain.scalar.return_value = 0
 
         stats = adapter.get_stats()
-        rate_card = [s for s in stats if s.key == "success_rate"][0]
-        assert "0.0%" in str(rate_card.value)
+        rate_card = [s for s in stats if s.title == "匹配成功率"][0]
+        assert rate_card.value == 0.0
 
     @patch("app.services.dashboard_adapters.others.MesProjectStaffingNeed")
     @patch("app.services.dashboard_adapters.others.HrAIMatchingLog")
@@ -273,7 +273,7 @@ class TestStaffMatchingDashboardAdapter:
 
         widgets = adapter.get_widgets()
         assert len(widgets) == 2
-        assert widgets[0].data[0]["employee_name"] == "John"
+        assert widgets[0].data["items"][0]["employee_name"] == "John"
 
     @patch("app.services.dashboard_adapters.others.MesProjectStaffingNeed")
     @patch("app.services.dashboard_adapters.others.HrAIMatchingLog")
@@ -287,8 +287,8 @@ class TestStaffMatchingDashboardAdapter:
 
         result = adapter.get_detailed_data()
         assert isinstance(result, DetailedDashboardResponse)
-        assert result.module == "staff_matching"
-        assert "by_status" in result.details
+        assert result.module_id == "staff_matching"
+        assert "by_status" in result.data.get("details", result.data)
 
 
 # ==================== KitRateDashboardAdapter ====================
@@ -353,4 +353,4 @@ class TestKitRateDashboardAdapter:
         }
         result = adapter.get_detailed_data()
         assert isinstance(result, DetailedDashboardResponse)
-        assert result.module == "kit_rate"
+        assert result.module_id == "kit_rate"

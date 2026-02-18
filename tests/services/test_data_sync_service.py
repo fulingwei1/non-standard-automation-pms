@@ -59,7 +59,8 @@ class TestDataSyncService:
             id=1, project_id=10,
             contract_amount=amount,
             signed_date=None,
-            quote_version=None
+            quote_version=None,
+            delivery_deadline=None
         )
         project = MagicMock(
             id=10,

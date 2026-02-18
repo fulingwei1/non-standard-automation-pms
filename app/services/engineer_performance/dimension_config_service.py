@@ -383,6 +383,8 @@ class DimensionConfigService:
 
         config.approval_status = 'APPROVED' if approved else 'REJECTED'
         config.approval_reason = approval_reason
+        if hasattr(config, 'approved_by'):
+            config.approved_by = approver_id
 
         self.db.commit()
         self.db.refresh(config)

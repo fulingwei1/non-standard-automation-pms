@@ -229,7 +229,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         return [
             DashboardStatCard(
                 key="open_needs",
-                label="待匹配需求",
+                title="待匹配需求",
                 value=open_needs,
                 unit="个",
                 icon="need",
@@ -237,7 +237,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="matching_needs",
-                label="匹配中",
+                title="匹配中",
                 value=matching_needs,
                 unit="个",
                 icon="matching",
@@ -245,7 +245,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="filled_needs",
-                label="已填充",
+                title="已填充",
                 value=filled_needs,
                 unit="个",
                 icon="filled",
@@ -253,7 +253,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="total_headcount",
-                label="总需求人数",
+                title="总需求人数",
                 value=int(total_headcount_needed),
                 unit="人",
                 icon="people",
@@ -261,7 +261,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="filled_headcount",
-                label="已填充人数",
+                title="已填充人数",
                 value=int(total_headcount_filled),
                 unit="人",
                 icon="filled-people",
@@ -269,8 +269,8 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="success_rate",
-                label="匹配成功率",
-                value=f"{success_rate:.1f}%",
+                title="匹配成功率",
+                value=round(float(success_rate), 1),
                 icon="success",
                 color="green",
             ),
@@ -319,7 +319,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
                 widget_id="recent_matches",
                 widget_type="list",
                 title="最近匹配记录",
-                data=recent_matches,
+                data={'items': recent_matches},
                 order=1,
                 span=16,
             ),
@@ -351,11 +351,9 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         details = {"by_status": by_status}
 
         return DetailedDashboardResponse(
-            module=self.module_id,
+            module_id=self.module_id,
             module_name=self.module_name,
-            summary=summary,
-            details=details,
-            generated_at=datetime.now(),
+            data={'summary': summary, 'details': details},
         )
 
 
@@ -389,7 +387,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
         return [
             DashboardStatCard(
                 key="total_projects",
-                label="项目总数",
+                title="项目总数",
                 value=overall_stats.get("total_projects", 0),
                 unit="个",
                 icon="project",
@@ -397,14 +395,14 @@ class KitRateDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="avg_kit_rate",
-                label="平均齐套率",
-                value=f"{overall_stats.get('avg_kit_rate', 0):.1f}%",
+                title="平均齐套率",
+                value=round(float(overall_stats.get('avg_kit_rate', 0)), 1),
                 icon="rate",
                 color="green",
             ),
             DashboardStatCard(
                 key="can_start_count",
-                label="可开工项目",
+                title="可开工项目",
                 value=overall_stats.get("can_start_count", 0),
                 unit="个",
                 icon="start",
@@ -412,7 +410,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
             ),
             DashboardStatCard(
                 key="shortage_count",
-                label="缺料项目",
+                title="缺料项目",
                 value=overall_stats.get("shortage_count", 0),
                 unit="个",
                 icon="shortage",
@@ -435,7 +433,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
                 widget_id="project_list",
                 widget_type="table",
                 title="项目齐套情况",
-                data=project_list[:10],  # 只显示前10个
+                data={'items': project_list[:10]},  # 只显示前10个
                 order=1,
                 span=24,
             )
@@ -456,9 +454,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
         details = {"project_list": project_list}
 
         return DetailedDashboardResponse(
-            module=self.module_id,
+            module_id=self.module_id,
             module_name=self.module_name,
-            summary=summary,
-            details=details,
-            generated_at=datetime.now(),
+            data={'summary': summary, 'details': details},
         )

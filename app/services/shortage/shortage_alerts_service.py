@@ -207,21 +207,21 @@ class ShortageAlertsService:
     def get_follow_ups(self, alert_id: int) -> List[dict]:
         """获取跟进行动列表"""
         follow_ups = self.db.query(ArrivalFollowUp).options(
-            joinedload(ArrivalFollowUp.created_by_user)
+            
         ).filter(
-            ArrivalFollowUp.shortage_id == alert_id
+            ArrivalFollowUp.arrival_id == alert_id
         ).order_by(ArrivalFollowUp.created_at.desc()).all()
 
         return [
             {
                 "id": fu.id,
                 "follow_up_type": fu.follow_up_type,
-                "description": fu.description,
-                "contact_person": fu.contact_person,
-                "contact_method": fu.contact_method,
-                "scheduled_time": fu.scheduled_time.isoformat() if fu.scheduled_time else None,
-                "status": fu.status,
-                "created_by": fu.created_by_user.name if fu.created_by_user else None,
+                "description": fu.follow_up_note,
+                "contact_person": None,
+                "contact_method": fu.follow_up_type,
+                "scheduled_time": None,
+                "status": "completed",
+                "created_by": None,
                 "created_at": fu.created_at.isoformat(),
                 "completed_at": fu.completed_at.isoformat() if fu.completed_at else None
             }

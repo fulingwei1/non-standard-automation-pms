@@ -11,9 +11,9 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-# from app.models.inventory_tracking import InventoryStock, InventoryTransaction  # FIXME: Classes do not exist
+# from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation  # FIXME: Classes do not exist
 # Use correct class names:
-from app.models.inventory_tracking import MaterialStock, MaterialTransaction
+from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation
 from app.models.material import Material, ProjectMaterial
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
@@ -64,9 +64,9 @@ class MaterialTransferService:
             return result
 
         # 2. 尝试从库存表查询
-        inventory = db.query(InventoryStock).filter(
-            InventoryStock.project_id == project_id,
-            InventoryStock.material_id == material_id
+        inventory = db.query(MaterialReservation).filter(
+            MaterialReservation.project_id == project_id,
+            MaterialReservation.material_id == material_id
         ).first()
 
         if inventory:
@@ -237,9 +237,9 @@ class MaterialTransferService:
             return result
 
         # 2. 如果项目物料表没有记录，尝试更新库存表
-        inventory = db.query(InventoryStock).filter(
-            InventoryStock.project_id == project_id,
-            InventoryStock.material_id == material_id
+        inventory = db.query(MaterialReservation).filter(
+            MaterialReservation.project_id == project_id,
+            MaterialReservation.material_id == material_id
         ).first()
 
         if inventory:
@@ -305,7 +305,7 @@ class MaterialTransferService:
             # 获取物料信息
             material = db.query(Material).filter(Material.id == material_id).first()
 
-            transaction = InventoryTransaction(
+            transaction = MaterialTransaction(
                 project_id=project_id,
                 material_id=material_id,
                 material_code=material.material_code if material else None,
@@ -372,9 +372,8 @@ class MaterialTransferService:
             })
 
         # 2. 检查中心仓库库存
-        inventory = db.query(InventoryStock).filter(
-            InventoryStock.material_id == material_id,
-            InventoryStock.project_id.is_(None)  # 中心仓库
+        inventory = db.query(MaterialStock).filter(
+            MaterialStock.material_id == material_id
         ).first()
 
         if inventory and inventory.available_qty > 0:

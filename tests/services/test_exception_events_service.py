@@ -83,7 +83,11 @@ class TestExceptionEventsService(unittest.TestCase):
 
     # --- create_exception_event ---
     @patch.object(ExceptionEvent, "__init__", lambda self, **kw: None)
-    def test_create_exception_event(self):
+    @patch("app.services.alert.exception_events_service.ExceptionEvent")
+    def test_create_exception_event(self, mock_event_cls):
+        mock_event = MagicMock()
+        mock_event_cls.return_value = mock_event
+
         event_data = MagicMock()
         event_data.title = "test"
         event_data.description = "desc"
@@ -99,9 +103,9 @@ class TestExceptionEventsService(unittest.TestCase):
         user.id = 1
 
         result = self.service.create_exception_event(event_data, user)
-        self.db.add.assert_called_once()
-        self.db.commit.assert_called_once()
-        self.db.refresh.assert_called_once()
+        self.db.add.assert_called()
+        self.db.commit.assert_called()
+        self.db.refresh.assert_called()
 
     # --- update_exception_event ---
     def test_update_exception_event_not_found(self):

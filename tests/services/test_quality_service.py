@@ -151,6 +151,7 @@ class TestBatchTracing:
         db.query.return_value.filter.return_value.all.side_effect = [
             [insp],   # inspection 查询
             [],       # defect analysis 查询
+            [],       # rework orders 查询
         ]
         result = QualityService.batch_tracing(db, "BATCH-001")
         assert "batch_no" in result

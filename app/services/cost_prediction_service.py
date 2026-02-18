@@ -672,7 +672,7 @@ class CostPredictionService:
     
     def _traditional_eac_prediction(self, latest_evm: EarnedValueData) -> Dict:
         """传统EAC预测方法"""
-        cpi = latest_evm.cost_performance_index or Decimal('1')
+        cpi = latest_evm.cost_performance_index if latest_evm.cost_performance_index is not None else Decimal('1')
         bac = latest_evm.budget_at_completion
         ac = latest_evm.actual_cost
         ev = latest_evm.earned_value

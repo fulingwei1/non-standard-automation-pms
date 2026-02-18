@@ -72,7 +72,7 @@ class SalesPredictionService:
         # 获取历史合同数据（用于训练预测模型）
         query_contracts = self.db.query(Contract).filter(
             Contract.status == "SIGNED",
-            Contract.contract_amount.isnot(None),
+            Contract.total_amount.isnot(None),
         )
 
         if customer_id:
@@ -80,7 +80,7 @@ class SalesPredictionService:
         if owner_id:
             query_contracts = query_contracts.filter(Contract.owner_id == owner_id)
 
-        contracts = query_contracts.order_by(Contract.signed_date.desc()).limit(100).all()
+        contracts = query_contracts.order_by(Contract.signing_date.desc()).limit(100).all()
 
         # 获取历史月度收入数据
         monthly_revenue = self._get_monthly_revenue(contracts)
@@ -205,10 +205,10 @@ class SalesPredictionService:
         monthly_data = defaultdict(lambda: {"count": 0, "amount": Decimal("0")})
 
         for contract in contracts:
-            if contract.signed_date:
-                month_key = contract.signed_date.strftime("%Y-%m")
+            if contract.signing_date:
+                month_key = contract.signing_date.strftime("%Y-%m")
                 monthly_data[month_key]["count"] += 1
-                monthly_data[month_key]["amount"] += contract.contract_amount or Decimal("0")
+                monthly_data[month_key]["amount"] += contract.total_amount or Decimal("0")
 
         # 转换为列表并按月份排序
         result = []
@@ -381,11 +381,11 @@ class SalesPredictionService:
         # 获取该时间段内实际签约的合同
         actual_contracts = self.db.query(Contract).filter(
             Contract.status == "SIGNED",
-            Contract.signed_date >= start_date,
-            Contract.signed_date <= today,
+            Contract.signing_date >= start_date,
+            Contract.signing_date <= today,
         ).all()
 
-        actual_revenue = sum([float(c.contract_amount or 0) for c in actual_contracts])
+        actual_revenue = sum([float(c.total_amount or 0) for c in actual_contracts])
 
         # 获取该时间段开始时的商机（模拟历史预测）
         historical_opps = self.db.query(Opportunity).filter(
