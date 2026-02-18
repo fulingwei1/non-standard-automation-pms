@@ -11,6 +11,7 @@ import random
 
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import Session
+import math
 import numpy as np
 
 try:
@@ -136,6 +137,8 @@ class TimesheetForecastService:
             # 计算相似项目的平均工时
             hours_list = [float(r.total_hours) for r in similar_results]
             predicted_hours = np.mean(hours_list)
+            if math.isnan(float(predicted_hours)):
+                predicted_hours = 0.0
             confidence_level = 70  # 中等置信度
             
             # 根据团队规模和周期调整
@@ -187,7 +190,7 @@ class TimesheetForecastService:
             project_id=project_id,
             project_name=project_name or '新项目',
             forecast_method='HISTORICAL_AVERAGE',
-            predicted_hours=Decimal(str(round(predicted_hours, 2))),
+            predicted_hours=Decimal(str(round(float(predicted_hours) if not (predicted_hours != predicted_hours) else 0.0, 2))),
             predicted_hours_min=Decimal(str(round(predicted_hours_min, 2))),
             predicted_hours_max=Decimal(str(round(predicted_hours_max, 2))),
             confidence_level=Decimal(str(confidence_level)),
@@ -310,7 +313,7 @@ class TimesheetForecastService:
             project_id=project_id,
             project_name=project_name or '新项目',
             forecast_method='LINEAR_REGRESSION',
-            predicted_hours=Decimal(str(round(predicted_hours, 2))),
+            predicted_hours=Decimal(str(round(float(predicted_hours) if not (predicted_hours != predicted_hours) else 0.0, 2))),
             predicted_hours_min=Decimal(str(round(predicted_hours_min, 2))),
             predicted_hours_max=Decimal(str(round(predicted_hours_max, 2))),
             confidence_level=Decimal(str(round(confidence_level, 2))),
@@ -404,7 +407,7 @@ class TimesheetForecastService:
             project_id=project_id,
             project_name=project_name or '新项目',
             forecast_method='TREND_FORECAST',
-            predicted_hours=Decimal(str(round(predicted_hours, 2))),
+            predicted_hours=Decimal(str(round(float(predicted_hours) if not (predicted_hours != predicted_hours) else 0.0, 2))),
             predicted_hours_min=Decimal(str(round(predicted_hours_min, 2))),
             predicted_hours_max=Decimal(str(round(predicted_hours_max, 2))),
             confidence_level=Decimal(str(round(confidence_level, 2))),

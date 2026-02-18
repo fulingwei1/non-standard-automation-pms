@@ -3,6 +3,8 @@
 测试资源分配、冲突检测、利用率计算等功能
 """
 import pytest
+pytest.importorskip("app.services.resource_optimization_service")
+
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 from typing import List

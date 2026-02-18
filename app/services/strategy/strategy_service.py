@@ -482,3 +482,17 @@ class StrategyService:
 
     def get_strategy_metrics(self, strategy_id: int) -> dict:
         return self.get_metrics(strategy_id)
+
+    def get_by_code(self, code: str) -> Optional[Strategy]:
+        return get_strategy_by_code(self.db, code)
+
+    def get_active(self) -> Optional[Strategy]:
+        return get_active_strategy(self.db)
+
+    def publish(self, strategy_id: int, approved_by: Optional[int] = None) -> Optional[Strategy]:
+        if approved_by is not None:
+            return publish_strategy(self.db, strategy_id, approved_by)
+        return publish_strategy(self.db, strategy_id)
+
+    def archive(self, strategy_id: int) -> Optional[Strategy]:
+        return archive_strategy(self.db, strategy_id)
