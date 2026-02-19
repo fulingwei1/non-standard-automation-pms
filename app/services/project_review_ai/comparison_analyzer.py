@@ -226,7 +226,7 @@ class ProjectComparisonAnalyzer:
 - strengths: 优势数组 [{area, description, reason}]
 - weaknesses: 劣势数组 [{area, description, cause}]
 - improvements: 改进建议数组 [{area, problem, suggestion, expected_impact, priority}]
-- benchmarks: 基准对比 {schedule, cost, quality, each with target/actual/gap}"""
+- benchmarks: 基准对比 {{schedule, cost, quality, each with target/actual/gap}}"""
         
         ai_response = self.ai_client.generate_solution(
             prompt=prompt,
