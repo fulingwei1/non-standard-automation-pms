@@ -123,11 +123,26 @@ The API layer is the single largest gap by absolute missing lines.
 
 The existing 74 API test files focus on basic CRUD happy paths. Key gaps:
 
-1. **Authorization testing**: Most endpoints use `require_permission()` but tests don't verify that unauthorized users are rejected.
-2. **Input validation**: Pydantic validation errors, malformed request bodies, invalid query parameters.
-3. **Pagination and filtering**: The system uses common pagination utilities but tests rarely verify pagination behavior, keyword filtering, or empty result handling.
-4. **Error responses**: 404 for missing resources, 409 for conflicts, 422 for validation errors.
+1. **Authorization testing**: Most endpoints use `require_permission()` but tests don't verify that unauthorized users are rejected. No test sends a request with a non-admin user and asserts 403.
+2. **Input validation**: Pydantic validation errors, malformed request bodies, invalid query parameters. No tests verify 422 responses for bad payloads.
+3. **Pagination and filtering**: Tests only request page 1 with default size. No tests for page=0, page_size > max, page > total_pages, or keyword filtering.
+4. **Error responses**: No tests for 404 (missing resources), 409 (conflicts/duplicates), or 422 (schema violations).
 5. **Production and sales modules**: The two largest API modules (5,780 and 5,131 lines respectively) both sit below 40% coverage.
+
+**Specific example** — `tests/api/test_alerts.py`:
+- Lines 20-59: Only GET requests
+- Lines 60-84: Only successful POST (status 201)
+- Lines 87-119: Only GET by ID success
+- Missing: 400/403/404/409/422 error cases, pagination edge cases, rate limiting behavior
+
+**Specific example** — `tests/api/test_auth.py` (lines 26-32):
+```python
+def test_login_wrong_password(...):
+    # Only checks "!= 200" — doesn't verify specific 401 status
+    # Doesn't check error message content
+    # Doesn't test rate limiting after 5 wrong attempts
+    # Doesn't test account lockout behavior
+```
 
 ---
 
@@ -165,33 +180,72 @@ Sampling 200 test files revealed:
 - **68 out of 713 test functions** (in 50 sampled files) contain **no assertions at all**.
 - These tests provide a false sense of coverage without actually verifying behavior.
 
-**Example pattern to avoid:**
+**Specific examples found:**
+
+`tests/unit/test_acceptance_bonus_service_comprehensive.py` (lines 106, 133, 240, 267):
 ```python
-def test_create_project(self, service):
-    result = service.create_project(data)
-    assert result is not None  # Only checks existence, not correctness
+assert result is not None  # Only checks existence — never validates bonus values
 ```
 
-**Better:**
+`tests/api/test_approvals_api.py` (lines 48, 91, 93):
 ```python
-def test_create_project(self, service):
-    result = service.create_project(data)
-    assert result.name == data["name"]
-    assert result.code.startswith("PJ")
-    assert result.stage == ProjectStage.S1_REQUIREMENT
+assert "total" in data or "items" in data  # OR condition too loose — accepts any shape
+assert response.status_code in [200, 201]  # Accepts either — doesn't know which to expect
+assert "id" in data or "template_code" in data  # Accepts any shape
+```
+
+**Pattern to follow instead** (from `tests/unit/test_auth.py` lines 95-120):
+```python
+payload = jwt.decode(token, ...)
+assert payload["sub"] == user_id       # Validates specific content
+assert "exp" in payload                # Validates structure
+assert len(payload["jti"]) == 32       # Validates value properties
 ```
 
 ### 6b. Over-Mocking
 
 30% of sampled unit test files use mocks. While mocking is appropriate for external dependencies (Redis, email, AI APIs), some tests mock the database layer so heavily that they don't verify actual query logic or ORM relationships work.
 
+**Specific example** — `tests/services/test_approval_approve.py` (lines 47-120):
+```python
+class MockEngine(ApprovalProcessMixin):
+    def __init__(self):
+        self.db = MagicMock()
+        self.executor = MagicMock()
+        self.notify = MagicMock()
+        self.delegate_service = MagicMock()
+```
+Everything is stubbed — tests pass even if underlying approval logic is broken. The test verifies mock behavior, not actual workflow state transitions.
+
+**Contrast with good pattern** — `tests/unit/test_auth.py` (lines 33-75):
+- Uses real `get_password_hash()` and `verify_password()`, not mocks
+- Creates actual JWT tokens and decodes them with real crypto
+- These tests catch real authentication bugs
+
 ### 6c. Missing Error Path Tests
 
-State machine implementations (`app/core/state_machine/`) define valid transitions but tests primarily verify the happy path. Missing tests:
-- Invalid state transitions (e.g., `draft` → `completed` skipping intermediate states)
-- Permission denied during state transitions
-- Concurrent state transitions on the same entity
-- State transition hooks (pre/post callbacks) error handling
+State machine implementations (`app/core/state_machine/`) define valid transitions but tests primarily verify the happy path.
+
+**State machine** (`app/core/state_machine/base.py` lines 74-114):
+- Has enum handling with `.rsplit(".", 1)[-1]` fallback (line 87-93) — **no test covers this path**
+- Has validator exception handling (lines 106-112) — **no test triggers validator failures**
+- `can_transition_to()` validation — **no test for invalid target states**
+
+**Auth module** (`app/core/auth.py` lines 107-118):
+```python
+if user_is_superuser and user_tenant_id is not None:
+    raise ValueError("Invalid superuser data...")
+```
+This `validate_user_tenant_consistency()` function is **never tested** despite being a security-critical validation.
+
+**Approval engine** — `tests/services/test_approval_approve.py`:
+- Tests empty comment rejection but not `None` comment, whitespace-only comment, or max-length comment
+- No tests for concurrent approvals of the same instance
+- No tests for approval callback failures
+
+### 6d. High Test Skip Rate
+
+The test suite has **2,663+ `pytest.skip()` calls**, indicating many tests are routinely skipped. This inflates the test file count while reducing actual coverage.
 
 ---
 
