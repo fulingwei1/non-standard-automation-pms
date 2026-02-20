@@ -295,9 +295,12 @@ class TestEmployeePerformanceService(unittest.TestCase):
     def test_get_evaluator_type_dept_manager(self):
         """测试判断评价人类型为部门经理"""
         mock_user = MagicMock()
+        # 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
         mock_role = MagicMock()
-        mock_role.role.role_code = "dept_manager"
-        mock_role.role.role_name = "部门经理"
+        mock_role.role = role_obj
         mock_user.roles = [mock_role]
 
         result = self.service.get_evaluator_type(mock_user)
@@ -306,9 +309,12 @@ class TestEmployeePerformanceService(unittest.TestCase):
     def test_get_evaluator_type_project_manager(self):
         """测试判断评价人类型为项目经理"""
         mock_user = MagicMock()
+        # 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "pm"
+        role_obj.role_name = "项目经理"
         mock_role = MagicMock()
-        mock_role.role.role_code = "pm"
-        mock_role.role.role_name = "项目经理"
+        mock_role.role = role_obj
         mock_user.roles = [mock_role]
 
         result = self.service.get_evaluator_type(mock_user)

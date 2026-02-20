@@ -53,10 +53,12 @@ class TestManagerPerformanceService(unittest.TestCase):
         current_user.department_id = 10
         current_user.roles = []
 
-        # 创建角色
+        # 创建角色 - 修复嵌套结构
+        role_obj = Mock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
         role_mock = Mock()
-        role_mock.role.role_code = "dept_manager"
-        role_mock.role.role_name = "部门经理"
+        role_mock.role = role_obj
         current_user.roles = [role_mock]
 
         target_user = Mock(spec=User)
@@ -125,9 +127,12 @@ class TestManagerPerformanceService(unittest.TestCase):
     def test_get_evaluator_type_dept_manager(self):
         """测试判断评价人类型为部门经理"""
         user = Mock(spec=User)
+        # 修复嵌套结构
+        role_obj = Mock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
         role_mock = Mock()
-        role_mock.role.role_code = "dept_manager"
-        role_mock.role.role_name = "部门经理"
+        role_mock.role = role_obj
         user.roles = [role_mock]
 
         result = self.service.get_evaluator_type(user)
@@ -137,9 +142,12 @@ class TestManagerPerformanceService(unittest.TestCase):
     def test_get_evaluator_type_project_manager(self):
         """测试判断评价人类型为项目经理"""
         user = Mock(spec=User)
+        # 修复嵌套结构
+        role_obj = Mock()
+        role_obj.role_code = "pm"
+        role_obj.role_name = "项目经理"
         role_mock = Mock()
-        role_mock.role.role_code = "pm"
-        role_mock.role.role_name = "项目经理"
+        role_mock.role = role_obj
         user.roles = [role_mock]
 
         result = self.service.get_evaluator_type(user)
@@ -149,12 +157,18 @@ class TestManagerPerformanceService(unittest.TestCase):
     def test_get_evaluator_type_both(self):
         """测试判断评价人类型为双重角色"""
         user = Mock(spec=User)
+        # 修复嵌套结构 - 部门经理
+        role_obj1 = Mock()
+        role_obj1.role_code = "dept_manager"
+        role_obj1.role_name = "部门经理"
         role_mock1 = Mock()
-        role_mock1.role.role_code = "dept_manager"
-        role_mock1.role.role_name = "部门经理"
+        role_mock1.role = role_obj1
+        # 修复嵌套结构 - 项目经理
+        role_obj2 = Mock()
+        role_obj2.role_code = "pm"
+        role_obj2.role_name = "项目经理"
         role_mock2 = Mock()
-        role_mock2.role.role_code = "pm"
-        role_mock2.role.role_name = "项目经理"
+        role_mock2.role = role_obj2
         user.roles = [role_mock1, role_mock2]
 
         result = self.service.get_evaluator_type(user)
@@ -260,9 +274,12 @@ class TestManagerPerformanceService(unittest.TestCase):
 
         current_user = Mock(spec=User)
         current_user.id = 1
+        # 修复嵌套结构
+        role_obj = Mock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
         role_mock = Mock()
-        role_mock.role.role_code = "dept_manager"
-        role_mock.role.role_name = "部门经理"
+        role_mock.role = role_obj
         current_user.roles = [role_mock]
 
         evaluation_in = PerformanceEvaluationRecordCreate(

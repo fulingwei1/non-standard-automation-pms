@@ -113,13 +113,19 @@ class TestProjectPerformanceService(unittest.TestCase):
         """测试评价人类型判断 - BOTH"""
         user = MagicMock()
 
+        # 修复嵌套结构 - 部门经理角色
+        dept_role_obj = MagicMock()
+        dept_role_obj.role_code = "dept_manager"
+        dept_role_obj.role_name = "部门经理"
         dept_role = MagicMock()
-        dept_role.role.role_code = "dept_manager"
-        dept_role.role.role_name = "部门经理"
+        dept_role.role = dept_role_obj
 
+        # 修复嵌套结构 - 项目经理角色
+        pm_role_obj = MagicMock()
+        pm_role_obj.role_code = "pm"
+        pm_role_obj.role_name = "项目经理"
         pm_role = MagicMock()
-        pm_role.role.role_code = "pm"
-        pm_role.role.role_name = "项目经理"
+        pm_role.role = pm_role_obj
 
         user.roles = [dept_role, pm_role]
 
@@ -130,9 +136,12 @@ class TestProjectPerformanceService(unittest.TestCase):
         """测试评价人类型判断 - DEPT_MANAGER"""
         user = MagicMock()
 
+        # 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
         dept_role = MagicMock()
-        dept_role.role.role_code = "dept_manager"
-        dept_role.role.role_name = "部门经理"
+        dept_role.role = role_obj
 
         user.roles = [dept_role]
 
@@ -143,9 +152,12 @@ class TestProjectPerformanceService(unittest.TestCase):
         """测试评价人类型判断 - PROJECT_MANAGER"""
         user = MagicMock()
 
+        # 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "pm"
+        role_obj.role_name = "项目经理"
         pm_role = MagicMock()
-        pm_role.role.role_code = "pm"
-        pm_role.role.role_name = "项目经理"
+        pm_role.role = role_obj
 
         user.roles = [pm_role]
 
@@ -156,9 +168,12 @@ class TestProjectPerformanceService(unittest.TestCase):
         """测试评价人类型判断 - OTHER"""
         user = MagicMock()
 
+        # 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "employee"
+        role_obj.role_name = "员工"
         role = MagicMock()
-        role.role.role_code = "employee"
-        role.role.role_name = "员工"
+        role.role = role_obj
 
         user.roles = [role]
 
