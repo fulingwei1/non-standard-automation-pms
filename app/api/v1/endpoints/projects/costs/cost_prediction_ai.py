@@ -16,10 +16,9 @@ from app.api.deps import get_db, get_current_user
 from app.models import (
     CostOptimizationSuggestion,
     CostPrediction,
-    Project,
     User,
 )
-from app.services.cost_prediction_service import CostPredictionService
+from app.services.project_cost_prediction import ProjectCostPredictionService
 
 router = APIRouter()
 
@@ -201,16 +200,7 @@ def create_cost_prediction(
     - 成本趋势分析
     - AI洞察（如启用AI）
     """
-    # 验证项目存在
-    project = db.query(Project).filter(Project.id == request.project_id).first()
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"项目不存在: id={request.project_id}"
-        )
-    
-    # 创建服务
-    service = CostPredictionService(db)
+    service = ProjectCostPredictionService(db)
     
     try:
         prediction = service.create_prediction(
@@ -261,7 +251,7 @@ def get_prediction_detail(
 
 @router.get("/predictions/latest", response_model=PredictionDetailSchema)
 def get_latest_prediction(
-    project_id: int,  # from path prefix /{project_id}/costs
+    project_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -269,9 +259,8 @@ def get_latest_prediction(
     获取项目最新预测
     
     返回指定项目的最新成本预测结果。
-    project_id is provided from the path prefix: /{project_id}/costs
     """
-    service = CostPredictionService(db)
+    service = ProjectCostPredictionService(db)
     prediction = service.get_latest_prediction(project_id)
     
     if not prediction:
@@ -285,7 +274,7 @@ def get_latest_prediction(
 
 @router.get("/predictions/history", response_model=List[PredictionResultSchema])
 def get_prediction_history(
-    project_id: int,  # from path prefix /{project_id}/costs
+    project_id: int,
     limit: int = Query(default=10, ge=1, le=50, description="返回数量限制"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -294,9 +283,8 @@ def get_prediction_history(
     获取预测历史
     
     返回项目的历史预测记录，用于趋势分析。
-    project_id is provided from the path prefix: /{project_id}/costs
     """
-    service = CostPredictionService(db)
+    service = ProjectCostPredictionService(db)
     predictions = service.get_prediction_history(project_id, limit=limit)
     
     return predictions
@@ -441,6 +429,8 @@ def assign_suggestion(
     
     将建议分配给责任人执行。
     """
+    from app.models import User as UserModel
+    
     suggestion = db.query(CostOptimizationSuggestion).filter(
         CostOptimizationSuggestion.id == suggestion_id
     ).first()
@@ -452,7 +442,7 @@ def assign_suggestion(
         )
     
     # 验证责任人存在
-    assignee = db.query(User).filter(User.id == request.assigned_to).first()
+    assignee = db.query(UserModel).filter(UserModel.id == request.assigned_to).first()
     if not assignee:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -507,7 +497,7 @@ def complete_suggestion(
 
 @router.get("/cost-health", response_model=dict)
 def get_project_cost_health(
-    project_id: int,  # from path prefix /{project_id}/costs
+    project_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -519,84 +509,15 @@ def get_project_cost_health(
     - 超支风险等级
     - 待处理的优化建议
     - 成本趋势
-    
-    project_id is provided from the path prefix: /{project_id}/costs
     """
-    service = CostPredictionService(db)
-    prediction = service.get_latest_prediction(project_id)
+    service = ProjectCostPredictionService(db)
     
-    if not prediction:
+    try:
+        health_analysis = service.get_cost_health_analysis(project_id)
+        return health_analysis
+        
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"项目暂无预测数据: project_id={project_id}"
+            detail=str(e)
         )
-    
-    # 统计优化建议
-    pending_suggestions = db.query(CostOptimizationSuggestion).filter(
-        CostOptimizationSuggestion.project_id == project_id,
-        CostOptimizationSuggestion.status == "PENDING"
-    ).count()
-    
-    approved_suggestions = db.query(CostOptimizationSuggestion).filter(
-        CostOptimizationSuggestion.project_id == project_id,
-        CostOptimizationSuggestion.status == "APPROVED"
-    ).count()
-    
-    in_progress_suggestions = db.query(CostOptimizationSuggestion).filter(
-        CostOptimizationSuggestion.project_id == project_id,
-        CostOptimizationSuggestion.status == "IN_PROGRESS"
-    ).count()
-    
-    # 计算总体健康评分
-    health_score = 100.0
-    
-    # 根据超支风险扣分
-    if prediction.risk_level == "CRITICAL":
-        health_score -= 40
-    elif prediction.risk_level == "HIGH":
-        health_score -= 25
-    elif prediction.risk_level == "MEDIUM":
-        health_score -= 10
-    
-    # 根据CPI扣分
-    if prediction.current_cpi:
-        cpi = float(prediction.current_cpi)
-        if cpi < 0.8:
-            health_score -= 20
-        elif cpi < 0.9:
-            health_score -= 10
-    
-    # 有待处理建议则扣分
-    if pending_suggestions > 0:
-        health_score -= 5
-    
-    health_score = max(0, health_score)
-    
-    return {
-        "project_id": project_id,
-        "health_score": health_score,
-        "risk_level": prediction.risk_level,
-        "overrun_probability": float(prediction.overrun_probability or 0),
-        "expected_overrun_amount": float(prediction.expected_overrun_amount or 0),
-        "cost_trend": prediction.cost_trend,
-        "current_cpi": float(prediction.current_cpi or 1),
-        "prediction_date": prediction.prediction_date,
-        "suggestions_summary": {
-            "pending": pending_suggestions,
-            "approved": approved_suggestions,
-            "in_progress": in_progress_suggestions
-        },
-        "recommendation": _get_health_recommendation(health_score, prediction.risk_level)
-    }
-
-
-def _get_health_recommendation(health_score: float, risk_level: str) -> str:
-    """根据健康评分和风险等级生成建议"""
-    if health_score >= 80:
-        return "项目成本状况良好，继续保持。"
-    elif health_score >= 60:
-        return "项目成本存在一定风险，建议关注优化建议。"
-    elif health_score >= 40:
-        return "项目成本风险较高，建议立即采取优化措施。"
-    else:
-        return "项目成本风险严重，需要紧急干预！"
