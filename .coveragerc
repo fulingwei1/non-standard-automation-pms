@@ -1,7 +1,0 @@
-[run]
-source = app
-
-# Temporarily removed exclusions to get accurate coverage baseline
-# Will add back necessary exclusions (like migrations) after achieving 80%
-omit =
-    */migrations/*
