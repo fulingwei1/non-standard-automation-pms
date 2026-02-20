@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-工时报表自动生成系统 - API端点
+工时报表 API 端点 - 薄控制器层
 """
 
 import logging
@@ -13,23 +13,10 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models import (
-    ReportTemplate,
-    ReportArchive,
-    ReportRecipient,
-    User,
-)
-from app.models.report import (
-    ReportTypeEnum,
-    OutputFormatEnum,
-    FrequencyEnum,
-    RecipientTypeEnum,
-    DeliveryMethodEnum,
-    GeneratedByEnum,
-    ArchiveStatusEnum,
-)
+from app.models import User
+from app.models.report import OutputFormatEnum, ArchiveStatusEnum
 from app.schemas.common import ResponseModel
-from app.services.report_service import ReportService
+from app.services.report.report_service import ReportService
 from app.services.report_excel_service import ReportExcelService
 
 router = APIRouter()
@@ -47,32 +34,23 @@ def create_template(
     report_type: str,
     description: Optional[str] = None,
     config: Optional[dict] = None,
-    output_format: str = OutputFormatEnum.EXCEL.value,
-    frequency: str = FrequencyEnum.MONTHLY.value,
+    output_format: str = "EXCEL",
+    frequency: str = "MONTHLY",
     enabled: bool = True,
 ):
-    """
-    创建报表模板
+    """创建报表模板 (权限: HR/Admin)"""
+    service = ReportService(db)
     
-    **权限**: HR/Admin
-    """
-    # TODO: 权限检查
-    # deps.check_permission(current_user, "report:template:create")
-    
-    template = ReportTemplate(
+    template = service.create_template(
         name=name,
         report_type=report_type,
+        created_by=current_user.id,
         description=description,
-        config=config or {},
+        config=config,
         output_format=output_format,
         frequency=frequency,
         enabled=enabled,
-        created_by=current_user.id,
     )
-    
-    db.add(template)
-    db.commit()
-    db.refresh(template)
     
     logger.info(f"用户 {current_user.username} 创建了报表模板: {template.name}")
     
@@ -98,27 +76,18 @@ def list_templates(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    """
-    获取报表模板列表
+    """获取报表模板列表 (权限: HR/Manager)"""
+    service = ReportService(db)
     
-    **权限**: HR/Manager
-    """
-    query = db.query(ReportTemplate)
-    
-    # 筛选条件
-    if report_type:
-        query = query.filter(ReportTemplate.report_type == report_type)
-    if enabled is not None:
-        query = query.filter(ReportTemplate.enabled == enabled)
-    
-    # 分页
-    total = query.count()
-    templates = query.order_by(ReportTemplate.created_at.desc()).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+    result = service.list_templates(
+        report_type=report_type,
+        enabled=enabled,
+        page=page,
+        page_size=page_size,
+    )
     
     items = []
-    for template in templates:
+    for template in result['templates']:
         items.append({
             "id": template.id,
             "name": template.name,
@@ -134,9 +103,9 @@ def list_templates(
         code=0,
         message="查询成功",
         data={
-            "total": total,
-            "page": page,
-            "page_size": page_size,
+            "total": result['total'],
+            "page": result['page'],
+            "page_size": result['page_size'],
             "items": items,
         }
     )
@@ -149,23 +118,18 @@ def get_template(
     current_user: User = Depends(deps.get_current_active_user),
     template_id: int,
 ):
-    """
-    获取报表模板详情
-    """
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == template_id
-    ).first()
+    """获取报表模板详情"""
+    service = ReportService(db)
     
-    if not template:
+    result = service.get_template_with_recipients(template_id)
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="报表模板不存在"
         )
     
-    # 获取收件人列表
-    recipients = db.query(ReportRecipient).filter(
-        ReportRecipient.template_id == template_id
-    ).all()
+    template = result['template']
+    recipients = result['recipients']
     
     return ResponseModel(
         code=0,
@@ -209,37 +173,24 @@ def update_template(
     frequency: Optional[str] = None,
     enabled: Optional[bool] = None,
 ):
-    """
-    更新报表模板
+    """更新报表模板 (权限: HR/Admin)"""
+    service = ReportService(db)
     
-    **权限**: HR/Admin
-    """
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == template_id
-    ).first()
+    template = service.update_template(
+        template_id=template_id,
+        name=name,
+        description=description,
+        config=config,
+        output_format=output_format,
+        frequency=frequency,
+        enabled=enabled,
+    )
     
     if not template:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="报表模板不存在"
         )
-    
-    # 更新字段
-    if name is not None:
-        template.name = name
-    if description is not None:
-        template.description = description
-    if config is not None:
-        template.config = config
-    if output_format is not None:
-        template.output_format = output_format
-    if frequency is not None:
-        template.frequency = frequency
-    if enabled is not None:
-        template.enabled = enabled
-    
-    db.commit()
-    db.refresh(template)
     
     logger.info(f"用户 {current_user.username} 更新了报表模板: {template.name}")
     
@@ -257,28 +208,18 @@ def delete_template(
     current_user: User = Depends(deps.get_current_active_user),
     template_id: int,
 ):
-    """
-    删除报表模板
+    """删除报表模板 (权限: Admin only)"""
+    service = ReportService(db)
     
-    **权限**: Admin only
-    """
-    # TODO: 权限检查
-    # deps.check_permission(current_user, "report:template:delete")
+    success = service.delete_template(template_id)
     
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == template_id
-    ).first()
-    
-    if not template:
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="报表模板不存在"
         )
     
-    db.delete(template)
-    db.commit()
-    
-    logger.info(f"用户 {current_user.username} 删除了报表模板: {template.name}")
+    logger.info(f"用户 {current_user.username} 删除了报表模板 ID: {template_id}")
     
     return ResponseModel(
         code=0,
@@ -293,31 +234,28 @@ def toggle_template(
     current_user: User = Depends(deps.get_current_active_user),
     template_id: int,
 ):
-    """
-    启用/禁用报表模板
-    """
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == template_id
-    ).first()
+    """启用/禁用报表模板"""
+    service = ReportService(db)
     
-    if not template:
+    result = service.toggle_template(template_id)
+    
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="报表模板不存在"
         )
     
-    template.enabled = not template.enabled
-    db.commit()
-    db.refresh(template)
+    template = result['template']
+    enabled = result['enabled']
     
     logger.info(
-        f"用户 {current_user.username} {'启用' if template.enabled else '禁用'}了报表模板: {template.name}"
+        f"用户 {current_user.username} {'启用' if enabled else '禁用'}了报表模板: {template.name}"
     )
     
     return ResponseModel(
         code=0,
-        message=f"报表模板已{'启用' if template.enabled else '禁用'}",
-        data={"enabled": template.enabled}
+        message=f"报表模板已{'启用' if enabled else '禁用'}",
+        data={"enabled": enabled}
     )
 
 
@@ -334,14 +272,15 @@ def generate_report(
     """
     手动生成报表
     
-    **参数**:
+    参数:
     - template_id: 模板ID
     - period: 报表周期（如：2026-01）
     """
+    service = ReportService(db)
+    
     try:
         # 生成报表数据
-        data = ReportService.generate_report(
-            db=db,
+        data = service.generate_report_data(
             template_id=template_id,
             period=period,
             generated_by=f"USER_{current_user.id}"
@@ -363,8 +302,7 @@ def generate_report(
             )
         
         # 归档
-        archive = ReportService.archive_report(
-            db=db,
+        archive = service.archive_report(
             template_id=template_id,
             period=period,
             file_path=file_path,
@@ -387,12 +325,17 @@ def generate_report(
             }
         )
         
+    except ValueError as e:
+        logger.error(f"报表生成失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"报表生成失败: {str(e)}", exc_info=True)
         
         # 记录失败归档
-        ReportService.archive_report(
-            db=db,
+        service.archive_report(
             template_id=template_id,
             period=period,
             file_path="",
@@ -418,12 +361,11 @@ def preview_report(
     period: str,
     limit: int = Query(50, ge=1, le=1000),
 ):
-    """
-    预览报表数据（不导出文件）
-    """
+    """预览报表数据（不导出文件）"""
+    service = ReportService(db)
+    
     try:
-        data = ReportService.generate_report(
-            db=db,
+        data = service.generate_report_data(
             template_id=template_id,
             period=period,
             generated_by=f"USER_{current_user.id}"
@@ -431,7 +373,7 @@ def preview_report(
         
         # 限制返回的数据量
         summary = data['summary'][:limit]
-        detail = data['detail'][:limit] if data.get('detail') else []
+        detail = data.get('detail', [])[:limit]
         
         return ResponseModel(
             code=0,
@@ -445,6 +387,12 @@ def preview_report(
             }
         )
         
+    except ValueError as e:
+        logger.error(f"报表预览失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"报表预览失败: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -462,9 +410,7 @@ def export_report(
     period: str,
     format: str = Query("excel", description="导出格式: excel/pdf/csv"),
 ):
-    """
-    导出报表（已有功能，增强版本）
-    """
+    """导出报表（已有功能，增强版本）"""
     # 复用 generate_report 功能
     return generate_report(
         db=db,
@@ -488,29 +434,20 @@ def list_archives(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    """
-    获取报表归档列表
-    """
-    query = db.query(ReportArchive)
+    """获取报表归档列表"""
+    service = ReportService(db)
     
-    # 筛选条件
-    if template_id:
-        query = query.filter(ReportArchive.template_id == template_id)
-    if report_type:
-        query = query.filter(ReportArchive.report_type == report_type)
-    if period:
-        query = query.filter(ReportArchive.period == period)
-    if status:
-        query = query.filter(ReportArchive.status == status)
-    
-    # 分页
-    total = query.count()
-    archives = query.order_by(ReportArchive.generated_at.desc()).offset(
-        (page - 1) * page_size
-    ).limit(page_size).all()
+    result = service.list_archives(
+        template_id=template_id,
+        report_type=report_type,
+        period=period,
+        status=status,
+        page=page,
+        page_size=page_size,
+    )
     
     items = []
-    for archive in archives:
+    for archive in result['archives']:
         items.append({
             "id": archive.id,
             "template_id": archive.template_id,
@@ -529,9 +466,9 @@ def list_archives(
         code=0,
         message="查询成功",
         data={
-            "total": total,
-            "page": page,
-            "page_size": page_size,
+            "total": result['total'],
+            "page": result['page'],
+            "page_size": result['page_size'],
             "items": items,
         }
     )
@@ -544,23 +481,19 @@ def get_archive(
     current_user: User = Depends(deps.get_current_active_user),
     archive_id: int,
 ):
-    """
-    获取报表归档详情
-    """
-    archive = db.query(ReportArchive).filter(
-        ReportArchive.id == archive_id
-    ).first()
+    """获取报表归档详情"""
+    service = ReportService(db)
     
-    if not archive:
+    result = service.get_archive_with_template(archive_id)
+    
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="报表归档不存在"
         )
     
-    # 获取关联模板
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == archive.template_id
-    ).first()
+    archive = result['archive']
+    template = result['template']
     
     return ResponseModel(
         code=0,
@@ -590,12 +523,10 @@ def download_archive(
     current_user: User = Depends(deps.get_current_active_user),
     archive_id: int,
 ):
-    """
-    下载报表文件
-    """
-    archive = db.query(ReportArchive).filter(
-        ReportArchive.id == archive_id
-    ).first()
+    """下载报表文件"""
+    service = ReportService(db)
+    
+    archive = service.get_archive(archive_id)
     
     if not archive:
         raise HTTPException(
@@ -617,7 +548,7 @@ def download_archive(
         )
     
     # 增加下载次数
-    ReportService.increment_download_count(db, archive_id)
+    service.increment_download_count(archive_id)
     
     logger.info(f"用户 {current_user.username} 下载了报表: {archive.period}")
     
@@ -641,10 +572,9 @@ def batch_download_archives(
     
     TODO: 实现 ZIP 打包功能
     """
-    # 简化实现：返回文件列表
-    archives = db.query(ReportArchive).filter(
-        ReportArchive.id.in_(archive_ids)
-    ).all()
+    service = ReportService(db)
+    
+    archives = service.get_archives_by_ids(archive_ids)
     
     files = []
     for archive in archives:
@@ -673,23 +603,13 @@ def add_recipient(
     recipient_type: str,
     recipient_id: Optional[int] = None,
     recipient_email: Optional[str] = None,
-    delivery_method: str = DeliveryMethodEnum.EMAIL.value,
+    delivery_method: str = "EMAIL",
     enabled: bool = True,
 ):
-    """
-    添加报表收件人
-    """
-    template = db.query(ReportTemplate).filter(
-        ReportTemplate.id == template_id
-    ).first()
+    """添加报表收件人"""
+    service = ReportService(db)
     
-    if not template:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="报表模板不存在"
-        )
-    
-    recipient = ReportRecipient(
+    recipient = service.add_recipient(
         template_id=template_id,
         recipient_type=recipient_type,
         recipient_id=recipient_id,
@@ -698,11 +618,13 @@ def add_recipient(
         enabled=enabled,
     )
     
-    db.add(recipient)
-    db.commit()
-    db.refresh(recipient)
+    if not recipient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="报表模板不存在"
+        )
     
-    logger.info(f"用户 {current_user.username} 为模板 {template.name} 添加了收件人")
+    logger.info(f"用户 {current_user.username} 添加了收件人")
     
     return ResponseModel(
         code=0,
@@ -718,23 +640,18 @@ def delete_recipient(
     current_user: User = Depends(deps.get_current_active_user),
     recipient_id: int,
 ):
-    """
-    删除报表收件人
-    """
-    recipient = db.query(ReportRecipient).filter(
-        ReportRecipient.id == recipient_id
-    ).first()
+    """删除报表收件人"""
+    service = ReportService(db)
     
-    if not recipient:
+    success = service.delete_recipient(recipient_id)
+    
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="收件人不存在"
         )
     
-    db.delete(recipient)
-    db.commit()
-    
-    logger.info(f"用户 {current_user.username} 删除了收件人")
+    logger.info(f"用户 {current_user.username} 删除了收件人 ID: {recipient_id}")
     
     return ResponseModel(
         code=0,
