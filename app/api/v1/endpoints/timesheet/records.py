@@ -8,22 +8,14 @@
 """
 
 from datetime import date
-from decimal import Decimal
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.core import security
-from app.models.organization import Department
-from app.models.project import Project
-from app.models.timesheet import (
-    Timesheet,
-)
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
@@ -33,7 +25,7 @@ from app.schemas.timesheet import (
     TimesheetResponse,
     TimesheetUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.services.timesheet_records import TimesheetRecordsService
 
 router = APIRouter(prefix="/records", tags=["records"])
 
@@ -57,63 +49,17 @@ def list_timesheets(
     """
     工时记录列表（分页+筛选）
     """
-    from app.core.permissions.timesheet import apply_timesheet_access_filter
-
-    query = db.query(Timesheet)
-    query = apply_timesheet_access_filter(query, db, current_user)
-
-    if user_id:
-        query = query.filter(Timesheet.user_id == user_id)
-
-    if project_id:
-        query = query.filter(Timesheet.project_id == project_id)
-    if start_date:
-        query = query.filter(Timesheet.work_date >= start_date)
-    if end_date:
-        query = query.filter(Timesheet.work_date <= end_date)
-    if status:
-        query = query.filter(Timesheet.status == status)
-
-    total = query.count()
-    query = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at))
-    query = apply_pagination(query, pagination.offset, pagination.limit)
-    timesheets = query.all()
-
-    items = []
-    for ts in timesheets:
-        user = db.query(User).filter(User.id == ts.user_id).first()
-        project = None
-        if ts.project_id:
-            project = db.query(Project).filter(Project.id == ts.project_id).first()
-
-        task_name = None
-        if ts.task_id:
-            from app.models.progress import Task
-
-            task = db.query(Task).filter(Task.id == ts.task_id).first()
-            task_name = task.task_name if task else None
-
-        items.append(
-            TimesheetResponse(
-                id=ts.id,
-                user_id=ts.user_id,
-                user_name=user.real_name or user.username if user else None,
-                project_id=ts.project_id,
-                rd_project_id=ts.rd_project_id,
-                project_name=project.project_name if project else None,
-                task_id=ts.task_id,
-                task_name=task_name,
-                work_date=ts.work_date,
-                work_hours=ts.hours or Decimal("0"),
-                work_type=ts.overtime_type or "NORMAL",
-                description=ts.work_content,
-                status=ts.status or "DRAFT",
-                approved_by=ts.approver_id,
-                approved_at=ts.approve_time,
-                created_at=ts.created_at,
-                updated_at=ts.updated_at,
-            )
-        )
+    service = TimesheetRecordsService(db)
+    items, total = service.list_timesheets(
+        current_user=current_user,
+        offset=pagination.offset,
+        limit=pagination.limit,
+        user_id=user_id,
+        project_id=project_id,
+        start_date=start_date,
+        end_date=end_date,
+        status=status,
+    )
 
     return TimesheetListResponse(
         items=items,
@@ -134,86 +80,8 @@ def create_timesheet(
     """
     创建单条工时
     """
-    # 验证项目（至少需要有一个项目ID）
-    if not timesheet_in.project_id and not timesheet_in.rd_project_id:
-        raise HTTPException(status_code=400, detail="必须指定项目ID或研发项目ID")
-
-    if timesheet_in.project_id:
-        project = get_or_404(db, Project, timesheet_in.project_id, "项目不存在")
-
-    if timesheet_in.rd_project_id:
-        from app.models.rd_project import RdProject
-
-        rd_project = (
-            db.query(RdProject)
-            .filter(RdProject.id == timesheet_in.rd_project_id)
-            .first()
-        )
-        if not rd_project:
-            raise HTTPException(status_code=404, detail="研发项目不存在")
-
-    # 检查同一天是否已有记录
-    query_filter = [
-        Timesheet.user_id == current_user.id,
-        Timesheet.work_date == timesheet_in.work_date,
-        Timesheet.status != "REJECTED",
-    ]
-    if timesheet_in.project_id:
-        query_filter.append(Timesheet.project_id == timesheet_in.project_id)
-    if timesheet_in.rd_project_id:
-        query_filter.append(Timesheet.rd_project_id == timesheet_in.rd_project_id)
-
-    existing = db.query(Timesheet).filter(*query_filter).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=400, detail="该日期已有工时记录，请更新或删除后重试"
-        )
-
-    # 获取用户和部门信息
-    user = db.query(User).filter(User.id == current_user.id).first()
-    department_id = None
-    department_name = None
-    if user and hasattr(user, "department_id") and user.department_id:
-        department = (
-            db.query(Department).filter(Department.id == user.department_id).first()
-        )
-        if department:
-            department_id = department.id
-            department_name = department.name
-
-    # 获取项目信息
-    project_code = None
-    project_name = None
-    if timesheet_in.project_id:
-        project = (
-            db.query(Project).filter(Project.id == timesheet_in.project_id).first()
-        )
-        if project:
-            project_code = project.project_code
-            project_name = project.project_name
-
-    timesheet = Timesheet(
-        user_id=current_user.id,
-        user_name=user.real_name or user.username if user else None,
-        department_id=department_id,
-        department_name=department_name,
-        project_id=timesheet_in.project_id,
-        project_code=project_code,
-        project_name=project_name,
-        rd_project_id=timesheet_in.rd_project_id,
-        task_id=timesheet_in.task_id,
-        work_date=timesheet_in.work_date,
-        hours=timesheet_in.work_hours,
-        overtime_type=timesheet_in.work_type,
-        work_content=timesheet_in.description,
-        status="DRAFT",
-        created_by=current_user.id,
-    )
-
-    save_obj(db, timesheet)
-
-    return get_timesheet_detail(timesheet.id, db, current_user)
+    service = TimesheetRecordsService(db)
+    return service.create_timesheet(timesheet_in, current_user)
 
 
 @router.post(
@@ -228,91 +96,13 @@ def batch_create_timesheets(
     """
     批量创建工时
     """
-    success_count = 0
-    failed_count = 0
-    errors = []
-
-    for ts_in in batch_in.timesheets:
-        try:
-            # 验证项目
-            if ts_in.project_id:
-                project = (
-                    db.query(Project).filter(Project.id == ts_in.project_id).first()
-                )
-                if not project:
-                    errors.append(
-                        {"date": ts_in.work_date.isoformat(), "error": "项目不存在"}
-                    )
-                    failed_count += 1
-                    continue
-
-            # 检查是否已存在
-            existing = (
-                db.query(Timesheet)
-                .filter(
-                    Timesheet.user_id == current_user.id,
-                    Timesheet.work_date == ts_in.work_date,
-                    Timesheet.project_id == ts_in.project_id,
-                    Timesheet.status != "REJECTED",
-                )
-                .first()
-            )
-
-            if existing:
-                errors.append(
-                    {"date": ts_in.work_date.isoformat(), "error": "该日期已有记录"}
-                )
-                failed_count += 1
-                continue
-
-            # 获取用户和项目信息
-            user = db.query(User).filter(User.id == current_user.id).first()
-            project_code = None
-            project_name = None
-            if ts_in.project_id:
-                project = (
-                    db.query(Project).filter(Project.id == ts_in.project_id).first()
-                )
-                if project:
-                    project_code = project.project_code
-                    project_name = project.project_name
-
-            timesheet = Timesheet(
-                user_id=current_user.id,
-                user_name=user.real_name or user.username if user else None,
-                project_id=ts_in.project_id,
-                project_code=project_code,
-                project_name=project_name,
-                task_id=ts_in.task_id,
-                work_date=ts_in.work_date,
-                hours=ts_in.work_hours,
-                overtime_type=ts_in.work_type,
-                work_content=ts_in.description,
-                status="DRAFT",
-                created_by=current_user.id,
-            )
-
-            db.add(timesheet)
-            success_count += 1
-        except Exception as e:
-            errors.append(
-                {
-                    "date": ts_in.work_date.isoformat() if ts_in.work_date else None,
-                    "error": str(e),
-                }
-            )
-            failed_count += 1
-
-    db.commit()
+    service = TimesheetRecordsService(db)
+    result = service.batch_create_timesheets(batch_in.timesheets, current_user)
 
     return ResponseModel(
         code=200,
-        message=f"批量创建完成：成功 {success_count} 条，失败 {failed_count} 条",
-        data={
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "errors": errors,
-        },
+        message=f"批量创建完成：成功 {result['success_count']} 条，失败 {result['failed_count']} 条",
+        data=result,
     )
 
 
@@ -327,48 +117,8 @@ def get_timesheet_detail(
     """
     获取工时记录详情
     """
-    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
-
-    # 权限检查
-    if timesheet.user_id != current_user.id:
-        if not hasattr(current_user, "is_superuser") or not current_user.is_superuser:
-            raise HTTPException(status_code=403, detail="无权访问此记录")
-
-    user = db.query(User).filter(User.id == timesheet.user_id).first()
-    project = None
-    if timesheet.project_id:
-        project = db.query(Project).filter(Project.id == timesheet.project_id).first()
-
-    rd_project = None
-    if timesheet.rd_project_id:
-        from app.models.rd_project import RdProject
-
-        rd_project = (
-            db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
-        )
-
-    return TimesheetResponse(
-        id=timesheet.id,
-        user_id=timesheet.user_id,
-        user_name=user.real_name or user.username if user else None,
-        project_id=timesheet.project_id,
-        rd_project_id=timesheet.rd_project_id,
-        project_name=project.project_name
-        if project
-        else (rd_project.project_name if rd_project else None),
-        task_id=timesheet.task_id,
-        task_name=None,
-        work_date=timesheet.work_date,
-        work_hours=timesheet.hours or Decimal("0"),
-        work_type=timesheet.overtime_type or "NORMAL",
-        description=timesheet.work_content,
-        is_billable=True,
-        status=timesheet.status or "DRAFT",
-        approved_by=timesheet.approver_id,
-        approved_at=timesheet.approve_time,
-        created_at=timesheet.created_at,
-        updated_at=timesheet.updated_at,
-    )
+    service = TimesheetRecordsService(db)
+    return service.get_timesheet_detail(timesheet_id, current_user)
 
 
 @router.put(
@@ -384,27 +134,8 @@ def update_timesheet(
     """
     更新工时记录
     """
-    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
-
-    # 权限检查：只能修改自己的草稿状态记录
-    if timesheet.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="无权修改此记录")
-
-    if timesheet.status != "DRAFT":
-        raise HTTPException(status_code=400, detail="只能修改草稿状态的记录")
-
-    if timesheet_in.work_date is not None:
-        timesheet.work_date = timesheet_in.work_date
-    if timesheet_in.work_hours is not None:
-        timesheet.hours = timesheet_in.work_hours
-    if timesheet_in.work_type is not None:
-        timesheet.overtime_type = timesheet_in.work_type
-    if timesheet_in.description is not None:
-        timesheet.work_content = timesheet_in.description
-
-    save_obj(db, timesheet)
-
-    return get_timesheet_detail(timesheet_id, db, current_user)
+    service = TimesheetRecordsService(db)
+    return service.update_timesheet(timesheet_id, timesheet_in, current_user)
 
 
 @router.delete(
@@ -419,14 +150,7 @@ def delete_timesheet(
     """
     删除工时记录（仅草稿）
     """
-    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
-
-    if timesheet.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="无权删除此记录")
-
-    if timesheet.status != "DRAFT":
-        raise HTTPException(status_code=400, detail="只能删除草稿状态的记录")
-
-    delete_obj(db, timesheet)
+    service = TimesheetRecordsService(db)
+    service.delete_timesheet(timesheet_id, current_user)
 
     return ResponseModel(message="工时记录已删除")
