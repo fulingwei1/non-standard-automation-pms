@@ -10,22 +10,14 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, or_, text
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.security import get_current_active_user, require_permission
-from app.models.user import (
-    ApiPermission,
-    Role,
-    RoleApiPermission,
-    User,
-    UserRole,
-)
+from app.models.user import User
 from app.schemas.common import ResponseModel, PaginatedResponse
-from app.services.permission_crud_service import PermissionCRUDService
+from app.services.permission_management import PermissionManagementService
 
 router = APIRouter(prefix="/permissions", tags=["权限管理"])
 logger = logging.getLogger(__name__)
@@ -52,38 +44,15 @@ def list_permissions(
     - 系统级权限（tenant_id=NULL）：所有租户可见
     - 租户级权限（tenant_id=N）：仅该租户可见
     """
-    tenant_id = current_user.tenant_id
-    
-    query = db.query(ApiPermission).filter(
-        or_(
-            ApiPermission.tenant_id.is_(None),  # 系统级权限
-            ApiPermission.tenant_id == tenant_id  # 租户级权限
-        )
-    )
-    
-    # 筛选条件
-    if module:
-        query = query.filter(ApiPermission.module == module)
-    if action:
-        query = query.filter(ApiPermission.action == action)
-    if is_active is not None:
-        query = query.filter(ApiPermission.is_active == is_active)
-    if keyword:
-        query = query.filter(
-            or_(
-                ApiPermission.perm_code.contains(keyword),
-                ApiPermission.perm_name.contains(keyword),
-                ApiPermission.description.contains(keyword),
-            )
-        )
-    
-    # 分页查询
-    total = query.count()
-    permissions = (
-        query.order_by(ApiPermission.module, ApiPermission.perm_code)
-        .offset((pagination.page - 1) * pagination.page_size)
-        .limit(pagination.page_size)
-        .all()
+    service = PermissionManagementService(db)
+    result = service.list_permissions(
+        tenant_id=current_user.tenant_id,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        module=module,
+        action=action,
+        keyword=keyword,
+        is_active=is_active,
     )
     
     # 构建响应
@@ -103,18 +72,18 @@ def list_permissions(
             "created_at": p.created_at.isoformat() if p.created_at else None,
             "updated_at": p.updated_at.isoformat() if p.updated_at else None,
         }
-        for p in permissions
+        for p in result["items"]
     ]
     
-    result = PaginatedResponse(
+    paginated_result = PaginatedResponse(
         items=items,
-        total=total,
+        total=result["total"],
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=(total + pagination.page_size - 1) // pagination.page_size,
+        pages=(result["total"] + pagination.page_size - 1) // pagination.page_size,
     )
     
-    return ResponseModel(code=200, message="获取成功", data=result.model_dump())
+    return ResponseModel(code=200, message="获取成功", data=paginated_result.model_dump())
 
 
 @router.get("/modules", response_model=ResponseModel)
@@ -123,24 +92,10 @@ def list_modules(
     current_user: User = Depends(require_permission("permission:read")),
 ):
     """获取所有权限模块列表（去重）"""
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
+    modules = service.list_modules(tenant_id=current_user.tenant_id)
     
-    modules = (
-        db.query(ApiPermission.module)
-        .filter(
-            ApiPermission.module.isnot(None),
-            or_(
-                ApiPermission.tenant_id.is_(None),
-                ApiPermission.tenant_id == tenant_id
-            )
-        )
-        .distinct()
-        .order_by(ApiPermission.module)
-        .all()
-    )
-    
-    result = [m[0] for m in modules if m[0]]
-    return ResponseModel(code=200, message="获取成功", data=result)
+    return ResponseModel(code=200, message="获取成功", data=modules)
 
 
 @router.get("/{permission_id}", response_model=ResponseModel)
@@ -150,15 +105,11 @@ def get_permission(
     current_user: User = Depends(require_permission("permission:read")),
 ):
     """获取权限详情"""
-    tenant_id = current_user.tenant_id
-    
-    permission = db.query(ApiPermission).filter(
-        ApiPermission.id == permission_id,
-        or_(
-            ApiPermission.tenant_id.is_(None),
-            ApiPermission.tenant_id == tenant_id
-        )
-    ).first()
+    service = PermissionManagementService(db)
+    permission = service.get_permission(
+        permission_id=permission_id,
+        tenant_id=current_user.tenant_id,
+    )
     
     if not permission:
         raise HTTPException(
@@ -203,26 +154,18 @@ def create_permission(
     - 普通用户只能创建租户级权限
     - 超级管理员可以创建系统级权限（通过设置 tenant_id=NULL）
     """
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
-    # 检查权限编码是否已存在（在当前租户或系统级）
-    existing = db.query(ApiPermission).filter(
-        ApiPermission.perm_code == perm_code,
-        or_(
-            ApiPermission.tenant_id.is_(None),
-            ApiPermission.tenant_id == tenant_id
-        )
-    ).first()
-    
-    if existing:
+    # 检查权限编码是否已存在
+    if service.check_permission_code_exists(perm_code, current_user.tenant_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"权限编码 {perm_code} 已存在"
         )
     
     # 创建权限
-    permission = ApiPermission(
-        tenant_id=tenant_id,  # 租户级权限
+    permission = service.create_permission(
+        tenant_id=current_user.tenant_id,
         perm_code=perm_code,
         perm_name=perm_name,
         module=module,
@@ -230,13 +173,7 @@ def create_permission(
         action=action,
         description=description,
         permission_type=permission_type,
-        is_active=True,
-        is_system=False,
     )
-    
-    db.add(permission)
-    db.commit()
-    db.refresh(permission)
     
     result = {
         "id": permission.id,
@@ -261,15 +198,12 @@ def update_permission(
     current_user: User = Depends(require_permission("permission:update")),
 ):
     """更新权限（不允许修改系统预置权限）"""
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
-    permission = db.query(ApiPermission).filter(
-        ApiPermission.id == permission_id,
-        or_(
-            ApiPermission.tenant_id.is_(None),
-            ApiPermission.tenant_id == tenant_id
-        )
-    ).first()
+    permission = service.get_permission(
+        permission_id=permission_id,
+        tenant_id=current_user.tenant_id,
+    )
     
     if not permission:
         raise HTTPException(
@@ -283,22 +217,16 @@ def update_permission(
             detail="系统预置权限不允许修改"
         )
     
-    # 更新字段
-    if perm_name is not None:
-        permission.perm_name = perm_name
-    if module is not None:
-        permission.module = module
-    if page_code is not None:
-        permission.page_code = page_code
-    if action is not None:
-        permission.action = action
-    if description is not None:
-        permission.description = description
-    if is_active is not None:
-        permission.is_active = is_active
-    
-    db.commit()
-    db.refresh(permission)
+    # 更新权限
+    permission = service.update_permission(
+        permission=permission,
+        perm_name=perm_name,
+        module=module,
+        page_code=page_code,
+        action=action,
+        description=description,
+        is_active=is_active,
+    )
     
     result = {
         "id": permission.id,
@@ -317,14 +245,15 @@ def delete_permission(
     current_user: User = Depends(require_permission("permission:delete")),
 ):
     """删除权限（不允许删除系统预置权限）"""
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
-    permission = db.query(ApiPermission).filter(
-        ApiPermission.id == permission_id,
-        ApiPermission.tenant_id == tenant_id  # 只能删除自己租户的权限
-    ).first()
+    permission = service.get_permission(
+        permission_id=permission_id,
+        tenant_id=current_user.tenant_id,
+    )
     
-    if not permission:
+    # 注意：删除时需要严格限制只能删除自己租户的权限
+    if not permission or permission.tenant_id != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="权限不存在或无删除权限"
@@ -337,18 +266,14 @@ def delete_permission(
         )
     
     # 检查是否有角色使用此权限
-    role_count = db.query(RoleApiPermission).filter(
-        RoleApiPermission.permission_id == permission_id
-    ).count()
-    
+    role_count = service.count_roles_using_permission(permission_id)
     if role_count > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"该权限被 {role_count} 个角色使用，无法删除"
         )
     
-    db.delete(permission)
-    db.commit()
+    service.delete_permission(permission)
     
     return ResponseModel(code=200, message="删除成功")
 
@@ -365,17 +290,10 @@ def get_role_permissions(
     current_user: User = Depends(require_permission("role:read")),
 ):
     """获取角色的所有权限"""
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
     # 检查角色是否存在且可访问
-    role = db.query(Role).filter(
-        Role.id == role_id,
-        or_(
-            Role.tenant_id.is_(None),
-            Role.tenant_id == tenant_id
-        )
-    ).first()
-    
+    role = service.get_role(role_id=role_id, tenant_id=current_user.tenant_id)
     if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -383,14 +301,7 @@ def get_role_permissions(
         )
     
     # 获取角色权限
-    permissions = (
-        db.query(ApiPermission)
-        .join(RoleApiPermission, RoleApiPermission.permission_id == ApiPermission.id)
-        .filter(RoleApiPermission.role_id == role_id)
-        .filter(ApiPermission.is_active)
-        .order_by(ApiPermission.module, ApiPermission.perm_code)
-        .all()
-    )
+    permissions = service.get_role_permissions(role_id)
     
     result = {
         "role_id": role_id,
@@ -424,52 +335,25 @@ def assign_role_permissions(
     - 删除现有权限关联
     - 添加新的权限关联
     """
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
     # 检查角色是否存在且可访问
-    role = db.query(Role).filter(
-        Role.id == role_id,
-        or_(
-            Role.tenant_id.is_(None),
-            Role.tenant_id == tenant_id
-        )
-    ).first()
-    
+    role = service.get_role(role_id=role_id, tenant_id=current_user.tenant_id)
     if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="角色不存在或无访问权限"
         )
     
-    # 删除现有权限关联
-    db.query(RoleApiPermission).filter(
-        RoleApiPermission.role_id == role_id
-    ).delete()
-    
-    # 验证权限ID并添加新的关联
-    valid_count = 0
-    for perm_id in permission_ids:
-        permission = db.query(ApiPermission).filter(
-            ApiPermission.id == perm_id,
-            or_(
-                ApiPermission.tenant_id.is_(None),
-                ApiPermission.tenant_id == tenant_id
-            )
-        ).first()
-        
-        if permission:
-            db.add(RoleApiPermission(role_id=role_id, permission_id=perm_id))
-            valid_count += 1
-    
-    db.commit()
+    # 分配权限
+    valid_count = service.assign_role_permissions(
+        role_id=role_id,
+        permission_ids=permission_ids,
+        tenant_id=current_user.tenant_id,
+    )
     
     # 清除权限缓存
-    try:
-        from app.services.permission_cache_service import get_permission_cache_service
-        cache_service = get_permission_cache_service()
-        cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
-    except Exception as e:
-        logger.warning(f"清除权限缓存失败: {e}")
+    service.invalidate_permission_cache(role_id, current_user.tenant_id)
     
     return ResponseModel(
         code=200,
@@ -496,10 +380,10 @@ def get_user_permissions(
     - 支持角色继承（如果启用）
     - 返回去重后的权限列表
     """
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
     # 检查用户是否存在
-    user = db.query(User).filter(User.id == user_id).first()
+    user = service.get_user(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -507,29 +391,14 @@ def get_user_permissions(
         )
     
     # 数据隔离：只能查询同租户的用户
-    if not current_user.is_superuser and user.tenant_id != tenant_id:
+    if not current_user.is_superuser and user.tenant_id != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权查询其他租户的用户权限"
         )
     
-    # 使用 PermissionService 获取用户权限
-    from app.services.permission_service import PermissionService
-    
-    permission_codes = PermissionService.get_user_permissions(
-        db, user_id, user.tenant_id
-    )
-    
-    # 获取权限详情
-    permissions = (
-        db.query(ApiPermission)
-        .filter(
-            ApiPermission.perm_code.in_(permission_codes),
-            ApiPermission.is_active
-        )
-        .order_by(ApiPermission.module, ApiPermission.perm_code)
-        .all()
-    )
+    # 获取用户权限
+    permissions = service.get_user_permissions(user_id, user.tenant_id)
     
     result = {
         "user_id": user_id,
@@ -563,10 +432,10 @@ def check_user_permission(
     
     返回: { "has_permission": true/false }
     """
-    tenant_id = current_user.tenant_id
+    service = PermissionManagementService(db)
     
     # 检查用户是否存在
-    user = db.query(User).filter(User.id == user_id).first()
+    user = service.get_user(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -574,17 +443,15 @@ def check_user_permission(
         )
     
     # 数据隔离
-    if not current_user.is_superuser and user.tenant_id != tenant_id:
+    if not current_user.is_superuser and user.tenant_id != current_user.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权查询其他租户的用户权限"
         )
     
-    # 使用 PermissionService 检查权限
-    from app.services.permission_service import PermissionService
-    
-    has_permission = PermissionService.check_permission(
-        db, user_id, permission_code, user, user.tenant_id
+    # 检查权限
+    has_permission = service.check_user_permission(
+        user_id, permission_code, user, user.tenant_id
     )
     
     result = {
