@@ -15,15 +15,13 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.sales.contracts import Contract
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.approval_engine import ApprovalEngineService
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.services.contract_approval import ContractApprovalService
 
 logger = logging.getLogger(__name__)
 
-from app.utils.db_helpers import get_or_404
 router = APIRouter(prefix="/contracts/approval", tags=["合同审批工作流"])
 
 
@@ -80,69 +78,13 @@ def submit_for_approval(
     - 被驳回的合同修改后重新提交
     - 合同变更后需要重新审批
     """
-    engine = ApprovalEngineService(db)
-    results = []
-    errors = []
-
-    for contract_id in request.contract_ids:
-        contract = db.query(Contract).filter(Contract.id == contract_id).first()
-        if not contract:
-            errors.append({"contract_id": contract_id, "error": "合同不存在"})
-            continue
-
-        # 验证状态：只有草稿或被驳回的合同可以提交审批
-        if contract.status not in ["DRAFT", "REJECTED"]:
-            errors.append(
-                {
-                    "contract_id": contract_id,
-                    "error": f"当前状态 '{contract.status}' 不允许提交审批",
-                }
-            )
-            continue
-
-        # 验证合同金额
-        if not contract.contract_amount or contract.contract_amount <= 0:
-            errors.append(
-                {"contract_id": contract_id, "error": "合同金额必须大于0"}
-            )
-            continue
-
-        try:
-            # 构建表单数据
-            form_data = {
-                "contract_id": contract.id,
-                "contract_code": contract.contract_code,
-                "customer_contract_no": contract.customer_contract_no,
-                "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-                "customer_id": contract.customer_id,
-                "customer_name": contract.customer.name if contract.customer else None,
-                "project_id": contract.project_id,
-                "signed_date": contract.signed_date.isoformat() if contract.signed_date else None,
-                "payment_terms_summary": contract.payment_terms_summary,
-                "acceptance_summary": contract.acceptance_summary,
-            }
-
-            instance = engine.submit(
-                template_code="SALES_CONTRACT_APPROVAL",
-                entity_type="CONTRACT",
-                entity_id=contract_id,
-                form_data=form_data,
-                initiator_id=current_user.id,
-                urgency=request.urgency,
-            )
-
-            results.append(
-                {
-                    "contract_id": contract_id,
-                    "contract_code": contract.contract_code,
-                    "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-                    "instance_id": instance.id,
-                    "status": "submitted",
-                }
-            )
-        except Exception as e:
-            logger.exception(f"合同 {contract_id} 提交审批失败")
-            errors.append({"contract_id": contract_id, "error": str(e)})
+    service = ContractApprovalService(db)
+    results, errors = service.submit_contracts_for_approval(
+        contract_ids=request.contract_ids,
+        initiator_id=current_user.id,
+        urgency=request.urgency,
+        comment=request.comment,
+    )
 
     db.commit()
 
@@ -167,52 +109,14 @@ def get_pending_approval_tasks(
 
     返回当前用户待审批的合同任务。
     """
-    engine = ApprovalEngineService(db)
-    tasks = engine.get_pending_tasks(user_id=current_user.id, entity_type="CONTRACT")
-
-    # 筛选
-    filtered_tasks = []
-    for task in tasks:
-        contract = (
-            db.query(Contract)
-            .filter(Contract.id == task.instance.entity_id)
-            .first()
-        )
-        if not contract:
-            continue
-        if customer_id and contract.customer_id != customer_id:
-            continue
-        if min_amount and (not contract.contract_amount or float(contract.contract_amount) < min_amount):
-            continue
-        filtered_tasks.append(task)
-
-    tasks = filtered_tasks
-    total = len(tasks)
-    paginated_tasks = tasks[pagination.offset : pagination.offset + pagination.page_size]
-
-    items = []
-    for task in paginated_tasks:
-        instance = task.instance
-        contract = (
-            db.query(Contract).filter(Contract.id == instance.entity_id).first()
-        )
-
-        items.append(
-            {
-                "task_id": task.id,
-                "instance_id": instance.id,
-                "contract_id": instance.entity_id,
-                "contract_code": contract.contract_code if contract else None,
-                "customer_contract_no": contract.customer_contract_no if contract else None,
-                "customer_name": contract.customer.name if contract and contract.customer else None,
-                "contract_amount": float(contract.contract_amount) if contract and contract.contract_amount else 0,
-                "project_name": contract.project.project_name if contract and contract.project else None,
-                "initiator_name": instance.initiator.real_name if instance.initiator else None,
-                "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
-                "urgency": instance.urgency,
-                "node_name": task.node.node_name if task.node else None,
-            }
-        )
+    service = ContractApprovalService(db)
+    items, total = service.get_pending_tasks(
+        user_id=current_user.id,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        customer_id=customer_id,
+        min_amount=min_amount,
+    )
 
     return ResponseModel(
         code=200,
@@ -239,17 +143,17 @@ def perform_approval_action(
 
     对单个合同进行审批通过或驳回。
     """
-    engine = ApprovalEngineService(db)
+    service = ContractApprovalService(db)
 
     try:
         if request.action == "approve":
-            result = engine.approve(
+            result = service.approve_task(
                 task_id=request.task_id,
                 approver_id=current_user.id,
                 comment=request.comment,
             )
         elif request.action == "reject":
-            result = engine.reject(
+            result = service.reject_task(
                 task_id=request.task_id,
                 approver_id=current_user.id,
                 comment=request.comment,
@@ -289,33 +193,13 @@ def perform_batch_approval(
 
     对多个合同进行批量审批通过或驳回。
     """
-    engine = ApprovalEngineService(db)
-    results = []
-    errors = []
-
-    for task_id in request.task_ids:
-        try:
-            if request.action == "approve":
-                engine.approve(
-                    task_id=task_id,
-                    approver_id=current_user.id,
-                    comment=request.comment,
-                )
-            elif request.action == "reject":
-                engine.reject(
-                    task_id=task_id,
-                    approver_id=current_user.id,
-                    comment=request.comment,
-                )
-            else:
-                errors.append(
-                    {"task_id": task_id, "error": f"不支持的操作: {request.action}"}
-                )
-                continue
-
-            results.append({"task_id": task_id, "status": "success"})
-        except Exception as e:
-            errors.append({"task_id": task_id, "error": str(e)})
+    service = ContractApprovalService(db)
+    results, errors = service.batch_approve_or_reject(
+        task_ids=request.task_ids,
+        approver_id=current_user.id,
+        action=request.action,
+        comment=request.comment,
+    )
 
     db.commit()
 
@@ -339,77 +223,35 @@ def get_approval_status(
 
     获取指定合同的审批流程状态和历史。
     """
-    from app.models.approval import ApprovalInstance, ApprovalTask
-
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
-
-    instance = (
-        db.query(ApprovalInstance)
-        .filter(
-            ApprovalInstance.entity_type == "CONTRACT",
-            ApprovalInstance.entity_id == contract_id,
-        )
-        .order_by(ApprovalInstance.created_at.desc())
-        .first()
-    )
-
-    if not instance:
+    service = ContractApprovalService(db)
+    
+    try:
+        status_data = service.get_contract_approval_status(contract_id)
+        
+        if not status_data:
+            # 获取合同基本信息
+            from app.models.sales.contracts import Contract
+            from app.utils.db_helpers import get_or_404
+            
+            contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+            return ResponseModel(
+                code=200,
+                message="该合同暂无审批记录",
+                data={
+                    "contract_id": contract_id,
+                    "contract_code": contract.contract_code,
+                    "status": contract.status,
+                    "approval_instance": None,
+                },
+            )
+        
         return ResponseModel(
             code=200,
-            message="该合同暂无审批记录",
-            data={
-                "contract_id": contract_id,
-                "contract_code": contract.contract_code,
-                "status": contract.status,
-                "approval_instance": None,
-            },
+            message="获取审批状态成功",
+            data=status_data,
         )
-
-    tasks = (
-        db.query(ApprovalTask)
-        .filter(ApprovalTask.instance_id == instance.id)
-        .order_by(ApprovalTask.created_at)
-        .all()
-    )
-
-    task_history = []
-    for task in tasks:
-        task_history.append(
-            {
-                "task_id": task.id,
-                "node_name": task.node.node_name if task.node else None,
-                "assignee_name": task.assignee.real_name if task.assignee else None,
-                "status": task.status,
-                "action": task.action,
-                "comment": task.comment,
-                "completed_at": task.completed_at.isoformat()
-                if task.completed_at
-                else None,
-            }
-        )
-
-    return ResponseModel(
-        code=200,
-        message="获取审批状态成功",
-        data={
-            "contract_id": contract_id,
-            "contract_code": contract.contract_code,
-            "customer_contract_no": contract.customer_contract_no,
-            "customer_name": contract.customer.name if contract.customer else None,
-            "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-            "contract_status": contract.status,
-            "instance_id": instance.id,
-            "instance_status": instance.status,
-            "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
-            "task_history": task_history,
-        },
-    )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.post("/withdraw", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -424,42 +266,30 @@ def withdraw_approval(
 
     撤回正在审批中的合同。
     """
-    from app.models.approval import ApprovalInstance
-
-    contract = db.query(Contract).filter(Contract.id == request.contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="合同不存在")
-
-    instance = (
-        db.query(ApprovalInstance)
-        .filter(
-            ApprovalInstance.entity_type == "CONTRACT",
-            ApprovalInstance.entity_id == request.contract_id,
-            ApprovalInstance.status == "PENDING",
-        )
-        .first()
-    )
-
-    if not instance:
-        raise HTTPException(status_code=400, detail="没有进行中的审批流程可撤回")
-
-    if instance.initiator_id != current_user.id:
-        raise HTTPException(status_code=403, detail="只能撤回自己提交的审批")
-
-    engine = ApprovalEngineService(db)
+    service = ContractApprovalService(db)
+    
     try:
-        engine.withdraw(instance_id=instance.id, user_id=current_user.id)
+        result = service.withdraw_approval(
+            contract_id=request.contract_id,
+            user_id=current_user.id,
+            reason=request.reason,
+        )
+        
         db.commit()
-
+        
         return ResponseModel(
             code=200,
             message="审批撤回成功",
-            data={
-                "contract_id": request.contract_id,
-                "contract_code": contract.contract_code,
-                "status": "withdrawn",
-            },
+            data=result,
         )
+    except ValueError as e:
+        db.rollback()
+        if "不存在" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        elif "只能撤回" in str(e):
+            raise HTTPException(status_code=403, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -478,53 +308,13 @@ def get_approval_history(
 
     获取当前用户处理过的合同审批历史。
     """
-    from app.models.approval import ApprovalInstance, ApprovalTask
-
-    query = (
-        db.query(ApprovalTask)
-        .join(ApprovalInstance)
-        .filter(
-            ApprovalTask.assignee_id == current_user.id,
-            ApprovalInstance.entity_type == "CONTRACT",
-            ApprovalTask.status.in_(["APPROVED", "REJECTED"]),
-        )
+    service = ContractApprovalService(db)
+    items, total = service.get_approval_history(
+        user_id=current_user.id,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        status_filter=status_filter,
     )
-
-    if status_filter:
-        query = query.filter(ApprovalTask.status == status_filter)
-
-    total = query.count()
-    tasks = (
-        query.order_by(ApprovalTask.completed_at.desc())
-        .offset(pagination.offset)
-        .limit(pagination.limit)
-        .all()
-    )
-
-    items = []
-    for task in tasks:
-        instance = task.instance
-        contract = (
-            db.query(Contract)
-            .filter(Contract.id == instance.entity_id)
-            .first()
-        )
-
-        items.append(
-            {
-                "task_id": task.id,
-                "contract_id": instance.entity_id,
-                "contract_code": contract.contract_code if contract else None,
-                "customer_name": contract.customer.name if contract and contract.customer else None,
-                "contract_amount": float(contract.contract_amount) if contract and contract.contract_amount else 0,
-                "action": task.action,
-                "status": task.status,
-                "comment": task.comment,
-                "completed_at": task.completed_at.isoformat()
-                if task.completed_at
-                else None,
-            }
-        )
 
     return ResponseModel(
         code=200,
