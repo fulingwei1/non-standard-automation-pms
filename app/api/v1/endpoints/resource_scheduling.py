@@ -1,24 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 资源冲突智能调度系统 - API端点
+重构后的薄控制器，业务逻辑已迁移到服务层
 """
 
-import time
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.resource_scheduling import (
-    ResourceConflictDetection,
-    ResourceDemandForecast,
-    ResourceSchedulingLog,
-    ResourceSchedulingSuggestion,
-    ResourceUtilizationAnalysis,
-)
 from app.models.user import User
 from app.schemas.resource_scheduling import (
     AISchedulingSuggestionRequest,
@@ -28,24 +19,16 @@ from app.schemas.resource_scheduling import (
     DashboardSummary,
     ForecastRequest,
     ForecastResponse,
-    ResourceConflictDetectionCreate,
     ResourceConflictDetectionInDB,
     ResourceConflictDetectionUpdate,
-    ResourceDemandForecastCreate,
     ResourceDemandForecastInDB,
-    ResourceDemandForecastUpdate,
-    ResourceSchedulingLogCreate,
     ResourceSchedulingLogInDB,
-    ResourceSchedulingSuggestionCreate,
     ResourceSchedulingSuggestionInDB,
-    ResourceSchedulingSuggestionUpdate,
-    ResourceUtilizationAnalysisCreate,
     ResourceUtilizationAnalysisInDB,
-    ResourceUtilizationAnalysisUpdate,
     UtilizationAnalysisRequest,
     UtilizationAnalysisResponse,
 )
-from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+from app.services.resource_scheduling import ResourceSchedulingService
 
 
 router = APIRouter()
@@ -70,54 +53,26 @@ def detect_resource_conflicts(
     - 可选自动生成调度方案
     - AI评估严重程度
     """
-    start_time = time.time()
+    service = ResourceSchedulingService(db)
     
-    service = ResourceSchedulingAIService(db)
-    
-    # 检测冲突
-    conflicts = service.detect_resource_conflicts(
+    result = service.detect_conflicts(
         resource_id=request.resource_id,
         resource_type=request.resource_type or "PERSON",
         project_id=request.project_id,
         start_date=request.start_date,
         end_date=request.end_date,
-    )
-    
-    # 统计
-    total_conflicts = len(conflicts)
-    critical_conflicts = sum(1 for c in conflicts if c.severity == "CRITICAL")
-    
-    # 自动生成方案
-    suggestions_generated = 0
-    if request.auto_generate_suggestions and conflicts:
-        for conflict in conflicts[:5]:  # 限制前5个
-            try:
-                service.generate_scheduling_suggestions(
-                    conflict_id=conflict.id,
-                    max_suggestions=2,
-                )
-                suggestions_generated += 1
-            except Exception:
-                pass
-    
-    # 记录日志
-    _log_action(
-        db=db,
-        action_type="DETECT",
-        action_desc=f"检测到{total_conflicts}个资源冲突",
+        auto_generate_suggestions=request.auto_generate_suggestions,
         operator_id=current_user.id,
         operator_name=current_user.real_name,
-        result="SUCCESS",
-        execution_time_ms=int((time.time() - start_time) * 1000),
     )
     
     return ConflictDetectionResponse(
-        total_conflicts=total_conflicts,
-        new_conflicts=total_conflicts,  # 全部都是新的
-        critical_conflicts=critical_conflicts,
-        conflicts=[ResourceConflictDetectionInDB.model_validate(c) for c in conflicts],
-        suggestions_generated=suggestions_generated,
-        detection_time_ms=int((time.time() - start_time) * 1000),
+        total_conflicts=result["total_conflicts"],
+        new_conflicts=result["total_conflicts"],
+        critical_conflicts=result["critical_conflicts"],
+        conflicts=[ResourceConflictDetectionInDB.model_validate(c) for c in result["conflicts"]],
+        suggestions_generated=result["suggestions_generated"],
+        detection_time_ms=result["detection_time_ms"],
     )
 
 
@@ -138,18 +93,16 @@ def list_conflicts(
     
     支持分页和多条件筛选
     """
-    query = db.query(ResourceConflictDetection)
+    service = ResourceSchedulingService(db)
     
-    if status:
-        query = query.filter(ResourceConflictDetection.status == status)
-    if severity:
-        query = query.filter(ResourceConflictDetection.severity == severity)
-    if resource_id:
-        query = query.filter(ResourceConflictDetection.resource_id == resource_id)
-    if is_resolved is not None:
-        query = query.filter(ResourceConflictDetection.is_resolved == is_resolved)
-    
-    conflicts = query.order_by(desc(ResourceConflictDetection.priority_score)).offset(skip).limit(limit).all()
+    conflicts = service.list_conflicts(
+        skip=skip,
+        limit=limit,
+        status=status,
+        severity=severity,
+        resource_id=resource_id,
+        is_resolved=is_resolved,
+    )
     
     return [ResourceConflictDetectionInDB.model_validate(c) for c in conflicts]
 
@@ -162,7 +115,9 @@ def get_conflict(
     conflict_id: int,
 ) -> Any:
     """获取指定冲突的详细信息"""
-    conflict = db.query(ResourceConflictDetection).filter(ResourceConflictDetection.id == conflict_id).first()
+    service = ResourceSchedulingService(db)
+    
+    conflict = service.get_conflict(conflict_id)
     
     if not conflict:
         raise HTTPException(
@@ -188,39 +143,20 @@ def update_conflict(
     - 修改严重程度
     - 添加解决说明
     """
-    conflict = db.query(ResourceConflictDetection).filter(ResourceConflictDetection.id == conflict_id).first()
+    service = ResourceSchedulingService(db)
+    
+    conflict = service.update_conflict(
+        conflict_id=conflict_id,
+        update_data=update_data.model_dump(exclude_unset=True),
+        operator_id=current_user.id,
+        operator_name=current_user.real_name,
+    )
     
     if not conflict:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Conflict {conflict_id} not found",
         )
-    
-    # 更新字段
-    update_dict = update_data.model_dump(exclude_unset=True)
-    for field, value in update_dict.items():
-        setattr(conflict, field, value)
-    
-    # 如果标记为已解决
-    if update_data.is_resolved:
-        conflict.resolved_by = current_user.id
-        conflict.resolved_at = datetime.now()
-        conflict.status = "RESOLVED"
-    
-    conflict.updated_at = datetime.now()
-    db.commit()
-    db.refresh(conflict)
-    
-    # 记录日志
-    _log_action(
-        db=db,
-        conflict_id=conflict_id,
-        action_type="RESOLVE" if update_data.is_resolved else "UPDATE",
-        action_desc=f"更新冲突状态",
-        operator_id=current_user.id,
-        operator_name=current_user.real_name,
-        result="SUCCESS",
-    )
     
     return ResourceConflictDetectionInDB.model_validate(conflict)
 
@@ -233,16 +169,15 @@ def delete_conflict(
     conflict_id: int,
 ) -> Any:
     """删除指定的冲突记录（仅用于误检）"""
-    conflict = db.query(ResourceConflictDetection).filter(ResourceConflictDetection.id == conflict_id).first()
+    service = ResourceSchedulingService(db)
     
-    if not conflict:
+    success = service.delete_conflict(conflict_id)
+    
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Conflict {conflict_id} not found",
         )
-    
-    db.delete(conflict)
-    db.commit()
     
     return {"message": f"Conflict {conflict_id} deleted"}
 
@@ -266,15 +201,15 @@ def generate_scheduling_suggestions(
     - 评估可行性、成本、风险
     - 自动推荐最优方案
     """
-    start_time = time.time()
-    
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingService(db)
     
     try:
-        suggestions = service.generate_scheduling_suggestions(
+        result = service.generate_suggestions(
             conflict_id=request.conflict_id,
             max_suggestions=request.max_suggestions,
             prefer_minimal_impact=request.prefer_minimal_impact,
+            operator_id=current_user.id,
+            operator_name=current_user.real_name,
         )
     except ValueError as e:
         raise HTTPException(
@@ -287,31 +222,12 @@ def generate_scheduling_suggestions(
             detail=f"AI生成失败: {str(e)}",
         )
     
-    # 找到推荐方案
-    recommended_id = next((s.id for s in suggestions if s.is_recommended), None)
-    
-    # 统计Token消耗
-    total_tokens = sum(s.ai_tokens_used or 0 for s in suggestions)
-    
-    # 记录日志
-    _log_action(
-        db=db,
-        conflict_id=request.conflict_id,
-        action_type="SUGGEST",
-        action_desc=f"AI生成{len(suggestions)}个调度方案",
-        operator_id=current_user.id,
-        operator_name=current_user.real_name,
-        result="SUCCESS",
-        execution_time_ms=int((time.time() - start_time) * 1000),
-        ai_tokens_used=total_tokens,
-    )
-    
     return AISchedulingSuggestionResponse(
         conflict_id=request.conflict_id,
-        suggestions=[ResourceSchedulingSuggestionInDB.model_validate(s) for s in suggestions],
-        recommended_suggestion_id=recommended_id,
-        generation_time_ms=int((time.time() - start_time) * 1000),
-        ai_tokens_used=total_tokens,
+        suggestions=[ResourceSchedulingSuggestionInDB.model_validate(s) for s in result["suggestions"]],
+        recommended_suggestion_id=result["recommended_id"],
+        generation_time_ms=result["generation_time_ms"],
+        ai_tokens_used=result["total_tokens"],
     )
 
 
@@ -328,18 +244,16 @@ def list_suggestions(
     is_recommended: Optional[bool] = Query(None, description="是否推荐"),
 ) -> Any:
     """查询调度方案列表"""
-    query = db.query(ResourceSchedulingSuggestion)
+    service = ResourceSchedulingService(db)
     
-    if conflict_id:
-        query = query.filter(ResourceSchedulingSuggestion.conflict_id == conflict_id)
-    if status:
-        query = query.filter(ResourceSchedulingSuggestion.status == status)
-    if solution_type:
-        query = query.filter(ResourceSchedulingSuggestion.solution_type == solution_type)
-    if is_recommended is not None:
-        query = query.filter(ResourceSchedulingSuggestion.is_recommended == is_recommended)
-    
-    suggestions = query.order_by(ResourceSchedulingSuggestion.rank_order).offset(skip).limit(limit).all()
+    suggestions = service.list_suggestions(
+        skip=skip,
+        limit=limit,
+        conflict_id=conflict_id,
+        status=status,
+        solution_type=solution_type,
+        is_recommended=is_recommended,
+    )
     
     return [ResourceSchedulingSuggestionInDB.model_validate(s) for s in suggestions]
 
@@ -352,9 +266,9 @@ def get_suggestion(
     suggestion_id: int,
 ) -> Any:
     """获取指定方案的详细信息"""
-    suggestion = db.query(ResourceSchedulingSuggestion).filter(
-        ResourceSchedulingSuggestion.id == suggestion_id
-    ).first()
+    service = ResourceSchedulingService(db)
+    
+    suggestion = service.get_suggestion(suggestion_id)
     
     if not suggestion:
         raise HTTPException(
@@ -380,44 +294,27 @@ def review_suggestion(
     - ACCEPT: 接受方案
     - REJECT: 拒绝方案
     """
-    suggestion = db.query(ResourceSchedulingSuggestion).filter(
-        ResourceSchedulingSuggestion.id == suggestion_id
-    ).first()
+    service = ResourceSchedulingService(db)
     
-    if not suggestion:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Suggestion {suggestion_id} not found",
-        )
-    
-    if action == "ACCEPT":
-        suggestion.status = "ACCEPTED"
-    elif action == "REJECT":
-        suggestion.status = "REJECTED"
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid action. Use ACCEPT or REJECT.",
-        )
-    
-    suggestion.reviewed_by = current_user.id
-    suggestion.reviewed_at = datetime.now()
-    suggestion.review_comment = review_comment
-    suggestion.updated_at = datetime.now()
-    
-    db.commit()
-    db.refresh(suggestion)
-    
-    # 记录日志
-    _log_action(
-        db=db,
+    success, suggestion, error_msg = service.review_suggestion(
         suggestion_id=suggestion_id,
-        action_type="REVIEW",
-        action_desc=f"审核方案: {action}",
+        action=action,
+        review_comment=review_comment,
         operator_id=current_user.id,
         operator_name=current_user.real_name,
-        result="SUCCESS",
     )
+    
+    if not success:
+        if "not found" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=error_msg,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg,
+            )
     
     return ResourceSchedulingSuggestionInDB.model_validate(suggestion)
 
@@ -435,55 +332,26 @@ def implement_suggestion(
     
     标记方案为已执行状态
     """
-    suggestion = db.query(ResourceSchedulingSuggestion).filter(
-        ResourceSchedulingSuggestion.id == suggestion_id
-    ).first()
+    service = ResourceSchedulingService(db)
     
-    if not suggestion:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Suggestion {suggestion_id} not found",
-        )
-    
-    if suggestion.status != "ACCEPTED":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only ACCEPTED suggestions can be implemented",
-        )
-    
-    suggestion.status = "IMPLEMENTED"
-    suggestion.implemented_by = current_user.id
-    suggestion.implemented_at = datetime.now()
-    suggestion.implementation_result = implementation_result
-    suggestion.updated_at = datetime.now()
-    
-    db.commit()
-    db.refresh(suggestion)
-    
-    # 同时解决关联的冲突
-    conflict = db.query(ResourceConflictDetection).filter(
-        ResourceConflictDetection.id == suggestion.conflict_id
-    ).first()
-    
-    if conflict:
-        conflict.is_resolved = True
-        conflict.resolved_by = current_user.id
-        conflict.resolved_at = datetime.now()
-        conflict.resolution_method = f"AI方案{suggestion.solution_type}"
-        conflict.status = "RESOLVED"
-        db.commit()
-    
-    # 记录日志
-    _log_action(
-        db=db,
+    success, suggestion, error_msg = service.implement_suggestion(
         suggestion_id=suggestion_id,
-        conflict_id=suggestion.conflict_id,
-        action_type="IMPLEMENT",
-        action_desc="执行调度方案",
+        implementation_result=implementation_result,
         operator_id=current_user.id,
         operator_name=current_user.real_name,
-        result="SUCCESS",
     )
+    
+    if not success:
+        if "not found" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=error_msg,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg,
+            )
     
     return ResourceSchedulingSuggestionInDB.model_validate(suggestion)
 
@@ -507,26 +375,20 @@ def generate_forecast(
     - 识别技能缺口
     - 提供招聘/培训建议
     """
-    start_time = time.time()
+    service = ResourceSchedulingService(db)
     
-    service = ResourceSchedulingAIService(db)
-    
-    forecasts = service.forecast_resource_demand(
+    result = service.generate_forecast(
         forecast_period=request.forecast_period,
         resource_type=request.resource_type,
         skill_category=request.skill_category,
     )
     
-    # 统计关键缺口
-    critical_gaps = sum(1 for f in forecasts if f.gap_severity in ["SHORTAGE", "CRITICAL"])
-    total_hiring = sum(f.demand_gap for f in forecasts if f.demand_gap and f.demand_gap > 0)
-    
     return ForecastResponse(
-        forecasts=[ResourceDemandForecastInDB.model_validate(f) for f in forecasts],
-        critical_gaps=critical_gaps,
-        total_hiring_needed=total_hiring or 0,
+        forecasts=[ResourceDemandForecastInDB.model_validate(f) for f in result["forecasts"]],
+        critical_gaps=result["critical_gaps"],
+        total_hiring_needed=result["total_hiring"],
         total_training_needed=0,  # TODO: 实现培训需求统计
-        generation_time_ms=int((time.time() - start_time) * 1000),
+        generation_time_ms=result["generation_time_ms"],
     )
 
 
@@ -541,14 +403,14 @@ def list_forecasts(
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """查询资源需求预测列表"""
-    query = db.query(ResourceDemandForecast)
+    service = ResourceSchedulingService(db)
     
-    if forecast_period:
-        query = query.filter(ResourceDemandForecast.forecast_period == forecast_period)
-    if status:
-        query = query.filter(ResourceDemandForecast.status == status)
-    
-    forecasts = query.order_by(desc(ResourceDemandForecast.created_at)).offset(skip).limit(limit).all()
+    forecasts = service.list_forecasts(
+        skip=skip,
+        limit=limit,
+        forecast_period=forecast_period,
+        status=status,
+    )
     
     return [ResourceDemandForecastInDB.model_validate(f) for f in forecasts]
 
@@ -561,7 +423,9 @@ def get_forecast(
     forecast_id: int,
 ) -> Any:
     """获取指定预测的详细信息"""
-    forecast = db.query(ResourceDemandForecast).filter(ResourceDemandForecast.id == forecast_id).first()
+    service = ResourceSchedulingService(db)
+    
+    forecast = service.get_forecast(forecast_id)
     
     if not forecast:
         raise HTTPException(
@@ -591,52 +455,22 @@ def analyze_utilization(
     - 识别闲置和超负荷资源
     - AI优化建议
     """
-    start_time = time.time()
+    service = ResourceSchedulingService(db)
     
-    service = ResourceSchedulingAIService(db)
-    
-    analyses = []
-    
-    # 如果指定resource_id，分析单个资源
-    if request.resource_id:
-        analysis = service.analyze_resource_utilization(
-            resource_id=request.resource_id,
-            start_date=request.start_date,
-            end_date=request.end_date,
-            analysis_period=request.analysis_period,
-        )
-        analyses.append(analysis)
-    else:
-        # 否则分析所有资源（限制数量）
-        from app.models.user import User
-        users = db.query(User).filter(User.is_active == True).limit(50).all()
-        
-        for user in users:
-            try:
-                analysis = service.analyze_resource_utilization(
-                    resource_id=user.id,
-                    start_date=request.start_date,
-                    end_date=request.end_date,
-                    analysis_period=request.analysis_period,
-                )
-                analyses.append(analysis)
-            except Exception:
-                pass
-    
-    # 统计
-    idle_count = sum(1 for a in analyses if a.is_idle_resource)
-    overloaded_count = sum(1 for a in analyses if a.is_overloaded)
-    
-    # 计算平均利用率
-    avg_utilization = sum(a.utilization_rate or 0 for a in analyses) / len(analyses) if analyses else 0
+    result = service.analyze_utilization(
+        resource_id=request.resource_id,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        analysis_period=request.analysis_period,
+    )
     
     return UtilizationAnalysisResponse(
-        analyses=[ResourceUtilizationAnalysisInDB.model_validate(a) for a in analyses],
-        idle_resources_count=idle_count,
-        overloaded_resources_count=overloaded_count,
-        avg_utilization=avg_utilization,
-        optimization_opportunities=idle_count + overloaded_count,
-        analysis_time_ms=int((time.time() - start_time) * 1000),
+        analyses=[ResourceUtilizationAnalysisInDB.model_validate(a) for a in result["analyses"]],
+        idle_resources_count=result["idle_count"],
+        overloaded_resources_count=result["overloaded_count"],
+        avg_utilization=result["avg_utilization"],
+        optimization_opportunities=result["optimization_opportunities"],
+        analysis_time_ms=result["analysis_time_ms"],
     )
 
 
@@ -652,16 +486,15 @@ def list_utilization_analyses(
     is_overloaded: Optional[bool] = Query(None, description="是否超负荷"),
 ) -> Any:
     """查询资源利用率分析列表"""
-    query = db.query(ResourceUtilizationAnalysis)
+    service = ResourceSchedulingService(db)
     
-    if resource_id:
-        query = query.filter(ResourceUtilizationAnalysis.resource_id == resource_id)
-    if is_idle is not None:
-        query = query.filter(ResourceUtilizationAnalysis.is_idle_resource == is_idle)
-    if is_overloaded is not None:
-        query = query.filter(ResourceUtilizationAnalysis.is_overloaded == is_overloaded)
-    
-    analyses = query.order_by(desc(ResourceUtilizationAnalysis.created_at)).offset(skip).limit(limit).all()
+    analyses = service.list_utilization_analyses(
+        skip=skip,
+        limit=limit,
+        resource_id=resource_id,
+        is_idle=is_idle,
+        is_overloaded=is_overloaded,
+    )
     
     return [ResourceUtilizationAnalysisInDB.model_validate(a) for a in analyses]
 
@@ -674,9 +507,9 @@ def get_utilization_analysis(
     analysis_id: int,
 ) -> Any:
     """获取指定利用率分析的详细信息"""
-    analysis = db.query(ResourceUtilizationAnalysis).filter(
-        ResourceUtilizationAnalysis.id == analysis_id
-    ).first()
+    service = ResourceSchedulingService(db)
+    
+    analysis = service.get_utilization_analysis(analysis_id)
     
     if not analysis:
         raise HTTPException(
@@ -702,76 +535,11 @@ def get_dashboard_summary(
     
     汇总所有关键指标
     """
-    # 冲突统计
-    total_conflicts = db.query(func.count(ResourceConflictDetection.id)).scalar() or 0
-    critical_conflicts = db.query(func.count(ResourceConflictDetection.id)).filter(
-        ResourceConflictDetection.severity == "CRITICAL"
-    ).scalar() or 0
-    unresolved_conflicts = db.query(func.count(ResourceConflictDetection.id)).filter(
-        ResourceConflictDetection.is_resolved == False
-    ).scalar() or 0
+    service = ResourceSchedulingService(db)
     
-    # 方案统计
-    total_suggestions = db.query(func.count(ResourceSchedulingSuggestion.id)).scalar() or 0
-    pending_suggestions = db.query(func.count(ResourceSchedulingSuggestion.id)).filter(
-        ResourceSchedulingSuggestion.status == "PENDING"
-    ).scalar() or 0
-    implemented_suggestions = db.query(func.count(ResourceSchedulingSuggestion.id)).filter(
-        ResourceSchedulingSuggestion.status == "IMPLEMENTED"
-    ).scalar() or 0
+    summary = service.get_dashboard_summary()
     
-    # 利用率统计
-    idle_resources = db.query(func.count(ResourceUtilizationAnalysis.id)).filter(
-        ResourceUtilizationAnalysis.is_idle_resource == True
-    ).scalar() or 0
-    overloaded_resources = db.query(func.count(ResourceUtilizationAnalysis.id)).filter(
-        ResourceUtilizationAnalysis.is_overloaded == True
-    ).scalar() or 0
-    
-    # 平均利用率
-    avg_util = db.query(func.avg(ResourceUtilizationAnalysis.utilization_rate)).scalar()
-    avg_utilization = float(avg_util) if avg_util else 0.0
-    
-    # 预测统计
-    forecasts_count = db.query(func.count(ResourceDemandForecast.id)).filter(
-        ResourceDemandForecast.status == "ACTIVE"
-    ).scalar() or 0
-    
-    critical_gaps = db.query(func.count(ResourceDemandForecast.id)).filter(
-        ResourceDemandForecast.gap_severity.in_(["SHORTAGE", "CRITICAL"])
-    ).scalar() or 0
-    
-    # 招聘需求
-    hiring_query = db.query(func.sum(ResourceDemandForecast.demand_gap)).filter(
-        ResourceDemandForecast.demand_gap > 0
-    ).scalar()
-    hiring_needed = int(hiring_query) if hiring_query else 0
-    
-    # 最近检测/分析时间
-    last_conflict = db.query(ResourceConflictDetection).order_by(
-        desc(ResourceConflictDetection.created_at)
-    ).first()
-    
-    last_analysis = db.query(ResourceUtilizationAnalysis).order_by(
-        desc(ResourceUtilizationAnalysis.created_at)
-    ).first()
-    
-    return DashboardSummary(
-        total_conflicts=total_conflicts,
-        critical_conflicts=critical_conflicts,
-        unresolved_conflicts=unresolved_conflicts,
-        total_suggestions=total_suggestions,
-        pending_suggestions=pending_suggestions,
-        implemented_suggestions=implemented_suggestions,
-        idle_resources=idle_resources,
-        overloaded_resources=overloaded_resources,
-        avg_utilization=avg_utilization,
-        forecasts_count=forecasts_count,
-        critical_gaps=critical_gaps,
-        hiring_needed=hiring_needed,
-        last_detection_time=last_conflict.created_at if last_conflict else None,
-        last_analysis_time=last_analysis.created_at if last_analysis else None,
-    )
+    return DashboardSummary(**summary)
 
 
 @router.get("/logs", response_model=List[ResourceSchedulingLogInDB], summary="查询操作日志")
@@ -785,47 +553,13 @@ def list_logs(
     conflict_id: Optional[int] = Query(None, description="冲突ID筛选"),
 ) -> Any:
     """查询资源调度操作日志"""
-    query = db.query(ResourceSchedulingLog)
+    service = ResourceSchedulingService(db)
     
-    if action_type:
-        query = query.filter(ResourceSchedulingLog.action_type == action_type)
-    if conflict_id:
-        query = query.filter(ResourceSchedulingLog.conflict_id == conflict_id)
-    
-    logs = query.order_by(desc(ResourceSchedulingLog.created_at)).offset(skip).limit(limit).all()
+    logs = service.list_logs(
+        skip=skip,
+        limit=limit,
+        action_type=action_type,
+        conflict_id=conflict_id,
+    )
     
     return [ResourceSchedulingLogInDB.model_validate(log) for log in logs]
-
-
-# ============================================================================
-# 辅助函数
-# ============================================================================
-
-def _log_action(
-    db: Session,
-    action_type: str,
-    action_desc: str,
-    operator_id: int,
-    operator_name: str,
-    result: str = "SUCCESS",
-    conflict_id: Optional[int] = None,
-    suggestion_id: Optional[int] = None,
-    execution_time_ms: Optional[int] = None,
-    ai_tokens_used: Optional[int] = None,
-    error_message: Optional[str] = None,
-) -> None:
-    """记录操作日志"""
-    log = ResourceSchedulingLog(
-        conflict_id=conflict_id,
-        suggestion_id=suggestion_id,
-        action_type=action_type,
-        action_desc=action_desc,
-        operator_id=operator_id,
-        operator_name=operator_name,
-        result=result,
-        execution_time_ms=execution_time_ms,
-        ai_tokens_used=ai_tokens_used,
-        error_message=error_message,
-    )
-    db.add(log)
-    db.commit()
