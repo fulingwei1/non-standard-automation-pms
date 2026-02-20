@@ -314,24 +314,15 @@ class TestRoleManagementService(unittest.TestCase):
             {"label": "系统管理", "items": []}
         ]
         
-        # 模拟查询
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
+        # 创建两个独立的查询mock
+        mock_query1 = MagicMock()
+        mock_query1.filter.return_value.all.return_value = [mock_user_role]
         
-        # 第一次查询返回 UserRole
-        def first_all():
-            return [mock_user_role]
+        mock_query2 = MagicMock()
+        mock_query2.filter.return_value.all.return_value = [mock_role]
         
-        # 第二次查询返回 Role
-        def second_all():
-            return [mock_role]
-        
-        mock_query.filter.side_effect = [
-            type('obj', (), {'all': first_all})(),
-            type('obj', (), {'all': second_all})()
-        ]
-        
-        self.db.query.return_value = mock_query
+        # 第一次查询返回UserRole，第二次返回Role
+        self.db.query.side_effect = [mock_query1, mock_query2]
 
         # 执行测试
         result = self.service.get_user_nav_groups(user_id=1)
