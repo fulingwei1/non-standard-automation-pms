@@ -111,7 +111,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             critical_failed_items = self.db.query(AcceptanceOrderItem).filter(
                 AcceptanceOrderItem.order_id == entity_id,
                 AcceptanceOrderItem.is_key_item,
-                AcceptanceOrderItem.check_result == "NG"
+                AcceptanceOrderItem.result_status == "NG"
             ).count()
             has_critical_failure = critical_failed_items > 0
 
