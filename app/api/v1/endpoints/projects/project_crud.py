@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-项目模块 - 基础CRUD操作
+项目模块 - 基础CRUD操作（薄Controller层）
 
 包含项目列表、创建、详情、更新、删除
+业务逻辑已提取到 app.services.project_crud.ProjectCrudService
 """
 
 import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from sqlalchemy import desc
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import (
@@ -26,7 +24,7 @@ from app.schemas.project import (
     ProjectResponse,
     ProjectUpdate,
 )
-from app.utils.db_helpers import save_obj
+from app.services.project_crud import ProjectCrudService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -46,98 +44,20 @@ def read_projects(
     min_progress: Optional[float] = Query(None, ge=0, le=100, description="最小进度百分比"),
     max_progress: Optional[float] = Query(None, ge=0, le=100, description="最大进度百分比"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    # 成本相关参数
     include_cost: bool = Query(False, description="是否包含成本摘要"),
     overrun_only: bool = Query(False, description="仅显示超支项目"),
     sort: Optional[str] = Query(
         None, 
-        description="排序方式：cost_desc（成本倒序）/ cost_asc（成本正序）/ budget_used_pct（预算使用率倒序）/ created_at_desc（默认）"
+        description="排序方式：cost_desc/cost_asc/budget_used_pct/created_at_desc（默认）"
     ),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取项目列表（支持分页、搜索、筛选、成本展示）
-    
-    **新增功能**：
-    - `include_cost=true`: 在列表中显示成本摘要（总成本、预算、使用率、是否超支等）
-    - `overrun_only=true`: 仅显示超支项目
-    - `sort=cost_desc/cost_asc/budget_used_pct`: 按成本或预算使用率排序
     """
-    query = db.query(Project)
+    service = ProjectCrudService(db)
 
-    # 关键词搜索
-    query = apply_keyword_filter(query, Project, keyword, ["project_name", "project_code", "contract_no"])
-
-    # 客户筛选
-    if customer_id:
-        query = query.filter(Project.customer_id == customer_id)
-
-    # 阶段筛选
-    if stage:
-        query = query.filter(Project.stage == stage)
-
-    # 状态筛选
-    if status:
-        query = query.filter(Project.status == status)
-
-    # 健康度筛选
-    if health:
-        query = query.filter(Project.health == health)
-
-    # 项目类型筛选
-    if project_type:
-        query = query.filter(Project.project_type == project_type)
-
-    # 项目经理筛选
-    if pm_id:
-        query = query.filter(Project.pm_id == pm_id)
-
-    # 进度筛选
-    if min_progress is not None:
-        query = query.filter(Project.progress_pct >= min_progress)
-    if max_progress is not None:
-        query = query.filter(Project.progress_pct <= max_progress)
-
-    # 是否启用筛选
-    if is_active is not None:
-        query = query.filter(Project.is_active == is_active)
-
-    # 超支项目筛选（仅当 overrun_only=true 时）
-    if overrun_only:
-        query = query.filter(
-            Project.actual_cost > Project.budget_amount,
-            Project.budget_amount > 0
-        )
-
-    # 应用数据权限过滤
-    from app.services.data_scope import DataScopeService
-    query = DataScopeService.filter_projects_by_scope(db, query, current_user)
-
-    # 使用selectinload优化关联查询
-    query = query.options(
-        selectinload(Project.customer),
-        selectinload(Project.manager)
-    )
-
-    # 排序逻辑
-    if sort == "cost_desc":
-        query = query.order_by(desc(Project.actual_cost))
-    elif sort == "cost_asc":
-        query = query.order_by(Project.actual_cost)
-    elif sort == "budget_used_pct":
-        # 按预算使用率排序（actual_cost / budget_amount）
-        # 使用CASE避免除以0
-        from sqlalchemy import case
-        budget_used_expr = case(
-            (Project.budget_amount > 0, Project.actual_cost / Project.budget_amount),
-            else_=0
-        )
-        query = query.order_by(desc(budget_used_expr))
-    else:
-        # 默认按创建时间倒序
-        query = query.order_by(desc(Project.created_at))
-
-    # 缓存逻辑（如果有成本相关参数，禁用缓存）
+    # 判断是否使用缓存
     use_cache = (
         not keyword 
         and not any([customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress])
@@ -145,6 +65,8 @@ def read_projects(
         and not overrun_only
         and not sort
     )
+
+    # 尝试从缓存读取
     if use_cache:
         try:
             from app.services.cache_service import CacheService
@@ -160,23 +82,26 @@ def read_projects(
         except Exception:
             logger.debug("项目列表缓存读取失败，继续查询数据库", exc_info=True)
 
-    # 总数统计
-    try:
-        count_result = query.count()
-        total = int(count_result) if count_result is not None else 0
-    except Exception:
-        logger.debug("项目列表统计总数失败，降级为 0", exc_info=True)
-        total = 0
-
-    # 分页
-    projects = apply_pagination(query, pagination.offset, pagination.limit).all()
+    # 从服务层获取项目列表
+    projects, total = service.get_projects_with_pagination(
+        pagination=pagination,
+        keyword=keyword,
+        customer_id=customer_id,
+        stage=stage,
+        status=status,
+        health=health,
+        project_type=project_type,
+        pm_id=pm_id,
+        min_progress=min_progress,
+        max_progress=max_progress,
+        is_active=is_active,
+        overrun_only=overrun_only,
+        sort=sort,
+        current_user=current_user,
+    )
 
     # 补充冗余字段
-    for project in projects:
-        if not project.customer_name and project.customer:
-            project.customer_name = project.customer.customer_name
-        if not project.pm_name and project.manager:
-            project.pm_name = project.manager.real_name or project.manager.username
+    service.populate_redundant_fields(projects)
 
     # 批量获取成本数据（如果需要）
     cost_summaries = {}
@@ -188,10 +113,10 @@ def read_projects(
             project_ids, include_breakdown=True
         )
 
-    total = int(total) if total is not None else 0
+    # 计算分页
     pages = pagination.pages_for_total(total)
 
-    # 转换为响应对象，映射字段
+    # 转换为响应对象
     project_items = []
     for p in projects:
         item_dict = {
@@ -204,8 +129,8 @@ def read_projects(
             "progress_pct": p.progress_pct,
             "pm_name": p.pm_name,
             "pm_id": p.pm_id,
-            "sales_id": p.salesperson_id,  # 映射 salesperson_id -> sales_id
-            "te_id": getattr(p, "te_id", None),  # 技术负责人ID（如有）
+            "sales_id": p.salesperson_id,
+            "te_id": getattr(p, "te_id", None),
             "cost_summary": cost_summaries.get(p.id) if include_cost else None,
         }
         project_items.append(ProjectListResponse(**item_dict))
@@ -245,41 +170,8 @@ def create_project(
     """
     Create new project.
     """
-    project = (
-        db.query(Project)
-        .filter(Project.project_code == project_in.project_code)
-        .first()
-    )
-    if project:
-        raise HTTPException(
-            status_code=400,
-            detail="The project with this project number already exists in the system.",
-        )
-
-    project_data = project_in.model_dump()
-    project_data.pop("machine_count", None)
-
-    project = Project(**project_data)
-
-    # Populate redundant fields
-    if project.customer_id:
-        customer = db.query(Customer).get(project.customer_id)
-        if customer:
-            project.customer_name = customer.customer_name
-            project.customer_contact = customer.contact_person
-            project.customer_phone = customer.contact_phone
-
-    if project.pm_id:
-        pm = db.query(User).get(project.pm_id)
-        if pm:
-            project.pm_name = pm.real_name or pm.username
-
-    save_obj(db, project)
-
-    # Initialize standard stages
-    from app.utils.project_utils import init_project_stages
-    init_project_stages(db, project.id)
-
+    service = ProjectCrudService(db)
+    project = service.create_project(project_in)
     return project
 
 
@@ -297,65 +189,22 @@ def read_project(
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id, "您没有权限查看该项目")
 
-    project = (
-        db.query(Project)
-        .options(
-            joinedload(Project.customer),
-            joinedload(Project.manager),
-        )
-        .filter(Project.id == project_id)
-        .first()
-    )
+    service = ProjectCrudService(db)
+    
+    # 获取项目基础信息
+    project = service.get_project_by_id(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    # 补充冗余字段
-    if not project.customer_name and project.customer:
-        project.customer_name = project.customer.customer_name
-        project.customer_contact = project.customer.contact_person
-        project.customer_phone = project.customer.contact_phone
-    if not project.pm_name and project.manager:
-        project.pm_name = project.manager.real_name or project.manager.username
+    # 获取项目成员
+    members = service.get_project_members(project_id)
 
-    # 加载项目成员
-    from app.models.project import ProjectMember
-    from app.schemas.project import ProjectMemberResponse
-    members_query = (
-        db.query(ProjectMember)
-        .options(joinedload(ProjectMember.user))
-        .filter(ProjectMember.project_id == project_id)
-        .all()
-    )
-
-    members = []
-    for member in members_query:
-        member_data = {
-            "id": member.id,
-            "project_id": member.project_id,
-            "user_id": member.user_id,
-            "username": member.user.username if member.user else f"user_{member.user_id}",
-            "real_name": member.user.real_name if member.user and member.user.real_name else None,
-            "role_code": member.role_code,
-            "allocation_pct": member.allocation_pct,
-            "start_date": member.start_date,
-            "end_date": member.end_date,
-            "is_active": member.is_active,
-            "remark": member.remark,
-        }
-        members.append(ProjectMemberResponse(**member_data))
-
-    # 加载machines和milestones
-    from app.schemas.project import MachineResponse, MilestoneResponse
-    machines_query = project.machines.all() if hasattr(project.machines, 'all') else []
-    machines = [MachineResponse.model_validate(m) for m in machines_query]
-
-    milestones_query = project.milestones.all() if hasattr(project.milestones, 'all') else []
-    milestones = [MilestoneResponse.model_validate(m) for m in milestones_query]
+    # 获取设备和里程碑
+    machines = service.get_project_machines(project)
+    milestones = service.get_project_milestones(project)
 
     # 构建响应
-    from app.schemas.project import ProjectDetailResponse, ProjectResponse
     project_base = ProjectResponse.model_validate(project)
-
     project_detail = ProjectDetailResponse(
         **project_base.model_dump(),
         members=members,
@@ -399,39 +248,14 @@ def update_project(
     from app.utils.permission_helpers import check_project_access_or_raise
     project = check_project_access_or_raise(db, current_user, project_id, "您没有权限修改该项目")
 
+    service = ProjectCrudService(db)
     update_data = project_in.model_dump(exclude_unset=True)
+    updated_project = service.update_project(project, update_data)
 
-    for field, value in update_data.items():
-        if hasattr(project, field):
-            setattr(project, field, value)
+    # 使缓存失效
+    service.invalidate_project_cache(project_id)
 
-    # Update redundant fields if ID changed
-    if "customer_id" in update_data:
-        customer = db.query(Customer).get(project.customer_id)
-        if customer:
-            project.customer_name = customer.customer_name
-            project.customer_contact = customer.contact_person
-            project.customer_phone = customer.contact_phone
-
-    if "pm_id" in update_data:
-        pm = db.query(User).get(project.pm_id)
-        if pm:
-            project.pm_name = pm.real_name or pm.username
-
-    db.add(project)
-    db.commit()
-
-    # 使项目缓存失效
-    try:
-        from app.services.cache_service import CacheService
-        cache_service = CacheService()
-        cache_service.invalidate_project_detail(project_id)
-        cache_service.invalidate_project_list()
-    except Exception:
-        logger.debug("项目缓存失效失败，忽略", exc_info=True)
-
-    db.refresh(project)
-    return project
+    return updated_project
 
 
 @router.delete("/{project_id}", response_model=ResponseModel)
@@ -447,18 +271,11 @@ def delete_project(
     from app.utils.permission_helpers import check_project_access_or_raise
     project = check_project_access_or_raise(db, current_user, project_id, "您没有权限删除该项目")
 
-    project.is_active = False
-    db.add(project)
-    db.commit()
+    service = ProjectCrudService(db)
+    service.soft_delete_project(project)
 
     # 使缓存失效
-    try:
-        from app.services.cache_service import CacheService
-        cache_service = CacheService()
-        cache_service.invalidate_project_detail(project_id)
-        cache_service.invalidate_project_list()
-    except Exception:
-        logger.debug("项目缓存失效失败，忽略", exc_info=True)
+    service.invalidate_project_cache(project_id)
 
     return ResponseModel(
         code=200,
