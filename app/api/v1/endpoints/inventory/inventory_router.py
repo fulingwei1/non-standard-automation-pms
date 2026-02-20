@@ -183,16 +183,7 @@ def get_stocks(
     if material_id:
         stocks = service.get_stock(material_id, location)
     else:
-        # 查询所有库存
-        from app.models.inventory_tracking import MaterialStock
-        query = db.query(MaterialStock).filter(
-            MaterialStock.tenant_id == current_user.tenant_id
-        )
-        if location:
-            query = query.filter(MaterialStock.location == location)
-        if status:
-            query = query.filter(MaterialStock.status == status)
-        stocks = query.limit(100).all()
+        stocks = service.get_all_stocks(location=location, status=status)
     
     return stocks
 
@@ -594,25 +585,4 @@ def get_aging_analysis(
     返回物料库龄分析,按0-30天、31-90天、91-180天、181-365天、365天以上分类
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
-    result = service.analyze_aging(location=location)
-    
-    # 按库龄分组统计
-    aging_summary = {}
-    for item in result:
-        category = item['aging_category']
-        if category not in aging_summary:
-            aging_summary[category] = {
-                'count': 0,
-                'total_quantity': 0,
-                'total_value': 0
-            }
-        
-        aging_summary[category]['count'] += 1
-        aging_summary[category]['total_quantity'] += item['quantity']
-        aging_summary[category]['total_value'] += item['total_value']
-    
-    return {
-        "aging_summary": aging_summary,
-        "details": result
-    }
+    return service.analyze_aging(location=location)

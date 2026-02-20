@@ -417,20 +417,36 @@ class TestCalculateTurnoverRate:
 
     def test_calculates_non_zero_rate(self):
         svc, db = _make_service()
-        # Transactions with total_amount
+        
+        # 准备交易数据
         tx = MagicMock()
         tx.total_amount = Decimal("200")
-        db.query.return_value.filter.return_value.all.return_value = [tx]
-
+        
+        # 准备库存数据
         stock = MagicMock()
         stock.total_value = Decimal("400")
-        db.query.return_value.filter.return_value.all.return_value = [tx, stock]
-
-        # We need to control what's returned differently for the two queries
-        # Easier: just check the result shape
+        
+        # 为两个不同的查询配置不同的返回值
+        def query_side_effect(*args):
+            mock_query = MagicMock()
+            mock_query.filter.return_value = mock_query
+            # 判断查询的是交易还是库存
+            if args and hasattr(args[0], '__name__'):
+                if 'Transaction' in args[0].__name__:
+                    mock_query.all.return_value = [tx]
+                else:
+                    mock_query.all.return_value = [stock]
+            else:
+                mock_query.all.return_value = []
+            return mock_query
+        
+        db.query.side_effect = query_side_effect
+        
         result = svc.calculate_turnover_rate()
         assert "turnover_rate" in result
         assert "period" in result
+        # 200 / 400 = 0.5
+        assert result["turnover_rate"] == 0.5
         assert "start_date" in result["period"]
 
     def test_result_has_required_keys(self):
@@ -467,7 +483,9 @@ class TestAnalyzeAging:
         svc, db = _make_service()
         db.query.return_value.filter.return_value.all.return_value = []
         result = svc.analyze_aging()
-        assert result == []
+        assert 'aging_summary' in result
+        assert 'details' in result
+        assert result['details'] == []
 
     def test_categorizes_0_to_30_days(self):
         svc, db = _make_service()
@@ -475,7 +493,8 @@ class TestAnalyzeAging:
             self._make_aged_stock(15)
         ]
         result = svc.analyze_aging()
-        assert result[0]["aging_category"] == "0-30天"
+        assert result['details'][0]["aging_category"] == "0-30天"
+        assert result['aging_summary']['0-30天']['count'] == 1
 
     def test_categorizes_31_to_90_days(self):
         svc, db = _make_service()
@@ -483,7 +502,8 @@ class TestAnalyzeAging:
             self._make_aged_stock(60)
         ]
         result = svc.analyze_aging()
-        assert result[0]["aging_category"] == "31-90天"
+        assert result['details'][0]["aging_category"] == "31-90天"
+        assert result['aging_summary']['31-90天']['count'] == 1
 
     def test_categorizes_over_365_days(self):
         svc, db = _make_service()
@@ -491,7 +511,8 @@ class TestAnalyzeAging:
             self._make_aged_stock(400)
         ]
         result = svc.analyze_aging()
-        assert result[0]["aging_category"] == "365天以上"
+        assert result['details'][0]["aging_category"] == "365天以上"
+        assert result['aging_summary']['365天以上']['count'] == 1
 
     def test_result_contains_required_fields(self):
         svc, db = _make_service()
@@ -499,9 +520,11 @@ class TestAnalyzeAging:
             self._make_aged_stock(10)
         ]
         result = svc.analyze_aging()
+        assert 'aging_summary' in result
+        assert 'details' in result
         for field in ("material_id", "material_code", "days_in_stock",
                       "aging_category", "quantity", "total_value"):
-            assert field in result[0]
+            assert field in result['details'][0]
 
     def test_skips_stocks_without_last_in_date(self):
         svc, db = _make_service()
@@ -510,4 +533,4 @@ class TestAnalyzeAging:
         s.quantity = Decimal("10")
         db.query.return_value.filter.return_value.all.return_value = [s]
         result = svc.analyze_aging()
-        assert result == []
+        assert result['details'] == []

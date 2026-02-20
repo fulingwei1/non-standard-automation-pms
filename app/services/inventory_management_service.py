@@ -695,6 +695,34 @@ class InventoryManagementService:
 
     # ============ 库存分析 ============
 
+    def get_all_stocks(
+        self,
+        location: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100
+    ) -> List[MaterialStock]:
+        """
+        查询所有库存
+        
+        Args:
+            location: 仓库位置 (可选)
+            status: 库存状态 (可选)
+            limit: 返回数量限制
+        
+        Returns:
+            库存列表
+        """
+        query = self.db.query(MaterialStock).filter(
+            MaterialStock.tenant_id == self.tenant_id
+        )
+        
+        if location:
+            query = query.filter(MaterialStock.location == location)
+        if status:
+            query = query.filter(MaterialStock.status == status)
+        
+        return query.limit(limit).all()
+
     def calculate_turnover_rate(
         self,
         material_id: Optional[int] = None,
@@ -746,9 +774,16 @@ class InventoryManagementService:
             'turnover_days': int(365 / turnover_rate) if turnover_rate > 0 else 0
         }
 
-    def analyze_aging(self, location: Optional[str] = None) -> List[Dict]:
-        """库龄分析"""
+    def analyze_aging(self, location: Optional[str] = None) -> Dict:
+        """
+        库龄分析
         
+        Args:
+            location: 仓库位置 (可选)
+        
+        Returns:
+            包含汇总和明细的库龄分析结果
+        """
         query = self.db.query(MaterialStock).filter(
             MaterialStock.tenant_id == self.tenant_id,
             MaterialStock.quantity > 0
@@ -760,7 +795,14 @@ class InventoryManagementService:
         stocks = query.all()
         results = []
         
-        today = date.today()
+        # 初始化库龄汇总
+        aging_summary = {
+            '0-30天': {'count': 0, 'total_quantity': 0, 'total_value': 0},
+            '31-90天': {'count': 0, 'total_quantity': 0, 'total_value': 0},
+            '91-180天': {'count': 0, 'total_quantity': 0, 'total_value': 0},
+            '181-365天': {'count': 0, 'total_quantity': 0, 'total_value': 0},
+            '365天以上': {'count': 0, 'total_quantity': 0, 'total_value': 0}
+        }
         
         for stock in stocks:
             if not stock.last_in_date:
@@ -780,18 +822,29 @@ class InventoryManagementService:
             else:
                 aging_category = '365天以上'
             
+            quantity = float(stock.quantity)
+            total_value = float(stock.total_value)
+            
+            # 更新汇总统计
+            aging_summary[aging_category]['count'] += 1
+            aging_summary[aging_category]['total_quantity'] += quantity
+            aging_summary[aging_category]['total_value'] += total_value
+            
             results.append({
                 'material_id': stock.material_id,
                 'material_code': stock.material_code,
                 'material_name': stock.material_name,
                 'location': stock.location,
                 'batch_number': stock.batch_number,
-                'quantity': float(stock.quantity),
+                'quantity': quantity,
                 'unit_price': float(stock.unit_price),
-                'total_value': float(stock.total_value),
+                'total_value': total_value,
                 'last_in_date': stock.last_in_date.isoformat() if stock.last_in_date else None,
                 'days_in_stock': days_in_stock,
                 'aging_category': aging_category
             })
         
-        return results
+        return {
+            'aging_summary': aging_summary,
+            'details': results
+        }
