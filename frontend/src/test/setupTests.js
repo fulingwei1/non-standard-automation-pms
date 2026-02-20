@@ -49,6 +49,18 @@ global.sessionStorage = sessionStorageMock;
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
+// Mock react-router-dom (for useParams, useNavigate等)
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useParams: vi.fn(() => ({ id: '1' })),
+    useNavigate: vi.fn(() => vi.fn()),
+    useLocation: vi.fn(() => ({ pathname: '/', search: '', hash: '', state: null })),
+    useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
+  };
+});
+
 // Mock API client globally with proper response structure
 vi.mock('../services/api/client', () => {
   const mockResponse = (data = {}) => ({

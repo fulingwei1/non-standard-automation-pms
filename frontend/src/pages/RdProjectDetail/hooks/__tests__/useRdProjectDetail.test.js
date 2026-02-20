@@ -32,7 +32,7 @@ describe('useRdProjectDetail Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => useRdProjectDetail());
+    const { result } = renderHook(() => useRdProjectDetail(1));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {

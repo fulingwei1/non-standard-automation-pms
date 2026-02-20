@@ -32,7 +32,7 @@ describe('useArrivalDetail Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => useArrivalDetail());
+    const { result } = renderHook(() => useArrivalDetail(1));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {

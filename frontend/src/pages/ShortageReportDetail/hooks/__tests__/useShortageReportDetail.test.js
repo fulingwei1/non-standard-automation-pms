@@ -32,7 +32,7 @@ describe('useShortageReportDetail Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => useShortageReportDetail());
+    const { result } = renderHook(() => useShortageReportDetail(1));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {

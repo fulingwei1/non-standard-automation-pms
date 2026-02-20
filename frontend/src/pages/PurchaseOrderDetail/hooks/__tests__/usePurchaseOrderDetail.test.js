@@ -32,7 +32,7 @@ describe('usePurchaseOrderDetail Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => usePurchaseOrderDetail());
+    const { result } = renderHook(() => usePurchaseOrderDetail(1));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {

@@ -32,7 +32,7 @@ describe('useBiddingDetail Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => useBiddingDetail());
+    const { result } = renderHook(() => useBiddingDetail(1));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
