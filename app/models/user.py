@@ -45,6 +45,7 @@ class User(Base, TimestampMixin):
     phone = Column(String(20), comment="手机号")
     real_name = Column(String(50), comment="真实姓名")
     employee_no = Column(String(50), comment="工号")
+    department_id = Column(Integer, ForeignKey("departments.id"), comment="部门ID")
     department = Column(String(100), comment="部门")
     position = Column(String(100), comment="职位")
     avatar = Column(String(500), comment="头像URL")
