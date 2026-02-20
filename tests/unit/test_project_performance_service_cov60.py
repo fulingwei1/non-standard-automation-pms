@@ -55,14 +55,14 @@ class TestProjectPerformanceService(unittest.TestCase):
         current_user.is_superuser = False
         current_user.id = 1
         current_user.department_id = 10
-        current_user.roles = []
 
-        # 创建部门经理角色
-        role = MagicMock()
-        role.role.role_code = "dept_manager"
-        role.role.role_name = "部门经理"
+        # 创建部门经理角色 - 修复嵌套结构
+        role_obj = MagicMock()
+        role_obj.role_code = "dept_manager"
+        role_obj.role_name = "部门经理"
+        
         user_role = MagicMock()
-        user_role.role = role
+        user_role.role = role_obj
         current_user.roles = [user_role]
 
         target_user = MagicMock()
@@ -73,32 +73,38 @@ class TestProjectPerformanceService(unittest.TestCase):
         result = self.service.check_performance_view_permission(current_user, 2)
         self.assertTrue(result)
 
-    def test_get_team_members(self):
+    @patch("app.services.project_performance.service.User")
+    def test_get_team_members(self, mock_user_class):
         """测试获取团队成员"""
         user1 = MagicMock()
         user1.id = 1
         user2 = MagicMock()
         user2.id = 2
 
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            user1,
-            user2,
-        ]
+        # Mock完整的查询链
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_filter.all.return_value = [user1, user2]
+        mock_query.filter.return_value = mock_filter
+        self.db.query.return_value = mock_query
 
         result = self.service.get_team_members(10)
         self.assertEqual(result, [1, 2])
 
-    def test_get_department_members(self):
+    @patch("app.services.project_performance.service.User")
+    def test_get_department_members(self, mock_user_class):
         """测试获取部门成员"""
         user1 = MagicMock()
         user1.id = 3
         user2 = MagicMock()
         user2.id = 4
 
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            user1,
-            user2,
-        ]
+        # Mock完整的查询链
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_filter.all.return_value = [user1, user2]
+        mock_query.filter.return_value = mock_filter
+        self.db.query.return_value = mock_query
 
         result = self.service.get_department_members(20)
         self.assertEqual(result, [3, 4])
