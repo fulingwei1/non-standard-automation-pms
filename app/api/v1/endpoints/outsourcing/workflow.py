@@ -15,10 +15,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.models.outsourcing import OutsourcingOrder
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.approval_engine import ApprovalEngineService
+from app.services.outsourcing_workflow import OutsourcingWorkflowService
 
 logger = logging.getLogger(__name__)
 
@@ -74,62 +73,23 @@ def submit_orders_for_approval(
 
     将一个或多个外协订单提交到审批流程。
     """
-    engine = ApprovalEngineService(db)
-    results = []
-    errors = []
-
-    for order_id in request.order_ids:
-        order = (
-            db.query(OutsourcingOrder)
-            .filter(OutsourcingOrder.id == order_id)
-            .first()
-        )
-        if not order:
-            errors.append({"order_id": order_id, "error": "外协订单不存在"})
-            continue
-
-        if order.status not in ["DRAFT", "REJECTED"]:
-            errors.append(
-                {"order_id": order_id, "error": f"当前状态 '{order.status}' 不允许提交审批"}
-            )
-            continue
-
-        try:
-            instance = engine.submit(
-                template_code="OUTSOURCING_ORDER_APPROVAL",
-                entity_type="OUTSOURCING_ORDER",
-                entity_id=order_id,
-                form_data={
-                    "order_no": order.order_no,
-                    "order_title": order.order_title,
-                    "order_type": order.order_type,
-                    "amount_with_tax": float(order.amount_with_tax)
-                    if order.amount_with_tax
-                    else 0,
-                    "vendor_id": order.vendor_id,
-                    "project_id": order.project_id,
-                    "machine_id": order.machine_id,
-                },
-                initiator_id=current_user.id,
-                urgency=request.urgency,
-            )
-            results.append(
-                {
-                    "order_id": order_id,
-                    "order_no": order.order_no,
-                    "instance_id": instance.id,
-                    "status": "submitted",
-                }
-            )
-        except Exception as e:
-            errors.append({"order_id": order_id, "error": str(e)})
+    service = OutsourcingWorkflowService(db)
+    result = service.submit_orders_for_approval(
+        order_ids=request.order_ids,
+        initiator_id=current_user.id,
+        urgency=request.urgency,
+        comment=request.comment,
+    )
 
     db.commit()
 
+    success_count = len(result["success"])
+    error_count = len(result["errors"])
+
     return ResponseModel(
         code=200,
-        message=f"提交完成: 成功 {len(results)} 个, 失败 {len(errors)} 个",
-        data={"success": results, "errors": errors},
+        message=f"提交完成: 成功 {success_count} 个, 失败 {error_count} 个",
+        data=result,
     )
 
 
@@ -145,60 +105,20 @@ def get_pending_approval_tasks(
 
     返回当前用户待审批的外协订单任务。
     """
-    engine = ApprovalEngineService(db)
-    tasks = engine.get_pending_tasks(
-        user_id=current_user.id, entity_type="OUTSOURCING_ORDER"
+    service = OutsourcingWorkflowService(db)
+    result = service.get_pending_tasks(
+        user_id=current_user.id, offset=pagination.offset, limit=pagination.limit
     )
-
-    total = len(tasks)
-    paginated_tasks = tasks[pagination.offset : pagination.offset + pagination.limit]
-
-    items = []
-    for task in paginated_tasks:
-        instance = task.instance
-        order = (
-            db.query(OutsourcingOrder)
-            .filter(OutsourcingOrder.id == instance.entity_id)
-            .first()
-        )
-
-        items.append(
-            {
-                "task_id": task.id,
-                "instance_id": instance.id,
-                "order_id": instance.entity_id,
-                "order_no": order.order_no if order else None,
-                "order_title": order.order_title if order else None,
-                "order_type": order.order_type if order else None,
-                "amount_with_tax": float(order.amount_with_tax)
-                if order and order.amount_with_tax
-                else 0,
-                "vendor_name": order.vendor.vendor_name
-                if order and hasattr(order, "vendor") and order.vendor
-                else None,
-                "project_name": order.project.project_name
-                if order and hasattr(order, "project") and order.project
-                else None,
-                "initiator_name": instance.initiator.real_name
-                if instance.initiator
-                else None,
-                "submitted_at": instance.created_at.isoformat()
-                if instance.created_at
-                else None,
-                "urgency": instance.urgency,
-                "node_name": task.node.node_name if task.node else None,
-            }
-        )
 
     return ResponseModel(
         code=200,
         message="获取待审批列表成功",
         data={
-            "items": items,
-            "total": total,
+            "items": result["items"],
+            "total": result["total"],
             "page": pagination.page,
             "page_size": pagination.page_size,
-            "pages": pagination.pages_for_total(total),
+            "pages": pagination.pages_for_total(result["total"]),
         },
     )
 
@@ -216,57 +136,24 @@ def perform_approval_action(
     对单个外协订单进行审批通过或驳回。
     审批通过后自动触发成本归集。
     """
-    engine = ApprovalEngineService(db)
+    service = OutsourcingWorkflowService(db)
 
     try:
-        if request.action == "approve":
-            result = engine.approve(
-                task_id=request.task_id,
-                approver_id=current_user.id,
-                comment=request.comment,
-            )
-
-            # 审批通过后触发成本归集
-            if hasattr(result, "status") and result.status == "APPROVED":
-                _trigger_cost_collection(db, result.entity_id, current_user.id)
-
-        elif request.action == "reject":
-            result = engine.reject(
-                task_id=request.task_id,
-                approver_id=current_user.id,
-                comment=request.comment,
-            )
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"不支持的操作类型: {request.action}"
-            )
+        result = service.perform_approval_action(
+            task_id=request.task_id,
+            approver_id=current_user.id,
+            action=request.action,
+            comment=request.comment,
+        )
 
         db.commit()
 
-        return ResponseModel(
-            code=200,
-            message="审批操作成功",
-            data={
-                "task_id": request.task_id,
-                "action": request.action,
-                "instance_status": result.status if hasattr(result, "status") else None,
-            },
-        )
+        return ResponseModel(code=200, message="审批操作成功", data=result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
-
-
-def _trigger_cost_collection(db: Session, order_id: int, user_id: int) -> None:
-    """触发成本归集"""
-    try:
-        from app.services.cost_collection_service import CostCollectionService
-
-        CostCollectionService.collect_from_outsourcing_order(
-            db, order_id, created_by=user_id
-        )
-    except Exception as e:
-        logger.error(f"Failed to collect cost from outsourcing order {order_id}: {e}")
 
 
 @router.post(
@@ -283,43 +170,23 @@ def perform_batch_approval(
 
     对多个外协订单进行批量审批通过或驳回。
     """
-    engine = ApprovalEngineService(db)
-    results = []
-    errors = []
-
-    for task_id in request.task_ids:
-        try:
-            if request.action == "approve":
-                result = engine.approve(
-                    task_id=task_id,
-                    approver_id=current_user.id,
-                    comment=request.comment,
-                )
-                if hasattr(result, "status") and result.status == "APPROVED":
-                    _trigger_cost_collection(db, result.entity_id, current_user.id)
-
-            elif request.action == "reject":
-                engine.reject(
-                    task_id=task_id,
-                    approver_id=current_user.id,
-                    comment=request.comment,
-                )
-            else:
-                errors.append(
-                    {"task_id": task_id, "error": f"不支持的操作: {request.action}"}
-                )
-                continue
-
-            results.append({"task_id": task_id, "status": "success"})
-        except Exception as e:
-            errors.append({"task_id": task_id, "error": str(e)})
+    service = OutsourcingWorkflowService(db)
+    result = service.perform_batch_approval(
+        task_ids=request.task_ids,
+        approver_id=current_user.id,
+        action=request.action,
+        comment=request.comment,
+    )
 
     db.commit()
 
+    success_count = len(result["success"])
+    error_count = len(result["errors"])
+
     return ResponseModel(
         code=200,
-        message=f"批量审批完成: 成功 {len(results)} 个, 失败 {len(errors)} 个",
-        data={"success": results, "errors": errors},
+        message=f"批量审批完成: 成功 {success_count} 个, 失败 {error_count} 个",
+        data=result,
     )
 
 
@@ -336,78 +203,17 @@ def get_approval_status(
 
     获取指定外协订单的审批流程状态和历史。
     """
-    from app.models.approval import ApprovalInstance, ApprovalTask
+    service = OutsourcingWorkflowService(db)
 
-    order = (
-        db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
-    )
-    if not order:
-        raise HTTPException(status_code=404, detail="外协订单不存在")
+    try:
+        result = service.get_approval_status(order_id)
 
-    instance = (
-        db.query(ApprovalInstance)
-        .filter(
-            ApprovalInstance.entity_type == "OUTSOURCING_ORDER",
-            ApprovalInstance.entity_id == order_id,
-        )
-        .order_by(ApprovalInstance.created_at.desc())
-        .first()
-    )
+        if result.get("approval_instance") is None:
+            return ResponseModel(code=200, message="该订单暂无审批记录", data=result)
 
-    if not instance:
-        return ResponseModel(
-            code=200,
-            message="该订单暂无审批记录",
-            data={
-                "order_id": order_id,
-                "order_no": order.order_no,
-                "status": order.status,
-                "approval_instance": None,
-            },
-        )
-
-    tasks = (
-        db.query(ApprovalTask)
-        .filter(ApprovalTask.instance_id == instance.id)
-        .order_by(ApprovalTask.created_at)
-        .all()
-    )
-
-    task_history = []
-    for task in tasks:
-        task_history.append(
-            {
-                "task_id": task.id,
-                "node_name": task.node.node_name if task.node else None,
-                "assignee_name": task.assignee.real_name if task.assignee else None,
-                "status": task.status,
-                "action": task.action,
-                "comment": task.comment,
-                "completed_at": task.completed_at.isoformat()
-                if task.completed_at
-                else None,
-            }
-        )
-
-    return ResponseModel(
-        code=200,
-        message="获取审批状态成功",
-        data={
-            "order_id": order_id,
-            "order_no": order.order_no,
-            "order_status": order.status,
-            "instance_id": instance.id,
-            "instance_status": instance.status,
-            "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
-            "task_history": task_history,
-        },
-    )
+        return ResponseModel(code=200, message="获取审批状态成功", data=result)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.post("/withdraw", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -422,44 +228,23 @@ def withdraw_approval(
 
     撤回正在审批中的外协订单。
     """
-    from app.models.approval import ApprovalInstance
+    service = OutsourcingWorkflowService(db)
 
-    order = (
-        db.query(OutsourcingOrder).filter(OutsourcingOrder.id == request.order_id).first()
-    )
-    if not order:
-        raise HTTPException(status_code=404, detail="外协订单不存在")
-
-    instance = (
-        db.query(ApprovalInstance)
-        .filter(
-            ApprovalInstance.entity_type == "OUTSOURCING_ORDER",
-            ApprovalInstance.entity_id == request.order_id,
-            ApprovalInstance.status == "PENDING",
-        )
-        .first()
-    )
-
-    if not instance:
-        raise HTTPException(status_code=400, detail="没有进行中的审批流程可撤回")
-
-    if instance.initiator_id != current_user.id:
-        raise HTTPException(status_code=403, detail="只能撤回自己提交的审批")
-
-    engine = ApprovalEngineService(db)
     try:
-        engine.withdraw(instance_id=instance.id, user_id=current_user.id)
+        result = service.withdraw_approval(
+            order_id=request.order_id, user_id=current_user.id, reason=request.reason
+        )
+
         db.commit()
 
-        return ResponseModel(
-            code=200,
-            message="审批撤回成功",
-            data={
-                "order_id": request.order_id,
-                "order_no": order.order_no,
-                "status": "withdrawn",
-            },
-        )
+        return ResponseModel(code=200, message="审批撤回成功", data=result)
+    except ValueError as e:
+        if "不存在" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        elif "权限" in str(e) or "只能撤回" in str(e):
+            raise HTTPException(status_code=403, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -478,62 +263,21 @@ def get_approval_history(
 
     获取当前用户处理过的外协订单审批历史。
     """
-    from app.models.approval import ApprovalInstance, ApprovalTask
-
-    query = (
-        db.query(ApprovalTask)
-        .join(ApprovalInstance)
-        .filter(
-            ApprovalTask.assignee_id == current_user.id,
-            ApprovalInstance.entity_type == "OUTSOURCING_ORDER",
-            ApprovalTask.status.in_(["APPROVED", "REJECTED"]),
-        )
+    service = OutsourcingWorkflowService(db)
+    result = service.get_approval_history(
+        user_id=current_user.id,
+        offset=pagination.offset,
+        limit=pagination.page_size,
+        status_filter=status_filter,
     )
 
-    if status_filter:
-        query = query.filter(ApprovalTask.status == status_filter)
-
-    total = query.count()
-    tasks = (
-        query.order_by(ApprovalTask.completed_at.desc())
-        .offset(pagination.offset)
-        .limit(pagination.page_size)
-        .all()
-    )
-
-    items = []
-    for task in tasks:
-        instance = task.instance
-        order = (
-            db.query(OutsourcingOrder)
-            .filter(OutsourcingOrder.id == instance.entity_id)
-            .first()
-        )
-
-        items.append(
-            {
-                "task_id": task.id,
-                "order_id": instance.entity_id,
-                "order_no": order.order_no if order else None,
-                "order_title": order.order_title if order else None,
-                "order_type": order.order_type if order else None,
-                "amount_with_tax": float(order.amount_with_tax)
-                if order and order.amount_with_tax
-                else 0,
-                "action": task.action,
-                "status": task.status,
-                "comment": task.comment,
-                "completed_at": task.completed_at.isoformat()
-                if task.completed_at
-                else None,
-            }
-        )
+    total = result["total"]
 
     return ResponseModel(
         code=200,
         message="获取审批历史成功",
         data={
-            "items": items,
+            "items": result["items"],
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
