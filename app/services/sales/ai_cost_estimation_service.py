@@ -480,7 +480,10 @@ class AICostEstimationService:
                 total_predictions=0,
                 average_variance_rate=Decimal("0"),
                 accuracy_rate=Decimal("0"),
-                recent_trend="无数据"
+                best_performing_category=None,
+                worst_performing_category=None,
+                recent_trend="无数据",
+                sample_cases=None
             )
         
         total = len(histories)
