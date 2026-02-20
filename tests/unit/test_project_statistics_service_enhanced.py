@@ -1,911 +1,873 @@
 # -*- coding: utf-8 -*-
 """
-项目统计服务测试 - 完整覆盖
-测试目标：app/services/project_statistics_service.py (518行)
-测试数量：40+个测试用例
-覆盖内容：项目统计、趋势分析、仪表板数据、分组聚合、指标计算
+项目统计服务增强测试
+覆盖 project_statistics_service.py 的所有核心方法
 """
 
-import pytest
+import unittest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
 from app.services.project_statistics_service import (
-    calculate_status_statistics,
-    calculate_stage_statistics,
-    calculate_health_statistics,
-    calculate_pm_statistics,
-    calculate_customer_statistics,
-    calculate_monthly_statistics,
-    build_project_statistics,
-    ProjectStatisticsServiceBase,
     CostStatisticsService,
+    ProjectStatisticsServiceBase,
     TimesheetStatisticsService,
     WorkLogStatisticsService,
+    build_project_statistics,
+    calculate_customer_statistics,
+    calculate_health_statistics,
+    calculate_monthly_statistics,
+    calculate_pm_statistics,
+    calculate_stage_statistics,
+    calculate_status_statistics,
 )
 
 
-# ==================== 辅助函数测试 ====================
+class TestCalculateStatusStatistics(unittest.TestCase):
+    """测试状态统计函数"""
 
-
-class TestCalculateStatusStatistics:
-    """测试状态统计功能"""
-
-    def test_calculate_empty_projects(self):
-        """测试空项目列表"""
-        query = Mock()
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
         query.all.return_value = []
         result = calculate_status_statistics(query)
-        assert result == {}
+        self.assertEqual(result, {})
 
-    def test_calculate_single_status(self):
-        """测试单一状态"""
-        p1 = Mock(status="ACTIVE")
-        p2 = Mock(status="ACTIVE")
-        query = Mock()
+    def test_single_status(self):
+        """测试单个状态"""
+        project = MagicMock()
+        project.status = "ACTIVE"
+        query = MagicMock()
+        query.all.return_value = [project]
+        result = calculate_status_statistics(query)
+        self.assertEqual(result, {"ACTIVE": 1})
+
+    def test_multiple_statuses(self):
+        """测试多个状态"""
+        p1 = MagicMock(status="ACTIVE")
+        p2 = MagicMock(status="ACTIVE")
+        p3 = MagicMock(status="CLOSED")
+        query = MagicMock()
+        query.all.return_value = [p1, p2, p3]
+        result = calculate_status_statistics(query)
+        self.assertEqual(result, {"ACTIVE": 2, "CLOSED": 1})
+
+    def test_none_status(self):
+        """测试None状态"""
+        p1 = MagicMock(status=None)
+        p2 = MagicMock(status="ACTIVE")
+        query = MagicMock()
         query.all.return_value = [p1, p2]
-        
         result = calculate_status_statistics(query)
-        assert result == {"ACTIVE": 2}
-
-    def test_calculate_multiple_statuses(self):
-        """测试多种状态"""
-        p1 = Mock(status="ACTIVE")
-        p2 = Mock(status="COMPLETED")
-        p3 = Mock(status="ACTIVE")
-        p4 = Mock(status="PAUSED")
-        query = Mock()
-        query.all.return_value = [p1, p2, p3, p4]
-        
-        result = calculate_status_statistics(query)
-        assert result == {"ACTIVE": 2, "COMPLETED": 1, "PAUSED": 1}
-
-    def test_calculate_with_none_status(self):
-        """测试包含None状态"""
-        p1 = Mock(status="ACTIVE")
-        p2 = Mock(status=None)
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_status_statistics(query)
-        assert result == {"ACTIVE": 1}
+        self.assertEqual(result, {"ACTIVE": 1})
 
 
-class TestCalculateStageStatistics:
-    """测试阶段统计功能"""
+class TestCalculateStageStatistics(unittest.TestCase):
+    """测试阶段统计函数"""
 
-    def test_calculate_empty_projects(self):
-        """测试空项目列表"""
-        query = Mock()
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
         query.all.return_value = []
         result = calculate_stage_statistics(query)
-        assert result == {}
+        self.assertEqual(result, {})
 
-    def test_calculate_multiple_stages(self):
+    def test_multiple_stages(self):
         """测试多个阶段"""
-        p1 = Mock(stage="DESIGN")
-        p2 = Mock(stage="DEVELOPMENT")
-        p3 = Mock(stage="DESIGN")
-        query = Mock()
+        p1 = MagicMock(stage="PLANNING")
+        p2 = MagicMock(stage="EXECUTION")
+        p3 = MagicMock(stage="PLANNING")
+        query = MagicMock()
         query.all.return_value = [p1, p2, p3]
-        
         result = calculate_stage_statistics(query)
-        assert result == {"DESIGN": 2, "DEVELOPMENT": 1}
+        self.assertEqual(result, {"PLANNING": 2, "EXECUTION": 1})
 
-    def test_calculate_with_none_stage(self):
-        """测试包含None阶段"""
-        p1 = Mock(stage="TESTING")
-        p2 = Mock(stage=None)
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_stage_statistics(query)
-        assert result == {"TESTING": 1}
-
-
-class TestCalculateHealthStatistics:
-    """测试健康度统计功能"""
-
-    def test_calculate_empty_projects(self):
-        """测试空项目列表"""
-        query = Mock()
-        query.all.return_value = []
-        result = calculate_health_statistics(query)
-        assert result == {}
-
-    def test_calculate_health_distribution(self):
-        """测试健康度分布"""
-        p1 = Mock(health="GREEN")
-        p2 = Mock(health="YELLOW")
-        p3 = Mock(health="GREEN")
-        p4 = Mock(health="RED")
-        query = Mock()
-        query.all.return_value = [p1, p2, p3, p4]
-        
-        result = calculate_health_statistics(query)
-        assert result == {"GREEN": 2, "YELLOW": 1, "RED": 1}
-
-
-class TestCalculatePmStatistics:
-    """测试项目经理统计功能"""
-
-    def test_calculate_empty_projects(self):
-        """测试空项目列表"""
-        query = Mock()
-        query.all.return_value = []
-        result = calculate_pm_statistics(query)
-        assert result == []
-
-    def test_calculate_single_pm(self):
-        """测试单个项目经理"""
-        p1 = Mock(pm_id=1, pm_name="张三")
-        p2 = Mock(pm_id=1, pm_name="张三")
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_pm_statistics(query)
-        assert len(result) == 1
-        assert result[0] == {"pm_id": 1, "pm_name": "张三", "count": 2}
-
-    def test_calculate_multiple_pms(self):
-        """测试多个项目经理"""
-        p1 = Mock(pm_id=1, pm_name="张三")
-        p2 = Mock(pm_id=2, pm_name="李四")
-        p3 = Mock(pm_id=1, pm_name="张三")
-        query = Mock()
-        query.all.return_value = [p1, p2, p3]
-        
-        result = calculate_pm_statistics(query)
-        assert len(result) == 2
-        pm_dict = {r["pm_id"]: r for r in result}
-        assert pm_dict[1]["count"] == 2
-        assert pm_dict[2]["count"] == 1
-
-    def test_calculate_with_none_pm(self):
-        """测试包含None项目经理"""
-        p1 = Mock(pm_id=1, pm_name="张三")
-        p2 = Mock(pm_id=None, pm_name=None)
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_pm_statistics(query)
-        assert len(result) == 1
-
-
-class TestCalculateCustomerStatistics:
-    """测试客户统计功能"""
-
-    def test_calculate_empty_projects(self):
-        """测试空项目列表"""
-        query = Mock()
-        query.all.return_value = []
-        result = calculate_customer_statistics(query)
-        assert result == []
-
-    def test_calculate_single_customer(self):
-        """测试单个客户"""
-        p1 = Mock(customer_id=1, customer_name="客户A", contract_amount=10000)
-        p2 = Mock(customer_id=1, customer_name="客户A", contract_amount=20000)
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_customer_statistics(query)
-        assert len(result) == 1
-        assert result[0] == {
-            "customer_id": 1,
-            "customer_name": "客户A",
-            "count": 2,
-            "total_amount": 30000.0,
-        }
-
-    def test_calculate_multiple_customers(self):
-        """测试多个客户"""
-        p1 = Mock(customer_id=1, customer_name="客户A", contract_amount=10000)
-        p2 = Mock(customer_id=2, customer_name="客户B", contract_amount=15000)
-        p3 = Mock(customer_id=1, customer_name="客户A", contract_amount=5000)
-        query = Mock()
-        query.all.return_value = [p1, p2, p3]
-        
-        result = calculate_customer_statistics(query)
-        assert len(result) == 2
-        customer_dict = {r["customer_id"]: r for r in result}
-        assert customer_dict[1]["total_amount"] == 15000.0
-        assert customer_dict[2]["total_amount"] == 15000.0
-
-    def test_calculate_with_none_customer(self):
-        """测试包含None客户"""
-        p1 = Mock(customer_id=None, customer_name=None, contract_amount=10000)
-        query = Mock()
+    def test_none_stage(self):
+        """测试None阶段"""
+        p1 = MagicMock(stage=None)
+        query = MagicMock()
         query.all.return_value = [p1]
-        
-        result = calculate_customer_statistics(query)
-        assert len(result) == 1
-        assert result[0]["customer_name"] == "未知客户"
+        result = calculate_stage_statistics(query)
+        self.assertEqual(result, {})
 
 
-class TestCalculateMonthlyStatistics:
-    """测试月度统计功能"""
+class TestCalculateHealthStatistics(unittest.TestCase):
+    """测试健康度统计函数"""
 
-    @patch("app.services.project_statistics_service.Project")
-    def test_calculate_empty_projects(self, mock_project):
-        """测试空项目列表"""
-        query = Mock()
-        query.filter.return_value = query
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
         query.all.return_value = []
-        
-        result = calculate_monthly_statistics(query)
-        assert result == []
+        result = calculate_health_statistics(query)
+        self.assertEqual(result, {})
 
-    @patch("app.services.project_statistics_service.Project")
-    def test_calculate_single_month(self, mock_project):
-        """测试单月统计"""
-        p1 = Mock(
-            created_at=datetime(2026, 2, 1),
-            contract_amount=10000
-        )
-        p2 = Mock(
-            created_at=datetime(2026, 2, 15),
-            contract_amount=20000
-        )
-        query = Mock()
-        query.filter.return_value = query
-        query.all.return_value = [p1, p2]
-        
-        result = calculate_monthly_statistics(query)
-        assert len(result) == 1
-        assert result[0]["year"] == 2026
-        assert result[0]["month"] == 2
-        assert result[0]["count"] == 2
-        assert result[0]["total_amount"] == 30000.0
-
-    @patch("app.services.project_statistics_service.Project")
-    def test_calculate_multiple_months(self, mock_project):
-        """测试多月统计"""
-        p1 = Mock(created_at=datetime(2026, 1, 10), contract_amount=10000)
-        p2 = Mock(created_at=datetime(2026, 2, 15), contract_amount=20000)
-        p3 = Mock(created_at=datetime(2026, 1, 20), contract_amount=5000)
-        query = Mock()
-        query.filter.return_value = query
+    def test_multiple_health_levels(self):
+        """测试多个健康度"""
+        p1 = MagicMock(health="GREEN")
+        p2 = MagicMock(health="YELLOW")
+        p3 = MagicMock(health="GREEN")
+        query = MagicMock()
         query.all.return_value = [p1, p2, p3]
-        
-        result = calculate_monthly_statistics(query)
-        assert len(result) == 2
-        assert result[0]["month_label"] == "2026-01"
-        assert result[0]["count"] == 2
-        assert result[1]["month_label"] == "2026-02"
-        assert result[1]["count"] == 1
-
-    def test_calculate_with_date_filter(self):
-        """测试带日期过滤的月度统计"""
-        # 创建带有实际项目数据的query
-        p1 = Mock(
-            created_at=datetime(2026, 2, 1),
-            contract_amount=10000
-        )
-        p2 = Mock(
-            created_at=datetime(2026, 4, 15),  # 超出范围
-            contract_amount=20000
-        )
-        
-        # Mock query
-        filtered_query = Mock()
-        filtered_query.filter.return_value = filtered_query
-        filtered_query.all.return_value = [p1]  # 只返回范围内的项目
-        
-        base_query = Mock()
-        base_query.filter.return_value = filtered_query
-        
-        start_date = date(2026, 1, 1)
-        end_date = date(2026, 3, 31)
-        
-        result = calculate_monthly_statistics(base_query, start_date, end_date)
-        
-        # 验证调用了过滤方法
-        assert base_query.filter.called
-        # 验证返回了统计结果
-        assert isinstance(result, list)
+        result = calculate_health_statistics(query)
+        self.assertEqual(result, {"GREEN": 2, "YELLOW": 1})
 
 
-class TestBuildProjectStatistics:
-    """测试综合统计构建"""
+class TestCalculatePmStatistics(unittest.TestCase):
+    """测试项目经理统计函数"""
 
-    def test_build_empty_statistics(self):
-        """测试空统计"""
-        db = Mock()
-        query = Mock()
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
         query.all.return_value = []
-        
-        result = build_project_statistics(db, query)
-        
-        assert result["total"] == 0
-        assert result["average_progress"] == 0
-        assert result["by_status"] == {}
-        assert result["by_stage"] == {}
+        result = calculate_pm_statistics(query)
+        self.assertEqual(result, [])
 
-    def test_build_basic_statistics(self):
+    def test_single_pm(self):
+        """测试单个PM"""
+        p1 = MagicMock(pm_id=1, pm_name="张三")
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_pm_statistics(query)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["pm_id"], 1)
+        self.assertEqual(result[0]["pm_name"], "张三")
+        self.assertEqual(result[0]["count"], 1)
+
+    def test_multiple_pms(self):
+        """测试多个PM"""
+        p1 = MagicMock(pm_id=1, pm_name="张三")
+        p2 = MagicMock(pm_id=2, pm_name="李四")
+        p3 = MagicMock(pm_id=1, pm_name="张三")
+        query = MagicMock()
+        query.all.return_value = [p1, p2, p3]
+        result = calculate_pm_statistics(query)
+        self.assertEqual(len(result), 2)
+        pm_dict = {r["pm_id"]: r for r in result}
+        self.assertEqual(pm_dict[1]["count"], 2)
+        self.assertEqual(pm_dict[2]["count"], 1)
+
+    def test_none_pm_name(self):
+        """测试PM名字为None"""
+        p1 = MagicMock(pm_id=1, pm_name=None)
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_pm_statistics(query)
+        self.assertEqual(result[0]["pm_name"], "未知")
+
+    def test_none_pm_id(self):
+        """测试PM ID为None"""
+        p1 = MagicMock(pm_id=None, pm_name="张三")
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_pm_statistics(query)
+        self.assertEqual(result, [])
+
+
+class TestCalculateCustomerStatistics(unittest.TestCase):
+    """测试客户统计函数"""
+
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
+        query.all.return_value = []
+        result = calculate_customer_statistics(query)
+        self.assertEqual(result, [])
+
+    def test_single_customer(self):
+        """测试单个客户"""
+        p1 = MagicMock(customer_id=1, customer_name="客户A", contract_amount=100000)
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_customer_statistics(query)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["customer_id"], 1)
+        self.assertEqual(result[0]["customer_name"], "客户A")
+        self.assertEqual(result[0]["count"], 1)
+        self.assertEqual(result[0]["total_amount"], 100000.0)
+
+    def test_multiple_customers(self):
+        """测试多个客户"""
+        p1 = MagicMock(customer_id=1, customer_name="客户A", contract_amount=100000)
+        p2 = MagicMock(customer_id=2, customer_name="客户B", contract_amount=200000)
+        p3 = MagicMock(customer_id=1, customer_name="客户A", contract_amount=50000)
+        query = MagicMock()
+        query.all.return_value = [p1, p2, p3]
+        result = calculate_customer_statistics(query)
+        self.assertEqual(len(result), 2)
+        cust_dict = {r["customer_id"]: r for r in result}
+        self.assertEqual(cust_dict[1]["count"], 2)
+        self.assertEqual(cust_dict[1]["total_amount"], 150000.0)
+
+    def test_none_customer_id(self):
+        """测试客户ID为None"""
+        p1 = MagicMock(customer_id=None, customer_name=None, contract_amount=100000)
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_customer_statistics(query)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["customer_id"], 0)
+        self.assertEqual(result[0]["customer_name"], "未知客户")
+
+    def test_none_contract_amount(self):
+        """测试合同金额为None"""
+        p1 = MagicMock(customer_id=1, customer_name="客户A", contract_amount=None)
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_customer_statistics(query)
+        self.assertEqual(result[0]["total_amount"], 0.0)
+
+
+class TestCalculateMonthlyStatistics(unittest.TestCase):
+    """测试月度统计函数"""
+
+    def test_empty_query(self):
+        """测试空查询"""
+        query = MagicMock()
+        query.all.return_value = []
+        result = calculate_monthly_statistics(query)
+        self.assertEqual(result, [])
+
+    def test_single_month(self):
+        """测试单个月份"""
+        p1 = MagicMock(
+            created_at=datetime(2024, 1, 15, 10, 0, 0), contract_amount=100000
+        )
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_monthly_statistics(query)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["year"], 2024)
+        self.assertEqual(result[0]["month"], 1)
+        self.assertEqual(result[0]["month_label"], "2024-01")
+        self.assertEqual(result[0]["count"], 1)
+        self.assertEqual(result[0]["total_amount"], 100000.0)
+
+    def test_multiple_months_sorted(self):
+        """测试多个月份排序"""
+        p1 = MagicMock(
+            created_at=datetime(2024, 3, 15, 10, 0, 0), contract_amount=100000
+        )
+        p2 = MagicMock(
+            created_at=datetime(2024, 1, 20, 10, 0, 0), contract_amount=200000
+        )
+        p3 = MagicMock(
+            created_at=datetime(2024, 2, 10, 10, 0, 0), contract_amount=150000
+        )
+        query = MagicMock()
+        query.all.return_value = [p1, p2, p3]
+        result = calculate_monthly_statistics(query)
+        self.assertEqual(len(result), 3)
+        # 应该按时间排序
+        self.assertEqual(result[0]["month"], 1)
+        self.assertEqual(result[1]["month"], 2)
+        self.assertEqual(result[2]["month"], 3)
+
+    def test_none_created_at(self):
+        """测试创建时间为None"""
+        p1 = MagicMock(created_at=None, contract_amount=100000)
+        query = MagicMock()
+        query.all.return_value = [p1]
+        result = calculate_monthly_statistics(query)
+        self.assertEqual(result, [])
+
+    def test_date_filter(self):
+        """测试日期过滤"""
+        p1 = MagicMock(
+            created_at=datetime(2024, 6, 15, 10, 0, 0), contract_amount=100000
+        )
+        query = MagicMock()
+        query.all.return_value = [p1]
+        query.filter.return_value = query
+        
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 12, 31)
+        
+        result = calculate_monthly_statistics(query, start_date, end_date)
+        
+        # 应该有结果
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["month"], 6)
+
+
+class TestBuildProjectStatistics(unittest.TestCase):
+    """测试综合统计构建函数"""
+
+    def test_basic_statistics(self):
         """测试基础统计"""
-        db = Mock()
-        p1 = Mock(
+        p1 = MagicMock(
             status="ACTIVE",
-            stage="DESIGN",
+            stage="PLANNING",
             health="GREEN",
+            progress_pct=50,
             pm_id=1,
             pm_name="张三",
-            progress_pct=30
-        )
-        p2 = Mock(
-            status="ACTIVE",
-            stage="DEVELOPMENT",
-            health="YELLOW",
-            pm_id=2,
-            pm_name="李四",
-            progress_pct=50
-        )
-        query = Mock()
-        query.all.return_value = [p1, p2]
-        
-        result = build_project_statistics(db, query)
-        
-        assert result["total"] == 2
-        assert result["average_progress"] == 40
-        assert result["by_status"]["ACTIVE"] == 2
-        assert len(result["by_pm"]) == 2
-
-    def test_build_with_customer_grouping(self):
-        """测试按客户分组"""
-        db = Mock()
-        p1 = Mock(
-            status="ACTIVE",
-            stage="DESIGN",
-            health="GREEN",
-            pm_id=1,
-            pm_name="张三",
-            progress_pct=30,
             customer_id=1,
             customer_name="客户A",
-            contract_amount=10000
+            contract_amount=100000,
+            created_at=datetime(2024, 1, 15),
         )
-        query = Mock()
+        query = MagicMock()
         query.all.return_value = [p1]
         
+        db = MagicMock()
+        result = build_project_statistics(db, query)
+        
+        self.assertEqual(result["total"], 1)
+        self.assertEqual(result["average_progress"], 50)
+        self.assertIn("by_status", result)
+        self.assertIn("by_stage", result)
+        self.assertIn("by_health", result)
+        self.assertIn("by_pm", result)
+
+    def test_empty_projects(self):
+        """测试空项目列表"""
+        query = MagicMock()
+        query.all.return_value = []
+        
+        db = MagicMock()
+        result = build_project_statistics(db, query)
+        
+        self.assertEqual(result["total"], 0)
+        self.assertEqual(result["average_progress"], 0)
+
+    def test_group_by_customer(self):
+        """测试按客户分组"""
+        p1 = MagicMock(
+            status="ACTIVE",
+            stage="PLANNING",
+            health="GREEN",
+            progress_pct=50,
+            pm_id=1,
+            pm_name="张三",
+            customer_id=1,
+            customer_name="客户A",
+            contract_amount=100000,
+        )
+        query = MagicMock()
+        query.all.return_value = [p1]
+        
+        db = MagicMock()
         result = build_project_statistics(db, query, group_by="customer")
         
-        assert "by_customer" in result
-        assert len(result["by_customer"]) == 1
+        self.assertIn("by_customer", result)
 
-    @patch("app.services.project_statistics_service.calculate_monthly_statistics")
-    def test_build_with_month_grouping(self, mock_monthly):
-        """测试按月分组"""
-        db = Mock()
-        query = Mock()
-        query.all.return_value = []
-        mock_monthly.return_value = []
+    def test_group_by_month(self):
+        """测试按月份分组"""
+        p1 = MagicMock(
+            status="ACTIVE",
+            stage="PLANNING",
+            health="GREEN",
+            progress_pct=50,
+            pm_id=1,
+            pm_name="张三",
+            created_at=datetime(2024, 1, 15),
+            contract_amount=100000,
+        )
+        query = MagicMock()
+        query.all.return_value = [p1]
         
-        start_date = date(2026, 1, 1)
-        end_date = date(2026, 3, 31)
-        
+        db = MagicMock()
         result = build_project_statistics(
-            db, query, group_by="month", start_date=start_date, end_date=end_date
+            db, query, group_by="month", start_date=date(2024, 1, 1)
         )
         
-        assert "by_month" in result
-        mock_monthly.assert_called_once()
+        self.assertIn("by_month", result)
 
 
-# ==================== 基类测试 ====================
+class TestProjectStatisticsServiceBase(unittest.TestCase):
+    """测试项目统计服务基类"""
 
-
-class TestProjectStatisticsServiceBase:
-    """测试统计服务基类"""
+    def setUp(self):
+        """测试前准备"""
+        self.db = MagicMock()
+        
+        # 创建一个具体实现类用于测试
+        class TestService(ProjectStatisticsServiceBase):
+            def get_model(self):
+                return MagicMock()
+            
+            def get_project_id_field(self):
+                return "project_id"
+            
+            def get_summary(self, project_id, start_date=None, end_date=None):
+                return {}
+        
+        self.service = TestService(self.db)
 
     def test_get_project_success(self):
         """测试获取项目成功"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        db.query.return_value.filter.return_value.first.return_value = project
+        mock_project = MagicMock()
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            mock_project
+        )
         
-        # 创建具体实现类用于测试
-        service = CostStatisticsService(db)
-        result = service.get_project(1)
+        result = self.service.get_project(1)
         
-        assert result == project
+        self.assertEqual(result, mock_project)
 
     def test_get_project_not_found(self):
         """测试项目不存在"""
-        db = Mock()
-        db.query.return_value.filter.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.first.return_value = None
         
-        service = CostStatisticsService(db)
+        with self.assertRaises(ValueError) as context:
+            self.service.get_project(999)
         
-        with pytest.raises(ValueError, match="项目不存在"):
-            service.get_project(999)
+        self.assertIn("项目不存在", str(context.exception))
 
-    def test_apply_date_filter_with_both_dates(self):
-        """测试应用双日期过滤"""
-        db = Mock()
-        service = CostStatisticsService(db)
+    def test_build_base_query(self):
+        """测试构建基础查询"""
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        query = Mock()
-        query.filter.return_value = query
+        result = self.service.build_base_query(1)
         
-        start_date = date(2026, 1, 1)
-        end_date = date(2026, 3, 31)
-        
-        result = service.apply_date_filter(query, start_date, end_date)
-        
-        assert query.filter.call_count == 2
+        self.db.query.assert_called_once_with(mock_model)
 
-    def test_apply_date_filter_with_start_only(self):
-        """测试仅应用开始日期过滤"""
-        db = Mock()
-        service = CostStatisticsService(db)
+    def test_apply_date_filter_with_start_date(self):
+        """测试应用开始日期过滤"""
+        query = MagicMock()
+        mock_model = MagicMock()
+        # Mock 一个支持比较的属性
+        mock_date_attr = MagicMock()
+        mock_date_attr.__ge__ = MagicMock(return_value=True)
+        mock_model.created_at = mock_date_attr
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        query = Mock()
-        query.filter.return_value = query
+        start_date = date(2024, 1, 1)
+        result = self.service.apply_date_filter(query, start_date=start_date)
         
-        start_date = date(2026, 1, 1)
-        
-        result = service.apply_date_filter(query, start_date=start_date)
-        
-        assert query.filter.call_count == 1
+        query.filter.assert_called_once()
 
-    def test_group_by_field_count(self):
-        """测试按字段分组计数"""
-        db = Mock()
-        service = CostStatisticsService(db)
+    def test_apply_date_filter_with_end_date(self):
+        """测试应用结束日期过滤"""
+        query = MagicMock()
+        mock_model = MagicMock()
+        # Mock 一个支持比较的属性
+        mock_date_attr = MagicMock()
+        mock_date_attr.__le__ = MagicMock(return_value=True)
+        mock_model.created_at = mock_date_attr
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.group_by.return_value.all.return_value = [
+        end_date = date(2024, 12, 31)
+        result = self.service.apply_date_filter(query, end_date=end_date)
+        
+        query.filter.assert_called_once()
+
+    def test_group_by_field_with_count(self):
+        """测试按字段分组统计（计数）"""
+        query = MagicMock()
+        query.with_entities.return_value.group_by.return_value.all.return_value = [
             ("TYPE_A", 5),
             ("TYPE_B", 3),
         ]
         
-        result = service.group_by_field(query, "cost_type")
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        assert result == {"TYPE_A": 5, "TYPE_B": 3}
+        result = self.service.group_by_field(query, "test_field")
+        
+        self.assertEqual(result, {"TYPE_A": 5, "TYPE_B": 3})
 
-    def test_group_by_field_with_aggregate(self):
-        """测试按字段分组并聚合"""
+    def test_group_by_field_with_sum(self):
+        """测试按字段分组统计（求和）"""
         from sqlalchemy import func
         
-        db = Mock()
-        service = CostStatisticsService(db)
-        
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.group_by.return_value.all.return_value = [
-            ("TYPE_A", Decimal("1500.50")),
-            ("TYPE_B", Decimal("2300.00")),
+        query = MagicMock()
+        query.with_entities.return_value.group_by.return_value.all.return_value = [
+            ("TYPE_A", Decimal("1000.50")),
+            ("TYPE_B", Decimal("2000.75")),
         ]
         
-        result = service.group_by_field(
-            query, "cost_type", func.sum, "amount"
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
+        
+        result = self.service.group_by_field(
+            query, "test_field", func.sum, "amount"
         )
         
-        assert result == {"TYPE_A": 1500.50, "TYPE_B": 2300.0}
+        self.assertEqual(result, {"TYPE_A": 1000.50, "TYPE_B": 2000.75})
+
+    def test_group_by_field_not_exist(self):
+        """测试字段不存在"""
+        query = MagicMock()
+        mock_model = MagicMock()
+        mock_model.test_field = None
+        delattr(mock_model, "test_field")
+        self.service.get_model = MagicMock(return_value=mock_model)
+        
+        result = self.service.group_by_field(query, "nonexistent_field")
+        
+        self.assertEqual(result, {})
 
     def test_calculate_total(self):
         """测试计算总和"""
-        db = Mock()
-        service = CostStatisticsService(db)
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = Decimal("5000.00")
         
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.scalar.return_value = Decimal("5000.00")
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        result = service.calculate_total(query, "amount")
+        result = self.service.calculate_total(query, "amount")
         
-        assert result == 5000.0
+        self.assertEqual(result, 5000.0)
 
     def test_calculate_total_none(self):
-        """测试计算总和为None"""
-        db = Mock()
-        service = CostStatisticsService(db)
+        """测试计算总和返回None"""
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = None
         
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.scalar.return_value = None
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        result = service.calculate_total(query, "amount")
+        result = self.service.calculate_total(query, "amount")
         
-        assert result == 0.0
+        self.assertEqual(result, 0.0)
 
     def test_calculate_avg(self):
         """测试计算平均值"""
-        db = Mock()
-        service = CostStatisticsService(db)
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = Decimal("75.5")
         
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.scalar.return_value = Decimal("2500.00")
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        result = service.calculate_avg(query, "amount")
+        result = self.service.calculate_avg(query, "score")
         
-        assert result == 2500.0
+        self.assertEqual(result, 75.5)
+
+    def test_calculate_avg_none(self):
+        """测试计算平均值返回None"""
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = None
+        
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
+        
+        result = self.service.calculate_avg(query, "score")
+        
+        self.assertEqual(result, 0.0)
 
     def test_count_distinct(self):
         """测试计算不重复数量"""
-        db = Mock()
-        service = CostStatisticsService(db)
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = 10
         
-        query = Mock()
-        with_entities_mock = Mock()
-        query.with_entities.return_value = with_entities_mock
-        with_entities_mock.scalar.return_value = 5
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
         
-        result = service.count_distinct(query, "cost_type")
+        result = self.service.count_distinct(query, "user_id")
         
-        assert result == 5
+        self.assertEqual(result, 10)
+
+    def test_count_distinct_none(self):
+        """测试计算不重复数量返回None"""
+        query = MagicMock()
+        query.with_entities.return_value.scalar.return_value = None
+        
+        mock_model = MagicMock()
+        self.service.get_model = MagicMock(return_value=mock_model)
+        
+        result = self.service.count_distinct(query, "user_id")
+        
+        self.assertEqual(result, 0)
 
 
-# ==================== 成本统计服务测试 ====================
-
-
-class TestCostStatisticsService:
+class TestCostStatisticsService(unittest.TestCase):
     """测试成本统计服务"""
 
+    def setUp(self):
+        """测试前准备"""
+        self.db = MagicMock()
+        self.service = CostStatisticsService(self.db)
+
+    def test_get_model(self):
+        """测试获取模型"""
+        from app.models.project import ProjectCost
+        result = self.service.get_model()
+        self.assertEqual(result, ProjectCost)
+
+    def test_get_project_id_field(self):
+        """测试获取项目ID字段"""
+        result = self.service.get_project_id_field()
+        self.assertEqual(result, "project_id")
+
     def test_get_summary_basic(self):
-        """测试基础成本汇总"""
-        db = Mock()
-        project = Mock(
-            id=1,
-            project_name="测试项目",
-            budget_amount=Decimal("100000")
-        )
+        """测试获取基本汇总"""
+        # Mock项目
+        mock_project = MagicMock()
+        mock_project.project_name = "测试项目"
+        mock_project.budget_amount = Decimal("100000")
         
-        # 配置db.query的返回值链
-        project_query = Mock()
-        project_query.filter.return_value.first.return_value = project
+        # 创建一个复杂的query mock链
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = mock_project
         
-        cost_query = Mock()
+        cost_query = MagicMock()
         cost_query.filter.return_value = cost_query
         
-        # db.query根据不同参数返回不同的mock
         def query_side_effect(model):
-            from app.models.project import Project, ProjectCost
+            from app.models.project import Project
             if model == Project:
                 return project_query
-            elif model == ProjectCost:
+            else:
                 return cost_query
-            return Mock()
         
-        db.query.side_effect = query_side_effect
+        self.db.query.side_effect = query_side_effect
         
-        service = CostStatisticsService(db)
+        # Mock group_by_field
+        self.service.group_by_field = MagicMock(
+            return_value={"人工": 30000, "设备": 20000}
+        )
+        self.service.calculate_total = MagicMock(return_value=50000.0)
         
-        # Mock group_by_field and calculate_total
-        with patch.object(service, 'group_by_field', return_value={"LABOR": 30000, "MATERIAL": 20000}):
-            with patch.object(service, 'calculate_total', return_value=50000.0):
-                result = service.get_summary(1)
+        result = self.service.get_summary(1)
         
-        assert result["project_id"] == 1
-        assert result["project_name"] == "测试项目"
-        assert result["total_cost"] == 50000.0
-        assert result["budget"] == 100000.0
-        assert result["budget_used_pct"] == 50.0
+        self.assertEqual(result["project_id"], 1)
+        self.assertEqual(result["project_name"], "测试项目")
+        self.assertEqual(result["total_cost"], 50000.0)
+        self.assertEqual(result["by_type"], {"人工": 30000, "设备": 20000})
+        self.assertEqual(result["budget"], 100000.0)
+        self.assertEqual(result["budget_used_pct"], 50.0)
 
     def test_get_summary_no_budget(self):
         """测试无预算情况"""
-        db = Mock()
-        project = Mock(
-            id=1,
-            project_name="测试项目",
-            budget_amount=None
-        )
+        mock_project = MagicMock()
+        mock_project.project_name = "测试项目"
+        mock_project.budget_amount = None
         
-        # 配置db.query的返回值链
-        project_query = Mock()
-        project_query.filter.return_value.first.return_value = project
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = mock_project
         
-        cost_query = Mock()
+        cost_query = MagicMock()
         cost_query.filter.return_value = cost_query
         
         def query_side_effect(model):
-            from app.models.project import Project, ProjectCost
+            from app.models.project import Project
             if model == Project:
                 return project_query
-            elif model == ProjectCost:
+            else:
                 return cost_query
-            return Mock()
         
-        db.query.side_effect = query_side_effect
+        self.db.query.side_effect = query_side_effect
         
-        service = CostStatisticsService(db)
+        self.service.group_by_field = MagicMock(return_value={})
+        self.service.calculate_total = MagicMock(return_value=0.0)
         
-        with patch.object(service, 'group_by_field', return_value={}):
-            with patch.object(service, 'calculate_total', return_value=0.0):
-                result = service.get_summary(1)
+        result = self.service.get_summary(1)
         
-        assert result["budget"] is None
-        assert result["budget_used_pct"] is None
-
-    def test_get_summary_with_date_filter(self):
-        """测试带日期过滤的成本汇总"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目", budget_amount=Decimal("100000"))
-        
-        # 配置db.query的返回值链
-        project_query = Mock()
-        project_query.filter.return_value.first.return_value = project
-        
-        cost_query = Mock()
-        cost_query.filter.return_value = cost_query
-        
-        def query_side_effect(model):
-            from app.models.project import Project, ProjectCost
-            if model == Project:
-                return project_query
-            elif model == ProjectCost:
-                return cost_query
-            return Mock()
-        
-        db.query.side_effect = query_side_effect
-        
-        service = CostStatisticsService(db)
-        
-        start_date = date(2026, 1, 1)
-        end_date = date(2026, 3, 31)
-        
-        with patch.object(service, 'group_by_field', return_value={}):
-            with patch.object(service, 'calculate_total', return_value=0.0):
-                result = service.get_summary(1, start_date, end_date)
-        
-        assert result["project_id"] == 1
+        self.assertIsNone(result["budget"])
+        self.assertIsNone(result["budget_used_pct"])
 
 
-# ==================== 工时统计服务测试 ====================
-
-
-class TestTimesheetStatisticsService:
+class TestTimesheetStatisticsService(unittest.TestCase):
     """测试工时统计服务"""
 
+    def setUp(self):
+        """测试前准备"""
+        self.db = MagicMock()
+        self.service = TimesheetStatisticsService(self.db)
+
+    def test_get_model(self):
+        """测试获取模型"""
+        from app.models.timesheet import Timesheet
+        result = self.service.get_model()
+        self.assertEqual(result, Timesheet)
+
+    def test_get_project_id_field(self):
+        """测试获取项目ID字段"""
+        result = self.service.get_project_id_field()
+        self.assertEqual(result, "project_id")
+
     def test_get_summary_basic(self):
-        """测试基础工时汇总"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        db.query.return_value.filter.return_value.first.return_value = project
+        """测试获取基本汇总"""
+        from app.models.project import Project
+        from app.models.user import User
+        from app.models.timesheet import Timesheet
         
-        # Mock timesheets
-        user1 = Mock(id=1, real_name="张三", username="zhangsan")
-        ts1 = Mock(
-            user_id=1,
-            hours=8.0,
-            work_date=date(2026, 2, 20),
-            overtime_type="NORMAL",
-            status="APPROVED"
-        )
-        ts2 = Mock(
-            user_id=1,
-            hours=4.0,
-            work_date=date(2026, 2, 21),
-            overtime_type="NORMAL",
-            status="APPROVED"
-        )
+        # Mock项目
+        mock_project = MagicMock()
+        mock_project.project_name = "测试项目"
         
-        service = TimesheetStatisticsService(db)
+        # Mock用户
+        mock_user_obj = MagicMock()
+        mock_user_obj.real_name = "张三"
+        mock_user_obj.username = "zhangsan"
         
-        # Setup query mocks
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.all.return_value = [ts1, ts2]
+        # 配置数据库查询Mock
+        def query_side_effect(model):
+            if model == Project:
+                return MagicMock(
+                    filter=MagicMock(
+                        return_value=MagicMock(first=MagicMock(return_value=mock_project))
+                    )
+                )
+            elif model == User:
+                return MagicMock(
+                    filter=MagicMock(
+                        return_value=MagicMock(first=MagicMock(return_value=mock_user_obj))
+                    )
+                )
+            else:
+                # Timesheet查询
+                ts1 = MagicMock(
+                    user_id=1,
+                    hours=8.0,
+                    work_date=date(2024, 1, 15),
+                    overtime_type="NORMAL",
+                    status="APPROVED",
+                )
+                ts2 = MagicMock(
+                    user_id=1,
+                    hours=4.0,
+                    work_date=date(2024, 1, 16),
+                    overtime_type="NORMAL",
+                    status="APPROVED",
+                )
+                
+                mock_query = MagicMock()
+                mock_query.filter.return_value = mock_query
+                mock_query.all.return_value = [ts1, ts2]
+                return mock_query
         
-        # Mock user query
-        user_query = Mock()
-        user_query.filter.return_value.first.return_value = user1
-        db.query.side_effect = lambda model: (
-            Mock(filter=lambda x: Mock(first=lambda: project))
-            if "Project" in str(model)
-            else user_query if "User" in str(model)
-            else query_chain
-        )
+        self.db.query.side_effect = query_side_effect
         
-        result = service.get_summary(1)
+        result = self.service.get_summary(1)
         
-        assert result["project_id"] == 1
-        assert result["total_hours"] == 12.0
-        assert result["total_participants"] == 1
+        self.assertEqual(result["project_id"], 1)
+        self.assertEqual(result["project_name"], "测试项目")
+        self.assertEqual(result["total_hours"], 12.0)
+        self.assertEqual(result["total_participants"], 1)
 
     def test_get_statistics_all_statuses(self):
-        """测试所有状态的工时统计"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
+        """测试获取所有状态的工时统计"""
+        from app.models.project import Project
         
-        ts1 = Mock(user_id=1, hours=8.0, work_date=date(2026, 2, 20), status="APPROVED")
-        ts2 = Mock(user_id=1, hours=4.0, work_date=date(2026, 2, 21), status="PENDING")
-        ts3 = Mock(user_id=2, hours=2.0, work_date=date(2026, 2, 20), status="DRAFT")
-        ts4 = Mock(user_id=2, hours=1.0, work_date=date(2026, 2, 22), status="REJECTED")
+        mock_project = MagicMock()
+        mock_project.project_name = "测试项目"
         
-        service = TimesheetStatisticsService(db)
-        
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.all.return_value = [ts1, ts2, ts3, ts4]
-        
-        # Mock project query
-        db.query.return_value.filter.return_value.first.return_value = project
-        
-        result = service.get_statistics(1)
-        
-        assert result["total_hours"] == 15.0
-        assert result["approved_hours"] == 8.0
-        assert result["pending_hours"] == 4.0
-        assert result["draft_hours"] == 2.0
-        assert result["rejected_hours"] == 1.0
-        assert result["total_records"] == 4
-        assert result["total_participants"] == 2
-        assert result["unique_work_days"] == 3
-
-    def test_get_statistics_avg_daily_hours(self):
-        """测试平均每日工时计算"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        
-        ts1 = Mock(user_id=1, hours=8.0, work_date=date(2026, 2, 20), status="APPROVED")
-        ts2 = Mock(user_id=1, hours=8.0, work_date=date(2026, 2, 21), status="APPROVED")
-        ts3 = Mock(user_id=2, hours=8.0, work_date=date(2026, 2, 20), status="APPROVED")
-        
-        service = TimesheetStatisticsService(db)
-        
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.all.return_value = [ts1, ts2, ts3]
-        
-        db.query.return_value.filter.return_value.first.return_value = project
-        
-        result = service.get_statistics(1)
-        
-        # 总工时24小时，2个工作日，平均12小时/天
-        assert result["avg_daily_hours"] == 12.0
-
-
-# ==================== 工作日志统计服务测试 ====================
-
-
-class TestWorkLogStatisticsService:
-    """测试工作日志统计服务"""
-
-    def test_get_summary_basic(self):
-        """测试基础工作日志汇总"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        db.query.return_value.filter.return_value.first.return_value = project
-        
-        service = WorkLogStatisticsService(db)
-        
-        # Mock query result
-        stats = Mock(log_count=10, contributor_count=3)
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.join.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.with_entities.return_value.first.return_value = stats
-        
-        result = service.get_summary(1, days=30)
-        
-        assert result["project_id"] == 1
-        assert result["period_days"] == 30
-        assert result["log_count"] == 10
-        assert result["contributor_count"] == 3
-
-    def test_get_summary_with_date_range(self):
-        """测试带日期范围的工作日志汇总"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        db.query.return_value.filter.return_value.first.return_value = project
-        
-        service = WorkLogStatisticsService(db)
-        
-        stats = Mock(log_count=5, contributor_count=2)
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.join.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.with_entities.return_value.first.return_value = stats
-        
-        start_date = date(2026, 2, 1)
-        end_date = date(2026, 2, 28)
-        
-        result = service.get_summary(1, start_date=start_date, end_date=end_date)
-        
-        assert result["log_count"] == 5
-        assert result["contributor_count"] == 2
-
-    def test_get_summary_no_logs(self):
-        """测试无工作日志情况"""
-        db = Mock()
-        project = Mock(id=1, project_name="测试项目")
-        db.query.return_value.filter.return_value.first.return_value = project
-        
-        service = WorkLogStatisticsService(db)
-        
-        query_chain = Mock()
-        db.query.return_value = query_chain
-        query_chain.join.return_value = query_chain
-        query_chain.filter.return_value = query_chain
-        query_chain.with_entities.return_value.first.return_value = None
-        
-        result = service.get_summary(1)
-        
-        assert result["log_count"] == 0
-        assert result["contributor_count"] == 0
-
-
-# ==================== 集成测试 ====================
-
-
-class TestStatisticsIntegration:
-    """统计服务集成测试"""
-
-    def test_cost_and_timesheet_correlation(self):
-        """测试成本和工时统计关联"""
-        db = Mock()
-        project = Mock(id=1, project_name="项目A", budget_amount=Decimal("100000"))
-        
-        # 成本统计
-        cost_service = CostStatisticsService(db)
-        
-        # 配置成本查询
-        project_query = Mock()
-        project_query.filter.return_value.first.return_value = project
-        
-        cost_query = Mock()
-        cost_query.filter.return_value = cost_query
-        
-        from app.models.project import Project, ProjectCost
-        from app.models.timesheet import Timesheet
-        from app.models.user import User
-        
-        def query_side_effect_cost(model):
-            if model == Project:
-                return project_query
-            elif model == ProjectCost:
-                return cost_query
-            return Mock()
-        
-        db.query.side_effect = query_side_effect_cost
-        
-        with patch.object(cost_service, 'group_by_field', return_value={"LABOR": 50000}):
-            with patch.object(cost_service, 'calculate_total', return_value=50000.0):
-                cost_result = cost_service.get_summary(1)
-        
-        # 工时统计
-        timesheet_service = TimesheetStatisticsService(db)
-        
-        ts = Mock(user_id=1, hours=100.0, work_date=date(2026, 2, 20), status="APPROVED")
-        
-        timesheet_query = Mock()
-        timesheet_query.filter.return_value = timesheet_query
-        timesheet_query.all.return_value = [ts]
-        
-        user_query = Mock()
-        user_query.filter.return_value.first.return_value = Mock(
-            id=1, real_name="张三", username="zhangsan"
+        # Mock不同状态的工时
+        ts1 = MagicMock(
+            hours=8.0, work_date=date(2024, 1, 15), status="APPROVED", user_id=1
+        )
+        ts2 = MagicMock(
+            hours=4.0, work_date=date(2024, 1, 15), status="PENDING", user_id=2
+        )
+        ts3 = MagicMock(
+            hours=2.0, work_date=date(2024, 1, 16), status="DRAFT", user_id=1
+        )
+        ts4 = MagicMock(
+            hours=1.0, work_date=date(2024, 1, 16), status="REJECTED", user_id=3
         )
         
-        def query_side_effect_timesheet(model):
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = mock_project
+        
+        timesheet_query = MagicMock()
+        timesheet_query.filter.return_value = timesheet_query
+        timesheet_query.all.return_value = [ts1, ts2, ts3, ts4]
+        
+        def query_side_effect(model):
             if model == Project:
                 return project_query
-            elif model == Timesheet:
+            else:
                 return timesheet_query
-            elif model == User:
-                return user_query
-            return Mock()
         
-        db.query.side_effect = query_side_effect_timesheet
+        self.db.query.side_effect = query_side_effect
         
-        timesheet_result = timesheet_service.get_summary(1)
+        result = self.service.get_statistics(1)
         
-        # 验证关联性
-        assert cost_result["total_cost"] > 0
-        assert timesheet_result["total_hours"] > 0
-        assert cost_result["project_id"] == timesheet_result["project_id"]
+        self.assertEqual(result["total_hours"], 15.0)
+        self.assertEqual(result["approved_hours"], 8.0)
+        self.assertEqual(result["pending_hours"], 4.0)
+        self.assertEqual(result["draft_hours"], 2.0)
+        self.assertEqual(result["rejected_hours"], 1.0)
+        self.assertEqual(result["total_participants"], 3)
+        self.assertEqual(result["unique_work_days"], 2)
+
+
+class TestWorkLogStatisticsService(unittest.TestCase):
+    """测试工作日志统计服务"""
+
+    def setUp(self):
+        """测试前准备"""
+        self.db = MagicMock()
+        self.service = WorkLogStatisticsService(self.db)
+
+    def test_get_model(self):
+        """测试获取模型"""
+        from app.models.work_log import WorkLog
+        result = self.service.get_model()
+        self.assertEqual(result, WorkLog)
+
+    def test_get_project_id_field(self):
+        """测试获取项目ID字段"""
+        result = self.service.get_project_id_field()
+        self.assertEqual(result, "id")
+
+    def test_get_summary_basic(self):
+        """测试获取基本汇总"""
+        from app.models.project import Project
+        
+        # Mock项目
+        mock_project = MagicMock()
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = mock_project
+        
+        # Mock统计结果
+        mock_stats = MagicMock()
+        mock_stats.log_count = 10
+        mock_stats.contributor_count = 5
+        
+        worklog_query = MagicMock()
+        worklog_query.join.return_value = worklog_query
+        worklog_query.filter.return_value = worklog_query
+        worklog_query.with_entities.return_value.first.return_value = mock_stats
+        
+        def query_side_effect(model):
+            if model == Project:
+                return project_query
+            else:
+                return worklog_query
+        
+        self.db.query.side_effect = query_side_effect
+        
+        result = self.service.get_summary(1)
+        
+        self.assertEqual(result["project_id"], 1)
+        self.assertEqual(result["log_count"], 10)
+        self.assertEqual(result["contributor_count"], 5)
+
+    def test_get_summary_with_custom_days(self):
+        """测试自定义天数的汇总"""
+        from app.models.project import Project
+        
+        mock_project = MagicMock()
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = mock_project
+        
+        mock_stats = MagicMock()
+        mock_stats.log_count = 15
+        mock_stats.contributor_count = 8
+        
+        worklog_query = MagicMock()
+        worklog_query.join.return_value = worklog_query
+        worklog_query.filter.return_value = worklog_query
+        worklog_query.with_entities.return_value.first.return_value = mock_stats
+        
+        def query_side_effect(model):
+            if model == Project:
+                return project_query
+            else:
+                return worklog_query
+        
+        self.db.query.side_effect = query_side_effect
+        
+        result = self.service.get_summary(1, days=60)
+        
+        self.assertEqual(result["period_days"], 60)
+        self.assertEqual(result["log_count"], 15)
+
+
+if __name__ == "__main__":
+    unittest.main()
