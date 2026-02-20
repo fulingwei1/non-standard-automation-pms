@@ -1,24 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-项目成员 CRUD 操作（重构版本）
+项目成员 CRUD 操作（重构版本 - 薄控制器）
 
-使用项目中心CRUD路由基类，大幅减少代码量
-包含批量添加、冲突检查、部门经理通知等扩展功能
+使用服务层处理业务逻辑，endpoint 仅负责请求处理和响应
 """
 
 from datetime import date
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Body, Query
+from fastapi import APIRouter, Depends, Path, Body, Query
 from pydantic import BaseModel
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
-from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.api import deps
 from app.core import security
-from app.models.organization import Department, Employee
-from app.models.project import ProjectMember, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import (
@@ -28,47 +23,15 @@ from app.schemas.project import (
 )
 from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.services.project_members import ProjectMembersService
 
 
-def filter_by_role(query, role: str):
-    """自定义角色筛选器"""
-    return query.filter(ProjectMember.role_code == role)
-
-
-def enrich_member_response(member: ProjectMember) -> ProjectMember:
-    """填充成员的username和real_name"""
-    if member.user:
-        member.username = member.user.username
-        member.real_name = member.user.real_name
-    else:
-        member.username = "Unknown"
-        member.real_name = "Unknown"
-    return member
-
-
-# 使用项目中心CRUD路由基类创建路由（用于获取基础路由结构）
-base_router = create_project_crud_router(
-    model=ProjectMember,
-    create_schema=ProjectMemberCreate,
-    update_schema=ProjectMemberUpdate,
-    response_schema=ProjectMemberResponse,
-    permission_prefix="project",
-    project_id_field="project_id",
-    keyword_fields=["remark"],
-    default_order_by="created_at",
-    default_order_direction="desc",
-    custom_filters={
-        "role": filter_by_role,
-    },
-)
-
-# 创建新的router，覆盖所有端点以添加填充用户信息的逻辑
 router = APIRouter()
 
 
-# 覆盖列表端点，添加填充用户信息逻辑
+# ==================== CRUD 操作 ====================
+
+
 @router.get("/", response_model=PaginatedResponse[ProjectMemberResponse])
 def list_project_members(
     project_id: int = Path(..., description="项目ID"),
@@ -83,42 +46,26 @@ def list_project_members(
     """获取项目成员列表（支持分页、搜索、排序、筛选）"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    # 构建查询
-    query = db.query(ProjectMember).filter(ProjectMember.project_id == project_id)
-    
-    # 角色筛选
-    if role:
-        query = query.filter(ProjectMember.role_code == role)
-    
-    # 关键词搜索
-    query = apply_keyword_filter(query, ProjectMember, keyword, "remark")
-    
-    # 排序
-    order_field = getattr(ProjectMember, order_by or "created_at", None)
-    if order_field:
-        if order_direction == "asc":
-            query = query.order_by(order_field.asc())
-        else:
-            query = query.order_by(order_field.desc())
-    
-    # 分页
-    total = query.count()
-    members = apply_pagination(query, pagination.offset, pagination.limit).all()
-    
-    # 填充用户信息
-    for member in members:
-        enrich_member_response(member)
+    service = ProjectMembersService(db)
+    members, total = service.list_members(
+        project_id=project_id,
+        offset=pagination.offset,
+        limit=pagination.limit,
+        keyword=keyword,
+        order_by=order_by,
+        order_direction=order_direction,
+        role=role
+    )
     
     return PaginatedResponse(
         items=members,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total)
     )
 
 
-# 覆盖创建端点，添加重复检查和填充用户信息逻辑
 @router.post("/", response_model=ProjectMemberResponse, status_code=201)
 def add_project_member(
     project_id: int = Path(..., description="项目ID"),
@@ -126,35 +73,28 @@ def add_project_member(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
-    """为项目添加成员（覆盖基类端点，添加重复检查逻辑）"""
+    """为项目添加成员"""
     check_project_access_or_raise(
         db, current_user, project_id, "您没有权限在该项目中添加成员"
     )
     
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    service = ProjectMembersService(db)
+    member = service.create_member(
+        project_id=project_id,
+        user_id=member_in.user_id,
+        role_code=member_in.role_code,
+        allocation_pct=member_in.allocation_pct,
+        start_date=member_in.start_date,
+        end_date=member_in.end_date,
+        commitment_level=member_in.commitment_level,
+        reporting_to_pm=member_in.reporting_to_pm,
+        remark=member_in.remark,
+        created_by=current_user.id
+    )
     
-    user = get_or_404(db, User, member_in.user_id, detail="用户不存在")
-    
-    # 检查是否已是项目成员
-    existing = db.query(ProjectMember).filter(
-        ProjectMember.project_id == project_id,
-        ProjectMember.user_id == member_in.user_id,
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="该用户已是项目成员")
-    
-    # 准备成员数据，强制使用路径中的 project_id
-    member_data = member_in.model_dump(exclude_unset=True)
-    member_data["project_id"] = project_id
-    
-    member = ProjectMember(**member_data)
-    save_obj(db, member)
-    
-    # 填充用户信息
-    return enrich_member_response(member)
+    return member
 
 
-# 覆盖详情端点，添加填充用户信息逻辑
 @router.get("/{member_id}", response_model=ProjectMemberResponse)
 def get_project_member(
     project_id: int = Path(..., description="项目ID"),
@@ -162,22 +102,13 @@ def get_project_member(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
-    """获取项目成员详情（覆盖基类端点，填充用户信息）"""
+    """获取项目成员详情"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    member = db.query(ProjectMember).filter(
-        ProjectMember.id == member_id,
-        ProjectMember.project_id == project_id,
-    ).first()
-    
-    if not member:
-        raise HTTPException(status_code=404, detail="项目成员不存在")
-    
-    # 填充用户信息
-    return enrich_member_response(member)
+    service = ProjectMembersService(db)
+    return service.get_member_by_id(project_id, member_id)
 
 
-# 覆盖更新端点，添加填充用户信息逻辑
 @router.put("/{member_id}", response_model=ProjectMemberResponse)
 def update_project_member(
     project_id: int = Path(..., description="项目ID"),
@@ -186,29 +117,14 @@ def update_project_member(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
-    """更新项目成员信息（覆盖基类端点，填充用户信息）"""
+    """更新项目成员信息"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    member = db.query(ProjectMember).filter(
-        ProjectMember.id == member_id,
-        ProjectMember.project_id == project_id,
-    ).first()
-    
-    if not member:
-        raise HTTPException(status_code=404, detail="项目成员不存在")
-    
+    service = ProjectMembersService(db)
     update_data = member_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        if hasattr(member, field):
-            setattr(member, field, value)
-    
-    save_obj(db, member)
-    
-    # 填充用户信息
-    return enrich_member_response(member)
+    return service.update_member(project_id, member_id, update_data)
 
 
-# 覆盖删除端点
 @router.delete("/{member_id}", status_code=204)
 def remove_project_member(
     project_id: int = Path(..., description="项目ID"),
@@ -216,75 +132,14 @@ def remove_project_member(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:update")),
 ):
-    """移除项目成员（覆盖基类端点）"""
+    """移除项目成员"""
     check_project_access_or_raise(db, current_user, project_id)
-
-    member = db.query(ProjectMember).filter(
-        ProjectMember.id == member_id,
-        ProjectMember.project_id == project_id,
-    ).first()
-
-    if not member:
-        raise HTTPException(status_code=404, detail="项目成员不存在")
-
-    delete_obj(db, member)
+    
+    service = ProjectMembersService(db)
+    service.delete_member(project_id, member_id)
 
 
 # ==================== 冲突检查 ====================
-
-
-def check_member_conflicts_internal(
-    db: Session,
-    user_id: int,
-    start_date: Optional[date],
-    end_date: Optional[date],
-    exclude_project_id: Optional[int] = None
-) -> dict:
-    """检查成员分配冲突（内部函数）"""
-    if not start_date or not end_date:
-        return {'has_conflict': False}
-
-    query = db.query(ProjectMember).filter(
-        ProjectMember.user_id == user_id,
-        ProjectMember.is_active,
-        or_(
-            and_(ProjectMember.start_date <= start_date, ProjectMember.end_date >= start_date),
-            and_(ProjectMember.start_date <= end_date, ProjectMember.end_date >= end_date),
-            and_(ProjectMember.start_date >= start_date, ProjectMember.end_date <= end_date)
-        )
-    )
-
-    if exclude_project_id:
-        query = query.filter(ProjectMember.project_id != exclude_project_id)
-
-    conflicting_members = query.all()
-
-    if not conflicting_members:
-        return {'has_conflict': False}
-
-    conflicting_projects = []
-    for member in conflicting_members:
-        project = db.query(Project).filter(Project.id == member.project_id).first()
-        if project:
-            conflicting_projects.append({
-                'project_id': project.id,
-                'project_code': project.project_code,
-                'project_name': project.project_name,
-                'allocation_pct': float(member.allocation_pct or 100),
-                'start_date': member.start_date.isoformat() if member.start_date else None,
-                'end_date': member.end_date.isoformat() if member.end_date else None,
-            })
-
-    user = db.query(User).filter(User.id == user_id).first()
-    user_name = user.real_name or user.username if user else f'User {user_id}'
-
-    return {
-        'has_conflict': True,
-        'user_id': user_id,
-        'user_name': user_name,
-        'conflicting_projects': conflicting_projects,
-        'conflict_count': len(conflicting_projects)
-    }
 
 
 @router.get("/conflicts", response_model=dict)
@@ -298,7 +153,11 @@ def check_member_conflicts(
 ) -> Any:
     """检查成员分配冲突"""
     check_project_access_or_raise(db, current_user, project_id)
-    return check_member_conflicts_internal(db, user_id, start_date, end_date, project_id)
+    
+    service = ProjectMembersService(db)
+    return service.check_member_conflicts(
+        user_id, start_date, end_date, project_id
+    )
 
 
 # ==================== 批量添加 ====================
@@ -323,59 +182,22 @@ def batch_add_project_members(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """批量添加项目成员"""
-    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中添加成员")
-
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
-
-    added_count = 0
-    skipped_count = 0
-    conflicts = []
-
-    for user_id in request.user_ids:
-        existing = db.query(ProjectMember).filter(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == user_id,
-        ).first()
-
-        if existing:
-            skipped_count += 1
-            continue
-
-        conflict_info = check_member_conflicts_internal(
-            db, user_id, request.start_date, request.end_date, project_id
-        )
-        if conflict_info['has_conflict']:
-            conflicts.append({
-                'user_id': user_id,
-                'user_name': conflict_info.get('user_name', f'User {user_id}'),
-                'conflicting_projects': conflict_info.get('conflicting_projects', [])
-            })
-            continue
-
-        member = ProjectMember(
-            project_id=project_id,
-            user_id=user_id,
-            role_code=request.role_code,
-            allocation_pct=request.allocation_pct,
-            start_date=request.start_date,
-            end_date=request.end_date,
-            commitment_level=request.commitment_level,
-            reporting_to_pm=request.reporting_to_pm,
-            dept_manager_notified=False,
-            created_by=current_user.id
-        )
-
-        db.add(member)
-        added_count += 1
-
-    db.commit()
-
-    return {
-        'added_count': added_count,
-        'skipped_count': skipped_count,
-        'conflicts': conflicts,
-        'message': f'成功添加 {added_count} 位成员，跳过 {skipped_count} 位，发现 {len(conflicts)} 个时间冲突'
-    }
+    check_project_access_or_raise(
+        db, current_user, project_id, "您没有权限在该项目中添加成员"
+    )
+    
+    service = ProjectMembersService(db)
+    return service.batch_add_members(
+        project_id=project_id,
+        user_ids=request.user_ids,
+        role_code=request.role_code,
+        allocation_pct=request.allocation_pct,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        commitment_level=request.commitment_level,
+        reporting_to_pm=request.reporting_to_pm,
+        created_by=current_user.id
+    )
 
 
 # ==================== 扩展功能 ====================
@@ -390,21 +212,11 @@ def notify_dept_manager(
 ) -> Any:
     """通知部门经理（成员加入项目）"""
     check_project_access_or_raise(db, current_user, project_id)
-
-    member = db.query(ProjectMember).filter(
-        ProjectMember.id == member_id,
-        ProjectMember.project_id == project_id
-    ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="项目成员不存在")
-
-    if member.dept_manager_notified:
-        return ResponseModel(code=200, message="部门经理已通知")
-
-    member.dept_manager_notified = True
-    db.commit()
-
-    return ResponseModel(code=200, message="部门经理通知已发送")
+    
+    service = ProjectMembersService(db)
+    result = service.notify_dept_manager(project_id, member_id)
+    
+    return ResponseModel(code=200, message=result['message'])
 
 
 @router.get("/from-dept/{dept_id}", response_model=dict)
@@ -416,37 +228,6 @@ def get_dept_users_for_project(
 ) -> Any:
     """获取部门用户列表（用于批量添加成员）"""
     check_project_access_or_raise(db, current_user, project_id)
-
-    dept = get_or_404(db, Department, dept_id, detail="部门不存在")
-
-    employees = db.query(Employee).filter(
-        Employee.department == dept.dept_name,
-        Employee.is_active
-    ).all()
-
-    employee_ids = [e.id for e in employees]
-    users = db.query(User).filter(
-        User.employee_id.in_(employee_ids),
-        User.is_active
-    ).all()
-
-    existing_member_ids = db.query(ProjectMember.user_id).filter(
-        ProjectMember.project_id == project_id,
-        ProjectMember.is_active
-    ).all()
-    existing_user_ids = {m[0] for m in existing_member_ids}
-
-    available_users = []
-    for user in users:
-        available_users.append({
-            'user_id': user.id,
-            'username': user.username,
-            'real_name': user.real_name,
-            'is_member': user.id in existing_user_ids
-        })
-
-    return {
-        'dept_id': dept_id,
-        'dept_name': dept.dept_name,
-        'users': available_users
-    }
+    
+    service = ProjectMembersService(db)
+    return service.get_dept_users_for_project(project_id, dept_id)
