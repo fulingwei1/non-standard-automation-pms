@@ -27,6 +27,9 @@ os.environ.setdefault("ENABLE_SCHEDULER", "false")
 import pytest
 from fastapi import HTTPException
 
+# 服务层的 patch 前缀
+SVC = "app.services.production.plan_service"
+
 
 # ──────────────────────────────────────────────
 # Helpers
@@ -100,7 +103,7 @@ class TestReadProductionPlans:
         db.query.return_value.order_by.return_value = db.query.return_value
         db.query.return_value.all.return_value = []
 
-        with patch("app.api.v1.endpoints.production.plans.apply_pagination") as mock_pag:
+        with patch(f"{SVC}.apply_pagination") as mock_pag:
             mock_pag.return_value.all.return_value = []
 
             result = read_production_plans(
@@ -127,7 +130,7 @@ class TestReadProductionPlans:
         db.query.return_value.filter.return_value = db.query.return_value
         db.query.return_value.count.return_value = 1
 
-        with patch("app.api.v1.endpoints.production.plans.apply_pagination") as mock_pag:
+        with patch(f"{SVC}.apply_pagination") as mock_pag:
             mock_pag.return_value.all.return_value = [plan]
             db.query.return_value.filter.return_value.first.return_value = None  # project/workshop lookups
 
@@ -176,9 +179,9 @@ class TestCreateProductionPlan:
 
         plan_instance = _make_plan()
 
-        with patch("app.api.v1.endpoints.production.plans.ProductionPlan") as MockPlan, \
-             patch("app.api.v1.endpoints.production.plans.generate_plan_no", return_value="PP000001"), \
-             patch("app.api.v1.endpoints.production.plans.save_obj"):
+        with patch(f"{SVC}.ProductionPlan") as MockPlan, \
+             patch("app.api.v1.endpoints.production.utils.generate_plan_no", return_value="PP000001"), \
+             patch(f"{SVC}.save_obj"):
             MockPlan.return_value = plan_instance
 
             result = create_production_plan(db=db, plan_in=plan_in, current_user=current_user)
@@ -239,7 +242,7 @@ class TestReadProductionPlan:
         current_user = _make_user()
         plan = _make_plan()
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             db.query.return_value.filter.return_value.first.return_value = None
             result = read_production_plan(plan_id=1, db=db, current_user=current_user)
 
@@ -254,7 +257,7 @@ class TestReadProductionPlan:
         current_user = _make_user()
 
         with patch(
-            "app.api.v1.endpoints.production.plans.get_or_404",
+            f"{SVC}.get_or_404",
             side_effect=HTTPException(status_code=404, detail="生产计划不存在")
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -280,8 +283,8 @@ class TestUpdateProductionPlan:
         plan_in = MagicMock()
         plan_in.model_dump.return_value = {"plan_name": "更新计划名"}
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan), \
-             patch("app.api.v1.endpoints.production.plans.save_obj"):
+        with patch(f"{SVC}.get_or_404", return_value=plan), \
+             patch(f"{SVC}.save_obj"):
             db.query.return_value.filter.return_value.first.return_value = None
             result = update_production_plan(db=db, plan_id=1, plan_in=plan_in, current_user=current_user)
 
@@ -298,7 +301,7 @@ class TestUpdateProductionPlan:
         plan_in = MagicMock()
         plan_in.model_dump.return_value = {}
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             with pytest.raises(HTTPException) as exc_info:
                 update_production_plan(db=db, plan_id=1, plan_in=plan_in, current_user=current_user)
 
@@ -319,12 +322,12 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="DRAFT")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             result = submit_production_plan(db=db, plan_id=1, current_user=current_user)
 
         assert plan.status == "SUBMITTED"
         assert db.commit.called
-        assert result.code == 200
+        assert result["code"] == 200
 
     def test_submit_non_draft_raises(self):
         """非草稿计划不可提交"""
@@ -334,7 +337,7 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="SUBMITTED")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             with pytest.raises(HTTPException) as exc_info:
                 submit_production_plan(db=db, plan_id=1, current_user=current_user)
 
@@ -348,14 +351,14 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="SUBMITTED")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             result = approve_production_plan(
                 db=db, plan_id=1, approved=True, approval_note="通过", current_user=current_user
             )
 
         assert plan.status == "APPROVED"
         assert plan.approved_by == current_user.id
-        assert result.code == 200
+        assert result["code"] == 200
 
     def test_reject_plan(self):
         """驳回计划回到草稿状态"""
@@ -365,7 +368,7 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="SUBMITTED")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             result = approve_production_plan(
                 db=db, plan_id=1, approved=False, approval_note=None, current_user=current_user
             )
@@ -380,11 +383,11 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="APPROVED")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             result = publish_production_plan(db=db, plan_id=1, current_user=current_user)
 
         assert plan.status == "PUBLISHED"
-        assert result.code == 200
+        assert result["code"] == 200
 
     def test_publish_unapproved_raises(self):
         """未审批计划不可发布"""
@@ -394,7 +397,7 @@ class TestPlanWorkflow:
         current_user = _make_user()
         plan = _make_plan(status="DRAFT")
 
-        with patch("app.api.v1.endpoints.production.plans.get_or_404", return_value=plan):
+        with patch(f"{SVC}.get_or_404", return_value=plan):
             with pytest.raises(HTTPException) as exc_info:
                 publish_production_plan(db=db, plan_id=1, current_user=current_user)
 

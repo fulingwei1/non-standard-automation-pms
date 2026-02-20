@@ -4,18 +4,14 @@
 
 包含：计划CRUD、提交、审批、发布
 """
-from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.models.production import ProductionPlan, Workshop
-from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.production import (
@@ -23,10 +19,7 @@ from app.schemas.production import (
     ProductionPlanResponse,
     ProductionPlanUpdate,
 )
-
-from .utils import generate_plan_no
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.production.plan_service import ProductionPlanService
 
 router = APIRouter()
 
@@ -46,58 +39,14 @@ def read_production_plans(
     """
     获取生产计划列表（主计划/车间计划）
     """
-    query = db.query(ProductionPlan)
-
-    if plan_type:
-        query = query.filter(ProductionPlan.plan_type == plan_type)
-
-    if project_id:
-        query = query.filter(ProductionPlan.project_id == project_id)
-
-    if workshop_id:
-        query = query.filter(ProductionPlan.workshop_id == workshop_id)
-
-    if status:
-        query = query.filter(ProductionPlan.status == status)
-
-    total = query.count()
-    plans = apply_pagination(query.order_by(desc(ProductionPlan.created_at)), pagination.offset, pagination.limit).all()
-
-    items = []
-    for plan in plans:
-        project_name = None
-        if plan.project_id:
-            project = db.query(Project).filter(Project.id == plan.project_id).first()
-            project_name = project.project_name if project else None
-
-        workshop_name = None
-        if plan.workshop_id:
-            workshop = db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
-            workshop_name = workshop.workshop_name if workshop else None
-
-        items.append(ProductionPlanResponse(
-            id=plan.id,
-            plan_no=plan.plan_no,
-            plan_name=plan.payment_name,
-            plan_type=plan.plan_type,
-            project_id=plan.project_id,
-            project_name=project_name,
-            workshop_id=plan.workshop_id,
-            workshop_name=workshop_name,
-            plan_start_date=plan.plan_start_date,
-            plan_end_date=plan.plan_end_date,
-            status=plan.status,
-            progress=plan.progress or 0,
-            description=plan.description,
-            created_by=plan.created_by,
-            approved_by=plan.approved_by,
-            approved_at=plan.approved_at,
-            remark=plan.remark,
-            created_at=plan.created_at,
-            updated_at=plan.updated_at,
-        ))
-
-    return pagination.to_response(items, total)
+    service = ProductionPlanService(db)
+    return service.list_plans(
+        pagination=pagination,
+        plan_type=plan_type,
+        project_id=project_id,
+        workshop_id=workshop_id,
+        status=status,
+    )
 
 
 @router.post("/production-plans", response_model=ProductionPlanResponse)
@@ -110,57 +59,8 @@ def create_production_plan(
     """
     创建生产计划
     """
-    # 检查项目是否存在
-    if plan_in.project_id:
-        project = get_or_404(db, Project, plan_in.project_id, "项目不存在")
-
-    # 检查车间是否存在
-    if plan_in.workshop_id:
-        workshop = get_or_404(db, Workshop, plan_in.workshop_id, "车间不存在")
-
-    # 生成计划编号
-    plan_no = generate_plan_no(db)
-
-    plan = ProductionPlan(
-        plan_no=plan_no,
-        status="DRAFT",
-        progress=0,
-        created_by=current_user.id,
-        **plan_in.model_dump()
-    )
-    save_obj(db, plan)
-
-    project_name = None
-    if plan.project_id:
-        project = db.query(Project).filter(Project.id == plan.project_id).first()
-        project_name = project.project_name if project else None
-
-    workshop_name = None
-    if plan.workshop_id:
-        workshop = db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
-        workshop_name = workshop.workshop_name if workshop else None
-
-    return ProductionPlanResponse(
-        id=plan.id,
-        plan_no=plan.plan_no,
-        plan_name=plan.payment_name,
-        plan_type=plan.plan_type,
-        project_id=plan.project_id,
-        project_name=project_name,
-        workshop_id=plan.workshop_id,
-        workshop_name=workshop_name,
-        plan_start_date=plan.plan_start_date,
-        plan_end_date=plan.plan_end_date,
-        status=plan.status,
-        progress=plan.progress or 0,
-        description=plan.description,
-        created_by=plan.created_by,
-        approved_by=plan.approved_by,
-        approved_at=plan.approved_at,
-        remark=plan.remark,
-        created_at=plan.created_at,
-        updated_at=plan.updated_at,
-    )
+    service = ProductionPlanService(db)
+    return service.create_plan(plan_in, current_user_id=current_user.id)
 
 
 @router.get("/production-plans/{plan_id}", response_model=ProductionPlanResponse)
@@ -172,39 +72,8 @@ def read_production_plan(
     """
     获取生产计划详情
     """
-    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
-
-    project_name = None
-    if plan.project_id:
-        project = db.query(Project).filter(Project.id == plan.project_id).first()
-        project_name = project.project_name if project else None
-
-    workshop_name = None
-    if plan.workshop_id:
-        workshop = db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
-        workshop_name = workshop.workshop_name if workshop else None
-
-    return ProductionPlanResponse(
-        id=plan.id,
-        plan_no=plan.plan_no,
-        plan_name=plan.payment_name,
-        plan_type=plan.plan_type,
-        project_id=plan.project_id,
-        project_name=project_name,
-        workshop_id=plan.workshop_id,
-        workshop_name=workshop_name,
-        plan_start_date=plan.plan_start_date,
-        plan_end_date=plan.plan_end_date,
-        status=plan.status,
-        progress=plan.progress or 0,
-        description=plan.description,
-        created_by=plan.created_by,
-        approved_by=plan.approved_by,
-        approved_at=plan.approved_at,
-        remark=plan.remark,
-        created_at=plan.created_at,
-        updated_at=plan.updated_at,
-    )
+    service = ProductionPlanService(db)
+    return service.get_plan(plan_id)
 
 
 @router.put("/production-plans/{plan_id}", response_model=ProductionPlanResponse)
@@ -218,49 +87,8 @@ def update_production_plan(
     """
     更新生产计划
     """
-    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
-
-    # 只有草稿状态才能更新
-    if plan.status != "DRAFT":
-        raise HTTPException(status_code=400, detail="只有草稿状态的计划才能更新")
-
-    update_data = plan_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(plan, field, value)
-
-    save_obj(db, plan)
-
-    project_name = None
-    if plan.project_id:
-        project = db.query(Project).filter(Project.id == plan.project_id).first()
-        project_name = project.project_name if project else None
-
-    workshop_name = None
-    if plan.workshop_id:
-        workshop = db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
-        workshop_name = workshop.workshop_name if workshop else None
-
-    return ProductionPlanResponse(
-        id=plan.id,
-        plan_no=plan.plan_no,
-        plan_name=plan.payment_name,
-        plan_type=plan.plan_type,
-        project_id=plan.project_id,
-        project_name=project_name,
-        workshop_id=plan.workshop_id,
-        workshop_name=workshop_name,
-        plan_start_date=plan.plan_start_date,
-        plan_end_date=plan.plan_end_date,
-        status=plan.status,
-        progress=plan.progress or 0,
-        description=plan.description,
-        created_by=plan.created_by,
-        approved_by=plan.approved_by,
-        approved_at=plan.approved_at,
-        remark=plan.remark,
-        created_at=plan.created_at,
-        updated_at=plan.updated_at,
-    )
+    service = ProductionPlanService(db)
+    return service.update_plan(plan_id, plan_in)
 
 
 @router.put("/production-plans/{plan_id}/submit", response_model=ResponseModel)
@@ -273,19 +101,8 @@ def submit_production_plan(
     """
     提交计划审批
     """
-    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
-
-    if plan.status != "DRAFT":
-        raise HTTPException(status_code=400, detail="只有草稿状态的计划才能提交")
-
-    plan.status = "SUBMITTED"
-    db.add(plan)
-    db.commit()
-
-    return ResponseModel(
-        code=200,
-        message="计划已提交审批"
-    )
+    service = ProductionPlanService(db)
+    return service.submit_plan(plan_id)
 
 
 @router.put("/production-plans/{plan_id}/approve", response_model=ResponseModel)
@@ -300,27 +117,12 @@ def approve_production_plan(
     """
     审批通过生产计划
     """
-    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
-
-    if plan.status != "SUBMITTED":
-        raise HTTPException(status_code=400, detail="只有已提交的计划才能审批")
-
-    if approved:
-        plan.status = "APPROVED"
-        plan.approved_by = current_user.id
-        plan.approved_at = datetime.now()
-    else:
-        plan.status = "DRAFT"  # 驳回后回到草稿状态
-
-    if approval_note:
-        plan.remark = (plan.remark or "") + f"\n审批意见：{approval_note}"
-
-    db.add(plan)
-    db.commit()
-
-    return ResponseModel(
-        code=200,
-        message="审批成功" if approved else "已驳回"
+    service = ProductionPlanService(db)
+    return service.approve_plan(
+        plan_id,
+        approved=approved,
+        approval_note=approval_note,
+        current_user_id=current_user.id,
     )
 
 
@@ -334,16 +136,5 @@ def publish_production_plan(
     """
     计划发布
     """
-    plan = get_or_404(db, ProductionPlan, plan_id, detail="生产计划不存在")
-
-    if plan.status != "APPROVED":
-        raise HTTPException(status_code=400, detail="只有已审批的计划才能发布")
-
-    plan.status = "PUBLISHED"
-    db.add(plan)
-    db.commit()
-
-    return ResponseModel(
-        code=200,
-        message="计划已发布"
-    )
+    service = ProductionPlanService(db)
+    return service.publish_plan(plan_id)

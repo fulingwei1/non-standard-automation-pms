@@ -2,6 +2,7 @@
 """
 物料跟踪 API 端点单元测试
 Covers: app/api/v1/endpoints/production/material_tracking.py
+        app/services/production/material_tracking/material_tracking_service.py
 方式A：直接调用函数，mock 掉 db 和 current_user
 
 注意事项：
@@ -16,8 +17,6 @@ import pytest
 from fastapi import HTTPException
 
 from app.api.v1.endpoints.production.material_tracking import (
-    _calculate_avg_daily_consumption,
-    _check_and_create_alerts,
     create_alert_rule,
     create_consumption,
     get_batch_tracing,
@@ -27,6 +26,9 @@ from app.api.v1.endpoints.production.material_tracking import (
     get_material_alerts,
     get_realtime_stock,
     get_waste_tracing,
+)
+from app.services.production.material_tracking.material_tracking_service import (
+    MaterialTrackingService,
 )
 
 # 需要正确的模型模块路径
@@ -254,10 +256,10 @@ class TestCreateConsumption:
         mock_db.query.return_value = batch_q
 
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.get_or_404",
+            "app.services.production.material_tracking.material_tracking_service.get_or_404",
             return_value=mock_material
-        ), patch(
-            "app.api.v1.endpoints.production.material_tracking._check_and_create_alerts"
+        ), patch.object(
+            MaterialTrackingService, "check_and_create_alerts"
         ):
             result = create_consumption(
                 db=mock_db, current_user=mock_user,
@@ -275,10 +277,10 @@ class TestCreateConsumption:
         mock_db.query.return_value = batch_q
 
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.get_or_404",
+            "app.services.production.material_tracking.material_tracking_service.get_or_404",
             return_value=mock_material
-        ), patch(
-            "app.api.v1.endpoints.production.material_tracking._check_and_create_alerts"
+        ), patch.object(
+            MaterialTrackingService, "check_and_create_alerts"
         ):
             result = create_consumption(
                 db=mock_db, current_user=mock_user,
@@ -296,10 +298,10 @@ class TestCreateConsumption:
         mock_db.query.return_value = batch_q
 
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.get_or_404",
+            "app.services.production.material_tracking.material_tracking_service.get_or_404",
             return_value=mock_material
-        ), patch(
-            "app.api.v1.endpoints.production.material_tracking._check_and_create_alerts"
+        ), patch.object(
+            MaterialTrackingService, "check_and_create_alerts"
         ):
             result = create_consumption(
                 db=mock_db, current_user=mock_user,
@@ -317,10 +319,10 @@ class TestCreateConsumption:
         mock_db.query.return_value = batch_q
 
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.get_or_404",
+            "app.services.production.material_tracking.material_tracking_service.get_or_404",
             return_value=mock_material
-        ), patch(
-            "app.api.v1.endpoints.production.material_tracking._check_and_create_alerts"
+        ), patch.object(
+            MaterialTrackingService, "check_and_create_alerts"
         ):
             result = create_consumption(
                 db=mock_db, current_user=mock_user,
@@ -338,10 +340,10 @@ class TestCreateConsumption:
         mock_db.query.return_value = batch_q
 
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.get_or_404",
+            "app.services.production.material_tracking.material_tracking_service.get_or_404",
             return_value=mock_material
-        ), patch(
-            "app.api.v1.endpoints.production.material_tracking._check_and_create_alerts"
+        ), patch.object(
+            MaterialTrackingService, "check_and_create_alerts"
         ):
             result = create_consumption(
                 db=mock_db, current_user=mock_user,
@@ -565,7 +567,7 @@ class TestCreateAlertRule:
     def test_create_basic_rule(self, mock_db, mock_user):
         """创建基础预警规则"""
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.save_obj"
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
             def _save(db, obj):
                 obj.id = 1
@@ -584,7 +586,7 @@ class TestCreateAlertRule:
     def test_create_rule_global(self, mock_db, mock_user):
         """创建全局（无 material_id）预警规则"""
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.save_obj"
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
             def _save(db, obj):
                 obj.id = 2
@@ -607,7 +609,7 @@ class TestCreateAlertRule:
     def test_create_rule_percentage_type(self, mock_db, mock_user):
         """百分比阈值类型的规则"""
         with patch(
-            "app.api.v1.endpoints.production.material_tracking.save_obj"
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
             def _save(db, obj):
                 obj.id = 3
@@ -1054,7 +1056,7 @@ class TestGetInventoryTurnover:
         assert result is not None
 
 
-# ==================== 辅助函数 ====================
+# ==================== 辅助函数 (now service methods) ====================
 
 class TestCheckAndCreateAlerts:
 
@@ -1063,7 +1065,8 @@ class TestCheckAndCreateAlerts:
         rules_q = _make_query_mock(items=[])
         mock_db.query.return_value = rules_q
 
-        _check_and_create_alerts(mock_db, mock_material)
+        service = MaterialTrackingService(mock_db)
+        service.check_and_create_alerts(mock_material)
         mock_db.add.assert_not_called()
 
     def test_low_stock_fixed_rule_triggers(self, mock_db, mock_material):
@@ -1092,7 +1095,8 @@ class TestCheckAndCreateAlerts:
 
         mock_db.query.side_effect = q_side
 
-        _check_and_create_alerts(mock_db, mock_material)
+        service = MaterialTrackingService(mock_db)
+        service.check_and_create_alerts(mock_material)
         mock_db.add.assert_called_once()
 
     def test_existing_alert_not_duplicate(self, mock_db, mock_material):
@@ -1118,7 +1122,8 @@ class TestCheckAndCreateAlerts:
 
         mock_db.query.side_effect = q_side
 
-        _check_and_create_alerts(mock_db, mock_material)
+        service = MaterialTrackingService(mock_db)
+        service.check_and_create_alerts(mock_material)
         mock_db.add.assert_not_called()
 
     def test_shortage_rule_triggers(self, mock_db, mock_material):
@@ -1147,7 +1152,8 @@ class TestCheckAndCreateAlerts:
 
         mock_db.query.side_effect = q_side
 
-        _check_and_create_alerts(mock_db, mock_material)
+        service = MaterialTrackingService(mock_db)
+        service.check_and_create_alerts(mock_material)
         mock_db.add.assert_called_once()
 
     def test_percentage_threshold_triggers(self, mock_db, mock_material):
@@ -1176,7 +1182,8 @@ class TestCheckAndCreateAlerts:
 
         mock_db.query.side_effect = q_side
 
-        _check_and_create_alerts(mock_db, mock_material)
+        service = MaterialTrackingService(mock_db)
+        service.check_and_create_alerts(mock_material)
         mock_db.add.assert_called_once()
 
 
@@ -1187,7 +1194,8 @@ class TestCalculateAvgDailyConsumption:
         q = _make_query_mock(items=[])
         mock_db.query.return_value = q
 
-        result = _calculate_avg_daily_consumption(mock_db, material_id=1, days=30)
+        service = MaterialTrackingService(mock_db)
+        result = service.calculate_avg_daily_consumption(material_id=1, days=30)
         assert result == 0.0
 
     def test_with_single_consumption(self, mock_db):
@@ -1198,7 +1206,8 @@ class TestCalculateAvgDailyConsumption:
         q = _make_query_mock(items=[mock_c])
         mock_db.query.return_value = q
 
-        result = _calculate_avg_daily_consumption(mock_db, material_id=1, days=30)
+        service = MaterialTrackingService(mock_db)
+        result = service.calculate_avg_daily_consumption(material_id=1, days=30)
         assert result == 5.0
 
     def test_multiple_consumptions(self, mock_db):
@@ -1212,7 +1221,8 @@ class TestCalculateAvgDailyConsumption:
         q = _make_query_mock(items=consumptions)
         mock_db.query.return_value = q
 
-        result = _calculate_avg_daily_consumption(mock_db, material_id=1, days=30)
+        service = MaterialTrackingService(mock_db)
+        result = service.calculate_avg_daily_consumption(material_id=1, days=30)
         assert result == 10.0
 
     def test_zero_days_returns_zero(self, mock_db):
@@ -1220,5 +1230,6 @@ class TestCalculateAvgDailyConsumption:
         q = _make_query_mock(items=[])
         mock_db.query.return_value = q
 
-        result = _calculate_avg_daily_consumption(mock_db, material_id=1, days=0)
+        service = MaterialTrackingService(mock_db)
+        result = service.calculate_avg_daily_consumption(material_id=1, days=0)
         assert result == 0

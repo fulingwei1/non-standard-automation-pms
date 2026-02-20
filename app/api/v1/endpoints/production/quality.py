@@ -9,39 +9,30 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.production import (
-    DefectAnalysis,
-    QualityAlertRule,
-    QualityInspection,
-    ReworkOrder,
-)
+from app.models.production import DefectAnalysis
 from app.schemas.production.quality import (
-    BatchTracingRequest,
     BatchTracingResponse,
     CorrectiveActionCreate,
     DefectAnalysisCreate,
     DefectAnalysisResponse,
-    ParetoAnalysisRequest,
     ParetoAnalysisResponse,
     QualityAlertListResponse,
-    QualityAlertResponse,
     QualityAlertRuleCreate,
     QualityAlertRuleResponse,
     QualityInspectionCreate,
     QualityInspectionListResponse,
     QualityInspectionResponse,
     QualityStatisticsResponse,
-    QualityTrendRequest,
     QualityTrendResponse,
     ReworkOrderCompleteRequest,
     ReworkOrderCreate,
     ReworkOrderListResponse,
     ReworkOrderResponse,
-    SPCDataRequest,
     SPCDataResponse,
 )
+from app.services.production.quality_service import ProductionQualityService
 from app.services.quality_service import QualityService
-from app.utils.db_helpers import get_or_404, save_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -57,7 +48,7 @@ def create_quality_inspection(
 ):
     """
     创建质检记录
-    
+
     - **work_order_id**: 工单ID (可选)
     - **material_id**: 物料ID (可选)
     - **inspection_type**: 检验类型 (IQC/IPQC/FQC/OQC)
@@ -91,31 +82,19 @@ def list_quality_inspections(
 ):
     """
     查询质检记录列表
-    
+
     支持按物料、检验类型、检验结果、日期范围筛选
     """
-    query = db.query(QualityInspection)
-    
-    if material_id:
-        query = query.filter(QualityInspection.material_id == material_id)
-    if inspection_type:
-        query = query.filter(QualityInspection.inspection_type == inspection_type)
-    if inspection_result:
-        query = query.filter(QualityInspection.inspection_result == inspection_result)
-    if start_date:
-        query = query.filter(QualityInspection.inspection_date >= start_date)
-    if end_date:
-        query = query.filter(QualityInspection.inspection_date <= end_date)
-    
-    total = query.count()
-    items = query.offset(skip).limit(limit).all()
-    
-    return {
-        "items": items,
-        "total": total,
-        "page": skip // limit + 1,
-        "page_size": limit
-    }
+    service = ProductionQualityService(db)
+    return service.list_inspections(
+        skip=skip,
+        limit=limit,
+        material_id=material_id,
+        inspection_type=inspection_type,
+        inspection_result=inspection_result,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
 
 # ==================== 质量趋势分析 ====================
@@ -133,7 +112,7 @@ def get_quality_trend(
 ):
     """
     质量趋势分析
-    
+
     - 按日/周/月聚合质检数据
     - 计算不良率趋势
     - 提供移动平均预测
@@ -163,7 +142,7 @@ def create_defect_analysis(
 ):
     """
     创建不良品根因分析
-    
+
     基于5M1E方法:
     - Man (人)
     - Machine (机)
@@ -207,44 +186,11 @@ def list_quality_alerts(
 ):
     """
     质量预警列表
-    
+
     显示最近触发的质量预警
     """
-    # TODO: 这里应该从AlertRecord表查询，暂时从规则表返回
-    query = db.query(QualityAlertRule).filter(
-        QualityAlertRule.enabled == 1,
-        QualityAlertRule.last_triggered_at.isnot(None)
-    )
-    
-    if alert_level:
-        query = query.filter(QualityAlertRule.alert_level == alert_level)
-    
-    total = query.count()
-    rules = query.order_by(QualityAlertRule.last_triggered_at.desc()).offset(skip).limit(limit).all()
-    
-    items = [
-        QualityAlertResponse(
-            alert_id=rule.id,
-            rule_id=rule.id,
-            rule_name=rule.rule_name,
-            alert_type=rule.alert_type,
-            alert_level=rule.alert_level,
-            trigger_time=rule.last_triggered_at,
-            current_value=float(rule.threshold_value),
-            threshold_value=float(rule.threshold_value),
-            message=f"质量预警: {rule.rule_name}",
-            material_id=rule.target_material_id,
-            process_id=rule.target_process_id
-        )
-        for rule in rules
-    ]
-    
-    return {
-        "items": items,
-        "total": total,
-        "page": skip // limit + 1,
-        "page_size": limit
-    }
+    service = ProductionQualityService(db)
+    return service.list_alerts(skip=skip, limit=limit, alert_level=alert_level)
 
 
 @router.post("/alert-rules", response_model=QualityAlertRuleResponse, summary="创建质量预警规则")
@@ -256,38 +202,15 @@ def create_quality_alert_rule(
 ):
     """
     创建质量预警规则
-    
+
     支持的预警类型:
     - DEFECT_RATE: 不良率预警
     - SPC_UCL: SPC控制上限预警
     - SPC_LCL: SPC控制下限预警
     - TREND: 趋势预警
     """
-    # 生成规则编号
-    today = datetime.now().strftime("%Y%m%d")
-    prefix = f"QR{today}"
-    
-    last_rule = db.query(QualityAlertRule).filter(
-        QualityAlertRule.rule_no.like(f"{prefix}%")
-    ).order_by(QualityAlertRule.rule_no.desc()).first()
-    
-    if last_rule:
-        last_seq = int(last_rule.rule_no[-4:])
-        new_seq = last_seq + 1
-    else:
-        new_seq = 1
-    
-    rule_no = f"{prefix}{new_seq:04d}"
-    
-    rule = QualityAlertRule(
-        rule_no=rule_no,
-        created_by=current_user["id"],
-        **rule_data.model_dump()
-    )
-    
-    save_obj(db, rule)
-    
-    return rule
+    service = ProductionQualityService(db)
+    return service.create_alert_rule(rule_data, current_user_id=current_user["id"])
 
 
 @router.get("/alert-rules", response_model=list, summary="质量预警规则列表")
@@ -297,13 +220,8 @@ def list_quality_alert_rules(
     current_user: dict = Depends(deps.get_current_user)
 ):
     """查询质量预警规则列表"""
-    query = db.query(QualityAlertRule)
-    
-    if enabled is not None:
-        query = query.filter(QualityAlertRule.enabled == enabled)
-    
-    rules = query.all()
-    return rules
+    service = ProductionQualityService(db)
+    return service.list_alert_rules(enabled=enabled)
 
 
 # ==================== SPC控制图 ====================
@@ -320,7 +238,7 @@ def get_spc_data(
 ):
     """
     获取SPC控制图数据
-    
+
     - 计算3σ控制限 (UCL, CL, LCL)
     - 识别失控点
     - 计算过程能力指数Cpk
@@ -351,7 +269,7 @@ def create_rework_order(
 ):
     """
     创建返工单
-    
+
     - 关联原工单和质检记录
     - 支持派工和进度跟踪
     - 记录返工成本
@@ -377,7 +295,7 @@ def complete_rework_order(
 ):
     """
     完成返工单
-    
+
     - 记录完成数量、合格数量、报废数量
     - 记录实际工时和返工成本
     """
@@ -403,20 +321,8 @@ def list_rework_orders(
     current_user: dict = Depends(deps.get_current_user)
 ):
     """查询返工单列表"""
-    query = db.query(ReworkOrder)
-    
-    if status:
-        query = query.filter(ReworkOrder.status == status)
-    
-    total = query.count()
-    items = query.offset(skip).limit(limit).all()
-    
-    return {
-        "items": items,
-        "total": total,
-        "page": skip // limit + 1,
-        "page_size": limit
-    }
+    service = ProductionQualityService(db)
+    return service.list_rework_orders(skip=skip, limit=limit, status=status)
 
 
 # ==================== 帕累托分析 ====================
@@ -433,7 +339,7 @@ def get_pareto_analysis(
 ):
     """
     帕累托分析 (80/20原则)
-    
+
     - 识别主要不良类型
     - 累计百分比分析
     - 找出占80%不良的关键类型
@@ -460,7 +366,7 @@ def get_quality_statistics(
 ):
     """
     质量统计看板
-    
+
     - 总体质量指标
     - Top不良类型
     - 最近7天趋势
@@ -485,7 +391,7 @@ def get_batch_tracing(
 ):
     """
     批次质量追溯
-    
+
     - 查询批次所有质检记录
     - 关联的不良品分析
     - 关联的返工单
@@ -511,25 +417,10 @@ def create_corrective_action(
 ):
     """
     创建纠正措施记录
-    
+
     - 关联不良品分析
     - 指定责任人和完成期限
     - 跟踪措施执行和验证
     """
-    # 更新DefectAnalysis中的纠正措施信息
-    analysis = get_or_404(db, DefectAnalysis, action_data.defect_analysis_id, "不良品分析记录不存在")
-    
-    if action_data.action_type == "CORRECTIVE":
-        analysis.corrective_action = action_data.action_description
-    else:
-        analysis.preventive_action = action_data.action_description
-    
-    analysis.responsible_person_id = action_data.responsible_person_id
-    analysis.due_date = action_data.due_date
-    
-    db.commit()
-    
-    return {
-        "message": "纠正措施创建成功",
-        "analysis_id": analysis.id
-    }
+    service = ProductionQualityService(db)
+    return service.create_corrective_action(action_data)

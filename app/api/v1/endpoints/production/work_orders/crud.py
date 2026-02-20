@@ -4,25 +4,16 @@
 """
 from typing import Any, Optional
 
-from fastapi import Depends, HTTPException, Query
-from sqlalchemy import desc
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.models.production import ProductionPlan, WorkOrder, Workshop, Workstation
-from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.production import WorkOrderCreate, WorkOrderResponse
-
-from fastapi import APIRouter
-
-from ..utils import generate_work_order_no
-from .utils import get_work_order_response
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.production.work_order_service import WorkOrderService
 
 router = APIRouter()
 
@@ -41,29 +32,15 @@ def read_work_orders(
     """
     获取工单列表（分页+筛选）
     """
-    query = db.query(WorkOrder)
-
-    if project_id:
-        query = query.filter(WorkOrder.project_id == project_id)
-
-    if workshop_id:
-        query = query.filter(WorkOrder.workshop_id == workshop_id)
-
-    if status:
-        query = query.filter(WorkOrder.status == status)
-
-    if priority:
-        query = query.filter(WorkOrder.priority == priority)
-
-    if assigned_to:
-        query = query.filter(WorkOrder.assigned_to == assigned_to)
-
-    total = query.count()
-    orders = apply_pagination(query.order_by(desc(WorkOrder.created_at)), pagination.offset, pagination.limit).all()
-
-    items = [get_work_order_response(db, order) for order in orders]
-
-    return pagination.to_response(items, total)
+    service = WorkOrderService(db)
+    return service.list_work_orders(
+        pagination=pagination,
+        project_id=project_id,
+        workshop_id=workshop_id,
+        status=status,
+        priority=priority,
+        assigned_to=assigned_to,
+    )
 
 
 @router.post("/work-orders", response_model=WorkOrderResponse)
@@ -76,45 +53,8 @@ def create_work_order(
     """
     创建工单
     """
-    # 检查项目是否存在
-    if order_in.project_id:
-        project = get_or_404(db, Project, order_in.project_id, "项目不存在")
-
-    # 检查机台是否存在
-    if order_in.machine_id:
-        machine = get_or_404(db, Machine, order_in.machine_id, "机台不存在")
-
-    # 检查生产计划是否存在
-    if order_in.production_plan_id:
-        plan = get_or_404(db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
-
-    # 检查车间是否存在
-    if order_in.workshop_id:
-        workshop = get_or_404(db, Workshop, order_in.workshop_id, "车间不存在")
-
-    # 检查工位是否存在
-    if order_in.workstation_id:
-        workstation = get_or_404(db, Workstation, order_in.workstation_id, "工位不存在")
-        if workstation.workshop_id != order_in.workshop_id:
-            raise HTTPException(status_code=400, detail="工位不属于该车间")
-
-    # 生成工单编号
-    work_order_no = generate_work_order_no(db)
-
-    order = WorkOrder(
-        work_order_no=work_order_no,
-        status="PENDING",
-        progress=0,
-        completed_qty=0,
-        qualified_qty=0,
-        defect_qty=0,
-        actual_hours=0,
-        created_by=current_user.id,
-        **order_in.model_dump()
-    )
-    save_obj(db, order)
-
-    return get_work_order_response(db, order)
+    service = WorkOrderService(db)
+    return service.create_work_order(order_in, current_user_id=current_user.id)
 
 
 @router.get("/work-orders/{order_id}", response_model=WorkOrderResponse)
@@ -127,6 +67,5 @@ def read_work_order(
     """
     获取工单详情
     """
-    order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
-
-    return get_work_order_response(db, order)
+    service = WorkOrderService(db)
+    return service.get_work_order(order_id)
