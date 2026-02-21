@@ -13,12 +13,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.ecn import Ecn, EcnEvaluation
+from app.models.ecn import Ecn, EcnEvaluation, EcnApproval
 
 from .base import ApprovalAdapter
-
-if TYPE_CHECKING:
-    from app.models.ecn import EcnApproval
 
 
 
