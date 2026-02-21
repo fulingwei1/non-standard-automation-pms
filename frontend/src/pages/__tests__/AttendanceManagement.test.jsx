@@ -45,7 +45,7 @@ describe('AttendanceManagement', () => {
       total: 1,
       present: 1,
       leave: 0,
-      late: 0,
+      lateCount: 0,
     },
     {
       id: 2,
@@ -62,7 +62,7 @@ describe('AttendanceManagement', () => {
       total: 1,
       present: 1,
       leave: 0,
-      late: 1,
+      lateCount: 1,
     },
     {
       id: 3,
@@ -79,7 +79,7 @@ describe('AttendanceManagement', () => {
       total: 1,
       present: 0,
       leave: 1,
-      late: 0,
+      lateCount: 0,
     },
   ];
 
