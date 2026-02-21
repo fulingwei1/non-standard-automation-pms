@@ -233,8 +233,8 @@ class PipelineBreakAnalysisService:
         cutoff_date = date.today() - timedelta(days=threshold)
 
         contracts = self.db.query(Contract).filter(
-            Contract.sign_date >= start_date,
-            Contract.sign_date <= end_date,
+            Contract.signing_date >= start_date,
+            Contract.signing_date <= end_date,
             Contract.status == 'SIGNED'
         ).all()
 
@@ -244,7 +244,7 @@ class PipelineBreakAnalysisService:
             has_project = contract.project_id is not None
 
             if not has_project:
-                sign_date = contract.sign_date
+                sign_date = contract.signing_date
                 if sign_date and sign_date < cutoff_date:
                     days_since = (date.today() - sign_date).days
                     break_records.append({
@@ -278,8 +278,8 @@ class PipelineBreakAnalysisService:
         from app.models.project import ProjectMilestone
         milestones = self.db.query(ProjectMilestone).filter(
             ProjectMilestone.status == 'COMPLETED',
-            ProjectMilestone.completed_date >= start_date,
-            ProjectMilestone.completed_date <= end_date
+            ProjectMilestone.actual_date >= start_date,
+            ProjectMilestone.actual_date <= end_date
         ).all()
 
         break_records = []
@@ -295,7 +295,7 @@ class PipelineBreakAnalysisService:
                 has_invoice = len(project.contract.invoices) > 0 if project.contract.invoices else False
 
             if not has_invoice:
-                completed_date = milestone.completed_date
+                completed_date = milestone.actual_date
                 if completed_date and completed_date < cutoff_date:
                     days_since = (date.today() - completed_date).days
                     break_records.append({
@@ -327,8 +327,8 @@ class PipelineBreakAnalysisService:
         cutoff_date = date.today() - timedelta(days=threshold)
 
         invoices = self.db.query(Invoice).filter(
-            Invoice.invoice_date >= start_date,
-            Invoice.invoice_date <= end_date,
+            Invoice.issue_date >= start_date,
+            Invoice.issue_date <= end_date,
             Invoice.status == 'ISSUED'
         ).all()
 
@@ -341,7 +341,7 @@ class PipelineBreakAnalysisService:
 
             if not is_fully_paid:
                 # 检查是否超过到期日+阈值
-                due_date = invoice.due_date or invoice.invoice_date
+                due_date = invoice.due_date or invoice.issue_date
                 if due_date and due_date < cutoff_date:
                     days_since = (date.today() - due_date).days
                     break_records.append({
