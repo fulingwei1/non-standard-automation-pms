@@ -14,6 +14,7 @@ from fastapi import APIRouter
 from .orders_refactored import router as orders_refactored_router
 from .receipts import router as receipts_router
 from .requests_refactored import router as requests_refactored_router
+from .utils import generate_request_no
 from .workflow import router as workflow_router
 
 router = APIRouter()
