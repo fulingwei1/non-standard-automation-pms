@@ -149,7 +149,7 @@ class ProjectReportGenerator:
             db.query(ProjectMilestone)
             .filter(
                 ProjectMilestone.project_id == project_id,
-                ProjectMilestone.milestone_date.between(start_date, end_date),
+                ProjectMilestone.planned_date.between(start_date, end_date),
             )
             .all()
         )
@@ -173,8 +173,8 @@ class ProjectReportGenerator:
                     "id": m.id,
                     "name": getattr(m, "milestone_name", f"里程碑{m.id}"),
                     "planned_date": (
-                        m.milestone_date.isoformat()
-                        if hasattr(m, "milestone_date") and m.milestone_date
+                        m.planned_date.isoformat()
+                        if hasattr(m, "planned_date") and m.planned_date
                         else None
                     ),
                     "actual_date": (
