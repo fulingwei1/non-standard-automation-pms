@@ -126,7 +126,6 @@ class TestExceptionEventsService(unittest.TestCase):
     # ========== get_exception_event() 测试 ==========
     # 注意：服务代码尝试joinedload不存在的关系，会失败
 
-    @unittest.expectedFailure
     def test_get_exception_event_found(self):
         """测试获取单个事件（预期失败 - joinedload不存在的关系）"""
         event = create_mock_event(1, "测试事件")
@@ -141,7 +140,6 @@ class TestExceptionEventsService(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.id, 1)
 
-    @unittest.expectedFailure
     def test_get_exception_event_not_found(self):
         """测试获取单个事件（预期失败 - joinedload不存在的关系）"""
         query_mock = MagicMock()
@@ -178,7 +176,6 @@ class TestExceptionEventsService(unittest.TestCase):
 
     # ========== update_exception_event() 测试 ==========
 
-    @unittest.expectedFailure
     def test_update_exception_event_success(self):
         """测试更新异常事件（预期失败 - joinedload不存在的关系）"""
         existing_event = create_mock_event(1, "旧标题", severity="low")
@@ -200,7 +197,6 @@ class TestExceptionEventsService(unittest.TestCase):
         self.assertEqual(result.updated_by, 1)
         self.db_mock.commit.assert_called_once()
 
-    @unittest.expectedFailure
     def test_update_exception_event_not_found(self):
         """测试更新异常事件（预期失败 - joinedload不存在的关系）"""
         query_mock = MagicMock()
@@ -243,7 +239,6 @@ class TestExceptionEventsService(unittest.TestCase):
         self.assertEqual(result.resolved_by, 1)
         self.db_mock.commit.assert_called_once()
 
-    @unittest.expectedFailure
     def test_resolve_exception_event_already_resolved(self):
         """测试解决已解决的事件（预期失败 - joinedload不存在的关系）"""
         existing_event = create_mock_event(1, "已解决", "resolved")
@@ -307,7 +302,6 @@ class TestExceptionEventsService(unittest.TestCase):
         
         self.assertEqual(result.status, "reopened")
 
-    @unittest.expectedFailure
     def test_verify_exception_event_not_resolved(self):
         """测试验证未解决的事件（预期失败 - joinedload不存在的关系）"""
         existing_event = create_mock_event(1, "待处理", "OPEN")

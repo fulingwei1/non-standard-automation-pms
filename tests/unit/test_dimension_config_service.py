@@ -841,7 +841,6 @@ class TestDimensionConfigServiceCore(unittest.TestCase):
         # 验证
         self.assertFalse(result['is_manager'])
 
-    @unittest.expectedFailure  # Bug in源代码: Employee.department_id should be Employee.department
     def test_get_department_configs_success(self):
         """测试成功获取部门配置"""
         # Mock 用户

@@ -53,10 +53,7 @@ class ExceptionEventsService:
     ) -> PaginatedResponse:
         """获取异常事件列表"""
         query = self.db.query(ExceptionEvent).options(
-            joinedload(ExceptionEvent.project),
-            joinedload(ExceptionEvent.reported_by_user),
-            joinedload(ExceptionEvent.assigned_user),
-            joinedload(ExceptionEvent.resolved_by_user)
+            joinedload(ExceptionEvent.project)
         )
 
         # 搜索条件
@@ -107,9 +104,6 @@ class ExceptionEventsService:
         """获取单个异常事件"""
         return self.db.query(ExceptionEvent).options(
             joinedload(ExceptionEvent.project),
-            joinedload(ExceptionEvent.reported_by_user),
-            joinedload(ExceptionEvent.assigned_user),
-            joinedload(ExceptionEvent.resolved_by_user),
             joinedload(ExceptionEvent.actions),
             joinedload(ExceptionEvent.escalations)
         ).filter(ExceptionEvent.id == event_id).first()
@@ -121,8 +115,8 @@ class ExceptionEventsService:
     ) -> ExceptionEvent:
         """创建异常事件"""
         exception_event = ExceptionEvent(
-            title=event_data.title,
-            description=event_data.description,
+            event_title=event_data.title,
+            event_description=event_data.description,
             event_type=event_data.event_type,
             severity=event_data.severity,
             project_id=event_data.project_id,
@@ -242,11 +236,10 @@ class ExceptionEventsService:
         exception_action = ExceptionAction(
             event_id=event_id,
             action_type=action_data["action_type"],
-            description=action_data["description"],
-            assigned_to=action_data.get("assigned_to"),
-            deadline=action_data.get("deadline"),
-            created_by=current_user.id,
-            status="pending"
+            action_content=action_data.get("description", ""),
+            old_status=action_data.get("old_status"),
+            new_status=action_data.get("new_status"),
+            created_by=current_user.id
         )
 
         save_obj(self.db, exception_action)
@@ -302,8 +295,8 @@ class ExceptionEventsService:
             )
 
         exception_event = ExceptionEvent(
-            title=f"【异常】{issue.title}",
-            description=issue.description,
+            event_title=f"【异常】{issue.title}",
+            event_description=issue.description,
             event_type="quality_issue",
             severity=self._determine_exception_severity(issue),
             project_id=issue.project_id,

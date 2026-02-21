@@ -245,7 +245,7 @@ class DimensionConfigService:
 
         # 获取部门内所有工程师的岗位类型
         employees = self.db.query(Employee).filter(
-            Employee.department_id == dept.id,
+            Employee.department == dept.id,
             Employee.is_active
         ).all()
 
