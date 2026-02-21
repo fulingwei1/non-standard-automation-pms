@@ -50,8 +50,8 @@ class BusinessSupportReportsService:
         new_contracts = (
             self.db.query(Contract)
             .filter(
-                Contract.signed_date >= start_date,
-                Contract.signed_date <= end_date,
+                Contract.signing_date >= start_date,
+                Contract.signing_date <= end_date,
                 Contract.status.in_(["SIGNED", "EXECUTING"]),
             )
             .all()
@@ -222,7 +222,7 @@ class BusinessSupportReportsService:
         new_contracts = (
             self.db.query(Contract)
             .filter(
-                func.date(Contract.signed_date) == report_dt,
+                func.date(Contract.signing_date) == report_dt,
                 Contract.status.in_(["SIGNED", "EXECUTING"]),
             )
             .all()
