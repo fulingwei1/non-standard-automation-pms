@@ -315,9 +315,9 @@ class ApprovalAdapter(ABC):
 
         # 其次尝试从关联的销售合同获取
         if hasattr(project, 'contract_id') and project.contract_id:
-            from app.models.sales import SalesContract
-            contract = self.db.query(SalesContract).filter(
-                SalesContract.id == project.contract_id
+            from app.models.sales.contracts import Contract
+            contract = self.db.query(Contract).filter(
+                Contract.id == project.contract_id
             ).first()
             if contract and hasattr(contract, 'sales_id') and contract.sales_id:
                 return contract.sales_id
