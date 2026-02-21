@@ -84,18 +84,18 @@ class AlertStatisticsService:
             ).label('max_response_seconds')
         ).first()
 
-        # 解决时间统计
+        # 解决时间统计（使用handle_end_at）
         resolution_time_stats = base_query.filter(
-            AlertRecord.resolved_at.isnot(None)
+            AlertRecord.handle_end_at.isnot(None)
         ).with_entities(
             func.avg(
-                func.extract('epoch', AlertRecord.resolved_at - AlertRecord.created_at)
+                func.extract('epoch', AlertRecord.handle_end_at - AlertRecord.created_at)
             ).label('avg_resolution_seconds'),
             func.min(
-                func.extract('epoch', AlertRecord.resolved_at - AlertRecord.created_at)
+                func.extract('epoch', AlertRecord.handle_end_at - AlertRecord.created_at)
             ).label('min_resolution_seconds'),
             func.max(
-                func.extract('epoch', AlertRecord.resolved_at - AlertRecord.created_at)
+                func.extract('epoch', AlertRecord.handle_end_at - AlertRecord.created_at)
             ).label('max_resolution_seconds')
         ).first()
 
@@ -202,11 +202,10 @@ class AlertStatisticsService:
 
         # 严重告警列表
         critical_alerts = self.db.query(AlertRecord).options(
-            joinedload(AlertRecord.project),
-            joinedload(AlertRecord.assigned_user)
+            joinedload(AlertRecord.project)
         ).filter(
             AlertRecord.severity.in_(["critical", "high"]),
-            AlertRecord.status.in_(["pending", "acknowledged"])
+            AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"])
         )
 
         if project_id:
@@ -219,20 +218,20 @@ class AlertStatisticsService:
 
         return {
             "today_summary": {
-                "total": today_counts.get("pending", 0) + today_counts.get("acknowledged", 0),
-                "pending": today_counts.get("pending", 0),
-                "acknowledged": today_counts.get("acknowledged", 0),
-                "resolved": today_counts.get("resolved", 0)
+                "total": today_counts.get("PENDING", 0) + today_counts.get("ACKNOWLEDGED", 0),
+                "pending": today_counts.get("PENDING", 0),
+                "acknowledged": today_counts.get("ACKNOWLEDGED", 0),
+                "resolved": today_counts.get("RESOLVED", 0)
             },
             "week_trend": week_trend,
             "critical_alerts": [
                 {
                     "id": alert.id,
-                    "title": alert.title,
+                    "title": alert.alert_title,
                     "severity": alert.severity,
                     "status": alert.status,
                     "project": alert.project.name if alert.project else None,
-                    "assigned_to": alert.assigned_user.name if alert.assigned_user else None,
+                    "handler": alert.handler_id,
                     "created_at": alert.created_at.isoformat()
                 }
                 for alert in critical_alerts
@@ -352,8 +351,8 @@ class AlertStatisticsService:
             week_data.append({
                 "date": current_day.isoformat(),
                 "total": sum(day_counts.values()),
-                "pending": day_counts.get("pending", 0),
-                "resolved": day_counts.get("resolved", 0)
+                "pending": day_counts.get("PENDING", 0),
+                "resolved": day_counts.get("RESOLVED", 0)
             })
 
             current_day = day_end
@@ -383,7 +382,7 @@ class AlertStatisticsService:
         total_alerts = base_query.count()
 
         # 解决率
-        resolved_count = base_query.filter(AlertRecord.status == "resolved").count()
+        resolved_count = base_query.filter(AlertRecord.status == "RESOLVED").count()
         resolution_rate = (resolved_count / total_alerts * 100) if total_alerts > 0 else 0
 
         # 平均响应时间和解决时间
@@ -394,9 +393,9 @@ class AlertStatisticsService:
         ).scalar()
 
         avg_resolution_time = base_query.filter(
-            AlertRecord.resolved_at.isnot(None)
+            AlertRecord.handle_end_at.isnot(None)
         ).with_entities(
-            func.avg(func.extract('epoch', AlertRecord.resolved_at - AlertRecord.created_at))
+            func.avg(func.extract('epoch', AlertRecord.handle_end_at - AlertRecord.created_at))
         ).scalar()
 
         return {
