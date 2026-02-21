@@ -347,113 +347,91 @@ class TestStatisticsAnalysis(unittest.TestCase):
 
     def test_get_exception_statistics_full(self):
         """测试完整的异常统计"""
-        # Mock总数查询
-        mock_main_query = MagicMock()
-        mock_main_query.filter.return_value = mock_main_query
-        mock_main_query.count.return_value = 100
-        
-        # Mock分组查询
-        mock_group_query = MagicMock()
-        
-        # 为不同的group_by调用设置不同的返回值
-        type_stats_result = MagicMock()
-        type_stats_result.all.return_value = [
-            ("EQUIPMENT_FAILURE", 40), ("QUALITY_ISSUE", 30), ("SAFETY_INCIDENT", 30)
-        ]
-        
-        level_stats_result = MagicMock()
-        level_stats_result.all.return_value = [
-            ("HIGH", 20), ("MEDIUM", 50), ("LOW", 30)
-        ]
-        
-        status_stats_result = MagicMock()
-        status_stats_result.all.return_value = [
-            ("REPORTED", 10), ("PROCESSING", 30), ("RESOLVED", 60)
-        ]
-        
-        top_exceptions_result = MagicMock()
-        top_exceptions_result.all.return_value = [
-            ("EQUIPMENT_FAILURE", "设备故障", 15),
-            ("QUALITY_ISSUE", "质量问题", 10)
-        ]
-        
-        # 设置query的side_effect，让每次调用都返回不同的mock对象
-        def query_side_effect(*args, **kwargs):
-            model = args[0] if args else None
-            if model == ProductionException:
-                q = MagicMock()
-                q.filter.return_value = q
-                q.count.return_value = 100
-                
-                # 为group_by设置不同的返回值
-                call_count = [0]
-                def group_by_side_effect(*args):
-                    call_count[0] += 1
-                    if call_count[0] == 1:
-                        return type_stats_result
-                    elif call_count[0] == 2:
-                        return level_stats_result
-                    elif call_count[0] == 3:
-                        return status_stats_result
-                    else:
-                        return top_exceptions_result
-                
-                q.group_by.side_effect = group_by_side_effect
-                return q
-            return MagicMock()
-        
-        self.db.query.side_effect = query_side_effect
-        
-        # Mock流程时长查询
-        flow1 = ExceptionHandlingFlow(total_duration_minutes=60)
-        flow2 = ExceptionHandlingFlow(total_duration_minutes=120)
-        
-        mock_flow_query = MagicMock()
-        mock_flow_query.join.return_value = mock_flow_query
-        mock_flow_query.filter.return_value = mock_flow_query
-        mock_flow_query.all.return_value = [flow1, flow2]
-        mock_flow_query.count.return_value = 20  # 升级数量
-        
-        # 重新设置db.query为更灵活的实现
-        def smart_query(*args, **kwargs):
-            model = args[0] if args else None
-            if model == ExceptionHandlingFlow:
-                return mock_flow_query
-            else:
-                q = MagicMock()
-                q.filter.return_value = q
-                q.count.return_value = 100
-                
-                call_count = [0]
-                def group_by_side_effect(*args):
-                    call_count[0] += 1
-                    if call_count[0] == 1:
-                        return type_stats_result
-                    elif call_count[0] == 2:
-                        return level_stats_result
-                    elif call_count[0] == 3:
-                        return status_stats_result
-                    else:
-                        return top_exceptions_result
-                
-                q.group_by.side_effect = group_by_side_effect
-                return q
-        
-        self.db.query.side_effect = smart_query
-        
-        result = self.service.get_exception_statistics(
-            start_date=datetime.now() - timedelta(days=30),
-            end_date=datetime.now(),
-        )
-        
-        # 验证
-        self.assertEqual(result.total_count, 100)
-        self.assertEqual(result.by_type["EQUIPMENT_FAILURE"], 40)
-        self.assertEqual(result.by_level["HIGH"], 20)
-        self.assertEqual(result.by_status["RESOLVED"], 60)
-        self.assertEqual(result.avg_resolution_time_minutes, 90)  # (60+120)/2
-        self.assertEqual(result.escalation_rate, 20)  # 20/100*100
-        self.assertEqual(len(result.top_exceptions), 2)
+        # 使用patch直接mock数据库查询方法
+        with patch.object(self.db, 'query') as mock_query:
+            # Mock总数查询 - ProductionException的count
+            mock_exception_base = MagicMock()
+            mock_exception_base.filter.return_value = mock_exception_base
+            mock_exception_base.count.return_value = 100
+            
+            # Mock类型统计
+            mock_type_query = MagicMock()
+            mock_type_query.filter.return_value = mock_type_query
+            mock_type_query.group_by.return_value.all.return_value = [
+                ("EQUIPMENT_FAILURE", 40), ("QUALITY_ISSUE", 30), ("SAFETY_INCIDENT", 30)
+            ]
+            
+            # Mock级别统计
+            mock_level_query = MagicMock()
+            mock_level_query.filter.return_value = mock_level_query
+            mock_level_query.group_by.return_value.all.return_value = [
+                ("HIGH", 20), ("MEDIUM", 50), ("LOW", 30)
+            ]
+            
+            # Mock状态统计
+            mock_status_query = MagicMock()
+            mock_status_query.filter.return_value = mock_status_query
+            mock_status_query.group_by.return_value.all.return_value = [
+                ("REPORTED", 10), ("PROCESSING", 30), ("RESOLVED", 60)
+            ]
+            
+            # Mock TOP异常统计
+            mock_top_query = MagicMock()
+            mock_top_query.filter.return_value = mock_top_query
+            mock_top_query.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+                ("EQUIPMENT_FAILURE", "设备故障", 15),
+                ("QUALITY_ISSUE", "质量问题", 10)
+            ]
+            
+            # Mock流程查询 - 平均解决时长
+            flow1 = ExceptionHandlingFlow(total_duration_minutes=60)
+            flow2 = ExceptionHandlingFlow(total_duration_minutes=120)
+            
+            mock_flow_avg = MagicMock()
+            mock_flow_avg.join.return_value = mock_flow_avg
+            mock_flow_avg.filter.return_value = mock_flow_avg
+            mock_flow_avg.all.return_value = [flow1, flow2]
+            
+            # Mock流程查询 - 升级数量
+            mock_flow_escalation = MagicMock()
+            mock_flow_escalation.join.return_value = mock_flow_escalation
+            mock_flow_escalation.filter.return_value = mock_flow_escalation
+            mock_flow_escalation.count.return_value = 20
+            
+            # 设置query的side_effect，根据调用次数返回不同的mock
+            call_count = [0]
+            def query_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:  # 第一次：总数查询
+                    return mock_exception_base
+                elif call_count[0] == 2:  # 第二次：类型统计
+                    return mock_type_query
+                elif call_count[0] == 3:  # 第三次：级别统计
+                    return mock_level_query
+                elif call_count[0] == 4:  # 第四次：状态统计
+                    return mock_status_query
+                elif call_count[0] == 5:  # 第五次：平均解决时长
+                    return mock_flow_avg
+                elif call_count[0] == 6:  # 第六次：升级数量
+                    return mock_flow_escalation
+                else:  # 第七次：TOP异常
+                    return mock_top_query
+            
+            mock_query.side_effect = query_side_effect
+            
+            result = self.service.get_exception_statistics(
+                start_date=datetime.now() - timedelta(days=30),
+                end_date=datetime.now(),
+            )
+            
+            # 验证
+            self.assertEqual(result.total_count, 100)
+            self.assertEqual(result.by_type["EQUIPMENT_FAILURE"], 40)
+            self.assertEqual(result.by_level["HIGH"], 20)
+            self.assertEqual(result.by_status["RESOLVED"], 60)
+            self.assertEqual(result.avg_resolution_time_minutes, 90)  # (60+120)/2
+            self.assertEqual(result.escalation_rate, 20)  # 20/100*100
+            self.assertEqual(len(result.top_exceptions), 2)
 
 
 class TestPDCAManagement(unittest.TestCase):
@@ -718,35 +696,58 @@ class TestEdgeCases(unittest.TestCase):
     def test_statistics_with_none_duration(self):
         """测试包含None时长的统计"""
         flow1 = ExceptionHandlingFlow(total_duration_minutes=60)
-        flow2 = ExceptionHandlingFlow(total_duration_minutes=None)  # None值会被isnot(None)过滤掉
         flow3 = ExceptionHandlingFlow(total_duration_minutes=120)
         
-        # Mock流程查询 - 只返回非None的flow
-        mock_flow_query = MagicMock()
-        mock_flow_query.join.return_value = mock_flow_query
-        mock_flow_query.filter.return_value = mock_flow_query
-        mock_flow_query.all.return_value = [flow1, flow3]  # 只返回有时长的
-        mock_flow_query.count.return_value = 0
-        
-        # Mock异常查询
-        mock_exception_query = MagicMock()
-        mock_exception_query.filter.return_value = mock_exception_query
-        mock_exception_query.count.return_value = 3
-        mock_exception_query.group_by.return_value.all.return_value = []
-        
-        def query_side_effect(*args, **kwargs):
-            model = args[0] if args else None
-            if model == ExceptionHandlingFlow:
-                return mock_flow_query
-            else:
-                return mock_exception_query
-        
-        self.db.query.side_effect = query_side_effect
-        
-        result = self.service.get_exception_statistics(None, None)
-        
-        # 应该只计算非None的值：(60+120)/2 = 90
-        self.assertEqual(result.avg_resolution_time_minutes, 90)
+        # 使用patch直接mock
+        with patch.object(self.db, 'query') as mock_query:
+            # Mock异常总数查询
+            mock_exception_base = MagicMock()
+            mock_exception_base.filter.return_value = mock_exception_base
+            mock_exception_base.count.return_value = 3
+            
+            # Mock类型、级别、状态统计（返回空）
+            mock_stats_query = MagicMock()
+            mock_stats_query.filter.return_value = mock_stats_query
+            mock_stats_query.group_by.return_value.all.return_value = []
+            
+            # Mock流程查询 - 只返回非None的flow
+            mock_flow_avg = MagicMock()
+            mock_flow_avg.join.return_value = mock_flow_avg
+            mock_flow_avg.filter.return_value = mock_flow_avg
+            mock_flow_avg.all.return_value = [flow1, flow3]  # 只返回有时长的
+            
+            # Mock升级数量查询
+            mock_flow_escalation = MagicMock()
+            mock_flow_escalation.join.return_value = mock_flow_escalation
+            mock_flow_escalation.filter.return_value = mock_flow_escalation
+            mock_flow_escalation.count.return_value = 0
+            
+            # Mock TOP异常查询
+            mock_top_query = MagicMock()
+            mock_top_query.filter.return_value = mock_top_query
+            mock_top_query.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+            
+            # 设置query的side_effect
+            call_count = [0]
+            def query_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:  # 总数查询
+                    return mock_exception_base
+                elif call_count[0] in [2, 3, 4]:  # 类型、级别、状态统计
+                    return mock_stats_query
+                elif call_count[0] == 5:  # 平均解决时长
+                    return mock_flow_avg
+                elif call_count[0] == 6:  # 升级数量
+                    return mock_flow_escalation
+                else:  # TOP异常
+                    return mock_top_query
+            
+            mock_query.side_effect = query_side_effect
+            
+            result = self.service.get_exception_statistics(None, None)
+            
+            # 应该只计算非None的值：(60+120)/2 = 90
+            self.assertEqual(result.avg_resolution_time_minutes, 90)
 
 
 if __name__ == "__main__":
