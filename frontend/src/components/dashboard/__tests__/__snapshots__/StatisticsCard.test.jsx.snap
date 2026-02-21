@@ -1,0 +1,119 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StatisticsCard > Snapshot Tests > matches snapshot for basic card 1`] = `
+<div>
+  <div
+    class="statistics-card"
+    data-color="blue"
+  >
+    <div
+      class="header"
+    >
+      <h3>
+        销售额
+      </h3>
+    </div>
+    <div
+      class="value"
+    >
+      ¥100,000
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatisticsCard > Snapshot Tests > matches snapshot with custom color 1`] = `
+<div>
+  <div
+    class="statistics-card"
+    data-color="green"
+  >
+    <div
+      class="header"
+    >
+      <svg
+        data-testid="mock-icon"
+      >
+        <circle />
+      </svg>
+      <h3>
+        新客户
+      </h3>
+    </div>
+    <div
+      class="value"
+    >
+      85
+    </div>
+    <div
+      class="trend positive"
+    >
+      +
+      8
+      %
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatisticsCard > Snapshot Tests > matches snapshot with icon and trend 1`] = `
+<div>
+  <div
+    class="statistics-card"
+    data-color="blue"
+  >
+    <div
+      class="header"
+    >
+      <svg
+        data-testid="mock-icon"
+      >
+        <circle />
+      </svg>
+      <h3>
+        订单数
+      </h3>
+    </div>
+    <div
+      class="value"
+    >
+      250
+    </div>
+    <div
+      class="trend positive"
+    >
+      +
+      12
+      %
+    </div>
+  </div>
+</div>
+`;
+
+exports[`StatisticsCard > Snapshot Tests > matches snapshot with negative trend 1`] = `
+<div>
+  <div
+    class="statistics-card"
+    data-color="red"
+  >
+    <div
+      class="header"
+    >
+      <h3>
+        退货率
+      </h3>
+    </div>
+    <div
+      class="value"
+    >
+      3.5%
+    </div>
+    <div
+      class="trend negative"
+    >
+      -2.5
+      %
+    </div>
+  </div>
+</div>
+`;

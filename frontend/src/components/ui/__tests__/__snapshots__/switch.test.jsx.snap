@@ -1,0 +1,102 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Switch > Snapshot Tests > matches snapshot for checked switch 1`] = `
+<div>
+  <div
+    class="switch-wrapper "
+  >
+    <button
+      aria-checked="true"
+      class="switch checked "
+      role="switch"
+    >
+      <span
+        class="switch-thumb"
+      />
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Switch > Snapshot Tests > matches snapshot for unchecked switch 1`] = `
+<div>
+  <div
+    class="switch-wrapper "
+  >
+    <button
+      aria-checked="false"
+      class="switch  "
+      role="switch"
+    >
+      <span
+        class="switch-thumb"
+      />
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Switch > Snapshot Tests > matches snapshot when disabled 1`] = `
+<div>
+  <div
+    class="switch-wrapper "
+  >
+    <button
+      aria-checked="false"
+      class="switch  disabled"
+      disabled=""
+      role="switch"
+    >
+      <span
+        class="switch-thumb"
+      />
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Switch > Snapshot Tests > matches snapshot with all props 1`] = `
+<div>
+  <div
+    class="switch-wrapper custom-switch"
+  >
+    <button
+      aria-checked="true"
+      class="switch checked "
+      role="switch"
+    >
+      <span
+        class="switch-thumb"
+      />
+    </button>
+    <span
+      class="switch-label"
+    >
+      自动保存
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Switch > Snapshot Tests > matches snapshot with label 1`] = `
+<div>
+  <div
+    class="switch-wrapper "
+  >
+    <button
+      aria-checked="false"
+      class="switch  "
+      role="switch"
+    >
+      <span
+        class="switch-thumb"
+      />
+    </button>
+    <span
+      class="switch-label"
+    >
+      启用暗黑模式
+    </span>
+  </div>
+</div>
+`;

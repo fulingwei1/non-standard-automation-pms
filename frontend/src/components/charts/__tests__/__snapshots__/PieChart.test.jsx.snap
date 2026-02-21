@@ -1,0 +1,293 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PieChart > Snapshot Tests > matches snapshot for basic pie chart 1`] = `
+<div>
+  <div
+    class="pie-chart"
+    data-testid="pie-chart"
+  >
+    <svg
+      data-testid="chart-svg"
+      height="300"
+      width="400"
+    >
+      <g
+        data-label="产品A"
+        data-value="300"
+      />
+      <g
+        data-label="产品B"
+        data-value="200"
+      />
+      <g
+        data-label="产品C"
+        data-value="150"
+      />
+    </svg>
+    <div
+      class="legend"
+      data-testid="legend"
+    >
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(59, 130, 246);"
+        />
+        <span
+          class="label"
+        >
+          产品A
+        </span>
+        <span
+          class="value"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(16, 185, 129);"
+        />
+        <span
+          class="label"
+        >
+          产品B
+        </span>
+        <span
+          class="value"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(245, 158, 11);"
+        />
+        <span
+          class="label"
+        >
+          产品C
+        </span>
+        <span
+          class="value"
+        >
+          150
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`PieChart > Snapshot Tests > matches snapshot with custom dimensions 1`] = `
+<div>
+  <div
+    class="pie-chart"
+    data-testid="pie-chart"
+  >
+    <svg
+      data-testid="chart-svg"
+      height="400"
+      width="500"
+    >
+      <g
+        data-label="产品A"
+        data-value="300"
+      />
+      <g
+        data-label="产品B"
+        data-value="200"
+      />
+      <g
+        data-label="产品C"
+        data-value="150"
+      />
+    </svg>
+    <div
+      class="legend"
+      data-testid="legend"
+    >
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(59, 130, 246);"
+        />
+        <span
+          class="label"
+        >
+          产品A
+        </span>
+        <span
+          class="value"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(16, 185, 129);"
+        />
+        <span
+          class="label"
+        >
+          产品B
+        </span>
+        <span
+          class="value"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(245, 158, 11);"
+        />
+        <span
+          class="label"
+        >
+          产品C
+        </span>
+        <span
+          class="value"
+        >
+          150
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`PieChart > Snapshot Tests > matches snapshot with title 1`] = `
+<div>
+  <div
+    class="pie-chart"
+    data-testid="pie-chart"
+  >
+    <h3>
+      产品销售分布
+    </h3>
+    <svg
+      data-testid="chart-svg"
+      height="300"
+      width="400"
+    >
+      <g
+        data-label="产品A"
+        data-value="300"
+      />
+      <g
+        data-label="产品B"
+        data-value="200"
+      />
+      <g
+        data-label="产品C"
+        data-value="150"
+      />
+    </svg>
+    <div
+      class="legend"
+      data-testid="legend"
+    >
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(59, 130, 246);"
+        />
+        <span
+          class="label"
+        >
+          产品A
+        </span>
+        <span
+          class="value"
+        >
+          300
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(16, 185, 129);"
+        />
+        <span
+          class="label"
+        >
+          产品B
+        </span>
+        <span
+          class="value"
+        >
+          200
+        </span>
+      </div>
+      <div
+        class="legend-item"
+      >
+        <span
+          class="color-box"
+          style="background-color: rgb(245, 158, 11);"
+        />
+        <span
+          class="label"
+        >
+          产品C
+        </span>
+        <span
+          class="value"
+        >
+          150
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`PieChart > Snapshot Tests > matches snapshot without legend 1`] = `
+<div>
+  <div
+    class="pie-chart"
+    data-testid="pie-chart"
+  >
+    <svg
+      data-testid="chart-svg"
+      height="300"
+      width="400"
+    >
+      <g
+        data-label="产品A"
+        data-value="300"
+      />
+      <g
+        data-label="产品B"
+        data-value="200"
+      />
+      <g
+        data-label="产品C"
+        data-value="150"
+      />
+    </svg>
+  </div>
+</div>
+`;

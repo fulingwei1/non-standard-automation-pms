@@ -1,0 +1,99 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Avatar > Snapshot Tests > matches snapshot with custom styling 1`] = `
+<div>
+  <div
+    class="avatar w-12 h-12 text-base rounded-full shadow-lg"
+  >
+    <img
+      alt="avatar"
+      class="avatar-image"
+      src="/avatar.jpg"
+    />
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with different sizes 1`] = `
+<div>
+  <div
+    class="avatar w-8 h-8 text-xs "
+  >
+    <span
+      class="avatar-fallback"
+    >
+      A
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with different sizes 2`] = `
+<div>
+  <div
+    class="avatar w-10 h-10 text-sm "
+  >
+    <span
+      class="avatar-fallback"
+    >
+      A
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with different sizes 3`] = `
+<div>
+  <div
+    class="avatar w-12 h-12 text-base "
+  >
+    <span
+      class="avatar-fallback"
+    >
+      A
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with different sizes 4`] = `
+<div>
+  <div
+    class="avatar w-16 h-16 text-lg "
+  >
+    <span
+      class="avatar-fallback"
+    >
+      A
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with fallback 1`] = `
+<div>
+  <div
+    class="avatar w-10 h-10 text-sm "
+  >
+    <span
+      class="avatar-fallback"
+    >
+      AB
+    </span>
+  </div>
+</div>
+`;
+
+exports[`Avatar > Snapshot Tests > matches snapshot with image 1`] = `
+<div>
+  <div
+    class="avatar w-10 h-10 text-sm "
+  >
+    <img
+      alt="用户"
+      class="avatar-image"
+      src="/avatar.jpg"
+    />
+  </div>
+</div>
+`;
