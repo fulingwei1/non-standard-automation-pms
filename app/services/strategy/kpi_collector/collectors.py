@@ -118,7 +118,7 @@ def collect_finance_metrics(
         # 合同总金额
         query = db.query(func.sum(Contract.total_amount))
         if "year" in filters:
-            query = query.filter(func.year(Contract.signed_date) == filters["year"])
+            query = query.filter(func.year(Contract.signing_date) == filters["year"])
         if "customer_id" in filters:
             query = query.filter(Contract.customer_id == filters["customer_id"])
         result = query.scalar()
@@ -151,14 +151,14 @@ def collect_finance_metrics(
         if not project_id:
             return None
         project = db.query(Project).filter(Project.id == project_id).first()
-        if not project or not project.contract_amount:
+        if not project:
             return None
+        if not project.contract_amount or project.contract_amount == 0:
+            return Decimal(0)
         total_cost = db.query(func.sum(ProjectCost.amount)).filter(
             ProjectCost.project_id == project_id
         ).scalar() or 0
         contract_amount = float(project.contract_amount)
-        if contract_amount == 0:
-            return Decimal(0)
         profit_margin = (contract_amount - float(total_cost)) / contract_amount * 100
         return Decimal(str(round(profit_margin, 2)))
 
