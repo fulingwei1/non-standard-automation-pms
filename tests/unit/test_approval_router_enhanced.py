@@ -1,694 +1,894 @@
 # -*- coding: utf-8 -*-
 """
-审批路由服务增强单元测试
+审批路由决策服务增强测试
 
-测试覆盖：
-- 流程选择逻辑
-- 条件表达式评估（所有操作符）
-- 审批人解析（所有类型）
-- 节点路由决策
-- 边界条件和异常处理
+测试 app/services/approval_engine/router.py 的所有核心方法
+目标覆盖率: 70%+
 """
 
-import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
-from typing import Dict, Any
+import re
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.approval_engine.router import ApprovalRouterService
 
 
-class TestApprovalRouterService(unittest.TestCase):
-    """审批路由服务测试"""
+@pytest.fixture
+def mock_db():
+    """Mock 数据库会话"""
+    return MagicMock()
 
-    def setUp(self):
-        """测试前准备"""
-        self.db_mock = MagicMock()
-        self.service = ApprovalRouterService(self.db_mock)
 
-    def tearDown(self):
-        """测试后清理"""
-        self.db_mock.reset_mock()
+@pytest.fixture
+def router_service(mock_db):
+    """创建路由服务实例"""
+    return ApprovalRouterService(mock_db)
 
-    # ==================== 流程选择测试 ====================
 
-    def test_select_flow_with_matching_rule(self):
-        """测试选择匹配的流程"""
-        # 准备数据
-        rule1 = MagicMock()
-        rule1.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": "<=", "value": 1000}]}
-        flow1 = MagicMock()
-        flow1.id = 1
-        flow1.flow_name = "小额流程"
-        rule1.flow = flow1
+@pytest.fixture
+def sample_context():
+    """创建示例上下文数据"""
+    return {
+        "form_data": {
+            "leave_days": 2,
+            "amount": 50000,
+            "department": "engineering",
+            "reason": "项目需求",
+            "approver_id": 100,
+        },
+        "initiator": {
+            "id": 1,
+            "dept_id": 10,
+            "reporting_to": 20,
+            "name": "张三",
+        },
+        "entity": {
+            "id": 101,
+            "gross_margin": 0.25,
+            "total_amount": 100000,
+        },
+    }
 
-        rule2 = MagicMock()
-        rule2.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 1000}]}
-        flow2 = MagicMock()
-        flow2.id = 2
-        flow2.flow_name = "大额流程"
-        rule2.flow = flow2
 
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.order_by.return_value = query_mock
-        query_mock.all.return_value = [rule1, rule2]
+@pytest.fixture
+def mock_node():
+    """创建Mock节点"""
+    node = MagicMock()
+    node.id = 1
+    node.flow_id = 100
+    node.node_order = 1
+    node.node_type = "APPROVAL"
+    node.approver_type = "FIXED_USER"
+    node.approver_config = {"user_ids": [1, 2, 3]}
+    node.is_active = True
+    return node
 
-        self.db_mock.query.return_value = query_mock
 
-        # 执行
-        context = {"form_data": {"amount": 500}}
-        result = self.service.select_flow(template_id=1, context=context)
+@pytest.mark.unit
+class TestSelectFlow:
+    """测试 select_flow 方法"""
 
-        # 验证
-        self.assertEqual(result.id, 1)
-        self.assertEqual(result.flow_name, "小额流程")
+    def test_select_flow_with_matching_rule(self, router_service, mock_db, sample_context):
+        """测试有匹配规则时选择流程"""
+        # 创建mock规则和流程
+        mock_rule = MagicMock()
+        mock_rule.conditions = {
+            "operator": "AND",
+            "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]
+        }
+        mock_flow = MagicMock()
+        mock_flow.id = 100
+        mock_flow.flow_name = "大额审批流程"
+        mock_rule.flow = mock_flow
 
-    def test_select_flow_no_matching_rule_use_default(self):
-        """测试无匹配规则时使用默认流程"""
-        # 准备数据
-        rule1 = MagicMock()
-        rule1.conditions = {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]}
-        rule1.flow = MagicMock(id=1)
+        # Mock 数据库查询返回规则列表
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_rule]
+        mock_db.query.return_value = mock_query
 
-        query_mock = MagicMock()
-        filter_mock = MagicMock()
-        order_by_mock = MagicMock()
+        result = router_service.select_flow(template_id=1, context=sample_context)
 
-        # 第一次查询返回规则
-        all_mock1 = MagicMock()
-        all_mock1.all.return_value = [rule1]
+        assert result == mock_flow
+        mock_db.query.assert_called()
 
-        # 第二次查询返回默认流程
-        first_mock = MagicMock()
-        default_flow = MagicMock(id=999, flow_name="默认流程", is_default=True)
-        first_mock.first.return_value = default_flow
+    def test_select_flow_no_matching_rule_returns_default(self, router_service, mock_db, sample_context):
+        """测试无匹配规则时返回默认流程"""
+        # Mock 查询返回空规则列表
+        mock_query_rules = MagicMock()
+        mock_query_rules.filter.return_value.order_by.return_value.all.return_value = []
 
-        self.db_mock.query.side_effect = [
-            MagicMock(filter=lambda *args, **kwargs: MagicMock(order_by=lambda *a: all_mock1)),
-            MagicMock(filter=lambda *args, **kwargs: first_mock)
-        ]
+        # Mock 默认流程
+        mock_default_flow = MagicMock()
+        mock_default_flow.id = 200
+        mock_default_flow.flow_name = "默认流程"
+        mock_query_default = MagicMock()
+        mock_query_default.filter.return_value.first.return_value = mock_default_flow
 
-        # 执行
-        context = {"form_data": {"amount": 500}}
-        result = self.service.select_flow(template_id=1, context=context)
+        # 设置query的多次调用返回不同结果
+        mock_db.query.side_effect = [mock_query_rules, mock_query_default]
 
-        # 验证
-        self.assertEqual(result.id, 999)
-        self.assertEqual(result.flow_name, "默认流程")
+        result = router_service.select_flow(template_id=1, context=sample_context)
 
-    def test_select_flow_empty_rules(self):
-        """测试空规则列表返回默认流程"""
-        query_mock = MagicMock()
-        filter_mock = MagicMock()
-        order_by_mock = MagicMock()
-        all_mock = MagicMock()
+        assert result == mock_default_flow
 
-        all_mock.all.return_value = []
+    def test_select_flow_multiple_rules_priority(self, router_service, mock_db, sample_context):
+        """测试多条规则时按优先级匹配"""
+        # 创建两条规则
+        mock_rule1 = MagicMock()
+        mock_rule1.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]}
+        mock_rule1.flow = MagicMock(id=101, flow_name="高额流程")
 
-        default_flow = MagicMock(id=100, is_default=True)
-        first_mock = MagicMock()
-        first_mock.first.return_value = default_flow
+        mock_rule2 = MagicMock()
+        mock_rule2.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]}
+        mock_rule2.flow = MagicMock(id=102, flow_name="中额流程")
 
-        self.db_mock.query.side_effect = [
-            MagicMock(filter=lambda *args, **kwargs: MagicMock(order_by=lambda *a: all_mock)),
-            MagicMock(filter=lambda *args, **kwargs: first_mock)
-        ]
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_rule1, mock_rule2]
+        mock_db.query.return_value = mock_query
 
-        context = {"form_data": {}}
-        result = self.service.select_flow(template_id=1, context=context)
+        result = router_service.select_flow(template_id=1, context=sample_context)
 
-        self.assertEqual(result.id, 100)
+        # amount=50000，不匹配rule1(>100000)，应该匹配rule2(>=10000)
+        assert result == mock_rule2.flow
 
-    def test_get_default_flow(self):
-        """测试获取默认流程"""
-        default_flow = MagicMock(id=10, is_default=True, is_active=True)
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = default_flow
 
-        self.db_mock.query.return_value = query_mock
+@pytest.mark.unit
+class TestGetDefaultFlow:
+    """测试 _get_default_flow 方法"""
 
-        result = self.service._get_default_flow(template_id=1)
+    def test_get_default_flow_exists(self, router_service, mock_db):
+        """测试获取存在的默认流程"""
+        mock_flow = MagicMock()
+        mock_flow.id = 1
+        mock_flow.is_default = True
 
-        self.assertEqual(result.id, 10)
-        self.assertTrue(result.is_default)
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_flow
+        mock_db.query.return_value = mock_query
 
-    # ==================== 条件评估测试 ====================
+        result = router_service._get_default_flow(template_id=1)
 
-    def test_evaluate_conditions_and_all_true(self):
-        """测试AND条件全部为真"""
+        assert result == mock_flow
+
+    def test_get_default_flow_not_exists(self, router_service, mock_db):
+        """测试默认流程不存在时返回None"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
+        mock_db.query.return_value = mock_query
+
+        result = router_service._get_default_flow(template_id=999)
+
+        assert result is None
+
+
+@pytest.mark.unit
+class TestEvaluateConditions:
+    """测试 _evaluate_conditions 方法"""
+
+    def test_evaluate_conditions_empty_items(self, router_service, sample_context):
+        """测试空条件项返回True"""
+        conditions = {"operator": "AND", "items": []}
+        result = router_service._evaluate_conditions(conditions, sample_context)
+        assert result is True
+
+    def test_evaluate_conditions_and_all_true(self, router_service, sample_context):
+        """测试AND操作符所有条件为真"""
         conditions = {
             "operator": "AND",
             "items": [
-                {"field": "form_data.amount", "op": "<=", "value": 1000},
-                {"field": "form_data.type", "op": "==", "value": "A"}
+                {"field": "form_data.amount", "op": ">=", "value": 10000},
+                {"field": "form_data.department", "op": "==", "value": "engineering"},
             ]
         }
-        context = {"form_data": {"amount": 500, "type": "A"}}
+        result = router_service._evaluate_conditions(conditions, sample_context)
+        assert result is True
 
-        result = self.service._evaluate_conditions(conditions, context)
-
-        self.assertTrue(result)
-
-    def test_evaluate_conditions_and_partial_false(self):
-        """测试AND条件部分为假"""
+    def test_evaluate_conditions_and_partial_false(self, router_service, sample_context):
+        """测试AND操作符部分条件为假"""
         conditions = {
             "operator": "AND",
             "items": [
-                {"field": "form_data.amount", "op": "<=", "value": 1000},
-                {"field": "form_data.type", "op": "==", "value": "B"}
+                {"field": "form_data.amount", "op": ">", "value": 100000},  # False
+                {"field": "form_data.department", "op": "==", "value": "engineering"},  # True
             ]
         }
-        context = {"form_data": {"amount": 500, "type": "A"}}
+        result = router_service._evaluate_conditions(conditions, sample_context)
+        assert result is False
 
-        result = self.service._evaluate_conditions(conditions, context)
-
-        self.assertFalse(result)
-
-    def test_evaluate_conditions_or_partial_true(self):
-        """测试OR条件部分为真"""
+    def test_evaluate_conditions_or_any_true(self, router_service, sample_context):
+        """测试OR操作符任一条件为真"""
         conditions = {
             "operator": "OR",
             "items": [
-                {"field": "form_data.amount", "op": ">", "value": 1000},
-                {"field": "form_data.type", "op": "==", "value": "A"}
+                {"field": "form_data.amount", "op": ">", "value": 100000},  # False
+                {"field": "form_data.department", "op": "==", "value": "engineering"},  # True
             ]
         }
-        context = {"form_data": {"amount": 500, "type": "A"}}
+        result = router_service._evaluate_conditions(conditions, sample_context)
+        assert result is True
 
-        result = self.service._evaluate_conditions(conditions, context)
+    def test_evaluate_conditions_or_all_false(self, router_service, sample_context):
+        """测试OR操作符所有条件为假"""
+        conditions = {
+            "operator": "OR",
+            "items": [
+                {"field": "form_data.amount", "op": ">", "value": 100000},  # False
+                {"field": "form_data.department", "op": "==", "value": "sales"},  # False
+            ]
+        }
+        result = router_service._evaluate_conditions(conditions, sample_context)
+        assert result is False
 
-        self.assertTrue(result)
 
-    def test_evaluate_conditions_empty_items(self):
-        """测试空条件列表返回True"""
-        conditions = {"operator": "AND", "items": []}
+@pytest.mark.unit
+class TestEvaluateSingle:
+    """测试 _evaluate_single 方法"""
+
+    def test_evaluate_single_simple_equal(self, router_service, sample_context):
+        """测试简单相等条件"""
+        condition = {"field": "form_data.leave_days", "op": "==", "value": 2}
+        result = router_service._evaluate_single(condition, sample_context)
+        assert result is True
+
+    def test_evaluate_single_not_equal(self, router_service, sample_context):
+        """测试不等条件"""
+        condition = {"field": "form_data.leave_days", "op": "!=", "value": 5}
+        result = router_service._evaluate_single(condition, sample_context)
+        assert result is True
+
+    def test_evaluate_single_missing_field(self, router_service, sample_context):
+        """测试缺失字段返回False"""
+        condition = {"field": "form_data.nonexistent", "op": "==", "value": "test"}
+        result = router_service._evaluate_single(condition, sample_context)
+        assert result is False
+
+
+@pytest.mark.unit
+class TestGetFieldValue:
+    """测试 _get_field_value 方法"""
+
+    def test_get_field_value_nested_dict(self, router_service, sample_context):
+        """测试获取嵌套字典值"""
+        result = router_service._get_field_value("form_data.amount", sample_context)
+        assert result == 50000
+
+    def test_get_field_value_nested_object(self, router_service):
+        """测试获取嵌套对象属性"""
+        mock_obj = MagicMock()
+        mock_obj.user = MagicMock()
+        mock_obj.user.name = "Alice"
+        context = {"initiator": mock_obj}
+
+        result = router_service._get_field_value("initiator.user.name", context)
+        assert result == "Alice"
+
+    def test_get_field_value_top_level(self, router_service, sample_context):
+        """测试获取顶级字段"""
+        result = router_service._get_field_value("form_data", sample_context)
+        assert result == sample_context["form_data"]
+
+    def test_get_field_value_missing_path(self, router_service, sample_context):
+        """测试缺失路径返回None"""
+        result = router_service._get_field_value("form_data.nonexistent.field", sample_context)
+        assert result is None
+
+    def test_get_field_value_empty_path(self, router_service, sample_context):
+        """测试空路径返回None"""
+        result = router_service._get_field_value("", sample_context)
+        assert result is None
+
+    def test_get_field_value_none_intermediate(self, router_service):
+        """测试中间值为None时返回None"""
+        context = {"form_data": {"nested": None}}
+        result = router_service._get_field_value("form_data.nested.field", context)
+        assert result is None
+
+
+@pytest.mark.unit
+class TestCompare:
+    """测试 _compare 方法 - 所有比较操作符"""
+
+    def test_compare_equal(self, router_service):
+        """测试相等操作符"""
+        assert router_service._compare(10, "==", 10) is True
+        assert router_service._compare("test", "==", "test") is True
+        assert router_service._compare(10, "==", 20) is False
+
+    def test_compare_not_equal(self, router_service):
+        """测试不等操作符"""
+        assert router_service._compare(10, "!=", 20) is True
+        assert router_service._compare(10, "!=", 10) is False
+
+    def test_compare_greater_than(self, router_service):
+        """测试大于操作符"""
+        assert router_service._compare(20, ">", 10) is True
+        assert router_service._compare(10, ">", 20) is False
+        assert router_service._compare(None, ">", 10) is False
+
+    def test_compare_greater_equal(self, router_service):
+        """测试大于等于操作符"""
+        assert router_service._compare(20, ">=", 10) is True
+        assert router_service._compare(10, ">=", 10) is True
+        assert router_service._compare(5, ">=", 10) is False
+
+    def test_compare_less_than(self, router_service):
+        """测试小于操作符"""
+        assert router_service._compare(5, "<", 10) is True
+        assert router_service._compare(20, "<", 10) is False
+
+    def test_compare_less_equal(self, router_service):
+        """测试小于等于操作符"""
+        assert router_service._compare(5, "<=", 10) is True
+        assert router_service._compare(10, "<=", 10) is True
+        assert router_service._compare(15, "<=", 10) is False
+
+    def test_compare_in_list(self, router_service):
+        """测试in操作符"""
+        assert router_service._compare("A", "in", ["A", "B", "C"]) is True
+        assert router_service._compare("D", "in", ["A", "B", "C"]) is False
+        assert router_service._compare("X", "in", []) is False
+
+    def test_compare_not_in_list(self, router_service):
+        """测试not_in操作符"""
+        assert router_service._compare("D", "not_in", ["A", "B", "C"]) is True
+        assert router_service._compare("A", "not_in", ["A", "B", "C"]) is False
+        assert router_service._compare("X", "not_in", []) is True
+
+    def test_compare_between(self, router_service):
+        """测试between操作符"""
+        assert router_service._compare(15, "between", [10, 20]) is True
+        assert router_service._compare(10, "between", [10, 20]) is True
+        assert router_service._compare(20, "between", [10, 20]) is True
+        assert router_service._compare(5, "between", [10, 20]) is False
+        assert router_service._compare(None, "between", [10, 20]) is False
+        assert router_service._compare(15, "between", [10]) is False  # 无效范围
+
+    def test_compare_contains(self, router_service):
+        """测试contains操作符"""
+        assert router_service._compare("hello world", "contains", "world") is True
+        assert router_service._compare("hello", "contains", "xyz") is False
+        assert router_service._compare(None, "contains", "test") is False
+
+    def test_compare_starts_with(self, router_service):
+        """测试starts_with操作符"""
+        assert router_service._compare("hello world", "starts_with", "hello") is True
+        assert router_service._compare("hello world", "starts_with", "world") is False
+        assert router_service._compare(None, "starts_with", "test") is False
+
+    def test_compare_ends_with(self, router_service):
+        """测试ends_with操作符"""
+        assert router_service._compare("hello world", "ends_with", "world") is True
+        assert router_service._compare("hello world", "ends_with", "hello") is False
+        assert router_service._compare(None, "ends_with", "test") is False
+
+    def test_compare_is_null(self, router_service):
+        """测试is_null操作符"""
+        assert router_service._compare(None, "is_null", True) is True
+        assert router_service._compare("value", "is_null", False) is True
+        assert router_service._compare(None, "is_null", False) is False
+
+    def test_compare_regex(self, router_service):
+        """测试regex操作符"""
+        assert router_service._compare("test123", "regex", r"^test\d+$") is True
+        assert router_service._compare("test", "regex", r"^test\d+$") is False
+        assert router_service._compare(None, "regex", r"^test$") is False
+
+    def test_compare_invalid_operator(self, router_service):
+        """测试无效操作符返回False"""
+        assert router_service._compare(10, "invalid_op", 10) is False
+
+    def test_compare_type_error_handling(self, router_service):
+        """测试类型错误处理"""
+        # 比较不兼容类型时应返回False而不是抛出异常
+        assert router_service._compare("string", ">", 10) is False
+
+
+@pytest.mark.unit
+class TestResolveApprovers:
+    """测试 resolve_approvers 方法"""
+
+    def test_resolve_approvers_fixed_user(self, router_service, mock_node, sample_context):
+        """测试固定用户类型"""
+        mock_node.approver_type = "FIXED_USER"
+        mock_node.approver_config = {"user_ids": [1, 2, 3]}
+
+        result = router_service.resolve_approvers(mock_node, sample_context)
+
+        assert result == [1, 2, 3]
+
+    def test_resolve_approvers_form_field_single(self, router_service, mock_node, sample_context):
+        """测试表单字段类型 - 单个用户"""
+        mock_node.approver_type = "FORM_FIELD"
+        mock_node.approver_config = {"field_name": "approver_id"}
+
+        result = router_service.resolve_approvers(mock_node, sample_context)
+
+        assert result == [100]
+
+    def test_resolve_approvers_form_field_list(self, router_service, mock_node, sample_context):
+        """测试表单字段类型 - 多个用户"""
+        sample_context["form_data"]["approver_ids"] = [10, 20, 30]
+        mock_node.approver_type = "FORM_FIELD"
+        mock_node.approver_config = {"field_name": "approver_ids"}
+
+        result = router_service.resolve_approvers(mock_node, sample_context)
+
+        assert result == [10, 20, 30]
+
+    def test_resolve_approvers_form_field_missing(self, router_service, mock_node, sample_context):
+        """测试表单字段缺失时返回空列表"""
+        mock_node.approver_type = "FORM_FIELD"
+        mock_node.approver_config = {"field_name": "nonexistent_field"}
+
+        result = router_service.resolve_approvers(mock_node, sample_context)
+
+        assert result == []
+
+    def test_resolve_approvers_initiator(self, router_service, mock_node, sample_context):
+        """测试发起人类型"""
+        mock_node.approver_type = "INITIATOR"
+        mock_node.approver_config = {}
+
+        result = router_service.resolve_approvers(mock_node, sample_context)
+
+        assert result == [1]
+
+    def test_resolve_approvers_initiator_none(self, router_service, mock_node):
+        """测试发起人类型 - 空上下文"""
         context = {}
 
-        result = self.service._evaluate_conditions(conditions, context)
+        mock_node.approver_type = "INITIATOR"
+        mock_node.approver_config = {}
 
-        self.assertTrue(result)
+        result = router_service.resolve_approvers(mock_node, context)
 
-    # ==================== 字段值获取测试 ====================
+        assert result == []
 
-    def test_get_field_value_nested_dict(self):
-        """测试获取嵌套字典值"""
-        context = {
-            "form_data": {"leave": {"days": 3, "type": "annual"}},
-            "initiator": {"name": "张三"}
-        }
+    def test_resolve_approvers_dynamic_with_adapter(self, router_service, mock_node, sample_context):
+        """测试动态类型使用适配器"""
+        mock_adapter = MagicMock()
+        mock_adapter.resolve_approvers.return_value = [100, 200]
+        sample_context["adapter"] = mock_adapter
 
-        result = self.service._get_field_value("form_data.leave.days", context)
-        self.assertEqual(result, 3)
+        mock_node.approver_type = "DYNAMIC"
+        mock_node.approver_config = {}
 
-    def test_get_field_value_object_attribute(self):
-        """测试获取对象属性"""
-        user = MagicMock()
-        user.dept_id = 10
-        user.name = "李四"
+        result = router_service.resolve_approvers(mock_node, sample_context)
 
-        context = {"initiator": user}
+        assert result == [100, 200]
+        mock_adapter.resolve_approvers.assert_called_once_with(mock_node, sample_context)
 
-        result = self.service._get_field_value("initiator.dept_id", context)
-        self.assertEqual(result, 10)
+    def test_resolve_approvers_dynamic_no_adapter(self, router_service, mock_node, sample_context):
+        """测试动态类型无适配器时返回空列表"""
+        mock_node.approver_type = "DYNAMIC"
+        mock_node.approver_config = {}
 
-    def test_get_field_value_not_found(self):
-        """测试获取不存在的字段返回None"""
-        context = {"form_data": {"amount": 100}}
+        result = router_service.resolve_approvers(mock_node, sample_context)
 
-        result = self.service._get_field_value("form_data.nonexistent.field", context)
-        self.assertIsNone(result)
+        assert result == []
 
-    def test_get_field_value_empty_path(self):
-        """测试空路径返回None"""
-        context = {"form_data": {}}
-
-        result = self.service._get_field_value("", context)
-        self.assertIsNone(result)
-
-    # ==================== 比较操作测试 ====================
-
-    def test_compare_equal(self):
-        """测试相等比较"""
-        self.assertTrue(self.service._compare(100, "==", 100))
-        self.assertFalse(self.service._compare(100, "==", 200))
-
-    def test_compare_not_equal(self):
-        """测试不等比较"""
-        self.assertTrue(self.service._compare(100, "!=", 200))
-        self.assertFalse(self.service._compare(100, "!=", 100))
-
-    def test_compare_greater_than(self):
-        """测试大于比较"""
-        self.assertTrue(self.service._compare(200, ">", 100))
-        self.assertFalse(self.service._compare(100, ">", 200))
-        self.assertFalse(self.service._compare(None, ">", 100))
-
-    def test_compare_greater_equal(self):
-        """测试大于等于比较"""
-        self.assertTrue(self.service._compare(100, ">=", 100))
-        self.assertTrue(self.service._compare(200, ">=", 100))
-        self.assertFalse(self.service._compare(50, ">=", 100))
-
-    def test_compare_less_than(self):
-        """测试小于比较"""
-        self.assertTrue(self.service._compare(50, "<", 100))
-        self.assertFalse(self.service._compare(150, "<", 100))
-
-    def test_compare_less_equal(self):
-        """测试小于等于比较"""
-        self.assertTrue(self.service._compare(100, "<=", 100))
-        self.assertTrue(self.service._compare(50, "<=", 100))
-        self.assertFalse(self.service._compare(150, "<=", 100))
-
-    def test_compare_in(self):
-        """测试in操作"""
-        self.assertTrue(self.service._compare("A", "in", ["A", "B", "C"]))
-        self.assertFalse(self.service._compare("D", "in", ["A", "B", "C"]))
-        self.assertFalse(self.service._compare("A", "in", None))
-
-    def test_compare_not_in(self):
-        """测试not_in操作"""
-        self.assertTrue(self.service._compare("D", "not_in", ["A", "B", "C"]))
-        self.assertFalse(self.service._compare("A", "not_in", ["A", "B", "C"]))
-
-    def test_compare_between(self):
-        """测试between操作（闭区间）"""
-        self.assertTrue(self.service._compare(50, "between", [10, 100]))
-        self.assertTrue(self.service._compare(10, "between", [10, 100]))
-        self.assertTrue(self.service._compare(100, "between", [10, 100]))
-        self.assertFalse(self.service._compare(150, "between", [10, 100]))
-        self.assertFalse(self.service._compare(None, "between", [10, 100]))
-        self.assertFalse(self.service._compare(50, "between", [10]))  # 无效范围
-
-    def test_compare_contains(self):
-        """测试字符串包含"""
-        self.assertTrue(self.service._compare("hello world", "contains", "world"))
-        self.assertFalse(self.service._compare("hello", "contains", "world"))
-        self.assertFalse(self.service._compare(None, "contains", "world"))
-
-    def test_compare_starts_with(self):
-        """测试字符串前缀"""
-        self.assertTrue(self.service._compare("hello world", "starts_with", "hello"))
-        self.assertFalse(self.service._compare("world hello", "starts_with", "hello"))
-
-    def test_compare_ends_with(self):
-        """测试字符串后缀"""
-        self.assertTrue(self.service._compare("hello world", "ends_with", "world"))
-        self.assertFalse(self.service._compare("world hello", "ends_with", "world"))
-
-    def test_compare_is_null(self):
-        """测试空值判断"""
-        self.assertTrue(self.service._compare(None, "is_null", True))
-        self.assertFalse(self.service._compare("value", "is_null", True))
-        self.assertTrue(self.service._compare("value", "is_null", False))
-
-    def test_compare_regex(self):
-        """测试正则匹配"""
-        self.assertTrue(self.service._compare("test@example.com", "regex", r"^\w+@\w+\.\w+$"))
-        self.assertFalse(self.service._compare("invalid-email", "regex", r"^\w+@\w+\.\w+$"))
-        self.assertFalse(self.service._compare(None, "regex", r"^\w+$"))
-
-    def test_compare_unknown_operator(self):
-        """测试未知操作符返回False"""
-        self.assertFalse(self.service._compare(100, "unknown_op", 100))
-
-    def test_compare_type_error(self):
-        """测试类型错误返回False"""
-        self.assertFalse(self.service._compare("text", ">", 100))
-
-    # ==================== 审批人解析测试 ====================
-
-    def test_resolve_approvers_fixed_user(self):
-        """测试固定用户审批人"""
-        node = MagicMock()
-        node.approver_type = "FIXED_USER"
-        node.approver_config = {"user_ids": [1, 2, 3]}
-
-        result = self.service.resolve_approvers(node, {})
-
-        self.assertEqual(result, [1, 2, 3])
-
-    def test_resolve_approvers_role(self):
-        """测试角色审批人"""
-        node = MagicMock()
-        node.approver_type = "ROLE"
-        node.approver_config = {"role_codes": ["MANAGER", "DIRECTOR"]}
-
-        user1 = MagicMock(id=10)
-        user2 = MagicMock(id=20)
-
-        query_mock = MagicMock()
-        query_mock.join.return_value = query_mock
-        query_mock.filter.return_value = query_mock
-        query_mock.all.return_value = [user1, user2]
-
-        self.db_mock.query.return_value = query_mock
-
-        result = self.service.resolve_approvers(node, {})
-
-        self.assertEqual(result, [10, 20])
-
-    def test_resolve_approvers_department_head(self):
-        """测试部门主管审批人"""
-        node = MagicMock()
-        node.approver_type = "DEPARTMENT_HEAD"
-        node.approver_config = {}
-
-        initiator = {"dept_id": 5}
-        dept = MagicMock(id=5, manager_id=100)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = dept
-
-        self.db_mock.query.return_value = query_mock
-
-        context = {"initiator": initiator}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [100])
-
-    def test_resolve_approvers_direct_manager(self):
-        """测试直属上级审批人"""
-        node = MagicMock()
-        node.approver_type = "DIRECT_MANAGER"
-        node.approver_config = {}
-
-        initiator = {"id": 10}
-        user = MagicMock(id=10, reporting_to=50)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = user
-
-        self.db_mock.query.return_value = query_mock
-
-        context = {"initiator": initiator}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [50])
-
-    def test_resolve_approvers_form_field_single(self):
-        """测试表单字段审批人（单个）"""
-        node = MagicMock()
-        node.approver_type = "FORM_FIELD"
-        node.approver_config = {"field_name": "approver_id"}
-
-        context = {"form_data": {"approver_id": 99}}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [99])
-
-    def test_resolve_approvers_form_field_multiple(self):
-        """测试表单字段审批人（多个）"""
-        node = MagicMock()
-        node.approver_type = "FORM_FIELD"
-        node.approver_config = {"field_name": "approver_ids"}
-
-        context = {"form_data": {"approver_ids": [11, 22, 33]}}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [11, 22, 33])
-
-    def test_resolve_approvers_multi_dept(self):
-        """测试多部门审批人"""
-        node = MagicMock()
-        node.approver_type = "MULTI_DEPT"
-        node.approver_config = {"departments": ["研发部", "质量部", "生产部"]}
-
-        dept1 = MagicMock(dept_name="研发部", manager_id=101)
-        dept2 = MagicMock(dept_name="质量部", manager_id=102)
-        dept3 = MagicMock(dept_name="生产部", manager_id=103)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.all.return_value = [dept1, dept2, dept3]
-
-        self.db_mock.query.return_value = query_mock
-
-        result = self.service.resolve_approvers(node, {})
-
-        self.assertEqual(sorted(result), [101, 102, 103])
-
-    def test_resolve_approvers_dynamic_with_adapter(self):
-        """测试动态审批人（通过适配器）"""
-        node = MagicMock()
-        node.approver_type = "DYNAMIC"
-        node.approver_config = {}
-
-        adapter = MagicMock()
-        adapter.resolve_approvers.return_value = [200, 201]
-
-        context = {"adapter": adapter}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [200, 201])
-        adapter.resolve_approvers.assert_called_once_with(node, context)
-
-    def test_resolve_approvers_initiator(self):
-        """测试发起人审批人（退回场景）"""
-        node = MagicMock()
-        node.approver_type = "INITIATOR"
-        node.approver_config = {}
-
-        initiator = {"id": 88}
-        context = {"initiator": initiator}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [88])
-
-    def test_resolve_approvers_initiator_object(self):
-        """测试发起人对象形式"""
-        node = MagicMock()
-        node.approver_type = "INITIATOR"
-        node.approver_config = {}
-
-        initiator = MagicMock()
-        initiator.id = 77
-        type(initiator).id = PropertyMock(return_value=77)
-        initiator.get.return_value = None  # 确保get方法返回None，让代码走hasattr分支
-        
-        context = {"initiator": initiator}
-        result = self.service.resolve_approvers(node, context)
-
-        self.assertEqual(result, [77])
-
-    def test_resolve_approvers_unknown_type(self):
+    def test_resolve_approvers_unknown_type(self, router_service, mock_node, sample_context):
         """测试未知类型返回空列表"""
-        node = MagicMock()
-        node.approver_type = "UNKNOWN"
-        node.approver_config = {}
+        mock_node.approver_type = "UNKNOWN_TYPE"
+        mock_node.approver_config = {}
 
-        result = self.service.resolve_approvers(node, {})
+        result = router_service.resolve_approvers(mock_node, sample_context)
 
-        self.assertEqual(result, [])
+        assert result == []
 
-    # ==================== 节点路由测试 ====================
 
-    def test_get_next_nodes_normal_node(self):
-        """测试获取普通下一节点"""
-        current_node = MagicMock()
-        current_node.flow_id = 1
-        current_node.node_order = 10
+@pytest.mark.unit
+class TestResolveRoleApprovers:
+    """测试 _resolve_role_approvers 方法"""
 
-        next_node = MagicMock(node_type="APPROVAL", node_order=20)
+    def test_resolve_role_approvers_single_role(self, router_service, mock_db, sample_context):
+        """测试单个角色解析"""
+        config = {"role_codes": ["SALES_MANAGER"]}
 
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.order_by.return_value = query_mock
-        query_mock.all.return_value = [next_node]
+        # Mock 查询结果
+        mock_user1 = MagicMock()
+        mock_user1.id = 10
+        mock_user2 = MagicMock()
+        mock_user2.id = 20
 
-        self.db_mock.query.return_value = query_mock
+        mock_query = MagicMock()
+        mock_query.join.return_value = mock_query
+        mock_query.filter.return_value.all.return_value = [mock_user1, mock_user2]
+        mock_db.query.return_value = mock_query
 
-        result = self.service.get_next_nodes(current_node, {})
+        result = router_service._resolve_role_approvers(config, sample_context)
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].node_type, "APPROVAL")
+        assert result == [10, 20]
 
-    def test_get_next_nodes_no_next(self):
-        """测试无下一节点（流程结束）"""
-        current_node = MagicMock()
-        current_node.flow_id = 1
-        current_node.node_order = 100
+    def test_resolve_role_approvers_multiple_roles(self, router_service, mock_db, sample_context):
+        """测试多个角色解析"""
+        config = {"role_codes": ["SALES_MANAGER", "DEPT_HEAD"]}
 
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.order_by.return_value = query_mock
-        query_mock.all.return_value = []
+        mock_user1 = MagicMock()
+        mock_user1.id = 10
 
-        self.db_mock.query.return_value = query_mock
+        mock_query = MagicMock()
+        mock_query.join.return_value = mock_query
+        mock_query.filter.return_value.all.return_value = [mock_user1]
+        mock_db.query.return_value = mock_query
 
-        result = self.service.get_next_nodes(current_node, {})
+        result = router_service._resolve_role_approvers(config, sample_context)
 
-        self.assertEqual(result, [])
+        assert result == [10]
 
-    def test_get_next_nodes_condition_branch(self):
-        """测试条件分支节点"""
-        current_node = MagicMock()
-        current_node.flow_id = 1
-        current_node.node_order = 10
+    def test_resolve_role_approvers_string_role(self, router_service, mock_db, sample_context):
+        """测试字符串形式的角色代码"""
+        config = {"role_codes": "SALES_MANAGER"}
 
+        mock_query = MagicMock()
+        mock_query.join.return_value = mock_query
+        mock_query.filter.return_value.all.return_value = []
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_role_approvers(config, sample_context)
+
+        assert result == []
+
+    def test_resolve_role_approvers_empty_config(self, router_service, mock_db, sample_context):
+        """测试空配置返回空列表"""
+        config = {}
+
+        result = router_service._resolve_role_approvers(config, sample_context)
+
+        assert result == []
+
+
+@pytest.mark.unit
+class TestResolveDepartmentHead:
+    """测试 _resolve_department_head 方法"""
+
+    def test_resolve_department_head_dict_initiator(self, router_service, mock_db, sample_context):
+        """测试字典形式的发起人"""
+        mock_dept = MagicMock()
+        mock_dept.manager_id = 50
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_dept
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_department_head(sample_context)
+
+        assert result == [50]
+
+    def test_resolve_department_head_object_initiator(self, router_service, mock_db):
+        """测试对象形式的发起人"""
+        initiator = MagicMock()
+        initiator.dept_id = 10
+        context = {"initiator": initiator}
+
+        mock_dept = MagicMock()
+        mock_dept.manager_id = 60
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_dept
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_department_head(context)
+
+        assert result == [60]
+
+    def test_resolve_department_head_no_dept_id(self, router_service, mock_db):
+        """测试无部门ID时返回空列表"""
+        context = {"initiator": {}}
+
+        result = router_service._resolve_department_head(context)
+
+        assert result == []
+
+    def test_resolve_department_head_no_manager(self, router_service, mock_db, sample_context):
+        """测试部门无主管时返回空列表"""
+        mock_dept = MagicMock()
+        mock_dept.manager_id = None
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_dept
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_department_head(sample_context)
+
+        assert result == []
+
+    def test_resolve_department_head_dept_not_found(self, router_service, mock_db, sample_context):
+        """测试部门不存在时返回空列表"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_department_head(sample_context)
+
+        assert result == []
+
+
+@pytest.mark.unit
+class TestResolveDirectManager:
+    """测试 _resolve_direct_manager 方法"""
+
+    def test_resolve_direct_manager_dict_initiator(self, router_service, mock_db, sample_context):
+        """测试字典形式的发起人"""
+        mock_user = MagicMock()
+        mock_user.reporting_to = 20
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_user
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_direct_manager(sample_context)
+
+        assert result == [20]
+
+    def test_resolve_direct_manager_object_initiator(self, router_service, mock_db):
+        """测试对象形式的发起人"""
+        initiator = MagicMock()
+        initiator.id = 5
+        context = {"initiator": initiator}
+
+        mock_user = MagicMock()
+        mock_user.reporting_to = 30
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_user
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_direct_manager(context)
+
+        assert result == [30]
+
+    def test_resolve_direct_manager_no_user_id(self, router_service, mock_db):
+        """测试无用户ID时返回空列表"""
+        context = {"initiator": {}}
+
+        result = router_service._resolve_direct_manager(context)
+
+        assert result == []
+
+    def test_resolve_direct_manager_no_reporting_to(self, router_service, mock_db, sample_context):
+        """测试无上级时返回空列表"""
+        mock_user = MagicMock()
+        mock_user.reporting_to = None
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = mock_user
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_direct_manager(sample_context)
+
+        assert result == []
+
+
+@pytest.mark.unit
+class TestResolveMultiDeptApprovers:
+    """测试 _resolve_multi_dept_approvers 方法"""
+
+    def test_resolve_multi_dept_approvers_multiple_depts(self, router_service, mock_db, sample_context):
+        """测试多个部门审批人"""
+        config = {"departments": ["工程部", "采购部", "质量部"]}
+
+        mock_dept1 = MagicMock()
+        mock_dept1.manager_id = 100
+        mock_dept2 = MagicMock()
+        mock_dept2.manager_id = 200
+        mock_dept3 = MagicMock()
+        mock_dept3.manager_id = None  # 无主管
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.all.return_value = [mock_dept1, mock_dept2, mock_dept3]
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_multi_dept_approvers(config, sample_context)
+
+        assert result == [100, 200]
+
+    def test_resolve_multi_dept_approvers_empty_config(self, router_service, mock_db, sample_context):
+        """测试空配置返回空列表"""
+        config = {}
+
+        result = router_service._resolve_multi_dept_approvers(config, sample_context)
+
+        assert result == []
+
+
+@pytest.mark.unit
+class TestGetNextNodes:
+    """测试 get_next_nodes 方法"""
+
+    def test_get_next_nodes_normal_flow(self, router_service, mock_db, mock_node, sample_context):
+        """测试正常获取下一个节点"""
+        current_node = mock_node
+        current_node.flow_id = 100
+        current_node.node_order = 1
+
+        next_node = MagicMock()
+        next_node.id = 2
+        next_node.node_type = "APPROVAL"
+        next_node.node_order = 2
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [next_node]
+        mock_db.query.return_value = mock_query
+
+        result = router_service.get_next_nodes(current_node, sample_context)
+
+        assert result == [next_node]
+
+    def test_get_next_nodes_no_next(self, router_service, mock_db, mock_node, sample_context):
+        """测试无下一个节点时返回空列表"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value = mock_query
+
+        result = router_service.get_next_nodes(mock_node, sample_context)
+
+        assert result == []
+
+    def test_get_next_nodes_condition_node(self, router_service, mock_db, mock_node, sample_context):
+        """测试下一个节点为条件分支节点"""
         condition_node = MagicMock()
+        condition_node.id = 2
         condition_node.node_type = "CONDITION"
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]},
-                    "target_node_id": 100
+                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]},
+                    "target_node_id": 10
                 }
             ],
-            "default_node_id": 200
+            "default_node_id": 20
         }
 
-        target_node = MagicMock(id=100, node_type="APPROVAL")
+        target_node = MagicMock()
+        target_node.id = 10
 
-        # 第一次查询返回条件节点
-        query_mock1 = MagicMock()
-        query_mock1.filter.return_value = query_mock1
-        query_mock1.order_by.return_value = query_mock1
-        query_mock1.all.return_value = [condition_node]
+        # Mock 查询：第一次返回条件节点，第二次返回目标节点
+        mock_query1 = MagicMock()
+        mock_query1.filter.return_value.order_by.return_value.all.return_value = [condition_node]
 
-        # 第二次查询返回目标节点
-        query_mock2 = MagicMock()
-        query_mock2.filter.return_value = query_mock2
-        query_mock2.first.return_value = target_node
+        mock_query2 = MagicMock()
+        mock_query2.filter.return_value.first.return_value = target_node
 
-        self.db_mock.query.side_effect = [query_mock1, query_mock2]
+        mock_db.query.side_effect = [mock_query1, mock_query2]
 
-        context = {"form_data": {"amount": 5000}}
-        result = self.service.get_next_nodes(current_node, context)
+        result = router_service.get_next_nodes(mock_node, sample_context)
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].id, 100)
+        assert result == [target_node]
 
-    def test_resolve_condition_branch_default(self):
-        """测试条件分支无匹配走默认分支"""
+
+@pytest.mark.unit
+class TestResolveConditionBranch:
+    """测试 _resolve_condition_branch 方法"""
+
+    def test_resolve_condition_branch_matching(self, router_service, mock_db, sample_context):
+        """测试匹配条件分支"""
         condition_node = MagicMock()
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]},
-                    "target_node_id": 100
-                }
-            ],
-            "default_node_id": 200
-        }
-
-        default_node = MagicMock(id=200, node_type="APPROVAL")
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = default_node
-
-        self.db_mock.query.return_value = query_mock
-
-        context = {"form_data": {"amount": 500}}
-        result = self.service._resolve_condition_branch(condition_node, context)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].id, 200)
-
-    # ==================== 边界条件测试 ====================
-
-    def test_resolve_role_approvers_empty_roles(self):
-        """测试角色为空时返回空列表"""
-        config = {"role_codes": []}
-        result = self.service._resolve_role_approvers(config, {})
-        self.assertEqual(result, [])
-
-    def test_resolve_role_approvers_single_string(self):
-        """测试单个角色字符串"""
-        config = {"role_codes": "ADMIN"}
-
-        user1 = MagicMock(id=10)
-        query_mock = MagicMock()
-        query_mock.join.return_value = query_mock
-        query_mock.filter.return_value = query_mock
-        query_mock.all.return_value = [user1]
-
-        self.db_mock.query.return_value = query_mock
-
-        result = self.service._resolve_role_approvers(config, {})
-        self.assertEqual(result, [10])
-
-    def test_resolve_department_head_no_dept_id(self):
-        """测试无部门ID返回空列表"""
-        initiator = {"id": 1}  # 无dept_id
-        context = {"initiator": initiator}
-
-        result = self.service._resolve_department_head(context)
-        self.assertEqual(result, [])
-
-    def test_resolve_department_head_no_manager(self):
-        """测试部门无主管返回空列表"""
-        initiator = {"dept_id": 5}
-        dept = MagicMock(id=5, manager_id=None)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = dept
-
-        self.db_mock.query.return_value = query_mock
-
-        context = {"initiator": initiator}
-        result = self.service._resolve_department_head(context)
-        self.assertEqual(result, [])
-
-    def test_resolve_direct_manager_no_reporting_to(self):
-        """测试无直属上级返回空列表"""
-        initiator = {"id": 10}
-        user = MagicMock(id=10, reporting_to=None)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.first.return_value = user
-
-        self.db_mock.query.return_value = query_mock
-
-        context = {"initiator": initiator}
-        result = self.service._resolve_direct_manager(context)
-        self.assertEqual(result, [])
-
-    def test_resolve_multi_dept_approvers_empty_depts(self):
-        """测试空部门列表返回空列表"""
-        config = {"departments": []}
-        result = self.service._resolve_multi_dept_approvers(config, {})
-        self.assertEqual(result, [])
-
-    def test_resolve_multi_dept_approvers_some_without_manager(self):
-        """测试部分部门无主管"""
-        config = {"departments": ["研发部", "质量部"]}
-
-        dept1 = MagicMock(dept_name="研发部", manager_id=101)
-        dept2 = MagicMock(dept_name="质量部", manager_id=None)
-
-        query_mock = MagicMock()
-        query_mock.filter.return_value = query_mock
-        query_mock.all.return_value = [dept1, dept2]
-
-        self.db_mock.query.return_value = query_mock
-
-        result = self.service._resolve_multi_dept_approvers(config, {})
-        self.assertEqual(result, [101])
-
-    def test_resolve_condition_branch_no_matching_no_default(self):
-        """测试无匹配且无默认分支返回空列表"""
-        condition_node = MagicMock()
-        condition_node.approver_config = {
-            "branches": [
-                {
-                    "conditions": {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]},
+                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]},
                     "target_node_id": 100
                 }
             ]
         }
 
-        context = {"form_data": {"amount": 500}}
-        result = self.service._resolve_condition_branch(condition_node, context)
+        target_node = MagicMock()
+        target_node.id = 100
 
-        self.assertEqual(result, [])
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = target_node
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_condition_branch(condition_node, sample_context)
+
+        assert result == [target_node]
+
+    def test_resolve_condition_branch_default(self, router_service, mock_db, sample_context):
+        """测试使用默认分支"""
+        condition_node = MagicMock()
+        condition_node.approver_config = {
+            "branches": [
+                {
+                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]},
+                    "target_node_id": 100
+                }
+            ],
+            "default_node_id": 200
+        }
+
+        default_node = MagicMock()
+        default_node.id = 200
+
+        # 条件不匹配（50000 > 100000为False），直接查询默认节点
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = default_node
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_condition_branch(condition_node, sample_context)
+
+        assert result == [default_node]
+
+    def test_resolve_condition_branch_no_match_no_default(self, router_service, mock_db, sample_context):
+        """测试无匹配且无默认分支时返回空列表"""
+        condition_node = MagicMock()
+        condition_node.approver_config = {
+            "branches": [
+                {
+                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]},
+                    "target_node_id": 100
+                }
+            ]
+        }
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
+        mock_db.query.return_value = mock_query
+
+        result = router_service._resolve_condition_branch(condition_node, sample_context)
+
+        assert result == []
+
+    def test_resolve_condition_branch_empty_branches(self, router_service, mock_db, sample_context):
+        """测试空分支配置"""
+        condition_node = MagicMock()
+        condition_node.approver_config = {"branches": []}
+
+        result = router_service._resolve_condition_branch(condition_node, sample_context)
+
+        assert result == []
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.unit
+class TestEdgeCases:
+    """测试边界情况和异常处理"""
+
+    def test_resolve_approvers_role_type(self, router_service, mock_db, mock_node, sample_context):
+        """测试ROLE类型审批人解析"""
+        mock_node.approver_type = "ROLE"
+        mock_node.approver_config = {"role_codes": ["MANAGER"]}
+
+        with patch.object(router_service, '_resolve_role_approvers', return_value=[10, 20]):
+            result = router_service.resolve_approvers(mock_node, sample_context)
+            assert result == [10, 20]
+
+    def test_resolve_approvers_department_head_type(self, router_service, mock_db, mock_node, sample_context):
+        """测试DEPARTMENT_HEAD类型审批人解析"""
+        mock_node.approver_type = "DEPARTMENT_HEAD"
+        mock_node.approver_config = {}
+
+        with patch.object(router_service, '_resolve_department_head', return_value=[50]):
+            result = router_service.resolve_approvers(mock_node, sample_context)
+            assert result == [50]
+
+    def test_resolve_approvers_direct_manager_type(self, router_service, mock_db, mock_node, sample_context):
+        """测试DIRECT_MANAGER类型审批人解析"""
+        mock_node.approver_type = "DIRECT_MANAGER"
+        mock_node.approver_config = {}
+
+        with patch.object(router_service, '_resolve_direct_manager', return_value=[30]):
+            result = router_service.resolve_approvers(mock_node, sample_context)
+            assert result == [30]
+
+    def test_resolve_approvers_multi_dept_type(self, router_service, mock_db, mock_node, sample_context):
+        """测试MULTI_DEPT类型审批人解析"""
+        mock_node.approver_type = "MULTI_DEPT"
+        mock_node.approver_config = {"departments": ["工程部", "采购部"]}
+
+        with patch.object(router_service, '_resolve_multi_dept_approvers', return_value=[100, 200]):
+            result = router_service.resolve_approvers(mock_node, sample_context)
+            assert result == [100, 200]
+
+    def test_compare_with_numeric_strings(self, router_service):
+        """测试数字字符串比较"""
+        # contains 会将值转为字符串
+        assert router_service._compare(12345, "contains", "23") is True
+
+    def test_get_field_value_with_numeric_key(self, router_service):
+        """测试数字键的字段访问"""
+        context = {"data": {"0": "value"}}
+        # 因为split会产生字符串"0"，所以可以正常访问
+        result = router_service._get_field_value("data.0", context)
+        assert result == "value"
