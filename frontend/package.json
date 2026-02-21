@@ -16,7 +16,15 @@
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
-    "e2e": "pnpm run build && playwright test"
+    "e2e": "pnpm run build && playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report",
+    "e2e:auth": "playwright test auth.spec.js",
+    "e2e:project": "playwright test project-management.spec.js",
+    "e2e:sales": "playwright test sales-flow.spec.js",
+    "e2e:procurement": "playwright test procurement-flow.spec.js",
+    "e2e:approval": "playwright test approval-flow.spec.js"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
