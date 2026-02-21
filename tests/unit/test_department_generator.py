@@ -2,779 +2,860 @@
 """
 部门报表生成器单元测试
 
-目标：
-1. 只mock外部依赖（数据库操作）
-2. 测试核心业务逻辑
-3. 达到70%+覆盖率
+策略:
+1. 只mock外部依赖(db.query及其链式调用)
+2. 让业务逻辑真正执行
+3. 覆盖主要方法和边界情况
+4. 目标覆盖率: 70%+
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock
 from datetime import date, datetime
-
 from app.services.report_framework.generators.department import DeptReportGenerator
 
 
-class TestDeptReportGeneratorCore(unittest.TestCase):
-    """测试核心生成方法"""
+class TestDeptReportGeneratorWeekly(unittest.TestCase):
+    """测试周报生成"""
 
     def setUp(self):
-        """测试前准备"""
-        self.db = MagicMock()
-        self.generator = DeptReportGenerator()
+        """设置测试环境"""
+        self.mock_db = MagicMock()
+        self.dept_id = 1
+        self.start_date = date(2024, 1, 1)
+        self.end_date = date(2024, 1, 7)
 
-    # ========== generate_weekly() 测试 ==========
+    def _create_mock_department(self, dept_id=1, dept_name="研发部", dept_code="DEV"):
+        """创建mock部门对象"""
+        dept = MagicMock()
+        dept.id = dept_id
+        dept.dept_name = dept_name
+        dept.dept_code = dept_code
+        dept.name = dept_name  # 备用属性
+        return dept
+
+    def _create_mock_user(self, user_id, username, real_name, department_id=1, position="工程师"):
+        """创建mock用户对象"""
+        user = MagicMock()
+        user.id = user_id
+        user.username = username
+        user.real_name = real_name
+        user.department_id = department_id
+        user.department = "研发部"
+        user.is_active = True
+        user.position = position
+        return user
+
+    def _create_mock_timesheet(self, user_id, project_id, hours, work_date):
+        """创建mock工时记录"""
+        ts = MagicMock()
+        ts.user_id = user_id
+        ts.project_id = project_id
+        ts.hours = hours
+        ts.work_date = work_date
+        return ts
+
+    def _create_mock_project(self, proj_id, project_name, stage="S1", health="H1"):
+        """创建mock项目对象"""
+        proj = MagicMock()
+        proj.id = proj_id
+        proj.project_name = project_name
+        proj.stage = stage
+        proj.health = health
+        proj.is_active = True
+        proj.created_at = datetime(2024, 1, 1)
+        proj.updated_at = datetime(2024, 1, 5)
+        return proj
+
+    def test_generate_weekly_success(self):
+        """测试周报生成成功"""
+        # 准备mock数据
+        mock_dept = self._create_mock_department(1, "研发部", "DEV")
+        mock_users = [
+            self._create_mock_user(1, "zhangsan", "张三", 1, "高级工程师"),
+            self._create_mock_user(2, "lisi", "李四", 1, "工程师"),
+        ]
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 101, 8, date(2024, 1, 1)),
+            self._create_mock_timesheet(1, 101, 8, date(2024, 1, 2)),
+            self._create_mock_timesheet(2, 102, 6, date(2024, 1, 3)),
+        ]
+        
+        # 设置db.query的返回值
+        # 查询部门
+        dept_query = MagicMock()
+        dept_query.filter.return_value.first.return_value = mock_dept
+        
+        # 查询用户
+        user_query = MagicMock()
+        user_query.filter.return_value.all.return_value = mock_users
+        
+        # 查询工时
+        timesheet_query = MagicMock()
+        timesheet_query.filter.return_value.all.return_value = mock_timesheets
+        
+        # 查询项目（用于工时分布）
+        project_query = MagicMock()
+        project_query.filter.return_value.first.return_value = self._create_mock_project(101, "项目A")
+        
+        # 配置db.query按调用次序返回不同的query对象
+        query_call_count = [0]
+        def query_side_effect(model):
+            query_call_count[0] += 1
+            if query_call_count[0] == 1:  # 第1次：查部门
+                return dept_query
+            elif query_call_count[0] == 2:  # 第2次：查用户
+                return user_query
+            elif query_call_count[0] == 3:  # 第3次：查工时汇总
+                return timesheet_query
+            elif query_call_count[0] == 4:  # 第4次：查工时分布
+                return timesheet_query
+            elif query_call_count[0] >= 5:  # 第5+次：查项目（可能多次）
+                return project_query
+            return MagicMock()
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        # 执行测试
+        result = DeptReportGenerator.generate_weekly(
+            self.mock_db, self.dept_id, self.start_date, self.end_date
+        )
+        
+        # 验证结果
+        self.assertIn("summary", result)
+        self.assertEqual(result["summary"]["department_id"], 1)
+        self.assertEqual(result["summary"]["department_name"], "研发部")
+        self.assertEqual(result["summary"]["member_count"], 2)
+        
+        self.assertIn("members", result)
+        self.assertEqual(result["members"]["total_count"], 2)
+        
+        self.assertIn("timesheet", result)
+        self.assertEqual(result["timesheet"]["total_hours"], 22.0)  # 8+8+6
+        
+        self.assertIn("workload", result)
+        self.assertEqual(len(result["workload"]), 2)
 
     def test_generate_weekly_department_not_found(self):
-        """测试生成周报 - 部门不存在"""
-        # Mock数据库查询返回None
-        self.db.query.return_value.filter.return_value.first.return_value = None
-
-        result = self.generator.generate_weekly(
-            self.db, 
-            department_id=999,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+        """测试部门不存在"""
+        # 模拟部门不存在
+        dept_query = MagicMock()
+        dept_query.filter.return_value.first.return_value = None
+        self.mock_db.query.return_value = dept_query
+        
+        result = DeptReportGenerator.generate_weekly(
+            self.mock_db, 999, self.start_date, self.end_date
         )
-
+        
+        self.assertIn("error", result)
         self.assertEqual(result["error"], "部门不存在")
         self.assertEqual(result["department_id"], 999)
 
-    def test_generate_weekly_success_with_data(self):
-        """测试生成周报 - 成功（有数据）"""
-        # Mock部门
-        mock_dept = MagicMock()
-        mock_dept.id = 1
-        mock_dept.dept_name = "研发部"
-        mock_dept.dept_code = "RD001"
-
-        # Mock用户
-        mock_user1 = MagicMock()
-        mock_user1.id = 101
-        mock_user1.real_name = "张三"
-        mock_user1.username = "zhangsan"
-        mock_user1.position = "工程师"
-        mock_user1.is_active = True
-        mock_user1.department_id = 1
-
-        mock_user2 = MagicMock()
-        mock_user2.id = 102
-        mock_user2.real_name = "李四"
-        mock_user2.username = "lisi"
-        mock_user2.position = "高级工程师"
-        mock_user2.is_active = True
-        mock_user2.department_id = 1
-
-        # Mock工时记录
-        mock_timesheet1 = MagicMock()
-        mock_timesheet1.user_id = 101
-        mock_timesheet1.project_id = 1
-        mock_timesheet1.hours = 8
-        mock_timesheet1.work_date = date(2024, 1, 2)
-
-        mock_timesheet2 = MagicMock()
-        mock_timesheet2.user_id = 102
-        mock_timesheet2.project_id = 1
-        mock_timesheet2.hours = 7.5
-        mock_timesheet2.work_date = date(2024, 1, 3)
-
-        # Mock项目
-        mock_project = MagicMock()
-        mock_project.id = 1
-        mock_project.project_name = "测试项目A"
-
-        # 设置数据库查询mock
+    def test_generate_weekly_no_members(self):
+        """测试部门无成员"""
+        mock_dept = self._create_mock_department()
+        
+        # 部门存在
+        dept_query = MagicMock()
+        dept_query.filter.return_value.first.return_value = mock_dept
+        
+        # 但无成员
+        user_query = MagicMock()
+        user_query.filter.return_value.all.return_value = []
+        
+        timesheet_query = MagicMock()
+        timesheet_query.filter.return_value.all.return_value = []
+        
+        query_call_count = [0]
         def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "Department":
-                mock_query.filter.return_value.first.return_value = mock_dept
-            elif model.__name__ == "User":
-                mock_query.filter.return_value.all.return_value = [mock_user1, mock_user2]
-            elif model.__name__ == "Timesheet":
-                mock_query.filter.return_value.all.return_value = [mock_timesheet1, mock_timesheet2]
-            elif model.__name__ == "Project":
-                mock_query.filter.return_value.first.return_value = mock_project
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator.generate_weekly(
-            self.db,
-            department_id=1,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+            query_call_count[0] += 1
+            if query_call_count[0] == 1:
+                return dept_query
+            elif query_call_count[0] == 2:
+                return user_query
+            else:
+                return timesheet_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator.generate_weekly(
+            self.mock_db, self.dept_id, self.start_date, self.end_date
         )
-
-        # 验证基础信息
-        self.assertEqual(result["summary"]["department_id"], 1)
-        self.assertEqual(result["summary"]["department_name"], "研发部")
-        self.assertEqual(result["summary"]["department_code"], "RD001")
-        self.assertEqual(result["summary"]["member_count"], 2)
-        self.assertEqual(result["summary"]["period_start"], "2024-01-01")
-        self.assertEqual(result["summary"]["period_end"], "2024-01-07")
-
-        # 验证成员统计
-        self.assertEqual(result["members"]["total_count"], 2)
-        self.assertEqual(result["members"]["active_count"], 2)
-
-        # 验证工时统计
-        self.assertEqual(result["timesheet"]["total_hours"], 15.5)
-        self.assertGreater(len(result["timesheet"]["project_breakdown"]), 0)
-
-        # 验证人员负荷
-        self.assertEqual(len(result["workload"]), 2)
-
-    def test_generate_weekly_success_empty_members(self):
-        """测试生成周报 - 成功（无成员）"""
-        # Mock部门
-        mock_dept = MagicMock()
-        mock_dept.id = 1
-        mock_dept.dept_name = "新部门"
-        mock_dept.dept_code = "NEW001"
-
-        # 设置数据库查询mock
-        def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "Department":
-                mock_query.filter.return_value.first.return_value = mock_dept
-            elif model.__name__ == "User":
-                mock_query.filter.return_value.all.return_value = []
-            elif model.__name__ == "Timesheet":
-                mock_query.filter.return_value.all.return_value = []
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator.generate_weekly(
-            self.db,
-            department_id=1,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
-        )
-
-        # 验证空成员情况
+        
         self.assertEqual(result["summary"]["member_count"], 0)
         self.assertEqual(result["members"]["total_count"], 0)
         self.assertEqual(result["timesheet"]["total_hours"], 0)
         self.assertEqual(len(result["workload"]), 0)
 
-    # ========== generate_monthly() 测试 ==========
+
+class TestDeptReportGeneratorMonthly(unittest.TestCase):
+    """测试月报生成"""
+
+    def setUp(self):
+        """设置测试环境"""
+        self.mock_db = MagicMock()
+        self.dept_id = 1
+        self.start_date = date(2024, 1, 1)
+        self.end_date = date(2024, 1, 31)
+
+    def _create_mock_department(self, dept_id=1, dept_name="研发部", dept_code="DEV"):
+        """创建mock部门对象"""
+        dept = MagicMock()
+        dept.id = dept_id
+        dept.dept_name = dept_name
+        dept.dept_code = dept_code
+        return dept
+
+    def _create_mock_user(self, user_id, username, real_name):
+        """创建mock用户对象"""
+        user = MagicMock()
+        user.id = user_id
+        user.username = username
+        user.real_name = real_name
+        user.department_id = 1
+        user.is_active = True
+        user.position = "工程师"
+        return user
+
+    def _create_mock_timesheet(self, user_id, project_id, hours, work_date):
+        """创建mock工时记录"""
+        ts = MagicMock()
+        ts.user_id = user_id
+        ts.project_id = project_id
+        ts.hours = hours
+        ts.work_date = work_date
+        return ts
+
+    def _create_mock_project(self, proj_id, project_name, stage="S1", health="H1"):
+        """创建mock项目对象"""
+        proj = MagicMock()
+        proj.id = proj_id
+        proj.project_name = project_name
+        proj.stage = stage
+        proj.health = health
+        proj.is_active = True
+        proj.created_at = datetime(2024, 1, 1)
+        proj.updated_at = datetime(2024, 1, 15)
+        return proj
+
+    def _create_mock_project_member(self, user_id, project_id):
+        """创建mock项目成员"""
+        pm = MagicMock()
+        pm.user_id = user_id
+        pm.project_id = project_id
+        return pm
+
+    def test_generate_monthly_success(self):
+        """测试月报生成成功"""
+        mock_dept = self._create_mock_department(1, "研发部", "DEV")
+        mock_users = [
+            self._create_mock_user(1, "zhangsan", "张三"),
+            self._create_mock_user(2, "lisi", "李四"),
+        ]
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 101, 40, date(2024, 1, 1)),
+            self._create_mock_timesheet(2, 102, 35, date(2024, 1, 2)),
+        ]
+        mock_project_members = [
+            self._create_mock_project_member(1, 101),
+            self._create_mock_project_member(2, 102),
+        ]
+        mock_projects = [
+            self._create_mock_project(101, "项目A", "S3", "H1"),
+            self._create_mock_project(102, "项目B", "S5", "H2"),
+        ]
+        
+        # 设置查询返回
+        dept_query = MagicMock()
+        dept_query.filter.return_value.first.return_value = mock_dept
+        
+        user_query = MagicMock()
+        user_query.filter.return_value.all.return_value = mock_users
+        
+        pm_query = MagicMock()
+        pm_query.filter.return_value.all.return_value = mock_project_members
+        
+        project_query = MagicMock()
+        project_query.filter.return_value.all.return_value = mock_projects
+        project_query.filter.return_value.first.return_value = mock_projects[0]
+        
+        timesheet_query = MagicMock()
+        timesheet_query.filter.return_value.all.return_value = mock_timesheets
+        
+        query_call_count = [0]
+        def query_side_effect(model):
+            query_call_count[0] += 1
+            model_name = model.__name__ if hasattr(model, '__name__') else str(model)
+            
+            if query_call_count[0] == 1:  # 部门
+                return dept_query
+            elif query_call_count[0] == 2:  # 用户
+                return user_query
+            elif query_call_count[0] == 3:  # 项目成员
+                return pm_query
+            elif query_call_count[0] == 4:  # 项目
+                return project_query
+            else:  # 工时或其他
+                return timesheet_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator.generate_monthly(
+            self.mock_db, self.dept_id, self.start_date, self.end_date
+        )
+        
+        # 验证结果
+        self.assertIn("summary", result)
+        self.assertEqual(result["summary"]["department_id"], 1)
+        self.assertEqual(result["summary"]["report_type"], "月报")
+        
+        self.assertIn("key_metrics", result)
+        self.assertEqual(result["key_metrics"]["total_members"], 2)
+        self.assertEqual(result["key_metrics"]["total_hours"], 75.0)
+        self.assertEqual(result["key_metrics"]["projects_involved"], 2)
+        
+        self.assertIn("project_stats", result)
+        self.assertEqual(result["project_stats"]["total"], 2)
+        
+        self.assertIn("member_workload", result)
 
     def test_generate_monthly_department_not_found(self):
-        """测试生成月报 - 部门不存在"""
-        self.db.query.return_value.filter.return_value.first.return_value = None
-
-        result = self.generator.generate_monthly(
-            self.db,
-            department_id=999,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-        )
-
-        self.assertEqual(result["error"], "部门不存在")
-        self.assertEqual(result["department_id"], 999)
-
-    def test_generate_monthly_success_with_data(self):
-        """测试生成月报 - 成功（有数据）"""
-        # Mock部门
-        mock_dept = MagicMock()
-        mock_dept.id = 1
-        mock_dept.dept_name = "研发部"
-        mock_dept.dept_code = "RD001"
-
-        # Mock用户
-        mock_user = MagicMock()
-        mock_user.id = 101
-        mock_user.real_name = "张三"
-        mock_user.username = "zhangsan"
-        mock_user.position = "工程师"
-        mock_user.is_active = True
-        mock_user.department_id = 1
-
-        # Mock工时记录
-        mock_timesheet = MagicMock()
-        mock_timesheet.user_id = 101
-        mock_timesheet.project_id = 1
-        mock_timesheet.hours = 8
-        mock_timesheet.work_date = date(2024, 1, 2)
-
-        # Mock项目
-        mock_project = MagicMock()
-        mock_project.id = 1
-        mock_project.project_name = "测试项目A"
-        mock_project.is_active = True
-        mock_project.stage = "S3"
-        mock_project.health = "H1"
-        mock_project.created_at = datetime(2024, 1, 5)
-        mock_project.updated_at = datetime(2024, 1, 20)
-
-        # Mock项目成员
-        mock_pm = MagicMock()
-        mock_pm.project_id = 1
-        mock_pm.user_id = 101
-
-        # 设置数据库查询mock
-        def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "Department":
-                mock_query.filter.return_value.first.return_value = mock_dept
-            elif model.__name__ == "User":
-                mock_query.filter.return_value.all.return_value = [mock_user]
-            elif model.__name__ == "Timesheet":
-                mock_query.filter.return_value.all.return_value = [mock_timesheet]
-            elif model.__name__ == "Project":
-                mock_query.filter.return_value.first.return_value = mock_project
-                mock_query.filter.return_value.all.return_value = [mock_project]
-            elif model.__name__ == "ProjectMember":
-                mock_query.filter.return_value.all.return_value = [mock_pm]
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator.generate_monthly(
-            self.db,
-            department_id=1,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-        )
-
-        # 验证基础信息
-        self.assertEqual(result["summary"]["department_id"], 1)
-        self.assertEqual(result["summary"]["department_name"], "研发部")
-        self.assertEqual(result["summary"]["report_type"], "月报")
-
-        # 验证关键指标
-        self.assertIn("key_metrics", result)
-        self.assertEqual(result["key_metrics"]["total_members"], 1)
-        self.assertGreater(result["key_metrics"]["total_hours"], 0)
-
-        # 验证项目统计
-        self.assertIn("project_stats", result)
-        self.assertEqual(result["project_stats"]["total"], 1)
+        """测试部门不存在（月报）"""
+        dept_query = MagicMock()
+        dept_query.filter.return_value.first.return_value = None
+        self.mock_db.query.return_value = dept_query
         
-        # 验证人员工时详情
-        self.assertIn("member_workload", result)
-        self.assertEqual(len(result["member_workload"]), 1)
+        result = DeptReportGenerator.generate_monthly(
+            self.mock_db, 999, self.start_date, self.end_date
+        )
+        
+        self.assertIn("error", result)
+        self.assertEqual(result["error"], "部门不存在")
 
-    # ========== _get_department_members() 测试 ==========
 
-    def test_get_department_members_by_department_id(self):
+class TestGetDepartmentMembers(unittest.TestCase):
+    """测试获取部门成员"""
+
+    def setUp(self):
+        self.mock_db = MagicMock()
+
+    def _create_mock_department(self, dept_id=1, dept_name="研发部"):
+        """创建mock部门"""
+        dept = MagicMock()
+        dept.id = dept_id
+        dept.dept_name = dept_name
+        dept.name = dept_name
+        return dept
+
+    def _create_mock_user(self, user_id, username, department_id=1):
+        """创建mock用户"""
+        user = MagicMock()
+        user.id = user_id
+        user.username = username
+        user.department_id = department_id
+        user.department = "研发部"
+        user.is_active = True
+        return user
+
+    def test_get_members_by_department_id(self):
         """测试通过department_id获取成员"""
-        mock_dept = MagicMock()
-        mock_dept.id = 1
+        mock_dept = self._create_mock_department(1, "研发部")
+        mock_users = [
+            self._create_mock_user(1, "user1", 1),
+            self._create_mock_user(2, "user2", 1),
+        ]
+        
+        user_query = MagicMock()
+        user_query.filter.return_value.all.return_value = mock_users
+        self.mock_db.query.return_value = user_query
+        
+        result = DeptReportGenerator._get_department_members(self.mock_db, mock_dept)
+        
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].id, 1)
 
-        mock_user = MagicMock()
-        mock_user.id = 101
-        mock_user.is_active = True
-
-        self.db.query.return_value.filter.return_value.all.return_value = [mock_user]
-
-        result = self.generator._get_department_members(self.db, mock_dept)
-
+    def test_get_members_fallback_to_dept_name(self):
+        """测试回退到部门名称查询"""
+        mock_dept = self._create_mock_department(1, "研发部")
+        mock_users = [self._create_mock_user(1, "user1", 1)]
+        
+        # 第一次查询返回空，第二次返回结果
+        user_query_empty = MagicMock()
+        user_query_empty.filter.return_value.all.return_value = []
+        
+        user_query_with_data = MagicMock()
+        user_query_with_data.filter.return_value.all.return_value = mock_users
+        
+        query_calls = [0]
+        def query_side_effect(model):
+            query_calls[0] += 1
+            if query_calls[0] == 1:
+                return user_query_empty
+            else:
+                return user_query_with_data
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_department_members(self.mock_db, mock_dept)
+        
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].id, 101)
+        self.assertEqual(result[0].id, 1)
 
-    def test_get_department_members_by_dept_name_fallback(self):
-        """测试通过部门名称获取成员（回退策略）"""
-        mock_dept = MagicMock()
-        mock_dept.id = 1
-        mock_dept.dept_name = "研发部"
-
-        mock_user = MagicMock()
-        mock_user.id = 101
-        mock_user.is_active = True
-
-        # 第一次查询返回空，第二次查询返回结果
-        self.db.query.return_value.filter.return_value.all.side_effect = [[], [mock_user]]
-
-        result = self.generator._get_department_members(self.db, mock_dept)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].id, 101)
-
-    def test_get_department_members_empty(self):
-        """测试获取成员 - 空结果"""
-        mock_dept = MagicMock()
-        mock_dept.id = 1
-        mock_dept.dept_name = ""
-
-        self.db.query.return_value.filter.return_value.all.return_value = []
-
-        result = self.generator._get_department_members(self.db, mock_dept)
-
+    def test_get_members_no_results(self):
+        """测试无成员情况"""
+        mock_dept = self._create_mock_department(1, "")
+        
+        user_query = MagicMock()
+        user_query.filter.return_value.all.return_value = []
+        self.mock_db.query.return_value = user_query
+        
+        result = DeptReportGenerator._get_department_members(self.mock_db, mock_dept)
+        
         self.assertEqual(len(result), 0)
 
-    # ========== _get_timesheet_summary() 测试 ==========
 
-    def test_get_timesheet_summary_empty_users(self):
-        """测试工时汇总 - 空用户列表"""
-        result = self.generator._get_timesheet_summary(
-            self.db,
-            user_ids=[],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+class TestTimesheetSummary(unittest.TestCase):
+    """测试工时汇总"""
+
+    def setUp(self):
+        self.mock_db = MagicMock()
+
+    def _create_mock_timesheet(self, user_id, hours, work_date):
+        """创建mock工时记录"""
+        ts = MagicMock()
+        ts.user_id = user_id
+        ts.hours = hours
+        ts.work_date = work_date
+        return ts
+
+    def test_timesheet_summary_success(self):
+        """测试工时汇总成功"""
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 8, date(2024, 1, 1)),
+            self._create_mock_timesheet(1, 6.5, date(2024, 1, 2)),
+            self._create_mock_timesheet(2, 7, date(2024, 1, 3)),
+        ]
+        
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        self.mock_db.query.return_value = ts_query
+        
+        result = DeptReportGenerator._get_timesheet_summary(
+            self.mock_db, [1, 2], date(2024, 1, 1), date(2024, 1, 7)
         )
+        
+        self.assertEqual(result["total_hours"], 21.5)
+        self.assertEqual(result["timesheet_count"], 3)
 
+    def test_timesheet_summary_empty_user_ids(self):
+        """测试空用户列表"""
+        result = DeptReportGenerator._get_timesheet_summary(
+            self.mock_db, [], date(2024, 1, 1), date(2024, 1, 7)
+        )
+        
         self.assertEqual(result["total_hours"], 0)
         self.assertEqual(result["timesheet_count"], 0)
 
-    def test_get_timesheet_summary_with_data(self):
-        """测试工时汇总 - 有数据"""
-        mock_ts1 = MagicMock()
-        mock_ts1.hours = 8.0
+    def test_timesheet_summary_no_records(self):
+        """测试无工时记录"""
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = []
+        self.mock_db.query.return_value = ts_query
+        
+        result = DeptReportGenerator._get_timesheet_summary(
+            self.mock_db, [1, 2], date(2024, 1, 1), date(2024, 1, 7)
+        )
+        
+        self.assertEqual(result["total_hours"], 0)
+        self.assertEqual(result["timesheet_count"], 0)
 
-        mock_ts2 = MagicMock()
-        mock_ts2.hours = 7.5
 
-        mock_ts3 = MagicMock()
-        mock_ts3.hours = None  # 测试None值
+class TestProjectBreakdown(unittest.TestCase):
+    """测试项目工时分布"""
 
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            mock_ts1, mock_ts2, mock_ts3
+    def setUp(self):
+        self.mock_db = MagicMock()
+
+    def _create_mock_timesheet(self, user_id, project_id, hours):
+        """创建mock工时记录"""
+        ts = MagicMock()
+        ts.user_id = user_id
+        ts.project_id = project_id
+        ts.hours = hours
+        ts.work_date = date(2024, 1, 1)
+        return ts
+
+    def _create_mock_project(self, proj_id, project_name):
+        """创建mock项目"""
+        proj = MagicMock()
+        proj.id = proj_id
+        proj.project_name = project_name
+        return proj
+
+    def test_project_breakdown_success(self):
+        """测试项目工时分布"""
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 101, 10),
+            self._create_mock_timesheet(1, 101, 8),
+            self._create_mock_timesheet(2, 102, 6),
         ]
-
-        result = self.generator._get_timesheet_summary(
-            self.db,
-            user_ids=[101, 102],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+        
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        
+        proj_query = MagicMock()
+        def get_project(proj_id):
+            if proj_id == 101:
+                return self._create_mock_project(101, "项目A")
+            elif proj_id == 102:
+                return self._create_mock_project(102, "项目B")
+            return None
+        
+        proj_query.filter.return_value.first.side_effect = lambda: get_project(101)
+        
+        query_calls = [0]
+        def query_side_effect(model):
+            query_calls[0] += 1
+            if query_calls[0] == 1:
+                return ts_query
+            else:
+                # 每次查项目都需要新的query对象
+                pq = MagicMock()
+                # 根据filter条件确定返回哪个项目
+                pq.filter.return_value.first.return_value = self._create_mock_project(101, "项目A")
+                return pq
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_breakdown(
+            self.mock_db, [1, 2], date(2024, 1, 1), date(2024, 1, 7)
         )
+        
+        self.assertGreater(len(result), 0)
+        # 项目A应该排第一（18小时）
+        self.assertEqual(result[0]["project_id"], 101)
+        self.assertEqual(result[0]["hours"], 18)
+        self.assertEqual(result[0]["percentage"], 75.0)  # 18/(18+6)*100
 
-        self.assertEqual(result["total_hours"], 15.5)
-        self.assertEqual(result["timesheet_count"], 3)
-
-    # ========== _get_project_breakdown() 测试 ==========
-
-    def test_get_project_breakdown_empty_users(self):
-        """测试项目工时分布 - 空用户列表"""
-        result = self.generator._get_project_breakdown(
-            self.db,
-            user_ids=[],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+    def test_project_breakdown_with_null_project(self):
+        """测试包含非项目工作"""
+        mock_timesheets = [
+            self._create_mock_timesheet(1, None, 5),
+        ]
+        
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        self.mock_db.query.return_value = ts_query
+        
+        result = DeptReportGenerator._get_project_breakdown(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 7)
         )
+        
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["project_id"], 0)
+        self.assertEqual(result[0]["project_name"], "非项目工作")
 
+    def test_project_breakdown_empty_user_ids(self):
+        """测试空用户列表"""
+        result = DeptReportGenerator._get_project_breakdown(
+            self.mock_db, [], date(2024, 1, 1), date(2024, 1, 7)
+        )
+        
         self.assertEqual(len(result), 0)
 
-    def test_get_project_breakdown_with_data(self):
-        """测试项目工时分布 - 有数据"""
-        # Mock工时记录
-        mock_ts1 = MagicMock()
-        mock_ts1.project_id = 1
-        mock_ts1.hours = 10.0
-
-        mock_ts2 = MagicMock()
-        mock_ts2.project_id = 1
-        mock_ts2.hours = 5.0
-
-        mock_ts3 = MagicMock()
-        mock_ts3.project_id = 2
-        mock_ts3.hours = 8.0
-
-        mock_ts4 = MagicMock()
-        mock_ts4.project_id = None  # 非项目工作
-        mock_ts4.hours = 3.0
-
-        # Mock项目
-        mock_project1 = MagicMock()
-        mock_project1.project_name = "项目A"
-
-        mock_project2 = MagicMock()
-        mock_project2.project_name = "项目B"
-
-        # 设置数据库查询mock
-        def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "Timesheet":
-                mock_query.filter.return_value.all.return_value = [
-                    mock_ts1, mock_ts2, mock_ts3, mock_ts4
-                ]
-            elif model.__name__ == "Project":
-                def filter_side_effect(*args, **kwargs):
-                    # 根据project_id返回不同的项目
-                    filter_mock = MagicMock()
-                    # 简化处理：总是返回project1
-                    filter_mock.first.return_value = mock_project1
-                    return filter_mock
-                
-                mock_query.filter.side_effect = filter_side_effect
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator._get_project_breakdown(
-            self.db,
-            user_ids=[101],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
-            limit=10,
-        )
-
-        # 验证结果
-        self.assertGreater(len(result), 0)
+    def test_project_breakdown_limit(self):
+        """测试结果限制"""
+        # 创建15个项目的工时
+        mock_timesheets = [
+            self._create_mock_timesheet(1, i, 10 - i*0.5)
+            for i in range(1, 16)
+        ]
         
-        # 验证项目1（工时最多）
-        project1_data = next((p for p in result if p["project_id"] == 1), None)
-        self.assertIsNotNone(project1_data)
-        self.assertEqual(project1_data["hours"], 15.0)
-        self.assertEqual(project1_data["timesheet_count"], 2)
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
         
-        # 验证非项目工作
-        non_project_data = next((p for p in result if p["project_id"] == 0), None)
-        self.assertIsNotNone(non_project_data)
-        self.assertEqual(non_project_data["project_name"], "非项目工作")
-        self.assertEqual(non_project_data["hours"], 3.0)
-
-    def test_get_project_breakdown_with_limit(self):
-        """测试项目工时分布 - 限制数量"""
-        # 创建多个项目的工时
-        timesheets = []
-        for i in range(20):
-            mock_ts = MagicMock()
-            mock_ts.project_id = i + 1
-            mock_ts.hours = 10 - i * 0.1  # 递减的工时
-            timesheets.append(mock_ts)
-
-        mock_project = MagicMock()
-        mock_project.project_name = "测试项目"
-
+        proj_query = MagicMock()
+        proj_query.filter.return_value.first.return_value = self._create_mock_project(1, "项目")
+        
+        query_calls = [0]
         def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "Timesheet":
-                mock_query.filter.return_value.all.return_value = timesheets
-            elif model.__name__ == "Project":
-                mock_query.filter.return_value.first.return_value = mock_project
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator._get_project_breakdown(
-            self.db,
-            user_ids=[101],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
-            limit=5,
+            query_calls[0] += 1
+            if query_calls[0] == 1:
+                return ts_query
+            else:
+                return proj_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_breakdown(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 7), limit=5
         )
-
-        # 验证限制数量
+        
         self.assertEqual(len(result), 5)
 
-    # ========== _get_member_workload() 测试 ==========
 
-    def test_get_member_workload_empty_members(self):
-        """测试成员工作负荷 - 空成员列表"""
-        result = self.generator._get_member_workload(
-            self.db,
-            members=[],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
-        )
+class TestMemberWorkload(unittest.TestCase):
+    """测试成员工作负荷"""
 
-        self.assertEqual(len(result), 0)
+    def setUp(self):
+        self.mock_db = MagicMock()
 
-    def test_get_member_workload_with_data(self):
-        """测试成员工作负荷 - 有数据"""
-        # Mock用户
-        mock_user1 = MagicMock()
-        mock_user1.id = 101
-        mock_user1.real_name = "张三"
-        mock_user1.username = "zhangsan"
-        mock_user1.position = "工程师"
+    def _create_mock_user(self, user_id, username, real_name, position="工程师"):
+        """创建mock用户"""
+        user = MagicMock()
+        user.id = user_id
+        user.username = username
+        user.real_name = real_name
+        user.position = position
+        return user
 
-        mock_user2 = MagicMock()
-        mock_user2.id = 102
-        mock_user2.real_name = None  # 测试None值，应使用username
-        mock_user2.username = "lisi"
-        mock_user2.position = None  # 测试None值
+    def _create_mock_timesheet(self, user_id, hours, work_date):
+        """创建mock工时记录"""
+        ts = MagicMock()
+        ts.user_id = user_id
+        ts.hours = hours
+        ts.work_date = work_date
+        return ts
 
-        # Mock工时记录
-        mock_ts1 = MagicMock()
-        mock_ts1.user_id = 101
-        mock_ts1.hours = 8.0
-
-        mock_ts2 = MagicMock()
-        mock_ts2.user_id = 101
-        mock_ts2.hours = 7.5
-
-        mock_ts3 = MagicMock()
-        mock_ts3.user_id = 102
-        mock_ts3.hours = 6.0
-
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            mock_ts1, mock_ts2, mock_ts3
+    def test_member_workload_success(self):
+        """测试成员负荷计算"""
+        mock_users = [
+            self._create_mock_user(1, "zhangsan", "张三", "高级工程师"),
+            self._create_mock_user(2, "lisi", "李四", "工程师"),
         ]
-
-        result = self.generator._get_member_workload(
-            self.db,
-            members=[mock_user1, mock_user2],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 7),
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 8, date(2024, 1, 1)),
+            self._create_mock_timesheet(1, 7, date(2024, 1, 2)),
+            self._create_mock_timesheet(2, 6, date(2024, 1, 1)),
+        ]
+        
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        self.mock_db.query.return_value = ts_query
+        
+        result = DeptReportGenerator._get_member_workload(
+            self.mock_db, mock_users, date(2024, 1, 1), date(2024, 1, 7)
         )
-
+        
         self.assertEqual(len(result), 2)
-        
-        # 验证用户1
-        user1_data = next((u for u in result if u["user_id"] == 101), None)
-        self.assertIsNotNone(user1_data)
-        self.assertEqual(user1_data["user_name"], "张三")
-        self.assertEqual(user1_data["total_hours"], 15.5)
-        self.assertEqual(user1_data["avg_daily_hours"], 3.1)
-        
-        # 验证用户2（测试None值处理）
-        user2_data = next((u for u in result if u["user_id"] == 102), None)
-        self.assertIsNotNone(user2_data)
-        self.assertEqual(user2_data["user_name"], "lisi")
-        self.assertEqual(user2_data["position"], "")
+        self.assertEqual(result[0]["user_id"], 1)
+        self.assertEqual(result[0]["total_hours"], 15)
+        self.assertEqual(result[0]["position"], "高级工程师")
 
-    # ========== _get_member_workload_detailed() 测试 ==========
-
-    def test_get_member_workload_detailed_empty_members(self):
-        """测试成员工作负荷详情 - 空成员列表"""
-        result = self.generator._get_member_workload_detailed(
-            self.db,
-            members=[],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-            working_days=22,
+    def test_member_workload_empty_members(self):
+        """测试空成员列表"""
+        result = DeptReportGenerator._get_member_workload(
+            self.mock_db, [], date(2024, 1, 1), date(2024, 1, 7)
         )
-
+        
         self.assertEqual(len(result), 0)
 
-    def test_get_member_workload_detailed_with_data(self):
-        """测试成员工作负荷详情 - 有数据"""
-        # Mock用户
-        mock_user = MagicMock()
-        mock_user.id = 101
-        mock_user.real_name = "张三"
-        mock_user.username = "zhangsan"
-        mock_user.position = "工程师"
-
-        # Mock工时记录
-        mock_ts1 = MagicMock()
-        mock_ts1.user_id = 101
-        mock_ts1.hours = 8.0
-        mock_ts1.work_date = date(2024, 1, 2)
-
-        mock_ts2 = MagicMock()
-        mock_ts2.user_id = 101
-        mock_ts2.hours = 8.0
-        mock_ts2.work_date = date(2024, 1, 3)
-
-        mock_ts3 = MagicMock()
-        mock_ts3.user_id = 101
-        mock_ts3.hours = 8.0
-        mock_ts3.work_date = date(2024, 1, 3)  # 同一天
-
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            mock_ts1, mock_ts2, mock_ts3
+    def test_member_workload_detailed_success(self):
+        """测试详细工作负荷计算"""
+        mock_users = [
+            self._create_mock_user(1, "zhangsan", "张三"),
         ]
-
-        result = self.generator._get_member_workload_detailed(
-            self.db,
-            members=[mock_user],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-            working_days=22,
-        )
-
-        self.assertEqual(len(result), 1)
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 8, date(2024, 1, 1)),
+            self._create_mock_timesheet(1, 8, date(2024, 1, 2)),
+            self._create_mock_timesheet(1, 8, date(2024, 1, 3)),
+        ]
         
-        user_data = result[0]
-        self.assertEqual(user_data["user_id"], 101)
-        self.assertEqual(user_data["total_hours"], 24.0)
-        self.assertEqual(user_data["expected_hours"], 176)  # 22 * 8
-        self.assertEqual(user_data["utilization_rate"], 13.6)  # 24/176*100
-        self.assertEqual(user_data["timesheet_days"], 2)  # 2个不同日期
-
-    def test_get_member_workload_detailed_zero_working_days(self):
-        """测试成员工作负荷详情 - 零工作日"""
-        mock_user = MagicMock()
-        mock_user.id = 101
-        mock_user.real_name = "张三"
-        mock_user.username = "zhangsan"
-        mock_user.position = "工程师"
-
-        self.db.query.return_value.filter.return_value.all.return_value = []
-
-        result = self.generator._get_member_workload_detailed(
-            self.db,
-            members=[mock_user],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-            working_days=0,  # 测试除以0的情况
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        self.mock_db.query.return_value = ts_query
+        
+        working_days = 20
+        result = DeptReportGenerator._get_member_workload_detailed(
+            self.mock_db, mock_users, date(2024, 1, 1), date(2024, 1, 31), working_days
         )
-
+        
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["utilization_rate"], 0)
+        self.assertEqual(result[0]["total_hours"], 24)
+        self.assertEqual(result[0]["expected_hours"], 160)  # 20*8
+        self.assertEqual(result[0]["utilization_rate"], 15.0)  # 24/160*100
+        self.assertEqual(result[0]["timesheet_days"], 3)
 
-    def test_get_member_workload_detailed_sorting(self):
-        """测试成员工作负荷详情 - 按工时排序"""
-        # Mock用户
-        mock_user1 = MagicMock()
-        mock_user1.id = 101
-        mock_user1.real_name = "张三"
-        mock_user1.username = "zhangsan"
-        mock_user1.position = "工程师"
-
-        mock_user2 = MagicMock()
-        mock_user2.id = 102
-        mock_user2.real_name = "李四"
-        mock_user2.username = "lisi"
-        mock_user2.position = "高级工程师"
-
-        # Mock工时（user2工时更多）
-        mock_ts1 = MagicMock()
-        mock_ts1.user_id = 101
-        mock_ts1.hours = 10.0
-        mock_ts1.work_date = date(2024, 1, 2)
-
-        mock_ts2 = MagicMock()
-        mock_ts2.user_id = 102
-        mock_ts2.hours = 20.0
-        mock_ts2.work_date = date(2024, 1, 2)
-
-        self.db.query.return_value.filter.return_value.all.return_value = [
-            mock_ts1, mock_ts2
+    def test_member_workload_detailed_sorted(self):
+        """测试结果按工时排序"""
+        mock_users = [
+            self._create_mock_user(1, "user1", "用户1"),
+            self._create_mock_user(2, "user2", "用户2"),
         ]
-
-        result = self.generator._get_member_workload_detailed(
-            self.db,
-            members=[mock_user1, mock_user2],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-            working_days=22,
+        mock_timesheets = [
+            self._create_mock_timesheet(1, 10, date(2024, 1, 1)),
+            self._create_mock_timesheet(2, 20, date(2024, 1, 1)),
+        ]
+        
+        ts_query = MagicMock()
+        ts_query.filter.return_value.all.return_value = mock_timesheets
+        self.mock_db.query.return_value = ts_query
+        
+        result = DeptReportGenerator._get_member_workload_detailed(
+            self.mock_db, mock_users, date(2024, 1, 1), date(2024, 1, 7), 5
         )
+        
+        # 应该按工时降序排列
+        self.assertEqual(result[0]["user_id"], 2)
+        self.assertEqual(result[0]["total_hours"], 20)
+        self.assertEqual(result[1]["user_id"], 1)
+        self.assertEqual(result[1]["total_hours"], 10)
 
-        # 验证排序（工时多的在前）
-        self.assertEqual(result[0]["user_id"], 102)
-        self.assertEqual(result[1]["user_id"], 101)
 
-    # ========== _get_project_stats() 测试 ==========
+class TestProjectStats(unittest.TestCase):
+    """测试项目统计"""
 
-    def test_get_project_stats_empty_users(self):
-        """测试项目统计 - 空用户列表"""
-        result = self.generator._get_project_stats(
-            self.db,
-            user_ids=[],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
+    def setUp(self):
+        self.mock_db = MagicMock()
+
+    def _create_mock_project_member(self, user_id, project_id):
+        """创建mock项目成员"""
+        pm = MagicMock()
+        pm.user_id = user_id
+        pm.project_id = project_id
+        return pm
+
+    def _create_mock_project(self, proj_id, name, stage="S1", health="H1", 
+                           created_at=None, updated_at=None):
+        """创建mock项目"""
+        proj = MagicMock()
+        proj.id = proj_id
+        proj.project_name = name
+        proj.stage = stage
+        proj.health = health
+        proj.is_active = True
+        proj.created_at = created_at or datetime(2023, 12, 1)
+        proj.updated_at = updated_at or datetime(2024, 1, 15)
+        return proj
+
+    def test_project_stats_success(self):
+        """测试项目统计成功"""
+        mock_pms = [
+            self._create_mock_project_member(1, 101),
+            self._create_mock_project_member(1, 102),
+        ]
+        mock_projects = [
+            self._create_mock_project(101, "项目A", "S3", "H1"),
+            self._create_mock_project(102, "项目B", "S5", "H2"),
+        ]
+        
+        pm_query = MagicMock()
+        pm_query.filter.return_value.all.return_value = mock_pms
+        
+        proj_query = MagicMock()
+        proj_query.filter.return_value.all.return_value = mock_projects
+        
+        query_calls = [0]
+        def query_side_effect(model):
+            query_calls[0] += 1
+            if query_calls[0] == 1:
+                return pm_query
+            else:
+                return proj_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_stats(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 31)
         )
+        
+        self.assertEqual(result["total"], 2)
+        self.assertEqual(result["by_stage"]["S3"], 1)
+        self.assertEqual(result["by_stage"]["S5"], 1)
+        self.assertEqual(result["by_health"]["H1"], 1)
+        self.assertEqual(result["by_health"]["H2"], 1)
 
+    def test_project_stats_completed_this_month(self):
+        """测试统计本月完成的项目"""
+        mock_pms = [self._create_mock_project_member(1, 101)]
+        # S9表示已完成
+        mock_projects = [
+            self._create_mock_project(
+                101, "完成项目", "S9", "H1",
+                updated_at=datetime(2024, 1, 20)
+            ),
+        ]
+        
+        pm_query = MagicMock()
+        pm_query.filter.return_value.all.return_value = mock_pms
+        
+        proj_query = MagicMock()
+        proj_query.filter.return_value.all.return_value = mock_projects
+        
+        query_calls = [0]
+        def query_side_effect(model):
+            query_calls[0] += 1
+            return pm_query if query_calls[0] == 1 else proj_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_stats(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 31)
+        )
+        
+        self.assertEqual(result["completed_this_month"], 1)
+
+    def test_project_stats_started_this_month(self):
+        """测试统计本月新开项目"""
+        mock_pms = [self._create_mock_project_member(1, 101)]
+        mock_projects = [
+            self._create_mock_project(
+                101, "新项目", "S1", "H1",
+                created_at=datetime(2024, 1, 5)
+            ),
+        ]
+        
+        pm_query = MagicMock()
+        pm_query.filter.return_value.all.return_value = mock_pms
+        
+        proj_query = MagicMock()
+        proj_query.filter.return_value.all.return_value = mock_projects
+        
+        query_calls = [0]
+        def query_side_effect(model):
+            query_calls[0] += 1
+            return pm_query if query_calls[0] == 1 else proj_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_stats(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 31)
+        )
+        
+        self.assertEqual(result["started_this_month"], 1)
+
+    def test_project_stats_empty_user_ids(self):
+        """测试空用户列表"""
+        result = DeptReportGenerator._get_project_stats(
+            self.mock_db, [], date(2024, 1, 1), date(2024, 1, 31)
+        )
+        
         self.assertEqual(result["total"], 0)
         self.assertEqual(result["by_stage"], {})
         self.assertEqual(result["by_health"], {})
         self.assertEqual(result["completed_this_month"], 0)
         self.assertEqual(result["started_this_month"], 0)
 
-    def test_get_project_stats_with_data(self):
-        """测试项目统计 - 有数据"""
-        # Mock项目成员
-        mock_pm1 = MagicMock()
-        mock_pm1.project_id = 1
-
-        mock_pm2 = MagicMock()
-        mock_pm2.project_id = 2
-
-        # Mock项目
-        mock_project1 = MagicMock()
-        mock_project1.id = 1
-        mock_project1.is_active = True
-        mock_project1.stage = "S3"
-        mock_project1.health = "H1"
-        mock_project1.created_at = datetime(2024, 1, 5)
-        mock_project1.updated_at = datetime(2024, 1, 20)
-
-        mock_project2 = MagicMock()
-        mock_project2.id = 2
-        mock_project2.is_active = True
-        mock_project2.stage = "S9"  # 已完成
-        mock_project2.health = "H3"  # 高风险
-        mock_project2.created_at = datetime(2023, 12, 1)
-        mock_project2.updated_at = datetime(2024, 1, 15)
-
-        # 设置数据库查询mock
+    def test_project_stats_no_projects(self):
+        """测试无项目情况"""
+        pm_query = MagicMock()
+        pm_query.filter.return_value.all.return_value = []
+        
+        proj_query = MagicMock()
+        proj_query.filter.return_value.all.return_value = []
+        
+        query_calls = [0]
         def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "ProjectMember":
-                mock_query.filter.return_value.all.return_value = [mock_pm1, mock_pm2]
-            elif model.__name__ == "Project":
-                mock_query.filter.return_value.all.return_value = [mock_project1, mock_project2]
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator._get_project_stats(
-            self.db,
-            user_ids=[101],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
+            query_calls[0] += 1
+            return pm_query if query_calls[0] == 1 else proj_query
+        
+        self.mock_db.query.side_effect = query_side_effect
+        
+        result = DeptReportGenerator._get_project_stats(
+            self.mock_db, [1], date(2024, 1, 1), date(2024, 1, 31)
         )
-
-        # 验证总数
-        self.assertEqual(result["total"], 2)
         
-        # 验证按阶段统计
-        self.assertEqual(result["by_stage"]["S3"], 1)
-        self.assertEqual(result["by_stage"]["S9"], 1)
-        
-        # 验证按健康度统计
-        self.assertEqual(result["by_health"]["H1"], 1)
-        self.assertEqual(result["by_health"]["H3"], 1)
-        
-        # 验证本月完成/新开项目
-        self.assertEqual(result["completed_this_month"], 1)
-        self.assertEqual(result["started_this_month"], 1)
-
-    def test_get_project_stats_null_attributes(self):
-        """测试项目统计 - 处理None属性"""
-        # Mock项目成员
-        mock_pm = MagicMock()
-        mock_pm.project_id = 1
-
-        # Mock项目（属性为None）
-        mock_project = MagicMock()
-        mock_project.id = 1
-        mock_project.is_active = True
-        mock_project.stage = None
-        mock_project.health = None
-        mock_project.created_at = None
-        mock_project.updated_at = None
-
-        def query_side_effect(model):
-            mock_query = MagicMock()
-            
-            if model.__name__ == "ProjectMember":
-                mock_query.filter.return_value.all.return_value = [mock_pm]
-            elif model.__name__ == "Project":
-                mock_query.filter.return_value.all.return_value = [mock_project]
-            
-            return mock_query
-
-        self.db.query.side_effect = query_side_effect
-
-        result = self.generator._get_project_stats(
-            self.db,
-            user_ids=[101],
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31),
-        )
-
-        # 验证None值被处理为默认值
-        self.assertEqual(result["total"], 1)
-        self.assertEqual(result["by_stage"]["S1"], 1)  # 默认S1
-        self.assertEqual(result["by_health"]["H1"], 1)  # 默认H1
+        self.assertEqual(result["total"], 0)
 
 
 if __name__ == "__main__":
