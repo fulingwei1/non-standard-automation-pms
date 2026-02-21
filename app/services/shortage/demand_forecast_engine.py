@@ -226,20 +226,20 @@ class DemandForecastEngine:
         
         # 从工单获取历史需求
         query = self.db.query(
-            func.date(WorkOrder.planned_start_date).label('demand_date'),
-            func.sum(WorkOrder.planned_quantity).label('daily_demand')
+            func.date(WorkOrder.plan_start_date).label('demand_date'),
+            func.sum(WorkOrder.plan_qty).label('daily_demand')
         ).filter(
             and_(
                 WorkOrder.material_id == material_id,
-                WorkOrder.planned_start_date >= start_date,
-                WorkOrder.planned_start_date < datetime.now().date()
+                WorkOrder.plan_start_date >= start_date,
+                WorkOrder.plan_start_date < datetime.now().date()
             )
         )
         
         if project_id:
             query = query.filter(WorkOrder.project_id == project_id)
         
-        query = query.group_by(func.date(WorkOrder.planned_start_date))
+        query = query.group_by(func.date(WorkOrder.plan_start_date))
         
         results = query.all()
         
