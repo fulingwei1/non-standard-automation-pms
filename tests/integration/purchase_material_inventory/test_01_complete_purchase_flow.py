@@ -41,12 +41,14 @@ class TestCompletePurchaseFlow:
         # 添加采购申请明细
         request_item = PurchaseRequestItem(
             request_id=purchase_request.id,
-            item_no=1,
             material_id=material_m001.id,
-            required_quantity=Decimal("100"),
+            material_code=material_m001.material_code,
+            material_name=material_m001.material_name,
+            specification=material_m001.specification,
+            unit=material_m001.unit,
+            quantity=Decimal("100"),
             required_date=(datetime.utcnow() + timedelta(days=7)).date(),
-            purpose="生产用料",
-            urgency="HIGH"
+            remark="生产用料 - 紧急度: HIGH"
         )
         db.add(request_item)
         db.commit()

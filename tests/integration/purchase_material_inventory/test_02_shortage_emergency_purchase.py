@@ -78,12 +78,14 @@ class TestShortageEmergencyPurchase:
             
             request_item = PurchaseRequestItem(
                 request_id=purchase_request.id,
-                item_no=1,
                 material_id=material.id,
-                required_quantity=suggested_qty,
+                material_code=material.material_code,
+                material_name=material.material_name,
+                specification=material.specification,
+                unit=material.unit,
+                quantity=suggested_qty,
                 required_date=alert.required_date,
-                purpose="补充安全库存",
-                urgency="URGENT" if material.is_key_material else "HIGH"
+                remark=f"补充安全库存 - 紧急度: {'URGENT' if material.is_key_material else 'HIGH'}"
             )
             db.add(request_item)
             

@@ -172,6 +172,22 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 预售AI模块加载失败: {e}")
     
+    # ==================== 验收管理 ====================
+    try:
+        from app.api.v1.endpoints.acceptance import router as acceptance_router
+        api_router.include_router(acceptance_router, tags=["acceptance"])
+        print("✓ 验收管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 验收管理模块加载失败: {e}")
+    
+    # ==================== 报表框架 ====================
+    try:
+        from app.api.v1.endpoints.reports.unified import router as reports_router
+        api_router.include_router(reports_router, tags=["reports"])
+        print("✓ 报表框架模块加载成功")
+    except Exception as e:
+        print(f"✗ 报表框架模块加载失败: {e}")
+    
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
