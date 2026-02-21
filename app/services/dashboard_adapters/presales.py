@@ -59,15 +59,15 @@ class PresalesDashboardAdapter(DashboardAdapter):
         )
 
         # 资源浪费统计
-        from app.models.work_log import WorkLog
+        from app.models.timesheet import Timesheet
 
         total_hours = 0
         wasted_hours = 0
 
         for project in ytd_projects:
             hours = (
-                self.db.query(func.sum(WorkLog.work_hours))
-                .filter(WorkLog.project_id == project.id)
+                self.db.query(func.sum(Timesheet.hours))
+                .filter(Timesheet.project_id == project.id)
                 .scalar()
                 or 0
             )
