@@ -19,7 +19,7 @@ from app.models.production.work_order import WorkOrder
 # from app.models.inventory_tracking import Inventory  # FIXME: Class does not exist
 # Use MaterialStock instead if needed
 from app.models.inventory_tracking import MaterialStock
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
 from app.core.exceptions import BusinessException
 from app.utils.db_helpers import save_obj
 
@@ -292,8 +292,8 @@ class SmartAlertEngine:
             WorkOrder.material_id,
             Material.material_code,
             Material.material_name,
-            WorkOrder.planned_quantity.label('required_qty'),
-            WorkOrder.planned_start_date.label('required_date'),
+            WorkOrder.plan_qty.label('required_qty'),
+            WorkOrder.plan_start_date.label('required_date'),
             WorkOrder.is_critical_path
         ).join(Material, Material.id == WorkOrder.material_id)
         
@@ -329,9 +329,9 @@ class SmartAlertEngine:
     def _get_available_qty(self, material_id: int) -> Decimal:
         """获取可用库存"""
         result = self.db.query(
-            func.sum(Inventory.available_quantity)
+            func.sum(MaterialStock.available_qty)
         ).filter(
-            Inventory.material_id == material_id
+            MaterialStock.material_id == material_id
         ).scalar()
         
         return result or Decimal('0')
@@ -339,15 +339,15 @@ class SmartAlertEngine:
     def _get_in_transit_qty(self, material_id: int) -> Decimal:
         """获取在途数量"""
         result = self.db.query(
-            func.sum(PurchaseOrderItem.quantity - PurchaseOrderItem.received_quantity)
+            func.sum(PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty)
         ).join(
             PurchaseOrder,
-            PurchaseOrder.id == PurchaseOrderItem.purchase_order_id
+            PurchaseOrder.id == PurchaseOrderItem.order_id
         ).filter(
             and_(
                 PurchaseOrderItem.material_id == material_id,
                 PurchaseOrder.status.in_(['CONFIRMED', 'IN_TRANSIT']),
-                PurchaseOrderItem.quantity > PurchaseOrderItem.received_quantity
+                PurchaseOrderItem.quantity > PurchaseOrderItem.received_qty
             )
         ).scalar()
         
@@ -410,19 +410,23 @@ class SmartAlertEngine:
     
     def _get_average_lead_time(self, material_id: int) -> int:
         """获取物料平均交期"""
-        # 从历史采购订单计算
+        # 从历史收货记录计算平均交期
         result = self.db.query(
             func.avg(
-                func.julianday(PurchaseOrder.actual_delivery_date) -
+                func.julianday(GoodsReceipt.receipt_date) -
                 func.julianday(PurchaseOrder.order_date)
             )
         ).join(
+            PurchaseOrder,
+            PurchaseOrder.id == GoodsReceipt.order_id
+        ).join(
             PurchaseOrderItem,
-            PurchaseOrderItem.purchase_order_id == PurchaseOrder.id
+            PurchaseOrderItem.order_id == PurchaseOrder.id
         ).filter(
             and_(
                 PurchaseOrderItem.material_id == material_id,
-                PurchaseOrder.actual_delivery_date.isnot(None)
+                GoodsReceipt.receipt_date.isnot(None),
+                GoodsReceipt.status == 'COMPLETED'
             )
         ).scalar()
         

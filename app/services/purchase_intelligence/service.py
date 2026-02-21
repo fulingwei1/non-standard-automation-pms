@@ -7,6 +7,7 @@
 
 import logging
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, desc
@@ -352,12 +353,12 @@ class PurchaseIntelligenceService:
         for item in compare_items:
             # 综合评分 = 价格评分(40%) + 绩效评分(60%)
             price_score = (
-                (1 - (item.unit_price - quotations[0].unit_price) / quotations[0].unit_price)
-                * 100
+                (Decimal('1') - (item.unit_price - quotations[0].unit_price) / quotations[0].unit_price)
+                * Decimal('100')
             )
             perf_score = float(item.performance_score) if item.performance_score else 50
 
-            combined_score = price_score * 0.4 + perf_score * 0.6
+            combined_score = float(price_score) * 0.4 + perf_score * 0.6
 
             if combined_score > max_combined_score:
                 max_combined_score = combined_score
