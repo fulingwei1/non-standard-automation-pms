@@ -54,8 +54,8 @@ class BomAttributesService:
             if bom_item:
                 material = self.db.query(Material).filter(Material.id == bom_item.material_id).first()
                 if material:
-                    data.material_code = material.code
-                    data.material_name = material.name
+                    data.material_code = material.material_code
+                    data.material_name = material.material_name
                 data.required_qty = bom_item.quantity
             stage = self.db.query(AssemblyStage).filter(AssemblyStage.stage_code == attr.assembly_stage).first()
             if stage:
@@ -212,8 +212,8 @@ class BomAttributesService:
             if rec:
                 result.append({
                     "bom_item_id": bom_item.id,
-                    "material_code": material.code,
-                    "material_name": material.name,
+                    "material_code": material.material_code,
+                    "material_name": material.material_name,
                     "recommended_stage": rec.stage_code,
                     "recommended_blocking": rec.is_blocking,
                     "recommended_postpone": rec.can_postpone,
@@ -340,8 +340,8 @@ class BomAttributesService:
             config = None
             if material.category_id:
                 category = self.db.query(MaterialCategory).filter(MaterialCategory.id == material.category_id).first()
-                if category and category.code in stage_config:
-                    config = stage_config[category.code]
+                if category and category.category_code in stage_config:
+                    config = stage_config[category.category_code]
 
             if not config:
                 continue

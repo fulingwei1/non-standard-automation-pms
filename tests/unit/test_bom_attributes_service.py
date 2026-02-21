@@ -70,8 +70,8 @@ class TestBomAttributesService(unittest.TestCase):
         # Mock物料
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         
         # Mock阶段
         mock_stage = AssemblyStage(
@@ -334,8 +334,8 @@ class TestBomAttributesService(unittest.TestCase):
         # Mock物料
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         # Mock分类映射
@@ -388,8 +388,8 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         with patch("app.services.bom_attributes.bom_attributes_service.get_or_404") as mock_get_or_404:
@@ -481,8 +481,8 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         mock_existing = BomItemAssemblyAttrs(
@@ -583,8 +583,8 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Material(
             id=100,
-            code="MAT-001",
-            name="测试物料",
+            material_code="MAT-001",
+            material_name="测试物料",
         )
         
         # Mock推荐结果
@@ -824,14 +824,14 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         mock_category = MaterialCategory(
             id=5,
-            code="ELECTRONIC",
-            name="电子元器件",
+            category_code="ELECTRONIC",
+            category_name="电子元器件",
         )
         
         with patch("app.services.bom_attributes.bom_attributes_service.get_or_404") as mock_get_or_404:
@@ -947,14 +947,14 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         mock_category = MaterialCategory(
             id=5,
-            code="ELECTRONIC",  # 不匹配模板
-            name="电子元器件",
+            category_code="ELECTRONIC",  # 不匹配模板
+            category_name="电子元器件",
         )
         
         with patch("app.services.bom_attributes.bom_attributes_service.get_or_404") as mock_get_or_404:
@@ -1011,14 +1011,14 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         mock_category = MaterialCategory(
             id=5,
-            code="ELECTRONIC",
-            name="电子元器件",
+            category_code="ELECTRONIC",
+            category_name="电子元器件",
         )
         
         mock_existing = BomItemAssemblyAttrs(
@@ -1090,14 +1090,14 @@ class TestBomAttributesService(unittest.TestCase):
         
         mock_material = Mock()
         mock_material.id = 100
-        mock_material.code = "MAT-001"
-        mock_material.name = "测试物料"
+        mock_material.material_code = "MAT-001"
+        mock_material.material_name = "测试物料"
         mock_material.category_id = 5
         
         mock_category = MaterialCategory(
             id=5,
-            code="ELECTRONIC",
-            name="电子元器件",
+            category_code="ELECTRONIC",
+            category_name="电子元器件",
         )
         
         mock_existing = BomItemAssemblyAttrs(
