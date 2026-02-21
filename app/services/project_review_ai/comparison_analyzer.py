@@ -130,7 +130,7 @@ class ProjectComparisonAnalyzer:
             )
         elif similarity_type == 'scale':
             # 按项目规模查找（预算接近）
-            budget = current_review.budget_amount or 0
+            budget = float(current_review.budget_amount or 0)
             query = query.filter(
                 and_(
                     ProjectReview.budget_amount >= budget * 0.7,
@@ -138,8 +138,8 @@ class ProjectComparisonAnalyzer:
                 )
             )
         
-        # 按质量评分排序
-        query = query.order_by(ProjectReview.quality_score.desc())
+        # 按客户满意度排序（替代不存在的quality_score）
+        query = query.order_by(ProjectReview.customer_satisfaction.desc())
         
         return query.limit(limit).all()
     
@@ -223,10 +223,10 @@ class ProjectComparisonAnalyzer:
    - 质量管理基准
 
 请以JSON格式输出：
-- strengths: 优势数组 [{area, description, reason}]
-- weaknesses: 劣势数组 [{area, description, cause}]
-- improvements: 改进建议数组 [{area, problem, suggestion, expected_impact, priority}]
-- benchmarks: 基准对比 {{schedule, cost, quality, each with target/actual/gap}}"""
+- strengths: 优势数组 [{{"area": "领域", "description": "描述", "reason": "原因"}}]
+- weaknesses: 劣势数组 [{{"area": "领域", "description": "描述", "cause": "原因"}}]
+- improvements: 改进建议数组 [{{"area": "领域", "problem": "问题", "suggestion": "建议", "expected_impact": "预期影响", "priority": "优先级"}}]
+- benchmarks: 基准对比 {{"schedule": {{}}, "cost": {{}}, "quality": {{}}}}"""
         
         ai_response = self.ai_client.generate_solution(
             prompt=prompt,
@@ -264,7 +264,7 @@ class ProjectComparisonAnalyzer:
             'cost_variance': float(review.cost_variance or 0),
             'change_count': review.change_count,
             'customer_satisfaction': review.customer_satisfaction,
-            'quality_score': float(review.quality_score or 0),
+            'quality_issues': review.quality_issues or 0,
         }
     
     def _calculate_priority(self, improvement: Dict[str, Any]) -> str:
