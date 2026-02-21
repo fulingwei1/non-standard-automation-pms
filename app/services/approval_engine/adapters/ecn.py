@@ -452,7 +452,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                     .join(UserRole, User.id == UserRole.user_id)
                     .join(Role, UserRole.role_id == Role.id)
                     .filter(
-                        Role.code == matrix_item.approval_role,
+                        Role.role_code == matrix_item.approval_role,
                         User.is_active,
                     )
                     .all()

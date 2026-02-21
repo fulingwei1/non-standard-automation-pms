@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-02-21T10:13:46.736699",
+  "total_coverage": 18.97,
+  "files_tested": 106,
+  "total_files": 587,
+  "total_tests": 1208,
+  "milestones": {
+    "100_services": "2026-02-21",
+    "1000_tests": "2026-02-21"
+  },
+  "batches": {
+    "11": {
+      "services": 15,
+      "tests": 572,
+      "date": "2026-02-20"
+    },
+    "12": {
+      "services": 8,
+      "tests": 322,
+      "date": "2026-02-21"
+    },
+    "13": {
+      "services": 8,
+      "tests": 314,
+      "date": "2026-02-21"
+    }
+  },
+  "statements": 84900,
+  "covered_lines": 19468,
+  "missing_lines": 65432,
+  "total_files_with_coverage": 1116,
+  "service_files": {
+    "total": 647,
+    "zero_coverage": 592,
+    "low_coverage": 44,
+    "high_coverage": 10
+  }
+}

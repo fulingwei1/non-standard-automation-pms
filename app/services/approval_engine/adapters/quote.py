@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from app.models.sales.quotes import QuoteApproval
+    from app.models.sales.technical_assessment import QuoteApproval
 
 from sqlalchemy.orm import Session
 
@@ -294,7 +294,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         task: ApprovalTask,
     ) -> Optional[QuoteApproval]:
         """创建报价审批记录"""
-        from app.models.sales.quotes import QuoteApproval
+        from app.models.sales.technical_assessment import QuoteApproval
 
         # 检查是否已存在
         existing = (
@@ -337,6 +337,8 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         comment: Optional[str] = None,
     ) -> Optional[QuoteApproval]:
         """更新报价审批记录"""
+        from app.models.sales.technical_assessment import QuoteApproval
+        
         approval_level = task.node_order
         approval = (
             self.db.query(QuoteApproval)
