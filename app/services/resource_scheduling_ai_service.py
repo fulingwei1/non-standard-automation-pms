@@ -18,7 +18,7 @@ from app.models.resource_scheduling import (
     ResourceSchedulingSuggestion,
     ResourceUtilizationAnalysis,
 )
-from app.models.project import Project
+from app.models.project.core import Project
 from app.models.user import User
 from app.services.ai_client_service import AIClientService
 from app.utils.db_helpers import save_obj
@@ -53,7 +53,7 @@ class ResourceSchedulingAIService:
         4. 判断是否超负荷（>100%）
         5. AI评估严重程度
         """
-        from app.models.finance import PMOResourceAllocation
+        from app.models.pmo.resource_closure import PmoResourceAllocation as PMOResourceAllocation
         
         # 查询分配记录
         query = self.db.query(PMOResourceAllocation)
@@ -570,8 +570,8 @@ class ResourceSchedulingAIService:
         # 查询未来项目
         future_projects = self.db.query(Project).filter(
             and_(
-                Project.start_date <= forecast_end,
-                Project.end_date >= today,
+                Project.planned_start_date <= forecast_end,
+                Project.planned_end_date >= today,
                 Project.is_active == True,
             )
         ).all()
@@ -738,7 +738,7 @@ class ResourceSchedulingAIService:
         3. 效率率 = 实际工时 / 分配工时
         """
         
-        from app.models.finance import Timesheet
+        from app.models.timesheet import Timesheet
         
         # 查询工时记录
         timesheets = self.db.query(Timesheet).filter(
