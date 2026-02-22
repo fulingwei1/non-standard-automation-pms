@@ -14,6 +14,7 @@ from app.models.quality_risk_detection import (
     QualityRiskDetection,
     QualityTestRecommendation,
 )
+from app.models.project.core import Project
 from app.models.timesheet import Timesheet
 from app.services.quality_risk_ai import (
     QualityRiskAnalyzer,
@@ -447,7 +448,7 @@ class QualityRiskManagementService:
         
         report = {
             'project_id': project_id,
-            'project_name': f"项目 {project_id}",  # TODO: 从Project表查询
+            'project_name': self._get_project_name(project_id),
             'report_period': f"{start_date} 至 {end_date}",
             'overall_risk_level': overall_risk,
             'total_detections': len(detections),
@@ -466,6 +467,13 @@ class QualityRiskManagementService:
         
         return report
     
+    def _get_project_name(self, project_id: int) -> str:
+        """根据项目ID查询项目名称"""
+        project = self.db.query(Project.project_name).filter(
+            Project.id == project_id
+        ).first()
+        return project.project_name if project else f"项目 {project_id}"
+
     def _calculate_overall_risk(self, risk_distribution: Dict[str, int]) -> str:
         """计算总体风险等级"""
         if risk_distribution.get('CRITICAL', 0) > 0:
