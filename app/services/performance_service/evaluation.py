@@ -8,6 +8,8 @@ from typing import List
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range_by_ym
+
 from app.models.organization import Department, Employee
 from app.models.performance import (
     EvaluationStatusEnum,
@@ -84,8 +86,7 @@ def create_evaluation_tasks(
     # 2. 创建项目经理评价任务
     # 查找员工参与的所有活跃项目
     year, month = map(int, summary.period.split('-'))
-    period_start = date(year, month, 1)
-    period_end = date(year, month, 28)
+    period_start, period_end = get_month_range_by_ym(year, month)
 
     project_members = db.query(ProjectMember).filter(
         ProjectMember.user_id == summary.employee_id,

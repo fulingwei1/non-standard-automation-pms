@@ -33,7 +33,7 @@ class OthersDashboardAdapter:
             project_count = self.db.query(Project).count()
             user_count = self.db.query(User).count()
             alert_count = self.db.query(AlertRecord).filter(
-                AlertRecord.status == "ACTIVE"
+                AlertRecord.status.in_(["OPEN", "PENDING", "ACKNOWLEDGED", "PROCESSING"])
             ).count()
         except Exception:
             project_count = 0

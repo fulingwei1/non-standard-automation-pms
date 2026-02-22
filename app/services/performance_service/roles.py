@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range_by_ym
+
 from app.models.organization import Department, Employee
 from app.models.project import Project, ProjectMember
 from app.models.user import User
@@ -109,8 +111,7 @@ def get_manageable_employees(
         if period:
             # 将 YYYY-MM 转换为日期范围
             year, month = map(int, period.split('-'))
-            period_start = date(year, month, 1)
-            period_end = date(year, month, 28)  # 简化处理，用28号代表月末
+            period_start, period_end = get_month_range_by_ym(year, month)
 
             query = query.filter(
                 or_(
