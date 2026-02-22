@@ -282,7 +282,7 @@ class ProjectAggregationService:
             "total_machines": len(machines),
             "stage_distribution": stage_dist,
             "health_distribution": health_dist,
-            "avg_progress": (total_progress / len(machines)).quantize(Decimal("0.01")),
+            "avg_progress": (total_progress / len(machines)).quantize(Decimal("0.01")) if machines else Decimal("0"),
             "completed_count": completed,
             "at_risk_count": at_risk,
             "blocked_count": blocked,

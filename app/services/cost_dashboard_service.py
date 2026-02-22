@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, desc, extract, func
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range, month_start as get_month_start
 from app.models.project import Project, ProjectCost, ProjectPaymentPlan
 from app.models.project.financial import FinancialProjectCost
 
@@ -80,8 +81,7 @@ class CostDashboardService:
         
         # 本月成本趋势
         today = date.today()
-        month_start = today.replace(day=1)
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        month_start, month_end = get_month_range(today)
         
         # 本月成本（从ProjectCost和FinancialProjectCost聚合）
         month_cost_project = self.db.query(
@@ -264,7 +264,7 @@ class CostDashboardService:
             # 3. 成本异常波动（近期成本突增）
             # 简化版：检查本月成本是否异常高
             today = date.today()
-            month_start = today.replace(day=1)
+            month_start = get_month_start(today)
             
             month_cost = self.db.query(
                 func.sum(ProjectCost.amount).label("total")
@@ -387,11 +387,7 @@ class CostDashboardService:
         
         for i in range(11, -1, -1):
             month_date = today - timedelta(days=30 * i)
-            month_start = month_date.replace(day=1)
-            if month_date.month == 12:
-                month_end = month_date.replace(day=31)
-            else:
-                month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            month_start, month_end = get_month_range(month_date)
             
             month_str = month_date.strftime("%Y-%m")
             

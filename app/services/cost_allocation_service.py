@@ -82,7 +82,7 @@ def calculate_allocation_rates_by_hours(
     if total_hours > 0:
         for project_id, hours in project_hours.items():
             allocation_rates[project_id] = float(hours / total_hours * 100)
-    else:
+    elif target_project_ids:
         rate = 100.0 / len(target_project_ids)
         for project_id in target_project_ids:
             allocation_rates[project_id] = rate
@@ -115,7 +115,7 @@ def calculate_allocation_rates_by_headcount(
     if total_participants > 0:
         for project_id, participants in project_participants.items():
             allocation_rates[project_id] = float(participants / total_participants * 100)
-    else:
+    elif target_project_ids:
         rate = 100.0 / len(target_project_ids)
         for project_id in target_project_ids:
             allocation_rates[project_id] = rate
