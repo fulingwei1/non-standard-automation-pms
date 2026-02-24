@@ -3,7 +3,11 @@
 使用Locust进行负载测试
 """
 import pytest
-from locust import HttpUser, task, between
+
+try:
+    from locust import HttpUser, task, between
+except ImportError:
+    pytest.skip("locust not available", allow_module_level=True)
 import time
 
 
