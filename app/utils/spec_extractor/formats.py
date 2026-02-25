@@ -217,17 +217,17 @@ def extract_from_pdf(
 ) -> List:
     """
     从PDF文件中提取规格要求
-    使用PyPDF2或pdfplumber提取文本，然后进行模式匹配
+    使用pypdf提取文本，然后进行模式匹配
     """
     try:
-        import PyPDF2
+        from pypdf import PdfReader
 
         requirements = []
         text_content = ""
 
         # 提取PDF文本
         with open(file_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
+            pdf_reader = PdfReader(file)
             for page in pdf_reader.pages:
                 text_content += page.extract_text() + "\n"
 
@@ -271,6 +271,6 @@ def extract_from_pdf(
         return requirements
 
     except ImportError:
-        raise ImportError("需要安装 PyPDF2: pip install PyPDF2")
+        raise ImportError("需要安装 pypdf: pip install pypdf")
     except Exception as e:
         raise Exception(f"PDF解析失败: {str(e)}")

@@ -11,12 +11,12 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 
 # 安全认证
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 slowapi==0.1.9  # API速率限制
 
 # 文件处理
-python-multipart==0.0.12
+python-multipart==0.0.18
 
 # 数据处理
 pandas==2.2.3
@@ -27,7 +27,7 @@ apscheduler==3.10.4
 
 # 文档处理
 python-docx==1.1.2
-PyPDF2==3.0.1
+pypdf==5.3.0
 reportlab==4.2.5
 
 # Redis支持
