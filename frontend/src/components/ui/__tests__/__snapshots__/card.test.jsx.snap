@@ -1,0 +1,67 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Card Components > Snapshot Tests > matches snapshot for basic card 1`] = `
+<div>
+  <div
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+  >
+    基础卡片
+  </div>
+</div>
+`;
+
+exports[`Card Components > Snapshot Tests > matches snapshot for complete card structure 1`] = `
+<div>
+  <div
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 custom-card"
+  >
+    <div
+      class="flex flex-col space-y-1.5 p-5 pb-0"
+    >
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight"
+      >
+        完整卡片
+      </h3>
+      <p
+        class="text-sm text-slate-400"
+      >
+        带描述的卡片
+      </p>
+    </div>
+    <div
+      class="p-5"
+    >
+      卡片内容区域
+    </div>
+    <div
+      class="flex items-center p-5 pt-0"
+    >
+      卡片底部
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Card Components > Snapshot Tests > matches snapshot with custom styling 1`] = `
+<div>
+  <div
+    class="rounded-2xl from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 bg-blue-500"
+  >
+    <div
+      class="flex flex-col space-y-1.5 p-5 pb-0 border-b"
+    >
+      <h3
+        class="font-semibold tracking-tight text-lg"
+      >
+        自定义样式
+      </h3>
+    </div>
+    <div
+      class="p-6"
+    >
+      内容
+    </div>
+  </div>
+</div>
+`;

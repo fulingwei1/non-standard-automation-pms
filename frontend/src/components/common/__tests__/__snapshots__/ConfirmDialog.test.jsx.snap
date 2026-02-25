@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ConfirmDialog > Snapshot Tests > matches snapshot for default variant 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;
+
+exports[`ConfirmDialog > Snapshot Tests > matches snapshot for destructive variant 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;
+
+exports[`ConfirmDialog > Snapshot Tests > matches snapshot with children 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;

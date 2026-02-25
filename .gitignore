@@ -129,3 +129,12 @@ Thumbs.db
 !frontend/src/lib/**
 # Nightshift plan artifacts (keep out of version control)
 .nightshift-plan
+
+# 覆盖率临时文件
+coverage.json
+coverage.xml
+coverage_*.json
+
+# SQLite数据库
+*.db
+

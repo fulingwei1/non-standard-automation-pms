@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Progress > Snapshot Tests > matches snapshot for 0% progress 1`] = `
+<div>
+  <div
+    class="relative w-full"
+  >
+    <div
+      aria-valuemax="100"
+      aria-valuemin="0"
+      class="relative w-full overflow-hidden rounded-full bg-white/[0.05] h-2"
+      data-max="100"
+      data-state="indeterminate"
+      role="progressbar"
+    >
+      <div
+        class="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-violet-500 to-indigo-500"
+        data-max="100"
+        data-state="indeterminate"
+        style="width: 0%;"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Progress > Snapshot Tests > matches snapshot for 50% progress 1`] = `
+<div>
+  <div
+    class="relative w-full"
+  >
+    <div
+      aria-valuemax="100"
+      aria-valuemin="0"
+      class="relative w-full overflow-hidden rounded-full bg-white/[0.05] h-2"
+      data-max="100"
+      data-state="indeterminate"
+      role="progressbar"
+    >
+      <div
+        class="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-violet-500 to-indigo-500"
+        data-max="100"
+        data-state="indeterminate"
+        style="width: 50%;"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Progress > Snapshot Tests > matches snapshot for 100% progress 1`] = `
+<div>
+  <div
+    class="relative w-full"
+  >
+    <div
+      aria-valuemax="100"
+      aria-valuemin="0"
+      class="relative w-full overflow-hidden rounded-full bg-white/[0.05] h-2"
+      data-max="100"
+      data-state="indeterminate"
+      role="progressbar"
+    >
+      <div
+        class="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-violet-500 to-indigo-500"
+        data-max="100"
+        data-state="indeterminate"
+        style="width: 100%;"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Progress > Snapshot Tests > matches snapshot with custom className 1`] = `
+<div>
+  <div
+    class="relative w-full"
+  >
+    <div
+      aria-valuemax="100"
+      aria-valuemin="0"
+      class="relative w-full overflow-hidden rounded-full bg-white/[0.05] h-2 custom-styles"
+      data-max="100"
+      data-state="indeterminate"
+      role="progressbar"
+    >
+      <div
+        class="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-violet-500 to-indigo-500"
+        data-max="100"
+        data-state="indeterminate"
+        style="width: 75%;"
+      />
+    </div>
+  </div>
+</div>
+`;

@@ -1,0 +1,105 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-10 px-4 py-2"
+  >
+    default
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 2`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-white/[0.05] text-white border border-white/10 hover:bg-white/[0.08] hover:border-white/20 h-10 px-4 py-2"
+  >
+    secondary
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 3`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 border border-white/20 text-white bg-transparent hover:bg-white/[0.05] hover:border-primary/50 h-10 px-4 py-2"
+  >
+    outline
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 4`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white hover:bg-white/[0.05] h-10 px-4 py-2"
+  >
+    ghost
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 5`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 h-10 px-4 py-2"
+  >
+    destructive
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 6`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 h-10 px-4 py-2"
+  >
+    success
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for all variants 7`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 text-primary underline-offset-4 hover:underline p-0 h-10 px-4 py-2"
+  >
+    link
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for default button 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-10 px-4 py-2"
+  >
+    默认按钮
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot for disabled state 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-10 px-4 py-2"
+    disabled=""
+  >
+    禁用按钮
+  </button>
+</div>
+`;
+
+exports[`Button > Snapshot Tests > matches snapshot with icon and text 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-10 px-4 py-2"
+  >
+    <span>
+      图标
+    </span>
+    确认
+  </button>
+</div>
+`;

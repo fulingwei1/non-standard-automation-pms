@@ -1,0 +1,106 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 1`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-primary/15 text-primary border border-primary/30"
+  >
+    default
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 2`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+  >
+    secondary
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 3`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+  >
+    success
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 4`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-amber-500/15 text-amber-400 border border-amber-500/30"
+  >
+    warning
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 5`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-red-500/15 text-red-400 border border-red-500/30"
+  >
+    danger
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 6`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-blue-500/15 text-blue-400 border border-blue-500/30"
+  >
+    info
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for all variants 7`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+  >
+    outline
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot for default badge 1`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-primary/15 text-primary border border-primary/30"
+  >
+    默认标签
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot with custom className 1`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-primary/15 text-primary border border-primary/30 custom-styles"
+  >
+    自定义样式
+  </span>
+</div>
+`;
+
+exports[`Badge > Snapshot Tests > matches snapshot with icon 1`] = `
+<div>
+  <span
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+  >
+    <svg
+      class="icon"
+    >
+      <circle />
+    </svg>
+    完成
+  </span>
+</div>
+`;

@@ -12,10 +12,13 @@ export function usePurchaseRequestNew() {
 
     const loadProjects = useCallback(async () => {
         try {
+            setLoading(true);
             const response = await projectApi.list({ status: 'active', page_size: 100 });
             setProjects(response.data?.items || response.data || []);
         } catch (err) {
             console.error('Failed to load projects:', err);
+        } finally {
+            setLoading(false);
         }
     }, []);
 
