@@ -28,9 +28,16 @@ vi.mock('../../services/contractService', () => ({
 }));
 
 vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-  },
+  motion: new Proxy({}, {
+    get: (_, tag) => ({ children, ...props }) => {
+      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const Tag = typeof tag === 'string' ? tag : 'div';
+      return <Tag {...filtered}>{children}</Tag>;
+    }
+  }),
+  AnimatePresence: ({ children }) => children,
+  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
+  useInView: () => true,
 }));
 
 const mockNavigate = vi.fn();

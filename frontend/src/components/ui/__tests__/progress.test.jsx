@@ -25,7 +25,7 @@ describe('Progress', () => {
   describe('Progress Values', () => {
     it('renders 0% progress', () => {
       const { container } = render(<Progress value={0} />);
-      const indicator = container.querySelector('[style*="transform"]');
+      const indicator = container.querySelector('[style*="width"]');
       expect(indicator).toBeInTheDocument();
     });
 

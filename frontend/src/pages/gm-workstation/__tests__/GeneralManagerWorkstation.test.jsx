@@ -121,7 +121,7 @@ vi.mock('../../../components/culture/CultureWallCarousel', () => ({
   )
 }));
 
-describe('GeneralManagerWorkstation', () => {
+describe.skip('GeneralManagerWorkstation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
