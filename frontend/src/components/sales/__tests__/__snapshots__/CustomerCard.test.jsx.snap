@@ -1,0 +1,655 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CustomerCard > Snapshot > matches snapshot in compact mode 1`] = `
+<div
+  class="flex items-center justify-between p-3 bg-surface-50 rounded-lg hover:bg-surface-100 cursor-pointer transition-colors group"
+>
+  <div
+    class="flex items-center gap-3"
+  >
+    <div
+      class="w-2 h-2 rounded-full bg-emerald-500"
+    />
+    <div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <span
+          class="font-medium text-white"
+        >
+          某某科技
+        </span>
+        <span
+          class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors border text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+        >
+          A
+          级
+        </span>
+      </div>
+      <span
+        class="text-xs text-slate-400"
+      >
+        软件开发
+      </span>
+    </div>
+  </div>
+  <div
+    class="flex items-center gap-3"
+  >
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-white/5 text-slate-400 border border-white/10 text-xs"
+    >
+      3
+      个商机
+    </span>
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-chevron-right w-4 h-4 text-slate-500 group-hover:text-white transition-colors"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="m9 18 6-6-6-6"
+      />
+    </svg>
+  </div>
+</div>
+`;
+
+exports[`CustomerCard > Snapshot > matches snapshot in normal mode 1`] = `
+<div
+  class="bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all"
+>
+  <div
+    class="flex items-start justify-between mb-3"
+  >
+    <div
+      class="flex items-center gap-3"
+    >
+      <div
+        class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-building2 lucide-building-2 w-5 h-5 text-primary"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 12h4"
+          />
+          <path
+            d="M10 8h4"
+          />
+          <path
+            d="M14 21v-3a2 2 0 0 0-4 0v3"
+          />
+          <path
+            d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"
+          />
+          <path
+            d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"
+          />
+        </svg>
+      </div>
+      <div>
+        <div
+          class="flex items-center gap-2"
+        >
+          <h3
+            class="font-semibold text-white"
+          >
+            某某科技
+          </h3>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors border text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+          >
+            A
+            级
+          </span>
+        </div>
+        <p
+          class="text-xs text-slate-400"
+        >
+          某某科技有限公司
+        </p>
+      </div>
+    </div>
+    <button
+      class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white hover:bg-white/[0.05] h-8 w-8"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-ellipsis w-4 h-4 text-slate-400"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="1"
+        />
+        <circle
+          cx="19"
+          cy="12"
+          r="1"
+        />
+        <circle
+          cx="5"
+          cy="12"
+          r="1"
+        />
+      </svg>
+    </button>
+  </div>
+  <div
+    class="space-y-2 mb-3"
+  >
+    <div
+      class="flex items-center gap-2 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-map-pin w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+        />
+        <circle
+          cx="12"
+          cy="10"
+          r="3"
+        />
+      </svg>
+      <span>
+        北京市海淀区
+      </span>
+      <span
+        class="text-slate-600"
+      >
+        |
+      </span>
+      <span>
+        软件开发
+      </span>
+    </div>
+    <div
+      class="flex items-center gap-2 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-phone w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"
+        />
+      </svg>
+      <span>
+        张三
+      </span>
+      <span
+        class="text-slate-500"
+      >
+        · 
+        138****1234
+      </span>
+    </div>
+  </div>
+  <div
+    class="flex flex-wrap gap-1 mb-3"
+  >
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-white/5 text-slate-400 border border-white/10 text-xs"
+    >
+      VIP
+    </span>
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-white/5 text-slate-400 border border-white/10 text-xs"
+    >
+      战略合作
+    </span>
+  </div>
+  <div
+    class="grid grid-cols-3 gap-2 pt-3 border-t border-white/5"
+  >
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        累计金额
+      </div>
+      <div
+        class="text-sm font-semibold text-white"
+      >
+        ¥
+        500
+        万
+      </div>
+    </div>
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        待回款
+      </div>
+      <div
+        class="text-sm font-semibold text-amber-400"
+      >
+        ¥
+        100
+        万
+      </div>
+    </div>
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        项目数
+      </div>
+      <div
+        class="text-sm font-semibold text-white"
+      >
+        8
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-center justify-between mt-3 pt-3 border-t border-white/5"
+  >
+    <div
+      class="flex items-center gap-1 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-calendar w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M8 2v4"
+        />
+        <path
+          d="M16 2v4"
+        />
+        <rect
+          height="18"
+          rx="2"
+          width="18"
+          x="3"
+          y="4"
+        />
+        <path
+          d="M3 10h18"
+        />
+      </svg>
+      <span>
+        上次联系: 
+        2024-01-15
+      </span>
+    </div>
+    <div
+      class="w-2 h-2 rounded-full bg-emerald-500"
+      title="活跃"
+    />
+  </div>
+</div>
+`;
+
+exports[`CustomerCard > Snapshot > matches snapshot with warning 1`] = `
+<div
+  class="bg-surface-100/50 backdrop-blur-sm rounded-xl border p-4 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all border-amber-500/30"
+>
+  <div
+    class="flex items-start justify-between mb-3"
+  >
+    <div
+      class="flex items-center gap-3"
+    >
+      <div
+        class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-building2 lucide-building-2 w-5 h-5 text-primary"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 12h4"
+          />
+          <path
+            d="M10 8h4"
+          />
+          <path
+            d="M14 21v-3a2 2 0 0 0-4 0v3"
+          />
+          <path
+            d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"
+          />
+          <path
+            d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"
+          />
+        </svg>
+      </div>
+      <div>
+        <div
+          class="flex items-center gap-2"
+        >
+          <h3
+            class="font-semibold text-white"
+          >
+            某某科技
+          </h3>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors border text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+          >
+            A
+            级
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-triangle-alert w-4 h-4 text-amber-500"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+            />
+            <path
+              d="M12 9v4"
+            />
+            <path
+              d="M12 17h.01"
+            />
+          </svg>
+        </div>
+        <p
+          class="text-xs text-slate-400"
+        >
+          某某科技有限公司
+        </p>
+      </div>
+    </div>
+    <button
+      class="inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white hover:bg-white/[0.05] h-8 w-8"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-ellipsis w-4 h-4 text-slate-400"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="1"
+        />
+        <circle
+          cx="19"
+          cy="12"
+          r="1"
+        />
+        <circle
+          cx="5"
+          cy="12"
+          r="1"
+        />
+      </svg>
+    </button>
+  </div>
+  <div
+    class="space-y-2 mb-3"
+  >
+    <div
+      class="flex items-center gap-2 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-map-pin w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+        />
+        <circle
+          cx="12"
+          cy="10"
+          r="3"
+        />
+      </svg>
+      <span>
+        北京市海淀区
+      </span>
+      <span
+        class="text-slate-600"
+      >
+        |
+      </span>
+      <span>
+        软件开发
+      </span>
+    </div>
+    <div
+      class="flex items-center gap-2 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-phone w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"
+        />
+      </svg>
+      <span>
+        张三
+      </span>
+      <span
+        class="text-slate-500"
+      >
+        · 
+        138****1234
+      </span>
+    </div>
+  </div>
+  <div
+    class="flex flex-wrap gap-1 mb-3"
+  >
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-white/5 text-slate-400 border border-white/10 text-xs"
+    >
+      VIP
+    </span>
+    <span
+      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-white/5 text-slate-400 border border-white/10 text-xs"
+    >
+      战略合作
+    </span>
+  </div>
+  <div
+    class="grid grid-cols-3 gap-2 pt-3 border-t border-white/5"
+  >
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        累计金额
+      </div>
+      <div
+        class="text-sm font-semibold text-white"
+      >
+        ¥
+        500
+        万
+      </div>
+    </div>
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        待回款
+      </div>
+      <div
+        class="text-sm font-semibold text-amber-400"
+      >
+        ¥
+        100
+        万
+      </div>
+    </div>
+    <div
+      class="text-center"
+    >
+      <div
+        class="text-xs text-slate-400"
+      >
+        项目数
+      </div>
+      <div
+        class="text-sm font-semibold text-white"
+      >
+        8
+      </div>
+    </div>
+  </div>
+  <div
+    class="flex items-center justify-between mt-3 pt-3 border-t border-white/5"
+  >
+    <div
+      class="flex items-center gap-1 text-xs text-slate-400"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-calendar w-3 h-3"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M8 2v4"
+        />
+        <path
+          d="M16 2v4"
+        />
+        <rect
+          height="18"
+          rx="2"
+          width="18"
+          x="3"
+          y="4"
+        />
+        <path
+          d="M3 10h18"
+        />
+      </svg>
+      <span>
+        上次联系: 
+        2024-01-15
+      </span>
+    </div>
+    <div
+      class="w-2 h-2 rounded-full bg-emerald-500"
+      title="活跃"
+    />
+  </div>
+</div>
+`;

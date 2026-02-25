@@ -1,0 +1,338 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SolutionLibrary > Snapshot > matches snapshot in loading state 1`] = `
+<div
+  class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+>
+  <div
+    class="p-6"
+  >
+    <div
+      class="text-center text-gray-500"
+    >
+      加载中...
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SolutionLibrary > Snapshot > matches snapshot with templates 1`] = `
+<div
+  class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+>
+  <div
+    class="flex flex-col space-y-1.5 p-5 pb-0"
+  >
+    <div
+      class="flex items-center justify-between"
+    >
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-book-open h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 7v14"
+          />
+          <path
+            d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"
+          />
+        </svg>
+        解决方案模板库
+      </h3>
+      <button
+        class="inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-8 px-3 text-xs"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus h-4 w-4 mr-2"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        创建模板
+      </button>
+    </div>
+  </div>
+  <div
+    class="p-5"
+  >
+    <div
+      class="flex items-center gap-4 mb-6"
+    >
+      <div
+        class="relative flex-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21 21-4.34-4.34"
+          />
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+        </svg>
+        <div
+          class="relative"
+        >
+          <input
+            class="flex w-full h-11 rounded-xl text-sm bg-white/[0.03] border border-white/10 text-white placeholder:text-slate-500 transition-all duration-200 px-4 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-white/[0.05] hover:border-white/20 hover:bg-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed pl-9"
+            placeholder="搜索解决方案模板..."
+            value=""
+          />
+        </div>
+      </div>
+      <select
+        class="h-9 px-3 rounded-lg border border-gray-300 text-sm"
+      >
+        <option
+          value="all"
+        >
+          全部类型
+        </option>
+        <option
+          value="DEFECT"
+        >
+          缺陷
+        </option>
+        <option
+          value="DEVIATION"
+        >
+          偏差
+        </option>
+        <option
+          value="RISK"
+        >
+          风险
+        </option>
+        <option
+          value="BLOCKER"
+        >
+          阻塞
+        </option>
+      </select>
+    </div>
+    <div
+      class="space-y-3"
+    >
+      <div
+        class="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+      >
+        <div
+          class="flex items-start justify-between mb-2"
+        >
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2 mb-1"
+            >
+              <p
+                class="font-medium"
+              >
+                性能优化方案
+              </p>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+              >
+                技术问题
+              </span>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+              >
+                技术问题
+              </span>
+            </div>
+            <p
+              class="text-sm text-gray-600 mb-2"
+            >
+              适用于系统性能优化场景
+            </p>
+            <div
+              class="p-3 bg-gray-50 rounded text-sm"
+            >
+              1. 分析性能瓶颈
+2. 优化代码
+3. 测试验证
+            </div>
+          </div>
+        </div>
+        <div
+          class="flex items-center justify-between mt-3"
+        >
+          <div
+            class="flex items-center gap-4 text-sm text-gray-500"
+          >
+            <span>
+              使用 
+              15
+               次
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 border border-white/20 text-white bg-transparent hover:bg-white/[0.05] hover:border-primary/50 h-8 px-3 text-xs"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-copy h-4 w-4 mr-1"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="14"
+                  rx="2"
+                  ry="2"
+                  width="14"
+                  x="8"
+                  y="8"
+                />
+                <path
+                  d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                />
+              </svg>
+              应用模板
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+      >
+        <div
+          class="flex items-start justify-between mb-2"
+        >
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2 mb-1"
+            >
+              <p
+                class="font-medium"
+              >
+                需求变更处理
+              </p>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+              >
+                管理问题
+              </span>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+              >
+                管理问题
+              </span>
+            </div>
+            <p
+              class="text-sm text-gray-600 mb-2"
+            >
+              适用于客户需求变更
+            </p>
+            <div
+              class="p-3 bg-gray-50 rounded text-sm"
+            >
+              1. 评估影响
+2. 制定方案
+3. 获取批准
+            </div>
+          </div>
+        </div>
+        <div
+          class="flex items-center justify-between mt-3"
+        >
+          <div
+            class="flex items-center gap-4 text-sm text-gray-500"
+          >
+            <span>
+              使用 
+              8
+               次
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2"
+          >
+            <button
+              class="inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 border border-white/20 text-white bg-transparent hover:bg-white/[0.05] hover:border-primary/50 h-8 px-3 text-xs"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-copy h-4 w-4 mr-1"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="14"
+                  rx="2"
+                  ry="2"
+                  width="14"
+                  x="8"
+                  y="8"
+                />
+                <path
+                  d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                />
+              </svg>
+              应用模板
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
