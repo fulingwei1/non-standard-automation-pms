@@ -47,14 +47,7 @@ from ...business_support import (
 from ...culture_wall import CultureWallContent, CultureWallReadRecord, PersonalGoal
 from ...culture_wall_config import CultureWallConfig
 
-# 财务管理
-from ...finance import (
-    EquityStructure,
-    FundingRecord,
-    FundingRound,
-    FundingUsage,
-    Investor,
-)
+# 财务管理 - 融资模块已废弃删除
 
 # 安装派工
 from ...installation_dispatch import (
@@ -277,12 +270,7 @@ __all__ = [
     "PersonalGoal",
     "CultureWallReadRecord",
     "CultureWallConfig",
-    # Finance
-    "FundingRound",
-    "Investor",
-    "FundingRecord",
-    "EquityStructure",
-    "FundingUsage",
+    # Finance - 融资模块已废弃删除
     # Installation Dispatch
     "InstallationDispatchOrder",
     "InstallationDispatchTaskTypeEnum",

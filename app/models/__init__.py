@@ -508,12 +508,7 @@ __all__ = [
     "EmployeeContract",
     "ContractReminder",
     "SalaryRecord",
-    # Finance
-    "FundingRound",
-    "Investor",
-    "FundingRecord",
-    "EquityStructure",
-    "FundingUsage",
+    # Finance - 融资模块已废弃删除
     # Standard Cost
     "StandardCost",
     "StandardCostHistory",
