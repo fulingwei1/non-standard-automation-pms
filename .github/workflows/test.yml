@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r api/requirements.txt
-          pip install ruff
+          pip install ruff pytest pytest-mock factory-boy faker httpx pytest-cov
 
       - name: Ruff lint
         run: ruff check app/
@@ -43,7 +43,9 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r api/requirements.txt
+        run: |
+          pip install -r api/requirements.txt
+          pip install pytest pytest-cov
 
       - name: Run coverage
         run: python -m pytest -o 'addopts=' --cov=app --cov-report=xml tests/
