@@ -226,7 +226,7 @@ def create_related_issue(
         reporter_name=current_user.real_name or current_user.username,
         report_date=datetime.now(),
         assignee_id=issue_in.assignee_id,
-        assignee_name=db.query(User).filter(User.id == issue_in.assignee_id).first().real_name if issue_in.assignee_id else None,
+        assignee_name=(lambda u: u.real_name if u else None)(db.query(User).filter(User.id == issue_in.assignee_id).first()) if issue_in.assignee_id else None,
         due_date=issue_in.due_date,
         status='OPEN',
         impact_scope=issue_in.impact_scope,

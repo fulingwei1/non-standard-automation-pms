@@ -13,6 +13,8 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
+from app.models.alert import AlertRecord, AlertRule
+from app.models.material import Material
 from app.models.production import (
     DefectAnalysis,
     QualityAlertRule,
@@ -659,7 +661,12 @@ class QualityService:
             "pass_rate": round(pass_rate, 2),
             "rework_orders_count": len(rework_orders),
             "pending_rework_count": pending_rework,
-            "active_alerts_count": 0,  # TODO: 从AlertRecord表查询
+            "active_alerts_count": db.query(func.count(AlertRecord.id)).join(
+                AlertRule, AlertRecord.rule_id == AlertRule.id
+            ).filter(
+                AlertRecord.status.in_(["OPEN", "PENDING", "ACKNOWLEDGED", "PROCESSING"]),
+                AlertRule.rule_type == "QUALITY_ISSUE"
+            ).scalar() or 0,
             "top_defect_types": top_defects,
             "trend_last_7_days": [d.model_dump() for d in trend]
         }
@@ -693,7 +700,11 @@ class QualityService:
         material_id = None
         if inspections and inspections[0].material_id:
             material_id = inspections[0].material_id
-            # TODO: 从Material表查询物料名称
+            material = db.query(Material.material_name).filter(
+                Material.id == material_id
+            ).first()
+            if material:
+                material_name = material.material_name
         
         return {
             "batch_no": batch_no,
