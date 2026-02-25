@@ -11,11 +11,11 @@ import {
   DialogTitle,
   DialogFooter,
   DialogBody,
-} from "../../../ui/dialog";
-import { Button } from "../../../ui/button";
-import { Label } from "../../../ui/label";
-import { Badge } from "../../../ui/badge";
-import { cn } from "../../../../lib/utils";
+} from "../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Label } from "../../ui/label";
+import { Badge } from "../../ui/badge";
+import { cn } from "../../../lib/utils";
 import { ORDER_STATUS_CONFIGS, PurchaseOrderUtils } from "@/lib/constants/procurement";
 
 export default function OrderDetailDialog({

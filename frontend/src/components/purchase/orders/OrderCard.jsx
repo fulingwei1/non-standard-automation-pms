@@ -12,8 +12,8 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import { Card, Badge, Button } from "../../../ui";
-import { cn } from "../../../../lib/utils";
+import { Card, Badge, Button } from "../../ui";
+import { cn } from "../../../lib/utils";
 import {
   ORDER_STATUS,
   ORDER_URGENCY,

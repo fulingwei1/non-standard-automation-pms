@@ -5,8 +5,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Package } from "lucide-react";
-import { Button } from "../../../ui/button";
-import { fadeIn } from "../../../../lib/animations";
+import { Button } from "../../ui/button";
+import { fadeIn } from "../../../lib/animations";
 import OrderCard from "./OrderCard";
 
 export default function PurchaseOrderList({

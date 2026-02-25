@@ -12,13 +12,13 @@ import {
   DialogTitle,
   DialogFooter,
   DialogBody } from
-"../../../ui/dialog";
-import { Button } from "../../../ui/button";
-import { Label } from "../../../ui/label";
-import { Input } from "../../../ui/input";
-import { Textarea } from "../../../ui/textarea";
-import { Badge } from "../../../ui/badge";
-import { cn } from "../../../../lib/utils";
+"../../ui/dialog";
+import { Button } from "../../ui/button";
+import { Label } from "../../ui/label";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Badge } from "../../ui/badge";
+import { cn } from "../../../lib/utils";
 
 export default function ReceiveGoodsDialog({
   open,

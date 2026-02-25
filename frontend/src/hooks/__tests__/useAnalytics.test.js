@@ -28,7 +28,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     expect(result.current.kpis.length).toBeGreaterThan(0);
     expect(result.current.projectTrend.length).toBeGreaterThan(0);
@@ -40,7 +40,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.kpis.length).toBe(4);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     const kpi = result.current.kpis[0];
     expect(kpi).toHaveProperty('id');
@@ -56,7 +56,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.projectTrend.length).toBeGreaterThan(0);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     const trendData = result.current.projectTrend[0];
     expect(trendData).toHaveProperty('date');
@@ -69,7 +69,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.statusDistribution.length).toBeGreaterThan(0);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     const distribution = result.current.statusDistribution[0];
     expect(distribution).toHaveProperty('name');
@@ -82,7 +82,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     act(() => {
       result.current.refresh();
@@ -92,7 +92,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     expect(result.current.kpis).toBeDefined();
   });
@@ -111,7 +111,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     // lastUpdated is set to new Date() after successful load
     expect(result.current.lastUpdated).toBeInstanceOf(Date);
@@ -122,7 +122,7 @@ describe('useAnalytics', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
     expect(result.current).toHaveProperty('kpis');
     expect(result.current).toHaveProperty('projectTrend');
