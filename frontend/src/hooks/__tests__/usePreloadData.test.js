@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { usePreloadData } from '../usePreloadData';
 
 // Mock usePreload
@@ -19,15 +19,28 @@ vi.mock('../useIntersectionObserver', () => ({
 }));
 
 describe('usePreloadData', () => {
+  let storageMap;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    storageMap = {};
+    // Configure the global localStorage mock
+    localStorage.getItem.mockImplementation((key) => storageMap[key] ?? null);
+    localStorage.setItem.mockImplementation((key, value) => {
+      storageMap[key] = String(value);
+    });
+    localStorage.removeItem.mockImplementation((key) => {
+      delete storageMap[key];
+    });
+    localStorage.clear.mockImplementation(() => {
+      storageMap = {};
+    });
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    localStorage.clear();
+    storageMap = {};
     vi.restoreAllMocks();
   });
 
@@ -142,10 +155,10 @@ describe('usePreloadData', () => {
     const cacheKey = 'test-cache-key';
     
     // 设置缓存
-    localStorage.setItem(cacheKey, JSON.stringify({
+    storageMap[cacheKey] = JSON.stringify({
       data: mockData,
       timestamp: Date.now()
-    }));
+    });
 
     const fetchFn = vi.fn().mockResolvedValue({ data: [] });
     const { result } = renderHook(() => 
@@ -166,10 +179,10 @@ describe('usePreloadData', () => {
     const cacheKey = 'test-cache-key';
     
     // 设置过期缓存（6分钟前）
-    localStorage.setItem(cacheKey, JSON.stringify({
+    storageMap[cacheKey] = JSON.stringify({
       data: oldData,
       timestamp: Date.now() - (6 * 60 * 1000)
-    }));
+    });
 
     const fetchFn = vi.fn().mockResolvedValue({ data: newData });
     const { result } = renderHook(() => 
@@ -189,7 +202,7 @@ describe('usePreloadData', () => {
     const cacheKey = 'test-cache-key';
     
     // 设置无效的缓存数据
-    localStorage.setItem(cacheKey, 'invalid-json{');
+    storageMap[cacheKey] = 'invalid-json{';
 
     const { result } = renderHook(() => 
       usePreloadData({ fetchFn, cacheKey })

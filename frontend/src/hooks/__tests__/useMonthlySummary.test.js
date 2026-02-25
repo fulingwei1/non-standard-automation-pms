@@ -5,9 +5,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useMonthlySummary } from '../useMonthlySummary';
+import { performanceApi } from '../../services/api';
 
 // Mock API
-vi.mock('../services/api', () => ({
+vi.mock('../../services/api', () => ({
   performanceApi: {
     getMonthlySummaryHistory: vi.fn(),
     saveDraft: vi.fn(),
@@ -16,7 +17,7 @@ vi.mock('../services/api', () => ({
 }));
 
 // Mock utils
-vi.mock('../utils/monthlySummaryUtils', () => ({
+vi.mock('../../utils/monthlySummaryUtils', () => ({
   getCurrentPeriod: vi.fn(() => ({
     period: '2024-01',
     year: 2024,
@@ -51,7 +52,7 @@ describe('useMonthlySummary', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getMonthlySummaryHistory.mockResolvedValue({
       data: mockHistory
     });
@@ -106,7 +107,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should handle history loading error', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getMonthlySummaryHistory.mockRejectedValue(
       new Error('Failed to load')
     );
@@ -140,7 +141,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should save draft successfully', async () => {
-    const { performanceApi } = require('../services/api');
+
     const { result } = renderHook(() => useMonthlySummary());
 
     act(() => {
@@ -160,7 +161,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should set saving state during draft save', async () => {
-    const { performanceApi } = require('../services/api');
+
     let resolveSave;
     const promise = new Promise(resolve => {
       resolveSave = resolve;
@@ -182,7 +183,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should submit summary successfully', async () => {
-    const { performanceApi } = require('../services/api');
+
     const { result } = renderHook(() => useMonthlySummary());
 
     act(() => {
@@ -202,7 +203,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should set submitting state during submit', async () => {
-    const { performanceApi } = require('../services/api');
+
     let resolveSubmit;
     const promise = new Promise(resolve => {
       resolveSubmit = resolve;
@@ -236,7 +237,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should handle submit error', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.submitSummary.mockRejectedValue(
       new Error('Submit failed')
     );
@@ -251,7 +252,7 @@ describe('useMonthlySummary', () => {
   });
 
   it('should update period in form data', () => {
-    const { getCurrentPeriod } = require('../utils/monthlySummaryUtils');
+
     getCurrentPeriod.mockReturnValue({
       period: '2024-02',
       year: 2024,

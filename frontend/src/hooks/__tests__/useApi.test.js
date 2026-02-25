@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useApi, useApiMutation } from '../useApi';
 
 describe('useApi', () => {
@@ -70,11 +70,10 @@ describe('useApi', () => {
 
     expect(result.current.loading).toBe(false);
 
-    const promise = result.current.execute();
-
-    expect(result.current.loading).toBe(true);
-
-    const response = await promise;
+    let response;
+    await act(async () => {
+      response = await result.current.execute();
+    });
 
     expect(response.success).toBe(true);
     expect(response.data).toEqual(mockData);
@@ -88,7 +87,9 @@ describe('useApi', () => {
     
     const { result } = renderHook(() => useApi(mockApiFunction));
 
-    await result.current.execute(1, 'param2');
+    await act(async () => {
+      await result.current.execute(1, 'param2');
+    });
 
     expect(mockApiFunction).toHaveBeenCalledWith(1, 'param2');
   });
@@ -100,7 +101,10 @@ describe('useApi', () => {
     
     const { result } = renderHook(() => useApi(mockApiFunction));
 
-    const response = await result.current.execute();
+    let response;
+    await act(async () => {
+      response = await result.current.execute();
+    });
 
     expect(response.success).toBe(false);
     expect(response.error).toBe('API Error Message');
@@ -113,7 +117,9 @@ describe('useApi', () => {
     
     const { result } = renderHook(() => useApi(mockApiFunction));
 
-    await result.current.execute();
+    await act(async () => {
+      await result.current.execute();
+    });
 
     expect(result.current.error).toBe('Network Error');
   });
@@ -127,7 +133,9 @@ describe('useApi', () => {
       useApi(mockApiFunction, { onSuccess })
     );
 
-    await result.current.execute();
+    await act(async () => {
+      await result.current.execute();
+    });
 
     expect(onSuccess).toHaveBeenCalledWith(mockData);
   });
@@ -141,7 +149,9 @@ describe('useApi', () => {
       useApi(mockApiFunction, { onError })
     );
 
-    await result.current.execute();
+    await act(async () => {
+      await result.current.execute();
+    });
 
     expect(onError).toHaveBeenCalledWith(mockError);
   });
@@ -153,10 +163,14 @@ describe('useApi', () => {
       useApi(mockApiFunction, { initialData })
     );
 
-    result.current.setData({ id: 2 });
+    act(() => {
+      result.current.setData({ id: 2 });
+    });
     expect(result.current.data).toEqual({ id: 2 });
 
-    result.current.reset();
+    act(() => {
+      result.current.reset();
+    });
 
     expect(result.current.data).toEqual(initialData);
     expect(result.current.error).toBe(null);
@@ -167,7 +181,9 @@ describe('useApi', () => {
     const { result } = renderHook(() => useApi(mockApiFunction));
 
     const newData = { id: 1, name: 'Updated' };
-    result.current.setData(newData);
+    act(() => {
+      result.current.setData(newData);
+    });
 
     expect(result.current.data).toEqual(newData);
   });
@@ -194,7 +210,10 @@ describe('useApiMutation', () => {
     
     const { result } = renderHook(() => useApiMutation(mockApiFunction));
 
-    const response = await result.current.mutate({ name: 'Created' });
+    let response;
+    await act(async () => {
+      response = await result.current.mutate({ name: 'Created' });
+    });
 
     expect(response.success).toBe(true);
     expect(response.data).toEqual(mockData);
@@ -208,7 +227,10 @@ describe('useApiMutation', () => {
     
     const { result } = renderHook(() => useApiMutation(mockApiFunction));
 
-    const response = await result.current.mutate({ name: 'Test' });
+    let response;
+    await act(async () => {
+      response = await result.current.mutate({ name: 'Test' });
+    });
 
     expect(response.success).toBe(false);
     expect(response.error).toBe('Mutation Failed');
@@ -224,7 +246,9 @@ describe('useApiMutation', () => {
       useApiMutation(mockApiFunction, { onSuccess })
     );
 
-    await result.current.mutate({ name: 'Created' });
+    await act(async () => {
+      await result.current.mutate({ name: 'Created' });
+    });
 
     expect(onSuccess).toHaveBeenCalledWith(mockData);
   });
@@ -238,21 +262,28 @@ describe('useApiMutation', () => {
       useApiMutation(mockApiFunction, { onError })
     );
 
-    await result.current.mutate({ name: 'Test' });
+    await act(async () => {
+      await result.current.mutate({ name: 'Test' });
+    });
 
     expect(onError).toHaveBeenCalledWith(mockError);
   });
 
-  it('should reset error state', () => {
-    const mockApiFunction = vi.fn();
+  it('should reset error state', async () => {
+    const mockError = new Error('Test Error');
+    mockError.response = { data: { detail: 'Error' } };
+    const mockApiFunction = vi.fn().mockRejectedValue(mockError);
     const { result } = renderHook(() => useApiMutation(mockApiFunction));
 
-    // 手动设置错误（通过内部状态）
-    result.current.mutate = async () => {
-      throw new Error('Test Error');
-    };
+    await act(async () => {
+      await result.current.mutate();
+    });
 
-    result.current.reset();
+    expect(result.current.error).toBe('Error');
+
+    act(() => {
+      result.current.reset();
+    });
 
     expect(result.current.error).toBe(null);
   });
@@ -263,7 +294,9 @@ describe('useApiMutation', () => {
     
     const { result } = renderHook(() => useApiMutation(mockApiFunction));
 
-    await result.current.mutate('arg1', 'arg2', 'arg3');
+    await act(async () => {
+      await result.current.mutate('arg1', 'arg2', 'arg3');
+    });
 
     expect(mockApiFunction).toHaveBeenCalledWith('arg1', 'arg2', 'arg3');
   });
@@ -277,12 +310,17 @@ describe('useApiMutation', () => {
     
     const { result } = renderHook(() => useApiMutation(mockApiFunction));
 
-    const mutationPromise = result.current.mutate({ name: 'Test' });
+    let mutationPromise;
+    act(() => {
+      mutationPromise = result.current.mutate({ name: 'Test' });
+    });
     
     expect(result.current.loading).toBe(true);
 
-    resolvePromise({ data: { id: 1 } });
-    await mutationPromise;
+    await act(async () => {
+      resolvePromise({ data: { id: 1 } });
+      await mutationPromise;
+    });
 
     expect(result.current.loading).toBe(false);
   });

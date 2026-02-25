@@ -5,9 +5,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useWeightConfig } from '../useWeightConfig';
+import { performanceApi } from '../../services/api';
 
 // Mock API
-vi.mock('../services/api', () => ({
+vi.mock('../../services/api', () => ({
   performanceApi: {
     getWeightConfig: vi.fn(),
     saveWeightConfig: vi.fn()
@@ -15,7 +16,7 @@ vi.mock('../services/api', () => ({
 }));
 
 // Mock utils
-vi.mock('../utils/weightConfigUtils', () => ({
+vi.mock('../../utils/weightConfigUtils', () => ({
   defaultWeights: {
     deptManager: 50,
     projectManager: 50
@@ -47,7 +48,7 @@ describe('useWeightConfig', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getWeightConfig.mockResolvedValue(mockWeightResponse);
     performanceApi.saveWeightConfig.mockResolvedValue({ success: true });
   });
@@ -129,7 +130,7 @@ describe('useWeightConfig', () => {
   });
 
   it('should save weight configuration', async () => {
-    const { performanceApi } = require('../services/api');
+
     const { result } = renderHook(() => useWeightConfig());
 
     await waitFor(() => {
@@ -153,7 +154,7 @@ describe('useWeightConfig', () => {
   });
 
   it('should set saving state during save', async () => {
-    const { performanceApi } = require('../services/api');
+
     let resolveSave;
     const promise = new Promise(resolve => {
       resolveSave = resolve;
@@ -199,7 +200,7 @@ describe('useWeightConfig', () => {
   });
 
   it('should handle save error', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.saveWeightConfig.mockRejectedValue(
       new Error('Save failed')
     );
@@ -218,7 +219,7 @@ describe('useWeightConfig', () => {
   });
 
   it('should handle load error with fallback data', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getWeightConfig.mockRejectedValue(
       new Error('Load failed')
     );

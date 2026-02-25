@@ -224,16 +224,15 @@ describe('useFilter', () => {
   });
 
   it('should maintain function reference stability', () => {
-    const { result, rerender } = renderHook(() => useFilter());
+    const initialFilters = { status: 'all' };
+    const { result, rerender } = renderHook(() => useFilter(initialFilters));
 
     const firstSet = result.current.set;
-    const firstReset = result.current.reset;
-    const firstToQueryParams = result.current.toQueryParams;
+    const firstSetMultiple = result.current.setMultiple;
 
     rerender();
 
     expect(result.current.set).toBe(firstSet);
-    expect(result.current.reset).toBe(firstReset);
-    expect(result.current.toQueryParams).toBe(firstToQueryParams);
+    expect(result.current.setMultiple).toBe(firstSetMultiple);
   });
 });

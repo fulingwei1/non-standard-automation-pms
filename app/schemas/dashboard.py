@@ -5,7 +5,7 @@
 """
 
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -15,7 +15,7 @@ class DashboardStatCard(BaseModel):
     
     key: Optional[str] = Field(None, description="唯一键")
     title: str = Field(..., description="标题")
-    value: float = Field(..., description="数值")
+    value: Union[float, int, str] = Field(..., description="数值或字符串")
     unit: Optional[str] = Field(None, description="单位")
     change: Optional[float] = Field(None, description="变化量")
     change_pct: Optional[float] = Field(None, description="变化率(%)")

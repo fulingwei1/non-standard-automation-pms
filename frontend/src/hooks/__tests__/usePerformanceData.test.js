@@ -5,9 +5,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { usePerformanceData } from '../usePerformanceData';
+import { performanceApi } from '../../services/api';
 
 // Mock API
-vi.mock('../services/api', () => ({
+vi.mock('../../services/api', () => ({
   performanceApi: {
     getMyPerformance: vi.fn()
   }
@@ -37,7 +38,7 @@ describe('usePerformanceData', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getMyPerformance.mockResolvedValue({
       data: mockPerformanceData
     });
@@ -67,7 +68,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should call API on mount', async () => {
-    const { performanceApi } = require('../services/api');
+
     
     renderHook(() => usePerformanceData(mockFallbackData));
 
@@ -77,7 +78,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should handle API error with fallback data', async () => {
-    const { performanceApi } = require('../services/api');
+
     const mockError = new Error('API Error');
     mockError.response = { data: { detail: 'Failed to load performance' } };
     performanceApi.getMyPerformance.mockRejectedValue(mockError);
@@ -95,7 +96,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should handle API error without detail message', async () => {
-    const { performanceApi } = require('../services/api');
+
     const mockError = new Error('Network Error');
     performanceApi.getMyPerformance.mockRejectedValue(mockError);
 
@@ -112,7 +113,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should support manual refetch', async () => {
-    const { performanceApi } = require('../services/api');
+
     
     const { result } = renderHook(() => 
       usePerformanceData(mockFallbackData)
@@ -131,7 +132,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should update loading state during refetch', async () => {
-    const { performanceApi } = require('../services/api');
+
     
     const { result } = renderHook(() => 
       usePerformanceData(mockFallbackData)
@@ -151,7 +152,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should clear error on successful refetch', async () => {
-    const { performanceApi } = require('../services/api');
+
     
     // 首次调用失败
     performanceApi.getMyPerformance.mockRejectedValueOnce(new Error('Error'));
@@ -176,7 +177,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should not reload on re-render', async () => {
-    const { performanceApi } = require('../services/api');
+
     
     const { rerender } = renderHook(() => 
       usePerformanceData(mockFallbackData)
@@ -192,7 +193,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should handle null fallback data', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getMyPerformance.mockRejectedValue(new Error('Error'));
 
     const { result } = renderHook(() => 
@@ -207,7 +208,7 @@ describe('usePerformanceData', () => {
   });
 
   it('should handle empty performance data', async () => {
-    const { performanceApi } = require('../services/api');
+
     performanceApi.getMyPerformance.mockResolvedValue({ data: null });
 
     const { result } = renderHook(() => 

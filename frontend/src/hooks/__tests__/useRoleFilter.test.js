@@ -7,7 +7,7 @@ import { renderHook } from '@testing-library/react';
 import { useRoleFilter } from '../useRoleFilter';
 
 // Mock constants
-vi.mock('../lib/constants', () => ({
+vi.mock('../../lib/constants', () => ({
   PROJECT_STAGES: [
     { key: 'design', name: '方案设计', roles: ['admin', 'pm', 'te'] },
     { key: 'procurement', name: '采购备料', roles: ['admin', 'procurement'] },

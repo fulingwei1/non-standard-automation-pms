@@ -55,10 +55,10 @@ export function useAsync(asyncFunction, options = {}) {
     isPending: status === 'pending',
     isSuccess: status === 'success',
     isError: status === 'error',
-    reset: () => {
+    reset: useCallback(() => {
       setStatus('idle');
       setValue(null);
       setError(null);
-    },
+    }, []),
   };
 }

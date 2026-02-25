@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { usePermission } from '../usePermission';
+import { usePermissionContext } from '../../context/PermissionContext';
 import { ReactNode } from 'react';
 
 // Mock PermissionContext
@@ -17,14 +18,14 @@ const mockPermissionContext = {
   error: null
 };
 
-vi.mock('../context/PermissionContext', () => ({
+vi.mock('../../context/PermissionContext', () => ({
   usePermissionContext: vi.fn(() => mockPermissionContext)
 }));
 
 describe('usePermission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const { usePermissionContext } = require('../context/PermissionContext');
+
     usePermissionContext.mockReturnValue(mockPermissionContext);
   });
 
@@ -51,7 +52,7 @@ describe('usePermission', () => {
   });
 
   it('should return true for superuser', () => {
-    const { usePermissionContext } = require('../context/PermissionContext');
+
     usePermissionContext.mockReturnValue({
       ...mockPermissionContext,
       isSuperuser: true
@@ -65,7 +66,7 @@ describe('usePermission', () => {
   });
 
   it('should handle null permissions', () => {
-    const { usePermissionContext } = require('../context/PermissionContext');
+
     usePermissionContext.mockReturnValue({
       ...mockPermissionContext,
       permissions: null
@@ -79,7 +80,7 @@ describe('usePermission', () => {
   });
 
   it('should handle empty permissions array', () => {
-    const { usePermissionContext } = require('../context/PermissionContext');
+
     usePermissionContext.mockReturnValue({
       ...mockPermissionContext,
       permissions: []
@@ -121,7 +122,7 @@ describe('usePermission', () => {
   });
 
   it('should provide loading and error states', () => {
-    const { usePermissionContext } = require('../context/PermissionContext');
+
     usePermissionContext.mockReturnValue({
       ...mockPermissionContext,
       isLoading: true,

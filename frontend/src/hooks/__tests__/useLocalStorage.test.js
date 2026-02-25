@@ -7,14 +7,28 @@ import { renderHook, act } from '@testing-library/react';
 import { useLocalStorage } from '../useLocalStorage';
 
 describe('useLocalStorage', () => {
+  // Use a real-ish storage map since global localStorage is mocked with vi.fn()
+  let storageMap;
+
   beforeEach(() => {
-    // 清空 localStorage
-    localStorage.clear();
+    storageMap = {};
     vi.clearAllMocks();
+    
+    // Configure the global localStorage mock to behave like real localStorage
+    localStorage.getItem.mockImplementation((key) => storageMap[key] ?? null);
+    localStorage.setItem.mockImplementation((key, value) => {
+      storageMap[key] = String(value);
+    });
+    localStorage.removeItem.mockImplementation((key) => {
+      delete storageMap[key];
+    });
+    localStorage.clear.mockImplementation(() => {
+      storageMap = {};
+    });
   });
 
   afterEach(() => {
-    localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it('should initialize with initial value when localStorage is empty', () => {
@@ -26,7 +40,7 @@ describe('useLocalStorage', () => {
   });
 
   it('should initialize with value from localStorage if exists', () => {
-    localStorage.setItem('testKey', JSON.stringify('storedValue'));
+    storageMap['testKey'] = JSON.stringify('storedValue');
 
     const { result } = renderHook(() => 
       useLocalStorage('testKey', 'initialValue')
@@ -45,7 +59,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toBe('newValue');
-    expect(localStorage.getItem('testKey')).toBe(JSON.stringify('newValue'));
+    expect(storageMap['testKey']).toBe(JSON.stringify('newValue'));
   });
 
   it('should support function updates', () => {
@@ -58,7 +72,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toBe(1);
-    expect(localStorage.getItem('counter')).toBe(JSON.stringify(1));
+    expect(storageMap['counter']).toBe(JSON.stringify(1));
   });
 
   it('should handle complex objects', () => {
@@ -78,11 +92,11 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toEqual(complexObject);
-    expect(JSON.parse(localStorage.getItem('complexKey'))).toEqual(complexObject);
+    expect(JSON.parse(storageMap['complexKey'])).toEqual(complexObject);
   });
 
   it('should remove value from localStorage', () => {
-    localStorage.setItem('testKey', JSON.stringify('value'));
+    storageMap['testKey'] = JSON.stringify('value');
 
     const { result } = renderHook(() => 
       useLocalStorage('testKey', 'initialValue')
@@ -95,12 +109,11 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toBe('initialValue');
-    expect(localStorage.getItem('testKey')).toBe(null);
+    expect(storageMap['testKey']).toBeUndefined();
   });
 
   it('should handle JSON parse errors gracefully', () => {
-    // 设置无效的 JSON
-    localStorage.setItem('badKey', 'invalid-json{');
+    storageMap['badKey'] = 'invalid-json{';
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { result } = renderHook(() => 
@@ -116,8 +129,7 @@ describe('useLocalStorage', () => {
   it('should handle localStorage setItem errors', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    // 模拟 localStorage.setItem 抛出错误
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    localStorage.setItem.mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
 
@@ -131,14 +143,13 @@ describe('useLocalStorage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalled();
 
-    setItemSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
 
   it('should handle localStorage removeItem errors', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+    localStorage.removeItem.mockImplementation(() => {
       throw new Error('RemoveError');
     });
 
@@ -152,7 +163,6 @@ describe('useLocalStorage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalled();
 
-    removeItemSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
 
@@ -166,7 +176,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toBe(true);
-    expect(localStorage.getItem('boolKey')).toBe('true');
+    expect(storageMap['boolKey']).toBe('true');
   });
 
   it('should handle null values', () => {
@@ -185,7 +195,7 @@ describe('useLocalStorage', () => {
     });
 
     expect(result.current[0]).toBe(null);
-    expect(localStorage.getItem('nullKey')).toBe('null');
+    expect(storageMap['nullKey']).toBe('null');
   });
 
   it('should persist across re-renders', () => {

@@ -8,10 +8,7 @@ from typing import List
 
 from sqlalchemy import desc
 
-from app.models.enums import (
-    ActionItemStatus,
-    MeetingRhythmLevel,
-)
+from app.models.enums import ActionItemStatus
 from app.models.management_rhythm import (
     MeetingActionItem,
     RhythmDashboardSnapshot,
@@ -47,8 +44,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         strategic_snapshot = (
             self.db.query(RhythmDashboardSnapshot)
             .filter(
-                RhythmDashboardSnapshot.rhythm_level
-                == MeetingRhythmLevel.STRATEGIC.value
+                RhythmDashboardSnapshot.rhythm_level == "STRATEGIC"
             )
             .order_by(desc(RhythmDashboardSnapshot.snapshot_date))
             .first()
@@ -57,8 +53,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         (
             self.db.query(RhythmDashboardSnapshot)
             .filter(
-                RhythmDashboardSnapshot.rhythm_level
-                == MeetingRhythmLevel.OPERATIONAL.value
+                RhythmDashboardSnapshot.rhythm_level == "OPERATIONAL"
             )
             .order_by(desc(RhythmDashboardSnapshot.snapshot_date))
             .first()
@@ -74,7 +69,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         total_action_items = self.db.query(MeetingActionItem).count()
         completed_action_items = (
             self.db.query(MeetingActionItem)
-            .filter(MeetingActionItem.status == ActionItemStatus.COMPLETED.value)
+            .filter(MeetingActionItem.status == ActionItemStatus.DONE.value)
             .count()
         )
         overdue_action_items = (
@@ -92,51 +87,40 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         return [
             DashboardStatCard(
                 key="total_meetings",
-                label="会议总数",
+                title="会议总数",
                 value=total_meetings,
                 unit="个",
-                icon="meeting",
-                color="blue",
             ),
             DashboardStatCard(
                 key="total_action_items",
-                label="行动项总数",
+                title="行动项总数",
                 value=total_action_items,
                 unit="项",
-                icon="action",
-                color="cyan",
             ),
             DashboardStatCard(
                 key="completed_action_items",
-                label="已完成",
+                title="已完成",
                 value=completed_action_items,
                 unit="项",
-                icon="complete",
-                color="green",
             ),
             DashboardStatCard(
                 key="overdue_action_items",
-                label="逾期",
+                title="逾期",
                 value=overdue_action_items,
                 unit="项",
-                icon="overdue",
-                color="red",
             ),
             DashboardStatCard(
                 key="completion_rate",
-                label="完成率",
-                value=f"{completion_rate:.1f}%",
-                icon="rate",
-                color="purple",
+                title="完成率",
+                value=completion_rate,
+                unit="%",
             ),
             DashboardStatCard(
                 key="strategic_health",
-                label="战略会议健康度",
+                title="战略会议健康度",
                 value=(
                     strategic_snapshot.health_status if strategic_snapshot else "N/A"
                 ),
-                icon="health",
-                color="orange",
             ),
         ]
 
@@ -171,9 +155,9 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         my_action_items = (
             self.db.query(MeetingActionItem)
             .filter(
-                MeetingActionItem.assigned_to == self.current_user.id,
+                MeetingActionItem.owner_id == self.current_user.id,
                 MeetingActionItem.status.in_(
-                    [ActionItemStatus.PENDING.value, ActionItemStatus.IN_PROGRESS.value]
+                    [ActionItemStatus.TODO.value, ActionItemStatus.IN_PROGRESS.value]
                 ),
             )
             .order_by(MeetingActionItem.due_date)
@@ -218,10 +202,10 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
 
         # 按层级统计
         levels = [
-            MeetingRhythmLevel.STRATEGIC.value,
-            MeetingRhythmLevel.OPERATIONAL.value,
-            MeetingRhythmLevel.OPERATION.value,
-            MeetingRhythmLevel.TASK.value,
+            "STRATEGIC",
+            "OPERATIONAL",
+            "OPERATION",
+            "TASK",
         ]
 
         level_stats = []

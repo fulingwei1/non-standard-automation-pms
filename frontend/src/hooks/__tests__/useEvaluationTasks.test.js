@@ -3,18 +3,19 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useEvaluationTasks } from '../useEvaluationTasks';
+import { performanceApi } from '../../services/api';
 
 // Mock API
-vi.mock('../services/api', () => ({
+vi.mock('../../services/api', () => ({
   performanceApi: {
     getEvaluationTasks: vi.fn()
   }
 }));
 
 // Mock utils
-vi.mock('../utils/evaluationTaskUtils', () => ({
+vi.mock('../../utils/evaluationTaskUtils', () => ({
   calculateTaskStatistics: vi.fn((tasks) => ({
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'PENDING').length,
@@ -43,7 +44,6 @@ describe('useEvaluationTasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { performanceApi } = require('../services/api');
     performanceApi.getEvaluationTasks.mockResolvedValue({
       data: { tasks: mockTasks }
     });
@@ -73,8 +73,6 @@ describe('useEvaluationTasks', () => {
   });
 
   it('should filter tasks by period', async () => {
-    const { performanceApi } = require('../services/api');
-    
     const { result } = renderHook(() => 
       useEvaluationTasks('2024-01', 'all', '', 'all', [])
     );
@@ -90,8 +88,6 @@ describe('useEvaluationTasks', () => {
   });
 
   it('should filter tasks by status', async () => {
-    const { performanceApi } = require('../services/api');
-    
     const { result } = renderHook(() => 
       useEvaluationTasks('2024-01', 'pending', '', 'all', [])
     );
@@ -161,7 +157,6 @@ describe('useEvaluationTasks', () => {
   });
 
   it('should handle API errors with fallback', async () => {
-    const { performanceApi } = require('../services/api');
     const mockError = new Error('API Error');
     mockError.response = { data: { detail: 'Failed to load' } };
     performanceApi.getEvaluationTasks.mockRejectedValue(mockError);
@@ -181,8 +176,6 @@ describe('useEvaluationTasks', () => {
   });
 
   it('should support refetch', async () => {
-    const { performanceApi } = require('../services/api');
-    
     const { result } = renderHook(() => 
       useEvaluationTasks('2024-01', 'all', '', 'all', [])
     );
@@ -193,14 +186,14 @@ describe('useEvaluationTasks', () => {
 
     expect(performanceApi.getEvaluationTasks).toHaveBeenCalledTimes(1);
 
-    await result.current.refetch();
+    await act(async () => {
+      await result.current.refetch();
+    });
 
     expect(performanceApi.getEvaluationTasks).toHaveBeenCalledTimes(2);
   });
 
   it('should reload when period changes', async () => {
-    const { performanceApi } = require('../services/api');
-    
     const { rerender } = renderHook(
       ({ period, status }) => useEvaluationTasks(period, status, '', 'all', []),
       { initialProps: { period: '2024-01', status: 'all' } }
@@ -218,8 +211,6 @@ describe('useEvaluationTasks', () => {
   });
 
   it('should reload when status filter changes', async () => {
-    const { performanceApi } = require('../services/api');
-    
     const { rerender } = renderHook(
       ({ period, status }) => useEvaluationTasks(period, status, '', 'all', []),
       { initialProps: { period: '2024-01', status: 'all' } }
