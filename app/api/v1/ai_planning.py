@@ -16,8 +16,7 @@ from app.services.ai_planning import (
     AIProjectPlanGenerator,
     AIWbsDecomposer,
     AIResourceOptimizer,
-    AIScheduleOptimizer,
-    GLMService
+    AIScheduleOptimizer
 )
 from app.schemas.ai_planning import (
     ProjectPlanRequest,

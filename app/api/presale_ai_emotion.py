@@ -15,7 +15,6 @@ from app.schemas.presale_ai_emotion import (
     FollowUpRecommendationRequest,
     FollowUpRecommendationResponse,
     FollowUpReminderListResponse,
-    DismissReminderRequest,
     EmotionTrendResponse,
     BatchAnalysisRequest,
     BatchAnalysisResponse,
