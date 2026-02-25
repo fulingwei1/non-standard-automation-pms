@@ -3,7 +3,6 @@
 支持PDF导出
 """
 import os
-from typing import Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.presale_ai_solution import PresaleAISolution

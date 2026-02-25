@@ -6,12 +6,12 @@
 
 import json
 import os
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import requests
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models import (

@@ -1,7 +1,7 @@
 """
 AI客户情绪分析记录模型
 """
-from sqlalchemy import Column, Integer, String, Text, DECIMAL, Enum, TIMESTAMP, ForeignKey, JSON
+from sqlalchemy import Column, Integer, Text, DECIMAL, Enum, TIMESTAMP, ForeignKey, JSON
 from sqlalchemy.sql import func
 from app.models.base import Base
 import enum

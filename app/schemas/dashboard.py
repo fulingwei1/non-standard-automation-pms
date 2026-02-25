@@ -5,7 +5,7 @@
 """
 
 from datetime import date
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 

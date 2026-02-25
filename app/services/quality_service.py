@@ -4,11 +4,10 @@
 
 包含质量检验、SPC分析、质量预警、返工管理等核心功能
 """
-import json
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
@@ -20,13 +19,10 @@ from app.models.production import (
     QualityAlertRule,
     QualityInspection,
     ReworkOrder,
-    WorkOrder,
 )
 from app.schemas.production.quality import (
-    BatchTracingResponse,
     DefectAnalysisCreate,
     ParetoDataPoint,
-    QualityAlertResponse,
     QualityInspectionCreate,
     QualityTrendDataPoint,
     SPCControlLimits,

@@ -6,7 +6,7 @@
 """
 import pytest
 from datetime import date
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 
 from app.services.report_framework.adapters.template import TemplateReportAdapter

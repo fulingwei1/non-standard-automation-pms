@@ -13,7 +13,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.business_support import AssignProjectRequest, SalesOrderResponse, SendNoticeRequest
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from ..utils import _send_project_department_notifications
 from .utils import build_sales_order_response

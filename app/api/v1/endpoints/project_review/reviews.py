@@ -1,9 +1,9 @@
 """
 项目复盘报告API端点
 """
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -11,7 +11,6 @@ from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.project_review import ProjectReview
 from app.schemas.project_review import (
-    ProjectReviewCreate,
     ProjectReviewUpdate,
     ProjectReviewResponse,
     ProjectReviewListResponse,
@@ -23,7 +22,7 @@ from app.services.project_review_ai import (
     ProjectLessonExtractor,
     ProjectKnowledgeSyncer
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

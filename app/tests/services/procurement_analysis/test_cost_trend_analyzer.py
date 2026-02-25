@@ -5,9 +5,9 @@
 测试用例数: 6个
 """
 import pytest
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from sqlalchemy.orm import Session
 
 from app.services.procurement_analysis.cost_trend import CostTrendAnalyzer

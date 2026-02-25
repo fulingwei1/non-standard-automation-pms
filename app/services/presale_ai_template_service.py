@@ -1,7 +1,7 @@
 """
 售前AI方案模板管理服务
 """
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.presale_ai_solution import PresaleAISolutionTemplate

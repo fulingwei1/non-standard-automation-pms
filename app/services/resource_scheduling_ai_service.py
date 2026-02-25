@@ -4,12 +4,11 @@
 """
 
 import json
-import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.resource_scheduling import (
@@ -19,7 +18,6 @@ from app.models.resource_scheduling import (
     ResourceUtilizationAnalysis,
 )
 from app.models.project.core import Project
-from app.models.user import User
 from app.services.ai_client_service import AIClientService
 from app.utils.db_helpers import save_obj
 

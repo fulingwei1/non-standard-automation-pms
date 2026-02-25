@@ -6,10 +6,10 @@ AI资源优化器
 
 import logging
 import json
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, date, timedelta
+from typing import Dict, List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func
 
 from app.models import User, TaskUnified
 from app.models.ai_planning import AIWbsSuggestion, AIResourceAllocation

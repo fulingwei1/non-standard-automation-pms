@@ -6,7 +6,7 @@ AI WBS分解器
 
 import logging
 import json
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 

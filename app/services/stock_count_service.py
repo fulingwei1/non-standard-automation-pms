@@ -7,7 +7,6 @@ Team 2: 物料全流程跟踪系统
 from datetime import datetime, date
 from decimal import Decimal
 from typing import List, Optional, Dict
-from sqlalchemy import and_, or_, func
 from sqlalchemy.orm import Session
 
 from app.models.inventory_tracking import (
@@ -15,7 +14,6 @@ from app.models.inventory_tracking import (
     StockCountDetail,
     StockAdjustment,
     MaterialStock,
-    MaterialTransaction,
 )
 from app.models.material import Material
 from app.services.inventory_management_service import InventoryManagementService

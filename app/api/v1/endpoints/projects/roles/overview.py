@@ -7,7 +7,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps

@@ -8,10 +8,10 @@ import json
 import logging
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import and_, desc
 
 from app.models.project.schedule_prediction import (
     ProjectSchedulePrediction,

@@ -5,9 +5,9 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.contracts import (
@@ -17,8 +17,6 @@ from app.models.sales.contracts import (
     ContractTerm,
 )
 from app.schemas.sales.contract_enhanced import (
-    ContractApprovalCreate,
-    ContractApprovalUpdate,
     ContractAttachmentCreate,
     ContractCreate,
     ContractStats,

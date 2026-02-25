@@ -7,7 +7,7 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 

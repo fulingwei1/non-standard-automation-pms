@@ -4,12 +4,9 @@
 
 提供方便的装饰器，用于给特定端点添加速率限制
 """
-import functools
 import logging
 from typing import Callable, Optional
 
-from fastapi import Request, Response
-from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
 from app.core.rate_limiting import limiter, user_limiter, strict_limiter

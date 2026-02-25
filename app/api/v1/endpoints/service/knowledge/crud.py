@@ -4,7 +4,7 @@
 """
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,7 @@ from app.schemas.service import (
     KnowledgeBaseResponse,
     KnowledgeBaseUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 from ..number_utils import generate_article_no
 

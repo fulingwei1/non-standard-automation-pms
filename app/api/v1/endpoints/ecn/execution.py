@@ -16,7 +16,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnLog, EcnTask
 from app.models.user import User
 from app.schemas.ecn import EcnClose, EcnResponse, EcnStartExecution, EcnVerify
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .utils import build_ecn_response
 

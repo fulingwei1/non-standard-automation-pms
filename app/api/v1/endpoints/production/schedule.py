@@ -3,7 +3,6 @@
 生产排程API
 """
 import logging
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

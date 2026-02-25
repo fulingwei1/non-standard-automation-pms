@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.core.security import get_current_active_user, require_permission
+from app.core.security import require_permission
 from app.models.user import User
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.services.permission_management import PermissionManagementService

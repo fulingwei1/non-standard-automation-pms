@@ -5,11 +5,11 @@ AI情绪分析服务
 import json
 import httpx
 import os
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc
+from sqlalchemy import desc
 
 from app.models.presale_ai_emotion_analysis import PresaleAIEmotionAnalysis, SentimentType, ChurnRiskLevel
 from app.models.presale_follow_up_reminder import PresaleFollowUpReminder, ReminderPriority, ReminderStatus

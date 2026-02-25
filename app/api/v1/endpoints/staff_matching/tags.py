@@ -15,7 +15,7 @@ from app.models.staff_matching import HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 

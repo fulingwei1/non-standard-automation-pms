@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user, require_permission
+from app.core.security import require_permission
 from app.models.user import User
 from app.schemas.project_risk import (
     ProjectRiskCreate,

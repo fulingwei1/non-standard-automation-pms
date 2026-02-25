@@ -36,7 +36,7 @@ from app.services.ecn_notification import (
 )
 
 from .utils import build_ecn_list_response, build_ecn_response, generate_ecn_no
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

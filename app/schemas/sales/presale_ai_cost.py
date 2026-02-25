@@ -1,7 +1,7 @@
 """
 售前AI成本估算 Schemas
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from datetime import datetime

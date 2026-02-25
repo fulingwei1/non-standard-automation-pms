@@ -7,7 +7,7 @@
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectCost

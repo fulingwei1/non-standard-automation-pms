@@ -28,7 +28,7 @@ from app.services.ecn_notification import (
 )
 
 from .utils import get_user_display_name
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

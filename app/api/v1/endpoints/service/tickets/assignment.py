@@ -13,7 +13,7 @@ from app.core import security
 from app.models.service import ServiceTicket, ServiceTicketCcUser
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from fastapi import APIRouter
 

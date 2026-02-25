@@ -5,7 +5,6 @@
 
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Dict, List, Optional
 
 from sqlalchemy import and_, func
@@ -16,7 +15,6 @@ from app.models import (
     ReportArchive,
     ReportRecipient,
     Timesheet,
-    User,
 )
 from app.models.report import (
     ReportTypeEnum,

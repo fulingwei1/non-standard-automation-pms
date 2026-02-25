@@ -5,7 +5,7 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ from app.schemas.budget import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

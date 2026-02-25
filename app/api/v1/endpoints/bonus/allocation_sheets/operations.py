@@ -17,7 +17,7 @@ from app.schemas.bonus import BonusAllocationSheetConfirm, BonusAllocationSheetR
 from app.schemas.common import ResponseModel
 
 from ..payment import generate_distribution_code
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -17,7 +17,6 @@ from app.models.production import (
     EquipmentOEERecord,
     Worker,
     WorkerEfficiencyRecord,
-    Workshop,
 )
 
 router = APIRouter()
@@ -93,7 +92,7 @@ async def get_capacity_report(
     if format == "excel":
         try:
             import openpyxl
-            from openpyxl.styles import Font, Alignment, PatternFill
+            from openpyxl.styles import Font
             
             wb = openpyxl.Workbook()
             ws = wb.active

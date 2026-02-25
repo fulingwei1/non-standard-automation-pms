@@ -4,14 +4,12 @@
 """
 
 import logging
-from datetime import datetime
 from decimal import Decimal
 from typing import List
 
 from sqlalchemy.orm import Session
 
 from app.models import ChangeImpactAnalysis, ChangeRequest, ChangeResponseSuggestion
-from app.services.glm_service import call_glm_api
 
 logger = logging.getLogger(__name__)
 

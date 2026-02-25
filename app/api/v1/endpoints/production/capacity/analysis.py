@@ -3,7 +3,7 @@
 产能分析接口 - 瓶颈识别和利用率
 """
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, func, case

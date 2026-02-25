@@ -19,7 +19,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import ContractStatusEnum
 
 
 class ContractTemplate(Base, TimestampMixin):

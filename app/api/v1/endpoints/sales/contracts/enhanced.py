@@ -16,7 +16,6 @@ from app.schemas.sales.contract_enhanced import (
     ContractAttachmentCreate,
     ContractAttachmentResponse,
     ContractCreate,
-    ContractListResponse,
     ContractResponse,
     ContractStats,
     ContractStatusChange,

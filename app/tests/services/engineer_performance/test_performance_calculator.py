@@ -6,18 +6,14 @@
 import pytest
 from decimal import Decimal
 from datetime import datetime, date
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from sqlalchemy.orm import Session
 
 from app.services.engineer_performance.performance_calculator import PerformanceCalculator
 from app.models.engineer_performance import (
-    CodeModule,
     CollaborationRating,
     DesignReview,
     EngineerDimensionConfig,
-    KnowledgeContribution,
-    MechanicalDebugIssue,
-    PlcModuleLibrary,
     PlcProgramVersion,
     TestBugRecord,
 )
@@ -473,7 +469,6 @@ def test_calculate_electrical_score_with_plc_modules(calculator, mock_db, mock_p
 
 def test_calculate_solution_score_no_solutions(calculator, mock_db, mock_period):
     """测试无方案记录"""
-    from app.models.presale import PresaleSolution, PresaleSolutionTemplate
     
     def query_side_effect(model):
         mock_query = Mock()
@@ -496,7 +491,6 @@ def test_calculate_solution_score_no_solutions(calculator, mock_db, mock_period)
 def test_calculate_solution_score_with_approved_solution(calculator, mock_db, mock_period):
     """测试有已批准方案"""
     from app.models.presale import PresaleSolution
-    from app.models.sales import Contract
     
     # 创建模拟方案
     solution = Mock(spec=PresaleSolution)
@@ -529,7 +523,7 @@ def test_calculate_solution_score_with_approved_solution(calculator, mock_db, mo
 
 def test_calculate_solution_score_with_templates(calculator, mock_db, mock_period):
     """测试有方案模板贡献"""
-    from app.models.presale import PresaleSolution, PresaleSolutionTemplate
+    from app.models.presale import PresaleSolution
     
     mock_query = Mock()
     mock_db.query.return_value = mock_query
@@ -555,7 +549,7 @@ def test_calculate_solution_score_with_templates(calculator, mock_db, mock_perio
 
 def test_calculate_solution_score_with_high_value_contract(calculator, mock_db, mock_period):
     """测试高价值合同（>200万）"""
-    from app.models.presale import PresaleSolution, PresaleSolutionTemplate, PresaleSupportTicket
+    from app.models.presale import PresaleSolution
     from app.models.sales import Contract
     
     solution = Mock(spec=PresaleSolution)

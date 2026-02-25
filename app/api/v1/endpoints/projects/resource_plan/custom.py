@@ -6,7 +6,7 @@
 """
 
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
 
 from app.api import deps

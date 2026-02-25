@@ -41,7 +41,7 @@ router = APIRouter()
 
 
 from fastapi import APIRouter
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(
     prefix="/assembly-kit/scheduling",

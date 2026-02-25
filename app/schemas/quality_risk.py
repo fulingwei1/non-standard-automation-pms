@@ -5,7 +5,7 @@
 
 from datetime import date, datetime
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 # ==================== 质量风险检测 Schema ====================

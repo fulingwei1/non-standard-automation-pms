@@ -5,8 +5,8 @@ AI项目计划生成器
 """
 
 import logging
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models import Project

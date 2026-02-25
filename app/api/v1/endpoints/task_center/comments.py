@@ -28,7 +28,7 @@ from app.schemas.task_center import (
     TaskCommentResponse,
 )
 from app.services.sales_reminder import create_notification
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

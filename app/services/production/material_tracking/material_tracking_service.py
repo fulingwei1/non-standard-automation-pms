@@ -3,7 +3,7 @@
 物料跟踪系统 - 业务服务层
 """
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session

@@ -21,7 +21,6 @@ from app.schemas.presale_ai_knowledge import (
     AIQAResponse,
     QAFeedbackRequest,
     TagsResponse,
-    KnowledgeBaseSearchRequest,
     KnowledgeBaseSearchResponse,
 )
 

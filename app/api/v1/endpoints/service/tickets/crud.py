@@ -17,7 +17,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from ..number_utils import generate_ticket_no
 

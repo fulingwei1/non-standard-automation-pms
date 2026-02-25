@@ -15,7 +15,7 @@ from app.schemas.common import ResponseModel
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/summary", tags=["绩效总览"])
 

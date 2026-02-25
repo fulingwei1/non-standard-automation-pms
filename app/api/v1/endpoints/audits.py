@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import PermissionAudit, User
 from app.schemas.common import PaginatedResponse
 from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

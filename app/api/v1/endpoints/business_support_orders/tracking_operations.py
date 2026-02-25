@@ -21,7 +21,7 @@ from app.schemas.business_support import (
     ReminderRequest,
 )
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .tracking_helpers import build_tracking_response
 from .utils import _send_department_notification

@@ -37,7 +37,7 @@ from app.schemas.service import (
 from .number_utils import generate_record_no
 
 from app.core.config import settings
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

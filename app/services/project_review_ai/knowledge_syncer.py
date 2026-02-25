@@ -4,11 +4,11 @@
 """
 import json
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
 from app.services.ai_client_service import AIClientService
-from app.models.project_review import ProjectReview, ProjectLesson, ProjectBestPractice
+from app.models.project_review import ProjectReview, ProjectLesson
 from app.models.presale_knowledge_case import PresaleKnowledgeCase
 from app.models.project import Project
 

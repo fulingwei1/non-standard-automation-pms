@@ -2,8 +2,8 @@
 """
 设备OEE分析接口
 """
-from datetime import date, datetime, timedelta
-from typing import List, Optional
+from datetime import date, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, func
@@ -14,7 +14,6 @@ from app.models.production import (
     Equipment,
     EquipmentOEERecord,
     Workshop,
-    Workstation,
 )
 
 router = APIRouter()

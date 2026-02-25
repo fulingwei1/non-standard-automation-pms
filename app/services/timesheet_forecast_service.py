@@ -6,10 +6,9 @@
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional, Dict, Any, Tuple
-import random
+from typing import List, Optional
 
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import math
 import numpy as np
@@ -24,11 +23,6 @@ except ImportError:
 
 from app.models.timesheet import Timesheet
 from app.models.project import Project
-from app.models.timesheet_analytics import (
-    TimesheetForecast,
-    ForecastMethodEnum,
-    AlertLevelEnum
-)
 from app.schemas.timesheet_analytics import (
     ProjectForecastResponse,
     CompletionForecastResponse,

@@ -3,9 +3,7 @@
 变更影响智能分析系统 ORM 模型
 """
 
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,

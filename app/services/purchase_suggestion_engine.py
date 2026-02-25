@@ -24,7 +24,6 @@ from app.models import (
     PurchaseOrderItem,
     PurchaseSuggestion,
     SupplierPerformance,
-    Vendor,
 )
 
 logger = logging.getLogger(__name__)

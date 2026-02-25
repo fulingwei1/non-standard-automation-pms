@@ -19,7 +19,6 @@ from app.schemas.sales import (
     ContactCreate,
     ContactUpdate,
     ContactResponse,
-    SetPrimaryRequest,
 )
 
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj

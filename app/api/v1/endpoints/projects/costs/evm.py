@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.core.auth import require_permission
-from app.models import EarnedValueData, EarnedValueSnapshot, Project, User
+from app.models import EarnedValueData, Project, User
 from app.services.evm_service import EVMService
 from app.utils.db_helpers import get_or_404
 

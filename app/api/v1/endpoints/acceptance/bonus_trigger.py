@@ -17,7 +17,7 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import get_or_404, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

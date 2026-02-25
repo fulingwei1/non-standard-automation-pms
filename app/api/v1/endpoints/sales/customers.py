@@ -13,10 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api import deps
 from app.core import security
 from app.common.pagination import get_pagination_query, PaginationParams
-from app.common.query_filters import apply_keyword_filter
 from app.models.project.customer import Customer
-from app.models.sales.contacts import Contact
-from app.models.sales.customer_tags import CustomerTag
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (

@@ -4,12 +4,10 @@ AI WBS分解建议表
 存储AI生成的工作分解结构建议
 """
 
-from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, 
     Numeric, Boolean, JSON, ForeignKey, Index
 )
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

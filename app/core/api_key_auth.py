@@ -20,14 +20,13 @@ API Key认证机制
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta
-from typing import Optional, List
+from datetime import datetime
+from typing import Optional
 
 from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 
 # API Key Header名称
 API_KEY_NAME = "X-API-Key"

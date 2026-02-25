@@ -4,12 +4,10 @@ AI项目计划模板表
 存储AI生成的项目计划模板和推荐
 """
 
-from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, 
     Numeric, Boolean, JSON, ForeignKey, Index
 )
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

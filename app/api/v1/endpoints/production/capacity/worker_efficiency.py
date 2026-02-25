@@ -3,7 +3,7 @@
 工人效率分析接口
 """
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, func

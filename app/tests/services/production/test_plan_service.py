@@ -6,7 +6,7 @@
 """
 import pytest
 from datetime import datetime, date
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 

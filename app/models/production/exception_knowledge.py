@@ -2,7 +2,6 @@
 """
 异常知识库模型
 """
-from datetime import datetime
 
 from sqlalchemy import (
     Column,

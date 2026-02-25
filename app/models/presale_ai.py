@@ -2,7 +2,6 @@
 售前AI系统集成 - 数据模型
 Team 10: 售前AI系统集成与前端UI
 """
-from datetime import datetime, date
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, Text, JSON,
     Date, TIMESTAMP, ForeignKey, Enum, Index

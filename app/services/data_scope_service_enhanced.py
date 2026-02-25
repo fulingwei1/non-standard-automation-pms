@@ -10,13 +10,11 @@
 """
 
 import logging
-from functools import lru_cache
 from typing import Any, List, Optional, Set, TypeVar
 
-from sqlalchemy import or_, text
+from sqlalchemy import or_
 from sqlalchemy.orm import Query, Session
 
-from app.common.query_filters import apply_like_filter
 from app.models.enums import DataScopeEnum
 from app.models.organization import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission import ScopeType

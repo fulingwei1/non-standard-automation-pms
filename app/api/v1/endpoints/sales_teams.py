@@ -3,7 +3,7 @@
 销售团队管理 API 端点
 """
 
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,6 @@ from app.schemas.sales_team import (
     SalesTeamCreate,
     SalesTeamUpdate,
     SalesTeamResponse,
-    SalesTeamTreeNode,
     SalesTeamMemberCreate,
     SalesTeamMemberUpdate,
     SalesTeamMemberResponse,

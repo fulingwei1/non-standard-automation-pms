@@ -1,7 +1,7 @@
 """
 售前AI智能问答记录模型
 """
-from sqlalchemy import Column, Integer, String, Text, DECIMAL, TIMESTAMP, JSON
+from sqlalchemy import Column, Integer, Text, DECIMAL, TIMESTAMP, JSON
 from sqlalchemy.sql import func
 from app.models.base import Base
 

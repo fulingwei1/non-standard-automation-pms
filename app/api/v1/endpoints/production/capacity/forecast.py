@@ -4,7 +4,7 @@
 基于历史数据的线性回归,考虑季节性因素
 """
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Optional
 import math
 
 from fastapi import APIRouter, Depends, Query
@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
 from app.models.production import (
-    Equipment,
     EquipmentOEERecord,
     WorkerEfficiencyRecord,
 )

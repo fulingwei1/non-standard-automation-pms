@@ -8,12 +8,11 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.timesheet_reminder import (
     AnomalyTypeEnum,
-    NotificationChannelEnum,
     ReminderStatusEnum,
     ReminderTypeEnum,
     TimesheetAnomalyRecord,

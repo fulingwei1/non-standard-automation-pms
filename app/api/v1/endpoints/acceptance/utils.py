@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.common.query_filters import apply_like_filter
 from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
 from app.models.project import Machine, Project
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 # ==================== 验收约束规则验证 ====================
 

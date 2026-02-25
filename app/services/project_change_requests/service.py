@@ -3,7 +3,7 @@
 项目变更请求服务层
 """
 
-from typing import Any, Optional, List, Dict
+from typing import Optional, List, Dict
 from datetime import datetime
 from decimal import Decimal
 
@@ -16,7 +16,6 @@ from app.models.project import Project
 from app.models.change_request import (
     ChangeRequest,
     ChangeApprovalRecord,
-    ChangeNotification,
 )
 from app.models.enums import (
     ChangeStatusEnum,

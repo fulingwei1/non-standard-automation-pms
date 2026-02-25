@@ -5,16 +5,13 @@
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app.core.security import get_password_hash
 from app.models.user import User, Role, UserRole
-from app.models.organization import Employee, Department
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,6 @@ AI情绪分析相关Schema
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from decimal import Decimal
 
 
 # ==================== 情绪分析相关 ====================

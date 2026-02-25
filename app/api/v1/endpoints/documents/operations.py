@@ -21,7 +21,7 @@ from app.schemas.project import (
     ProjectDocumentUpdate,
 )
 from app.utils.permission_helpers import check_project_access_or_raise
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 

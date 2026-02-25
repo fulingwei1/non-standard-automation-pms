@@ -8,9 +8,9 @@ Team 3: 智能缺料预警系统
 import logging
 from datetime import datetime, timedelta, date
 from decimal import Decimal
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, func
 
 from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
 from app.models.material import Material
@@ -20,7 +20,6 @@ from app.models.production.work_order import WorkOrder
 # Use MaterialStock instead if needed
 from app.models.inventory_tracking import MaterialStock
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
-from app.core.exceptions import BusinessException
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)

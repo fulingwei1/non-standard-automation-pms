@@ -21,7 +21,7 @@ from app.schemas.common import BatchOperationResponse
 from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.task_progress_service import apply_task_progress_update
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .batch_helpers import log_task_operation
 

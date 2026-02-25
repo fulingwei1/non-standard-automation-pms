@@ -6,7 +6,7 @@
 from datetime import date, timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,7 @@ from app.schemas.service import (
     CustomerCommunicationResponse,
     CustomerCommunicationUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .number_utils import generate_communication_no
 

@@ -5,7 +5,7 @@
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -18,7 +18,7 @@ from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

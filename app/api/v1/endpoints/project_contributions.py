@@ -19,7 +19,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project_contribution_service import ProjectContributionService
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

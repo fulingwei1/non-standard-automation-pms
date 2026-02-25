@@ -1,18 +1,14 @@
 """
 AI智能成本估算服务
 """
-import json
-import os
 from typing import List, Dict, Any, Optional
 from decimal import Decimal
-from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func
 
 from app.models.sales.presale_ai_cost import (
     PresaleAICostEstimation,
-    PresaleCostHistory,
-    PresaleCostOptimizationRecord
+    PresaleCostHistory
 )
 from app.schemas.sales.presale_ai_cost import (
     CostEstimationInput,

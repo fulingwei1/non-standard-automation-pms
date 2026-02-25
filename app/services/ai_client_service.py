@@ -4,7 +4,7 @@ AI客户端服务
 """
 import os
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import httpx
 
 # 尝试导入 OpenAI SDK

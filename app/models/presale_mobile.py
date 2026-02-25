@@ -3,8 +3,6 @@
 移动端AI销售助手 - 数据库模型
 """
 
-from datetime import date, datetime
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -19,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base, FK, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class PresaleMobileAssistantChat(Base, TimestampMixin):

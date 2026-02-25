@@ -1,12 +1,10 @@
 """
 售前AI知识库服务
 """
-import json
 import numpy as np
 from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
-from datetime import datetime
+from sqlalchemy import and_, or_
 import logging
 
 from app.models.presale_knowledge_case import PresaleKnowledgeCase

@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.resource_scheduling import (

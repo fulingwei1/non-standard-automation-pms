@@ -11,9 +11,9 @@ from datetime import datetime
 
 try:
     from openpyxl import Workbook
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side  # noqa: F401
     from openpyxl.chart import BarChart, PieChart, Reference
-    from openpyxl.utils import get_column_letter
+    from openpyxl.utils import get_column_letter  # noqa: F401
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False

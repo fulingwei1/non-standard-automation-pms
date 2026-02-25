@@ -24,7 +24,7 @@ from app.schemas.acceptance import (
 
 from .order_crud import read_acceptance_order
 from .utils import validate_completion_rules, validate_edit_rules
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

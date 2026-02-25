@@ -3,7 +3,6 @@ AI需求理解记录模型
 记录AI对售前需求的分析结果
 """
 from datetime import datetime
-from typing import Optional
 from sqlalchemy import Column, Integer, String, Text, JSON, DECIMAL, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.models.base import Base

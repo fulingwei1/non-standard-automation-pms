@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Any
 
 import pandas as pd
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 

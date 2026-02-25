@@ -13,7 +13,6 @@
 import logging
 from typing import Dict, List, Optional, Set, Tuple
 
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.models.user import ApiPermission, Role, RoleApiPermission

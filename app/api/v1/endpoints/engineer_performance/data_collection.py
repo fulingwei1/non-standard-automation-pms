@@ -14,7 +14,7 @@ from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.performance_collector import PerformanceDataCollector
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/data-collection", tags=["数据采集"])
 

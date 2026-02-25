@@ -7,18 +7,15 @@ Team 2: 物料全流程跟踪系统
 from datetime import datetime, date
 from decimal import Decimal
 from typing import List, Optional, Dict
-from sqlalchemy import and_, or_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.inventory_tracking import (
     MaterialTransaction,
     MaterialStock,
     MaterialReservation,
-    StockAdjustment,
 )
 from app.models.material import Material
-from app.models.production.work_order import WorkOrder
-from app.models.project import Project
 
 
 class InsufficientStockError(Exception):

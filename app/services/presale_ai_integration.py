@@ -5,9 +5,7 @@ Team 10: 售前AI系统集成与前端UI
 from datetime import datetime, date, timedelta
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
-import json
-import asyncio
+from sqlalchemy import func, and_, desc
 
 from app.models.presale_ai import (
     PresaleAIUsageStats,
@@ -15,18 +13,12 @@ from app.models.presale_ai import (
     PresaleAIConfig,
     PresaleAIWorkflowLog,
     PresaleAIAuditLog,
-    AIFunctionEnum,
     WorkflowStepEnum,
     WorkflowStatusEnum
 )
 from app.schemas.presale_ai import (
-    AIUsageStatsCreate,
-    AIUsageStatsUpdate,
     AIFeedbackCreate,
-    AIConfigCreate,
     AIConfigUpdate,
-    AIWorkflowLogCreate,
-    AIAuditLogCreate,
     DashboardStatsResponse,
     WorkflowStatusResponse,
     HealthCheckResponse

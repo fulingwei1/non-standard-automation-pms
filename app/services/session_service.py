@@ -4,9 +4,8 @@
 负责用户会话的创建、查询、管理和安全控制
 """
 
-import hashlib
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 try:
@@ -16,14 +15,13 @@ except ImportError:
     def parse_user_agent(ua_string):
         return type('UserAgent', (), {'browser': type('Browser', (), {'family': 'Unknown', 'version_string': ''})(), 'os': type('OS', (), {'family': 'Unknown', 'version_string': ''})(), 'device': type('Device', (), {'family': 'Unknown'})()})()
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.session import UserSession
-from app.models.user import User
 
 if TYPE_CHECKING:
-    import redis
+    pass
 
 logger = logging.getLogger(__name__)
 

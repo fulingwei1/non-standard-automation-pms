@@ -4,7 +4,7 @@ Team 5: AI Quotation Generator API
 """
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List
 
 from app.dependencies import get_db
 from app.core.auth import get_current_user
@@ -12,8 +12,7 @@ from app.models.user import User
 from app.schemas.presale_ai_quotation import (
     QuotationGenerateRequest, QuotationResponse, QuotationUpdateRequest,
     QuotationApprovalRequest, QuotationApprovalResponse, QuotationEmailRequest,
-    ThreeTierQuotationRequest, ThreeTierQuotationResponse, QuotationHistoryResponse,
-    QuotationVersionResponse
+    ThreeTierQuotationRequest, ThreeTierQuotationResponse, QuotationHistoryResponse
 )
 from app.services.presale_ai_quotation_service import AIQuotationGeneratorService
 from app.services.quotation_pdf_service import QuotationPDFService

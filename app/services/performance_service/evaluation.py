@@ -2,7 +2,6 @@
 """
 绩效管理服务 - 评价任务
 """
-from datetime import date
 from typing import List
 
 from sqlalchemy import or_

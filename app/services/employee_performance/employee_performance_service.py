@@ -5,7 +5,7 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastapi import HTTPException, status
 from sqlalchemy import desc

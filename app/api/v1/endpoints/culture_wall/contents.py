@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ from app.schemas.culture_wall import (
     CultureWallContentCreate,
     CultureWallContentResponse,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

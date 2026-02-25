@@ -4,7 +4,7 @@ Team 10: 售前AI系统集成与前端UI
 """
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class AIUsageStatsBase(BaseModel):

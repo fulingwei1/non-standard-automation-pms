@@ -6,7 +6,7 @@ Team 3: 智能缺料预警系统
 支持多种预测算法：移动平均、指数平滑、线性回归
 """
 import logging
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Dict, Optional, Tuple
 from sqlalchemy.orm import Session
@@ -14,9 +14,7 @@ from sqlalchemy import and_, func
 import statistics
 
 from app.models.shortage.smart_alert import MaterialDemandForecast
-from app.models.material import Material
 from app.models.production.work_order import WorkOrder
-from app.models.purchase import PurchaseOrderItem
 from app.core.exceptions import BusinessException
 from app.utils.db_helpers import save_obj
 

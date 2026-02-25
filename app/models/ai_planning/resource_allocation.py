@@ -4,12 +4,10 @@ AI资源分配建议表
 存储AI生成的资源分配优化方案
 """
 
-from datetime import datetime, date
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Date,
     Numeric, Boolean, JSON, ForeignKey, Index
 )
-from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
 

@@ -7,7 +7,7 @@
 import csv
 import io
 import os
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse

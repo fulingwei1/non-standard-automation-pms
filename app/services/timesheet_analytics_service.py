@@ -4,21 +4,13 @@
 提供6种分析维度的核心逻辑
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import List, Optional, Dict, Any, Tuple
-from sqlalchemy import func, and_, or_, case
+from typing import List, Optional, Tuple
+from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
-from app.models.timesheet import Timesheet, TimesheetSummary
-from app.models.timesheet_analytics import (
-    TimesheetAnalytics,
-    TimesheetTrend,
-    AnalyticsPeriodEnum,
-    AnalyticsDimensionEnum
-)
-from app.models.project import Project
-from app.models.user import User
+from app.models.timesheet import Timesheet
 from app.schemas.timesheet_analytics import (
     TimesheetTrendResponse,
     WorkloadHeatmapResponse,

@@ -27,7 +27,6 @@ Date: 2026-02-16
 """
 
 import logging
-from typing import Optional
 
 from sqlalchemy.orm import Query
 
@@ -160,7 +159,6 @@ class TenantQuery(Query):
             User对象或None
         """
         try:
-            from starlette.requests import Request
             from starlette_context import context
             
             # 尝试从starlette-context获取

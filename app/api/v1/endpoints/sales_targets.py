@@ -3,7 +3,7 @@
 销售目标管理 API 端点
 """
 
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -14,11 +14,6 @@ from app.schemas.sales_target import (
     SalesTargetV2Response,
     TargetBreakdownRequest,
     AutoBreakdownRequest,
-    TargetBreakdownResponse,
-    TeamRankingResponse,
-    PersonalRankingResponse,
-    CompletionTrendResponse,
-    CompletionDistributionResponse,
 )
 from app.schemas.common import ResponseModel
 from app.services.sales_target_service import SalesTargetService

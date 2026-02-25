@@ -2,7 +2,6 @@
 AI需求理解API路由
 提供6个API端点实现需求分析、精炼、查询等功能
 """
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -15,8 +14,7 @@ from app.schemas.presale_ai_requirement import (
     RequirementRefinementRequest,
     RequirementUpdateRequest,
     ClarificationQuestionsResponse,
-    ConfidenceScoreResponse,
-    ClarificationQuestion
+    ConfidenceScoreResponse
 )
 from app.services.presale_ai_requirement_service import PresaleAIRequirementService
 

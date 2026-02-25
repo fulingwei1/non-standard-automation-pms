@@ -4,7 +4,6 @@ API Key数据模型
 """
 
 from datetime import datetime
-from typing import Optional, List
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.orm import relationship

@@ -14,8 +14,6 @@ from app.schemas.presale_ai import (
     AIUsageStatsResponse,
     AIFeedbackCreate,
     AIFeedbackResponse,
-    AIFeedbackQuery,
-    AIConfigCreate,
     AIConfigUpdate,
     AIConfigResponse,
     AIWorkflowLogResponse,
@@ -30,7 +28,6 @@ from app.schemas.presale_ai import (
     ExportReportResponse
 )
 from app.services.presale_ai_integration import PresaleAIIntegrationService
-from app.models.presale_ai import WorkflowStatusEnum
 
 logger = logging.getLogger(__name__)
 
@@ -383,7 +380,6 @@ async def export_report(
     - PDF
     - CSV
     """
-    import uuid
     
     service = PresaleAIIntegrationService(db)
     

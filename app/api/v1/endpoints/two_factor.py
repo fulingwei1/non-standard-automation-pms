@@ -17,7 +17,6 @@ from typing import Optional
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import Response
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 from sqlalchemy import text

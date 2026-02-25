@@ -6,17 +6,15 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
 from app.models import ChangeImpactAnalysis, ChangeRequest, ChangeResponseSuggestion, User
 from app.schemas.change_impact import (
-    ChangeImpactAnalysisCreate,
     ChangeImpactAnalysisResponse,
     ChangeResponseSuggestionResponse,
     ChainReactionResponse,
-    ImpactReportResponse,
     SuggestionGenerateRequest,
     SuggestionSelectRequest,
 )
@@ -256,7 +254,6 @@ async def get_impact_stats(
 ):
     """影响统计"""
     from sqlalchemy import func
-    from decimal import Decimal
     
     # 总数统计
     total_changes = db.query(func.count(ChangeRequest.id)).scalar()

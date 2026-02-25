@@ -19,7 +19,6 @@
 """
 
 import secrets
-from typing import Optional
 
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware

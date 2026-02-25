@@ -6,8 +6,8 @@ AI进度排期优化器
 
 import logging
 import json
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, date, timedelta
+from typing import Dict, List, Optional, Any
+from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
 from app.models import Project

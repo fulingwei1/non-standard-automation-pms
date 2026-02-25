@@ -12,7 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
-from app.core.rate_limiting import limiter, get_rate_limit_status
+from app.core.rate_limiting import get_rate_limit_status
 
 logger = logging.getLogger(__name__)
 

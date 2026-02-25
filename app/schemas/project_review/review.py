@@ -2,9 +2,9 @@
 项目复盘报告Schema
 """
 from datetime import date, datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from decimal import Decimal
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class ProjectReviewBase(BaseModel):

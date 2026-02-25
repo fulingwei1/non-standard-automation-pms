@@ -8,7 +8,7 @@ ECN审批较为复杂，包含多部门评估（会签）环节
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 

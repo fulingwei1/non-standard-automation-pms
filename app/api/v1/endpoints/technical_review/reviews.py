@@ -28,7 +28,7 @@ from app.schemas.technical_review import (
     TechnicalReviewResponse,
     TechnicalReviewUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_review_no
 

@@ -6,14 +6,13 @@ AI智能成本估算服务测试
 import pytest
 from decimal import Decimal
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 
 from app.services.sales.ai_cost_estimation_service import AICostEstimationService
 from app.models.sales.presale_ai_cost import (
     PresaleAICostEstimation,
-    PresaleCostHistory,
-    PresaleCostOptimizationRecord
+    PresaleCostHistory
 )
 from app.schemas.sales.presale_ai_cost import (
     CostEstimationInput,
@@ -24,7 +23,6 @@ from app.schemas.sales.presale_ai_cost import (
     PricingResponse,
     OptimizationSuggestion,
     PricingRecommendation,
-    CostBreakdown,
     UpdateActualCostInput,
     HistoricalAccuracyResponse
 )

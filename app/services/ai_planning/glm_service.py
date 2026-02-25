@@ -7,8 +7,7 @@ GLM-5 AI服务集成
 import os
 import json
 import time
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Dict, List, Optional
 import logging
 
 try:

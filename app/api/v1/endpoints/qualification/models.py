@@ -25,7 +25,7 @@ from app.schemas.qualification import (
     PositionCompetencyModelUpdate,
 )
 from app.services.qualification_service import QualificationService
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

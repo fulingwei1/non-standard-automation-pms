@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 

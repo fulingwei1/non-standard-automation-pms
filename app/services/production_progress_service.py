@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.production import (
@@ -21,7 +21,6 @@ from app.models.production import (
     WorkstationStatus,
 )
 from app.schemas.production_progress import (
-    BottleneckWorkstation,
     ProductionProgressLogCreate,
     ProgressAlertCreate,
     ProgressDeviation,

@@ -19,7 +19,7 @@ from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .utils import build_user_response, ensure_employee_unbound, prepare_employee_for_new_user, replace_user_roles
 

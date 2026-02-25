@@ -5,9 +5,9 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from sqlalchemy import and_, desc, extract, func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range, month_start as get_month_start

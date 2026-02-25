@@ -2,7 +2,7 @@
 项目经验教训Schema
 """
 from datetime import date, datetime
-from typing import Optional, List, Dict
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 

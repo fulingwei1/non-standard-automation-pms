@@ -5,7 +5,6 @@
 """
 
 from sqlalchemy import Column, Integer, String, Date, Enum as SQLEnum
-from sqlalchemy.orm import relationship
 from datetime import date
 import enum
 

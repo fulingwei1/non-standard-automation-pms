@@ -18,7 +18,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.permission_audit_service import PermissionAuditService
 from app.services.user_sync_service import UserSyncService
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .models import BatchToggleActiveRequest, SyncEmployeesRequest, ToggleActiveRequest
 

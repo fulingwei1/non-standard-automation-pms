@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 
 from app.models.sales.presale_ai_win_rate import (
     PresaleAIWinRate,

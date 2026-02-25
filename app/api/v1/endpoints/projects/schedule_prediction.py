@@ -5,13 +5,13 @@ Project Schedule Prediction Endpoints
 """
 
 from typing import Any, Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
 from app.api import deps
 from app.core import security
-from app.core.schemas import success_response, list_response
+from app.core.schemas import success_response
 from app.models.user import User
 from app.services.schedule_prediction_service import SchedulePredictionService
 

@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -17,7 +17,7 @@ from app.schemas.technical_review import (
     ReviewMaterialCreate,
     ReviewMaterialResponse,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

@@ -4,7 +4,7 @@
 """
 from typing import Any
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps

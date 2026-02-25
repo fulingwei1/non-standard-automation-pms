@@ -18,7 +18,6 @@ from app.models.project import (
     CostAlertRule,
     CostForecast,
     FinancialProjectCost,
-    Machine,
     Project,
     ProjectCost,
 )

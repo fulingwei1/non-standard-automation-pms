@@ -5,7 +5,6 @@ Team 2: 物料全流程跟踪系统
 实现物料从采购到消耗的全生命周期跟踪
 """
 from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,

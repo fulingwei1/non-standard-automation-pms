@@ -18,7 +18,7 @@ from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
 from app.services.progress_aggregation_service import aggregate_task_progress
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 

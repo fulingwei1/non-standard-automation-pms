@@ -6,7 +6,7 @@
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -18,7 +18,7 @@ from app.schemas.technical_review import (
     ReviewChecklistRecordResponse,
     ReviewChecklistRecordUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_issue_no, update_review_issue_counts
 

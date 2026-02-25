@@ -3,12 +3,10 @@
 移动端AI销售助手 - 核心服务
 """
 
-import base64
 import json
 import logging
 import time
 from datetime import datetime
-from io import BytesIO
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, desc
@@ -20,7 +18,7 @@ from app.models.presale_mobile import (
     PresaleMobileQuickEstimate,
     PresaleVisitRecord,
 )
-from app.schemas.presale_mobile import QuestionType, SyncStatus, VisitType
+from app.schemas.presale_mobile import QuestionType, SyncStatus
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)

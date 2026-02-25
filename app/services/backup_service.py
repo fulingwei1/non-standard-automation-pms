@@ -5,7 +5,6 @@
 
 import os
 import subprocess
-import hashlib
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from pathlib import Path

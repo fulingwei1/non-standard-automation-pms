@@ -2,8 +2,7 @@
 知识库同步Schema
 """
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from decimal import Decimal
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 

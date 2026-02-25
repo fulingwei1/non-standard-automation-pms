@@ -3,12 +3,12 @@
 与历史项目进行对比，识别改进点和最佳实践
 """
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import and_
 
 from app.services.ai_client_service import AIClientService
-from app.models.project_review import ProjectReview, ProjectLesson, ProjectBestPractice
+from app.models.project_review import ProjectReview
 from app.models.project import Project
 
 

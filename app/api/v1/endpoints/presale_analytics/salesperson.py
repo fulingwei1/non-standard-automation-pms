@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,7 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import SalespersonPerformance, SalespersonRanking
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

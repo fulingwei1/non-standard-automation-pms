@@ -1,7 +1,7 @@
 """
 售前AI知识库相关的Pydantic模型
 """
-from typing import Optional, List, Any
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 

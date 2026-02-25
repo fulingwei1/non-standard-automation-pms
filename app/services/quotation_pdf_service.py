@@ -4,9 +4,7 @@ Team 5: Quotation PDF Generator Service
 """
 import os
 from typing import Optional
-from decimal import Decimal
 from datetime import datetime
-from io import BytesIO
 
 try:
     from reportlab.lib.pagesizes import A4

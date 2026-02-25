@@ -4,13 +4,12 @@
 """
 
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_, func
+from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from fastapi import HTTPException
 
 from app.models.sales.team import SalesTeam, SalesTeamMember
 from app.models.sales.region import SalesRegion
-from app.models import User, Department
 from app.schemas.sales_team import (
     SalesTeamCreate,
     SalesTeamUpdate,

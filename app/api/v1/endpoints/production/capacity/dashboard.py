@@ -15,7 +15,6 @@ from app.models.production import (
     EquipmentOEERecord,
     Worker,
     WorkerEfficiencyRecord,
-    Workshop,
 )
 
 router = APIRouter()

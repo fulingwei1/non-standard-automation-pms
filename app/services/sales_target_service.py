@@ -7,13 +7,12 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
+from sqlalchemy import and_, or_, desc
 from fastapi import HTTPException
 import json
 
 from app.models.sales.target_v2 import SalesTargetV2, TargetBreakdownLog
 from app.models.sales.team import SalesTeam, SalesTeamMember
-from app.models import User
 from app.schemas.sales_target import (
     SalesTargetV2Create,
     SalesTargetV2Update,

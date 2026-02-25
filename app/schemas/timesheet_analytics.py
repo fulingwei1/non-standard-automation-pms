@@ -7,7 +7,7 @@
 from datetime import date
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 # ==================== 请求参数 ====================

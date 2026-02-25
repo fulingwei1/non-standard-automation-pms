@@ -7,7 +7,7 @@
 import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from sqlalchemy.orm import Session
 
 from app.services.report_framework.adapters.sales import SalesReportAdapter

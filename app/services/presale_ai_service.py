@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_
+from sqlalchemy import desc
 
 from app.models.presale_ai_solution import (
     PresaleAISolution,
@@ -18,10 +18,7 @@ from app.models.presale_ai_solution import (
 from app.schemas.presale_ai_solution import (
     TemplateMatchRequest,
     SolutionGenerationRequest,
-    ArchitectureGenerationRequest,
-    BOMGenerationRequest,
-    TemplateMatchItem,
-    BOMItem
+    TemplateMatchItem
 )
 from app.services.ai_client_service import AIClientService
 from app.utils.db_helpers import save_obj

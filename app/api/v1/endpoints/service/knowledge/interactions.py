@@ -4,7 +4,7 @@
 """
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -12,7 +12,7 @@ from app.core import security
 from app.models.service import KnowledgeBase
 from app.models.user import User
 from app.schemas.service import KnowledgeBaseResponse
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 

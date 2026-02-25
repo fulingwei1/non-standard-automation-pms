@@ -7,19 +7,15 @@ import re
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import desc
 
 from app.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
 from app.schemas.presale_ai_requirement import (
     RequirementAnalysisRequest,
     RequirementRefinementRequest,
     RequirementUpdateRequest,
-    StructuredRequirement,
     ClarificationQuestion,
-    FeasibilityAnalysis,
-    EquipmentItem,
-    ProcessStep,
-    TechnicalParameter
+    FeasibilityAnalysis
 )
 from app.core.config import settings
 import httpx

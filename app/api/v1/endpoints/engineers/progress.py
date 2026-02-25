@@ -21,7 +21,7 @@ from app.services.task_progress_service import (
  progress_error_to_http,
  update_task_progress as update_task_progress_service,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 

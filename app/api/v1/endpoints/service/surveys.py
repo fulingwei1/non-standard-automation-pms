@@ -22,7 +22,7 @@ from app.schemas.service import (
     CustomerSatisfactionResponse,
     CustomerSatisfactionUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .number_utils import generate_survey_no
 

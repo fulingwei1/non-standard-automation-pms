@@ -17,7 +17,7 @@ from app.models.sales import Contract
 from app.models.user import User
 from app.schemas.business_support import SalesOrderCreate, SalesOrderResponse, SalesOrderUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from ..utils import generate_order_no
 from .utils import build_sales_order_response

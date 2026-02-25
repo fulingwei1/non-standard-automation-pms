@@ -4,10 +4,10 @@
 提供6种分析接口和4种预测接口
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -16,10 +16,7 @@ from app.models.user import User
 from app.services.timesheet_analytics_service import TimesheetAnalyticsService
 from app.services.timesheet_forecast_service import TimesheetForecastService
 from app.schemas.timesheet_analytics import (
-    TimesheetAnalyticsQuery,
     ProjectForecastRequest,
-    CompletionForecastQuery,
-    WorkloadAlertQuery,
     TimesheetTrendResponse,
     WorkloadHeatmapResponse,
     EfficiencyComparisonResponse,

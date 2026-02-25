@@ -2,16 +2,15 @@
 AI报价单自动生成服务
 Team 5: AI Quotation Generator Service
 """
-import json
 import time
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Optional, Tuple
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.models.presale_ai_quotation import (
-    PresaleAIQuotation, QuotationTemplate, QuotationApproval, 
+    PresaleAIQuotation, QuotationApproval, 
     QuotationVersion, QuotationType, QuotationStatus
 )
 from app.schemas.presale_ai_quotation import (

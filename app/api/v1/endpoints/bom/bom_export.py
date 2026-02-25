@@ -6,7 +6,7 @@ BOM导出 - 从 bom.py 拆分
 from datetime import datetime
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 

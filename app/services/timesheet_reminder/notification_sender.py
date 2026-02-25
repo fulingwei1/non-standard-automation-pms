@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.notification import Notification
 from app.models.timesheet_reminder import (
-    NotificationChannelEnum,
     TimesheetReminderRecord,
 )
 from app.models.user import User

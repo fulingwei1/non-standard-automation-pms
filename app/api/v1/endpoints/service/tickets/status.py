@@ -17,7 +17,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
 from app.services.status_update_service import StatusUpdateService
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 from fastapi import APIRouter
 

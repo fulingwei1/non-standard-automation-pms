@@ -42,7 +42,7 @@ from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
 
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

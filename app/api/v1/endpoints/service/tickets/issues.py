@@ -4,7 +4,7 @@
 """
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
@@ -16,7 +16,7 @@ from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
 from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 

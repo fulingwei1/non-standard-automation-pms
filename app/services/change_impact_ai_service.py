@@ -5,17 +5,15 @@
 
 import json
 import logging
-import os
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models import (
     ChangeImpactAnalysis,
     ChangeRequest,
-    ChangeResponseSuggestion,
     Project,
     ProjectMilestone,
     Task,

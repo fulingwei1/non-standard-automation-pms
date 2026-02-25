@@ -1,7 +1,7 @@
 """
 跟进提醒模型
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, Text, DateTime, Enum, TIMESTAMP, ForeignKey
 from sqlalchemy.sql import func
 from app.models.base import Base
 import enum

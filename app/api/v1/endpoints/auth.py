@@ -23,15 +23,12 @@ from app.models.user import (
     User,
     UserRole,
 )
-from app.schemas.auth import PasswordChange, Token, UserResponse
+from app.schemas.auth import PasswordChange, UserResponse
 from app.schemas.session import (
     DeviceInfo,
     LogoutRequest,
     RefreshTokenRequest,
     RefreshTokenResponse,
-    RevokeSessionRequest,
-    SessionListResponse,
-    SessionResponse,
 )
 from app.services.session_service import SessionService
 from app.services.account_lockout_service import AccountLockoutService

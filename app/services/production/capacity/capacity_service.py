@@ -12,11 +12,9 @@
 - 看板数据
 - 报告生成
 """
-import math
-from datetime import date, datetime, timedelta
-from typing import List, Optional
+from datetime import date, timedelta
+from typing import Optional
 
-from fastapi import HTTPException
 from sqlalchemy import and_, func, case
 from sqlalchemy.orm import Session
 
@@ -29,7 +27,6 @@ from app.models.production import (
     Workstation,
     WorkOrder,
 )
-from app.utils.db_helpers import get_or_404, save_obj
 
 
 class CapacityAnalysisService:

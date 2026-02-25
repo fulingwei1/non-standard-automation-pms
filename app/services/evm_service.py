@@ -5,11 +5,11 @@ EVM (Earned Value Management) 挣值管理服务
 实现PMBOK标准的挣值管理核心算法和业务逻辑
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from sqlalchemy import and_, desc, func
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.models import EarnedValueData, Project
