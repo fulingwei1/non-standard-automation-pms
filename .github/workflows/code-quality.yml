@@ -19,7 +19,7 @@ jobs:
       - name: Install
         run: |
           pip install ruff bandit
-          pip install -r requirements.txt || true
+          pip install -r api/requirements.txt || true
 
       - name: Ruff report
         run: ruff check app/ --statistics || true
