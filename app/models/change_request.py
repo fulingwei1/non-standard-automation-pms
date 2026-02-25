@@ -243,7 +243,9 @@ class ChangeApprovalRecord(Base, TimestampMixin):
 # ==================== 变更通知记录表 ====================
 
 class ChangeNotification(Base, TimestampMixin):
-    """变更通知记录表"""
+    """变更通知记录表
+    
+    【状态】未启用 - 变更通知"""
     __tablename__ = 'change_notifications'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

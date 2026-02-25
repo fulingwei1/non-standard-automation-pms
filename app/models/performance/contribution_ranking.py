@@ -40,7 +40,9 @@ class ProjectContribution(Base, TimestampMixin):
 
 
 class PerformanceRankingSnapshot(Base, TimestampMixin):
-    """排行榜快照"""
+    """排行榜快照
+    
+    【状态】未启用 - 绩效排名快照"""
     __tablename__ = 'performance_ranking_snapshot'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

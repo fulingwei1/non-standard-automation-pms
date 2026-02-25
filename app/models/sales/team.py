@@ -134,11 +134,11 @@ class SalesTeamMember(Base, TimestampMixin):
 
 
 class TeamPerformanceSnapshot(Base, TimestampMixin):
-    """
-    团队业绩快照表
+    """团队业绩快照表
 
     定期记录团队业绩数据，用于排名和趋势分析。
-    """
+    
+    【状态】未启用 - 团队绩效快照"""
     __tablename__ = "team_performance_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

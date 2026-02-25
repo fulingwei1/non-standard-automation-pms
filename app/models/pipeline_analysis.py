@@ -19,8 +19,9 @@ from app.models.base import Base, TimestampMixin
 
 
 class PipelineBreakRecord(Base, TimestampMixin):
-    """断链记录表"""
-
+    """断链记录表
+    
+    【状态】未启用 - 管道中断记录"""
     __tablename__ = "pipeline_break_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -46,8 +47,9 @@ class PipelineBreakRecord(Base, TimestampMixin):
 
 
 class PipelineHealthSnapshot(Base, TimestampMixin):
-    """健康度快照表"""
-
+    """健康度快照表
+    
+    【状态】未启用 - 管道健康快照"""
     __tablename__ = "pipeline_health_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -67,8 +69,9 @@ class PipelineHealthSnapshot(Base, TimestampMixin):
 
 
 class AccountabilityRecord(Base, TimestampMixin):
-    """责任记录表"""
-
+    """责任记录表
+    
+    【状态】未启用 - 问责记录"""
     __tablename__ = "accountability_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

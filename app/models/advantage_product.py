@@ -33,8 +33,8 @@ class Industry(Base, TimestampMixin):
     1. 销售线索行业归类
     2. 优势产品与行业匹配
     3. 方案模板与行业关联
-    """
-
+    
+    【状态】预留功能 - 行业分类管理"""
     __tablename__ = "industries"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -68,8 +68,8 @@ class IndustryCategoryMapping(Base, TimestampMixin):
     """行业-产品类别映射表
 
     定义每个行业适用哪些优势产品类别，以及匹配度
-    """
-
+    
+    【状态】预留功能 - 行业类别映射"""
     __tablename__ = "industry_category_mappings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -203,8 +203,8 @@ class NewProductRequest(Base, TimestampMixin):
     1. 评估新产品开发价值
     2. 积累市场需求数据
     3. 后续可能转为优势产品
-    """
-
+    
+    【状态】预留功能 - 新产品请求"""
     __tablename__ = "new_product_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

@@ -91,8 +91,9 @@ class BiddingProject(Base, TimestampMixin):
 
 
 class BiddingDocument(Base, TimestampMixin):
-    """投标文件表"""
-
+    """投标文件表
+    
+    【状态】未启用 - 招投标文档管理"""
     __tablename__ = "bidding_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

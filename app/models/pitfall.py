@@ -88,8 +88,9 @@ class Pitfall(Base, TimestampMixin):
 
 
 class PitfallRecommendation(Base, TimestampMixin):
-    """踩坑推荐记录表"""
-
+    """踩坑推荐记录表
+    
+    【状态】未启用 - 陷阱推荐"""
     __tablename__ = "pitfall_recommendations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -121,8 +122,9 @@ class PitfallRecommendation(Base, TimestampMixin):
 
 
 class PitfallLearningProgress(Base, TimestampMixin):
-    """踩坑学习进度表"""
-
+    """踩坑学习进度表
+    
+    【状态】未启用 - 学习进度"""
     __tablename__ = "pitfall_learning_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

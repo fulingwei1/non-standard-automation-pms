@@ -11,7 +11,9 @@ from ..base import Base, TimestampMixin
 
 
 class WorkOrderBom(Base, TimestampMixin):
-    """工单BOM明细表"""
+    """工单BOM明细表
+    
+    【状态】未启用 - 工单BOM"""
     __tablename__ = 'mat_work_order_bom'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -50,7 +52,9 @@ class WorkOrderBom(Base, TimestampMixin):
 
 
 class MaterialRequirement(Base, TimestampMixin):
-    """物料需求汇总表"""
+    """物料需求汇总表
+    
+    【状态】未启用 - 物料需求"""
     __tablename__ = 'mat_material_requirement'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

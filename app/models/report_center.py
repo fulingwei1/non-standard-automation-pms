@@ -112,7 +112,9 @@ class ReportTemplate(Base, TimestampMixin):
 # ==================== 报表定义 ====================
 
 class ReportDefinition(Base, TimestampMixin):
-    """报表定义（用户自定义报表）"""
+    """报表定义（用户自定义报表）
+    
+    【状态】未启用 - 报表定义"""
     __tablename__ = 'report_definition'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -206,7 +208,9 @@ class ReportGeneration(Base, TimestampMixin):
 # ==================== 报表订阅 ====================
 
 class ReportSubscription(Base, TimestampMixin):
-    """报表订阅"""
+    """报表订阅
+    
+    【状态】未启用 - 报表订阅"""
     __tablename__ = 'report_subscription'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -301,7 +305,9 @@ class DataImportTask(Base, TimestampMixin):
 # ==================== 数据导出任务 ====================
 
 class DataExportTask(Base, TimestampMixin):
-    """数据导出任务"""
+    """数据导出任务
+    
+    【状态】未启用 - 数据导出任务"""
     __tablename__ = 'data_export_task'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

@@ -49,7 +49,9 @@ class Equipment(Base, TimestampMixin):
 
 
 class EquipmentMaintenance(Base, TimestampMixin):
-    """设备保养/维修记录"""
+    """设备保养/维修记录
+    
+    【状态】未启用 - 设备维护"""
     __tablename__ = 'equipment_maintenance'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

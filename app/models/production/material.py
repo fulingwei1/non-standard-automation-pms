@@ -21,7 +21,9 @@ from app.models.base import Base, TimestampMixin
 
 
 class MaterialRequisition(Base, TimestampMixin):
-    """领料单"""
+    """领料单
+    
+    【状态】未启用 - 物料申请"""
     __tablename__ = 'material_requisition'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -60,7 +62,9 @@ class MaterialRequisition(Base, TimestampMixin):
 
 
 class MaterialRequisitionItem(Base, TimestampMixin):
-    """领料单明细"""
+    """领料单明细
+    
+    【状态】未启用 - 物料申请明细"""
     __tablename__ = 'material_requisition_item'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

@@ -25,7 +25,9 @@ from app.models.base import Base, TimestampMixin
 
 
 class WbsTemplate(Base, TimestampMixin):
-    """WBS模板表"""
+    """WBS模板表
+    
+    【状态】未启用 - WBS模板"""
     __tablename__ = "wbs_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -48,7 +50,9 @@ class WbsTemplate(Base, TimestampMixin):
 
 
 class WbsTemplateTask(Base):
-    """WBS模板任务表"""
+    """WBS模板任务表
+    
+    【状态】未启用 - WBS模板任务"""
     __tablename__ = "wbs_template_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -172,7 +176,9 @@ class ProgressLog(Base):
 
 
 class ScheduleBaseline(Base, TimestampMixin):
-    """计划基线表"""
+    """计划基线表
+    
+    【状态】未启用 - 进度基线"""
     __tablename__ = "schedule_baselines"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -194,7 +200,9 @@ class ScheduleBaseline(Base, TimestampMixin):
 
 
 class BaselineTask(Base):
-    """基线任务快照表"""
+    """基线任务快照表
+    
+    【状态】未启用 - 基线任务"""
     __tablename__ = "baseline_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

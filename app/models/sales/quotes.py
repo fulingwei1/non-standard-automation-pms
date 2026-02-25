@@ -157,8 +157,9 @@ class QuoteCostTemplate(Base, TimestampMixin):
 
 
 class QuoteCostApproval(Base, TimestampMixin):
-    """报价成本审批表"""
-
+    """报价成本审批表
+    
+    【状态】未启用 - 报价成本审批"""
     __tablename__ = "quote_cost_approvals"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -205,8 +206,9 @@ class QuoteCostApproval(Base, TimestampMixin):
 
 
 class QuoteCostHistory(Base):
-    """报价成本历史记录表"""
-
+    """报价成本历史记录表
+    
+    【状态】未启用 - 报价成本历史"""
     __tablename__ = "quote_cost_histories"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

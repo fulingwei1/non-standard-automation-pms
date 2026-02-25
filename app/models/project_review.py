@@ -140,7 +140,9 @@ class ProjectLesson(Base, TimestampMixin):
 
 
 class ProjectBestPractice(Base, TimestampMixin):
-    """项目最佳实践表"""
+    """项目最佳实践表
+    
+    【状态】未启用 - 项目最佳实践"""
     __tablename__ = 'project_best_practices'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

@@ -113,8 +113,9 @@ class RoleDataScope(Base):
 
 
 class PermissionGroup(Base, TimestampMixin):
-    """权限分组表"""
-
+    """权限分组表
+    
+    【状态】未启用 - 权限组（被Permission V2替代）"""
     __tablename__ = "permission_groups"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

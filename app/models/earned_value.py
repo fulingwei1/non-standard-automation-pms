@@ -212,15 +212,14 @@ class EarnedValueData(Base, TimestampMixin):
 
 
 class EarnedValueSnapshot(Base, TimestampMixin):
-    """
-    EVM快照表 - 记录定期的EVM分析快照
+    """EVM快照表 - 记录定期的EVM分析快照
     
     用于：
     - 月度/季度EVM报告存档
     - 历史对比分析
     - 趋势分析
-    """
-
+    
+    【状态】未启用 - 挣值快照"""
     __tablename__ = "earned_value_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

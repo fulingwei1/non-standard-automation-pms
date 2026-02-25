@@ -11,7 +11,9 @@ from ..base import Base, TimestampMixin
 
 
 class PerformanceAppeal(Base, TimestampMixin):
-    """绩效申诉"""
+    """绩效申诉
+    
+    【状态】未启用 - 绩效申诉"""
     __tablename__ = 'performance_appeal'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

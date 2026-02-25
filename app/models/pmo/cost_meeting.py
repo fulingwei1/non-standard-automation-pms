@@ -8,7 +8,9 @@ from ..base import Base, TimestampMixin
 
 
 class PmoProjectCost(Base, TimestampMixin):
-    """项目成本"""
+    """项目成本
+    
+    【状态】未启用 - PMO成本会议"""
     __tablename__ = 'pmo_project_cost'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

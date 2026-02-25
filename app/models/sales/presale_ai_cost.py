@@ -76,7 +76,9 @@ class PresaleCostHistory(Base):
 
 
 class PresaleCostOptimizationRecord(Base):
-    """成本优化建议记录"""
+    """成本优化建议记录
+    
+    【状态】未启用 - 成本优化记录"""
     __tablename__ = "presale_cost_optimization_record"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

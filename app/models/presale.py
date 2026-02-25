@@ -383,7 +383,9 @@ class PresaleWorkload(Base, TimestampMixin):
 # ==================== 客户技术档案 ====================
 
 class PresaleCustomerTechProfile(Base, TimestampMixin):
-    """客户技术档案"""
+    """客户技术档案
+    
+    【状态】未启用 - 客户技术档案"""
     __tablename__ = 'presale_customer_tech_profile'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

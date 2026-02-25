@@ -64,7 +64,9 @@ class TestBugRecord(Base, TimestampMixin):
 
 
 class CodeReviewRecord(Base, TimestampMixin):
-    """代码评审记录"""
+    """代码评审记录
+    
+    【状态】未启用 - 代码评审记录"""
     __tablename__ = 'code_review_record'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

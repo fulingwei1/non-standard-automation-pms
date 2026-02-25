@@ -79,7 +79,9 @@ class WorkLog(Base, TimestampMixin):
 # ==================== 工作日志配置 ====================
 
 class WorkLogConfig(Base, TimestampMixin):
-    """工作日志配置表"""
+    """工作日志配置表
+    
+    【状态】未启用 - 工作日志配置"""
     __tablename__ = 'work_log_configs'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

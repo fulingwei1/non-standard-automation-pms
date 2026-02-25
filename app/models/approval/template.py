@@ -93,8 +93,9 @@ class ApprovalTemplate(Base, TimestampMixin):
 
 
 class ApprovalTemplateVersion(Base, TimestampMixin):
-    """审批模板版本历史"""
-
+    """审批模板版本历史
+    
+    【状态】未启用 - 审批模板版本控制"""
     __tablename__ = "approval_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

@@ -380,7 +380,9 @@ class AlertStatistics(Base, TimestampMixin):
 
 
 class ProjectHealthSnapshot(Base, TimestampMixin):
-    """项目健康度快照表"""
+    """项目健康度快照表
+    
+    【状态】未启用 - 项目健康快照"""
     __tablename__ = 'project_health_snapshots'
 
     id = Column(Integer, primary_key=True, autoincrement=True)

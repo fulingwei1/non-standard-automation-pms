@@ -21,8 +21,7 @@ class EmployeeEncryptedExampleStatus(str, enum.Enum):
 
 
 class EmployeeEncryptedExample(Base):
-    """
-    员工模型（带加密字段）
+    """员工模型（带加密字段）
     
     敏感字段加密存储:
     - 身份证号
@@ -31,8 +30,8 @@ class EmployeeEncryptedExample(Base):
     - 家庭住址
     - 紧急联系人信息
     - 工资薪酬
-    """
     
+    【状态】示例代码 - 可删除"""
     __tablename__ = "employees"
     
     # 基本信息（非敏感）

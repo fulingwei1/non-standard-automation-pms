@@ -78,7 +78,9 @@ class DeliveryMethodEnum(str, Enum):
 # ==================== 报表模板表 ====================
 
 class TimesheetReportTemplate(Base, TimestampMixin):
-    """报表模板"""
+    """报表模板
+    
+    【状态】未启用 - 工时报表模板"""
     __tablename__ = 'report_template'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

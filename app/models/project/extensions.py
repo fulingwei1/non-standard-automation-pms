@@ -24,15 +24,15 @@ from datetime import date
 
 
 class ProjectFinancial(Base, TimestampMixin):
-    """
-    项目财务信息表
+    """项目财务信息表
 
     存储项目的财务相关字段，从 Project 表拆分。
 
     字段来源：Project 表的财务字段
     - 合同金额、预算金额、实际成本
     - 开票状态、付款状态、付款日期
-    """
+    
+    【状态】未启用 - 项目财务扩展"""
     __tablename__ = "project_financials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -80,11 +80,11 @@ class ProjectFinancial(Base, TimestampMixin):
 
 
 class ProjectERP(Base, TimestampMixin):
-    """
-    项目ERP集成信息表
+    """项目ERP集成信息表
 
     存储项目与ERP系统集成的相关字段，从 Project 表拆分。
-    """
+    
+    【状态】未启用 - 项目ERP集成"""
     __tablename__ = "project_erp"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -130,11 +130,11 @@ class ProjectERP(Base, TimestampMixin):
 
 
 class ProjectWarranty(Base, TimestampMixin):
-    """
-    项目质保信息表
+    """项目质保信息表
 
     存储项目的质保相关信息，从 Project 表拆分。
-    """
+    
+    【状态】未启用 - 项目质保"""
     __tablename__ = "project_warranties"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -187,11 +187,11 @@ class ProjectWarranty(Base, TimestampMixin):
 
 
 class ProjectImplementation(Base, TimestampMixin):
-    """
-    项目实施信息表
+    """项目实施信息表
 
     存储项目的实施相关信息，从 Project 表拆分。
-    """
+    
+    【状态】未启用 - 项目实施"""
     __tablename__ = "project_implementations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -238,11 +238,11 @@ class ProjectImplementation(Base, TimestampMixin):
 
 
 class ProjectPresale(Base, TimestampMixin):
-    """
-    项目售前评估信息表
+    """项目售前评估信息表
 
     存储项目的售前评估相关信息，从 Project 表拆分。
-    """
+    
+    【状态】未启用 - 项目售前"""
     __tablename__ = "project_presales"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

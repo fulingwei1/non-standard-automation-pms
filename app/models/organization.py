@@ -357,8 +357,9 @@ class ContractReminder(Base, TimestampMixin):
 
 
 class SalaryRecord(Base, TimestampMixin):
-    """薪资记录表（记录员工薪资变动历史）"""
-
+    """薪资记录表（记录员工薪资变动历史）
+    
+    【状态】未启用 - 薪资记录"""
     __tablename__ = "salary_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

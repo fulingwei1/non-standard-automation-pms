@@ -207,7 +207,9 @@ class TimesheetSummary(Base, TimestampMixin):
 # ==================== 加班申请 ====================
 
 class OvertimeApplication(Base, TimestampMixin):
-    """加班申请"""
+    """加班申请
+    
+    【状态】未启用 - 加班申请"""
     __tablename__ = 'overtime_application'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -256,7 +258,9 @@ class OvertimeApplication(Base, TimestampMixin):
 # ==================== 工时审批记录 ====================
 
 class TimesheetApprovalLog(Base):
-    """工时审批记录"""
+    """工时审批记录
+    
+    【状态】未启用 - 工时审批日志"""
     __tablename__ = 'timesheet_approval_log'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -287,7 +291,9 @@ class TimesheetApprovalLog(Base):
 # ==================== 工时填报规则 ====================
 
 class TimesheetRule(Base, TimestampMixin):
-    """工时填报规则"""
+    """工时填报规则
+    
+    【状态】未启用 - 工时规则"""
     __tablename__ = 'timesheet_rule'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

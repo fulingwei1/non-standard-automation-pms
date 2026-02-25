@@ -288,7 +288,9 @@ class TaskComment(Base):
 # ==================== 任务提醒 ====================
 
 class TaskReminder(Base, TimestampMixin):
-    """任务提醒"""
+    """任务提醒
+    
+    【状态】未启用 - 任务提醒"""
     __tablename__ = 'task_reminder'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

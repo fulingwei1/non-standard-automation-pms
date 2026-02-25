@@ -12,8 +12,9 @@ from app.models.base import Base
 
 
 class APIKey(Base):
-    """API Key模型"""
+    """API Key模型
     
+    【状态】未启用 - API密钥管理"""
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -20,7 +20,9 @@ from app.models.base import Base, TimestampMixin
 
 
 class ElectricalDrawingVersion(Base, TimestampMixin):
-    """电气图纸版本"""
+    """电气图纸版本
+    
+    【状态】未启用 - 电气图纸版本"""
     __tablename__ = 'electrical_drawing_version'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -129,7 +131,9 @@ class PlcModuleLibrary(Base, TimestampMixin):
 
 
 class ComponentSelection(Base, TimestampMixin):
-    """元器件选型记录"""
+    """元器件选型记录
+    
+    【状态】未启用 - 元件选型"""
     __tablename__ = 'component_selection'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
@@ -161,7 +165,9 @@ class ComponentSelection(Base, TimestampMixin):
 
 
 class ElectricalFaultRecord(Base, TimestampMixin):
-    """电气故障记录"""
+    """电气故障记录
+    
+    【状态】未启用 - 电气故障记录"""
     __tablename__ = 'electrical_fault_record'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

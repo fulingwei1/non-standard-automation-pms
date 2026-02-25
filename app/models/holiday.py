@@ -10,14 +10,14 @@ from .base import Base, TimestampMixin
 
 
 class Holiday(Base, TimestampMixin):
-    """
-    节假日配置表
+    """节假日配置表
 
     用于配置：
     - 法定节假日（如春节、国庆等）
     - 调休工作日（原本是周末但需要上班的日子）
     - 公司特殊假期（如年会等）
-    """
+    
+    【状态】未启用 - 节假日管理"""
     __tablename__ = 'holidays'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

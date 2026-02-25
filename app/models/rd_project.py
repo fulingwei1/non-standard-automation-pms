@@ -241,7 +241,9 @@ class RdCostAllocationRule(Base, TimestampMixin):
 
 
 class RdReportRecord(Base, TimestampMixin):
-    """研发报表记录表"""
+    """研发报表记录表
+    
+    【状态】未启用 - 研发报告记录"""
     __tablename__ = 'rd_report_record'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

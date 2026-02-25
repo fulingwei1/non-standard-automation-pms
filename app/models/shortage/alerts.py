@@ -15,7 +15,9 @@ from ..base import Base, TimestampMixin
 
 
 class AlertHandleLog(Base, TimestampMixin):
-    """预警处理日志表"""
+    """预警处理日志表
+    
+    【状态】未启用 - 告警处理日志"""
     __tablename__ = 'mat_alert_log'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

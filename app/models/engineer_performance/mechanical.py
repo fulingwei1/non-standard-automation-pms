@@ -97,7 +97,9 @@ class MechanicalDebugIssue(Base, TimestampMixin):
 
 
 class DesignReuseRecord(Base, TimestampMixin):
-    """设计复用记录"""
+    """设计复用记录
+    
+    【状态】未启用 - 设计复用记录"""
     __tablename__ = 'design_reuse_record'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')

@@ -80,7 +80,9 @@ class PresaleAIQuotation(Base):
 
 
 class QuotationTemplate(Base):
-    """报价单模板库"""
+    """报价单模板库
+    
+    【状态】未启用 - 报价模板"""
     __tablename__ = "quotation_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
