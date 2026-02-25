@@ -158,7 +158,13 @@ class ProjectReviewReportGenerator:
         """构建AI提示词"""
         project = project_data['project']
         stats = project_data['statistics']
-        
+
+        schedule_label = '延期' if stats['schedule_variance'] > 0 else '提前' if stats['schedule_variance'] < 0 else '准时'
+        cost_label = '超支' if stats['cost_variance'] > 0 else '结余' if stats['cost_variance'] < 0 else '持平'
+        team_size = len(project_data['team_members'])
+        changes_text = self._format_changes(project_data['changes'])
+        extra_section = f"## 补充信息\n{additional_context}" if additional_context else ""
+
         prompt = f"""# 项目复盘报告生成任务
 
 ## 项目基本信息
@@ -171,20 +177,20 @@ class ProjectReviewReportGenerator:
 ## 项目周期
 - 计划工期：{stats['plan_duration']}天
 - 实际工期：{stats['actual_duration']}天
-- 进度偏差：{stats['schedule_variance']}天 ({'延期' if stats['schedule_variance'] > 0 else '提前' if stats['schedule_variance'] < 0 else '准时'})
+- 进度偏差：{stats['schedule_variance']}天 ({schedule_label})
 
 ## 项目成本
 - 预算金额：¥{project['budget']:,.2f}
 - 实际成本：¥{stats['total_cost']:,.2f}
-- 成本偏差：¥{stats['cost_variance']:,.2f} ({'超支' if stats['cost_variance'] > 0 else '结余' if stats['cost_variance'] < 0 else '持平'})
+- 成本偏差：¥{stats['cost_variance']:,.2f} ({cost_label})
 
 ## 项目统计
 - 总工时：{stats['total_hours']}小时
 - 变更次数：{stats['change_count']}次
-- 团队人数：{len(project_data['team_members'])}人
+- 团队人数：{team_size}人
 
 ## 主要变更
-{self._format_changes(project_data['changes'])}
+{changes_text}
 
 ## 任务要求
 请作为资深项目经理，基于以上数据生成一份专业的项目复盘报告，包含以下内容：
@@ -217,7 +223,7 @@ class ProjectReviewReportGenerator:
    - 关键启示
    - 未来展望
 
-{f"## 补充信息\\n{additional_context}" if additional_context else ""}
+{extra_section}
 
 请以JSON格式输出，包含以下字段：
 - summary: 项目总结
@@ -229,7 +235,7 @@ class ProjectReviewReportGenerator:
 - insights: AI洞察（其他值得关注的发现）
 
 确保分析客观、专业，基于数据而非猜测。"""
-        
+
         return prompt
     
     def _format_changes(self, changes: List[Dict]) -> str:

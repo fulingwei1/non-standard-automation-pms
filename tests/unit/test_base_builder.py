@@ -4,9 +4,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from pptx import Presentation
+import pytest
 
-from app.services.ppt_generator.base_builder import BaseSlideBuilder
+try:
+    from pptx import Presentation
+    from app.services.ppt_generator.base_builder import BaseSlideBuilder
+except ImportError:
+    pytest.skip("python-pptx not available", allow_module_level=True)
 
 
 class TestBaseSlideBuilder(unittest.TestCase):

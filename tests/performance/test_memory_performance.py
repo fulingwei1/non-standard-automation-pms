@@ -3,7 +3,11 @@
 """
 import pytest
 import time
-import psutil
+
+try:
+    import psutil
+except ImportError:
+    pytest.skip("psutil not available", allow_module_level=True)
 import os
 
 

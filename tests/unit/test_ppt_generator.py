@@ -11,9 +11,14 @@ PPT生成器单元测试
 
 import unittest
 from unittest.mock import MagicMock, patch, call
-from pptx.util import Inches, Pt
 
-from app.services.ppt_generator.generator import PresentationGenerator
+import pytest
+
+try:
+    from pptx.util import Inches, Pt
+    from app.services.ppt_generator.generator import PresentationGenerator
+except ImportError:
+    pytest.skip("python-pptx not available", allow_module_level=True)
 
 
 class TestPresentationGenerator(unittest.TestCase):

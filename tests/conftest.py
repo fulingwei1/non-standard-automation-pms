@@ -19,6 +19,9 @@ os.environ["SQLITE_DB_PATH"] = ":memory:"
 # Disable Redis during tests to avoid token blacklist issues with MagicMock.
 # MagicMock.exists() returns MagicMock which is truthy, causing all tokens to be "revoked".
 os.environ["REDIS_URL"] = ""
+# Enable DEBUG mode so Settings() generates a temporary SECRET_KEY automatically.
+# Without this, Settings validation fails in production mode requiring an explicit SECRET_KEY.
+os.environ.setdefault("DEBUG", "true")
 # Disable schedulers during tests to avoid background writes.
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
