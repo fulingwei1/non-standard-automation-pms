@@ -119,7 +119,15 @@ def validate_user_tenant_consistency(user: User) -> None:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码"""
+    """验证密码
+    
+    bcrypt has a 72-byte password limit. Truncate automatically if needed.
+    """
+    # Ensure password is at most 72 bytes (bcrypt limit) - must match get_password_hash
+    if isinstance(plain_password, str):
+        password_bytes = plain_password.encode('utf-8')
+        if len(password_bytes) > 72:
+            plain_password = password_bytes[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 

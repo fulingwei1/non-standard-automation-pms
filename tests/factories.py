@@ -361,7 +361,7 @@ class MaterialCategoryFactory(BaseFactory):
 #     contact_phone = factory.LazyFunction(
 #         lambda: f"137{random.randint(10000000, 99999999)}"
 #     )
-    status = "APPROVED"
+#     status = "APPROVED"
 
 
 class MaterialFactory(BaseFactory):
