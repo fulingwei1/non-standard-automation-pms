@@ -32,7 +32,7 @@ def create_review_participant(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """添加评审参与人"""
-    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     existing = db.query(ReviewParticipant).filter(
         ReviewParticipant.review_id == review_id,

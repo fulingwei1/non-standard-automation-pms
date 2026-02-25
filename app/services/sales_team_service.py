@@ -242,7 +242,7 @@ class SalesRegionService:
         region = get_or_404(db, SalesRegion, region_id, detail="区域不存在")
         
         # 检查团队是否存在
-        team = get_or_404(db, SalesTeam, team_id, detail="团队不存在")
+        get_or_404(db, SalesTeam, team_id, detail="团队不存在")
         
         region.team_id = team_id
         if leader_id:

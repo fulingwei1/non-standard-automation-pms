@@ -54,7 +54,7 @@ def read_acceptance_issues(
     """
     获取验收问题列表
     """
-    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
+    get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     query = db.query(AcceptanceIssue).filter(AcceptanceIssue.order_id == order_id)
 

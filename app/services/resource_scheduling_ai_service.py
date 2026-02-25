@@ -287,7 +287,7 @@ class ResourceSchedulingAIService:
                 result.get("impact_analysis", {}),
                 Decimal(str(result.get("confidence", 0.7))),
             )
-        except Exception as e:
+        except Exception:
             # AI调用失败，返回默认值
             return (
                 ["资源超负荷", "项目进度风险", "团队士气影响"],
@@ -409,7 +409,7 @@ class ResourceSchedulingAIService:
 """
         
         try:
-            start_time = datetime.now()
+            datetime.now()
             response = self.ai_client.generate_solution(
                 prompt=prompt,
                 model="glm-5",
@@ -429,7 +429,7 @@ class ResourceSchedulingAIService:
             
             return suggestions[:max_suggestions]
         
-        except Exception as e:
+        except Exception:
             # AI失败，返回默认方案
             return self._get_default_suggestions(conflict)
     

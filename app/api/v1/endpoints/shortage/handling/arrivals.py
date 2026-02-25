@@ -148,11 +148,11 @@ def create_arrival(
 
     # 如果关联缺料上报，验证上报存在
     if arrival_in.shortage_report_id:
-        report = get_or_404(db, ShortageReport, arrival_in.shortage_report_id, "缺料上报不存在")
+        get_or_404(db, ShortageReport, arrival_in.shortage_report_id, "缺料上报不存在")
 
     # 如果关联采购订单，验证订单存在
     if arrival_in.purchase_order_id:
-        po = get_or_404(db, PurchaseOrder, arrival_in.purchase_order_id, "采购订单不存在")
+        get_or_404(db, PurchaseOrder, arrival_in.purchase_order_id, "采购订单不存在")
 
     # 如果提供了供应商ID，验证供应商存在
     supplier = None
@@ -299,7 +299,7 @@ def list_arrival_follow_ups(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """到货跟踪的跟催记录列表"""
-    arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
+    get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
     query = db.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id == arrival_id)
 

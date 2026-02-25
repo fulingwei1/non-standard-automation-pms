@@ -166,7 +166,7 @@ def create_resource_allocation(
     Returns:
         ResponseModel: 创建结果
     """
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 检查是否已分配
     existing = db.query(PmoResourceAllocation).filter(

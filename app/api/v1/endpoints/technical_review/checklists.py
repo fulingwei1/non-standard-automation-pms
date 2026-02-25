@@ -33,7 +33,7 @@ def create_checklist_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审检查项记录"""
-    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     record = ReviewChecklistRecord(
         review_id=review_id,

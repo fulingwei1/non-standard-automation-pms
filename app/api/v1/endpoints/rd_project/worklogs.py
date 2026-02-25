@@ -48,7 +48,7 @@ def get_rd_project_worklogs(
     """
     获取研发项目工作日志列表
     """
-    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
+    get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     query = db.query(Timesheet).filter(Timesheet.rd_project_id == project_id)
 

@@ -84,7 +84,7 @@ def recalculate_project_aggregation(
 
     check_project_access_or_raise(db, current_user, project_id)
 
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
 
     aggregation_service = ProjectAggregationService(db)
     updated_project = aggregation_service.update_project_aggregation(project_id)

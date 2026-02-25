@@ -30,7 +30,7 @@ def create_review_material(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """添加评审材料"""
-    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     material = ReviewMaterial(
         review_id=review_id,

@@ -404,7 +404,6 @@ class PresaleAIKnowledgeService:
             return "暂无足够案例进行分析"
         
         # 提取共同的成功要素
-        common_factors = []
         all_factors = []
         
         for case in cases:

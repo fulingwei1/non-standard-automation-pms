@@ -31,7 +31,7 @@ def get_machine_bom_list(
     """
     获取机台的BOM列表
     """
-    machine = get_or_404(db, Machine, machine_id, "机台不存在")
+    get_or_404(db, Machine, machine_id, "机台不存在")
 
     bom_headers = (
         db.query(BomHeader)
@@ -140,7 +140,7 @@ def create_bom(
     machine = get_or_404(db, Machine, machine_id, "机台不存在")
 
     # 检查项目是否存在
-    project = get_or_404(db, Project, bom_in.project_id, "项目不存在")
+    get_or_404(db, Project, bom_in.project_id, "项目不存在")
 
     # 检查机台是否属于该项目
     if machine.project_id != bom_in.project_id:

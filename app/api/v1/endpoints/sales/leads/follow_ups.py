@@ -32,7 +32,7 @@ def get_lead_follow_ups(
     """
     获取线索跟进记录列表
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     follow_ups = db.query(LeadFollowUp).filter(
         LeadFollowUp.lead_id == lead_id

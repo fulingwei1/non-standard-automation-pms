@@ -31,7 +31,7 @@ def read_template_items(
     """
     获取模板检查项列表
     """
-    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
+    get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).order_by(TemplateCategory.sort_order).all()
 
@@ -72,7 +72,7 @@ def add_template_items(
     """
     添加模板检查项
     """
-    template = get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
+    get_or_404(db, AcceptanceTemplate, template_id, "验收模板不存在")
 
     category = db.query(TemplateCategory).filter(
         TemplateCategory.id == category_id,

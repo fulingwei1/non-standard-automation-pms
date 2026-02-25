@@ -87,7 +87,7 @@ def create_ai_clarification_for_lead(
     """
     为线索创建AI澄清
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 获取当前最大轮次
     max_round = db.query(func.max(AIClarification.round)).filter(
@@ -130,7 +130,7 @@ def create_ai_clarification_for_opportunity(
     """
     为商机创建AI澄清
     """
-    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 获取当前最大轮次
     max_round = db.query(func.max(AIClarification.round)).filter(

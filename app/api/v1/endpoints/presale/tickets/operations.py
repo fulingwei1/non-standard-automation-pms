@@ -94,7 +94,7 @@ def create_deliverable(
     """
     提交交付物
     """
-    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
+    get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     deliverable = PresaleTicketDeliverable(
         ticket_id=ticket_id,

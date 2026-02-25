@@ -41,7 +41,7 @@ def read_ecn_affected_materials(
     """
     获取受影响物料列表
     """
-    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
+    get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     affected_materials = db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id).all()
 
@@ -202,7 +202,7 @@ def read_ecn_affected_orders(
     """
     获取受影响订单列表
     """
-    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
+    get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     affected_orders = db.query(EcnAffectedOrder).filter(EcnAffectedOrder.ecn_id == ecn_id).all()
 
@@ -232,7 +232,7 @@ def create_ecn_affected_order(
     """
     添加受影响订单
     """
-    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
+    get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     # 验证订单是否存在
     if order_in.order_type == "PURCHASE":

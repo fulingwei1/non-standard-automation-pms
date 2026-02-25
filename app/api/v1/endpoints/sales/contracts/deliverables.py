@@ -39,7 +39,7 @@ def get_contract_deliverables(
     """
     获取合同交付物清单
     """
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+    get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
     return [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables]
@@ -56,7 +56,7 @@ def get_contract_amendments(
     """
     获取合同变更记录列表
     """
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+    get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     query = db.query(ContractAmendment).filter(ContractAmendment.contract_id == contract_id)
 

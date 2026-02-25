@@ -35,7 +35,7 @@ async def create_payment_reminder(
     try:
         # 检查合同是否存在
         if reminder_data.contract_id:
-            contract = get_or_404(db, Contract, reminder_data.contract_id, "合同不存在")
+            get_or_404(db, Contract, reminder_data.contract_id, "合同不存在")
 
         # 创建催收记录
         reminder = PaymentReminder(

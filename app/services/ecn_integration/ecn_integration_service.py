@@ -126,7 +126,7 @@ class EcnIntegrationService:
         Returns:
             同步结果字典，包含更新数量
         """
-        ecn = get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
+        get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
 
         affected_orders = self.db.query(EcnAffectedOrder).filter(
             EcnAffectedOrder.ecn_id == ecn_id,

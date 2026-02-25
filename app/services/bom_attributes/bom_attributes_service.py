@@ -36,7 +36,7 @@ class BomAttributesService:
     ) -> List[BomItemAssemblyAttrsResponse]:
         """获取BOM装配属性列表"""
         # 验证BOM存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         query = self.db.query(BomItemAssemblyAttrs).filter(BomItemAssemblyAttrs.bom_id == bom_id)
         if stage_code:
@@ -71,7 +71,7 @@ class BomAttributesService:
     ) -> Dict[str, int]:
         """批量设置BOM装配属性"""
         # 验证BOM存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         created_count = 0
         updated_count = 0
@@ -124,7 +124,7 @@ class BomAttributesService:
     ) -> Dict[str, int]:
         """自动分配装配属性（基于物料分类映射）"""
         # 验证BOM存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         # 获取BOM明细
         bom_items = self.db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -193,7 +193,7 @@ class BomAttributesService:
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
         # 验证BOM存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         # 获取BOM明细
         bom_items = self.db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -235,7 +235,7 @@ class BomAttributesService:
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
         # 验证BOM存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         # 获取BOM明细
         bom_items = self.db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -315,7 +315,7 @@ class BomAttributesService:
         from fastapi import HTTPException
 
         # 验证BOM和模板存在
-        bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+        get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
         template = self.db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
         if not template:

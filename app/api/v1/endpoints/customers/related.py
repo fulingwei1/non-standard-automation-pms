@@ -32,7 +32,7 @@ def get_customer_projects(
     """
     获取客户的项目列表
     """
-    customer = get_or_404(db, Customer, customer_id, "客户不存在")
+    get_or_404(db, Customer, customer_id, "客户不存在")
 
     query = db.query(Project).filter(Project.customer_id == customer_id)
     total = query.count()

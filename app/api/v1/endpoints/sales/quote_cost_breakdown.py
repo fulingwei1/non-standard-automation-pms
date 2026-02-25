@@ -45,7 +45,7 @@ def get_cost_breakdown(
     if not vid:
         raise HTTPException(status_code=400, detail="请指定报价版本")
 
-    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
+    get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
     items = db.query(QuoteItem).filter(
         QuoteItem.quote_version_id == vid

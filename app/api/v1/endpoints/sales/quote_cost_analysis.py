@@ -38,7 +38,7 @@ def get_cost_analysis(
     Returns:
         ResponseModel: 成本分析结果
     """
-    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     versions = db.query(QuoteVersion).filter(
         QuoteVersion.quote_id == quote_id

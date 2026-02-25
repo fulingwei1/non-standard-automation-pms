@@ -91,7 +91,7 @@ def create_rd_cost(
     project = get_or_404(db, RdProject, cost_in.rd_project_id, "研发项目不存在")
 
     # 验证费用类型是否存在
-    cost_type = get_or_404(db, RdCostType, cost_in.cost_type_id, "费用类型不存在")
+    get_or_404(db, RdCostType, cost_in.cost_type_id, "费用类型不存在")
 
     # 生成费用编号
     cost_no = generate_cost_no(db)
@@ -268,7 +268,7 @@ def calculate_labor_cost(
     人工费用自动计算（工时×时薪）
     """
     # 验证研发项目是否存在
-    project = get_or_404(db, RdProject, calc_request.rd_project_id, "研发项目不存在")
+    get_or_404(db, RdProject, calc_request.rd_project_id, "研发项目不存在")
 
     # 验证用户是否存在
     user = get_or_404(db, User, calc_request.user_id, "用户不存在")

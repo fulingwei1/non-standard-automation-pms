@@ -265,7 +265,7 @@ class EcnApprovalService:
 
         for task_id in task_ids:
             try:
-                result = self.perform_approval_action(
+                self.perform_approval_action(
                     task_id=task_id,
                     approver_id=approver_id,
                     action=action,

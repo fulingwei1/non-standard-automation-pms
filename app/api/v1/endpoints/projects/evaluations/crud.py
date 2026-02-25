@@ -68,7 +68,7 @@ def create_project_evaluation(
         db, current_user, project_id, "您没有权限为该项目创建评价"
     )
     
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     eval_service = ProjectEvaluationService(db)
     

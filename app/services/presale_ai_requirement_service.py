@@ -65,7 +65,7 @@ class AIRequirementAnalyzer:
             
             return parsed_result
             
-        except Exception as e:
+        except Exception:
             # 降级处理：使用规则引擎
             return self._fallback_rule_based_analysis(raw_requirement)
     
@@ -132,7 +132,7 @@ class AIRequirementAnalyzer:
             
             return questions
             
-        except Exception as e:
+        except Exception:
             # 降级：使用规则生成问题
             return self._fallback_generate_questions(raw_requirement)
     

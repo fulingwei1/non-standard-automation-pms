@@ -149,7 +149,7 @@ def create_project_relation(
     if project_id == related_project_id:
         raise HTTPException(status_code=400, detail="不能关联自身")
 
-    related_project = get_or_404(db, Project, related_project_id, detail="关联项目不存在")
+    get_or_404(db, Project, related_project_id, detail="关联项目不存在")
 
     if relation_type not in RELATION_TYPES:
         raise HTTPException(status_code=400, detail="无效的关联类型")

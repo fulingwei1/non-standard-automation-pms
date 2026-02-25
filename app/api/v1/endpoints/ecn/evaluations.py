@@ -42,7 +42,7 @@ def read_ecn_evaluations(
     """
     获取评估列表
     """
-    ecn = get_or_404(db, Ecn, ecn_id, "ECN不存在")
+    get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
     evaluations = db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).order_by(EcnEvaluation.created_at).all()
 

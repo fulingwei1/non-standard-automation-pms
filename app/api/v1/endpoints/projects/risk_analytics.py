@@ -207,7 +207,7 @@ def trigger_risk_calculation(
         project_id: 项目ID
     """
     # 验证项目存在
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
 
     service = ProjectRiskService(db)
     try:

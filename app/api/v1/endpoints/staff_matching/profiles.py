@@ -112,7 +112,7 @@ def get_profile(
 
     if not profile:
         # 尝试创建档案
-        employee = get_or_404(db, Employee, employee_id, "员工不存在")
+        get_or_404(db, Employee, employee_id, "员工不存在")
 
         profile = StaffMatchingService.aggregate_employee_profile(db, employee_id)
 
@@ -126,7 +126,7 @@ def refresh_profile(
     current_user: User = Depends(security.require_permission("staff_matching:read"))
 ):
     """刷新员工档案聚合数据"""
-    employee = get_or_404(db, Employee, employee_id, "员工不存在")
+    get_or_404(db, Employee, employee_id, "员工不存在")
 
     # 更新标签聚合
     profile = StaffMatchingService.aggregate_employee_profile(db, employee_id)

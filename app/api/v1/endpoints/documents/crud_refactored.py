@@ -88,7 +88,7 @@ def get_project_documents(
     """
     获取项目的文档列表
     """
-    project = get_or_404(db, Project, project_id, "项目不存在")
+    get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.project_id == project_id)
 
@@ -183,7 +183,7 @@ def create_project_document(
     """
     为项目创建文档记录
     """
-    project = get_or_404(db, Project, project_id, "项目不存在")
+    get_or_404(db, Project, project_id, "项目不存在")
 
     # 确保project_id一致
     doc_data = doc_in.model_dump()

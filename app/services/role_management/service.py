@@ -427,7 +427,7 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在时抛出404
         """
-        role = self.get_role_by_id(role_id)
+        self.get_role_by_id(role_id)
 
         # 删除现有权限
         self.db.query(RoleApiPermission).filter(
@@ -621,7 +621,7 @@ class RoleManagementService:
         Returns:
             子孙角色列表
         """
-        role = self.get_role_by_id(role_id)
+        self.get_role_by_id(role_id)
 
         descendants = []
         self._collect_descendants(role_id, descendants)

@@ -44,7 +44,6 @@ generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
 
-from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/proposals",

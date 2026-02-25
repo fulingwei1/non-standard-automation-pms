@@ -229,7 +229,7 @@ async def import_standard_costs(
                         effective_date = datetime.strptime(row['effective_date'], '%Y-%m-%d').date()
                     else:
                         effective_date = pd.to_datetime(row['effective_date']).date()
-                except Exception as e:
+                except Exception:
                     errors.append({
                         'row': row_num,
                         'field': 'effective_date',

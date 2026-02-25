@@ -30,7 +30,7 @@ def read_issue_follow_ups(
     """
     获取问题跟进记录
     """
-    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
+    get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     follow_ups = db.query(IssueFollowUp).filter(IssueFollowUp.issue_id == issue_id).order_by(IssueFollowUp.created_at).all()
 
@@ -68,7 +68,7 @@ def add_issue_follow_up(
     """
     添加跟进记录
     """
-    issue = get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
+    get_or_404(db, AcceptanceIssue, issue_id, "验收问题不存在")
 
     follow_up = IssueFollowUp(
         issue_id=issue_id,

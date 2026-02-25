@@ -84,7 +84,7 @@ class ProjectChangeRequestsService:
     ) -> ChangeRequest:
         """提交变更请求"""
         # 验证项目是否存在
-        project = get_or_404(self.db, Project, change_in.project_id, detail="项目不存在")
+        get_or_404(self.db, Project, change_in.project_id, detail="项目不存在")
         
         # 生成变更编号
         change_code = self.generate_change_code(change_in.project_id)
@@ -241,7 +241,7 @@ class ProjectChangeRequestsService:
     
     def get_approval_records(self, change_id: int) -> List[ChangeApprovalRecord]:
         """获取审批记录"""
-        change_request = get_or_404(self.db, ChangeRequest, change_id, detail="变更请求不存在")
+        get_or_404(self.db, ChangeRequest, change_id, detail="变更请求不存在")
         
         records = self.db.query(ChangeApprovalRecord)\
             .filter(ChangeApprovalRecord.change_request_id == change_id)\

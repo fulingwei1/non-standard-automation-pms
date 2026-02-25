@@ -65,7 +65,7 @@ def assign_employee(
         )
 
     # 验证员工存在
-    employee = get_or_404(db, User, assignment.employee_id, detail="员工不存在")
+    get_or_404(db, User, assignment.employee_id, detail="员工不存在")
 
     try:
         updated_plan, conflict = ResourcePlanService.assign_employee(

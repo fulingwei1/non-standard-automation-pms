@@ -74,7 +74,7 @@ def get_cost_history_by_id(
     权限要求：cost:read
     """
     # 检查成本是否存在
-    cost = get_or_404(db, StandardCost, cost_id, "标准成本不存在")
+    get_or_404(db, StandardCost, cost_id, "标准成本不存在")
     
     history_records = db.query(StandardCostHistory).filter(
         StandardCostHistory.standard_cost_id == cost_id

@@ -97,7 +97,7 @@ class CostForecastService:
         forecasted_completion_cost = slope * total_months + intercept
 
         # 生成月度预测数据
-        future_months = int(total_months - len(monthly_costs))
+        int(total_months - len(monthly_costs))
         monthly_forecast_data = []
 
         for i in range(1, int(total_months) + 1):
@@ -451,7 +451,6 @@ class CostForecastService:
 
         # 构建燃尽数据
         burn_down_data = []
-        remaining_budget = budget
 
         for i in range(int(total_months) + 1):
             # 理想剩余预算

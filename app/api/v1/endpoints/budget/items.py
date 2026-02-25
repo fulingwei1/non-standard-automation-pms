@@ -33,7 +33,7 @@ def get_budget_items(
     """
     获取预算明细列表
     """
-    budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
+    get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
     items = db.query(ProjectBudgetItem).filter(
         ProjectBudgetItem.budget_id == budget_id

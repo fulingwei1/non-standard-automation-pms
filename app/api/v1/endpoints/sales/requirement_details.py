@@ -33,7 +33,7 @@ def get_lead_requirement_detail(
     """
     获取线索需求详情
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     detail = db.query(LeadRequirementDetail).filter(
         LeadRequirementDetail.lead_id == lead_id
@@ -67,7 +67,7 @@ def create_lead_requirement_detail(
     """
     创建线索需求详情
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查是否已存在
     existing = db.query(LeadRequirementDetail).filter(
@@ -98,7 +98,7 @@ def update_lead_requirement_detail(
     """
     更新线索需求详情
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     detail = db.query(LeadRequirementDetail).filter(
         LeadRequirementDetail.lead_id == lead_id

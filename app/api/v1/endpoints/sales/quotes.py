@@ -65,7 +65,7 @@ def create_quote(
     if not opportunity_id or not customer_id:
         raise HTTPException(status_code=422, detail="opportunity_id / customer_id 必填")
 
-    opportunity = get_or_404(db, Opportunity, opportunity_id, detail="商机不存在")
+    get_or_404(db, Opportunity, opportunity_id, detail="商机不存在")
 
     version_payload = quote_data.get("version") or {}
     if not version_payload:

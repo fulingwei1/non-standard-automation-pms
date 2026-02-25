@@ -277,7 +277,7 @@ class TestProductionPlanService:
         mock_db.query.side_effect = query_side_effect
         
         # 调用方法
-        result = service.update_plan(plan_id=1, plan_in=plan_in)
+        service.update_plan(plan_id=1, plan_in=plan_in)
         
         # 验证更新
         assert sample_plan.payment_name == "更新后的计划"

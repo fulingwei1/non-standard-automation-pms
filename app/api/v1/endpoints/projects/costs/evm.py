@@ -185,7 +185,7 @@ async def get_evm_trend(
     用于绘制趋势图和历史分析
     """
     # 获取项目
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 获取趋势数据
     evm_service = EVMService(db)
@@ -222,7 +222,7 @@ async def create_evm_snapshot(
     创建新的EVM数据记录，系统会自动计算所有派生指标
     """
     # 检查项目是否存在
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     # 检查是否已存在相同周期的数据
     existing = db.query(EarnedValueData).filter(

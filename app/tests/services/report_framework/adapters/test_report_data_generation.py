@@ -84,7 +84,7 @@ class TestReportDataGenerationAdapter:
         params = {
             "project_id": 1
         }
-        result = adapter.generate_data(params)
+        adapter.generate_data(params)
         
         # 验证调用了默认日期
         mock_router.generate_report_by_type.assert_called_once()

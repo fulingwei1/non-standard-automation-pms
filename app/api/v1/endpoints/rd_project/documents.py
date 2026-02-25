@@ -58,7 +58,7 @@ def get_rd_project_documents(
     """
     获取研发项目文档列表
     """
-    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
+    get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.rd_project_id == project_id)
 
@@ -185,7 +185,7 @@ def download_rd_project_document(
     """
     下载研发项目文档
     """
-    project = get_or_404(db, RdProject, project_id, "研发项目不存在")
+    get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     document = db.query(ProjectDocument).filter(
         ProjectDocument.id == doc_id,

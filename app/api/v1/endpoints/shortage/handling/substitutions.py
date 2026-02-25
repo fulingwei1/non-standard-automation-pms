@@ -143,7 +143,7 @@ def create_substitution(
 ) -> Any:
     """创建替代申请"""
     # 验证项目
-    project = get_or_404(db, Project, sub_in.project_id, "项目不存在")
+    get_or_404(db, Project, sub_in.project_id, "项目不存在")
 
     # 验证原物料
     original_material = get_or_404(db, Material, sub_in.original_material_id, "原物料不存在")

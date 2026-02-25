@@ -169,7 +169,7 @@ async def calculate_worker_efficiency(
     工人效率 = 标准工时 / 实际工时 × 100%
     """
     # 验证工人存在
-    worker = get_or_404(db, Worker, request.worker_id, "工人不存在")
+    get_or_404(db, Worker, request.worker_id, "工人不存在")
     
     if request.actual_hours <= 0:
         raise HTTPException(status_code=400, detail="实际工时必须大于0")

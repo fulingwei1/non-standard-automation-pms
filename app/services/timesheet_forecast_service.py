@@ -580,7 +580,6 @@ class TimesheetForecastService:
         """
         # 标准工时（每天8小时，每周5天）
         standard_daily_hours = 8
-        standard_weekly_hours = 40
         
         # 查询用户最近的工时情况
         recent_start = date.today() - timedelta(days=forecast_days)

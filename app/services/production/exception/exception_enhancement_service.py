@@ -419,7 +419,7 @@ class ExceptionEnhancementService:
 
     def create_pdca(self, request, current_user_id: int) -> PDCAResponse:
         """创建PDCA记录"""
-        exception = get_or_404(self.db, ProductionException, request.exception_id, "异常不存在")
+        get_or_404(self.db, ProductionException, request.exception_id, "异常不存在")
 
         # 生成PDCA编号
         pdca_no = f"PDCA-{datetime.now().strftime('%Y%m%d%H%M%S')}-{request.exception_id}"

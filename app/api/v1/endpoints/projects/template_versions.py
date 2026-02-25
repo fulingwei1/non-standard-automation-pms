@@ -38,7 +38,7 @@ def get_template_versions(
     """
     获取模板版本列表
     """
-    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
+    get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     query = db.query(ProjectTemplateVersion).filter(
         ProjectTemplateVersion.template_id == template_id
@@ -79,7 +79,7 @@ def create_template_version(
     """
     创建模板版本
     """
-    template = get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
+    get_or_404(db, ProjectTemplate, template_id, detail="模板不存在")
 
     # 获取最新版本号
     latest_version = db.query(ProjectTemplateVersion).filter(

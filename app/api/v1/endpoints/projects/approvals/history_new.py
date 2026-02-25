@@ -49,7 +49,7 @@ def get_project_approval_history(
     """
     获取项目审批历史（使用统一审批系统）
     """
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
 
     try:
         instance = (

@@ -46,7 +46,7 @@ def sync_project_from_contract(
     if contract_id:
         result = sync_service.sync_contract_to_project(contract_id)
     else:
-        project = get_or_404(db, Project, project_id, detail="项目不存在")
+        get_or_404(db, Project, project_id, detail="项目不存在")
 
         from app.models.sales import Contract
         contracts = db.query(Contract).filter(Contract.project_id == project_id).all()

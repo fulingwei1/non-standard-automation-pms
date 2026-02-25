@@ -67,7 +67,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             
             return response
             
-        except RateLimitExceeded as e:
+        except RateLimitExceeded:
             # 速率限制异常会被slowapi的异常处理器捕获
             # 这里我们只记录日志
             logger.warning(

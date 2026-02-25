@@ -36,7 +36,7 @@ def list_lead_requirement_freezes(
     """
     获取线索的需求冻结记录列表
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     freezes = db.query(RequirementFreeze).filter(
         and_(
@@ -71,7 +71,7 @@ def create_lead_requirement_freeze(
     """
     创建线索需求冻结记录
     """
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查需求详情是否存在
     requirement_detail = db.query(LeadRequirementDetail).filter(
@@ -121,7 +121,7 @@ def list_opportunity_requirement_freezes(
     """
     获取商机的需求冻结记录列表
     """
-    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     freezes = db.query(RequirementFreeze).filter(
         and_(
@@ -156,7 +156,7 @@ def create_opportunity_requirement_freeze(
     """
     创建商机需求冻结记录
     """
-    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 创建冻结记录
     freeze = RequirementFreeze(

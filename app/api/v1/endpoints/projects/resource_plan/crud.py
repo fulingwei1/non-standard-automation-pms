@@ -64,7 +64,7 @@ def create_resource_plan(
         db, current_user, project_id, "您没有权限为该项目创建资源计划"
     )
     
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     plan = ResourcePlanService.create_resource_plan(db, project_id, plan_in)
     return plan

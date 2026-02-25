@@ -55,7 +55,7 @@ def get_project_approval_status(
     - 通过引擎的查询能力获取审批任务和日志
     - 保持与原有响应格式的兼容性
     """
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     try:
         # 使用统一审批引擎获取审批记录

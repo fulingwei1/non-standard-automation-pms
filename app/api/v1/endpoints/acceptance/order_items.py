@@ -34,7 +34,7 @@ def read_acceptance_order_items(
     """
     获取验收检查项列表
     """
-    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
+    get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     items = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.order_id == order_id).order_by(
         AcceptanceOrderItem.category_code, AcceptanceOrderItem.sort_order

@@ -129,7 +129,7 @@ def get_task_comments(
     """
     获取任务评论列表
     """
-    task = get_or_404(db, TaskUnified, task_id, "任务不存在")
+    get_or_404(db, TaskUnified, task_id, "任务不存在")
 
     comments = db.query(TaskComment).filter(
         TaskComment.task_id == task_id,

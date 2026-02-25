@@ -39,7 +39,7 @@ def create_competency_model(
 ) -> Any:
     """创建岗位能力模型"""
     # 检查等级是否存在
-    level = get_or_404(db, QualificationLevel, model_in.level_id, "等级不存在")
+    get_or_404(db, QualificationLevel, model_in.level_id, "等级不存在")
 
     model = PositionCompetencyModel(**model_in.model_dump())
     db.add(model)

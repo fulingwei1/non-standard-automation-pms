@@ -47,7 +47,7 @@ def get_material_suppliers(
         如需查询供应商列表，请使用 GET /suppliers 端点
     """
     # 验证物料是否存在
-    material = get_or_404(db, Material, material_id, "物料不存在")
+    get_or_404(db, Material, material_id, "物料不存在")
 
     # 查询物料供应商关联
     material_suppliers = (

@@ -32,7 +32,7 @@ def read_acceptance_signatures(
     """
     获取验收签字列表
     """
-    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
+    get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     signatures = db.query(AcceptanceSignature).filter(AcceptanceSignature.order_id == order_id).order_by(AcceptanceSignature.signed_at).all()
 

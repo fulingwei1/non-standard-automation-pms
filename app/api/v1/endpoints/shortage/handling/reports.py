@@ -148,7 +148,7 @@ def create_shortage_report(
 ) -> Any:
     """创建缺料上报（车间扫码上报）"""
     # 验证项目
-    project = get_or_404(db, Project, report_in.project_id, "项目不存在")
+    get_or_404(db, Project, report_in.project_id, "项目不存在")
 
     # 验证机台（如果提供）
     if report_in.machine_id:

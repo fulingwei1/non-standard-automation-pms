@@ -111,7 +111,7 @@ async def add_team_member(
     if lead.role_type and not lead.role_type.can_have_team:
         raise HTTPException(status_code=400, detail="该角色不支持带团队")
 
-    user = get_or_404(db, User, data.user_id, detail="用户不存在")
+    get_or_404(db, User, data.user_id, detail="用户不存在")
 
     existing = (
         db.query(ProjectMember)

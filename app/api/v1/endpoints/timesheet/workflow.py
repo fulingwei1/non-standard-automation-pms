@@ -509,7 +509,7 @@ def get_timesheet_approval_history(
     返回指定工时记录的完整审批历史记录。
     """
     # 验证工时存在
-    timesheet = get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
+    get_or_404(db, Timesheet, timesheet_id, "工时记录不存在")
 
     # 查找审批实例
     instance = (

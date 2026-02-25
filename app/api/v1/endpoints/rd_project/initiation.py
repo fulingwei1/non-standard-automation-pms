@@ -271,7 +271,7 @@ def link_rd_project(
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 验证关联的非标项目是否存在
-    linked_project = get_or_404(db, Project, link_request.linked_project_id, "关联的非标项目不存在")
+    get_or_404(db, Project, link_request.linked_project_id, "关联的非标项目不存在")
 
     project.linked_project_id = link_request.linked_project_id
 

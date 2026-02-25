@@ -34,7 +34,7 @@ async def create_contract_review(
     """创建合同审核记录"""
     try:
         # 检查合同是否存在
-        contract = get_or_404(db, Contract, contract_id, "合同不存在")
+        get_or_404(db, Contract, contract_id, "合同不存在")
 
         # 创建审核记录
         contract_review = ContractReview(

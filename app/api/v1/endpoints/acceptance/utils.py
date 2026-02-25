@@ -146,7 +146,7 @@ def validate_completion_rules(
     Raises:
         HTTPException: 如果违反约束规则
     """
-    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
+    get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR004: 检查是否存在未闭环的阻塞问题
     blocking_issues = db.query(AcceptanceIssue).filter(

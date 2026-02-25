@@ -30,7 +30,7 @@ def get_ticket_related_issues(
 ) -> Any:
     """获取工单关联的问题列表"""
     # 验证工单是否存在
-    ticket = get_or_404(db, ServiceTicket, ticket_id, "工单不存在")
+    get_or_404(db, ServiceTicket, ticket_id, "工单不存在")
 
     # 查询关联的问题
     from app.api.v1.endpoints.issues.crud import build_issue_response

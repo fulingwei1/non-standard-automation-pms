@@ -38,7 +38,7 @@ async def get_project_role_overview(
     current_user: User = Depends(security.require_permission("project_role:read")),
 ):
     """获取项目角色概览（包含角色类型、配置、负责人信息）"""
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
 
     role_types = (
         db.query(ProjectRoleType)

@@ -117,7 +117,7 @@ class RoleInheritanceUtils:
             权限编码集合
         """
         # 检查缓存
-        cache_key = f"{role_id}_{tenant_id}" if tenant_id else str(role_id)
+        f"{role_id}_{tenant_id}" if tenant_id else str(role_id)
         if role_id in RoleInheritanceUtils._permission_cache:
             cached = RoleInheritanceUtils._permission_cache[role_id]
             logger.debug(f"角色 {role_id} 权限缓存命中，共 {len(cached)} 个权限")
@@ -234,7 +234,7 @@ class RoleInheritanceUtils:
         roles = query.all()
 
         # 构建角色字典
-        role_dict = {r.id: r for r in roles}
+        {r.id: r for r in roles}
 
         def build_tree_node(role: Role) -> Dict:
             """构建树节点"""

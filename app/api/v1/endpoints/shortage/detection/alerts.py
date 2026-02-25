@@ -260,7 +260,7 @@ def update_alert(
         alert.solution = solution
 
     if handler_id is not None:
-        handler = get_or_404(db, User, handler_id, "处理人不存在")
+        get_or_404(db, User, handler_id, "处理人不存在")
         alert.handler_id = handler_id
 
     if alert_level is not None:

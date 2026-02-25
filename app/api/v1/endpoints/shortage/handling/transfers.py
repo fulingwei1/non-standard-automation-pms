@@ -141,11 +141,11 @@ def create_transfer(
 ) -> Any:
     """创建调拨申请"""
     # 验证调入项目
-    to_project = get_or_404(db, Project, transfer_in.to_project_id, "调入项目不存在")
+    get_or_404(db, Project, transfer_in.to_project_id, "调入项目不存在")
 
     # 验证调出项目（如果有）
     if transfer_in.from_project_id:
-        from_project = get_or_404(db, Project, transfer_in.from_project_id, "调出项目不存在")
+        get_or_404(db, Project, transfer_in.from_project_id, "调出项目不存在")
 
     # 验证物料
     material = get_or_404(db, Material, transfer_in.material_id, "物料不存在")

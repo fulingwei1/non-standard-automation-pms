@@ -80,7 +80,7 @@ def apply_standard_cost_to_project(
     权限要求：cost:manage
     """
     # 检查项目是否存在
-    project = get_or_404(db, Project, project_id, "项目不存在")
+    get_or_404(db, Project, project_id, "项目不存在")
     
     # 生成预算编号和版本
     budget_no = _generate_budget_no(db)

@@ -60,7 +60,7 @@ def create_review_issue(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审问题"""
-    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     issue_no = generate_issue_no(db)
 

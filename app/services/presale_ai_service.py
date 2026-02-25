@@ -265,7 +265,7 @@ class PresaleAIService:
             else:
                 # 直接解析
                 return json.loads(content)
-        except Exception as e:
+        except Exception:
             # 解析失败，返回基本结构
             return {
                 "description": ai_response.get("content", ""),

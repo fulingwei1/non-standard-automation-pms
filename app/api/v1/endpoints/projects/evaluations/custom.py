@@ -32,7 +32,7 @@ def get_project_latest_evaluation(
     """获取项目最新评价"""
     check_project_access_or_raise(db, current_user, project_id)
     
-    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    get_or_404(db, Project, project_id, detail="项目不存在")
     
     eval_service = ProjectEvaluationService(db)
     evaluation = eval_service.get_latest_evaluation(project_id)

@@ -32,7 +32,7 @@ async def create_contract_seal_record(
     """创建合同盖章记录"""
     try:
         # 检查合同是否存在
-        contract = get_or_404(db, Contract, contract_id, "合同不存在")
+        get_or_404(db, Contract, contract_id, "合同不存在")
 
         # 创建盖章记录
         seal_record = ContractSealRecord(

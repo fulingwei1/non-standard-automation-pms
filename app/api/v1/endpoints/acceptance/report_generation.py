@@ -209,7 +209,7 @@ def read_acceptance_reports(
     """
     获取验收报告列表
     """
-    order = get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
+    get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     reports = db.query(AcceptanceReport).filter(AcceptanceReport.order_id == order_id).order_by(desc(AcceptanceReport.created_at)).all()
 

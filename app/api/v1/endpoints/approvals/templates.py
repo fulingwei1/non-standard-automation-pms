@@ -201,7 +201,7 @@ def create_flow(
 ):
     """创建审批流程"""
     # 检查模板是否存在
-    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
+    get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
 
     # 如果设置为默认，取消其他默认
     if data.is_default:
@@ -290,7 +290,7 @@ def create_node(
     db: Session = Depends(deps.get_db),
 ):
     """创建审批节点"""
-    flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
+    get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
 
     node = ApprovalNodeDefinition(
         flow_id=flow_id,

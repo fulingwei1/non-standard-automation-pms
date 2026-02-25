@@ -95,7 +95,7 @@ def create_open_item(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建未决事项（线索）"""
-    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 生成编号
     item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{lead_id:03d}"
@@ -148,7 +148,7 @@ def create_open_item_for_opportunity(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建未决事项（商机）"""
-    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 生成编号
     item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{opp_id:03d}"

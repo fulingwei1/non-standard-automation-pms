@@ -156,7 +156,7 @@ def create_ticket(
             
             # 发送通知给PMO（企业微信/钉钉）
             try:
-                notification_message = PMInvolvementService.generate_notification_message(
+                PMInvolvementService.generate_notification_message(
                     pm_result,
                     {
                         "项目名称": ticket.title,
