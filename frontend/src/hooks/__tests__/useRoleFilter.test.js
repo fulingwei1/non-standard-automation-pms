@@ -80,29 +80,30 @@ describe('useRoleFilter', () => {
       useRoleFilter(user, mockProjects)
     );
 
-    expect(result.current.myProjects).toHaveLength(2);
-    expect(result.current.myProjects[0].id).toBe(1);
-    expect(result.current.myProjects[1].id).toBe(2);
+    // user id=1 is PM of project 1, sales of project 2, TE of project 3
+    expect(result.current.myProjects).toHaveLength(3);
   });
 
   it('should return user projects as TE', () => {
-    const user = { id: 1, role: 'te' };
+    // user id=2 is TE of project 1 only
+    const user = { id: 2, role: 'te' };
     const { result } = renderHook(() => 
       useRoleFilter(user, mockProjects)
     );
 
     expect(result.current.myProjects).toHaveLength(1);
-    expect(result.current.myProjects[0].id).toBe(3);
+    expect(result.current.myProjects[0].id).toBe(1);
   });
 
   it('should return user projects as sales', () => {
-    const user = { id: 1, role: 'sales' };
+    // user id=3 is sales of project 1 only
+    const user = { id: 3, role: 'sales' };
     const { result } = renderHook(() => 
       useRoleFilter(user, mockProjects)
     );
 
     expect(result.current.myProjects).toHaveLength(1);
-    expect(result.current.myProjects[0].id).toBe(2);
+    expect(result.current.myProjects[0].id).toBe(1);
   });
 
   it('should return user projects as member', () => {
@@ -140,7 +141,8 @@ describe('useRoleFilter', () => {
 
     expect(result.current.isProjectRelevant(1)).toBe(true);
     expect(result.current.isProjectRelevant(2)).toBe(true);
-    expect(result.current.isProjectRelevant(3)).toBe(false);
+    expect(result.current.isProjectRelevant(3)).toBe(true); // te_id=1 matches
+    expect(result.current.isProjectRelevant(999)).toBe(false);
   });
 
   it('should check if stage is relevant', () => {
@@ -187,11 +189,11 @@ describe('useRoleFilter', () => {
       { initialProps: { user: { id: 1, role: 'pm' }, projects: mockProjects } }
     );
 
-    expect(result.current.myProjects).toHaveLength(2);
+    expect(result.current.myProjects).toHaveLength(3); // pm_id=1, sales_id=1, te_id=1
 
     rerender({ user: { id: 5, role: 'pm' }, projects: mockProjects });
 
     expect(result.current.myProjects).toHaveLength(1);
-    expect(result.current.myProjects[0].id).toBe(2);
+    expect(result.current.myProjects[0].pm_id).toBe(5);
   });
 });

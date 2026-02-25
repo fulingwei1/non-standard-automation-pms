@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/tests/performance/test_permission_cache_performance.py", line 22, in <module>
-    from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
-ModuleNotFoundError: No module named 'app'

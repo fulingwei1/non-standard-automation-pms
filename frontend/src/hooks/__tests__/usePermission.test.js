@@ -11,7 +11,11 @@ import { ReactNode } from 'react';
 // Mock PermissionContext
 const mockPermissionContext = {
   permissions: ['project:create', 'project:read', 'project:update'],
-  menus: ['project-list', 'project-create', 'dashboard'],
+  menus: [
+    { code: 'project-list' },
+    { code: 'project-create' },
+    { code: 'dashboard' }
+  ],
   dataScopes: ['own', 'department'],
   isSuperuser: false,
   isLoading: false,

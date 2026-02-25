@@ -20,7 +20,7 @@ export function useRoleFilter(user, projects = []) {
       if (!stage.roles) {return true;} // 没有 roles 字段则显示所有阶段
       return stage.roles.includes(user.role);
     });
-  }, [user.role]);
+  }, [user?.role]);
 
   // 获取与当前用户相关的项目
   const myProjects = useMemo(() => {
@@ -37,7 +37,7 @@ export function useRoleFilter(user, projects = []) {
       if (project.sales_id === user.id) {return true;}
       return false;
     });
-  }, [projects, user.id]);
+  }, [projects, user?.id]);
 
   // 获取所有相关阶段的key
   const relevantStageKeys = useMemo(() => {
