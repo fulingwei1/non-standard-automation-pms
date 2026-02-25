@@ -10,7 +10,7 @@ vi.mock('../../../../services/api', () => ({
     },
     progressApi: {
         reports: {
-            getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), reports: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), tasks: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
+            getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), reports: { getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }, tasks: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) } },
         tasks: {
             list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
             create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
