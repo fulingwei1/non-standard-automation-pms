@@ -192,4 +192,14 @@ def create_api_router() -> APIRouter:
     return api_router
 
 # 创建全局API路由实例
-api_router = create_api_router()
+print("[DEBUG] app/api/v1/api.py: 准备调用 create_api_router()")
+try:
+    api_router = create_api_router()
+    print(f"[DEBUG] app/api/v1/api.py: 成功创建api_router，路由数={len(api_router.routes)}")
+except Exception as e:
+    print(f"[ERROR] app/api/v1/api.py: create_api_router() 失败: {e}")
+    import traceback
+    traceback.print_exc()
+    # 创建空路由器作为fallback
+    api_router = APIRouter()
+    print("[WARN] app/api/v1/api.py: 使用空路由器作为fallback")
