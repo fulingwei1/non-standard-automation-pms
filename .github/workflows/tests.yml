@@ -51,22 +51,22 @@ jobs:
         env:
           DATABASE_URL: sqlite:///test.db
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-for-ci
+          SECRET_KEY: test-secret-key-for-ci-32-chars-minimum-length-required
         run: |
           python -m pytest tests/api/ -o 'addopts=' -q --tb=short -p no:cov \
             --cov=app --cov-report=term --cov-report=xml \
-            -x 2>&1 || true
+            -x 2>&1
 
       - name: Run unit tests (sampled)
         env:
           DATABASE_URL: sqlite:///test.db
-          SECRET_KEY: test-secret-key-for-ci
+          SECRET_KEY: test-secret-key-for-ci-32-chars-minimum-length-required
         run: |
           # Run a subset to avoid OOM on CI runners too
           python -m pytest tests/unit/ -o 'addopts=' -q --tb=short -p no:cov \
             --cov=app --cov-append --cov-report=term --cov-report=xml \
             -k "not comprehensive and not complete" \
-            --timeout=30 2>&1 || true
+            --timeout=30 2>&1
 
       - name: Coverage summary
         run: |
