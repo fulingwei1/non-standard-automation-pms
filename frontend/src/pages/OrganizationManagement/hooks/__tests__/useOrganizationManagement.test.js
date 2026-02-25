@@ -6,7 +6,7 @@ import { orgApi } from '../../../../services/api';
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        orgApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn(), createDepartment: vi.fn(), deleteDepartment: vi.fn(), listDepartments: vi.fn(), updateDepartment: vi.fn() }
+        orgApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), createDepartment: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), deleteDepartment: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), listDepartments: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), updateDepartment: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
     };
 });
 

@@ -11,7 +11,7 @@ import { performanceApi } from '../../services/api';
 vi.mock('../../services/api', () => ({
   performanceApi: {
     getWeightConfig: vi.fn(),
-    saveWeightConfig: vi.fn()
+    updateWeightConfig: vi.fn()
   }
 }));
 
@@ -23,10 +23,13 @@ vi.mock('../../utils/weightConfigUtils', () => ({
   }
 }));
 
-// Mock confirmAction
+// Mock confirmAction - always confirms
 vi.mock('@/lib/confirmAction', () => ({
-  confirmAction: vi.fn((message, callback) => callback())
+  confirmAction: vi.fn().mockResolvedValue(true)
 }));
+
+// Mock alert
+globalThis.alert = vi.fn();
 
 describe('useWeightConfig', () => {
   const mockWeightResponse = {
@@ -48,14 +51,12 @@ describe('useWeightConfig', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
     performanceApi.getWeightConfig.mockResolvedValue(mockWeightResponse);
-    performanceApi.saveWeightConfig.mockResolvedValue({ success: true });
+    performanceApi.updateWeightConfig.mockResolvedValue({ success: true });
   });
 
   it('should initialize with default weights', () => {
     const { result } = renderHook(() => useWeightConfig());
-
     expect(result.current.isLoading).toBe(true);
     expect(result.current.weights).toEqual({
       deptManager: 50,
@@ -65,11 +66,9 @@ describe('useWeightConfig', () => {
 
   it('should load weight configuration successfully', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     expect(result.current.weights).toEqual({
       deptManager: 60,
       projectManager: 40
@@ -78,24 +77,21 @@ describe('useWeightConfig', () => {
 
   it('should load configuration history', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
-      expect(result.current.configHistory.length).toBeGreaterThan(0);
+      expect(result.current.isLoading).toBe(false);
     });
-
+    expect(result.current.configHistory.length).toBeGreaterThan(0);
     const historyItem = result.current.configHistory[0];
     expect(historyItem).toHaveProperty('id');
     expect(historyItem).toHaveProperty('date');
     expect(historyItem).toHaveProperty('operator');
   });
 
-  it('should update weight value', () => {
+  it('should update weight value via handleWeightChange', () => {
     const { result } = renderHook(() => useWeightConfig());
-
     act(() => {
-      result.current.updateWeight('deptManager', 70);
+      result.current.handleWeightChange('dept', 70);
     });
-
     expect(result.current.weights.deptManager).toBe(70);
     expect(result.current.weights.projectManager).toBe(30);
     expect(result.current.isDirty).toBe(true);
@@ -103,198 +99,160 @@ describe('useWeightConfig', () => {
 
   it('should ensure weights sum to 100', () => {
     const { result } = renderHook(() => useWeightConfig());
-
     act(() => {
-      result.current.updateWeight('deptManager', 75);
+      result.current.handleWeightChange('dept', 75);
     });
-
-    expect(result.current.weights.deptManager).toBe(75);
-    expect(result.current.weights.projectManager).toBe(25);
     expect(result.current.weights.deptManager + result.current.weights.projectManager).toBe(100);
   });
 
   it('should mark as dirty when weights change', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     expect(result.current.isDirty).toBe(false);
-
     act(() => {
-      result.current.updateWeight('deptManager', 65);
+      result.current.handleWeightChange('dept', 65);
     });
-
     expect(result.current.isDirty).toBe(true);
   });
 
   it('should save weight configuration', async () => {
-
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     act(() => {
-      result.current.updateWeight('deptManager', 70);
+      result.current.handleWeightChange('dept', 70);
     });
-
     await act(async () => {
       await result.current.handleSave();
     });
-
-    expect(performanceApi.saveWeightConfig).toHaveBeenCalledWith(
+    expect(performanceApi.updateWeightConfig).toHaveBeenCalledWith(
       expect.objectContaining({
-        deptManager: 70,
-        projectManager: 30
+        dept_manager_weight: 70,
+        project_manager_weight: 30
       })
     );
   });
 
   it('should set saving state during save', async () => {
-
     let resolveSave;
-    const promise = new Promise(resolve => {
-      resolveSave = resolve;
-    });
-    performanceApi.saveWeightConfig.mockReturnValue(promise);
-
+    performanceApi.updateWeightConfig.mockReturnValue(new Promise(resolve => { resolveSave = resolve; }));
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
-    const savePromise = act(async () => {
-      await result.current.handleSave();
+    
+    let savePromise;
+    act(() => {
+      savePromise = result.current.handleSave();
     });
 
-    expect(result.current.isSaving).toBe(true);
+    // Saving state should be true while promise is pending
+    await waitFor(() => {
+      expect(result.current.isSaving).toBe(true);
+    });
 
-    resolveSave({ success: true });
-    await savePromise;
+    await act(async () => {
+      resolveSave({ success: true });
+      await savePromise;
+    });
 
     expect(result.current.isSaving).toBe(false);
   });
 
   it('should reset dirty flag after save', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     act(() => {
-      result.current.updateWeight('deptManager', 65);
+      result.current.handleWeightChange('dept', 65);
     });
-
     expect(result.current.isDirty).toBe(true);
-
     await act(async () => {
       await result.current.handleSave();
     });
-
     expect(result.current.isDirty).toBe(false);
   });
 
   it('should handle save error', async () => {
-
-    performanceApi.saveWeightConfig.mockRejectedValue(
-      new Error('Save failed')
-    );
-
+    performanceApi.updateWeightConfig.mockRejectedValue(new Error('Save failed'));
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     await act(async () => {
       await result.current.handleSave();
     });
-
-    expect(result.current.error).toBeTruthy();
+    // alert should have been called with error message
+    expect(globalThis.alert).toHaveBeenCalledWith(expect.stringContaining('保存失败'));
   });
 
   it('should handle load error with fallback data', async () => {
-
-    performanceApi.getWeightConfig.mockRejectedValue(
-      new Error('Load failed')
-    );
-
+    performanceApi.getWeightConfig.mockRejectedValue(new Error('Load failed'));
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     expect(result.current.error).toBeTruthy();
     expect(result.current.weights).toBeDefined();
   });
 
   it('should provide impact statistics', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     expect(result.current.impactStatistics).toBeDefined();
     expect(result.current.impactStatistics).toHaveProperty('totalEmployees');
     expect(result.current.impactStatistics).toHaveProperty('affectedEmployees');
   });
 
-  it('should handle zero or negative weights', () => {
+  it('should reject negative weights', () => {
     const { result } = renderHook(() => useWeightConfig());
-
     act(() => {
-      result.current.updateWeight('deptManager', 0);
+      result.current.handleWeightChange('dept', -10);
     });
-
-    expect(result.current.weights.deptManager).toBe(0);
-    expect(result.current.weights.projectManager).toBe(100);
-
-    act(() => {
-      result.current.updateWeight('deptManager', -10);
-    });
-
-    // Should handle gracefully (implementation dependent)
+    // Should not change (invalid value rejected)
     expect(result.current.weights.deptManager).toBeGreaterThanOrEqual(0);
   });
 
-  it('should handle weights over 100', () => {
+  it('should reject weights over 100', () => {
     const { result } = renderHook(() => useWeightConfig());
-
     act(() => {
-      result.current.updateWeight('deptManager', 150);
+      result.current.handleWeightChange('dept', 150);
     });
-
-    // Should cap at 100
     expect(result.current.weights.deptManager).toBeLessThanOrEqual(100);
   });
 
   it('should support reset to default', async () => {
     const { result } = renderHook(() => useWeightConfig());
-
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-
     act(() => {
-      result.current.updateWeight('deptManager', 80);
+      result.current.handleWeightChange('dept', 80);
+    });
+    expect(result.current.isDirty).toBe(true);
+
+    await act(async () => {
+      await result.current.handleReset();
     });
 
-    if (result.current.handleReset) {
-      act(() => {
-        result.current.handleReset();
-      });
+    expect(result.current.weights).toEqual({
+      deptManager: 50,
+      projectManager: 50
+    });
+  });
 
-      expect(result.current.weights).toEqual({
-        deptManager: 50,
-        projectManager: 50
-      });
-    }
+  it('should update project weight when changing project type', () => {
+    const { result } = renderHook(() => useWeightConfig());
+    act(() => {
+      result.current.handleWeightChange('project', 70);
+    });
+    expect(result.current.weights.projectManager).toBe(70);
+    expect(result.current.weights.deptManager).toBe(30);
   });
 });

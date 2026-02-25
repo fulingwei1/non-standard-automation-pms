@@ -4,8 +4,8 @@ import { usePaymentManagement } from '../usePaymentManagement';
 import { paymentApi, receivableApi } from '../../../../services/api';
 
 vi.mock('../../../../services/api', () => ({
-    paymentApi: { list: vi.fn(), getReminders: vi.fn(), getStatistics: vi.fn() },
-    receivableApi: { getAging: vi.fn() }
+    paymentApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getReminders: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getStatistics: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
+    receivableApi: { getAging: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
 }));
 
 describe('usePaymentManagement Hook', () => {

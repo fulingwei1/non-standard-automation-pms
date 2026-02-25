@@ -11,20 +11,20 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('../../../../services/api', () => ({
     projectApi: {
-        get: vi.fn(),
-        list: vi.fn()
+        get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } })
     },
     pmoApi: {
         closures: {
-            get: vi.fn(),
-            create: vi.fn(),
-            review: vi.fn(),
-            updateLessons: vi.fn(), closures: vi.fn() }
+            get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+            create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+            review: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+            updateLessons: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
     }
 }));
 
 describe('useProjectClosureManagement Hook', () => {
-    const mockNavigate = vi.fn();
+    const mockNavigate = vi.fn().mockResolvedValue({ data: { items: [], total: 0 } });
     const mockProject = { id: 1, project_name: 'Test Project' };
     const mockClosure = { id: 101, status: 'DRAFT' };
 

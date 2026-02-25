@@ -6,8 +6,8 @@ import { machineApi, projectApi } from '../../../../services/api';
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        machineApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() },
-        projectApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
+        machineApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
+        projectApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
     };
 });
 
@@ -33,7 +33,7 @@ describe('useMachineData Hook', () => {
   });
 
   it('should load data', async () => {
-    const { result } = renderHook(() => useMachineData());
+    const { result } = renderHook(() => useMachineData('proj-1'));
 
     // Wait for loading to finish
     if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {

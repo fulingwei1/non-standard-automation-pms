@@ -5,15 +5,15 @@ import { timesheetApi, projectApi } from '../../../../services/api';
 
 vi.mock('../../../../services/api', () => ({
     timesheetApi: {
-        getWeek: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        batchCreate: vi.fn(),
-        submit: vi.fn(),
+        getWeek: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        batchCreate: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        submit: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
     },
     projectApi: {
-        list: vi.fn(),
+        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
     },
 }));
 

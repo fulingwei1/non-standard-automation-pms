@@ -6,8 +6,8 @@ import { organizationApi, staffMatchingApi } from '../../../../services/api';
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        organizationApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn(), importEmployees: vi.fn() },
-        staffMatchingApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn(), getProfiles: vi.fn() }
+        organizationApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), importEmployees: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
+        staffMatchingApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getProfiles: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
     };
 });
 

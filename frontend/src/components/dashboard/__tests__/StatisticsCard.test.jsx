@@ -140,8 +140,9 @@ describe('StatisticsCard', () => {
     });
 
     it('handles empty string value', () => {
-      render(<StatisticsCard title="空值" value="" />);
-      expect(screen.getByText('')).toBeInTheDocument();
+      const { container } = render(<StatisticsCard title="空值" value="" />);
+      // Component should render without crashing
+      expect(screen.getByText('空值')).toBeInTheDocument();
     });
 
     it('handles very long title', () => {

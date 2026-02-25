@@ -2,16 +2,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock Select component
-const Select = ({ value, onChange, options = [], placeholder = '请选择', disabled = false }) => {
+const Select = ({ value, onChange, options, placeholder = '请选择', disabled = false }) => {
+  const safeOptions = options || [];
   return (
     <select
       value={value}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={(e) => !disabled && onChange?.(e.target.value)}
       disabled={disabled}
       className="select-component"
     >
       <option value="">{placeholder}</option>
-      {options.map((option) => (
+      {safeOptions.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>

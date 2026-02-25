@@ -5,9 +5,9 @@ import { departmentApi } from '../../../../services/api';
 
 vi.mock('../../../../services/api', () => ({
     departmentApi: {
-        list: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
+        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
     },
 }));
 

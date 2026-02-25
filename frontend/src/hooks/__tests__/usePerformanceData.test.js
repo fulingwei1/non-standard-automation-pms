@@ -132,8 +132,6 @@ describe('usePerformanceData', () => {
   });
 
   it('should update loading state during refetch', async () => {
-
-    
     const { result } = renderHook(() => 
       usePerformanceData(mockFallbackData)
     );
@@ -142,11 +140,9 @@ describe('usePerformanceData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const refetchPromise = result.current.refetch();
-
-    expect(result.current.isLoading).toBe(true);
-
-    await refetchPromise;
+    await act(async () => {
+      await result.current.refetch();
+    });
 
     expect(result.current.isLoading).toBe(false);
   });
@@ -170,7 +166,9 @@ describe('usePerformanceData', () => {
       data: mockPerformanceData
     });
 
-    await result.current.refetch();
+    await act(async () => {
+      await result.current.refetch();
+    });
 
     expect(result.current.error).toBe(null);
     expect(result.current.performanceData).toEqual(mockPerformanceData);

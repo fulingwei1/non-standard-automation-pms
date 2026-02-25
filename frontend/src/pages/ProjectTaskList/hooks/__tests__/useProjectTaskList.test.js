@@ -6,15 +6,15 @@ import { progressApi, projectApi } from '../../../../services/api';
 // Mock the API module
 vi.mock('../../../../services/api', () => ({
     projectApi: {
-        get: vi.fn(),
+        get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
     },
     progressApi: {
         reports: {
-            getSummary: vi.fn(), reports: vi.fn(), tasks: vi.fn() },
+            getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), reports: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), tasks: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
         tasks: {
-            list: vi.fn(),
-            create: vi.fn(),
-            get: vi.fn(),
+            list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+            create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+            get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
         },
     },
 }));

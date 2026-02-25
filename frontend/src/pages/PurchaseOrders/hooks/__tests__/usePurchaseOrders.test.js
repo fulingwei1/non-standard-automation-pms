@@ -5,15 +5,15 @@ import { purchaseApi, supplierApi, projectApi } from '../../../../services/api';
 
 vi.mock('../../../../services/api', () => ({
     purchaseApi: {
-        list: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        submitApproval: vi.fn(),
-        receiveGoods: vi.fn()
+        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        submitApproval: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+        receiveGoods: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } })
     },
-    supplierApi: { list: vi.fn() },
-    projectApi: { list: vi.fn() }
+    supplierApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
+    projectApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
 }));
 
 vi.mock('react-router-dom', () => ({
