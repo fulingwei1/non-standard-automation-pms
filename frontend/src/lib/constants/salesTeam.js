@@ -42,7 +42,7 @@ export const QUICK_RANGE_PRESETS = [
 // ==================== 格式化函数 ====================
 
 // Re-export formatCurrency from unified formatters for backward compatibility
-export { formatCurrencyCompact as formatCurrency } from "../../../../lib/formatters";
+export { formatCurrencyCompact as formatCurrency } from "../formatters";
 
 /**
  * 格式化跟进类型
