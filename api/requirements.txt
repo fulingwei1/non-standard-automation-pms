@@ -12,7 +12,8 @@ pydantic-settings==2.5.2
 
 # 安全认证
 python-jose[cryptography]==3.4.0
-passlib[bcrypt]==1.7.4
+passlib==1.7.4
+bcrypt==4.3.0  # 固定版本以兼容 passlib 1.7.4
 slowapi==0.1.9  # API速率限制
 
 # 文件处理
