@@ -7,6 +7,10 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
@@ -18,7 +22,7 @@ jobs:
           python-version: "3.11"
       - run: pip install ruff
       - name: Run ruff
-        run: ruff check app/ --output-format=github || true
+        run: ruff check app/ --output-format=github
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -43,9 +47,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r api/requirements.txt || pip install -r api/requirements.txt --use-deprecated=legacy-resolver
-          pip install pytest-mock factory-boy faker httpx
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r api/requirements.txt
+          pip install pytest pytest-mock pytest-cov pytest-timeout factory-boy faker httpx
 
       - name: Run API tests
         env:
@@ -53,20 +57,19 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: test-secret-key-for-ci
         run: |
-          python -m pytest tests/api/ -o 'addopts=' -q --tb=short -p no:cov \
+          python -m pytest tests/api/ -o 'addopts=' -q --tb=short \
             --cov=app --cov-report=term --cov-report=xml \
-            -x 2>&1 || true
+            -x
 
       - name: Run unit tests (sampled)
         env:
           DATABASE_URL: sqlite:///test.db
           SECRET_KEY: test-secret-key-for-ci
         run: |
-          # Run a subset to avoid OOM on CI runners too
-          python -m pytest tests/unit/ -o 'addopts=' -q --tb=short -p no:cov \
+          python -m pytest tests/unit/ -o 'addopts=' -q --tb=short \
             --cov=app --cov-append --cov-report=term --cov-report=xml \
             -k "not comprehensive and not complete" \
-            --timeout=30 2>&1 || true
+            --timeout=30
 
       - name: Coverage summary
         run: |
@@ -75,7 +78,7 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.11' && hashFiles('coverage.xml') != ''
         with:
           file: ./coverage.xml
           fail_ci_if_error: false

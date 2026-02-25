@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -45,12 +49,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r api/requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-mock pytest-cov factory-boy faker httpx
 
       - name: Run coverage
-        run: python -m pytest -o 'addopts=' --cov=app --cov-report=xml tests/
+        run: python -m pytest -o 'addopts=' -q --tb=short --cov=app --cov-report=xml tests/
 
       - uses: actions/upload-artifact@v4
+        if: hashFiles('coverage.xml') != ''
         with:
           name: coverage-report
           path: coverage.xml
