@@ -6,7 +6,8 @@ import { roleApi } from '../../../../services/api';
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        roleApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
+        roleApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn(), assignPermissions: vi.fn(), compare: vi.fn(), createFromTemplate: vi.fn(), getDetail: vi.fn(), getInheritanceTree: vi.fn(), listTemplates: vi.fn(), permissions: vi.fn(), updateNavGroups: vi.fn() },
+        permissionApi: { getMatrix: vi.fn() }
     };
 });
 

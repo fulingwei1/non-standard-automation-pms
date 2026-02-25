@@ -11,9 +11,14 @@ import { performanceApi } from '../../services/api';
 vi.mock('../../services/api', () => ({
   performanceApi: {
     getMonthlySummaryHistory: vi.fn(),
-    saveDraft: vi.fn(),
-    submitSummary: vi.fn()
+    saveMonthlySummaryDraft: vi.fn(),
+    createMonthlySummary: vi.fn()
   }
+}));
+
+// Mock confirmAction
+vi.mock('@/lib/confirmAction', () => ({
+  confirmAction: vi.fn(() => Promise.resolve(true))
 }));
 
 // Mock utils
@@ -56,8 +61,8 @@ describe('useMonthlySummary', () => {
     performanceApi.getMonthlySummaryHistory.mockResolvedValue({
       data: mockHistory
     });
-    performanceApi.saveDraft.mockResolvedValue({ success: true });
-    performanceApi.submitSummary.mockResolvedValue({ success: true });
+    performanceApi.saveMonthlySummaryDraft.mockResolvedValue({ success: true });
+    performanceApi.createMonthlySummary.mockResolvedValue({ success: true });
   });
 
   it('should initialize with default form data', () => {
@@ -152,7 +157,7 @@ describe('useMonthlySummary', () => {
       await result.current.handleSaveDraft();
     });
 
-    expect(performanceApi.saveDraft).toHaveBeenCalledWith(
+    expect(performanceApi.saveMonthlySummaryDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         workContent: 'Draft work'
       })
@@ -166,7 +171,7 @@ describe('useMonthlySummary', () => {
     const promise = new Promise(resolve => {
       resolveSave = resolve;
     });
-    performanceApi.saveDraft.mockReturnValue(promise);
+    performanceApi.saveMonthlySummaryDraft.mockReturnValue(promise);
 
     const { result } = renderHook(() => useMonthlySummary());
 
@@ -194,7 +199,7 @@ describe('useMonthlySummary', () => {
       await result.current.handleSubmit();
     });
 
-    expect(performanceApi.submitSummary).toHaveBeenCalledWith(
+    expect(performanceApi.createMonthlySummary).toHaveBeenCalledWith(
       expect.objectContaining({
         workContent: 'Completed work'
       })
@@ -208,7 +213,7 @@ describe('useMonthlySummary', () => {
     const promise = new Promise(resolve => {
       resolveSubmit = resolve;
     });
-    performanceApi.submitSummary.mockReturnValue(promise);
+    performanceApi.createMonthlySummary.mockReturnValue(promise);
 
     const { result } = renderHook(() => useMonthlySummary());
 
@@ -238,7 +243,7 @@ describe('useMonthlySummary', () => {
 
   it('should handle submit error', async () => {
 
-    performanceApi.submitSummary.mockRejectedValue(
+    performanceApi.createMonthlySummary.mockRejectedValue(
       new Error('Submit failed')
     );
 

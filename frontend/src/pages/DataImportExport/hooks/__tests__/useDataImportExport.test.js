@@ -6,7 +6,7 @@ import { dataImportExportApi } from '../../../../services/api';
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        dataImportExportApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
+        dataImportExportApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn(), downloadTemplate: vi.fn(), exportProjectDetail: vi.fn(), exportProjectList: vi.fn(), exportTaskList: vi.fn(), exportTimesheet: vi.fn(), exportWorkload: vi.fn(), getTemplateTypes: vi.fn(), previewImport: vi.fn(), uploadImport: vi.fn() }
     };
 });
 

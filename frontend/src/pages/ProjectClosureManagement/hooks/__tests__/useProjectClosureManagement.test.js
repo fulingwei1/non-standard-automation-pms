@@ -19,8 +19,7 @@ vi.mock('../../../../services/api', () => ({
             get: vi.fn(),
             create: vi.fn(),
             review: vi.fn(),
-            updateLessons: vi.fn()
-        }
+            updateLessons: vi.fn(), closures: vi.fn() }
     }
 }));
 

@@ -10,8 +10,7 @@ vi.mock('../../../../services/api', () => ({
     },
     progressApi: {
         reports: {
-            getSummary: vi.fn(),
-        },
+            getSummary: vi.fn(), reports: vi.fn(), tasks: vi.fn() },
         tasks: {
             list: vi.fn(),
             create: vi.fn(),
