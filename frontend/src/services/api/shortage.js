@@ -5,7 +5,7 @@
 
 import api from "./client.js";
 
-const BASE_PATH = "/api/v1/shortage/smart";
+const BASE_PATH = "/shortage/smart";
 
 /**
  * 1. 获取预警列表
