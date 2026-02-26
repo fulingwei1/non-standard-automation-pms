@@ -73,6 +73,18 @@ class UnifiedImporter(ImportBase):
             imported_count, updated_count, failed_rows = BomImporter.import_bom_data(
                 db, df, current_user_id, update_existing
             )
+        elif template_type == "EMPLOYEE":
+            from app.services.employee_import_service import import_employees_from_dataframe
+            result = import_employees_from_dataframe(db, df, current_user_id)
+            imported_count = result.get("imported", 0)
+            updated_count = result.get("updated", 0)
+            failed_rows = [{"row_index": 0, "error": e} for e in result.get("errors", [])]
+        elif template_type == "HR_PROFILE":
+            from app.services.hr_profile_import_service import import_hr_profiles_from_dataframe
+            result = import_hr_profiles_from_dataframe(db, df)
+            imported_count = result.get("imported", 0)
+            updated_count = result.get("updated", 0)
+            failed_rows = [{"row_index": 0, "error": e} for e in result.get("errors", [])]
         else:
             raise HTTPException(status_code=400, detail=f"不支持的模板类型: {template_type}")
 
