@@ -317,11 +317,9 @@ class CostOverrunAnalysisService:
 
     def _calculate_material_cost(self, project_id: int) -> Decimal:
         """计算物料成本"""
-        material_costs = self.db.query(func.sum(ProjectCost.amount)).filter(
-            ProjectCost.project_id == project_id,
-            ProjectCost.cost_type == 'MATERIAL'
-        ).scalar() or Decimal('0')
-        return Decimal(str(material_costs))
+        from app.services.cost.cost_data_queries import get_cost_by_type
+
+        return get_cost_by_type(self.db, project_id, "MATERIAL")
 
     def _calculate_labor_cost(self, project_id: int) -> Decimal:
         """计算工时成本"""

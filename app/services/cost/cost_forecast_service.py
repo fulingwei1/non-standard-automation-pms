@@ -564,74 +564,13 @@ class CostForecastService:
     ) -> List[Dict[str, Any]]:
         """
         获取项目月度成本数据（合并ProjectCost和FinancialProjectCost）
+        委托给公共数据查询层。
         """
-        # 查询ProjectCost（业务系统自动产生的成本）
-        query1 = (
-            self.db.query(
-                func.date_format(ProjectCost.cost_date, "%Y-%m").label("month"),
-                func.sum(ProjectCost.amount).label("monthly_cost"),
-            )
-            .filter(ProjectCost.project_id == project_id)
-            .filter(ProjectCost.cost_date.isnot(None))
+        from app.services.cost.cost_data_queries import get_monthly_cost_data
+
+        return get_monthly_cost_data(
+            self.db, project_id, start_month=start_month, end_month=end_month
         )
-
-        if start_month:
-            query1 = query1.filter(
-                func.date_format(ProjectCost.cost_date, "%Y-%m") >= start_month
-            )
-        if end_month:
-            query1 = query1.filter(
-                func.date_format(ProjectCost.cost_date, "%Y-%m") <= end_month
-            )
-
-        result1 = query1.group_by("month").all()
-
-        # 查询FinancialProjectCost（财务手工录入的成本）
-        query2 = (
-            self.db.query(
-                FinancialProjectCost.cost_month.label("month"),
-                func.sum(FinancialProjectCost.amount).label("monthly_cost"),
-            )
-            .filter(FinancialProjectCost.project_id == project_id)
-            .filter(FinancialProjectCost.cost_month.isnot(None))
-        )
-
-        if start_month:
-            query2 = query2.filter(FinancialProjectCost.cost_month >= start_month)
-        if end_month:
-            query2 = query2.filter(FinancialProjectCost.cost_month <= end_month)
-
-        result2 = query2.group_by("month").all()
-
-        # 合并两个查询结果
-        monthly_dict = {}
-        for row in result1:
-            month = row.month
-            cost = float(row.monthly_cost or 0)
-            monthly_dict[month] = monthly_dict.get(month, 0) + cost
-
-        for row in result2:
-            month = row.month
-            cost = float(row.monthly_cost or 0)
-            monthly_dict[month] = monthly_dict.get(month, 0) + cost
-
-        # 排序并计算累计成本
-        sorted_months = sorted(monthly_dict.keys())
-        cumulative = 0
-        result = []
-
-        for month in sorted_months:
-            monthly_cost = monthly_dict[month]
-            cumulative += monthly_cost
-            result.append(
-                {
-                    "month": month,
-                    "monthly_cost": monthly_cost,
-                    "cumulative_cost": cumulative,
-                }
-            )
-
-        return result
 
     def _get_alert_rules(self, project_id: int) -> Dict[str, Any]:
         """
