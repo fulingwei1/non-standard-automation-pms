@@ -2,7 +2,8 @@
 """
 Excel模板生成服务
 
-提供统一的Excel模板生成功能，消除重复代码
+提供统一的Excel导入模板生成功能。
+共享样式已迁移到 report_framework/renderers/excel_styles.py (#39)。
 """
 
 import io

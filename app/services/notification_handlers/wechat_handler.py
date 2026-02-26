@@ -5,10 +5,12 @@
 此模块包含完整的企业微信消息发送实现，包括 API 和 Webhook 双通道支持。
 使用 app.utils.wechat_client.WeChatClient 作为底层 API 客户端。
 
-相关模块:
-- channel_handlers/wechat_handler.py: 统一渠道系统的轻量级适配器
-- wechat_alert_service.py: 缺料预警专用的企业微信推送服务
-- utils/wechat_client.py: 底层 API 客户端
+企业微信服务分层架构 (#45):
+  底层 API:  utils/wechat_client.py (WeChatClient) — canonical
+  通知分发:  本模块 (WeChatNotificationHandler)
+  预警专用:  wechat_alert_service.py
+  渠道适配:  channel_handlers/wechat_handler.py
+  配置查询:  assembly_kit/wechat_config.py
 """
 
 import logging

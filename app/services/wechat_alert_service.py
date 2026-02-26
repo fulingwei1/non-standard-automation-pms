@@ -3,11 +3,12 @@
 企业微信预警消息推送服务
 实现缺料预警的企业微信卡片消息推送
 
-此模块专注于缺料预警场景的企业微信推送。
-通用的企业微信通知请使用:
-- notification_handlers/wechat_handler.py (WeChatNotificationHandler)
-- channel_handlers/wechat_handler.py (WeChatChannelHandler)
-底层 API 客户端: utils/wechat_client.py (WeChatClient)
+企业微信服务分层架构 (#45):
+  底层 API:  utils/wechat_client.py (WeChatClient) — canonical
+  通知分发:  notification_handlers/wechat_handler.py
+  预警专用:  本模块 (WeChatAlertService)
+  渠道适配:  channel_handlers/wechat_handler.py
+  配置查询:  assembly_kit/wechat_config.py
 """
 
 import json
@@ -345,3 +346,12 @@ class WeChatAlertService:
                 fail_count += 1
 
         return {"total": len(shortages), "success": success_count, "failed": fail_count}
+
+
+# ── Re-exports for unified WeChat access (#45) ───────────────────────
+from app.utils.wechat_client import WeChatClient  # noqa: F401, E402
+
+def get_wechat_notification_handler():
+    """Lazy import to avoid circular dependency."""
+    from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+    return WeChatNotificationHandler

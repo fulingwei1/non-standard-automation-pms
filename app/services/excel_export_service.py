@@ -2,6 +2,8 @@
 """
 Excel 导出服务
 提供通用的 Excel 导出功能，支持自定义列、排序、筛选、样式设置
+
+NOTE: 共享样式常量已迁移到 report_framework/renderers/excel_styles.py (#39)。
 """
 
 import io
@@ -330,3 +332,12 @@ def create_excel_response(
             "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
         }
     )
+
+
+# ── Re-exports for unified access (#39) ──────────────────────────────
+from app.services.report_framework.renderers.excel_renderer import ExcelRenderer  # noqa: F401, E402
+from app.services.report_framework.renderers.excel_styles import (  # noqa: F401, E402
+    HEADER_FONT as EXCEL_HEADER_FONT,
+    HEADER_FILL as EXCEL_HEADER_FILL,
+    THIN_BORDER as EXCEL_THIN_BORDER,
+)
