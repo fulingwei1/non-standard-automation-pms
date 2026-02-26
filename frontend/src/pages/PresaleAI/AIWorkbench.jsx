@@ -32,6 +32,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { presaleAIService } from '@/services/presaleAIService';
+import { presaleApi } from '@/services/api';
 import { toast } from 'sonner';
 
 const AIWorkbench = () => {
@@ -48,37 +49,23 @@ const AIWorkbench = () => {
   const loadTickets = async () => {
     try {
       setLoading(true);
-      // TODO: 实际调用API获取售前工单列表
-      const mockTickets = [
-        {
-          id: 1,
-          title: '某大型企业ERP系统集成项目',
-          customer: 'ABC集团',
-          status: 'in_progress',
-          aiProgress: 60,
-          createdAt: '2026-02-10',
-          lastUpdated: '2026-02-14',
-        },
-        {
-          id: 2,
-          title: '智能制造MES系统定制开发',
-          customer: 'XYZ制造',
-          status: 'pending',
-          aiProgress: 20,
-          createdAt: '2026-02-12',
-          lastUpdated: '2026-02-13',
-        },
-        {
-          id: 3,
-          title: '电商平台技术架构升级咨询',
-          customer: '在线商城',
-          status: 'completed',
-          aiProgress: 100,
-          createdAt: '2026-02-01',
-          lastUpdated: '2026-02-08',
-        },
-      ];
-      setTickets(mockTickets);
+      const response = await presaleApi.tickets.list({ page_size: 50 });
+      const items = response.data?.items || response.data || [];
+      // Map backend ticket fields to component's expected shape
+      const mapped = items.map((t) => ({
+        id: t.id,
+        title: t.title || t.name || '',
+        customer: t.customer_name || t.customer || '',
+        status: t.status === 'COMPLETED' || t.status === 'completed'
+          ? 'completed'
+          : t.status === 'IN_PROGRESS' || t.status === 'in_progress' || t.status === 'ACCEPTED'
+            ? 'in_progress'
+            : 'pending',
+        aiProgress: t.ai_progress ?? (t.status === 'COMPLETED' ? 100 : t.progress || 0),
+        createdAt: t.created_at ? t.created_at.split('T')[0] : '',
+        lastUpdated: t.updated_at ? t.updated_at.split('T')[0] : '',
+      }));
+      setTickets(mapped);
     } catch (error) {
       console.error('Failed to load tickets:', error);
       toast.error('加载工单失败');
