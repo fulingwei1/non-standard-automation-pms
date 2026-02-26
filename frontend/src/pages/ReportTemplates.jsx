@@ -7,7 +7,7 @@ import {  Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 export default function ReportTemplates() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [_showDialog, setShowDialog] = useState(false);
+  const [, setShowDialog] = useState(false);
 
   useEffect(() => {
     fetchTemplates();
