@@ -43,7 +43,8 @@ export default function ReportGeneration() {
         period,
         limit: 50
       });
-      setPreview(response.data);
+      const data = response.data;
+      setPreview(data);
     } catch (error) {
       console.error('预览失败:', error);
     } finally {
