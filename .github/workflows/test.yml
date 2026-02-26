@@ -45,7 +45,7 @@ jobs:
         env:
           DATABASE_URL: sqlite:///test.db
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-for-ci-32-chars-minimum-length-required
+          SECRET_KEY: test-secret-key-for-ci-at-least-32-characters-long  # 新增这行
         run: |
           python -m pytest tests/ \
             -o 'addopts=' \
