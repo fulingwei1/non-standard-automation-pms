@@ -21,7 +21,7 @@ AlertNotificationService 和 NotificationPriority。
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 from sqlalchemy.orm import Session
 

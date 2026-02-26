@@ -34,5 +34,4 @@ class ShortageReportAdapter(BaseReportAdapter):
         if hasattr(self._service, "generate_daily_report"):
             return self._service.generate_daily_report(target_date)
 
-        # Fallback
         return {"report_type": "SHORTAGE", "data": {}, "status": "adapter_fallback"}
