@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.project import FinancialProjectCost, Project, ProjectCost
+from app.models.project import FinancialProjectCost, Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """仓储管理 - 库位管理"""
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session

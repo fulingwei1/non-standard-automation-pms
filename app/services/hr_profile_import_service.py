@@ -3,7 +3,6 @@
 HR档案导入服务
 """
 
-from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd

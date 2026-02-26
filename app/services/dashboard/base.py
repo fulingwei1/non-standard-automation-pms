@@ -13,8 +13,8 @@ Dashboard 服务基类 (#26)
 
 import logging
 from dataclasses import dataclass
-from datetime import date, timedelta
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from datetime import date
+from typing import Callable, Optional, TypeVar
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session

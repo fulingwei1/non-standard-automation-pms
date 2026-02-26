@@ -10,7 +10,6 @@ import logging
 from typing import Optional
 
 from reportlab.lib import colors
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 
 logger = logging.getLogger(__name__)
 

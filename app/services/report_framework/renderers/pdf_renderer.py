@@ -25,8 +25,7 @@ from reportlab.platypus import (
 
 from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
 from app.services.report_framework.renderers.pdf_styles import (
-    FONT_PATHS as _SHARED_FONT_PATHS, register_chinese_font,
-    HEADER_BG, HEADER_TEXT, ALT_ROW_BG, BORDER_COLOR,
+    FONT_PATHS as _SHARED_FONT_PATHS,
 )
 
 

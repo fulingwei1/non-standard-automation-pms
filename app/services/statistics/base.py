@@ -12,7 +12,6 @@
 - BaseStatisticsService 使用 AsyncSession，适合异步端点
 """
 
-from abc import abstractmethod
 from datetime import date
 from typing import (
     Any,
