@@ -4,8 +4,9 @@ import { api } from "./client.js";
 
 export const taskCenterApi = {
   getOverview: () => api.get("/task-center/overview"),
-  myTasks: (params) => api.get("/task-center/my-tasks", { params }),
   getMyTasks: (params) => api.get("/task-center/my-tasks", { params }),
+  /** @deprecated Use getMyTasks instead */
+  myTasks: (params) => api.get("/task-center/my-tasks", { params }),
   getTask: (id) => api.get(`/task-center/tasks/${id}`),
   createTask: (data) => api.post("/task-center/tasks", data),
   updateTask: (id, data) => api.put(`/task-center/tasks/${id}`, data),
