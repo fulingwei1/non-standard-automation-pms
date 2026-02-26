@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { FileText, Download } from 'lucide-react';
+import { reportCenterApi } from '../services/api';
 
 export default function ReportGeneration() {
   const [templates, setTemplates] = useState([]);
@@ -21,11 +22,9 @@ export default function ReportGeneration() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/v1/reports/templates?enabled=true');
-      const result = await response.json();
-      if (result.code === 0) {
-        setTemplates(result.data.items);
-      }
+      const response = await reportCenterApi.getTemplates({ enabled: true });
+      const data = response.data;
+      setTemplates(data?.items || data || []);
     } catch (error) {
       console.error('获取模板列表失败:', error);
     }
@@ -39,13 +38,12 @@ export default function ReportGeneration() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/v1/reports/preview?template_id=${selectedTemplate}&period=${period}&limit=50`
-      );
-      const result = await response.json();
-      if (result.code === 0) {
-        setPreview(result.data);
-      }
+      const response = await reportCenterApi.previewByTemplate({
+        template_id: selectedTemplate,
+        period,
+        limit: 50
+      });
+      setPreview(response.data);
     } catch (error) {
       console.error('预览失败:', error);
     } finally {
@@ -61,21 +59,14 @@ export default function ReportGeneration() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/reports/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template_id: parseInt(selectedTemplate),
-          period
-        })
+      await reportCenterApi.generate({
+        template_id: parseInt(selectedTemplate),
+        period
       });
-      const result = await response.json();
-      if (result.code === 0) {
-        alert('报表生成成功！');
-        // 可以下载或跳转到归档页面
-      }
+      alert('报表生成成功！');
     } catch (error) {
       console.error('生成失败:', error);
+      alert('生成失败: ' + (error.response?.data?.detail || '请稍后重试'));
     } finally {
       setLoading(false);
     }
