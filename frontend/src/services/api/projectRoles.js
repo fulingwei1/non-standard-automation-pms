@@ -50,43 +50,5 @@ export const projectRoleApi = {
     api.get(`/projects/${projectId}/roles/overview`),
 };
 
-export const projectRolesApi = {
-  // 项目角色配置
-  roleConfigs: {
-    list: (projectId) => api.get(`/projects/${projectId}/roles/configs`),
-    init: (projectId) =>
-      api.post(`/projects/${projectId}/roles/configs/init`),
-    batchUpdate: (projectId, data) =>
-      api.put(`/projects/${projectId}/roles/configs`, data),
-  },
-  // 项目负责人
-  leads: {
-    list: (projectId, includeTeam = false) =>
-      api.get(`/projects/${projectId}/roles/leads`, {
-        params: { include_team: includeTeam },
-      }),
-    create: (projectId, data) =>
-      api.post(`/projects/${projectId}/roles/leads`, data),
-    update: (projectId, memberId, data) =>
-      api.put(`/projects/${projectId}/roles/leads/${memberId}`, data),
-    delete: (projectId, memberId) =>
-      api.delete(`/projects/${projectId}/roles/leads/${memberId}`),
-  },
-  // 团队成员
-  teamMembers: {
-    list: (projectId, leadId) =>
-      api.get(`/projects/${projectId}/roles/leads/${leadId}/team`),
-    create: (projectId, leadId, data) =>
-      api.post(
-        `/projects/${projectId}/roles/leads/${leadId}/team`,
-        data,
-      ),
-    delete: (projectId, leadId, memberId) =>
-      api.delete(
-        `/projects/${projectId}/roles/leads/${leadId}/team/${memberId}`,
-      ),
-  },
-  // 角色概览
-  getRoleOverview: (projectId) =>
-    api.get(`/projects/${projectId}/roles/overview`),
-};
+/** @deprecated Use projectRoleApi instead */
+export const projectRolesApi = projectRoleApi;
