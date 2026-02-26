@@ -4,6 +4,7 @@ import { managementRhythmApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card, CardContent, Badge, Button } from "../components/ui";
 import {
+import { formatDate } from "@/lib/formatters";
   Calendar,
   Filter,
   Target,
@@ -73,14 +74,6 @@ export default function MeetingMap() {
     setSearchParams(params);
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
 
   const formatTime = (timeStr) => {
     if (!timeStr) {return "";}

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, Badge, Button } from "../ui";
 import { cn } from "../../lib/utils";
+import { formatDate } from "@/lib/formatters";
 
 const contentTypeConfig = {
   STRATEGY: {
@@ -168,15 +169,6 @@ export default function CultureWallCarousel({
     return items;
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
 
   const renderContentItem = (item) => {
     const config = contentTypeConfig[item.content_type || item.category];

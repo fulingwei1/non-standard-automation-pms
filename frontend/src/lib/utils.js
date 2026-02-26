@@ -9,23 +9,7 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Format date string to localized format
- */
-export function formatDate(date, options = {}) {
-  if (!date) {return "";}
-  const d = new Date(date);
-  if (isNaN(d.getTime())) {return date;}
-
-  const defaultOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    ...options,
-  };
-
-  return d.toLocaleDateString("zh-CN", defaultOptions);
-}
+// formatDate re-exported from formatters
 
 /**
  * Format currency value

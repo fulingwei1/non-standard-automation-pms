@@ -11,6 +11,7 @@ import {
   SkeletonCard,
 } from "../components/ui";
 import {
+import { formatDate } from "@/lib/formatters";
   Target,
   TrendingUp,
   Settings,
@@ -89,15 +90,6 @@ export default function ManagementRhythmDashboard() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
 
   const calculateDaysUntil = (dateStr) => {
     if (!dateStr) {return null;}

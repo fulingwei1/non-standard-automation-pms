@@ -72,6 +72,7 @@ import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
 
 import { useApprovalCenter, APPROVAL_TABS } from "./ApprovalCenter/hooks/useApprovalCenter";
+import { formatDateTime } from "@/lib/formatters";
 
 /**
  * 紧急程度配置
@@ -105,16 +106,6 @@ const ENTITY_TYPE_CONFIG = {
 /**
  * 格式化日期时间
  */
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const ApprovalCenter = () => {
   const navigate = useNavigate();
