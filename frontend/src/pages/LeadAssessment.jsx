@@ -85,6 +85,8 @@ import {
   FollowUpManager } from
 '../components/lead-assessment';
 
+import { leadApi } from '../services/api/sales';
+
 import {
   LEAD_SOURCES,
   LEAD_STATUS,
@@ -118,62 +120,9 @@ const LeadAssessment = () => {
   const [searchText, setSearchText] = useState('');
   const [showAssessmentModal, setShowAssessmentModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
-
-  // 模拟数据
-  const mockData = {
-    leads: [
-    {
-      id: 1,
-      companyName: '智能制造科技有限公司',
-      contactPerson: '张总',
-      position: 'CEO',
-      phone: '13800138000',
-      email: 'zhang@smartmanufacturing.com',
-      industry: 'manufacturing',
-      companySize: 'medium',
-      source: 'referral',
-      status: 'contacted',
-      qualification: 'hot',
-      score: 85,
-      budget: 'high',
-      authority: 'ceo',
-      need: 'urgent',
-      timeline: 'immediate',
-      address: '北京市海淀区',
-      createdAt: '2024-01-15',
-      lastContact: '2024-01-18',
-      description: '需要智能制造解决方案，预算充足，决策者直接对接'
-    }
-    // 更多模拟数据...
-    ],
-    followUps: [
-    {
-      id: 1,
-      leadId: 1,
-      leadCompany: '智能制造科技有限公司',
-      type: 'meeting',
-      description: '商务洽谈',
-      dueDate: '2024-01-25',
-      status: 'pending'
-    }],
-
-    overdueFollowUps: [
-    {
-      id: 2,
-      leadId: 2,
-      leadCompany: '绿色能源公司',
-      type: 'call',
-      description: '电话跟进',
-      dueDate: '2024-01-15',
-      status: 'overdue'
-    }],
-
-    monthlyStats: {
-      growth: 12.5,
-      newLeads: 45,
-      convertedLeads: 8
-    }
-  };
+  const [followUps, setFollowUps] = useState([]);
+  const [overdueFollowUps, setOverdueFollowUps] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState({ growth: 0, newLeads: 0, convertedLeads: 0 });
 
   // 数据加载
   useEffect(() => {
@@ -183,13 +132,85 @@ const LeadAssessment = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setLeads(mockData.leads);
-        setLoading(false);
-      }, 1000);
+      // 获取线索列表
+      const leadsRes = await leadApi.list({
+        source: filters.source || undefined,
+        status: filters.status || undefined,
+        qualification: filters.qualification || undefined,
+        industry: filters.industry || undefined,
+      });
+      const leadsData = leadsRes.data?.items || leadsRes.data || [];
+      // 将后端字段映射到前端字段
+      const mappedLeads = leadsData.map((lead) => ({
+        id: lead.id,
+        companyName: lead.company_name || lead.companyName || '',
+        contactPerson: lead.contact_person || lead.contactPerson || '',
+        position: lead.position || '',
+        phone: lead.phone || '',
+        email: lead.email || '',
+        industry: lead.industry || '',
+        companySize: lead.company_size || lead.companySize || '',
+        source: lead.source || '',
+        status: lead.status?.toLowerCase() || '',
+        qualification: lead.qualification?.toLowerCase() || '',
+        score: lead.score || 0,
+        budget: lead.budget || '',
+        authority: lead.authority || '',
+        need: lead.need || '',
+        timeline: lead.timeline || '',
+        address: lead.address || '',
+        createdAt: lead.created_at || lead.createdAt || '',
+        lastContact: lead.last_contact || lead.lastContact || '',
+        description: lead.description || '',
+      }));
+      setLeads(mappedLeads);
+
+      // 获取所有线索的跟进记录
+      const allFollowUps = [];
+      for (const lead of mappedLeads.slice(0, 20)) { // 限制请求数
+        try {
+          const fuRes = await leadApi.getFollowUps(lead.id);
+          const fuData = fuRes.data?.items || fuRes.data || [];
+          fuData.forEach((fu) => {
+            allFollowUps.push({
+              id: fu.id,
+              leadId: lead.id,
+              leadCompany: lead.companyName,
+              type: fu.type || fu.follow_up_type || 'call',
+              description: fu.description || fu.content || '',
+              dueDate: fu.due_date || fu.dueDate || '',
+              status: fu.status?.toLowerCase() || 'pending',
+            });
+          });
+        } catch (_e) { /* skip individual failures */ }
+      }
+      const now = new Date();
+      setFollowUps(allFollowUps.filter((fu) => fu.status !== 'overdue'));
+      setOverdueFollowUps(allFollowUps.filter((fu) => {
+        if (fu.status === 'overdue') return true;
+        return fu.dueDate && new Date(fu.dueDate) < now && fu.status === 'pending';
+      }));
+
+      // 计算月度统计（前端聚合）
+      const thisMonth = new Date();
+      const lastMonth = new Date(thisMonth);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const thisMonthStr = `${thisMonth.getFullYear()}-${String(thisMonth.getMonth() + 1).padStart(2, '0')}`;
+      const lastMonthStr = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+      const thisMonthLeads = mappedLeads.filter((l) => (l.createdAt || '').startsWith(thisMonthStr));
+      const lastMonthLeads = mappedLeads.filter((l) => (l.createdAt || '').startsWith(lastMonthStr));
+      const convertedLeads = mappedLeads.filter((l) => l.status === 'converted' || l.qualification === 'converted');
+      const growth = lastMonthLeads.length > 0
+        ? ((thisMonthLeads.length - lastMonthLeads.length) / lastMonthLeads.length * 100)
+        : 0;
+      setMonthlyStats({
+        growth: parseFloat(growth.toFixed(1)),
+        newLeads: thisMonthLeads.length,
+        convertedLeads: convertedLeads.length,
+      });
     } catch (_error) {
       message.error('加载数据失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -226,14 +247,12 @@ const LeadAssessment = () => {
   const handleDeleteLead = async (leadId) => {
     try {
       setLoading(true);
-      // 模拟删除API调用
-      setTimeout(() => {
-        setLeads(leads.filter((l) => l.id !== leadId));
-        message.success('删除成功');
-        setLoading(false);
-      }, 500);
+      await leadApi.update(leadId, { status: 'INVALID' });
+      setLeads(leads.filter((l) => l.id !== leadId));
+      message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -579,7 +598,7 @@ const LeadAssessment = () => {
           key="overview">
 
           <LeadOverview
-            data={mockData}
+            data={{ leads, followUps, overdueFollowUps, monthlyStats }}
             loading={loading}
             onNavigate={(type, _value) => {
               if (type === 'hot-leads') {
@@ -672,7 +691,7 @@ const LeadAssessment = () => {
           key="followups">
 
           <FollowUpManager
-            followUps={mockData.followUps}
+            followUps={[...followUps, ...overdueFollowUps]}
             leads={leads}
             loading={loading}
             onRefresh={loadData} />
