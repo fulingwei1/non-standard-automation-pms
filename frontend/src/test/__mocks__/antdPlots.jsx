@@ -6,7 +6,7 @@ import React from 'react';
 
 // Mock 所有图表组件，返回简单的 div 用于测试
 const createMockChart = (chartType) => {
-  return function MockChart({ data = [], ...props }) {
+  return function MockChart({ data = [], ..._props }) {
     return (
       <div
         data-testid={`${chartType}-chart`}

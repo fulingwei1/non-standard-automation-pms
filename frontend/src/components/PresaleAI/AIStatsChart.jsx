@@ -127,7 +127,7 @@ const AIStatsChart = ({
           </ResponsiveContainer>
         );
 
-      case 'multiline':
+      case 'multiline': {
         // 支持多条线
         const keys = Object.keys(data[0] || {}).filter((k) => k !== xKey);
         return (
@@ -151,7 +151,7 @@ const AIStatsChart = ({
             </LineChart>
           </ResponsiveContainer>
         );
-
+      }
       default:
         return null;
     }
