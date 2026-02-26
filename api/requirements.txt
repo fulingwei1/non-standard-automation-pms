@@ -9,6 +9,7 @@ psycopg2-binary==2.9.9  # PostgreSQL 驱动
 # 配置和验证
 pydantic==2.9.2
 pydantic-settings==2.5.2
+email-validator>=2.0.0  # required for pydantic EmailStr
 
 # 安全认证
 python-jose[cryptography]==3.4.0
