@@ -66,6 +66,7 @@ export default defineConfig([
   {
     files: [
       'vite.config.js',
+      'vitest.config.js',
       'postcss.config.js',
       'tailwind.config.js',
       'scripts/**/*.{js,jsx}',
@@ -89,6 +90,46 @@ export default defineConfig([
         },
       ],
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.{test,spec}.{js,jsx}', 'src/test/**/*.{js,jsx}'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        global: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+        MockAdapter: 'readonly',
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|_).*',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'react-hooks/globals': 'off',
     },
   },
 ])
