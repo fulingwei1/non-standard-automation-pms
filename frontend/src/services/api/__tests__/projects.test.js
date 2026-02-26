@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('Projects API', () => {
-  let api, mock;
+  let _api, mock;
   let projectApi, machineApi, stageApi, milestoneApi, memberApi, costApi;
   let financialCostApi, projectWorkspaceApi, projectContributionApi;
 
@@ -233,7 +233,7 @@ describe('Projects API', () => {
         data: ['ACTIVE', 'COMPLETED'],
       });
 
-      const response = await stageApi.statuses(1);
+      const _response = await stageApi.statuses(1);
 
       expect(mock.history.get[0].params).toEqual({ stage_id: 1 });
     });

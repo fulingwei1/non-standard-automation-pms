@@ -285,7 +285,7 @@ describe("logger", () => {
     it("should execute function even if grouping is not available", () => {
       const mockFn = vi.fn(() => "result");
 
-      const result = group("Group", mockFn);
+      const _result = group("Group", mockFn);
 
       expect(mockFn).toHaveBeenCalled();
       // group doesn't return the function result in current implementation

@@ -5,10 +5,8 @@ import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { 
-  formatCurrency, 
   formatCurrencyWan, 
   formatPercent, 
-  getCostStatus,
   getCostProgressColor 
 } from "../lib/utils/cost";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -59,7 +57,6 @@ const staggerChild = {
 // Project Card Component with Cost
 function ProjectCardWithCost({ project, onClick, onViewCostDetail, showCost }) {
   const costSummary = project?.cost_summary;
-  const costStatus = getCostStatus(costSummary);
 
   return (
     <motion.div variants={staggerChild}>
