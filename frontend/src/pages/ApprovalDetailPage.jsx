@@ -33,6 +33,7 @@ import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
 import ApprovalTimeline from "../components/approval/ApprovalTimeline";
 import { api } from "../services/api/client";
+import { formatDateTime } from "@/lib/formatters";
 
 /**
  * 紧急程度配置
@@ -68,17 +69,6 @@ const ENTITY_TYPE_CONFIG = {
 /**
  * 格式化日期时间
  */
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const ApprovalDetailPage = () => {
   const { id } = useParams();
