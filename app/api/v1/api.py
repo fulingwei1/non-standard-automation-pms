@@ -188,6 +188,7 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 报表框架模块加载失败: {e}")
     
+
     # ==================== 仓储管理 ====================
     try:
         from app.api.v1.endpoints.warehouse import router as warehouse_router

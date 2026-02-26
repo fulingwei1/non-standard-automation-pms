@@ -4,82 +4,57 @@
 """
 
 from sqlalchemy import (
-    Boolean,
-    Column,
-    Date,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    Text,
+    Boolean, Column, Date, DateTime, ForeignKey, Index,
+    Integer, Numeric, String, Text,
 )
 from sqlalchemy.orm import relationship
-
 from .base import Base, TimestampMixin
 
 
 class Warehouse(Base, TimestampMixin):
-    """仓库表"""
     __tablename__ = 'warehouses'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     warehouse_code = Column(String(50), unique=True, nullable=False, comment='仓库编码')
     warehouse_name = Column(String(200), nullable=False, comment='仓库名称')
-    warehouse_type = Column(String(50), default='NORMAL', comment='仓库类型: NORMAL/TEMPORARY/VIRTUAL')
+    warehouse_type = Column(String(50), default='NORMAL', comment='仓库类型')
     address = Column(String(500), comment='地址')
     manager = Column(String(100), comment='负责人')
     contact_phone = Column(String(50), comment='联系电话')
     capacity = Column(Numeric(12, 2), comment='容量')
     description = Column(Text, comment='描述')
     is_active = Column(Boolean, default=True, comment='是否启用')
-
     locations = relationship('WarehouseLocation', back_populates='warehouse')
-
-    def __repr__(self):
-        return f'<Warehouse {self.warehouse_code}>'
 
 
 class WarehouseLocation(Base, TimestampMixin):
-    """库位表"""
     __tablename__ = 'warehouse_locations'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False, comment='仓库ID')
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
     location_code = Column(String(50), nullable=False, comment='库位编码')
     location_name = Column(String(200), comment='库位名称')
-    zone = Column(String(50), comment='区域: A/B/C...')
+    zone = Column(String(50), comment='区域')
     aisle = Column(String(20), comment='通道')
     shelf = Column(String(20), comment='货架')
     level = Column(String(20), comment='层')
     position = Column(String(20), comment='位')
     capacity = Column(Numeric(12, 2), comment='容量')
-    location_type = Column(String(50), default='STORAGE', comment='类型: STORAGE/PICKING/STAGING/RETURN')
+    location_type = Column(String(50), default='STORAGE', comment='类型')
     is_active = Column(Boolean, default=True, comment='是否启用')
-
     warehouse = relationship('Warehouse', back_populates='locations')
-
     __table_args__ = (
         Index('ix_warehouse_location_code', 'warehouse_id', 'location_code', unique=True),
     )
 
-    def __repr__(self):
-        return f'<WarehouseLocation {self.location_code}>'
-
 
 class InboundOrder(Base, TimestampMixin):
-    """入库单"""
     __tablename__ = 'inbound_orders'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment='入库单号')
-    order_type = Column(String(50), default='PURCHASE', comment='入库类型: PURCHASE/RETURN/TRANSFER/OTHER')
+    order_type = Column(String(50), default='PURCHASE', comment='入库类型')
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'), comment='目标仓库ID')
-    source_no = Column(String(50), comment='来源单号(采购单号等)')
+    source_no = Column(String(50), comment='来源单号')
     supplier_name = Column(String(200), comment='供应商名称')
-    status = Column(String(20), default='DRAFT', comment='状态: DRAFT/PENDING/RECEIVING/COMPLETED/CANCELLED')
+    status = Column(String(20), default='DRAFT', comment='状态')
     planned_date = Column(Date, comment='计划入库日期')
     actual_date = Column(Date, comment='实际入库日期')
     operator = Column(String(100), comment='操作员')
@@ -87,19 +62,13 @@ class InboundOrder(Base, TimestampMixin):
     total_quantity = Column(Numeric(12, 2), default=0, comment='总数量')
     received_quantity = Column(Numeric(12, 2), default=0, comment='已收数量')
     created_by = Column(Integer, comment='创建人ID')
-
     items = relationship('InboundOrderItem', back_populates='order', cascade='all, delete-orphan')
-
-    def __repr__(self):
-        return f'<InboundOrder {self.order_no}>'
 
 
 class InboundOrderItem(Base, TimestampMixin):
-    """入库单明细"""
     __tablename__ = 'inbound_order_items'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey('inbound_orders.id'), nullable=False, comment='入库单ID')
+    order_id = Column(Integer, ForeignKey('inbound_orders.id'), nullable=False)
     material_code = Column(String(50), nullable=False, comment='物料编码')
     material_name = Column(String(200), comment='物料名称')
     specification = Column(String(500), comment='规格型号')
@@ -108,21 +77,18 @@ class InboundOrderItem(Base, TimestampMixin):
     received_quantity = Column(Numeric(12, 2), default=0, comment='实收数量')
     location_id = Column(Integer, ForeignKey('warehouse_locations.id'), comment='目标库位ID')
     remark = Column(Text, comment='备注')
-
     order = relationship('InboundOrder', back_populates='items')
 
 
 class OutboundOrder(Base, TimestampMixin):
-    """出库单"""
     __tablename__ = 'outbound_orders'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment='出库单号')
-    order_type = Column(String(50), default='PRODUCTION', comment='出库类型: PRODUCTION/SALES/TRANSFER/SCRAP/OTHER')
+    order_type = Column(String(50), default='PRODUCTION', comment='出库类型')
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'), comment='来源仓库ID')
-    target_no = Column(String(50), comment='目标单号(工单号等)')
+    target_no = Column(String(50), comment='目标单号')
     department = Column(String(200), comment='领料部门')
-    status = Column(String(20), default='DRAFT', comment='状态: DRAFT/PENDING/PICKING/COMPLETED/CANCELLED')
+    status = Column(String(20), default='DRAFT', comment='状态')
     planned_date = Column(Date, comment='计划出库日期')
     actual_date = Column(Date, comment='实际出库日期')
     operator = Column(String(100), comment='操作员')
@@ -131,19 +97,13 @@ class OutboundOrder(Base, TimestampMixin):
     picked_quantity = Column(Numeric(12, 2), default=0, comment='已拣数量')
     created_by = Column(Integer, comment='创建人ID')
     is_urgent = Column(Boolean, default=False, comment='是否紧急')
-
     items = relationship('OutboundOrderItem', back_populates='order', cascade='all, delete-orphan')
-
-    def __repr__(self):
-        return f'<OutboundOrder {self.order_no}>'
 
 
 class OutboundOrderItem(Base, TimestampMixin):
-    """出库单明细"""
     __tablename__ = 'outbound_order_items'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey('outbound_orders.id'), nullable=False, comment='出库单ID')
+    order_id = Column(Integer, ForeignKey('outbound_orders.id'), nullable=False)
     material_code = Column(String(50), nullable=False, comment='物料编码')
     material_name = Column(String(200), comment='物料名称')
     specification = Column(String(500), comment='规格型号')
@@ -152,16 +112,13 @@ class OutboundOrderItem(Base, TimestampMixin):
     picked_quantity = Column(Numeric(12, 2), default=0, comment='实拣数量')
     location_id = Column(Integer, ForeignKey('warehouse_locations.id'), comment='来源库位ID')
     remark = Column(Text, comment='备注')
-
     order = relationship('OutboundOrder', back_populates='items')
 
 
 class Inventory(Base, TimestampMixin):
-    """库存表"""
     __tablename__ = 'inventory'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False, comment='仓库ID')
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
     location_id = Column(Integer, ForeignKey('warehouse_locations.id'), comment='库位ID')
     material_code = Column(String(50), nullable=False, comment='物料编码')
     material_name = Column(String(200), comment='物料名称')
@@ -175,24 +132,18 @@ class Inventory(Base, TimestampMixin):
     batch_no = Column(String(100), comment='批次号')
     last_inbound_date = Column(DateTime, comment='最后入库时间')
     last_outbound_date = Column(DateTime, comment='最后出库时间')
-
     __table_args__ = (
         Index('ix_inventory_material', 'warehouse_id', 'material_code', 'batch_no'),
     )
 
-    def __repr__(self):
-        return f'<Inventory {self.material_code} qty={self.quantity}>'
-
 
 class StockCountOrder(Base, TimestampMixin):
-    """盘点单"""
     __tablename__ = 'stock_count_orders'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
     count_no = Column(String(50), unique=True, nullable=False, comment='盘点单号')
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'), comment='仓库ID')
-    count_type = Column(String(50), default='FULL', comment='盘点类型: FULL/PARTIAL/CYCLE')
-    status = Column(String(20), default='DRAFT', comment='状态: DRAFT/IN_PROGRESS/COMPLETED/CANCELLED')
+    count_type = Column(String(50), default='FULL', comment='盘点类型')
+    status = Column(String(20), default='DRAFT', comment='状态')
     planned_date = Column(Date, comment='计划盘点日期')
     actual_date = Column(Date, comment='实际盘点日期')
     operator = Column(String(100), comment='盘点员')
@@ -201,19 +152,13 @@ class StockCountOrder(Base, TimestampMixin):
     matched_items = Column(Integer, default=0, comment='一致项数')
     diff_items = Column(Integer, default=0, comment='差异项数')
     created_by = Column(Integer, comment='创建人ID')
-
     items = relationship('StockCountItem', back_populates='order', cascade='all, delete-orphan')
-
-    def __repr__(self):
-        return f'<StockCountOrder {self.count_no}>'
 
 
 class StockCountItem(Base, TimestampMixin):
-    """盘点明细"""
     __tablename__ = 'stock_count_items'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_id = Column(Integer, ForeignKey('stock_count_orders.id'), nullable=False, comment='盘点单ID')
+    order_id = Column(Integer, ForeignKey('stock_count_orders.id'), nullable=False)
     material_code = Column(String(50), nullable=False, comment='物料编码')
     material_name = Column(String(200), comment='物料名称')
     location_id = Column(Integer, ForeignKey('warehouse_locations.id'), comment='库位ID')
@@ -221,5 +166,4 @@ class StockCountItem(Base, TimestampMixin):
     actual_quantity = Column(Numeric(12, 2), comment='实盘数量')
     diff_quantity = Column(Numeric(12, 2), comment='差异数量')
     diff_reason = Column(Text, comment='差异原因')
-
     order = relationship('StockCountOrder', back_populates='items')
