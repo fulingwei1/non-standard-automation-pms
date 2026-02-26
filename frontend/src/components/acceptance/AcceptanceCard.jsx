@@ -2,11 +2,18 @@
  * 验收卡片组件
  */
 
+import { motion } from "framer-motion";
 import {
-  Clock
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  Eye
 } from "lucide-react";
 
-
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs } from "./acceptanceConfig";
 
