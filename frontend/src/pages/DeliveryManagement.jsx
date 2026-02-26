@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Truck,
@@ -162,9 +162,200 @@ const normalizeDelivery = (item = {}) => {
   };
 };
 
+// 发货单详情子视图
+const DeliveryDetail = ({ id, onBack }) => {
+  const [loading, setLoading] = useState(false);
+  const [detail, setDetail] = useState(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    businessSupportApi.deliveryOrders.get(id)
+      .then(res => {
+        const data = res?.data?.data || res?.data || {};
+        setDetail(data);
+      })
+      .catch(() => message.error('加载发货单详情失败'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <Spin size="large" style={{ display: 'block', margin: '80px auto' }} />;
+  if (!detail) return <Alert message="发货单不存在" type="warning" />;
+
+  return (
+    <Card
+      title={`发货单详情 - ${detail.delivery_no || ''}`}
+      extra={<Button onClick={onBack}>返回列表</Button>}
+    >
+      <Row gutter={[24, 16]}>
+        <Col span={8}><Text type="secondary">发货单号</Text><br /><Text strong>{detail.delivery_no}</Text></Col>
+        <Col span={8}><Text type="secondary">订单号</Text><br /><Text strong>{detail.order_no}</Text></Col>
+        <Col span={8}><Text type="secondary">客户名称</Text><br /><Text strong>{detail.customer_name}</Text></Col>
+        <Col span={8}><Text type="secondary">发货日期</Text><br /><Text>{detail.delivery_date || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">发货类型</Text><br /><Text>{detail.delivery_type || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">物流公司</Text><br /><Text>{detail.logistics_company || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">物流单号</Text><br /><Text>{detail.tracking_no || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">收货人</Text><br /><Text>{detail.receiver_name || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">联系电话</Text><br /><Text>{detail.receiver_phone || '-'}</Text></Col>
+        <Col span={24}><Text type="secondary">收货地址</Text><br /><Text>{detail.receiver_address || '-'}</Text></Col>
+        <Col span={8}><Text type="secondary">发货金额</Text><br /><Text>{detail.delivery_amount ?? '-'}</Text></Col>
+        <Col span={8}>
+          <Text type="secondary">审批状态</Text><br />
+          <Tag color={detail.approval_status === 'approved' ? 'green' : detail.approval_status === 'rejected' ? 'red' : 'orange'}>
+            {detail.approval_status || '-'}
+          </Tag>
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">发货状态</Text><br />
+          <Tag color={detail.delivery_status === 'shipped' ? 'blue' : detail.delivery_status === 'received' ? 'green' : 'default'}>
+            {detail.delivery_status || '-'}
+          </Tag>
+        </Col>
+        <Col span={24}><Text type="secondary">备注</Text><br /><Text>{detail.remark || '-'}</Text></Col>
+      </Row>
+    </Card>
+  );
+};
+
+// 发货单编辑/新建表单
+const DeliveryForm = ({ id, onBack }) => {
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    order_id: '',
+    delivery_date: '',
+    delivery_type: '',
+    logistics_company: '',
+    tracking_no: '',
+    receiver_name: '',
+    receiver_phone: '',
+    receiver_address: '',
+    delivery_amount: '',
+    remark: '',
+  });
+
+  const isEdit = Boolean(id);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    businessSupportApi.deliveryOrders.get(id)
+      .then(res => {
+        const data = res?.data?.data || res?.data || {};
+        setFormData({
+          order_id: data.order_id || '',
+          delivery_date: data.delivery_date || '',
+          delivery_type: data.delivery_type || '',
+          logistics_company: data.logistics_company || '',
+          tracking_no: data.tracking_no || '',
+          receiver_name: data.receiver_name || '',
+          receiver_phone: data.receiver_phone || '',
+          receiver_address: data.receiver_address || '',
+          delivery_amount: data.delivery_amount || '',
+          remark: data.remark || '',
+        });
+      })
+      .catch(() => message.error('加载发货单数据失败'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const handleSubmit = async () => {
+    if (!formData.order_id) {
+      message.warning('请填写销售订单ID');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (isEdit) {
+        await businessSupportApi.deliveryOrders.update(id, formData);
+        message.success('更新成功');
+      } else {
+        await businessSupportApi.deliveryOrders.create(formData);
+        message.success('创建成功');
+      }
+      onBack();
+    } catch (err) {
+      message.error(isEdit ? '更新失败' : '创建失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const updateField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
+  if (loading) return <Spin size="large" style={{ display: 'block', margin: '80px auto' }} />;
+
+  return (
+    <Card
+      title={isEdit ? '编辑发货单' : '新建发货单'}
+      extra={<Space><Button onClick={onBack}>取消</Button><Button type="primary" loading={submitting} onClick={handleSubmit}>保存</Button></Space>}
+    >
+      <Row gutter={[24, 16]}>
+        <Col span={8}>
+          <Text type="secondary">销售订单ID *</Text>
+          <Input value={formData.order_id} onChange={e => updateField('order_id', e.target.value)} placeholder="输入销售订单ID" />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">发货日期</Text>
+          <Input type="date" value={formData.delivery_date} onChange={e => updateField('delivery_date', e.target.value)} />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">发货类型</Text>
+          <Select value={formData.delivery_type || undefined} onChange={v => updateField('delivery_type', v)} placeholder="选择类型" style={{ width: '100%' }}>
+            <Select.Option value="standard">标准发货</Select.Option>
+            <Select.Option value="express">加急发货</Select.Option>
+            <Select.Option value="freight">物流发货</Select.Option>
+            <Select.Option value="self_pickup">自提</Select.Option>
+          </Select>
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">物流公司</Text>
+          <Input value={formData.logistics_company} onChange={e => updateField('logistics_company', e.target.value)} placeholder="物流公司名称" />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">物流单号</Text>
+          <Input value={formData.tracking_no} onChange={e => updateField('tracking_no', e.target.value)} placeholder="物流单号" />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">发货金额</Text>
+          <Input type="number" value={formData.delivery_amount} onChange={e => updateField('delivery_amount', e.target.value)} placeholder="金额" />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">收货人</Text>
+          <Input value={formData.receiver_name} onChange={e => updateField('receiver_name', e.target.value)} placeholder="收货人姓名" />
+        </Col>
+        <Col span={8}>
+          <Text type="secondary">联系电话</Text>
+          <Input value={formData.receiver_phone} onChange={e => updateField('receiver_phone', e.target.value)} placeholder="联系电话" />
+        </Col>
+        <Col span={24}>
+          <Text type="secondary">收货地址</Text>
+          <Input value={formData.receiver_address} onChange={e => updateField('receiver_address', e.target.value)} placeholder="收货地址" />
+        </Col>
+        <Col span={24}>
+          <Text type="secondary">备注</Text>
+          <Input.TextArea rows={3} value={formData.remark} onChange={e => updateField('remark', e.target.value)} placeholder="备注信息" />
+        </Col>
+      </Row>
+    </Card>
+  );
+};
+
 const DeliveryManagement = () => {
   const [_searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const params = useParams();
+  const location = useLocation();
+
+  // 判断当前视图模式
+  const getViewMode = () => {
+    const path = location.pathname;
+    if (path.endsWith('/new')) return 'create';
+    if (path.endsWith('/edit')) return 'edit';
+    if (params.id && !path.endsWith('/edit')) return 'detail';
+    return 'list';
+  };
+  const viewMode = getViewMode();
 
   // 状态管理
   const [loading, setLoading] = useState(false);
@@ -175,8 +366,8 @@ const DeliveryManagement = () => {
 
   // 数据加载
   useEffect(() => {
-    loadData();
-  }, [activeTab]);
+    if (viewMode === 'list') loadData();
+  }, [activeTab, viewMode]);
 
   const loadData = async () => {
      setLoading(true);
@@ -240,6 +431,33 @@ const DeliveryManagement = () => {
   }];
 
 
+  // 子视图渲染
+  const handleBack = () => navigate('/pmc/delivery-orders');
+
+  if (viewMode === 'detail') {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+        <DeliveryDetail id={params.id} onBack={handleBack} />
+      </motion.div>
+    );
+  }
+
+  if (viewMode === 'edit') {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+        <DeliveryForm id={params.id} onBack={handleBack} />
+      </motion.div>
+    );
+  }
+
+  if (viewMode === 'create') {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+        <DeliveryForm onBack={handleBack} />
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -264,7 +482,7 @@ const DeliveryManagement = () => {
             <Button
               type="primary"
               icon={<Plus size={16} />}
-              onClick={() => navigate('/deliveries/create')}>
+              onClick={() => navigate('/pmc/delivery-orders/new')}>
 
               创建发货单
             </Button>

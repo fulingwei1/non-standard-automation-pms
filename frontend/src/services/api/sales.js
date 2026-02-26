@@ -393,3 +393,11 @@ export const crossAnalysisApi = {
   getCrossDimension: (params) =>
     api.get("/sales/analysis/cross-dimension", { params }),
 };
+
+export const quoteDeliveryApi = {
+  get: (quoteId) => api.get(`/sales/quotes/${quoteId}/delivery`),
+  update: (quoteId, data) => api.put(`/sales/quotes/${quoteId}/delivery`, data),
+  upcoming: (params) => api.get("/sales/quotes/delivery/upcoming", { params }),
+  overdue: () => api.get("/sales/quotes/delivery/overdue"),
+  calendar: (params) => api.get("/sales/quotes/delivery/calendar", { params }),
+};
