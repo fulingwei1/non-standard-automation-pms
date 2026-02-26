@@ -234,7 +234,7 @@ export default function ProjectStageView() {
   } = useStageViews();
 
   // 操作 Hook
-  const stageActions = useStageActions();
+  const stageActions = useStageActions(selectedProjectId);
 
   /**
    * 处理项目选择（从流水线视图进入详情视图）

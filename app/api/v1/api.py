@@ -188,6 +188,31 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 报表框架模块加载失败: {e}")
     
+
+    # ==================== 任务中心 ====================
+    try:
+        from app.api.v1.endpoints.task_center import router as task_center_router
+        api_router.include_router(task_center_router, prefix="/task-center", tags=["task-center"])
+        print("✓ 任务中心模块加载成功")
+    except Exception as e:
+        print(f"✗ 任务中心模块加载失败: {e}")
+    
+    # ==================== 阶段模板管理 ====================
+    try:
+        from app.api.v1.endpoints.stage_templates import router as stage_templates_router
+        api_router.include_router(stage_templates_router, prefix="/stage-templates", tags=["stage-templates"])
+        print("✓ 阶段模板管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 阶段模板管理模块加载失败: {e}")
+    
+    # ==================== 节点子任务 ====================
+    try:
+        from app.api.v1.endpoints.node_tasks import router as node_tasks_router
+        api_router.include_router(node_tasks_router, prefix="/node-tasks", tags=["node-tasks"])
+        print("✓ 节点子任务模块加载成功")
+    except Exception as e:
+        print(f"✗ 节点子任务模块加载失败: {e}")
+    
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
