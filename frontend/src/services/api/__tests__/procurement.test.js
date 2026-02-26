@@ -6,7 +6,8 @@
  * - procurementAnalysisApi: 采购分析
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import MockAdapter from 'axios-mock-adapter';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Procurement API', () => {

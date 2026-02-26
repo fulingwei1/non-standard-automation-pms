@@ -1,0 +1,181 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VirtualizedList > Snapshot > matches snapshot with custom className 1`] = `
+<div
+  class="overflow-auto custom-virtualized-list"
+  style="height: 300px;"
+>
+  <div
+    style="height: 250px; position: relative;"
+  >
+    <div
+      style="transform: translateY(0px);"
+    >
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-0"
+        >
+          Item 0
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-1"
+        >
+          Item 1
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-2"
+        >
+          Item 2
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-3"
+        >
+          Item 3
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-4"
+        >
+          Item 4
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`VirtualizedList > Snapshot > matches snapshot with empty state 1`] = `
+<div
+  class="flex items-center justify-center"
+  style="height: 300px;"
+>
+  <p
+    class="text-slate-500"
+  >
+    暂无数据
+  </p>
+</div>
+`;
+
+exports[`VirtualizedList > Snapshot > matches snapshot with items 1`] = `
+<div
+  class="overflow-auto"
+  style="height: 300px;"
+>
+  <div
+    style="height: 500px; position: relative;"
+  >
+    <div
+      style="transform: translateY(0px);"
+    >
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-0"
+        >
+          Item 0
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-1"
+        >
+          Item 1
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-2"
+        >
+          Item 2
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-3"
+        >
+          Item 3
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-4"
+        >
+          Item 4
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-5"
+        >
+          Item 5
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-6"
+        >
+          Item 6
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-7"
+        >
+          Item 7
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-8"
+        >
+          Item 8
+        </div>
+      </div>
+      <div
+        style="height: 50px;"
+      >
+        <div
+          data-testid="item-9"
+        >
+          Item 9
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

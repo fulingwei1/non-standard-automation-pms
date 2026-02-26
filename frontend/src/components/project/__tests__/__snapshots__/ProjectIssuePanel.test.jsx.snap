@@ -1,0 +1,425 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ProjectIssuePanel > Snapshot > matches snapshot in loading state 1`] = `
+<div
+  class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+>
+  <div
+    class="p-6"
+  >
+    <div
+      class="text-center text-gray-500"
+    >
+      加载中...
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ProjectIssuePanel > Snapshot > matches snapshot with issues loaded 1`] = `
+<div
+  class="space-y-6"
+>
+  <div
+    class="grid grid-cols-1 md:grid-cols-4 gap-4"
+  >
+    <div
+      class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+    >
+      <div
+        class="p-4"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          问题总数
+        </p>
+        <p
+          class="text-2xl font-bold"
+        >
+          3
+        </p>
+      </div>
+    </div>
+    <div
+      class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+    >
+      <div
+        class="p-4"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          待处理
+        </p>
+        <p
+          class="text-2xl font-bold text-orange-600"
+        >
+          2
+        </p>
+      </div>
+    </div>
+    <div
+      class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+    >
+      <div
+        class="p-4"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          已解决
+        </p>
+        <p
+          class="text-2xl font-bold text-green-600"
+        >
+          1
+        </p>
+      </div>
+    </div>
+    <div
+      class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+    >
+      <div
+        class="p-4"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          解决率
+        </p>
+        <p
+          class="text-2xl font-bold"
+        >
+          33.3
+          %
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+  >
+    <div
+      class="flex flex-col space-y-1.5 p-5 pb-0"
+    >
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-alert h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <line
+            x1="12"
+            x2="12"
+            y1="8"
+            y2="12"
+          />
+          <line
+            x1="12"
+            x2="12.01"
+            y1="16"
+            y2="16"
+          />
+        </svg>
+        项目问题
+      </h3>
+    </div>
+    <div
+      class="p-5"
+    >
+      <div
+        class="w-full"
+      >
+        <div
+          class="h-10 items-center justify-center rounded-lg bg-surface-100 p-1 text-slate-400 grid w-full grid-cols-4"
+        >
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-surface-50 text-white shadow-sm"
+          >
+            全部
+          </button>
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white"
+          >
+            待处理
+          </button>
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white"
+          >
+            已解决
+          </button>
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-slate-400 hover:text-white"
+          >
+            有解决方案
+          </button>
+        </div>
+        <div
+          class="mt-4"
+        >
+          <div
+            class="space-y-2"
+          >
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题1
+                    </p>
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-transparent text-slate-400 border border-white/20 text-xs"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                    />
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+                    >
+                      HIGH
+                    </span>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                  </div>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                >
+                  OPEN
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题2
+                    </p>
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-transparent text-slate-400 border border-white/20 text-xs"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                    />
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+                    >
+                      MEDIUM
+                    </span>
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        class="lucide lucide-circle-check h-3 w-3 mr-1"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                        />
+                        <path
+                          d="m9 12 2 2 4-4"
+                        />
+                      </svg>
+                      已解决
+                    </span>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                  </div>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-primary/15 text-primary border border-primary/30"
+                >
+                  RESOLVED
+                </span>
+              </div>
+            </div>
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题3
+                    </p>
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium transition-colors bg-transparent text-slate-400 border border-white/20 text-xs"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                    />
+                    <span
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+                    >
+                      LOW
+                    </span>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                  </div>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-white/5 text-slate-400 border border-white/10"
+                >
+                  IN_PROGRESS
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10"
+  >
+    <div
+      class="flex flex-col space-y-1.5 p-5 pb-0"
+    >
+      <h3
+        class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-check h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m9 12 2 2 4-4"
+          />
+        </svg>
+        解决方案库
+      </h3>
+    </div>
+    <div
+      class="p-5"
+    >
+      <div
+        class="space-y-2"
+      >
+        <div
+          class="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div
+            class="flex items-center justify-between mb-2"
+          >
+            <div>
+              <p
+                class="font-medium"
+              />
+              <div
+                class="flex items-center gap-2 mt-1"
+              >
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+                />
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-transparent text-slate-400 border border-white/20"
+                />
+                <span
+                  class="text-sm text-gray-500"
+                />
+                <span
+                  class="text-sm text-gray-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

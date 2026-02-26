@@ -1,0 +1,148 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ErrorBoundary > Snapshot > matches snapshot with custom fallback 1`] = `
+<div>
+  Custom Fallback
+</div>
+`;
+
+exports[`ErrorBoundary > Snapshot > matches snapshot with error state 1`] = `
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4"
+>
+  <div
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 max-w-2xl w-full"
+  >
+    <div
+      class="p-8 text-center"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-triangle-alert w-16 h-16 text-red-400 mx-auto mb-4"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+        />
+        <path
+          d="M12 9v4"
+        />
+        <path
+          d="M12 17h.01"
+        />
+      </svg>
+      <h2
+        class="text-2xl font-bold text-white mb-2"
+      >
+        出现错误
+      </h2>
+      <p
+        class="text-slate-400 mb-6"
+      >
+        Snapshot error
+      </p>
+      <details
+        class="mb-6 text-left"
+      >
+        <summary
+          class="text-slate-400 cursor-pointer mb-2"
+        >
+          错误详情（开发模式）
+        </summary>
+        <pre
+          class="text-xs text-slate-500 bg-slate-900 p-4 rounded overflow-auto max-h-64"
+        >
+          Error: Snapshot error
+    at ThrowError (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/components/common/__tests__/ErrorBoundary.test.jsx:19:13)
+    at Object.react_stack_bottom_frame (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    at runWithFiberInDEV (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+    at performUnitOfWork (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+    at workLoopSync (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+    at renderRootSync (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+    at performWorkOnRoot (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/node_modules/.pnpm/react-dom@19.2.3_react@19.2.3/node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+          
+    at ThrowError (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/components/common/__tests__/ErrorBoundary.test.jsx:18:25)
+    at ErrorBoundary (/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/components/common/ErrorBoundary.jsx:15:5)
+        </pre>
+      </details>
+      <div
+        class="flex gap-3 justify-center"
+      >
+        <button
+          class="inline-flex items-center justify-center text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] h-10 px-4 py-2 gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-refresh-cw w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+            />
+            <path
+              d="M21 3v5h-5"
+            />
+            <path
+              d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+            />
+            <path
+              d="M8 16H3v5"
+            />
+          </svg>
+          重试
+        </button>
+        <button
+          class="inline-flex items-center justify-center text-sm font-medium whitespace-nowrap rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 border border-white/20 text-white bg-transparent hover:bg-white/[0.05] hover:border-primary/50 h-10 px-4 py-2 gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-house w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"
+            />
+            <path
+              d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+            />
+          </svg>
+          返回首页
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ErrorBoundary > Snapshot > matches snapshot with normal children 1`] = `
+<div>
+  Normal content
+</div>
+`;
