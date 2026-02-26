@@ -10,16 +10,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import (
     CostAlert,
     CostAlertRule,
     CostForecast,
-    FinancialProjectCost,
     Project,
-    ProjectCost,
 )
 from app.utils.db_helpers import save_obj
 

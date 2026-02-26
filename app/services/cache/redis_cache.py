@@ -7,7 +7,7 @@ Redis缓存服务
 
 import json
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 

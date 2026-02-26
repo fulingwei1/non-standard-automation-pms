@@ -57,7 +57,6 @@ def _update_project_field(
     project = check_project_access_or_raise(db, current_user, project_id)
 
     service = StatusUpdateService(db)
-    old_value = getattr(project, field) or valid_values[0]
 
     # 使用 StatusUpdateService 进行验证和更新
     def history_cb(entity, old_status, new_status, operator, reason_text):
