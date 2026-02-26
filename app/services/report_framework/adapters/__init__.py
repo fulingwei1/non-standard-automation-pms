@@ -25,6 +25,8 @@ from app.services.report_framework.adapters.project import (
 from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
 from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
 from app.services.report_framework.adapters.sales import SalesReportAdapter
+from app.services.report_framework.adapters.business_support import BusinessSupportReportAdapter
+from app.services.report_framework.adapters.shortage import ShortageReportAdapter
 from app.services.report_framework.adapters.template import TemplateReportAdapter
 from app.services.report_framework.adapters.timesheet import TimesheetReportAdapter
 
@@ -55,4 +57,8 @@ __all__ = [
     "ReportDataGenerationAdapter",
     # 模板报表
     "TemplateReportAdapter",
+    # 商务支持报表 (#42)
+    "BusinessSupportReportAdapter",
+    # 缺料报表 (#42)
+    "ShortageReportAdapter",
 ]
