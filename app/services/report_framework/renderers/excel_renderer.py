@@ -10,46 +10,34 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.styles import Alignment, Font
 
 from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
+from app.services.report_framework.renderers.excel_styles import (
+    HEADER_FONT, HEADER_FILL, HEADER_ALIGNMENT,
+    DATA_FONT, DATA_ALIGNMENT,
+    METRIC_LABEL_FONT, METRIC_VALUE_FONT,
+    THIN_BORDER, ALT_ROW_FILL,
+)
 
 
 class ExcelRenderer(Renderer):
     """
-    Excel 渲染器
-
-    使用 openpyxl 将报告数据渲染为 Excel 格式
+    Excel 渲染器 — canonical Excel renderer (#39).
+    共享样式定义见 ``excel_styles.py``。
     """
 
     def __init__(self, output_dir: str = "reports/excel"):
-        """
-        初始化 Excel 渲染器
-
-        Args:
-            output_dir: Excel 输出目录
-        """
         self.output_dir = output_dir
-
-        # 定义样式
-        self.header_font = Font(bold=True, color="FFFFFF", size=11)
-        self.header_fill = PatternFill(start_color="336699", end_color="336699", fill_type="solid")
-        self.header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-        self.data_font = Font(size=10)
-        self.data_alignment = Alignment(vertical="center", wrap_text=True)
-
-        self.metric_label_font = Font(size=9, color="666666")
-        self.metric_value_font = Font(size=14, bold=True)
-
-        self.border = Border(
-            left=Side(style="thin", color="CCCCCC"),
-            right=Side(style="thin", color="CCCCCC"),
-            top=Side(style="thin", color="CCCCCC"),
-            bottom=Side(style="thin", color="CCCCCC"),
-        )
-
-        self.alt_row_fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+        self.header_font = HEADER_FONT
+        self.header_fill = HEADER_FILL
+        self.header_alignment = HEADER_ALIGNMENT
+        self.data_font = DATA_FONT
+        self.data_alignment = DATA_ALIGNMENT
+        self.metric_label_font = METRIC_LABEL_FONT
+        self.metric_value_font = METRIC_VALUE_FONT
+        self.border = THIN_BORDER
+        self.alt_row_fill = ALT_ROW_FILL
 
     @property
     def format_name(self) -> str:

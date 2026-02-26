@@ -2,6 +2,8 @@
 """
 报表 Excel 导出服务
 功能：生成专业的 Excel 报表（总览 + 明细 + 图表）
+
+NOTE: 通用 Excel 渲染请使用 ExcelRenderer (#39)。
 """
 
 import logging

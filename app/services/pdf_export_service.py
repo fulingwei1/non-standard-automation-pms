@@ -2,6 +2,8 @@
 """
 PDF 导出服务
 提供报价单、合同、发票的 PDF 导出功能
+
+NOTE: 共享 PDF 样式/字体已迁移到 report_framework/renderers/pdf_styles.py (#40)。
 """
 
 import io
@@ -342,3 +344,11 @@ def create_pdf_response(
             "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
         }
     )
+
+
+# ── Re-exports for unified access (#40) ──────────────────────────────
+from app.services.report_framework.renderers.pdf_renderer import PdfRenderer  # noqa: F401, E402
+from app.services.report_framework.renderers.pdf_styles import (  # noqa: F401, E402
+    register_chinese_font,
+    HEADER_BG as PDF_HEADER_BG,
+)
