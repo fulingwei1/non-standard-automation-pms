@@ -7,9 +7,29 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SupplierManagement from '../SupplierManagement';
-import api from '../../services/api';
+import api, { supplierApi } from '../../services/api';
 
 // Mock dependencies
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    supplierApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      updateRating: vi.fn().mockResolvedValue({ data: {} }),
+      getMaterials: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
+
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
@@ -127,7 +147,7 @@ describe.skip('SupplierManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockImplementation((url) => {
+    supplierApi.list.mockImplementation((url) => {
       if (url.includes('/suppliers') && !url.includes('/suppliers/')) {
         return Promise.resolve({ data: mockSuppliers });
       }
@@ -137,8 +157,8 @@ describe.skip('SupplierManagement', () => {
       return Promise.resolve({ data: {} });
     });
 
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
+    supplierApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    supplierApi.update.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -209,7 +229,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/suppliers'));
+        expect(supplierApi.list).toHaveBeenCalledWith(expect.stringContaining('/suppliers'));
       });
     });
 
@@ -225,7 +245,7 @@ describe.skip('SupplierManagement', () => {
     });
 
     it('should handle API error', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to load'));
+      supplierApi.list.mockRejectedValueOnce(new Error('Failed to load'));
 
       render(
         <MemoryRouter>
@@ -240,7 +260,7 @@ describe.skip('SupplierManagement', () => {
     });
 
     it('should display empty state when no suppliers', async () => {
-      api.get.mockResolvedValueOnce({ data: { items: [], total: 0 } });
+      supplierApi.list.mockResolvedValueOnce({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -327,7 +347,7 @@ describe.skip('SupplierManagement', () => {
         fireEvent.change(searchInput, { target: { value: '深圳' } });
         
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(supplierApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -340,7 +360,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const ratingFilter = screen.queryByText(/评级|Rating/i);
@@ -357,7 +377,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const categoryFilter = screen.queryByText(/类别|Category/i);
@@ -374,7 +394,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const statusFilter = screen.queryByText(/状态|Status/i);
@@ -491,7 +511,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       // Expired certifications should be highlighted
@@ -555,7 +575,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -601,7 +621,7 @@ describe.skip('SupplierManagement', () => {
         fireEvent.click(deactivateButtons[0]);
         
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(supplierApi.update).toHaveBeenCalled();
         });
       }
     });
@@ -614,7 +634,7 @@ describe.skip('SupplierManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const exportButton = screen.queryByRole('button', { name: /导出|Export/i });

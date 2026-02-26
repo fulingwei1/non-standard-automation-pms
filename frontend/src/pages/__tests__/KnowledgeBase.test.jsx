@@ -7,7 +7,37 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import KnowledgeBase from '../KnowledgeBase';
-import api from '../../services/api';
+
+const serviceApi = {
+  knowledgeBase: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    publish: vi.fn(),
+    archive: vi.fn(),
+    statistics: vi.fn(),
+    upload: vi.fn(),
+    getQuota: vi.fn(),
+    like: vi.fn(),
+    adopt: vi.fn(),
+  },
+};
+
+vi.mock('../../services/api/service', () => ({
+  serviceApi,
+}));
+
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+  serviceApi,
+}));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -82,10 +112,12 @@ describe('KnowledgeBase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockKnowledgeData });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    serviceApi.knowledgeBase.list.mockResolvedValue({ data: mockKnowledgeData });
+    serviceApi.knowledgeBase.get.mockResolvedValue({ data: mockKnowledgeData.items[0] });
+    serviceApi.knowledgeBase.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    serviceApi.knowledgeBase.update.mockResolvedValue({ data: { success: true } });
+    serviceApi.knowledgeBase.delete.mockResolvedValue({ data: { success: true } });
+    serviceApi.knowledgeBase.statistics.mockResolvedValue({ data: mockKnowledgeData.stats });
   });
 
   afterEach(() => {
@@ -141,14 +173,14 @@ describe('KnowledgeBase', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalledWith(
           expect.stringContaining('/knowledge')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      serviceApi.knowledgeBase.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -160,7 +192,7 @@ describe('KnowledgeBase', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      serviceApi.knowledgeBase.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -259,7 +291,7 @@ describe('KnowledgeBase', () => {
         fireEvent.change(searchInput, { target: { value: '设备' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
         });
       }
     });
@@ -279,7 +311,7 @@ describe('KnowledgeBase', () => {
       fireEvent.click(categoryButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
     });
 
@@ -298,7 +330,7 @@ describe('KnowledgeBase', () => {
       fireEvent.click(tagButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
     });
   });
@@ -335,7 +367,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(favoriteButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
         });
       }
     });
@@ -348,7 +380,7 @@ describe('KnowledgeBase', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
 
       const favoritesFilter = screen.queryByRole('button', { name: /我的收藏|My Favorites/i });
@@ -356,7 +388,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(favoritesFilter);
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
         });
       }
     });
@@ -379,7 +411,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(ratingButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
         });
       }
     });
@@ -400,7 +432,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(likeButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
         });
       }
     });
@@ -415,7 +447,7 @@ describe('KnowledgeBase', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -463,7 +495,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(serviceApi.knowledgeBase.delete).toHaveBeenCalled();
         });
       }
     });
@@ -512,7 +544,7 @@ describe('KnowledgeBase', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
 
       const manageCategoryButton = screen.queryByRole('button', { name: /管理分类|Manage Categories/i });
@@ -573,7 +605,7 @@ describe('KnowledgeBase', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
       });
 
       const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
@@ -581,7 +613,7 @@ describe('KnowledgeBase', () => {
         fireEvent.click(exportButton);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalledWith(
+          expect(serviceApi.knowledgeBase.create).toHaveBeenCalledWith(
             expect.stringContaining('/export')
           );
         });

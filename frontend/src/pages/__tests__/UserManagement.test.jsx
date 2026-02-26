@@ -7,9 +7,57 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import UserManagement from '../UserManagement';
-import api from '../../services/api';
+import api, { userApi, roleApi } from '../../services/api';
 
 // Mock dependencies
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    userApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      assignRoles: vi.fn().mockResolvedValue({ data: {} }),
+      syncFromEmployees: vi.fn().mockResolvedValue({ data: {} }),
+      createFromEmployee: vi.fn().mockResolvedValue({ data: {} }),
+      toggleActive: vi.fn().mockResolvedValue({ data: {} }),
+      resetPassword: vi.fn().mockResolvedValue({ data: {} }),
+      batchToggleActive: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    roleApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      assignPermissions: vi.fn().mockResolvedValue({ data: {} }),
+      permissions: vi.fn().mockResolvedValue({ data: {} }),
+      getNavGroups: vi.fn().mockResolvedValue({ data: {} }),
+      updateNavGroups: vi.fn().mockResolvedValue({ data: {} }),
+      getMyNavGroups: vi.fn().mockResolvedValue({ data: {} }),
+      getAllConfig: vi.fn().mockResolvedValue({ data: {} }),
+      getDetail: vi.fn().mockResolvedValue({ data: {} }),
+      getInheritanceTree: vi.fn().mockResolvedValue({ data: {} }),
+      compare: vi.fn().mockResolvedValue({ data: {} }),
+      listTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      getTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      createTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      updateTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      deleteTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
+
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
@@ -65,7 +113,7 @@ describe.skip('UserManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockUserData });
+    userApi.list.mockResolvedValue({ data: mockUserData });
   });
 
   afterEach(() => {
@@ -123,14 +171,14 @@ describe.skip('UserManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/users')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      userApi.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -142,7 +190,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should handle empty user list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      userApi.list.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -163,14 +211,14 @@ describe.skip('UserManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(userApi.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(userApi.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -211,7 +259,7 @@ describe.skip('UserManagement', () => {
       fireEvent.change(deptFilter, { target: { value: '研发部' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('department=研发部')
         );
       });
@@ -232,7 +280,7 @@ describe.skip('UserManagement', () => {
       fireEvent.change(roleFilter, { target: { value: '管理员' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('role=管理员')
         );
       });
@@ -253,7 +301,7 @@ describe.skip('UserManagement', () => {
       fireEvent.change(searchInput, { target: { value: '张三' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=张三')
         );
       });
@@ -279,7 +327,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should reset password', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      userApi.update.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -296,7 +344,7 @@ describe.skip('UserManagement', () => {
       fireEvent.click(resetButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(userApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/users/1/reset-password'),
           expect.any(Object)
         );
@@ -304,7 +352,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should disable user', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      userApi.update.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -321,7 +369,7 @@ describe.skip('UserManagement', () => {
       fireEvent.click(disableButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(userApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/users/1/disable'),
           expect.any(Object)
         );
@@ -329,7 +377,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should delete user', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      userApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -346,12 +394,12 @@ describe.skip('UserManagement', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/users/1');
+        expect(userApi.delete).toHaveBeenCalledWith('/users/1');
       });
     });
 
     it('should assign role to user', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      userApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -372,7 +420,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should batch import users', async () => {
-      api.post.mockResolvedValue({ data: { success: true, count: 10 } });
+      userApi.create.mockResolvedValue({ data: { success: true, count: 10 } });
 
       render(
         <MemoryRouter>
@@ -392,12 +440,12 @@ describe.skip('UserManagement', () => {
       fireEvent.change(fileInput, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalled();
+        expect(userApi.create).toHaveBeenCalled();
       });
     });
 
     it('should export users', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
+      userApi.list.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
 
       render(
         <MemoryRouter>
@@ -413,7 +461,7 @@ describe.skip('UserManagement', () => {
       fireEvent.click(exportButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/users/export')
         );
       });
@@ -434,7 +482,7 @@ describe.skip('UserManagement', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
@@ -444,7 +492,7 @@ describe.skip('UserManagement', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      userApi.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -458,7 +506,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should handle create user failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      userApi.create.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -484,7 +532,7 @@ describe.skip('UserManagement', () => {
     });
 
     it('should handle delete user failure', async () => {
-      api.delete.mockRejectedValue(new Error('Delete Failed'));
+      userApi.delete.mockRejectedValue(new Error('Delete Failed'));
       window.confirm = vi.fn(() => true);
 
       render(

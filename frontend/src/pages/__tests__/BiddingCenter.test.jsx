@@ -7,9 +7,63 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BiddingCenter from '../BiddingCenter';
-import api from '../../services/api';
+import api, { presaleApi } from '../../services/api';
 
 // Mock dependencies
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    presaleApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      tickets: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        accept: vi.fn().mockResolvedValue({ data: {} }),
+        updateProgress: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        rate: vi.fn().mockResolvedValue({ data: {} }),
+        getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      solutions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        review: vi.fn().mockResolvedValue({ data: {} }),
+        getVersions: vi.fn().mockResolvedValue({ data: {} }),
+        getCost: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      templates: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      tenders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        updateResult: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      statistics: {
+        workload: vi.fn().mockResolvedValue({ data: {} }),
+        responseTime: vi.fn().mockResolvedValue({ data: {} }),
+        conversion: vi.fn().mockResolvedValue({ data: {} }),
+        performance: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    }
+}));
+
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
@@ -65,7 +119,7 @@ describe.skip('BiddingCenter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockBiddingData });
+    presaleApi.tenders.list.mockResolvedValue({ data: mockBiddingData });
   });
 
   afterEach(() => {
@@ -136,14 +190,14 @@ describe.skip('BiddingCenter', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tenders.list).toHaveBeenCalledWith(
           expect.stringContaining('/bidding')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      presaleApi.tenders.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -155,7 +209,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should handle empty bidding list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      presaleApi.tenders.list.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -176,14 +230,14 @@ describe.skip('BiddingCenter', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(presaleApi.tenders.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(presaleApi.tenders.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -224,7 +278,7 @@ describe.skip('BiddingCenter', () => {
       fireEvent.change(statusFilter, { target: { value: 'in_progress' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tenders.list).toHaveBeenCalledWith(
           expect.stringContaining('status=in_progress')
         );
       });
@@ -245,7 +299,7 @@ describe.skip('BiddingCenter', () => {
       fireEvent.change(searchInput, { target: { value: '智能制造' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tenders.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=智能制造')
         );
       });
@@ -271,7 +325,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should submit bidding document', async () => {
-      api.post.mockResolvedValue({ data: { success: true } });
+      presaleApi.create.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -287,7 +341,7 @@ describe.skip('BiddingCenter', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalledWith(
+        expect(presaleApi.create).toHaveBeenCalledWith(
           expect.stringContaining('/bidding/1/submit'),
           expect.any(Object)
         );
@@ -295,7 +349,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should upload bidding file', async () => {
-      api.post.mockResolvedValue({ data: { success: true, fileUrl: 'http://example.com/file.pdf' } });
+      presaleApi.create.mockResolvedValue({ data: { success: true, fileUrl: 'http://example.com/file.pdf' } });
 
       render(
         <MemoryRouter>
@@ -315,12 +369,12 @@ describe.skip('BiddingCenter', () => {
       fireEvent.change(fileInput, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalled();
+        expect(presaleApi.create).toHaveBeenCalled();
       });
     });
 
     it('should assign bidding to user', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      presaleApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -341,7 +395,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should delete bidding project', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      presaleApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -358,7 +412,7 @@ describe.skip('BiddingCenter', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/bidding/1');
+        expect(presaleApi.delete).toHaveBeenCalledWith('/bidding/1');
       });
     });
 
@@ -377,14 +431,14 @@ describe.skip('BiddingCenter', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tenders.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
     });
 
     it('should export bidding list', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
+      presaleApi.tenders.list.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
 
       render(
         <MemoryRouter>
@@ -400,7 +454,7 @@ describe.skip('BiddingCenter', () => {
       fireEvent.click(exportButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tenders.list).toHaveBeenCalledWith(
           expect.stringContaining('/bidding/export')
         );
       });
@@ -410,7 +464,7 @@ describe.skip('BiddingCenter', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      presaleApi.tenders.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -424,7 +478,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should handle create bidding failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      presaleApi.create.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -450,7 +504,7 @@ describe.skip('BiddingCenter', () => {
     });
 
     it('should handle submit failure', async () => {
-      api.post.mockRejectedValue(new Error('Submit Failed'));
+      presaleApi.create.mockRejectedValue(new Error('Submit Failed'));
 
       render(
         <MemoryRouter>

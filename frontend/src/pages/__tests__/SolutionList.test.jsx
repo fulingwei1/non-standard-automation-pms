@@ -7,9 +7,63 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SolutionList from '../SolutionList';
-import api from '../../services/api';
+import api, { presaleApi } from '../../services/api';
 
 // Mock dependencies
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    presaleApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      tickets: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        accept: vi.fn().mockResolvedValue({ data: {} }),
+        updateProgress: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        rate: vi.fn().mockResolvedValue({ data: {} }),
+        getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      solutions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        review: vi.fn().mockResolvedValue({ data: {} }),
+        getVersions: vi.fn().mockResolvedValue({ data: {} }),
+        getCost: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      templates: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      tenders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        updateResult: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      statistics: {
+        workload: vi.fn().mockResolvedValue({ data: {} }),
+        responseTime: vi.fn().mockResolvedValue({ data: {} }),
+        conversion: vi.fn().mockResolvedValue({ data: {} }),
+        performance: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    }
+}));
+
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
@@ -65,7 +119,7 @@ describe.skip('SolutionList', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockSolutionData });
+    presaleApi.solutions.list.mockResolvedValue({ data: mockSolutionData });
   });
 
   afterEach(() => {
@@ -136,14 +190,14 @@ describe.skip('SolutionList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('/solutions')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      presaleApi.solutions.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -155,7 +209,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should handle empty solution list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      presaleApi.solutions.list.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -176,14 +230,14 @@ describe.skip('SolutionList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(presaleApi.solutions.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(presaleApi.solutions.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -224,7 +278,7 @@ describe.skip('SolutionList', () => {
       fireEvent.change(statusFilter, { target: { value: 'approved' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('status=approved')
         );
       });
@@ -245,7 +299,7 @@ describe.skip('SolutionList', () => {
       fireEvent.change(industryFilter, { target: { value: '制造业' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('industry=制造业')
         );
       });
@@ -266,7 +320,7 @@ describe.skip('SolutionList', () => {
       fireEvent.change(searchInput, { target: { value: '智能制造' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=智能制造')
         );
       });
@@ -311,7 +365,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should clone solution', async () => {
-      api.post.mockResolvedValue({ data: { success: true, id: 3 } });
+      presaleApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
 
       render(
         <MemoryRouter>
@@ -327,7 +381,7 @@ describe.skip('SolutionList', () => {
       fireEvent.click(cloneButton);
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalledWith(
+        expect(presaleApi.create).toHaveBeenCalledWith(
           expect.stringContaining('/solutions/1/clone'),
           expect.any(Object)
         );
@@ -335,7 +389,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should approve solution', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      presaleApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -351,7 +405,7 @@ describe.skip('SolutionList', () => {
       fireEvent.click(approveButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(presaleApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/solutions/2/approve'),
           expect.any(Object)
         );
@@ -359,7 +413,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should delete solution', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      presaleApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -376,12 +430,12 @@ describe.skip('SolutionList', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/solutions/1');
+        expect(presaleApi.delete).toHaveBeenCalledWith('/solutions/1');
       });
     });
 
     it('should export solution', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['data'], { type: 'application/pdf' }) });
+      presaleApi.solutions.list.mockResolvedValue({ data: new Blob(['data'], { type: 'application/pdf' }) });
 
       render(
         <MemoryRouter>
@@ -397,7 +451,7 @@ describe.skip('SolutionList', () => {
       fireEvent.click(exportButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('/solutions/1/export')
         );
       });
@@ -418,7 +472,7 @@ describe.skip('SolutionList', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
@@ -439,7 +493,7 @@ describe.skip('SolutionList', () => {
       fireEvent.click(sortButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.solutions.list).toHaveBeenCalledWith(
           expect.stringContaining('sort=createdAt')
         );
       });
@@ -449,7 +503,7 @@ describe.skip('SolutionList', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      presaleApi.solutions.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -463,7 +517,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should handle create solution failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      presaleApi.create.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -489,7 +543,7 @@ describe.skip('SolutionList', () => {
     });
 
     it('should handle delete failure', async () => {
-      api.delete.mockRejectedValue(new Error('Delete Failed'));
+      presaleApi.delete.mockRejectedValue(new Error('Delete Failed'));
       window.confirm = vi.fn(() => true);
 
       render(

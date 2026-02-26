@@ -7,7 +7,60 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MaterialReadiness from '../MaterialReadiness';
-import api from '../../services/api';
+import api, { materialApi, projectApi, supplierApi } from '../../services/api';
+
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    materialApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      search: vi.fn().mockResolvedValue({ data: {} }),
+      warehouse: {
+        statistics: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      categories: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    supplierApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      updateRating: vi.fn().mockResolvedValue({ data: {} }),
+      getMaterials: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -86,9 +139,9 @@ describe('MaterialReadiness', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockReadinessData });
-    api.post.mockResolvedValue({ data: { success: true } });
-    api.put.mockResolvedValue({ data: { success: true } });
+    materialApi.list.mockResolvedValue({ data: mockReadinessData });
+    materialApi.create.mockResolvedValue({ data: { success: true } });
+    materialApi.update.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -144,14 +197,14 @@ describe('MaterialReadiness', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(materialApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/material-readiness')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      materialApi.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -163,7 +216,7 @@ describe('MaterialReadiness', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      materialApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -317,7 +370,7 @@ describe('MaterialReadiness', () => {
         fireEvent.click(purchaseButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(materialApi.create).toHaveBeenCalled();
         });
       }
     });
@@ -338,7 +391,7 @@ describe('MaterialReadiness', () => {
         fireEvent.click(alertButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(materialApi.create).toHaveBeenCalled();
         });
       }
     });
@@ -361,7 +414,7 @@ describe('MaterialReadiness', () => {
         fireEvent.change(searchInput, { target: { value: '产品A' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(materialApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -374,7 +427,7 @@ describe('MaterialReadiness', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
 
       const statusFilter = screen.queryByRole('combobox');
@@ -391,7 +444,7 @@ describe('MaterialReadiness', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -413,7 +466,7 @@ describe('MaterialReadiness', () => {
         fireEvent.click(checkButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(materialApi.create).toHaveBeenCalled();
         });
       }
     });
@@ -426,7 +479,7 @@ describe('MaterialReadiness', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
 
       const refreshButton = screen.queryByRole('button', { name: /刷新|Refresh/i });
@@ -434,7 +487,7 @@ describe('MaterialReadiness', () => {
         fireEvent.click(refreshButton);
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalledTimes(2);
+          expect(materialApi.list).toHaveBeenCalledTimes(2);
         });
       }
     });
@@ -489,7 +542,7 @@ describe('MaterialReadiness', () => {
           fireEvent.click(batchCheckButton);
 
           await waitFor(() => {
-            expect(api.post).toHaveBeenCalled();
+            expect(materialApi.create).toHaveBeenCalled();
           });
         }
       }

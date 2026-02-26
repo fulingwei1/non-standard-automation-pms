@@ -7,7 +7,116 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import WorkOrderManagement from '../WorkOrderManagement';
-import api from '../../services/api';
+import api, { productionApi, projectApi } from '../../services/api';
+
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    productionApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      dashboard: vi.fn().mockResolvedValue({ data: {} }),
+      dailyReports: {
+        daily: vi.fn().mockResolvedValue({ data: {} }),
+        latestDaily: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workshops: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        getWorkstations: vi.fn().mockResolvedValue({ data: {} }),
+        addWorkstation: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workstations: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        getStatus: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      productionPlans: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        submit: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        publish: vi.fn().mockResolvedValue({ data: {} }),
+        calendar: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workOrders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        assign: vi.fn().mockResolvedValue({ data: {} }),
+        start: vi.fn().mockResolvedValue({ data: {} }),
+        pause: vi.fn().mockResolvedValue({ data: {} }),
+        resume: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        getProgress: vi.fn().mockResolvedValue({ data: {} }),
+        getReports: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workers: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workReports: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        start: vi.fn().mockResolvedValue({ data: {} }),
+        progress: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        my: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      materialRequisitions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        issue: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      exceptions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        handle: vi.fn().mockResolvedValue({ data: {} }),
+        close: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      taskBoard: vi.fn().mockResolvedValue({ data: {} }),
+      reports: {
+        workerPerformance: vi.fn().mockResolvedValue({ data: {} }),
+        workerRanking: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -79,10 +188,10 @@ describe('WorkOrderManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockWorkOrders });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    projectApi.list.mockResolvedValue({ data: mockWorkOrders });
+    productionApi.workOrders.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    productionApi.workOrders.assign.mockResolvedValue({ data: { success: true } });
+    productionApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -138,14 +247,14 @@ describe('WorkOrderManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/workorder')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      projectApi.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -157,7 +266,7 @@ describe('WorkOrderManagement', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      projectApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -259,7 +368,7 @@ describe('WorkOrderManagement', () => {
           fireEvent.click(completeButton);
 
           await waitFor(() => {
-            expect(api.put).toHaveBeenCalled();
+            expect(productionApi.workOrders.assign).toHaveBeenCalled();
           });
         }
       }
@@ -315,7 +424,7 @@ describe('WorkOrderManagement', () => {
         fireEvent.click(reassignButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(productionApi.workOrders.assign).toHaveBeenCalled();
         });
       }
     });
@@ -358,7 +467,7 @@ describe('WorkOrderManagement', () => {
             fireEvent.click(saveButton);
 
             await waitFor(() => {
-              expect(api.put).toHaveBeenCalled();
+              expect(productionApi.workOrders.assign).toHaveBeenCalled();
             });
           }
         }
@@ -383,7 +492,7 @@ describe('WorkOrderManagement', () => {
         fireEvent.change(searchInput, { target: { value: '产品A' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(projectApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -396,7 +505,7 @@ describe('WorkOrderManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const statusFilter = screen.queryByRole('combobox');
@@ -413,7 +522,7 @@ describe('WorkOrderManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
 
@@ -425,7 +534,7 @@ describe('WorkOrderManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -439,7 +548,7 @@ describe('WorkOrderManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -487,7 +596,7 @@ describe('WorkOrderManagement', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(productionApi.delete).toHaveBeenCalled();
         });
       }
     });

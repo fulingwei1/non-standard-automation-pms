@@ -7,7 +7,109 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import WorkshopManagement from '../WorkshopManagement';
-import api from '../../services/api';
+import api, { productionApi, userApi } from '../../services/api';
+
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    productionApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      dashboard: vi.fn().mockResolvedValue({ data: {} }),
+      dailyReports: {
+        daily: vi.fn().mockResolvedValue({ data: {} }),
+        latestDaily: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workshops: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        getWorkstations: vi.fn().mockResolvedValue({ data: {} }),
+        addWorkstation: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workstations: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        getStatus: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      productionPlans: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        submit: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        publish: vi.fn().mockResolvedValue({ data: {} }),
+        calendar: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workOrders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        assign: vi.fn().mockResolvedValue({ data: {} }),
+        start: vi.fn().mockResolvedValue({ data: {} }),
+        pause: vi.fn().mockResolvedValue({ data: {} }),
+        resume: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        getProgress: vi.fn().mockResolvedValue({ data: {} }),
+        getReports: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workers: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      workReports: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        start: vi.fn().mockResolvedValue({ data: {} }),
+        progress: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        my: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      materialRequisitions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        issue: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      exceptions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        handle: vi.fn().mockResolvedValue({ data: {} }),
+        close: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      taskBoard: vi.fn().mockResolvedValue({ data: {} }),
+      reports: {
+        workerPerformance: vi.fn().mockResolvedValue({ data: {} }),
+        workerRanking: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    },
+    userApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      assignRoles: vi.fn().mockResolvedValue({ data: {} }),
+      syncFromEmployees: vi.fn().mockResolvedValue({ data: {} }),
+      createFromEmployee: vi.fn().mockResolvedValue({ data: {} }),
+      toggleActive: vi.fn().mockResolvedValue({ data: {} }),
+      resetPassword: vi.fn().mockResolvedValue({ data: {} }),
+      batchToggleActive: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -77,10 +179,10 @@ describe('WorkshopManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockWorkshops });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    userApi.list.mockResolvedValue({ data: mockWorkshops });
+    productionApi.workshops.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    productionApi.workshops.update.mockResolvedValue({ data: { success: true } });
+    productionApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -136,14 +238,14 @@ describe('WorkshopManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(userApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/workshop')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      userApi.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -155,7 +257,7 @@ describe('WorkshopManagement', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      userApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -267,7 +369,7 @@ describe('WorkshopManagement', () => {
         fireEvent.change(searchInput, { target: { value: '装配' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(userApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -280,7 +382,7 @@ describe('WorkshopManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const typeFilter = screen.queryByRole('combobox');
@@ -299,7 +401,7 @@ describe('WorkshopManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -347,7 +449,7 @@ describe('WorkshopManagement', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(productionApi.delete).toHaveBeenCalled();
         });
       }
     });
@@ -389,7 +491,7 @@ describe('WorkshopManagement', () => {
         fireEvent.click(assignButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(productionApi.workshops.create).toHaveBeenCalled();
         });
       }
     });
@@ -472,7 +574,7 @@ describe('WorkshopManagement', () => {
         fireEvent.click(updateButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(productionApi.workshops.update).toHaveBeenCalled();
         });
       }
     });

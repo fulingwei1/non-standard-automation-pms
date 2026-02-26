@@ -7,7 +7,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MaterialTracking from '../MaterialTracking';
-import api from '../../services/api';
+import { materialApi, purchaseApi } from '../../services/api';
+
+vi.mock('../../services/api', () => ({
+  materialApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  purchaseApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+  }
+}));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -95,8 +108,8 @@ describe('MaterialTracking', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockTrackingData });
-    api.post.mockResolvedValue({ data: { success: true } });
+    materialApi.list.mockResolvedValue({ data: mockTrackingData });
+    materialApi.create.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -152,14 +165,14 @@ describe('MaterialTracking', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(materialApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/material-tracking')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      materialApi.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -171,7 +184,7 @@ describe('MaterialTracking', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      materialApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -377,7 +390,7 @@ describe('MaterialTracking', () => {
         fireEvent.change(searchInput, { target: { value: 'MAT-001' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(materialApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -398,7 +411,7 @@ describe('MaterialTracking', () => {
         fireEvent.change(searchInput, { target: { value: 'BATCH-2024-001' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(materialApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -411,7 +424,7 @@ describe('MaterialTracking', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
 
       const statusFilter = screen.queryByRole('combobox');
@@ -428,7 +441,7 @@ describe('MaterialTracking', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -485,7 +498,7 @@ describe('MaterialTracking', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
 
       const scanButton = screen.queryByRole('button', { name: /扫码|Scan/i });
@@ -525,7 +538,7 @@ describe('MaterialTracking', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(materialApi.list).toHaveBeenCalled();
       });
 
       const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
@@ -533,7 +546,7 @@ describe('MaterialTracking', () => {
         fireEvent.click(exportButton);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalledWith(
+          expect(materialApi.create).toHaveBeenCalledWith(
             expect.stringContaining('/export')
           );
         });

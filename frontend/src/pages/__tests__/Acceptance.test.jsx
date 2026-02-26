@@ -7,9 +7,73 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Acceptance from '../Acceptance';
-import api from '../../services/api';
+import api, { acceptanceApi, projectApi } from '../../services/api';
 
 // Mock dependencies
+vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    acceptanceApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      templates: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        getItems: vi.fn().mockResolvedValue({ data: {} }),
+        addItems: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      orders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        start: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        getItems: vi.fn().mockResolvedValue({ data: {} }),
+        updateItem: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      issues: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        close: vi.fn().mockResolvedValue({ data: {} }),
+        addFollowUp: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      signatures: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      reports: {
+        generate: vi.fn().mockResolvedValue({ data: {} }),
+        download: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    }
+}));
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
@@ -65,7 +129,7 @@ describe.skip('Acceptance', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockAcceptanceData });
+    acceptanceApi.orders.list.mockResolvedValue({ data: mockAcceptanceData });
   });
 
   afterEach(() => {
@@ -136,14 +200,14 @@ describe.skip('Acceptance', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      acceptanceApi.orders.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -155,7 +219,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should handle empty acceptance list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      acceptanceApi.orders.list.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -176,14 +240,14 @@ describe.skip('Acceptance', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(acceptanceApi.orders.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(acceptanceApi.orders.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -224,7 +288,7 @@ describe.skip('Acceptance', () => {
       fireEvent.change(statusFilter, { target: { value: 'pending' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('status=pending')
         );
       });
@@ -245,7 +309,7 @@ describe.skip('Acceptance', () => {
       fireEvent.change(typeFilter, { target: { value: 'final' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('type=final')
         );
       });
@@ -266,7 +330,7 @@ describe.skip('Acceptance', () => {
       fireEvent.change(searchInput, { target: { value: '智能制造' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=智能制造')
         );
       });
@@ -292,7 +356,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should start acceptance execution', async () => {
-      api.post.mockResolvedValue({ data: { success: true } });
+      acceptanceApi.orders.create.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -308,7 +372,7 @@ describe.skip('Acceptance', () => {
       fireEvent.click(startButton);
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.create).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance/1/start'),
           expect.any(Object)
         );
@@ -316,7 +380,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should submit acceptance result', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      acceptanceApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -337,7 +401,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should approve acceptance', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      acceptanceApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -353,7 +417,7 @@ describe.skip('Acceptance', () => {
       fireEvent.click(approveButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(acceptanceApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance/2/approve'),
           expect.any(Object)
         );
@@ -361,7 +425,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should reject acceptance', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      acceptanceApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -377,7 +441,7 @@ describe.skip('Acceptance', () => {
       fireEvent.click(rejectButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(acceptanceApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance/1/reject'),
           expect.any(Object)
         );
@@ -385,7 +449,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should delete acceptance', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      acceptanceApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -402,12 +466,12 @@ describe.skip('Acceptance', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/acceptance/1');
+        expect(acceptanceApi.delete).toHaveBeenCalledWith('/acceptance/1');
       });
     });
 
     it('should export acceptance report', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['data'], { type: 'application/pdf' }) });
+      acceptanceApi.orders.list.mockResolvedValue({ data: new Blob(['data'], { type: 'application/pdf' }) });
 
       render(
         <MemoryRouter>
@@ -423,7 +487,7 @@ describe.skip('Acceptance', () => {
       fireEvent.click(exportButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance/1/report')
         );
       });
@@ -444,7 +508,7 @@ describe.skip('Acceptance', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
@@ -454,7 +518,7 @@ describe.skip('Acceptance', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      acceptanceApi.orders.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -468,7 +532,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should handle create acceptance failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      acceptanceApi.orders.create.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -494,7 +558,7 @@ describe.skip('Acceptance', () => {
     });
 
     it('should handle submit result failure', async () => {
-      api.put.mockRejectedValue(new Error('Submit Failed'));
+      acceptanceApi.update.mockRejectedValue(new Error('Submit Failed'));
 
       render(
         <MemoryRouter>
