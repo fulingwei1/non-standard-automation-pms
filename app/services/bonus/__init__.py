@@ -13,6 +13,9 @@ from app.services.bonus.project import ProjectBonusCalculator
 from app.services.bonus.sales import SalesBonusCalculator
 from app.services.bonus.team import TeamBonusCalculator
 
+from app.services.bonus.solution_engineer_bonus_service import SolutionEngineerBonusService
+from app.services.bonus.project_bonus_service import ProjectBonusService
+
 __all__ = [
     'BonusCalculatorBase',
     'BonusCalculator',
@@ -22,4 +25,6 @@ __all__ = [
     'TeamBonusCalculator',
     'PresaleBonusCalculator',
     'AcceptanceBonusTrigger',
+    'SolutionEngineerBonusService',
+    'ProjectBonusService',
 ]
