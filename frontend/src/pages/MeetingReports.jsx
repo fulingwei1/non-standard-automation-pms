@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { managementRhythmApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -87,12 +88,6 @@ export default function MeetingReports() {
       console.error("Failed to generate report:", err);
       alert("报告生成失败: " + (err.response?.data?.detail || err.message));
     }
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN");
   };
 
   const renderComparison = (comparison) => {
