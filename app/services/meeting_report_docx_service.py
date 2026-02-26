@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-会议报告Word文档生成服务
-基于python-docx生成格式化的Word报告文档
+会议报告 Word 文档生成服务 — DOCX 渲染层
+
+职责：将 meeting_report_helpers 产出的结构化数据字典渲染为
+     格式化的 Word (.docx) 报告文档（月度报告 / 年度报告）。
+
+与 meeting_report_helpers.py 的关系：
+  helpers 负责 **数据计算与查询**，本模块负责 **文档排版与输出**。
+  两者互补，不存在功能重复。
 """
 from io import BytesIO
 from typing import Any, Dict, Optional
