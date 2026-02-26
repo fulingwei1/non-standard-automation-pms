@@ -6,10 +6,9 @@
 """
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -17,45 +16,17 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.approval_workflow import (
+    OrderSubmitRequest,
+    ApprovalActionRequest,
+    BatchApprovalRequest,
+    WithdrawRequest,
+)
 from app.services.outsourcing_workflow import OutsourcingWorkflowService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/outsourcing-orders/workflow", tags=["外协审批工作流"])
-
-
-# ==================== 请求模型 ====================
-
-
-class OutsourcingOrderSubmitRequest(BaseModel):
-    """外协订单提交审批请求"""
-
-    order_ids: List[int] = Field(..., description="外协订单ID列表")
-    urgency: str = Field("NORMAL", description="紧急程度: LOW/NORMAL/HIGH/URGENT")
-    comment: Optional[str] = Field(None, description="提交备注")
-
-
-class ApprovalActionRequest(BaseModel):
-    """审批操作请求"""
-
-    task_id: int = Field(..., description="审批任务ID")
-    action: str = Field(..., description="操作类型: approve/reject")
-    comment: Optional[str] = Field(None, description="审批意见")
-
-
-class BatchApprovalRequest(BaseModel):
-    """批量审批请求"""
-
-    task_ids: List[int] = Field(..., description="审批任务ID列表")
-    action: str = Field(..., description="操作类型: approve/reject")
-    comment: Optional[str] = Field(None, description="审批意见")
-
-
-class WithdrawRequest(BaseModel):
-    """撤回请求"""
-
-    order_id: int = Field(..., description="外协订单ID")
-    reason: Optional[str] = Field(None, description="撤回原因")
 
 
 # ==================== API 端点 ====================
@@ -65,7 +36,7 @@ class WithdrawRequest(BaseModel):
 def submit_orders_for_approval(
     *,
     db: Session = Depends(deps.get_db),
-    request: OutsourcingOrderSubmitRequest,
+    request: OrderSubmitRequest,
     current_user: User = Depends(security.require_permission("outsourcing:create")),
 ) -> Any:
     """
