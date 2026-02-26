@@ -89,15 +89,7 @@ export default function ManagementRhythmDashboard() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
+  // formatDate imported from @/lib/formatters
 
   const calculateDaysUntil = (dateStr) => {
     if (!dateStr) {return null;}
