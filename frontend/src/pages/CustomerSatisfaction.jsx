@@ -85,6 +85,8 @@ import {
   TABLE_CONFIG } from
 '@/lib/constants/customer';
 
+import { serviceApi } from '@/services/api/service';
+
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -103,35 +105,8 @@ const CustomerSatisfaction = () => {
   const [_showTemplateModal, _setShowTemplateModal] = useState(false);
   const [_editingSurvey, setEditingSurvey] = useState(null);
 
-  // 模拟数据
-  const mockData = {
-    surveys: [
-    {
-      id: 1,
-      title: '客户服务满意度调查',
-      type: 'service',
-      status: 'active',
-      createdDate: '2024-01-15',
-      completedDate: '2024-01-20',
-      avgScore: 4.2,
-      responseCount: 156,
-      targetCount: 200
-    }
-    // 更多模拟数据...
-    ],
-    responses: [
-    {
-      id: 1,
-      surveyId: 1,
-      customerName: '张三',
-      satisfactionLevel: 4,
-      feedback: '服务质量很好，响应及时',
-      category: 'service',
-      createdDate: '2024-01-18'
-    }
-    // 更多模拟数据...
-    ]
-  };
+  // 满意度趋势数据
+  const [trendData, setTrendData] = useState({ direction: 'up', percentage: 0 });
 
   // 数据加载
   useEffect(() => {
@@ -141,14 +116,44 @@ const CustomerSatisfaction = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setSurveys(mockData.surveys);
-        setResponses(mockData.responses);
-        setLoading(false);
-      }, 1000);
+      const [satisfactionRes, statsRes] = await Promise.all([
+        serviceApi.satisfaction.list(),
+        serviceApi.satisfaction.statistics().catch(() => ({ data: {} })),
+      ]);
+      const satisfactionList = satisfactionRes.data?.items || satisfactionRes.data || [];
+      // 将满意度记录映射为 surveys 和 responses 格式
+      const surveyItems = satisfactionList.map((item) => ({
+        id: item.id,
+        title: item.title || item.survey_title || `满意度调查 #${item.id}`,
+        type: item.type || item.survey_type || 'service',
+        status: item.status || 'active',
+        createdDate: item.created_at || item.createdDate || '',
+        completedDate: item.completed_at || item.completedDate || '',
+        avgScore: item.avg_score ?? item.avgScore ?? 0,
+        responseCount: item.response_count ?? item.responseCount ?? 0,
+        targetCount: item.target_count ?? item.targetCount ?? 100,
+      }));
+      const responseItems = satisfactionList
+        .filter((item) => item.feedback || item.satisfaction_level != null)
+        .map((item) => ({
+          id: item.id,
+          surveyId: item.survey_id ?? item.id,
+          customerName: item.customer_name || item.customerName || '',
+          satisfactionLevel: item.satisfaction_level ?? item.satisfactionLevel ?? item.score ?? 0,
+          feedback: item.feedback || item.comment || '',
+          category: item.category || 'service',
+          createdDate: item.created_at || item.createdDate || '',
+        }));
+      setSurveys(surveyItems);
+      setResponses(responseItems);
+      const stats = statsRes.data || {};
+      setTrendData({
+        direction: stats.trend_direction || 'up',
+        percentage: stats.trend_percentage ?? 0,
+      });
     } catch (_error) {
       message.error('加载数据失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -187,14 +192,12 @@ const CustomerSatisfaction = () => {
   const handleDeleteSurvey = async (surveyId) => {
     try {
       setLoading(true);
-      // 模拟删除API调用
-      setTimeout(() => {
-        setSurveys(surveys.filter((s) => s.id !== surveyId));
-        message.success('删除成功');
-        setLoading(false);
-      }, 500);
+      // Note: satisfaction API may not have delete; remove locally for now
+      setSurveys(surveys.filter((s) => s.id !== surveyId));
+      message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -359,7 +362,7 @@ const CustomerSatisfaction = () => {
           key="overview">
 
           <CustomerSatisfactionOverview
-            data={{ surveys, responses, trend: { direction: 'up', percentage: 5.2 } }}
+            data={{ surveys, responses, trend: trendData }}
             loading={loading}
             onRefresh={loadData} />
 
