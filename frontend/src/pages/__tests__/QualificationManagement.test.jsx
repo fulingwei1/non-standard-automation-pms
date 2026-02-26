@@ -7,15 +7,35 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import QualificationManagement from '../QualificationManagement';
-import api from '../../services/api';
+import api, { qualificationApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    qualificationApi: {
+      getLevels: vi.fn().mockResolvedValue({ data: {} }),
+      getLevel: vi.fn().mockResolvedValue({ data: {} }),
+      createLevel: vi.fn().mockResolvedValue({ data: {} }),
+      updateLevel: vi.fn().mockResolvedValue({ data: {} }),
+      deleteLevel: vi.fn().mockResolvedValue({ data: {} }),
+      getModels: vi.fn().mockResolvedValue({ data: {} }),
+      getModel: vi.fn().mockResolvedValue({ data: {} }),
+      getModelById: vi.fn().mockResolvedValue({ data: {} }),
+      createModel: vi.fn().mockResolvedValue({ data: {} }),
+      updateModel: vi.fn().mockResolvedValue({ data: {} }),
+      getEmployeeQualification: vi.fn().mockResolvedValue({ data: {} }),
+      getEmployeeQualifications: vi.fn().mockResolvedValue({ data: {} }),
+      certifyEmployee: vi.fn().mockResolvedValue({ data: {} }),
+      promoteEmployee: vi.fn().mockResolvedValue({ data: {} }),
+      getAssessments: vi.fn().mockResolvedValue({ data: {} }),
+      createAssessment: vi.fn().mockResolvedValue({ data: {} }),
+      submitAssessment: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -84,10 +104,10 @@ describe('QualificationManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockQualifications });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    qualificationApi.getLevels.mockResolvedValue({ data: mockQualifications });
+    qualificationApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    qualificationApi.update.mockResolvedValue({ data: { success: true } });
+    qualificationApi.deleteLevel.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -143,14 +163,14 @@ describe('QualificationManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(qualificationApi.getLevels).toHaveBeenCalledWith(
           expect.stringContaining('/qualification')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      qualificationApi.getLevels.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -162,7 +182,7 @@ describe('QualificationManagement', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      qualificationApi.getLevels.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -273,7 +293,7 @@ describe('QualificationManagement', () => {
         fireEvent.click(reminderButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(qualificationApi.create).toHaveBeenCalled();
         });
       }
     });
@@ -309,7 +329,7 @@ describe('QualificationManagement', () => {
         fireEvent.click(updateButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(qualificationApi.update).toHaveBeenCalled();
         });
       }
     });
@@ -332,7 +352,7 @@ describe('QualificationManagement', () => {
         fireEvent.change(searchInput, { target: { value: '电工' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(qualificationApi.getLevels).toHaveBeenCalled();
         });
       }
     });
@@ -345,7 +365,7 @@ describe('QualificationManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(qualificationApi.getLevels).toHaveBeenCalled();
       });
 
       const categoryFilter = screen.queryByRole('combobox');
@@ -362,7 +382,7 @@ describe('QualificationManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(qualificationApi.getLevels).toHaveBeenCalled();
       });
     });
   });
@@ -376,7 +396,7 @@ describe('QualificationManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(qualificationApi.getLevels).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -424,7 +444,7 @@ describe('QualificationManagement', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(qualificationApi.deleteLevel).toHaveBeenCalled();
         });
       }
     });

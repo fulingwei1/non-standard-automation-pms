@@ -7,14 +7,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ServiceRecord from '../ServiceRecord';
-import api from '../../services/api';
+import { serviceApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+  serviceApi: {
+    records: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      getStatistics: vi.fn(),
+    }
   }
 }));
 
@@ -94,10 +97,8 @@ describe('ServiceRecord', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockServiceRecords });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    serviceApi.records.list.mockResolvedValue({ data: mockServiceRecords });
+    serviceApi.records.create.mockResolvedValue({ data: { success: true, id: 3 } });
   });
 
   afterEach(() => {
@@ -153,14 +154,14 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(serviceApi.records.list).toHaveBeenCalledWith(
           expect.stringContaining('/service-record')
         );
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      serviceApi.records.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -172,7 +173,7 @@ describe('ServiceRecord', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      serviceApi.records.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -299,7 +300,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(updateButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(serviceApi.update).toHaveBeenCalled();
         });
       }
     });
@@ -320,7 +321,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(completeButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(serviceApi.update).toHaveBeenCalled();
         });
       }
     });
@@ -388,7 +389,7 @@ describe('ServiceRecord', () => {
         fireEvent.change(searchInput, { target: { value: '客户A' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(serviceApi.records.list).toHaveBeenCalled();
         });
       }
     });
@@ -401,7 +402,7 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.records.list).toHaveBeenCalled();
       });
 
       const typeFilter = screen.queryByRole('combobox');
@@ -418,7 +419,7 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.records.list).toHaveBeenCalled();
       });
     });
 
@@ -430,7 +431,7 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.records.list).toHaveBeenCalled();
       });
     });
   });
@@ -444,7 +445,7 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.records.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -492,7 +493,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(serviceApi.delete).toHaveBeenCalled();
         });
       }
     });
@@ -636,7 +637,7 @@ describe('ServiceRecord', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(serviceApi.records.list).toHaveBeenCalled();
       });
 
       const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
@@ -644,7 +645,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(exportButton);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalledWith(
+          expect(serviceApi.records.create).toHaveBeenCalledWith(
             expect.stringContaining('/export')
           );
         });
@@ -669,7 +670,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(reportButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(serviceApi.records.create).toHaveBeenCalled();
         });
       }
     });

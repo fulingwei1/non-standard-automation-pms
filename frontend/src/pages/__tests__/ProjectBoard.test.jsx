@@ -7,16 +7,37 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProjectBoard from '../ProjectBoard';
-import api from '../../services/api';
+import api, { projectApi } from '../../services/api';
 
 // Mock API
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 // Mock framer-motion
@@ -119,7 +140,7 @@ describe.skip('ProjectBoard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockImplementation((url) => {
+    projectApi.list.mockImplementation((url) => {
       if (url.includes('/projects/board')) {
         return Promise.resolve({ data: { projects: mockProjects, stats: mockStats } });
       }
@@ -129,7 +150,7 @@ describe.skip('ProjectBoard', () => {
       return Promise.resolve({ data: {} });
     });
 
-    api.put.mockResolvedValue({ data: { success: true } });
+    projectApi.update.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -292,7 +313,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/projects'));
+        expect(projectApi.list).toHaveBeenCalledWith(expect.stringContaining('/projects'));
       });
     });
 
@@ -308,7 +329,7 @@ describe.skip('ProjectBoard', () => {
     });
 
     it('should handle API error gracefully', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to fetch projects'));
+      projectApi.list.mockRejectedValueOnce(new Error('Failed to fetch projects'));
 
       render(
         <MemoryRouter>
@@ -323,7 +344,7 @@ describe.skip('ProjectBoard', () => {
     });
 
     it('should display empty state when no projects', async () => {
-      api.get.mockResolvedValueOnce({ data: { projects: [], stats: {} } });
+      projectApi.list.mockResolvedValueOnce({ data: { projects: [], stats: {} } });
 
       render(
         <MemoryRouter>
@@ -364,7 +385,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const priorityFilter = screen.queryByText(/优先级|Priority/i);
@@ -398,7 +419,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const managerFilter = screen.queryByText(/项目经理|Manager/i);
@@ -418,7 +439,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const sortButton = screen.queryByText(/排序|Sort/i);
@@ -435,7 +456,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
 
@@ -447,7 +468,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -497,7 +518,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const initialCallCount = api.get.mock.calls.length;
@@ -520,7 +541,7 @@ describe.skip('ProjectBoard', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const viewToggle = screen.queryByRole('button', { name: /列表|List|看板|Board/i });
@@ -591,7 +612,7 @@ describe.skip('ProjectBoard', () => {
         fireEvent.dragEnd(projectCard);
         
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(projectApi.update).toHaveBeenCalled();
         });
       }
     });

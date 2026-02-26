@@ -7,16 +7,37 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProjectList from '../ProjectList';
-import api from '../../services/api';
+import api, { projectApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -79,8 +100,8 @@ describe.skip('ProjectList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockResolvedValue({ data: mockProjectList });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    projectApi.list.mockResolvedValue({ data: mockProjectList });
+    projectApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -150,7 +171,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/projects'));
+        expect(projectApi.list).toHaveBeenCalledWith(expect.stringContaining('/projects'));
       });
     });
 
@@ -167,7 +188,7 @@ describe.skip('ProjectList', () => {
     });
 
     it('should handle API error', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to load'));
+      projectApi.list.mockRejectedValueOnce(new Error('Failed to load'));
 
       render(
         <MemoryRouter>
@@ -182,7 +203,7 @@ describe.skip('ProjectList', () => {
     });
 
     it('should display empty state when no projects', async () => {
-      api.get.mockResolvedValueOnce({ data: { items: [], total: 0 } });
+      projectApi.list.mockResolvedValueOnce({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -215,7 +236,7 @@ describe.skip('ProjectList', () => {
         
         // Should filter results
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalledWith(
+          expect(projectApi.list).toHaveBeenCalledWith(
             expect.stringContaining('search'),
             expect.any(Object)
           );
@@ -231,7 +252,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
@@ -259,7 +280,7 @@ describe.skip('ProjectList', () => {
       fireEvent.click(codeHeader);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
 
@@ -311,13 +332,13 @@ describe.skip('ProjectList', () => {
       // First click - ascending
       fireEvent.click(nameHeader);
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       // Second click - descending
       fireEvent.click(nameHeader);
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -349,7 +370,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const priorityFilter = screen.queryByText(/优先级|Priority/i);
@@ -366,7 +387,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const managerFilter = screen.queryByText(/项目经理|Manager/i);
@@ -383,7 +404,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const resetButton = screen.queryByRole('button', { name: /重置|Reset/i });
@@ -426,7 +447,7 @@ describe.skip('ProjectList', () => {
         pageSize: 10
       };
 
-      api.get.mockResolvedValueOnce({ data: largeMockData });
+      projectApi.list.mockResolvedValueOnce({ data: largeMockData });
 
       render(
         <MemoryRouter>
@@ -443,7 +464,7 @@ describe.skip('ProjectList', () => {
         fireEvent.click(nextButton);
         
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalledWith(
+          expect(projectApi.list).toHaveBeenCalledWith(
             expect.anything(),
             expect.objectContaining({ params: expect.objectContaining({ page: 2 }) })
           );
@@ -459,7 +480,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const pageSizeSelect = screen.queryByRole('combobox');
@@ -527,7 +548,7 @@ describe.skip('ProjectList', () => {
           fireEvent.click(confirmButton);
           
           await waitFor(() => {
-            expect(api.delete).toHaveBeenCalled();
+            expect(projectApi.delete).toHaveBeenCalled();
           });
         }
       }
@@ -541,7 +562,7 @@ describe.skip('ProjectList', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const initialCallCount = api.get.mock.calls.length;

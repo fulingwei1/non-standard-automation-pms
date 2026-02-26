@@ -7,14 +7,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SupplierManagementData from '../SupplierManagementData';
-import api from '../../services/api';
+import api, { supplierApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    supplierApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      updateRating: vi.fn().mockResolvedValue({ data: {} }),
+      getMaterials: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -85,8 +95,8 @@ describe('SupplierManagementData', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockSupplierData });
-    api.post.mockResolvedValue({ data: { success: true } });
+    supplierApi.list.mockResolvedValue({ data: mockSupplierData });
+    supplierApi.create.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -170,7 +180,7 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const categoryFilter = screen.queryByRole('combobox');
@@ -187,7 +197,7 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const dateInputs = screen.queryAllByRole('textbox');
@@ -207,7 +217,7 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
@@ -215,7 +225,7 @@ describe('SupplierManagementData', () => {
         fireEvent.click(exportButton);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalledWith(
+          expect(supplierApi.create).toHaveBeenCalledWith(
             expect.stringContaining('/export')
           );
         });
@@ -232,7 +242,7 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(supplierApi.list).toHaveBeenCalled();
       });
 
       const importButton = screen.queryByRole('button', { name: /导入|Import/i });
@@ -308,14 +318,14 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(supplierApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/supplier')
         );
       });
     });
 
     it('should handle loading error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      supplierApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>

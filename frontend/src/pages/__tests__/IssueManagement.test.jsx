@@ -7,16 +7,48 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import IssueManagement from '../IssueManagement';
-import api from '../../services/api';
+import api, { issueApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    issueApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getIssues: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      assign: vi.fn().mockResolvedValue({ data: {} }),
+      resolve: vi.fn().mockResolvedValue({ data: {} }),
+      verify: vi.fn().mockResolvedValue({ data: {} }),
+      close: vi.fn().mockResolvedValue({ data: {} }),
+      cancel: vi.fn().mockResolvedValue({ data: {} }),
+      changeStatus: vi.fn().mockResolvedValue({ data: {} }),
+      getStatistics: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+      getTrend: vi.fn().mockResolvedValue({ data: {} }),
+      getEngineerStatistics: vi.fn().mockResolvedValue({ data: {} }),
+      getCauseAnalysis: vi.fn().mockResolvedValue({ data: {} }),
+      getSnapshots: vi.fn().mockResolvedValue({ data: {} }),
+      getSnapshot: vi.fn().mockResolvedValue({ data: {} }),
+      getFollowUps: vi.fn().mockResolvedValue({ data: {} }),
+      addFollowUp: vi.fn().mockResolvedValue({ data: {} }),
+      getRelated: vi.fn().mockResolvedValue({ data: {} }),
+      createRelated: vi.fn().mockResolvedValue({ data: {} }),
+      batchAssign: vi.fn().mockResolvedValue({ data: {} }),
+      batchStatus: vi.fn().mockResolvedValue({ data: {} }),
+      batchClose: vi.fn().mockResolvedValue({ data: {} }),
+      export: vi.fn().mockResolvedValue({ data: {} }),
+      import: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -76,7 +108,7 @@ describe.skip('IssueManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockIssueData });
+    issueApi.getIssues.mockResolvedValue({ data: mockIssueData });
   });
 
   afterEach(() => {
@@ -160,14 +192,14 @@ describe.skip('IssueManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('/issues')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      issueApi.getIssues.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -179,7 +211,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should handle empty issue list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      issueApi.getIssues.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -200,14 +232,14 @@ describe.skip('IssueManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(issueApi.getIssues).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(issueApi.getIssues).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -248,7 +280,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.change(severityFilter, { target: { value: 'high' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('severity=high')
         );
       });
@@ -269,7 +301,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.change(statusFilter, { target: { value: 'open' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('status=open')
         );
       });
@@ -290,7 +322,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.change(searchInput, { target: { value: '登录' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('keyword=登录')
         );
       });
@@ -316,7 +348,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should assign issue to user', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      issueApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -337,7 +369,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should update issue status', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      issueApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -353,7 +385,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(statusButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(issueApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/issues/1'),
           expect.any(Object)
         );
@@ -361,7 +393,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should resolve issue', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      issueApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -377,7 +409,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(resolveButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(issueApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/issues/1/resolve'),
           expect.any(Object)
         );
@@ -385,7 +417,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should close issue', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      issueApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -401,7 +433,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(closeButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(issueApi.update).toHaveBeenCalledWith(
           expect.stringContaining('/issues/1/close'),
           expect.any(Object)
         );
@@ -409,7 +441,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should delete issue', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      issueApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -426,12 +458,12 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/issues/1');
+        expect(issueApi.delete).toHaveBeenCalledWith('/issues/1');
       });
     });
 
     it('should add comment to issue', async () => {
-      api.post.mockResolvedValue({ data: { success: true } });
+      issueApi.create.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -466,14 +498,14 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
     });
 
     it('should export issues', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
+      issueApi.getIssues.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
 
       render(
         <MemoryRouter>
@@ -489,7 +521,7 @@ describe.skip('IssueManagement', () => {
       fireEvent.click(exportButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(issueApi.getIssues).toHaveBeenCalledWith(
           expect.stringContaining('/issues/export')
         );
       });
@@ -499,7 +531,7 @@ describe.skip('IssueManagement', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      issueApi.getIssues.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -513,7 +545,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should handle create issue failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      issueApi.create.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -539,7 +571,7 @@ describe.skip('IssueManagement', () => {
     });
 
     it('should handle update issue failure', async () => {
-      api.put.mockRejectedValue(new Error('Update Failed'));
+      issueApi.update.mockRejectedValue(new Error('Update Failed'));
 
       render(
         <MemoryRouter>

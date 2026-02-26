@@ -7,16 +7,26 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DepartmentManagement from '../DepartmentManagement';
-import api from '../../services/api';
+import api, { orgApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    orgApi: {
+      departments: vi.fn().mockResolvedValue({ data: {} }),
+      departmentTree: vi.fn().mockResolvedValue({ data: {} }),
+      createDepartment: vi.fn().mockResolvedValue({ data: {} }),
+      updateDepartment: vi.fn().mockResolvedValue({ data: {} }),
+      getDepartment: vi.fn().mockResolvedValue({ data: {} }),
+      getDepartmentUsers: vi.fn().mockResolvedValue({ data: {} }),
+      employees: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -74,7 +84,7 @@ describe.skip('DepartmentManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockDeptData });
+    orgApi.getDepartment.mockResolvedValue({ data: mockDeptData });
   });
 
   afterEach(() => {
@@ -119,14 +129,14 @@ describe.skip('DepartmentManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(orgApi.getDepartment).toHaveBeenCalledWith(
           expect.stringContaining('/departments')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      orgApi.getDepartment.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -179,7 +189,7 @@ describe.skip('DepartmentManagement', () => {
     });
 
     it('should delete department', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      orgApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -196,12 +206,12 @@ describe.skip('DepartmentManagement', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/departments/1');
+        expect(orgApi.delete).toHaveBeenCalledWith('/departments/1');
       });
     });
 
     it('should set department manager', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      orgApi.updateDepartment.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -225,7 +235,7 @@ describe.skip('DepartmentManagement', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      orgApi.getDepartment.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
