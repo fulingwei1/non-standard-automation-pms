@@ -13,14 +13,14 @@ export function useShortageManagement() {
             const params = { page_size: 100 };
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.priority && filters.priority !== 'all') params.priority = filters.priority;
-            const response = await shortageApi.list(params);
+            const response = await shortageApi.reports.list(params);
             setShortages(response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);
 
-    const resolveShortage = useCallback(async (id, resolution) => {
-        try { await shortageApi.resolve(id, resolution); await loadShortages(); return { success: true }; }
+    const resolveShortage = useCallback(async (id) => {
+        try { await shortageApi.reports.resolve(id); await loadShortages(); return { success: true }; }
         catch (err) { return { success: false, error: err.response?.data?.detail || err.message }; }
     }, [loadShortages]);
 
