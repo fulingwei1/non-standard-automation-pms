@@ -124,7 +124,7 @@ export default defineConfig([
       'no-unused-vars': [
         'error',
         {
-          varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*',
           argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|_).*',
           caughtErrorsIgnorePattern: '^_',
         },
