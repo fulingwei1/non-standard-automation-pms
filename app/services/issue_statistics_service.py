@@ -57,8 +57,7 @@ def count_issues_by_status(db: Session) -> Dict[str, int]:
     """统计各状态问题数量"""
     svc = IssueStatistics(db)
     dist = svc.get_status_distribution()
-    # 补全所有预期的 key，保持原有返回格式
-    total = db.query(Issue).filter(Issue.status != 'DELETED').count()
+    total = svc.count_total()
     return {
         'total': total,
         'open': dist.get('OPEN', 0),

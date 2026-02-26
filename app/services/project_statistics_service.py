@@ -3,7 +3,7 @@
 项目统一统计服务
 
 提供项目中心各模块的统一统计功能，减少代码重复。
-简单的 count-by-field 统计委托给 SyncStatisticsService，
+简单的 count-by-field 统计使用 SQL GROUP BY 替代全量加载，
 需要额外字段聚合的（pm_name, customer_name, contract_amount）保留自定义实现。
 """
 
@@ -28,7 +28,7 @@ class ProjectStatistics(SyncStatisticsService):
 
 
 def calculate_status_statistics(query) -> Dict[str, int]:
-    """计算状态统计（使用 SQL GROUP BY）"""
+    """计算状态统计（SQL GROUP BY 替代全量加载）"""
     rows = (
         query.with_entities(Project.status, func.count(Project.id))
         .filter(Project.status.isnot(None))
@@ -39,7 +39,7 @@ def calculate_status_statistics(query) -> Dict[str, int]:
 
 
 def calculate_stage_statistics(query) -> Dict[str, int]:
-    """计算阶段统计（使用 SQL GROUP BY）"""
+    """计算阶段统计（SQL GROUP BY 替代全量加载）"""
     rows = (
         query.with_entities(Project.stage, func.count(Project.id))
         .filter(Project.stage.isnot(None))
@@ -50,7 +50,7 @@ def calculate_stage_statistics(query) -> Dict[str, int]:
 
 
 def calculate_health_statistics(query) -> Dict[str, int]:
-    """计算健康度统计（使用 SQL GROUP BY）"""
+    """计算健康度统计（SQL GROUP BY 替代全量加载）"""
     rows = (
         query.with_entities(Project.health, func.count(Project.id))
         .filter(Project.health.isnot(None))
@@ -61,7 +61,7 @@ def calculate_health_statistics(query) -> Dict[str, int]:
 
 
 def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
-    """计算项目经理统计（需要 pm_name，无法纯用 count_by_field）"""
+    """计算项目经理统计"""
     projects = query.all()
     temp_stats = {}
     for p in projects:
@@ -77,7 +77,7 @@ def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
 
 
 def calculate_customer_statistics(query) -> List[Dict[str, Any]]:
-    """计算客户统计（需要聚合 contract_amount，无法纯用 count_by_field）"""
+    """计算客户统计"""
     projects = query.all()
     temp_stats = {}
     for p in projects:
