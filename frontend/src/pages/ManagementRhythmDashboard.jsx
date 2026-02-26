@@ -12,7 +12,6 @@ import {
   SkeletonCard,
 } from "../components/ui";
 import {
-import { formatDate } from "@/lib/formatters";
   Target,
   TrendingUp,
   Settings,
@@ -90,8 +89,6 @@ export default function ManagementRhythmDashboard() {
       setLoading(false);
     }
   };
-
->>>>>>> fix/import-export
 
   const calculateDaysUntil = (dateStr) => {
     if (!dateStr) {return null;}

@@ -6,6 +6,7 @@ export { api };
 export * from "./api/acceptance.js";
 export * from "./api/admin.js";
 export * from "./api/alerts.js";
+export * from "./api/analytics.js";
 export * from "./api/auth.js";
 export * from "./api/businessSupport.js";
 export * from "./api/customerCommunication.js";

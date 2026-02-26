@@ -266,6 +266,7 @@ export const reportCenterApi = {
   generate: (data) => api.post("/reports/generate", data),
   preview: (reportType, params) =>
     api.get(`/reports/preview/${reportType}`, { params }),
+  previewByTemplate: (params) => api.get("/reports/preview", { params }),
   compareRoles: (data) => api.post("/reports/compare-roles", data),
   // 报表导出
   exportReport: (data) => api.post("/reports/export", data),
@@ -275,7 +276,14 @@ export const reportCenterApi = {
     api.get(`/reports/download/${reportId}`, { responseType: "blob" }),
   // 报表模板
   getTemplates: (params) => api.get("/reports/templates", { params }),
+  createTemplate: (data) => api.post("/reports/templates", data),
+  toggleTemplate: (id) => api.post(`/reports/templates/${id}/toggle`),
+  deleteTemplate: (id) => api.delete(`/reports/templates/${id}`),
   applyTemplate: (data) => api.post("/reports/templates/apply", data),
+  // 报表归档
+  getArchives: (params) => api.get("/reports/archives", { params }),
+  downloadArchive: (id) =>
+    api.get(`/reports/archives/${id}/download`, { responseType: "blob" }),
   // BI 报表
   getDeliveryRate: (params) => api.get("/reports/delivery-rate", { params }),
   getHealthDistribution: () => api.get("/reports/health-distribution"),
