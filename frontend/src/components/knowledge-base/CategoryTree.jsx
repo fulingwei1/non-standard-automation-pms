@@ -22,12 +22,14 @@ import {
 "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { TrendingUp } from "lucide-react";
 import {
   articleCategoryConfigs as _articleCategoryConfigs,
   generateCategoryTree,
   getPopularCategories,
   getCategoryConfig,
-  formatCategory } from
+  formatCategory
+} from
 "@/lib/constants/knowledge";
 
 export default function CategoryTree({

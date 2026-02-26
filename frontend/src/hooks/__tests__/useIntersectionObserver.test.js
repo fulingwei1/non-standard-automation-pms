@@ -12,14 +12,14 @@ import {
 
 // Store observer instances
 let observerInstances = [];
-let observerCallback;
+let _observerCallback;
 
 class MockIntersectionObserver {
   constructor(callback, options) {
     this.callback = callback;
     this.options = options;
     this.elements = [];
-    observerCallback = callback;
+    _observerCallback = callback;
     observerInstances.push(this);
   }
 
@@ -43,7 +43,7 @@ class MockIntersectionObserver {
 describe('useIntersectionObserver', () => {
   beforeEach(() => {
     observerInstances = [];
-    observerCallback = null;
+    _observerCallback = null;
     global.IntersectionObserver = vi.fn((callback, options) => {
       return new MockIntersectionObserver(callback, options);
     });

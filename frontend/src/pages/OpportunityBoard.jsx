@@ -78,6 +78,7 @@ import {
 
 // 阶段映射函数
 import { confirmAction } from "@/lib/confirmAction";
+import { Eye } from "lucide-react";
 const mapStageToFrontend = (backendStage) => {
   const config = OpportunityUtils.getStageConfig(backendStage);
   return config?.frontendKey || "lead";

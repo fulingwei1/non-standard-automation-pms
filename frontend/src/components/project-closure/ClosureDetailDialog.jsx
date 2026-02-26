@@ -6,6 +6,7 @@
 
 import { formatDate } from "../../lib/utils";
 import { getStatusBadge } from "./closureUtils";
+import { Badge, Button, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
 
 export default function ClosureDetailDialog({ open, onOpenChange, closure }) {
   if (!closure) {return null;}

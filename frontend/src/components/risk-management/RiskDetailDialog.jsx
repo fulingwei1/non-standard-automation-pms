@@ -6,6 +6,7 @@
 
 import { formatDate } from "../../lib/utils";
 import { getRiskLevelBadge, getStatusBadge, getProbabilityLabel, getImpactLabel } from "./riskUtils";
+import { Badge, Button, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
 
 export default function RiskDetailDialog({ open, onOpenChange, risk }) {
   if (!risk) {return null;}

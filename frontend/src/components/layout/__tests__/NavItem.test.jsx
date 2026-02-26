@@ -169,8 +169,8 @@ describe('NavItem 组件', () => {
         cancelable: true,
       });
 
-      const preventDefaultSpy = vi.spyOn(clickEvent, 'preventDefault');
-      const stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation');
+      const _preventDefaultSpy = vi.spyOn(clickEvent, 'preventDefault');
+      const _stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation');
 
       favoriteButton.dispatchEvent(clickEvent);
 

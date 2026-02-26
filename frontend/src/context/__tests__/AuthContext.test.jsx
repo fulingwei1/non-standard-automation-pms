@@ -334,7 +334,7 @@ describe('AuthContext', () => {
     });
 
     it('应该传递原有的props', () => {
-      const TestComponent = ({ auth, customProp }) => {
+      const TestComponent = ({ _auth, customProp }) => {
         return (
           <div>
             <span data-testid="custom">{customProp}</span>

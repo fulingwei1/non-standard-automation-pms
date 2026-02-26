@@ -8,7 +8,7 @@ import { usePreloadData } from '../usePreloadData';
 
 // Mock usePreload
 vi.mock('../useIntersectionObserver', () => ({
-  usePreload: vi.fn((callback, options) => {
+  usePreload: vi.fn((callback, _options) => {
     // 立即调用 callback 模拟预加载触发
     setTimeout(() => callback(), 0);
     return {

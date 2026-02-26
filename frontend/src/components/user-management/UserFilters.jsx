@@ -60,6 +60,7 @@ import {
   formatUserStatus as _formatUserStatus } from
 "@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
+import { UserX } from "lucide-react";
 
 export function UserFilters({
   onFiltersChange,

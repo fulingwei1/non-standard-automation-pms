@@ -9,6 +9,9 @@ import {
 
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs } from "./acceptanceConfig";
+import { Badge, Button, Progress } from "../ui";
+import { Calendar, CheckCircle2, Edit3, Eye, XCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AcceptanceCard({ acceptance, onView }) {
   const type = typeConfigs[acceptance.type] || {

@@ -2,6 +2,7 @@
 
 import { formatDate } from "../../lib/utils";
 import { cn } from "../../lib/utils";
+import { Badge, Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
 import {
   DISPATCH_STATUS,
   DISPATCH_STATUS_LABELS,

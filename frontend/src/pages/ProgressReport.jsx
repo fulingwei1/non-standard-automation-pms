@@ -43,6 +43,7 @@ import {
 "../components/ui/dialog";
 import { cn as _cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
+import { Edit } from "lucide-react";
 export default function ProgressReport() {
   const { id } = useParams();
   const navigate = useNavigate();

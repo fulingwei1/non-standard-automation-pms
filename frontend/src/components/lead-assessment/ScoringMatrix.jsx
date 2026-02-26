@@ -43,6 +43,8 @@ import {
   LEAD_STATUSES } from
 "@/lib/constants/leadAssessment";
 import { Checkbox } from "../ui/checkbox";
+import { Input } from "../ui";
+import { Mail, Phone } from "lucide-react";
 
 export const ScoringMatrix = ({
   leads = [],

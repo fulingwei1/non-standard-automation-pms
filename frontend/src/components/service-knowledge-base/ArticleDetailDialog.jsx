@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 
 import { cn } from "../../lib/utils";
 import { categoryConfig, statusConfig } from "./knowledgeConfig";
+import { Badge, Button, Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Textarea } from "../ui";
+import { Edit, Eye, HelpCircle, Save, Star, ThumbsUp, Trash2 } from "lucide-react";
 
 export default function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);

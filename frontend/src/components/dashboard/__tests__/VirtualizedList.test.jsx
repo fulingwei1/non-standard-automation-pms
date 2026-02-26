@@ -186,7 +186,7 @@ describe('VirtualizedList', () => {
         />
       );
       
-      const initialCallCount = mockRenderItem.mock.calls.length;
+      const _initialCallCount = mockRenderItem.mock.calls.length;
       mockRenderItem.mockClear();
       
       const scrollContainer = container.querySelector('.overflow-auto');

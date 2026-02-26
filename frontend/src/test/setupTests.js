@@ -73,7 +73,6 @@ vi.mock('../services/api/client', () => {
       initiated_pending: 0,
       unread_cc: 0,
       urgent: 0,
-      total: 0,
     },
   });
 
@@ -132,7 +131,7 @@ vi.mock('@ant-design/plots', () => {
   const React = require('react');
   
   const createMockChart = (chartType) => {
-    return function MockChart({ data = [], ...props }) {
+    return function MockChart({ data = [], ..._props }) {
       return React.createElement('div', {
         'data-testid': `${chartType}-chart`,
         'data-chart-type': chartType,
