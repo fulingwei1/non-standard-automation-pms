@@ -93,7 +93,7 @@ import {
 '@/lib/constants/contractManagement';
 
 // 导入 API service
-import { getContracts } from '../services/contractService';
+import { getContracts, deleteContract } from '../services/contractService';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;

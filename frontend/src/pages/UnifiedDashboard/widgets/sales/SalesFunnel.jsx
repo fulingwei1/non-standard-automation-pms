@@ -5,24 +5,51 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import { salesStatisticsApi } from '../../../../services/api/sales';
 import { cn } from '../../../../lib/utils';
 
 const defaultFunnelData = [
-  { stage: '线索', count: 150, value: '¥15,000,000', color: 'bg-blue-500' },
-  { stage: '商机', count: 80, value: '¥8,000,000', color: 'bg-cyan-500' },
-  { stage: '客户', count: 45, value: '¥4,500,000', color: 'bg-green-500' },
+  { stage: '线索', count: 0, value: '¥0', color: 'bg-blue-500' },
+  { stage: '商机', count: 0, value: '¥0', color: 'bg-cyan-500' },
+  { stage: '客户', count: 0, value: '¥0', color: 'bg-green-500' },
 ];
+
+const STAGE_COLORS = {
+  '线索': 'bg-blue-500',
+  '商机': 'bg-cyan-500',
+  '客户': 'bg-green-500',
+};
 
 export default function SalesFunnel({ view: _view, data }) {
   const [funnelData, setFunnelData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setFunnelData(data?.funnel || defaultFunnelData);
+    if (data?.funnel) {
+      setFunnelData(data.funnel);
       setLoading(false);
-    }, 500);
+      return;
+    }
+    const loadFunnel = async () => {
+      setLoading(true);
+      try {
+        const res = await salesStatisticsApi.funnel();
+        const items = res.data?.items || res.data || res;
+        if (Array.isArray(items) && items.length > 0) {
+          setFunnelData(items.map(item => ({
+            ...item,
+            color: STAGE_COLORS[item.stage] || 'bg-blue-500',
+          })));
+        } else {
+          setFunnelData(defaultFunnelData);
+        }
+      } catch {
+        setFunnelData(defaultFunnelData);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFunnel();
   }, [data]);
 
   const maxCount = Math.max(...funnelData.map(d => d.count));

@@ -267,6 +267,62 @@ export function useStageActions(projectId) {
     }
   }, [projectId]);
 
+  // ==================== 节点操作 ====================
+
+  /**
+   * 开始节点
+   */
+  const startNode = useCallback(async (nodeInstanceId) => {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await stageViewsApi.nodes.start(projectId, nodeInstanceId);
+      return true;
+    } catch (err) {
+      console.error("开始节点失败:", err);
+      setActionError("开始节点失败");
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  }, [projectId]);
+
+  /**
+   * 完成节点
+   */
+  const completeNode = useCallback(async (nodeInstanceId, data) => {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await stageViewsApi.nodes.complete(projectId, nodeInstanceId, data);
+      return true;
+    } catch (err) {
+      console.error("完成节点失败:", err);
+      setActionError("完成节点失败");
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  }, [projectId]);
+
+  /**
+   * 跳过节点
+   */
+  const skipNode = useCallback(async (nodeInstanceId, reason) => {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await stageViewsApi.nodes.skip(projectId, nodeInstanceId, reason);
+      return true;
+    } catch (err) {
+      console.error("跳过节点失败:", err);
+      setActionError("跳过节点失败");
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  }, [projectId]);
+
   return {
     actionLoading,
     actionError,
@@ -274,6 +330,9 @@ export function useStageActions(projectId) {
     startStage,
     completeStage,
     submitReview,
+    startNode,
+    completeNode,
+    skipNode,
   };
 }
 

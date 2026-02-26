@@ -41,6 +41,8 @@ import {
   Progress,
   Badge,
   Radio,
+  Modal,
+  Form,
   message } from
 "antd";
 
@@ -76,10 +78,39 @@ const { RangePicker } = DatePicker;
 
 const AlertStatistics = () => {
   const [_selectedAlert, setSelectedAlert] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingAlert, setEditingAlert] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm] = Form.useForm();
 
   const handleEditAlert = (alert) => {
-    setSelectedAlert(alert);
-    message.info("编辑功能待实现");
+    setEditingAlert(alert);
+    editForm.setFieldsValue({
+      title: alert.title,
+      description: alert.description,
+      type: alert.type,
+      level: alert.level,
+      status: alert.status,
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      setEditLoading(true);
+      await alertApi.rules.update(editingAlert.id, values);
+      message.success("告警规则更新成功");
+      setEditModalVisible(false);
+      setEditingAlert(null);
+      editForm.resetFields();
+      loadData();
+    } catch (error) {
+      if (error.errorFields) return; // form validation error
+      message.error("更新告警规则失败");
+    } finally {
+      setEditLoading(false);
+    }
   };
   // 状态管理
   const [loading, setLoading] = useState(false);
@@ -440,6 +471,51 @@ const AlertStatistics = () => {
           )}
         </Tabs>
       </Card>
+
+      {/* 编辑告警规则弹窗 */}
+      <Modal
+        title="编辑告警规则"
+        open={editModalVisible}
+        onOk={handleEditSubmit}
+        onCancel={() => { setEditModalVisible(false); setEditingAlert(null); editForm.resetFields(); }}
+        confirmLoading={editLoading}
+        destroyOnClose>
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="title" label="告警标题" rules={[{ required: true, message: '请输入告警标题' }]}>
+            <Input placeholder="请输入告警标题" />
+          </Form.Item>
+          <Form.Item name="description" label="告警描述">
+            <Input.TextArea rows={3} placeholder="请输入告警描述" />
+          </Form.Item>
+          <Form.Item name="type" label="告警类型">
+            <Select placeholder="选择告警类型">
+              {Object.values(ALERT_TYPES).map((type) =>
+                <Select.Option key={type.value} value={type.value}>
+                  {type.icon} {type.label}
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+          <Form.Item name="level" label="告警级别">
+            <Select placeholder="选择告警级别">
+              {Object.values(ALERT_LEVELS).map((level) =>
+                <Select.Option key={level.value} value={level.value}>
+                  <Tag color={level.color}>{level.label}</Tag>
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+          <Form.Item name="status" label="状态">
+            <Select placeholder="选择状态">
+              {Object.values(ALERT_STATUS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
+                  <Tag color={status.color}>{status.label}</Tag>
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </motion.div>);
 
 };
