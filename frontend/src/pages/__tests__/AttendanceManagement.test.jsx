@@ -10,16 +10,6 @@ import AttendanceManagement from '../AttendanceManagement';
 import { adminApi } from '../../services/api';
 
 // Mock API
-vi.mock('../../services/api', () => ({
-  adminApi: {
-    attendance: {
-      list: vi.fn(),
-      getStats: vi.fn(),
-      approve: vi.fn(),
-    },
-  },
-}));
-
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

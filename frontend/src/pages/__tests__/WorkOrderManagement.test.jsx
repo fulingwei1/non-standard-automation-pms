@@ -9,15 +9,6 @@ import { MemoryRouter } from 'react-router-dom';
 import WorkOrderManagement from '../WorkOrderManagement';
 import api from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

@@ -10,14 +10,6 @@ import PermissionManagement from '../PermissionManagement';
 import { roleApi } from '../../services/api';
 
 // Mock dependencies
-vi.mock('../../services/api', () => ({
-  roleApi: {
-    permissions: vi.fn(),
-    list: vi.fn(),
-    assignPermissions: vi.fn(),
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

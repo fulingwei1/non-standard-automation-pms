@@ -4,20 +4,20 @@ import { useProjectTaskList } from '../useProjectTaskList';
 import { progressApi, projectApi } from '../../../../services/api';
 
 // Mock the API module
-vi.mock('../../../../services/api', () => ({
-    projectApi: {
-        get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
     },
-    progressApi: {
-        reports: {
-            getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), reports: { getSummary: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }, tasks: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) } },
-        tasks: {
-            list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-            create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-            get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        },
-    },
-}));
+  };
+});
 
 describe('useProjectTaskList Hook', () => {
     const projectId = '123';

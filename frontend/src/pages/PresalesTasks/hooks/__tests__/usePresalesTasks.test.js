@@ -4,10 +4,19 @@ import { usePresalesTasks } from '../usePresalesTasks';
 import { presaleApi } from '../../../../services/api';
 
 // Mock API
-vi.mock('../../../../services/api', () => {
-    return {
-        presaleApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), query: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), aiMatch: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), assign: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), completeTask: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getMyTasks: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), updateTaskStatus: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
-    };
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
+    },
+  };
 });
 
 describe('usePresalesTasks Hook', () => {

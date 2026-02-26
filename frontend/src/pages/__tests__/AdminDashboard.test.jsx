@@ -10,16 +10,6 @@ import AdminDashboard from '../AdminDashboard';
 import api from '../../services/api';
 
 // Mock API
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    patch: vi.fn(),
-  }
-}));
-
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

@@ -76,15 +76,23 @@ vi.mock('../services/api/client', () => {
     },
   });
 
-  return {
-    api: {
-      get: vi.fn().mockResolvedValue(mockResponse()),
-      post: vi.fn().mockResolvedValue(mockResponse()),
-      put: vi.fn().mockResolvedValue(mockResponse()),
-      delete: vi.fn().mockResolvedValue(mockResponse()),
-      patch: vi.fn().mockResolvedValue(mockResponse()),
-      request: vi.fn().mockResolvedValue(mockResponse()),
+  const apiMock = {
+    get: vi.fn().mockResolvedValue(mockResponse()),
+    post: vi.fn().mockResolvedValue(mockResponse()),
+    put: vi.fn().mockResolvedValue(mockResponse()),
+    delete: vi.fn().mockResolvedValue(mockResponse()),
+    patch: vi.fn().mockResolvedValue(mockResponse()),
+    request: vi.fn().mockResolvedValue(mockResponse()),
+    defaults: { baseURL: '/api/v1' },
+    interceptors: {
+      request: { use: vi.fn(), eject: vi.fn() },
+      response: { use: vi.fn(), eject: vi.fn() },
     },
+  };
+
+  return {
+    default: apiMock,
+    api: apiMock,
   };
 });
 

@@ -10,17 +10,6 @@ import ContractList from '../ContractList';
 import { contractApi } from '../../services/api';
 
 // Mock dependencies
-vi.mock('../../services/api', () => ({
-  contractApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    getMilestones: vi.fn(),
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

@@ -9,14 +9,6 @@ import { MemoryRouter } from 'react-router-dom';
 import SupplierManagementData from '../SupplierManagementData';
 import api from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

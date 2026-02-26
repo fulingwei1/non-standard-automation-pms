@@ -3,13 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useDepartmentManagement } from '../useDepartmentManagement';
 import { departmentApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', () => ({
-    departmentApi: {
-        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
     },
-}));
+  };
+});
 
 describe('useDepartmentManagement Hook', () => {
     const mockDepartments = [

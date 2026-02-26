@@ -10,15 +10,6 @@ import CustomerList from '../CustomerList';
 import api from '../../services/api';
 
 // Mock API
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
-}));
-
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
