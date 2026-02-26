@@ -22,10 +22,15 @@ def db():
 
 @pytest.fixture
 def resolver(db):
-    return DataResolver(db)
+    if IMPORT_OK:
+        return DataResolver(db)
 
 
-def make_config(source_type=DataSourceType.QUERY, args=None):
+def make_config(source_type=None, args=None):
+    if not IMPORT_OK:
+        return None
+    if source_type is None:
+        source_type = DataSourceType.QUERY
     cfg = MagicMock(spec=DataSourceConfig)
     cfg.type = source_type
     cfg.args = args or {}

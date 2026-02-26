@@ -13,12 +13,13 @@ except Exception:
 pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="模块导入失败，跳过测试")
 
 
-class ConcreteAdapter(BaseReportAdapter):
+if IMPORT_OK:
+    class ConcreteAdapter(BaseReportAdapter):
     def get_report_code(self) -> str:
         return "TEST_REPORT"
 
-    def generate_data(self, params, user=None):
-        return {"summary": {"key": "val"}, "details": [{"a": 1}], "title": "测试"}
+        def generate_data(self, params, user=None):
+            return {"summary": {"key": "val"}, "details": [{"a": 1}], "title": "测试"}
 
 
 @pytest.fixture
