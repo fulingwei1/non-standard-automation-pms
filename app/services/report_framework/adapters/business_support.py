@@ -43,6 +43,7 @@ class BusinessSupportReportAdapter(BaseReportAdapter):
         if not method_name:
             raise ValueError(f"Unsupported business support report type: {self.report_type}")
 
+        # 原服务的方法签名各不相同，按类型分发
         if method_name == "sales_daily":
             target_date = params.get("target_date") or date.today()
             if hasattr(self._service, "generate_daily_report"):
@@ -56,4 +57,5 @@ class BusinessSupportReportAdapter(BaseReportAdapter):
             if hasattr(self._service, "generate_monthly_report"):
                 return self._service.generate_monthly_report(month)
 
+        # Fallback: 返回空数据
         return {"report_type": self.report_type, "data": {}, "status": "adapter_fallback"}
