@@ -10,7 +10,6 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Projects API', () => {
   let api, mock;
@@ -19,7 +18,6 @@ describe('Projects API', () => {
 
   beforeEach(async () => {
     // 设置测试环境
-    ({ api, mock } = await setupApiTest());
     
     // 导入项目模块
     const projectsModule = await import('../projects.js');

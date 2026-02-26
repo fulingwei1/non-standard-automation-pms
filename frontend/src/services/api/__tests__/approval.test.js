@@ -9,7 +9,6 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
-import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Approval API', () => {
   let api, mock;
