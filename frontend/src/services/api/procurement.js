@@ -73,6 +73,7 @@ export const purchaseApi = {
   },
 };
 
+/** @deprecated Use purchaseApi instead */
 export const procurementApi = purchaseApi;
 
 export const outsourcingApi = {
