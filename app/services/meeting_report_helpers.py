@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-会议报告生成辅助函数
+会议报告生成辅助函数 — 数据计算层
+
+职责：查询会议与行动项数据、计算统计指标（完成率/环比/同比）、
+     构建报告所需的结构化数据字典。
+
+与 meeting_report_docx_service.py 的关系：
+  本模块负责 **数据准备**，docx_service 负责 **文档渲染**。
+  调用链：helpers 产出 dict → docx_service 消费 dict 生成 Word 文件。
 """
 
 from calendar import monthrange
