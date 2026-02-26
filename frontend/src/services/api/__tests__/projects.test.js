@@ -33,7 +33,7 @@ describe('Projects API', () => {
   });
 
   afterEach(() => {
-    teardownApiTest(mock);
+    mock.restore();
   });
 
   describe('projectApi - 项目API', () => {
