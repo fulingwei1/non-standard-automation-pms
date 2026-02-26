@@ -19,6 +19,10 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     issueApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      getIssues: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       getIssues: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),

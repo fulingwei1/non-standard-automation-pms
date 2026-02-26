@@ -19,6 +19,7 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     presaleApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
       tickets: {
         list: vi.fn().mockResolvedValue({ data: {} }),
         get: vi.fn().mockResolvedValue({ data: {} }),

@@ -19,6 +19,8 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     acceptanceApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       templates: {
         list: vi.fn().mockResolvedValue({ data: {} }),
         get: vi.fn().mockResolvedValue({ data: {} }),

@@ -19,6 +19,8 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     projectApi: {
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       getBoard: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),

@@ -18,6 +18,7 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     productionApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
       dashboard: vi.fn().mockResolvedValue({ data: {} }),
       dailyReports: {
         daily: vi.fn().mockResolvedValue({ data: {} }),

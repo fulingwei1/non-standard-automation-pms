@@ -18,6 +18,8 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     materialApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
       create: vi.fn().mockResolvedValue({ data: {} }),

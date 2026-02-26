@@ -19,6 +19,9 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     orgApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      getDepartment: vi.fn().mockResolvedValue({ data: {} }),
+      updateDepartment: vi.fn().mockResolvedValue({ data: {} }),
       departments: vi.fn().mockResolvedValue({ data: {} }),
       departmentTree: vi.fn().mockResolvedValue({ data: {} }),
       createDepartment: vi.fn().mockResolvedValue({ data: {} }),

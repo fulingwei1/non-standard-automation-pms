@@ -18,8 +18,13 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     qualificationApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      deleteLevel: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       getLevels: vi.fn().mockResolvedValue({ data: {} }),
       getLevel: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
       createLevel: vi.fn().mockResolvedValue({ data: {} }),
       updateLevel: vi.fn().mockResolvedValue({ data: {} }),
       deleteLevel: vi.fn().mockResolvedValue({ data: {} }),

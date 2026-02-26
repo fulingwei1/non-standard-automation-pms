@@ -300,7 +300,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(updateButtons[0]);
 
         await waitFor(() => {
-          expect(serviceApi.update).toHaveBeenCalled();
+          expect(serviceApi.records.update).toHaveBeenCalled();
         });
       }
     });
@@ -321,7 +321,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(completeButtons[0]);
 
         await waitFor(() => {
-          expect(serviceApi.update).toHaveBeenCalled();
+          expect(serviceApi.records.update).toHaveBeenCalled();
         });
       }
     });
@@ -493,7 +493,7 @@ describe('ServiceRecord', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(serviceApi.delete).toHaveBeenCalled();
+          expect(serviceApi.records.delete).toHaveBeenCalled();
         });
       }
     });

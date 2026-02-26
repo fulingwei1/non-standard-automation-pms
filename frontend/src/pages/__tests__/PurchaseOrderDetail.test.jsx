@@ -19,6 +19,7 @@ vi.mock('../../services/api', () => ({
     defaults: { baseURL: '/api' },
   },
     purchaseApi: {
+      update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
       create: vi.fn().mockResolvedValue({ data: {} }),
