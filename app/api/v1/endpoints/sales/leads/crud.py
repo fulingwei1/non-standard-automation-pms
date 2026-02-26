@@ -62,10 +62,10 @@ def read_leads(
 
     total = query.count()
     # 默认按优先级排序，如果没有优先级则按创建时间排序
-    leads = query.order_by(
+    leads = apply_pagination(query.order_by(
         desc(Lead.priority_score).nullslast(),
         desc(Lead.created_at)
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     # 填充负责人名称和优势产品信息
     lead_responses = []

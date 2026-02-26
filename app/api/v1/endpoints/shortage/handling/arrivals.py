@@ -197,10 +197,10 @@ def get_delayed_arrivals(
         query = query.filter(MaterialArrival.supplier_id == supplier_id)
 
     total = query.count()
-    arrivals = query.order_by(
+    arrivals = apply_pagination(query.order_by(
         MaterialArrival.delay_days.desc(),
         MaterialArrival.expected_date
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 

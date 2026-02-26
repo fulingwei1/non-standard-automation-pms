@@ -81,11 +81,11 @@ async def get_shortage_alerts(
     l3_count = query.filter(ShortageDetail.alert_level == "L3").count()
     l4_count = query.filter(ShortageDetail.alert_level == "L4").count()
 
-    shortages = query.order_by(
+    shortages = apply_pagination(query.order_by(
         ShortageDetail.alert_level,
         ShortageDetail.is_blocking.desc(),
         ShortageDetail.shortage_rate.desc()
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     # 构建预警项
     alert_items = []
