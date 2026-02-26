@@ -41,7 +41,7 @@ import {
   TabsTrigger } from
 "../components/ui/tabs";
 import { Label } from "../components/ui/label";
-import { projectRolesApi, userApi } from "../services/api";
+import { projectRoleApi, userApi } from "../services/api";
 import { fadeIn } from "../lib/animations";
 
 import { confirmAction } from "@/lib/confirmAction";
@@ -100,7 +100,7 @@ export default function ProjectRoles() {
     if (!projectId) {return;}
     try {
       setLoading(true);
-      const response = await projectRolesApi.getRoleOverview(projectId);
+      const response = await projectRoleApi.getOverview(projectId);
       const data = response.data?.data || response.data || response;
       setRoleOverview(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -114,7 +114,7 @@ export default function ProjectRoles() {
   const loadRoleConfigs = async () => {
     if (!projectId) {return;}
     try {
-      const response = await projectRolesApi.roleConfigs.list(projectId);
+      const response = await projectRoleApi.configs.get(projectId);
       const data = response.data?.data || response.data || response;
       setRoleConfigs(data.items || []);
     } catch (err) {
@@ -125,7 +125,7 @@ export default function ProjectRoles() {
   const loadLeads = async () => {
     if (!projectId) {return;}
     try {
-      const response = await projectRolesApi.leads.list(projectId, false);
+      const response = await projectRoleApi.leads.list(projectId, false);
       const data = response.data?.data || response.data || response;
       setLeads(data.items || []);
     } catch (err) {
@@ -137,7 +137,7 @@ export default function ProjectRoles() {
     if (!projectId) {return;}
     try {
       setLoading(true);
-      await projectRolesApi.roleConfigs.init(projectId);
+      await projectRoleApi.configs.init(projectId);
       loadRoleConfigs();
       loadRoleOverview();
     } catch (err) {
@@ -163,7 +163,7 @@ export default function ProjectRoles() {
     try {
       setLoading(true);
       setError(null);
-      await projectRolesApi.leads.create(projectId, leadForm);
+      await projectRoleApi.leads.create(projectId, leadForm);
       setLeadDialogOpen(false);
       loadLeads();
       loadRoleOverview();
@@ -189,7 +189,7 @@ export default function ProjectRoles() {
     try {
       setLoading(true);
       setError(null);
-      await projectRolesApi.teamMembers.create(
+      await projectRoleApi.team.add(
         projectId,
         selectedLead.id,
         teamMemberForm
@@ -212,7 +212,7 @@ export default function ProjectRoles() {
     }
     try {
       setLoading(true);
-      await projectRolesApi.leads.delete(projectId, memberId);
+      await projectRoleApi.leads.delete(projectId, memberId);
       loadLeads();
       loadRoleOverview();
     } catch (err) {
