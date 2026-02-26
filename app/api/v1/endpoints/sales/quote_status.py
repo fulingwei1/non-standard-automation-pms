@@ -4,8 +4,6 @@
 包含：状态定义、状态转换、状态历史
 """
 
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
