@@ -33,7 +33,6 @@ class BaseApprovalWorkflowService(ABC):
     - _build_form_data(entity): 构建审批表单数据
     - _build_pending_item(task, entity): 构建待审批列表项
     - _build_history_item(task, entity): 构建历史记录项
-    - _build_status_response(entity, instance, task_history): 构建状态响应
     """
 
     # ---- 子类必须定义的类属性 ----
@@ -71,7 +70,7 @@ class BaseApprovalWorkflowService(ABC):
     # ---- 子类可选覆盖的钩子 ----
 
     def _get_entity_no(self, entity: Any) -> Optional[str]:
-        """获取实体编号，默认尝试 order_no"""
+        """获取实体编号，默认尝试常见字段名"""
         for attr in ("order_no", "contract_no", "quote_no", "ecn_no"):
             if hasattr(entity, attr):
                 return getattr(entity, attr)
@@ -176,7 +175,6 @@ class BaseApprovalWorkflowService(ABC):
                 "urgency": instance.urgency,
                 "node_name": task.node.node_name if task.node else None,
             }
-            # 合并子类的扩展字段
             base_item.update(self._build_pending_item(task, entity))
             items.append(base_item)
 
