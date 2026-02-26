@@ -15,13 +15,18 @@ from app.models.presale import (
     PresaleSupportTicket,
 )
 from app.models.sales import Contract
+from app.services.bonus.base import BonusCalculatorBase
 
 
-class SolutionEngineerBonusService:
-    """方案工程师奖金补偿服务"""
+class SolutionEngineerBonusService(BonusCalculatorBase):
+    """方案工程师奖金补偿服务
+
+    继承 BonusCalculatorBase 以复用 get_active_rules、check_trigger_condition
+    等公共奖金计算逻辑（fix #37）。
+    """
 
     def __init__(self, db: Session):
-        self.db = db
+        super().__init__(db)
 
     def calculate_solution_bonus(
         self,

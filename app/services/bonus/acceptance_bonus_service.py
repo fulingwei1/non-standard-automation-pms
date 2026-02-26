@@ -13,6 +13,7 @@ from app.models.enums import TeamBonusAllocationMethodEnum
 from app.models.presale import PresaleSupportTicket
 from app.models.project import Project, ProjectMember
 from app.models.sales import Contract, Opportunity
+from app.services.bonus.base import BonusCalculatorBase
 from app.services.project_evaluation_service import ProjectEvaluationService
 
 
@@ -23,13 +24,12 @@ def get_active_rules(
     """
     获取激活的奖金规则
 
+    委托给 BonusCalculatorBase.get_active_rules 以消除重复逻辑（fix #37）。
+
     Returns:
         List[BonusRule]: 奖金规则列表
     """
-    return db.query(BonusRule).filter(
-        BonusRule.bonus_type == bonus_type,
-        BonusRule.is_active
-    ).all()
+    return BonusCalculatorBase(db).get_active_rules(bonus_type=bonus_type)
 
 
 def calculate_sales_bonus(

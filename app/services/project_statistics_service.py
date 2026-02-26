@@ -2,7 +2,9 @@
 """
 项目统一统计服务
 
-提供项目中心各模块的统一统计功能，减少代码重复
+提供项目中心各模块的统一统计功能，减少代码重复。
+简单的 count-by-field 统计委托给 SyncStatisticsService，
+需要额外字段聚合的（pm_name, customer_name, contract_amount）保留自定义实现。
 """
 
 from abc import ABC, abstractmethod
@@ -14,40 +16,52 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
+from app.services.statistics.base import SyncStatisticsService
+
+
+class ProjectStatistics(SyncStatisticsService):
+    """项目维度的通用统计，基于 SyncStatisticsService"""
+
+    model = Project
+    default_status_field = "status"
+    default_exclude_statuses = []
 
 
 def calculate_status_statistics(query) -> Dict[str, int]:
-    """计算状态统计"""
-    projects = query.all()
-    stats = {}
-    for p in projects:
-        if p.status:
-            stats[p.status] = stats.get(p.status, 0) + 1
-    return stats
+    """计算状态统计（使用 SQL GROUP BY）"""
+    rows = (
+        query.with_entities(Project.status, func.count(Project.id))
+        .filter(Project.status.isnot(None))
+        .group_by(Project.status)
+        .all()
+    )
+    return {str(r[0]): r[1] for r in rows}
 
 
 def calculate_stage_statistics(query) -> Dict[str, int]:
-    """计算阶段统计"""
-    projects = query.all()
-    stats = {}
-    for p in projects:
-        if p.stage:
-            stats[p.stage] = stats.get(p.stage, 0) + 1
-    return stats
+    """计算阶段统计（使用 SQL GROUP BY）"""
+    rows = (
+        query.with_entities(Project.stage, func.count(Project.id))
+        .filter(Project.stage.isnot(None))
+        .group_by(Project.stage)
+        .all()
+    )
+    return {str(r[0]): r[1] for r in rows}
 
 
 def calculate_health_statistics(query) -> Dict[str, int]:
-    """计算健康度统计"""
-    projects = query.all()
-    stats = {}
-    for p in projects:
-        if p.health:
-            stats[p.health] = stats.get(p.health, 0) + 1
-    return stats
+    """计算健康度统计（使用 SQL GROUP BY）"""
+    rows = (
+        query.with_entities(Project.health, func.count(Project.id))
+        .filter(Project.health.isnot(None))
+        .group_by(Project.health)
+        .all()
+    )
+    return {str(r[0]): r[1] for r in rows}
 
 
 def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
-    """计算项目经理统计"""
+    """计算项目经理统计（需要 pm_name，无法纯用 count_by_field）"""
     projects = query.all()
     temp_stats = {}
     for p in projects:
@@ -63,7 +77,7 @@ def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
 
 
 def calculate_customer_statistics(query) -> List[Dict[str, Any]]:
-    """计算客户统计"""
+    """计算客户统计（需要聚合 contract_amount，无法纯用 count_by_field）"""
     projects = query.all()
     temp_stats = {}
     for p in projects:
