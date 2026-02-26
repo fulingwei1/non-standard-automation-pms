@@ -188,7 +188,7 @@ export function useStageViews(initialView = VIEW_TYPES.PIPELINE) {
 /**
  * 阶段状态操作 Hook
  */
-export function useStageActions() {
+export function useStageActions(projectId) {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
 
@@ -199,7 +199,7 @@ export function useStageActions() {
     setActionLoading(true);
     setActionError(null);
     try {
-      await stageViewsApi.stages.updateStatus(stageInstanceId, { status, remark });
+      await stageViewsApi.stages.updateStatus(projectId, stageInstanceId, { status, remark });
       return true;
     } catch (err) {
       console.error("更新阶段状态失败:", err);
@@ -208,7 +208,7 @@ export function useStageActions() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   /**
    * 开始阶段
@@ -217,7 +217,7 @@ export function useStageActions() {
     setActionLoading(true);
     setActionError(null);
     try {
-      await stageViewsApi.stages.start(stageInstanceId, actualStartDate);
+      await stageViewsApi.stages.start(projectId, stageInstanceId, actualStartDate);
       return true;
     } catch (err) {
       console.error("开始阶段失败:", err);
@@ -226,7 +226,7 @@ export function useStageActions() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   /**
    * 完成阶段
@@ -235,7 +235,7 @@ export function useStageActions() {
     setActionLoading(true);
     setActionError(null);
     try {
-      await stageViewsApi.stages.complete(stageInstanceId, actualEndDate, autoStartNext);
+      await stageViewsApi.stages.complete(projectId, stageInstanceId, actualEndDate, autoStartNext);
       return true;
     } catch (err) {
       console.error("完成阶段失败:", err);
@@ -244,7 +244,7 @@ export function useStageActions() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   /**
    * 提交阶段评审
@@ -253,7 +253,7 @@ export function useStageActions() {
     setActionLoading(true);
     setActionError(null);
     try {
-      await stageViewsApi.stages.submitReview(stageInstanceId, {
+      await stageViewsApi.stages.submitReview(projectId, stageInstanceId, {
         review_result: reviewResult,
         review_notes: reviewNotes,
       });
@@ -265,7 +265,7 @@ export function useStageActions() {
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   return {
     actionLoading,

@@ -82,7 +82,7 @@ export default function ProjectBoard() {
 
   // 使用阶段视图Hook
   const stageViewsHook = useStageViews(VIEW_TYPES.PIPELINE);
-  const stageActions = useStageActions();
+  const stageActions = useStageActions(selectedProjectId);
 
   // 使用角色筛选 Hook
   const {
