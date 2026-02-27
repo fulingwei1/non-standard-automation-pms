@@ -154,7 +154,7 @@ def get_task_metrics(
     completed_tasks = query.filter(Task.status == 'COMPLETED').count()
     overdue_tasks = query.filter(
         and_(
-            Task.due_date < date.today(),
+            Task.deadline < date.today(),
             Task.status != 'COMPLETED'
         )
     ).count()

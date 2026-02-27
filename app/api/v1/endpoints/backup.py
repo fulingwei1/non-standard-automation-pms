@@ -188,7 +188,12 @@ async def get_backup_stats(
     stats = BackupService.get_backup_stats()
     
     if not stats:
-        raise HTTPException(status_code=500, detail="无法获取统计信息")
+        return {
+            "database": {"count": 0, "total_size": 0, "latest": None},
+            "uploads": {"count": 0, "total_size": 0, "latest": None},
+            "configs": {"count": 0, "total_size": 0, "latest": None},
+            "full": {"count": 0, "total_size": 0, "latest": None},
+        }
     
     return stats
 

@@ -67,7 +67,7 @@ async def create_reconciliation(
 
         # 2. 本期销售 = 对账期间内签订的合同金额
         period_sales_result = db.execute(text("""
-            SELECT COALESCE(SUM(contract_amount), 0) as sales
+            SELECT COALESCE(SUM(total_amount), 0) as sales
             FROM contracts
             WHERE customer_id = :customer_id
             AND signed_date >= :period_start

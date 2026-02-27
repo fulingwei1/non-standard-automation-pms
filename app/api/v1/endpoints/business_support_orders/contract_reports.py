@@ -53,16 +53,16 @@ async def get_contract_report(
 
         # 合同金额统计
         total_contracts = db.query(Contract).all()
-        total_contract_amount = sum(c.contract_amount or Decimal("0") for c in total_contracts)
+        total_contract_amount = sum(c.total_amount or Decimal("0") for c in total_contracts)
 
         signed_contracts = db.query(Contract).filter(Contract.status == "SIGNED").all()
-        signed_amount = sum(c.contract_amount or Decimal("0") for c in signed_contracts)
+        signed_amount = sum(c.total_amount or Decimal("0") for c in signed_contracts)
 
         executing_contracts = db.query(Contract).filter(Contract.status == "EXECUTING").all()
-        executing_amount = sum(c.contract_amount or Decimal("0") for c in executing_contracts)
+        executing_amount = sum(c.total_amount or Decimal("0") for c in executing_contracts)
 
         completed_contracts_objs = db.query(Contract).filter(Contract.status == "COMPLETED").all()
-        completed_amount = sum(c.contract_amount or Decimal("0") for c in completed_contracts_objs)
+        completed_amount = sum(c.total_amount or Decimal("0") for c in completed_contracts_objs)
 
         # 执行进度（简化处理，使用回款进度）
         try:
@@ -89,7 +89,7 @@ async def get_contract_report(
         top_customers_result = db.execute(text("""
             SELECT
                 c.customer_name,
-                COALESCE(SUM(ct.contract_amount), 0) as contract_amount
+                COALESCE(SUM(ct.total_amount), 0) as contract_amount
             FROM contracts ct
             JOIN customers c ON ct.customer_id = c.id
             WHERE ct.signing_date >= :start_date
