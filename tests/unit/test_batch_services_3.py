@@ -213,7 +213,7 @@ class TestProjectEvaluationService:
         from app.models import Project
 
         project = Mock(spec=Project)
-        project.contract_amount = Decimal("6000000")
+        project.total_amount = Decimal("6000000")
 
         service = ProjectEvaluationService(db_session_mock)
         score = service.auto_calculate_amount_score(project)
@@ -225,7 +225,7 @@ class TestProjectEvaluationService:
         from app.models import Project
 
         project = Mock(spec=Project)
-        project.contract_amount = Decimal("300000")
+        project.total_amount = Decimal("300000")
 
         service = ProjectEvaluationService(db_session_mock)
         score = service.auto_calculate_amount_score(project)

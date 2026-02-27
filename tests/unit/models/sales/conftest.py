@@ -40,7 +40,7 @@ def sample_opportunity(db_session, sample_user, sample_customer):
         owner_id=sample_user.id,
         stage="需求分析",
         probability=Decimal("60.00"),
-        expected_amount=Decimal("500000.00"),
+        est_amount=Decimal("500000.00"),
         expected_close_date=date.today() + timedelta(days=60)
     )
     db_session.add(opp)

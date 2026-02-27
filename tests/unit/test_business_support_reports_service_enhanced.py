@@ -75,9 +75,9 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_contract_stats_with_data(self):
         """测试有数据的合同统计"""
         mock_contract1 = MagicMock()
-        mock_contract1.contract_amount = Decimal("100000")
+        mock_contract1.total_amount = Decimal("100000")
         mock_contract2 = MagicMock()
-        mock_contract2.contract_amount = Decimal("200000")
+        mock_contract2.total_amount = Decimal("200000")
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -112,7 +112,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_contract_stats_with_none_amount(self):
         """测试合同金额为None的情况"""
         mock_contract = MagicMock()
-        mock_contract.contract_amount = None
+        mock_contract.total_amount = None
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -251,9 +251,9 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_invoice_stats_with_data(self):
         """测试有数据的开票统计"""
         mock_invoice1 = MagicMock()
-        mock_invoice1.invoice_amount = Decimal("30000")
+        mock_invoice1.amount = Decimal("30000")
         mock_invoice2 = MagicMock()
-        mock_invoice2.invoice_amount = Decimal("40000")
+        mock_invoice2.amount = Decimal("40000")
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -291,7 +291,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_invoice_stats_with_none_amount(self):
         """测试发票金额为None的情况"""
         mock_invoice = MagicMock()
-        mock_invoice.invoice_amount = None
+        mock_invoice.amount = None
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -398,13 +398,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试指定日期的日报"""
         # Mock all database queries
         mock_contract = MagicMock()
-        mock_contract.contract_amount = Decimal("100000")
+        mock_contract.total_amount = Decimal("100000")
         
         mock_order = MagicMock()
         mock_order.order_amount = Decimal("50000")
         
         mock_invoice = MagicMock()
-        mock_invoice.invoice_amount = Decimal("30000")
+        mock_invoice.amount = Decimal("30000")
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -476,13 +476,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_get_daily_report_with_none_amounts(self, mock_date_class):
         """测试日报中金额为None的情况"""
         mock_contract = MagicMock()
-        mock_contract.contract_amount = None
+        mock_contract.total_amount = None
         
         mock_order = MagicMock()
         mock_order.order_amount = None
         
         mock_invoice = MagicMock()
-        mock_invoice.invoice_amount = None
+        mock_invoice.amount = None
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value

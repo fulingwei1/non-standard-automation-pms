@@ -358,9 +358,9 @@ def test_contract(db_session: Session, test_customer):
         contract_name="单元测试合同",
         contract_type="SALES",
         customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
+        # customer_name is not a Contract field,
         status="EFFECTIVE",
-        contract_amount=Decimal("100000.00"),
+        total_amount=Decimal("100000.00"),
         signing_date=date.today(),
         effective_date=date.today(),
         expiry_date=date.today() + timedelta(days=365),
@@ -380,13 +380,11 @@ def test_lead(db_session: Session, test_sales_user):
 
     lead = Lead(
         lead_code="LD-UNIT-TEST",
-        lead_name="单元测试线索",
-        company_name="潜在客户公司",
+        customer_name="潜在客户公司",
         contact_name="联系人",
         contact_phone="13600000000",
         source="WEBSITE",
         status="NEW",
-        estimated_amount=Decimal("50000.00"),
         owner_id=test_sales_user.id,
     )
     db_session.add(lead)
@@ -404,14 +402,12 @@ def test_opportunity(db_session: Session, test_sales_user, test_customer):
     from app.models.sales import Opportunity
 
     opportunity = Opportunity(
-        opportunity_code="OP-UNIT-TEST",
-        opportunity_name="单元测试商机",
+        opp_code="OP-UNIT-TEST",
+        opp_name="单元测试商机",
         customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
         stage="INITIAL",
-        status="ACTIVE",
         probability=30,
-        expected_amount=Decimal("200000.00"),
+        est_amount=Decimal("200000.00"),
         expected_close_date=date.today() + timedelta(days=60),
         owner_id=test_sales_user.id,
     )
