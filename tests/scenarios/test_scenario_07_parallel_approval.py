@@ -33,7 +33,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -43,7 +42,6 @@ class TestParallelApproval:
             instance_id=instance.id,
             assignee_id=5,
             assignee_name="技术总监",
-            assignee_name="技术评审",
             task_order=1,
             status="PENDING",
         )
@@ -51,7 +49,6 @@ class TestParallelApproval:
             instance_id=instance.id,
             assignee_id=6,
             assignee_name="财务总监",
-            assignee_name="财务评审",
             task_order=1,  # 相同sequence表示并行
             status="PENDING",
         )
@@ -82,7 +79,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -134,7 +130,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -196,7 +191,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -254,7 +248,6 @@ class TestParallelApproval:
             initiator_id=3,
             status="PENDING",
             minimum_approval_count=2,  # 至少需要2人通过
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -319,7 +312,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -373,7 +365,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -439,7 +430,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -507,7 +497,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -558,7 +547,6 @@ class TestParallelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()

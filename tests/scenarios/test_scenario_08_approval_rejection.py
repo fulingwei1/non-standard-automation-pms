@@ -33,7 +33,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -107,7 +106,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="REJECTED",
-            initiator_id=3,
         )
         db_session.add(old_instance)
         db_session.commit()
@@ -125,7 +123,6 @@ class TestApprovalRejection:
             initiator_id=3,
             status="PENDING",
             previous_instance_id=old_instance.id,
-            initiator_id=3,
         )
         db_session.add(new_instance)
         db_session.commit()
@@ -150,7 +147,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -189,7 +185,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -241,7 +236,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -312,7 +306,6 @@ class TestApprovalRejection:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -382,7 +375,6 @@ class TestApprovalRejection:
             initiator_id=3,
             status="REJECTED",
             created_at=datetime.now() - timedelta(days=5),
-            initiator_id=3,
         )
         db_session.add(instance1)
         db_session.commit()
@@ -396,7 +388,6 @@ class TestApprovalRejection:
             status="REJECTED",
             previous_instance_id=instance1.id,
             created_at=datetime.now() - timedelta(days=2),
-            initiator_id=3,
         )
         db_session.add(instance2)
         db_session.commit()
@@ -409,7 +400,6 @@ class TestApprovalRejection:
             initiator_id=3,
             status="APPROVED",
             previous_instance_id=instance2.id,
-            initiator_id=3,
         )
         db_session.add(instance3)
         db_session.commit()

@@ -52,7 +52,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -78,7 +77,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -89,7 +87,6 @@ class TestMultiLevelApproval:
             instance_id=instance.id,
             assignee_id=4,
             assignee_name="部门经理",
-            assignee_name="部门经理审批",
             task_order=1,
             status="PENDING",
         )
@@ -100,7 +97,6 @@ class TestMultiLevelApproval:
             instance_id=instance.id,
             assignee_id=5,
             assignee_name="财务总监",
-            assignee_name="财务总监审批",
             task_order=2,
             status="NOT_STARTED",
         )
@@ -111,7 +107,6 @@ class TestMultiLevelApproval:
             instance_id=instance.id,
             assignee_id=1,
             assignee_name="总经理",
-            assignee_name="总经理审批",
             task_order=3,
             status="NOT_STARTED",
         )
@@ -144,7 +139,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -200,7 +194,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -270,7 +263,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -338,7 +330,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -410,7 +401,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -458,7 +448,6 @@ class TestMultiLevelApproval:
             instance_no=pr_small.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance_small)
         db_session.commit()
@@ -496,7 +485,6 @@ class TestMultiLevelApproval:
             instance_no=pr_large.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance_large)
         db_session.commit()
@@ -537,7 +525,6 @@ class TestMultiLevelApproval:
             initiator_id=3,
             status="PENDING",
             created_at=datetime.now() - timedelta(days=5),
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -615,7 +602,6 @@ class TestMultiLevelApproval:
             instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()

@@ -34,7 +34,6 @@ class TestQuoteToContractFlow:
         quote = Quote(
             quote_code="QT-FLOW-001",
             customer_id=flow_customer.id,
-            valid_until=date.today(),
             valid_until=date.today() + timedelta(days=30),
             total_price=Decimal("800000.00"),
             status="DRAFT",

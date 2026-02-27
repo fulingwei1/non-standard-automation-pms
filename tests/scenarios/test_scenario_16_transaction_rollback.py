@@ -174,7 +174,6 @@ class TestTransactionRollback:
                     instance_no=project.project_code,
                     initiator_id=1,
                     status="PENDING",
-                    initiator_id=1,
                 )
                 db_session.add(approval)
                 db_session.flush()
@@ -329,7 +328,6 @@ class TestTransactionRollback:
             instance_no=project.project_code,
             initiator_id=1,
             status="PENDING",
-            initiator_id=1,
         )
         db_session.add(approval)
         db_session.commit()
