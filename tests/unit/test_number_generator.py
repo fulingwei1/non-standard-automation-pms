@@ -255,7 +255,7 @@ class TestNumberGeneratorPadding:
     def generator(self, db_session: Session):
         from app.utils.number_generator import NumberGenerator
 
-        return NumberGenerator(db_session)
+        return NumberGenerator()
 
     def test_padding_zeros(self, generator, db_session: Session):
         """测试零填充"""
@@ -285,7 +285,7 @@ class TestNumberGeneratorCustomPrefix:
     def generator(self, db_session: Session):
         from app.utils.number_generator import NumberGenerator
 
-        return NumberGenerator(db_session)
+        return NumberGenerator()
 
     def test_custom_prefix(self, generator, db_session: Session):
         """测试自定义前缀"""
