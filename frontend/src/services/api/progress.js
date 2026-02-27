@@ -30,8 +30,8 @@ export const progressApi = {
     create: (data) => api.post("/progress-reports", data),
     get: (id) => api.get(`/progress-reports/${id}`),
     getSummary: (projectId) =>
-      api.get(`/projects/${projectId}/progress-summary`),
-    getGantt: (projectId) => api.get(`/projects/${projectId}/gantt`),
+      api.get(`/projects/${projectId}/progress/summary`),
+    getGantt: (projectId) => api.get(`/projects/${projectId}/progress/gantt`),
     getBoard: (projectId) => api.get(`/projects/${projectId}/progress/board`),
     getMilestoneRate: (projectId) =>
       api.get("/reports/milestone-rate", {
