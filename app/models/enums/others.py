@@ -168,6 +168,10 @@ class MeetingRhythmLevel(str, Enum):
     BI_WEEKLY = "BI_WEEKLY"
     MONTHLY = "MONTHLY"
     QUARTERLY = "QUARTERLY"
+    STRATEGIC = "STRATEGIC"
+    OPERATIONAL = "OPERATIONAL"
+    OPERATION = "OPERATION"
+    TASK = "TASK"
 
 
 class MeetingCycleType(str, Enum):
