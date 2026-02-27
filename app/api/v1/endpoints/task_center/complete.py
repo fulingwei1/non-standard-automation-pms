@@ -35,7 +35,7 @@ router = APIRouter()
 from .batch_helpers import log_task_operation
 
 router = APIRouter(
-    prefix="/complete",
+    prefix="",
     tags=["complete"]
 )
 

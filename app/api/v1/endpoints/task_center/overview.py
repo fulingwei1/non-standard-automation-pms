@@ -35,7 +35,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/overview",
+    prefix="",
     tags=["overview"]
 )
 

@@ -31,7 +31,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/report-center/configs",
+    prefix="/configs",
     tags=["configs"]
 )
 

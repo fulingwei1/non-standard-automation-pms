@@ -38,7 +38,7 @@ from .batch_helpers import generate_task_code, log_task_operation
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/create",
+    prefix="",
     tags=["create"]
 )
 

@@ -42,7 +42,7 @@ from .batch_helpers import log_task_operation
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/transfer",
+    prefix="",
     tags=["transfer"]
 )
 

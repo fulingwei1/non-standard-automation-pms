@@ -39,7 +39,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/my-tasks",
+    prefix="",
     tags=["my_tasks"]
 )
 
@@ -47,7 +47,7 @@ router = APIRouter(
 
 # ==================== 我的任务列表 ====================
 
-@router.get("", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
+@router.get("/my-tasks", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
 def get_my_tasks(
     *,
     db: Session = Depends(deps.get_db),
