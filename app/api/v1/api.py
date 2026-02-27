@@ -205,6 +205,30 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 节点任务模块加载失败: {e}")
 
+    # Dashboard 统计
+    try:
+        from app.api.v1.endpoints.dashboard_stats import router as dashboard_stats_router
+        api_router.include_router(dashboard_stats_router, tags=["dashboard_stats"])
+        print("✓ Dashboard统计模块加载成功")
+    except Exception as e:
+        print(f"✗ Dashboard统计模块加载失败: {e}")
+
+    # Dashboard 统一入口
+    try:
+        from app.api.v1.endpoints.dashboard_unified import router as dashboard_unified_router
+        api_router.include_router(dashboard_unified_router, tags=["dashboard_unified"])
+        print("✓ Dashboard统一模块加载成功")
+    except Exception as e:
+        print(f"✗ Dashboard统一模块加载失败: {e}")
+
+    # 通知中心
+    try:
+        from app.api.v1.endpoints.notifications import router as notifications_router
+        api_router.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
+        print("✓ 通知中心模块加载成功")
+    except Exception as e:
+        print(f"✗ 通知中心模块加载失败: {e}")
+
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
