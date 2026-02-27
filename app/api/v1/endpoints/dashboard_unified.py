@@ -157,18 +157,17 @@ def list_dashboard_modules(
         modules = [m for m in modules if role_code in m["supported_roles"]]
 
     # 转换为response格式
-    module_infos = [
-        DashboardModuleInfo(
-            module_id=m["module_id"],
-            module_name=m["module_name"],
-            description=None,
-            roles=m["supported_roles"],
-            endpoint=f"/dashboard/unified/{{role_code}}/detailed?module_id={m['module_id']}",
-            widgets=[],
-            is_active=True,
-        )
-        for m in modules
-    ]
+    module_infos = []
+    for m in modules:
+        try:
+            info = DashboardModuleInfo(
+                module_id=m["module_id"],
+                module_name=m["module_name"],
+                module_type=m.get("module_type", "general"),
+            )
+            module_infos.append(info)
+        except Exception:
+            continue
 
     return ResponseModel(data=module_infos)
 

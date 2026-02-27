@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("/bottlenecks")
-async def identify_bottlenecks(
+def identify_bottlenecks(
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),

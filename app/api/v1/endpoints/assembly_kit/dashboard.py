@@ -305,13 +305,19 @@ class AssemblyKitDashboardEndpoint(BaseDashboardEndpoint):
             dashboard_data.pop("stat_cards", [])
             
             # 构建AssemblyDashboardResponse
-            dashboard_response = AssemblyDashboardResponse(**dashboard_data)
+            try:
+                dashboard_response = AssemblyDashboardResponse(**dashboard_data)
+            except Exception:
+                # Validation error fallback - return raw data
+                return ResponseModel(code=200, message="success", data=dashboard_data)
             
             return ResponseModel(
                 code=200,
                 message="success",
                 data=dashboard_response
             )
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=500,

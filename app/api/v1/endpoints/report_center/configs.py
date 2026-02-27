@@ -95,9 +95,9 @@ def get_role_report_matrix(
     """
     角色-报表权限矩阵（权限配置）
     """
-    from app.services.report_data_generation_service import report_data_service
+    from app.services.report_data_generation.core import ReportDataGenerationCore
 
-    matrix = report_data_service.ROLE_REPORT_MATRIX
+    matrix = ReportDataGenerationCore.ROLE_REPORT_MATRIX
 
     return RoleReportMatrixResponse(matrix=matrix)
 
