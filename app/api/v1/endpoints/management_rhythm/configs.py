@@ -46,7 +46,7 @@ router = APIRouter(
 
 # ==================== 管理节律配置 ====================
 
-@router.get("/configs", response_model=PaginatedResponse)
+@router.get("/", response_model=PaginatedResponse)
 def read_rhythm_configs(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -101,7 +101,7 @@ def read_rhythm_configs(
     )
 
 
-@router.post("/configs", response_model=RhythmConfigResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RhythmConfigResponse, status_code=status.HTTP_201_CREATED)
 def create_rhythm_config(
     config_data: RhythmConfigCreate,
     db: Session = Depends(deps.get_db),
@@ -142,7 +142,7 @@ def create_rhythm_config(
     )
 
 
-@router.get("/configs/{config_id}", response_model=RhythmConfigResponse)
+@router.get("/{config_id}", response_model=RhythmConfigResponse)
 def read_rhythm_config(
     config_id: int,
     db: Session = Depends(deps.get_db),
@@ -171,7 +171,7 @@ def read_rhythm_config(
     )
 
 
-@router.put("/configs/{config_id}", response_model=RhythmConfigResponse)
+@router.put("/{config_id}", response_model=RhythmConfigResponse)
 def update_rhythm_config(
     config_id: int,
     config_data: RhythmConfigUpdate,

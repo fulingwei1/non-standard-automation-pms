@@ -58,7 +58,7 @@ class ManagementRhythmDashboardEndpoint(BaseDashboardEndpoint):
         
         # 主dashboard端点（保持原有路径）
         self.router.add_api_route(
-            "/dashboard",
+            "/",
             dashboard_endpoint,
             methods=["GET"],
             summary="获取节律仪表盘数据",
