@@ -54,6 +54,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 权限管理模块加载失败: {e}")
     
+    # ==================== 项目评审（必须在projects之前，避免/{project_id}吞掉project-reviews） ====================
+    try:
+        from app.api.v1.endpoints.project_review import router as project_review_router
+        api_router.include_router(project_review_router, prefix="/projects/project-reviews", tags=["project-reviews"])
+        print("✓ 项目评审模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目评审模块加载失败：{e}")
+
     # ==================== 项目管理 ====================
     try:
         from app.api.v1.endpoints.projects import router as projects_router
@@ -525,13 +533,7 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 预售分析模块加载失败：{e}")
 
-    # ==================== 项目评审 ====================
-    try:
-        from app.api.v1.endpoints.project_review import router as project_review_router
-        api_router.include_router(project_review_router, prefix="/project-reviews", tags=["project-reviews"])
-        print("✓ 项目评审模块加载成功")
-    except Exception as e:
-        print(f"✗ 项目评审模块加载失败：{e}")
+    # ==================== 项目评审（已移至projects之前注册） ====================
 
     # ==================== 服务工单 ====================
     try:

@@ -102,7 +102,7 @@ async def generate_review_report(
     )
 
 
-@router.get("", response_model=ProjectReviewListResponse)
+@router.get("/", response_model=ProjectReviewListResponse)
 async def list_reviews(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
