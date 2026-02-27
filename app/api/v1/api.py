@@ -392,7 +392,7 @@ def create_api_router() -> APIRouter:
     # ==================== ECN 工程变更 ====================
     try:
         from app.api.v1.endpoints.ecn import router as ecn_router
-        api_router.include_router(ecn_router, prefix="/ecn", tags=["ecn"])
+        api_router.include_router(ecn_router, prefix="", tags=["ecn"])
         print("✓ ECN模块加载成功")
     except Exception as e:
         print(f"✗ ECN模块加载失败：{e}")
