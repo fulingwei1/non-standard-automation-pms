@@ -163,26 +163,26 @@ export const timesheetApi = {
   list: (params) => api.get("/timesheets", { params }),
   get: (id) => api.get(`/timesheets/${id}`),
   create: (data) => api.post("/timesheets", data),
-  batchCreate: (data) => api.post("/timesheet/batch", data),
+  batchCreate: (data) => api.post("/timesheet/records/batch", data),
   update: (id, data) => api.put(`/timesheets/${id}`, data),
   delete: (id) => api.delete(`/timesheets/${id}`),
 
   // ========== 周工时表 ==========
-  getWeek: (params) => api.get("/timesheet/week", { params }),
-  submitWeek: (data) => api.post("/timesheet/week/submit", data),
+  getWeek: (params) => api.get("/timesheet/weekly/week", { params }),
+  submitWeek: (data) => api.post("/timesheet/weekly/week/submit", data),
 
   // ========== 提交与审批 ==========
-  submit: (data) => api.post("/timesheet/submit", data),
+  submit: (data) => api.post("/timesheet/workflow/submit", data),
   getPendingApproval: (params) =>
-    api.get("/timesheet/pending-approval", { params }),
+    api.get("/timesheet/pending/pending-approval", { params }),
   approve: (id, data) => api.put(`/timesheets/${id}/approve`, data),
-  batchApprove: (data) => api.post("/timesheet/approve", data),
+  batchApprove: (data) => api.post("/timesheet/workflow/batch-action", data),
   reject: (id, data) => api.post(`/timesheets/${id}/reject`, data),
 
   // ========== 统计汇总 ==========
   getStatistics: (params) => api.get("/timesheet/statistics", { params }),
-  getMonthSummary: (params) => api.get("/timesheet/month-summary", { params }),
-  getMySummary: (params) => api.get("/timesheet/my-summary", { params }),
+  getMonthSummary: (params) => api.get("/timesheet/monthly/month-summary", { params }),
+  getMySummary: (params) => api.get("/timesheet/statistics/my-summary", { params }),
   getDepartmentSummary: (deptId, params) =>
     api.get(`/timesheets/departments/${deptId}/timesheet-summary`, { params }),
 
