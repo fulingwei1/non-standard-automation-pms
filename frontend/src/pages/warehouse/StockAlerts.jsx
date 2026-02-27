@@ -27,7 +27,7 @@ export default function StockAlerts() {
       if (keyword) params.keyword = keyword;
       const res = await warehouseApi.alerts.list(params);
       setData(res.data || res);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (_e) { console.error(_e); } finally { setLoading(false); }
   }, [page, alertType, keyword]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

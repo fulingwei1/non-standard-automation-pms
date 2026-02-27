@@ -141,16 +141,16 @@ export default function QuoteCostManagement() {
       try {
         const checkRes = await quoteApi.checkCost(id);
         setCostCheck(checkRes.data?.data || checkRes.data);
-      } catch (e) {
-        console.log("Cost check not available:", e);
+      } catch (_e) {
+        console.log("Cost check not available:", _e);
       }
 
       // Load approval history
       try {
         const historyRes = await quoteApi.getCostApprovalHistory(id);
         setApprovalHistory(historyRes.data?.data || historyRes.data || []);
-      } catch (e) {
-        console.log("Approval history not available:", e);
+      } catch (_e) {
+        console.log("Approval history not available:", _e);
       }
 
       // Load cost templates
@@ -163,8 +163,8 @@ export default function QuoteCostManagement() {
         const templates =
           templatesRes.data?.data?.items || templatesRes.data?.items || [];
         setCostTemplates(templates);
-      } catch (e) {
-        console.log("Cost templates not available:", e);
+      } catch (_e) {
+        console.log("Cost templates not available:", _e);
       }
     } catch (error) {
       console.error("加载数据失败:", error);

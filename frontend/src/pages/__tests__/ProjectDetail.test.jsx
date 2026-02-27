@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProjectDetail from '../ProjectDetail';
-import api, { projectApi, machineApi, stageApi, milestoneApi, memberApi, costApi, documentApi } from '../../services/api';
+import _api, { projectApi, _machineApi, _stageApi, _milestoneApi, _memberApi, _costApi, _documentApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -23,9 +23,7 @@ vi.mock('../../services/api', () => ({
       update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
       create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       getMachines: vi.fn().mockResolvedValue({ data: {} }),
       getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
       recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),

@@ -36,7 +36,7 @@ export default function StockCount() {
       if (statusFilter && statusFilter !== "all") params.status = statusFilter;
       const res = await warehouseApi.stockCount.list(params);
       setData(res.data || res);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (_e) { console.error(_e); } finally { setLoading(false); }
   }, [page, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -46,17 +46,17 @@ export default function StockCount() {
     try {
       await warehouseApi.stockCount.create({ ...createForm, warehouse_id: createForm.warehouse_id ? parseInt(createForm.warehouse_id) : null, planned_date: createForm.planned_date || null });
       toast?.success?.("盘点单创建成功"); setShowCreate(false); fetchData();
-    } catch (e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
+    } catch (_e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
   };
 
   const viewDetail = async (order) => {
-    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (e) { console.error(e); }
+    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (_e) { console.error(_e); }
   };
 
   const changeStatus = async (id, status) => {
     try { await warehouseApi.stockCount.updateStatus(id, status); toast?.success?.("更新成功"); fetchData();
       if (showDetail) { const r = await warehouseApi.stockCount.get(id); setSelectedOrder(r.data || r); }
-    } catch (e) { toast?.error?.("失败"); }
+    } catch (_e) { toast?.error?.("失败"); }
   };
 
   return (

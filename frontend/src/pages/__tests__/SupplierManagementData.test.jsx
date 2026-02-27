@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SupplierManagementData from '../SupplierManagementData';
-import api, { supplierApi } from '../../services/api';
+import _api, { supplierApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {
@@ -21,7 +21,6 @@ vi.mock('../../services/api', () => ({
       create: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
       update: vi.fn().mockResolvedValue({ data: {} }),
       updateRating: vi.fn().mockResolvedValue({ data: {} }),
       getMaterials: vi.fn().mockResolvedValue({ data: {} }),

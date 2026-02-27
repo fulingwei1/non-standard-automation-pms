@@ -24,7 +24,6 @@ vi.mock('../../services/api', () => ({
       getBoard: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
       create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       getMachines: vi.fn().mockResolvedValue({ data: {} }),
       getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
       recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),

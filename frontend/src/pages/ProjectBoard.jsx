@@ -46,8 +46,8 @@ const getStoredUser = () => {
     if (storedUser) {
       return JSON.parse(storedUser);
     }
-  } catch (e) {
-    console.error("Failed to parse user from localStorage:", e);
+  } catch (_e) {
+    console.error("Failed to parse user from localStorage:", _e);
   }
   // 默认用户数据
   return {

@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { teardownApiTest } from './_test-setup.js';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Projects API', () => {
   let _api, mock;

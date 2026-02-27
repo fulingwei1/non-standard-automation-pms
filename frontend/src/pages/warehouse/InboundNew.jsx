@@ -38,7 +38,7 @@ export default function InboundNew() {
         items: valid.map((i) => ({ ...i, planned_quantity: parseFloat(i.planned_quantity) })),
       });
       toast?.success?.("入库单创建成功"); navigate("/warehouse/inbound");
-    } catch (e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
+    } catch (_e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
   };
 
   return (

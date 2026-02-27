@@ -23,10 +23,10 @@ export default function InboundDetail() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
 
-  const fetch = async () => { try { setLoading(true); const r = await warehouseApi.inbound.get(id); setOrder(r.data || r); } catch(e){} finally { setLoading(false); } };
+  const fetch = async () => { try { setLoading(true); const r = await warehouseApi.inbound.get(id); setOrder(r.data || r); } catch (_e) { /* ignore */ } finally { setLoading(false); } };
   useEffect(() => { fetch(); }, [id]);
 
-  const changeStatus = async (s) => { try { await warehouseApi.inbound.updateStatus(id, s); toast?.success?.("更新成功"); fetch(); } catch(e) { toast?.error?.("失败"); } };
+  const changeStatus = async (s) => { try { await warehouseApi.inbound.updateStatus(id, s); toast?.success?.("更新成功"); fetch(); } catch (_e) { toast?.error?.("失败"); } };
 
   if (loading) return <div className="p-8 text-center text-text-muted">加载中...</div>;
   if (!order) return <div className="p-8 text-center text-text-muted">入库单不存在</div>;

@@ -28,7 +28,7 @@ export default function InventoryList() {
       if (lowStockOnly) params.low_stock = true;
       const res = await warehouseApi.inventory.list(params);
       setData(res.data || res);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (_e) { console.error(_e); } finally { setLoading(false); }
   }, [page, warehouseId, keyword, lowStockOnly]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

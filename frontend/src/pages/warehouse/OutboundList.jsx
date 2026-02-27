@@ -34,7 +34,7 @@ export default function OutboundList() {
       if (keyword) params.keyword = keyword;
       const res = await warehouseApi.outbound.list(params);
       setData(res.data || res);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (_e) { console.error(_e); } finally { setLoading(false); }
   }, [page, statusFilter, keyword]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

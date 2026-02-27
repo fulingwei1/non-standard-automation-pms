@@ -13,14 +13,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Sales API', () => {
-  let api, mock;
+  let _api, mock;
   let leadApi, opportunityApi, quoteApi, contractApi, invoiceApi, paymentApi;
   let salesStatisticsApi, salesTemplateApi, salesTeamApi, salesTargetApi;
   let healthApi, priorityApi;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
-    api = setup.api;
+    _api = setup.api;
     mock = setup.mock;
     
     const salesModule = await import('../sales.js');

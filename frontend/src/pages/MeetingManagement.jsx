@@ -44,7 +44,7 @@ const MeetingManagement = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [_activeTab, _setActiveTab] = useState("upcoming");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState(undefined);
   const [filterStatus, setFilterStatus] = useState(undefined);

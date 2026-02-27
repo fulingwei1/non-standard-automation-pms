@@ -101,8 +101,8 @@ export default function QuoteCostAnalysis() {
             currentVersion.id
           );
           setCostStructure(structureRes.data?.data || structureRes.data);
-        } catch (e) {
-          console.log("Cost structure not available:", e);
+        } catch (_e) {
+          console.log("Cost structure not available:", _e);
         }
       }
 
@@ -110,8 +110,8 @@ export default function QuoteCostAnalysis() {
       try {
         const trendRes = await quoteApi.getCostTrend(id, {});
         setCostTrend(trendRes.data?.data || trendRes.data);
-      } catch (e) {
-        console.log("Cost trend not available:", e);
+      } catch (_e) {
+        console.log("Cost trend not available:", _e);
       }
     } catch (error) {
       console.error("加载数据失败:", error);

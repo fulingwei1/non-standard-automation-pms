@@ -1,0 +1,138 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/components/acceptance/AcceptanceCard.jsx
+  19:10  error  Parsing error: Identifier 'Badge' has already been declared
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/hooks/useAnalytics.js
+  9:32  error  'skillMatrixApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/AssemblerTaskCenter.jsx
+  39:10  error  'loading' is assigned a value but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/DeliveryManagement.jsx
+  277:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/EvaluationTaskList.jsx
+  24:36  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/LeadPriorityManagement.jsx
+  114:52  error  'e' is not defined  no-undef
+  127:51  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/MeetingManagement.jsx
+  47:10  error  'activeTab' is assigned a value but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u     no-unused-vars
+  47:21  error  'setActiveTab' is assigned a value but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/MeetingReports.jsx
+  17:1  error  Parsing error: Unexpected keyword 'import'
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/PermissionDebug.jsx
+  27:36  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/ProjectBoard.jsx
+  50:62  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/QuoteCostAnalysis.jsx
+  105:56  error  'e' is not defined  no-undef
+  114:50  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/QuoteCostManagement.jsx
+  145:50  error  'e' is not defined  no-undef
+  153:56  error  'e' is not defined  no-undef
+  167:54  error  'e' is not defined  no-undef
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/Shipments.jsx
+  38:10  error  'getItemsCompat' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+  93:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                               no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/StrategicMeetingDetail.jsx
+  18:1  error  Parsing error: Unexpected keyword 'import'
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/StrategicMeetingManagement.jsx
+  16:1  error  Parsing error: Unexpected keyword 'import'
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/UnifiedDashboard/widgets/production/ProductionBoard.jsx
+  15:43  error  'view' is defined but never used. Allowed unused args must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/UnifiedDashboard/widgets/sales/OpportunityBoard.jsx
+  11:44  error  'view' is defined but never used. Allowed unused args must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/Acceptance.test.jsx
+  10:8   error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u         no-unused-vars
+  10:30  error  'projectApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/BOMManagement.test.jsx
+  10:8   error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u         no-unused-vars
+  10:35  error  'machineApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/BiddingCenter.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/DepartmentManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/Documents.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/IssueManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/MaterialReadiness.test.jsx
+  10:8   error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u          no-unused-vars
+  10:28  error  'projectApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u   no-unused-vars
+  10:40  error  'supplierApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/MaterialTracking.test.jsx
+  10:23  error  'purchaseApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/PresalesTasks.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/ProjectDetail.test.jsx
+  10:8   error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u           no-unused-vars
+  10:27  error  'machineApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u    no-unused-vars
+  10:39  error  'stageApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u      no-unused-vars
+  10:49  error  'milestoneApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+  10:63  error  'memberApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u     no-unused-vars
+  10:74  error  'costApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u       no-unused-vars
+  10:83  error  'documentApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u   no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/PurchaseOrderDetail.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/QualificationManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/SalesFunnel.test.jsx
+  10:15  error  'salesStatisticsApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+  10:35  error  'customerApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u         no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/SolutionList.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/SupplierManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/SupplierManagementData.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/UserManagement.test.jsx
+  10:8   error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u      no-unused-vars
+  10:24  error  'roleApi' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/WorkOrderManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/__tests__/WorkshopManagement.test.jsx
+  10:8  error  'api' is defined but never used. Allowed unused vars must match /^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*/u  no-unused-vars
+
+/Users/fulingwei/.openclaw/workspace/non-standard-automation-pms/frontend/src/pages/quality/NCManagement.jsx
+  173:5  error  'setLoading' is not defined  no-undef
+  184:7  error  'setLoading' is not defined  no-undef
+  219:8  error  'loading' is not defined     no-undef
+
+✖ 57 problems (57 errors, 0 warnings)
+

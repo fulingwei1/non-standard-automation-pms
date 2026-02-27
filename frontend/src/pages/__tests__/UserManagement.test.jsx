@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import UserManagement from '../UserManagement';
-import api, { userApi, roleApi } from '../../services/api';
+import _api, { userApi, _roleApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -24,9 +24,6 @@ vi.mock('../../services/api', () => ({
       update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
       assignRoles: vi.fn().mockResolvedValue({ data: {} }),
       syncFromEmployees: vi.fn().mockResolvedValue({ data: {} }),
       createFromEmployee: vi.fn().mockResolvedValue({ data: {} }),
