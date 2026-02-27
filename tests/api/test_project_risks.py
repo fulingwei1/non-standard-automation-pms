@@ -21,7 +21,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试1：成功创建风险"""
         risk_data = {
@@ -37,7 +37,7 @@ class TestProjectRiskCRUD:
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -54,7 +54,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试2：风险评分自动计算"""
         test_cases = [
@@ -77,7 +77,7 @@ class TestProjectRiskCRUD:
             response = client.post(
                 f"/api/v1/projects/{test_project.id}/risks",
                 json=risk_data,
-                headers=admin_headers,
+                headers=admin_auth_headers,
             )
             
             assert response.status_code == 200
@@ -89,7 +89,7 @@ class TestProjectRiskCRUD:
         self,
         client: TestClient,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试3：无效的风险类型"""
         risk_data = {
@@ -102,7 +102,7 @@ class TestProjectRiskCRUD:
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 422  # Validation error
@@ -111,7 +111,7 @@ class TestProjectRiskCRUD:
         self,
         client: TestClient,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试4：无效的概率值（超出1-5范围）"""
         risk_data = {
@@ -124,7 +124,7 @@ class TestProjectRiskCRUD:
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 422
@@ -134,7 +134,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试5：获取风险列表"""
         # 创建多个风险
@@ -156,7 +156,7 @@ class TestProjectRiskCRUD:
         
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -169,7 +169,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试6：使用筛选条件获取风险列表"""
         # 创建不同类型的风险
@@ -201,7 +201,7 @@ class TestProjectRiskCRUD:
         # 筛选技术风险
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks?risk_type=TECHNICAL",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -213,7 +213,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试7：获取风险详情"""
         risk = ProjectRisk(
@@ -232,7 +232,7 @@ class TestProjectRiskCRUD:
         
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -246,7 +246,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试8：更新风险信息"""
         risk = ProjectRisk(
@@ -273,7 +273,7 @@ class TestProjectRiskCRUD:
         response = client.put(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             json=update_data,
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -288,7 +288,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试9：更新状态为CLOSED时自动设置关闭日期"""
         risk = ProjectRisk(
@@ -310,7 +310,7 @@ class TestProjectRiskCRUD:
         response = client.put(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             json=update_data,
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -323,7 +323,7 @@ class TestProjectRiskCRUD:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试10：删除风险"""
         risk = ProjectRisk(
@@ -342,7 +342,7 @@ class TestProjectRiskCRUD:
         
         response = client.delete(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -360,7 +360,7 @@ class TestProjectRiskAnalysis:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试11：获取风险矩阵"""
         # 创建不同概率和影响的风险
@@ -385,7 +385,7 @@ class TestProjectRiskAnalysis:
         
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risk-matrix",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -403,7 +403,7 @@ class TestProjectRiskAnalysis:
         client: TestClient,
         db: Session,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试12：获取风险汇总统计"""
         # 创建不同类型和等级的风险
@@ -432,7 +432,7 @@ class TestProjectRiskAnalysis:
         
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risk-summary",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 200
@@ -497,7 +497,7 @@ class TestProjectRiskValidation:
         self,
         client: TestClient,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试15：支持4种风险类型"""
         risk_types = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
@@ -513,7 +513,7 @@ class TestProjectRiskValidation:
             response = client.post(
                 f"/api/v1/projects/{test_project.id}/risks",
                 json=risk_data,
-                headers=admin_headers,
+                headers=admin_auth_headers,
             )
             
             assert response.status_code == 200
@@ -522,12 +522,12 @@ class TestProjectRiskValidation:
     def test_project_not_exist(
         self,
         client: TestClient,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试16：项目不存在"""
         response = client.get(
             "/api/v1/projects/99999/risks",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 404
@@ -536,12 +536,12 @@ class TestProjectRiskValidation:
         self,
         client: TestClient,
         test_project: Project,
-        admin_headers: dict,
+        admin_auth_headers: dict,
     ):
         """测试17：风险不存在"""
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks/99999",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
         
         assert response.status_code == 404
