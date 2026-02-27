@@ -34,6 +34,8 @@ jobs:
           git checkout origin/main
           python3 -c "from tests.scripts.generate_openapi_baseline import generate_openapi_baseline; generate_openapi_baseline()"
           mv tests/openapi_baseline.json /tmp/baseline_main.json
+        env:
+          DEBUG: "True"
 
       - name: Checkout PR branch
         run: |
@@ -43,6 +45,8 @@ jobs:
         run: |
           python3 -c "from tests.scripts.generate_openapi_baseline import generate_openapi_baseline; generate_openapi_baseline()"
           mv tests/openapi_baseline.json /tmp/baseline_pr.json
+        env:
+          DEBUG: "True"
 
       - name: Compare schemas
         run: |
