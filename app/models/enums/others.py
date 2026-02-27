@@ -196,6 +196,9 @@ class RhythmHealthStatus(str, Enum):
     HEALTHY = "HEALTHY"
     AT_RISK = "AT_RISK"
     UNHEALTHY = "UNHEALTHY"
+    GREEN = "GREEN"
+    YELLOW = "YELLOW"
+    RED = "RED"
 
 
 class DataScopeEnum(str, Enum):

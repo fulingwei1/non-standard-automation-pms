@@ -124,8 +124,8 @@ class StaffMatchingDashboardEndpoint(BaseDashboardEndpoint):
         ).scalar() or 0
 
         # 统计已填充人数
-        total_headcount_filled = db.query(func.sum(MesProjectStaffingNeed.filled_headcount)).filter(
-            MesProjectStaffingNeed.status.in_(['OPEN', 'MATCHING', 'FILLED'])
+        total_headcount_filled = db.query(func.sum(MesProjectStaffingNeed.headcount)).filter(
+            MesProjectStaffingNeed.status == 'FILLED'
         ).scalar() or 0
 
         # 使用基类方法创建统计卡片
