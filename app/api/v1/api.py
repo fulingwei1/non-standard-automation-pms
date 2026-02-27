@@ -196,7 +196,15 @@ def create_api_router() -> APIRouter:
         print("✓ 仓储管理模块加载成功")
     except Exception as e:
         print(f"✗ 仓储管理模块加载失败: {e}")
-    
+
+    # 节点任务
+    try:
+        from app.api.v1.endpoints.node_tasks import router as node_tasks_router
+        api_router.include_router(node_tasks_router, prefix="/node-tasks", tags=["node_tasks"])
+        print("✓ 节点任务模块加载成功")
+    except Exception as e:
+        print(f"✗ 节点任务模块加载失败: {e}")
+
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
