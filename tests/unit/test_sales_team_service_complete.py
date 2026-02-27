@@ -18,7 +18,7 @@ from app.services.sales_team_service import SalesTeamService
 @pytest.fixture
 def sales_team_service(db_session: Session):
     """Create sales team service instance."""
-    return SalesTeamService(db_session)
+    return SalesTeamService()
 
 
 @pytest.mark.unit
@@ -27,7 +27,7 @@ class TestSalesTeamServiceInit:
 
     def test_init_with_session(self, db_session: Session):
         """测试使用 session 初始化服务"""
-        service = SalesTeamService(db_session)
+        service = SalesTeamService()
         assert service.db is db_session
 
 

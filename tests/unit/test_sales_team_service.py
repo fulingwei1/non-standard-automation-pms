@@ -15,7 +15,7 @@ from app.services.sales_team_service import SalesTeamService
 
 @pytest.fixture
 def sales_team_service(db_session: Session):
-    return SalesTeamService(db_session)
+    return SalesTeamService()
 
 
 @pytest.fixture
