@@ -12,7 +12,7 @@ export const presaleApi = {
     updateProgress: (id, data) =>
       api.put(`/presale/tickets/${id}/progress`, data),
     complete: (id, data) => api.put(`/presale/tickets/${id}/complete`, data),
-    rate: (id, data) => api.put(`/presale/tickets/${id}/rate`, data),
+    rate: (id, data) => api.put(`/presale/tickets/${id}/rating`, data),
     getBoard: (params) => api.get("/presale/tickets/board", { params }),
   },
   solutions: {
