@@ -280,22 +280,22 @@ export const rdProjectApi = {
 export const rdReportApi = {
   // 研发费用辅助账
   getAuxiliaryLedger: (params) =>
-    api.get("/reports/rd-auxiliary-ledger", { params }),
+    api.get("/report-center/rd-expense/rd-auxiliary-ledger", { params }),
 
   // 研发费用加计扣除明细
   getDeductionDetail: (params) =>
-    api.get("/reports/rd-deduction-detail", { params }),
+    api.get("/report-center/rd-expense/rd-deduction-detail", { params }),
 
   // 高新企业研发费用表
-  getHighTechReport: (params) => api.get("/reports/rd-high-tech", { params }),
+  getHighTechReport: (params) => api.get("/report-center/rd-expense/rd-high-tech", { params }),
 
   // 研发投入强度报表
-  getIntensityReport: (params) => api.get("/reports/rd-intensity", { params }),
+  getIntensityReport: (params) => api.get("/report-center/rd-expense/rd-intensity", { params }),
 
   // 研发人员统计
-  getPersonnelReport: (params) => api.get("/reports/rd-personnel", { params }),
+  getPersonnelReport: (params) => api.get("/report-center/rd-expense/rd-personnel", { params }),
 
   // 导出研发费用报表
   exportReport: (params) =>
-    api.get("/reports/rd-export", { params, responseType: "blob" }),
+    api.get("/report-center/rd-expense/rd-export", { params, responseType: "blob" }),
 };

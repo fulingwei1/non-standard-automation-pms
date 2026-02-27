@@ -55,7 +55,7 @@ export const projectApi = {
   update: (id, data) => api.put(`/projects/${id}`, data),
   getMachines: (id) => api.get(`/projects/${id}/machines`),
   getInProductionSummary: (params) =>
-    api.get("/projects/in-production/summary", { params }),
+    api.get("/projects/in-production-summary", { params }),
   // Sprint 3 & 4: 模板和阶段门校验相关API
   recommendTemplates: (params) =>
     api.get("/projects/templates/recommend", { params }),

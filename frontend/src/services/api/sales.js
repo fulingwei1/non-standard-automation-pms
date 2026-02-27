@@ -46,11 +46,11 @@ export const quoteApi = {
   getVersions: (id) => api.get(`/sales/quotes/${id}/versions`),
   approve: (id, data) => api.post(`/sales/quotes/${id}/approve`, data),
   // Approval Workflow APIs (Sprint 2)
-  startApproval: (id) => api.post(`/sales/quotes/${id}/approval/start`),
-  getApprovalStatus: (id) => api.get(`/sales/quotes/${id}/approval-status`),
+  startApproval: (id) => api.post("/sales/quotes/approval/submit", { quote_ids: [id] }),
+  getApprovalStatus: (id) => api.get(`/sales/quotes/approval/status/${id}`),
   approvalAction: (id, data) =>
-    api.post(`/sales/quotes/${id}/approval/action`, data),
-  getApprovalHistory: (id) => api.get(`/sales/quotes/${id}/approval-history`),
+    api.post("/sales/quotes/approval/action", { ...data, quote_id: id }),
+  getApprovalHistory: (id) => api.get("/sales/quotes/approval/history", { params: { quote_id: id } }),
   // Quote Items APIs
   getItems: (id, versionId) =>
     api.get(`/sales/quotes/${id}/items`, { params: { version_id: versionId } }),
@@ -172,12 +172,12 @@ export const contractApi = {
   createProject: (id, data) => api.post(`/sales/contracts/${id}/project`, data),
   getDeliverables: (id) => api.get(`/sales/contracts/${id}/deliverables`),
   // Approval Workflow APIs (Sprint 2)
-  startApproval: (id) => api.post(`/sales/contracts/${id}/approval/start`),
-  getApprovalStatus: (id) => api.get(`/sales/contracts/${id}/approval-status`),
+  startApproval: (id) => api.post("/sales/contracts/approval/submit", { contract_ids: [id] }),
+  getApprovalStatus: (id) => api.get(`/sales/contracts/approval/status/${id}`),
   approvalAction: (id, data) =>
-    api.post(`/sales/contracts/${id}/approval/action`, data),
+    api.post("/sales/contracts/approval/action", { ...data, contract_id: id }),
   getApprovalHistory: (id) =>
-    api.get(`/sales/contracts/${id}/approval-history`),
+    api.get("/sales/contracts/approval/history", { params: { contract_id: id } }),
 };
 
 export const invoiceApi = {
