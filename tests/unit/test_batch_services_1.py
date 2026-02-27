@@ -517,7 +517,7 @@ def test_notification_service_init(mock_settings):
     mock_settings.SMS_ENABLED = False
     mock_settings.WECHAT_ENABLED = False
 
-    service = NotificationService()
+    service = NotificationService(MagicMock())
 
     assert len(service.enabled_channels) >= 2
 
@@ -540,7 +540,7 @@ def test_notification_send_web(mock_settings):
         mock_db.add = Mock()
         mock_db.commit = Mock()
 
-        service = NotificationService()
+        service = NotificationService(MagicMock())
         result = service.send_notification(
         mock_db, 1, NotificationType.TASK_ASSIGNED, "Test", "Content"
         )
@@ -560,7 +560,7 @@ def test_notification_send_task_assigned(mock_settings):
     mock_db.add = Mock()
     mock_db.commit = Mock()
 
-    service = NotificationService()
+    service = NotificationService(MagicMock())
     with patch.object(service, "send_notification") as mock_send:
         service.send_task_assigned_notification(mock_db, 1, "Task1", "Project1", 100)
 
@@ -579,7 +579,7 @@ def test_notification_send_deadline_reminder(mock_settings):
 
     mock_db = Mock(spec=Session)
 
-    service = NotificationService()
+    service = NotificationService(MagicMock())
     with patch.object(service, "send_notification") as mock_send:
         service.send_deadline_reminder(
         mock_db, 1, "Task1", date(2025, 2, 1), days_remaining=1
@@ -599,7 +599,7 @@ def test_notification_send_task_completed(mock_settings):
 
     mock_db = Mock(spec=Session)
 
-    service = NotificationService()
+    service = NotificationService(MagicMock())
     with patch.object(service, "send_notification") as mock_send:
         service.send_task_completed_notification(mock_db, 1, "Task1", "Project1")
 

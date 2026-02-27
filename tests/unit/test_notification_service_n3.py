@@ -42,37 +42,37 @@ class TestNotificationServiceInit:
     def test_web_channel_always_enabled(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.WEB in svc.enabled_channels
 
     def test_email_channel_when_enabled(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings(EMAIL_ENABLED=True)):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.EMAIL in svc.enabled_channels
 
     def test_sms_channel_when_enabled(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings(SMS_ENABLED=True)):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.SMS in svc.enabled_channels
 
     def test_wechat_channel_when_enabled(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings(WECHAT_ENABLED=True)):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.WECHAT in svc.enabled_channels
 
     def test_webhook_channel_when_url_set(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings(WECHAT_WEBHOOK_URL="https://example.com")):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.WEBHOOK in svc.enabled_channels
 
     def test_no_optional_channels_when_disabled(self):
         from app.services.notification_service import NotificationService, NotificationChannel
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert NotificationChannel.EMAIL not in svc.enabled_channels
         assert NotificationChannel.SMS not in svc.enabled_channels
 
@@ -93,7 +93,7 @@ class TestMapOldChannelToNew:
         from app.services.notification_service import NotificationService, NotificationChannel
         from app.services.channel_handlers.base import NotificationChannel as UC
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(db_session)
         result = svc._map_old_channel_to_new(NotificationChannel.WEB)
         assert result == UC.SYSTEM
 
@@ -101,7 +101,7 @@ class TestMapOldChannelToNew:
         from app.services.notification_service import NotificationService, NotificationChannel
         from app.services.channel_handlers.base import NotificationChannel as UC
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(db_session)
         result = svc._map_old_channel_to_new(NotificationChannel.EMAIL)
         assert result == UC.EMAIL
 
@@ -109,7 +109,7 @@ class TestMapOldChannelToNew:
         from app.services.notification_service import NotificationService, NotificationChannel
         from app.services.channel_handlers.base import NotificationChannel as UC
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         result = svc._map_old_channel_to_new(NotificationChannel.WECHAT)
         assert result == UC.WECHAT
 
@@ -122,19 +122,19 @@ class TestMapOldPriorityToNew:
     def test_enum_returns_value(self):
         from app.services.notification_service import NotificationService, NotificationPriority
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._map_old_priority_to_new(NotificationPriority.HIGH) == "high"
 
     def test_string_returns_as_is(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._map_old_priority_to_new("urgent") == "urgent"
 
     def test_non_string_converted_to_str(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         result = svc._map_old_priority_to_new(42)
         assert result == "42"
 
@@ -147,25 +147,25 @@ class TestInferCategory:
     def test_task_type_infers_task_category(self):
         from app.services.notification_service import NotificationService, NotificationType
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._infer_category(NotificationType.TASK_ASSIGNED) == "task"
 
     def test_project_update_infers_project(self):
         from app.services.notification_service import NotificationService, NotificationType
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._infer_category(NotificationType.PROJECT_UPDATE) == "project"
 
     def test_unknown_type_returns_general(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._infer_category("some_random_type") == "general"
 
     def test_deadline_reminder_returns_task(self):
         from app.services.notification_service import NotificationService, NotificationType
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         assert svc._infer_category(NotificationType.DEADLINE_REMINDER) == "task"
 
 
@@ -177,7 +177,7 @@ class TestSendNotification:
     def _make_service(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         return svc
 
     def test_returns_false_when_no_db(self):
@@ -272,7 +272,7 @@ class TestSendTaskAssignedNotification:
     def _make_service(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         return svc
 
     def test_includes_due_date_in_content(self):
@@ -316,7 +316,7 @@ class TestSendTaskCompletedNotification:
     def test_sends_completed_notification(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         mock_db = MagicMock()
         mock_unified = MagicMock()
         mock_unified.send_notification.return_value = {"success": True}
@@ -340,7 +340,7 @@ class TestSendDeadlineReminder:
     def _get_service(self):
         from app.services.notification_service import NotificationService
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService()
+            svc = NotificationService(MagicMock())
         return svc
 
     def test_urgent_title_when_1_day_remaining(self):

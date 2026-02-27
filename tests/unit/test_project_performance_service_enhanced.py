@@ -37,7 +37,7 @@ from app.services.project_performance.service import ProjectPerformanceService
 @pytest.fixture
 def perf_service(db_session: Session):
     """创建绩效服务实例"""
-    return ProjectPerformanceService()
+    return ProjectPerformanceService(db_session)
 
 
 @pytest.fixture
@@ -981,7 +981,7 @@ class TestEdgeCasesAndExceptions:
     
     def test_service_initialization(self, db_session):
         """测试服务初始化"""
-        service = ProjectPerformanceService()
+        service = ProjectPerformanceService(db_session)
         assert service.db == db_session
     
     def test_empty_user_list_comparison(self, perf_service, test_period):

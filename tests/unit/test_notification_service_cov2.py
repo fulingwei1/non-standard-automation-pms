@@ -35,7 +35,7 @@ def test_infer_category_task():
         mock_settings.SMS_ENABLED = False
         mock_settings.WECHAT_ENABLED = False
         mock_settings.WECHAT_WEBHOOK_URL = None
-        svc = NotificationService()
+        svc = NotificationService(MagicMock())
 
     cat = svc._infer_category(NotificationType.TASK_ASSIGNED)
     assert cat == "task"
@@ -49,7 +49,7 @@ def test_infer_category_project():
         mock_settings.SMS_ENABLED = False
         mock_settings.WECHAT_ENABLED = False
         mock_settings.WECHAT_WEBHOOK_URL = None
-        svc = NotificationService()
+        svc = NotificationService(MagicMock())
 
     cat = svc._infer_category(NotificationType.PROJECT_UPDATE)
     assert cat == "project"
@@ -63,7 +63,7 @@ def test_infer_category_general():
         mock_settings.SMS_ENABLED = False
         mock_settings.WECHAT_ENABLED = False
         mock_settings.WECHAT_WEBHOOK_URL = None
-        svc = NotificationService()
+        svc = NotificationService(MagicMock())
 
     cat = svc._infer_category(NotificationType.SYSTEM_ANNOUNCEMENT)
     assert cat == "general"
@@ -78,7 +78,7 @@ def test_enabled_channels_web_only():
         mock_settings.SMS_ENABLED = False
         mock_settings.WECHAT_ENABLED = False
         mock_settings.WECHAT_WEBHOOK_URL = None
-        svc = NotificationService()
+        svc = NotificationService(MagicMock())
         channels = svc._get_enabled_channels()
 
     assert NotificationChannel.WEB in channels
@@ -92,7 +92,7 @@ def test_enabled_channels_with_email():
         mock_settings.SMS_ENABLED = False
         mock_settings.WECHAT_ENABLED = False
         mock_settings.WECHAT_WEBHOOK_URL = None
-        svc = NotificationService()
+        svc = NotificationService(MagicMock())
         channels = svc._get_enabled_channels()
 
     assert NotificationChannel.EMAIL in channels
