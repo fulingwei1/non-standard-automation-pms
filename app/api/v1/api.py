@@ -741,6 +741,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 报表模块加载失败：{e}")
 
+    # ==================== Stub Endpoints (必须放最后作为fallback) ====================
+    try:
+        from app.api.v1.endpoints.stub_endpoints import router as stub_router
+        api_router.include_router(stub_router, tags=["stub-未实现"])
+        print("✓ Stub Endpoints加载成功（未实现API的兜底响应）")
+    except Exception as e:
+        print(f"✗ Stub模块加载失败：{e}")
+
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
