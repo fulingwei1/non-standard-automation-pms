@@ -27,11 +27,12 @@ from .worklogs import router as worklogs_router
 router = APIRouter()
 
 # 聚合子路由
+# 静态路径必须在initiation（含/{project_id}动态路径）之前
 router.include_router(categories_router)
-router.include_router(initiation_router)
 router.include_router(expense_types_router)
 router.include_router(expenses_router)
 router.include_router(allocation_router)
+router.include_router(initiation_router)
 router.include_router(worklogs_router)
 router.include_router(documents_router)
 
