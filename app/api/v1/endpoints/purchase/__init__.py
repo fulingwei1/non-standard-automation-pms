@@ -19,14 +19,15 @@ from .workflow import router as workflow_router
 
 router = APIRouter()
 
-# 采购订单（使用重构版本，统一响应格式）
-router.include_router(orders_refactored_router, tags=["采购订单"])
-
-# 采购申请（使用重构版本，统一响应格式）
+# 静态路径的子路由必须在动态路径(/{order_id})之前注册，避免被吞
+# 采购申请（/requests）
 router.include_router(requests_refactored_router, tags=["采购申请"])
 
-# 收货单
+# 收货单（/goods-receipts）
 router.include_router(receipts_router, tags=["收货管理"])
 
-# 审批工作流（使用统一审批引擎）
+# 审批工作流（/workflow）
 router.include_router(workflow_router, tags=["采购审批工作流"])
+
+# 采购订单（含 /{order_id} 动态路由，必须放最后）
+router.include_router(orders_refactored_router, tags=["采购订单"])

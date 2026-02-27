@@ -50,16 +50,12 @@ def list_purchase_requests(
     requests = apply_pagination(query.order_by(desc(PurchaseRequest.created_at)), pagination.offset, pagination.limit).all()
     
     items = [serialize_purchase_request(r, include_items=False) for r in requests]
-    pages = pagination.pages_for_total(total)
     
-    # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pages,
-        message="获取采购申请列表成功"
     )
 
 
