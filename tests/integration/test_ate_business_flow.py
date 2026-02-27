@@ -146,7 +146,7 @@ class ICTProjectService:
         project = SimpleProject(
             id=self._next_id,
             project_code=data.get("project_code", f"PJ{self._next_id:06d}"),
-            name=data["name"],
+            project_name=data["name"],
             customer_name=data["customer_name"],
             type=data.get("type", "ICT"),
             budget=data["budget"],

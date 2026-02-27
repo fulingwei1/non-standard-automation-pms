@@ -24,7 +24,7 @@ class TestInventoryConcurrentDeduction:
         material = Material(
             material_code="MAT-CONC-001",
             material_name="并发测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             standard_price=Decimal("100.00"),
             is_active=True,
@@ -122,7 +122,7 @@ class TestInventoryConcurrentDeduction:
         material = Material(
             material_code="MAT-OPT-001",
             material_name="乐观锁测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -281,7 +281,7 @@ class TestInventoryConcurrentDeduction:
         mat1 = Material(
             material_code="MAT-DL-001",
             material_name="死锁测试物料1",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -289,7 +289,7 @@ class TestInventoryConcurrentDeduction:
         mat2 = Material(
             material_code="MAT-DL-002",
             material_name="死锁测试物料2",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -346,7 +346,7 @@ class TestInventoryConcurrentDeduction:
             mat = Material(
                 material_code=f"MAT-BATCH-{i+1:03d}",
                 material_name=f"批量测试物料{i+1}",
-                category="GENERAL",
+                category_id="GENERAL",
                 unit="PCS",
                 is_active=True,
                 created_by=1,
@@ -443,7 +443,7 @@ class TestInventoryConcurrentDeduction:
         material = Material(
             material_code="MAT-TRANS-001",
             material_name="转移测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,

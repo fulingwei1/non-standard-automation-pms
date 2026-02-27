@@ -59,9 +59,9 @@ def sample_contract(db_session, sample_customer, sample_user):
         contract_name="测试合同",
         customer_id=sample_customer.id,
         contract_type="销售合同",
-        contract_amount=Decimal("300000.00"),
+        total_amount=Decimal("300000.00"),
         signing_date=date.today(),
-        owner_id=sample_user.id,
+        sales_owner_id=sample_user.id,
         status="SIGNED"
     )
     db_session.add(contract)

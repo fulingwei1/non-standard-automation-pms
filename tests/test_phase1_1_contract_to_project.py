@@ -91,7 +91,7 @@ def setup_test_data(db):
         contract = Contract(
             contract_code="TEST20260125001",
             customer_id=customer.id,
-            contract_amount=100000.00,
+            total_amount=100000.00,
             signed_date="2026-01-25",
             status="SIGNED",
             payment_nodes=json.dumps(payment_nodes, ensure_ascii=False),
@@ -111,7 +111,7 @@ def setup_test_data(db):
                 ],
                 ensure_ascii=False,
             ),
-            owner_id=admin.id,
+            sales_owner_id=admin.id,
         )
 
         db.add(contract)

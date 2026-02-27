@@ -206,7 +206,7 @@ def test_project(db_session: Session, project_manager):
         stage="S2",
         status="ST02",
         health="H1",
-        progress=50,
+        progress_pct=50,
     )
     db_session.add(project)
     db_session.commit()

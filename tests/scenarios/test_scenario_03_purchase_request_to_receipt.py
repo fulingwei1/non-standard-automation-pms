@@ -48,7 +48,7 @@ class TestPurchaseRequestToReceipt:
         material = Material(
             material_code="MAT-001",
             material_name="测试物料-电机",
-            category="ELECTRICAL",
+            category_id="ELECTRICAL",
             unit="PCS",
             standard_price=Decimal("1500.00"),
             is_active=True,
@@ -64,7 +64,7 @@ class TestPurchaseRequestToReceipt:
         pr = PurchaseRequest(
             request_no="PR-2026-001",
             request_date=date.today(),
-            requester_id=2,
+            requested_by=2,
             department="工程部",
             request_type="NORMAL",
             status="DRAFT",
@@ -83,7 +83,7 @@ class TestPurchaseRequestToReceipt:
         pr = PurchaseRequest(
             request_no="PR-2026-002",
             request_date=date.today(),
-            requester_id=2,
+            requested_by=2,
             status="DRAFT",
             total_amount=Decimal("8000.00"),
             created_by=2,
@@ -104,7 +104,7 @@ class TestPurchaseRequestToReceipt:
         pr = PurchaseRequest(
             request_no="PR-2026-003",
             request_date=date.today(),
-            requester_id=2,
+            requested_by=2,
             status="PENDING_APPROVAL",
             total_amount=Decimal("12000.00"),
             created_by=2,
@@ -126,7 +126,7 @@ class TestPurchaseRequestToReceipt:
         pr = PurchaseRequest(
             request_no="PR-2026-004",
             request_date=date.today(),
-            requester_id=2,
+            requested_by=2,
             status="PENDING_APPROVAL",
             total_amount=Decimal("50000.00"),
             created_by=2,
@@ -160,7 +160,7 @@ class TestPurchaseRequestToReceipt:
         pr = PurchaseRequest(
             request_no="PR-2026-005",
             request_date=date.today(),
-            requester_id=2,
+            requested_by=2,
             status="APPROVED",
             total_amount=Decimal("18000.00"),
             created_by=2,

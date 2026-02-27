@@ -24,8 +24,8 @@ except ImportError as e:
 def sample_project(db: Session):
     """创建测试项目"""
     project = Project(
-        code="TEST001",
-        name="测试自动化项目",
+        project_code="TEST001",
+        project_name="测试自动化项目",
         description="这是一个测试项目",
         status="COMPLETED",
         project_type="自动化",

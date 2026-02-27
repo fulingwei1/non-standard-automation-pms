@@ -158,7 +158,7 @@ class TestCalculateProgressFromProjects:
         
         # Mock项目
         from app.models.project import Project
-        project = Project(id=100, progress=Decimal('60'))
+        project = Project(id=100, progress_pct=Decimal('60'))
         
         mock_query_link = MagicMock()
         mock_query_link.filter.return_value.all.return_value = [link]
@@ -199,8 +199,8 @@ class TestCalculateProgressFromProjects:
         
         from app.models.project import Project
         projects = {
-            100: Project(id=100, progress=Decimal('60')),
-            101: Project(id=101, progress=Decimal('80'))
+            100: Project(id=100, progress_pct=Decimal('60')),
+            101: Project(id=101, progress_pct=Decimal('80'))
         }
         
         mock_query_link = MagicMock()
@@ -248,8 +248,8 @@ class TestCalculateProgressFromProjects:
         
         from app.models.project import Project
         projects = {
-            100: Project(id=100, progress=Decimal('60')),
-            101: Project(id=101, progress=Decimal('90'))
+            100: Project(id=100, progress_pct=Decimal('60')),
+            101: Project(id=101, progress_pct=Decimal('90'))
         }
         
         mock_query_link = MagicMock()
@@ -300,7 +300,7 @@ class TestCalculateProgressFromProjects:
         )
         
         from app.models.project import Project
-        project = Project(id=100, progress=None)
+        project = Project(id=100, progress_pct=None)
         
         mock_query_link = MagicMock()
         mock_query_link.filter.return_value.all.return_value = [link]
@@ -333,7 +333,7 @@ class TestCalculateProgressFromProjects:
         )
         
         from app.models.project import Project
-        project = Project(id=100, progress=None)
+        project = Project(id=100, progress_pct=None)
         
         mock_query_link = MagicMock()
         mock_query_link.filter.return_value.all.return_value = [link]
@@ -440,7 +440,7 @@ class TestEdgeCases:
         )
         
         from app.models.project import Project
-        project = Project(id=100, progress=Decimal('50'))
+        project = Project(id=100, progress_pct=Decimal('50'))
         
         mock_query_link = MagicMock()
         mock_query_link.filter.return_value.all.return_value = [link]

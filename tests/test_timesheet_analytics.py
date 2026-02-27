@@ -62,8 +62,8 @@ def test_data(db):
     for i in range(1, 4):
         project = Project(
             id=i,
-            code=f"PRJ-{i:03d}",
-            name=f"测试项目{i}",
+            project_code=f"PRJ-{i:03d}",
+            project_name=f"测试项目{i}",
             status="ONGOING"
         )
         db.add(project)

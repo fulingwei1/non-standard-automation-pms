@@ -78,7 +78,7 @@ class TestTransactionRollback:
         material = Material(
             material_code="MAT-TXN-001",
             material_name="事务测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -116,7 +116,7 @@ class TestTransactionRollback:
             mat = Material(
                 material_code=f"MAT-BATCH-{i+1:03d}",
                 material_name=f"批量物料{i+1}",
-                category="GENERAL",
+                category_id="GENERAL",
                 unit="PCS",
                 is_active=True,
                 created_by=1,
@@ -169,12 +169,12 @@ class TestTransactionRollback:
             # 内层事务：创建审批实例（失败）
             try:
                 approval = ApprovalInstance(
-                    business_type="PROJECT",
-                    business_id=project.id,
-                    business_code=project.project_code,
+                    entity_type="PROJECT",
+                    entity_id=project.id,
+                    instance_no=project.project_code,
                     initiator_id=1,
                     status="PENDING",
-                    created_by=1,
+                    initiator_id=1,
                 )
                 db_session.add(approval)
                 db_session.flush()
@@ -246,7 +246,7 @@ class TestTransactionRollback:
         material = Material(
             material_code="MAT-CONC-001",
             material_name="并发测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -324,12 +324,12 @@ class TestTransactionRollback:
 
         # 添加依赖数据
         approval = ApprovalInstance(
-            business_type="PROJECT",
-            business_id=project.id,
-            business_code=project.project_code,
+            entity_type="PROJECT",
+            entity_id=project.id,
+            instance_no=project.project_code,
             initiator_id=1,
             status="PENDING",
-            created_by=1,
+            initiator_id=1,
         )
         db_session.add(approval)
         db_session.commit()
@@ -373,7 +373,7 @@ class TestTransactionRollback:
             material = Material(
                 material_code="MAT-COMPLEX-001",
                 material_name="复杂操作物料",
-                category="GENERAL",
+                category_id="GENERAL",
                 unit="PCS",
                 is_active=True,
                 created_by=1,
@@ -418,7 +418,7 @@ class TestTransactionRollback:
         material = Material(
             material_code="MAT-TRIGGER-001",
             material_name="触发器测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             standard_price=Decimal("100.00"),
             is_active=True,
@@ -464,7 +464,7 @@ class TestTransactionRollback:
                 material = Material(
                     material_code=f"MAT-ATOM-{i+1:03d}",
                     material_name=f"原子性测试物料{i+1}",
-                    category="GENERAL",
+                    category_id="GENERAL",
                     unit="PCS",
                     is_active=True,
                     created_by=1,

@@ -131,7 +131,7 @@ class TestMaterialModel:
         material = Material(
             material_code="MAT005",
             material_name="分类测试",
-            category="电子元器件"
+            category_id="电子元器件"
         )
         db_session.add(material)
         db_session.commit()

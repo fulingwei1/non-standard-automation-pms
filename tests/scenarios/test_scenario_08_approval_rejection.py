@@ -19,7 +19,7 @@ class TestApprovalRejection:
         """测试1：带理由驳回审批"""
         pr = PurchaseRequest(
             request_no="PR-REJ-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -28,19 +28,19 @@ class TestApprovalRejection:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
+            assignee_id=4,
             status="PENDING",
         )
         db_session.add(task)
@@ -65,7 +65,7 @@ class TestApprovalRejection:
         """测试2：修改后重新提交"""
         pr = PurchaseRequest(
             request_no="PR-RESUB-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("200000.00"),
             status="REJECTED",
             reject_reason="金额过高",
@@ -92,7 +92,7 @@ class TestApprovalRejection:
         """测试3：驳回后创建新审批实例"""
         pr = PurchaseRequest(
             request_no="PR-NEWINS-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("180000.00"),
             status="REJECTED",
             created_by=3,
@@ -102,12 +102,12 @@ class TestApprovalRejection:
 
         # 旧审批实例
         old_instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="REJECTED",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(old_instance)
         db_session.commit()
@@ -119,13 +119,13 @@ class TestApprovalRejection:
 
         # 创建新审批实例
         new_instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
             previous_instance_id=old_instance.id,
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(new_instance)
         db_session.commit()
@@ -136,7 +136,7 @@ class TestApprovalRejection:
         """测试4：驳回通知"""
         pr = PurchaseRequest(
             request_no="PR-NOTIF-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("160000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -145,19 +145,19 @@ class TestApprovalRejection:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
+            assignee_id=4,
             status="PENDING",
         )
         db_session.add(task)
@@ -175,7 +175,7 @@ class TestApprovalRejection:
         """测试5：多级审批中的部分驳回"""
         pr = PurchaseRequest(
             request_no="PR-PARTIAL-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("300000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -184,12 +184,12 @@ class TestApprovalRejection:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -197,8 +197,8 @@ class TestApprovalRejection:
         # 第一级通过
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            sequence=1,
+            assignee_id=4,
+            task_order=1,
             status="APPROVED",
             approved_at=datetime.now(),
         )
@@ -207,8 +207,8 @@ class TestApprovalRejection:
         # 第二级驳回
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=2,
+            assignee_id=5,
+            task_order=2,
             status="REJECTED",
             comment="需要更详细的成本分析",
             approved_at=datetime.now(),
@@ -227,7 +227,7 @@ class TestApprovalRejection:
         """测试6：驳回并提供修改建议"""
         pr = PurchaseRequest(
             request_no="PR-SUGGEST-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -236,19 +236,19 @@ class TestApprovalRejection:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
+            assignee_id=4,
             status="PENDING",
         )
         db_session.add(task)
@@ -266,7 +266,7 @@ class TestApprovalRejection:
         """测试7：自动限制重新提交次数"""
         pr = PurchaseRequest(
             request_no="PR-LIMIT-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("170000.00"),
             status="DRAFT",
             resubmit_count=0,
@@ -298,7 +298,7 @@ class TestApprovalRejection:
         """测试8：驳回后升级处理"""
         pr = PurchaseRequest(
             request_no="PR-ESC-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -307,19 +307,19 @@ class TestApprovalRejection:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
+            assignee_id=4,
             status="PENDING",
         )
         db_session.add(task)
@@ -343,7 +343,7 @@ class TestApprovalRejection:
         for i in range(3):
             pr = PurchaseRequest(
                 request_no=f"PR-BATCH-REJ-{i+1:03d}",
-                requester_id=3,
+                requested_by=3,
                 total_amount=Decimal("80000.00"),
                 status="PENDING_APPROVAL",
                 batch_key="BATCH-001",
@@ -366,7 +366,7 @@ class TestApprovalRejection:
         """测试10：驳回历史跟踪"""
         pr = PurchaseRequest(
             request_no="PR-HISTORY-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("190000.00"),
             status="DRAFT",
             created_by=3,
@@ -376,40 +376,40 @@ class TestApprovalRejection:
 
         # 第一次审批实例
         instance1 = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="REJECTED",
             created_at=datetime.now() - timedelta(days=5),
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance1)
         db_session.commit()
 
         # 第二次审批实例
         instance2 = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="REJECTED",
             previous_instance_id=instance1.id,
             created_at=datetime.now() - timedelta(days=2),
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance2)
         db_session.commit()
 
         # 第三次审批实例
         instance3 = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="APPROVED",
             previous_instance_id=instance2.id,
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance3)
         db_session.commit()

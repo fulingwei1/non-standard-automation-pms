@@ -19,7 +19,7 @@ class TestParallelApproval:
         """测试1：创建并行审批任务"""
         pr = PurchaseRequest(
             request_no="PR-PAR-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("200000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -28,12 +28,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -41,18 +41,18 @@ class TestParallelApproval:
         # 创建并行审批任务（技术总监和财务总监同时审批）
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            approver_name="技术总监",
-            node_name="技术评审",
-            sequence=1,
+            assignee_id=5,
+            assignee_name="技术总监",
+            assignee_name="技术评审",
+            task_order=1,
             status="PENDING",
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            approver_name="财务总监",
-            node_name="财务评审",
-            sequence=1,  # 相同sequence表示并行
+            assignee_id=6,
+            assignee_name="财务总监",
+            assignee_name="财务评审",
+            task_order=1,  # 相同sequence表示并行
             status="PENDING",
         )
         db_session.add_all([task1, task2])
@@ -68,7 +68,7 @@ class TestParallelApproval:
         """测试2：一个审批人先审批"""
         pr = PurchaseRequest(
             request_no="PR-PAR-002",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -77,28 +77,28 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            node_name="技术评审",
-            sequence=1,
+            assignee_id=5,
+            assignee_name="技术评审",
+            task_order=1,
             status="PENDING",
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            node_name="财务评审",
-            sequence=1,
+            assignee_id=6,
+            assignee_name="财务评审",
+            task_order=1,
             status="PENDING",
         )
         db_session.add_all([task1, task2])
@@ -120,7 +120,7 @@ class TestParallelApproval:
         """测试3：所有并行审批人都通过"""
         pr = PurchaseRequest(
             request_no="PR-PAR-003",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("220000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -129,26 +129,26 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=1,
+            assignee_id=5,
+            task_order=1,
             status="PENDING",
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            sequence=1,
+            assignee_id=6,
+            task_order=1,
             status="PENDING",
         )
         db_session.add_all([task1, task2])
@@ -182,7 +182,7 @@ class TestParallelApproval:
         """测试4：一个并行审批人拒绝"""
         pr = PurchaseRequest(
             request_no="PR-PAR-004",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -191,26 +191,26 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=1,
+            assignee_id=5,
+            task_order=1,
             status="PENDING",
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            sequence=1,
+            assignee_id=6,
+            task_order=1,
             status="PENDING",
         )
         db_session.add_all([task1, task2])
@@ -239,7 +239,7 @@ class TestParallelApproval:
         """测试5：并行审批需要最少通过数量"""
         pr = PurchaseRequest(
             request_no="PR-PAR-005",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("300000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -248,13 +248,13 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
             minimum_approval_count=2,  # 至少需要2人通过
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -263,20 +263,20 @@ class TestParallelApproval:
         tasks = [
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=5,
-                sequence=1,
+                assignee_id=5,
+                task_order=1,
                 status="PENDING",
             ),
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=6,
-                sequence=1,
+                assignee_id=6,
+                task_order=1,
                 status="PENDING",
             ),
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=7,
-                sequence=1,
+                assignee_id=7,
+                task_order=1,
                 status="PENDING",
             ),
         ]
@@ -305,7 +305,7 @@ class TestParallelApproval:
         """测试6：并行审批超时处理"""
         pr = PurchaseRequest(
             request_no="PR-PAR-006",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -314,12 +314,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -329,15 +329,15 @@ class TestParallelApproval:
         # 创建并行任务
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=1,
+            assignee_id=5,
+            task_order=1,
             status="PENDING",
             due_date=datetime.now().date() - timedelta(days=2),  # 已超时
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            sequence=1,
+            assignee_id=6,
+            task_order=1,
             status="PENDING",
             due_date=datetime.now().date() + timedelta(days=2),  # 未超时
         )
@@ -359,7 +359,7 @@ class TestParallelApproval:
         """测试7：混合并行和顺序审批"""
         pr = PurchaseRequest(
             request_no="PR-HYBRID-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("400000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -368,12 +368,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -381,22 +381,22 @@ class TestParallelApproval:
         # 第一级：并行审批（技术+财务）
         task1_1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=1,
+            assignee_id=5,
+            task_order=1,
             status="PENDING",
         )
         task1_2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            sequence=1,
+            assignee_id=6,
+            task_order=1,
             status="PENDING",
         )
 
         # 第二级：总经理审批
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=1,
-            sequence=2,
+            assignee_id=1,
+            task_order=2,
             status="NOT_STARTED",
         )
         
@@ -425,7 +425,7 @@ class TestParallelApproval:
         """测试8：并行审批中的一票否决"""
         pr = PurchaseRequest(
             request_no="PR-VETO-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("500000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -434,12 +434,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -447,22 +447,22 @@ class TestParallelApproval:
         # 创建3个并行审批，技术总监有一票否决权
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            node_name="技术总监（一票否决）",
-            sequence=1,
+            assignee_id=5,
+            assignee_name="技术总监（一票否决）",
+            task_order=1,
             status="PENDING",
             has_veto_power=True,
         )
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            sequence=1,
+            assignee_id=6,
+            task_order=1,
             status="PENDING",
         )
         task3 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=7,
-            sequence=1,
+            assignee_id=7,
+            task_order=1,
             status="PENDING",
         )
         db_session.add_all([task1, task2, task3])
@@ -493,7 +493,7 @@ class TestParallelApproval:
         """测试9：并行审批通知"""
         pr = PurchaseRequest(
             request_no="PR-NOTIF-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -502,12 +502,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -516,14 +516,14 @@ class TestParallelApproval:
         tasks = [
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=5,
-                sequence=1,
+                assignee_id=5,
+                task_order=1,
                 status="PENDING",
             ),
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=6,
-                sequence=1,
+                assignee_id=6,
+                task_order=1,
                 status="PENDING",
             ),
         ]
@@ -544,7 +544,7 @@ class TestParallelApproval:
         """测试10：并行审批完成检查"""
         pr = PurchaseRequest(
             request_no="PR-CHECK-001",
-            requester_id=3,
+            requested_by=3,
             total_amount=Decimal("280000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -553,12 +553,12 @@ class TestParallelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
+            initiator_id=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -567,8 +567,8 @@ class TestParallelApproval:
         tasks = [
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=i,
-                sequence=1,
+                assignee_id=i,
+                task_order=1,
                 status="PENDING",
             )
             for i in range(5, 9)  # 4个审批人

@@ -32,7 +32,7 @@ class TestHealthMetrics:
         """Test creating health metrics from project."""
         project = Project(
         project_code="PJ260101001",
-        name="Test Project",
+        project_name="Test Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -50,7 +50,7 @@ class TestHealthMetrics:
         """Test delay calculation in health metrics."""
         project = Project(
         project_code="PJ260101002",
-        name="Delayed Project",
+        project_name="Delayed Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H2,
@@ -67,7 +67,7 @@ class TestHealthMetrics:
         """Test progress percentage calculation."""
         project = Project(
         project_code="PJ260101003",
-        name="Progress Test Project",
+        project_name="Progress Test Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -88,7 +88,7 @@ class TestHealthCalculation:
         """Test calculation of normal (H1) health."""
         project = Project(
         project_code="PJ260101004",
-        name="Normal Project",
+        project_name="Normal Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -106,7 +106,7 @@ class TestHealthCalculation:
         """Test calculation of at-risk (H2) health."""
         project = Project(
         project_code="PJ260101005",
-        name="At-Risk Project",
+        project_name="At-Risk Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H2,
@@ -123,7 +123,7 @@ class TestHealthCalculation:
         """Test calculation of blocked (H3) health."""
         project = Project(
         project_code="PJ260101006",
-        name="Blocked Project",
+        project_name="Blocked Project",
         customer_name="Test Customer",
         status=ProjectStatus.BLOCKED,
         health=ProjectHealthEnum.H3,
@@ -142,7 +142,7 @@ class TestHealthCalculation:
 
         project = Project(
         project_code="PJ260101007",
-        name="Project with Issues",
+        project_name="Project with Issues",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -207,7 +207,7 @@ class TestHealthUpgrade:
         """Test health upgrade due to delay."""
         project = Project(
         project_code="PJ260101008",
-        name="Project to Upgrade",
+        project_name="Project to Upgrade",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -223,7 +223,7 @@ class TestHealthUpgrade:
         """Test no upgrade when project is on track."""
         project = Project(
         project_code="PJ260101009",
-        name="Good Project",
+        project_name="Good Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -241,7 +241,7 @@ class TestHealthUpgrade:
 
         project = Project(
         project_code="PJ260101010",
-        name="Upgrade Test Project",
+        project_name="Upgrade Test Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -265,7 +265,7 @@ class TestHealthUpgrade:
         """Test cascading health upgrades."""
         project = Project(
         project_code="PJ260101011",
-        name="Cascading Upgrade Project",
+        project_name="Cascading Upgrade Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -299,7 +299,7 @@ class TestHealthSnapshot:
         """Test creating a health snapshot."""
         project = Project(
         project_code="PJ260101012",
-        name="Snapshot Test Project",
+        project_name="Snapshot Test Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -323,7 +323,7 @@ class TestHealthSnapshot:
         """Test snapshot stores rich metadata."""
         project = Project(
         project_code="PJ260101013",
-        name="Metadata Test Project",
+        project_name="Metadata Test Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H2,
@@ -347,7 +347,7 @@ class TestHealthSnapshot:
         """Test creating multiple snapshots over time."""
         project = Project(
         project_code="PJ260101014",
-        name="Timeline Project",
+        project_name="Timeline Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -384,7 +384,7 @@ class TestHealthCalculationEdgeCases:
         """Test health calculation for completed project."""
         project = Project(
         project_code="PJ260101015",
-        name="Completed Project",
+        project_name="Completed Project",
         customer_name="Test Customer",
         status=ProjectStatus.COMPLETED,
         health=ProjectHealthEnum.H4,
@@ -402,7 +402,7 @@ class TestHealthCalculationEdgeCases:
         """Test project slightly behind but within tolerance."""
         project = Project(
         project_code="PJ260101016",
-        name="On-Time Project",
+        project_name="On-Time Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,
@@ -419,7 +419,7 @@ class TestHealthCalculationEdgeCases:
         today = datetime.now()
         project = Project(
         project_code="PJ260101017",
-        name="Zero Duration Project",
+        project_name="Zero Duration Project",
         customer_name="Test Customer",
         status=ProjectStatus.IN_PROGRESS,
         health=ProjectHealthEnum.H1,

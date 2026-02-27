@@ -39,7 +39,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-REQ-001",
             material_name="需求测试物料",
-            category="ELECTRICAL",
+            category_id="ELECTRICAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -67,7 +67,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-REQ-002",
             material_name="审批测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -99,7 +99,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-PR-001",
             material_name="采购申请测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             standard_price=Decimal("200.00"),
             is_active=True,
@@ -121,7 +121,7 @@ class TestMaterialProcurementFlow:
         # 创建采购申请
         pr = PurchaseRequest(
             request_no="PR-MAT-001",
-            requester_id=2,
+            requested_by=2,
             total_amount=req.requested_quantity * material.standard_price,
             status="DRAFT",
             source_requisition_id=req.id,
@@ -140,7 +140,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-PO-001",
             material_name="采购订单测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             standard_price=Decimal("150.00"),
             is_active=True,
@@ -168,7 +168,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-RCV-001",
             material_name="入库测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -194,7 +194,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-ISS-001",
             material_name="领用测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -225,7 +225,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-RET-001",
             material_name="退料测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -255,7 +255,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-RSV-001",
             material_name="预留测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -287,7 +287,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-CNCL-001",
             material_name="取消预留测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -320,7 +320,7 @@ class TestMaterialProcurementFlow:
         material = Material(
             material_code="MAT-FULL-001",
             material_name="完整流程测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             standard_price=Decimal("100.00"),
             is_active=True,

@@ -232,7 +232,7 @@ class TestStatusTransitionIntegration:
                 opportunity_id=opportunity.id,
                 customer_id=customer.id,
                 status="SIGNED",
-                contract_amount=Decimal("100000.00"),
+                total_amount=Decimal("100000.00"),
                 signed_date=date.today(),
             )
             db_session.add(contract)
@@ -565,7 +565,7 @@ class TestSalesPipelineIntegration:
             opportunity_id=opportunity.id,
             customer_id=customer.id,
             status="DRAFT",
-            contract_amount=Decimal("200000.00"),
+            total_amount=Decimal("200000.00"),
         )
         db_session.add(contract)
         db_session.commit()
@@ -642,7 +642,7 @@ class TestSalesPipelineIntegration:
             opportunity_id=opportunity.id,
             customer_id=customer.id,
             status="SIGNED",
-            contract_amount=Decimal("480000.00"),
+            total_amount=Decimal("480000.00"),
             signed_date=date.today(),
         )
         db_session.add(contract)

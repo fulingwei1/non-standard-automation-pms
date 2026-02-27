@@ -20,9 +20,9 @@ class TestContractModel:
             contract_name="测试合同",
             customer_id=sample_customer.id,
             contract_type="销售合同",
-            contract_amount=Decimal("300000.00"),
+            total_amount=Decimal("300000.00"),
             signing_date=date.today(),
-            owner_id=sample_user.id
+            sales_owner_id=sample_user.id
         )
         db_session.add(contract)
         db_session.commit()
@@ -37,7 +37,7 @@ class TestContractModel:
             contract_code="C001",
             contract_name="合同1",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            sales_owner_id=sample_user.id
         )
         db_session.add(c1)
         db_session.commit()
@@ -46,7 +46,7 @@ class TestContractModel:
             contract_code="C001",
             contract_name="合同2",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            sales_owner_id=sample_user.id
         )
         db_session.add(c2)
         
@@ -63,7 +63,7 @@ class TestContractModel:
             contract_code="C002",
             contract_name="日期测试",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id,
+            sales_owner_id=sample_user.id,
             signing_date=signing,
             start_date=start,
             end_date=end
@@ -81,8 +81,8 @@ class TestContractModel:
             contract_code="C003",
             contract_name="金额测试",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id,
-            contract_amount=Decimal("500000.00"),
+            sales_owner_id=sample_user.id,
+            total_amount=Decimal("500000.00"),
             tax_amount=Decimal("80000.00"),
             total_amount=Decimal("580000.00")
         )
@@ -112,7 +112,7 @@ class TestContractModel:
                 contract_code=f"C_TYPE_{i}",
                 contract_name=f"{ct}测试",
                 customer_id=sample_customer.id,
-                owner_id=sample_user.id,
+                sales_owner_id=sample_user.id,
                 contract_type=ct
             )
             db_session.add(contract)
@@ -145,7 +145,7 @@ class TestContractModel:
             contract_code="C_DEL",
             contract_name="待删除",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            sales_owner_id=sample_user.id
         )
         db_session.add(contract)
         db_session.commit()
@@ -163,7 +163,7 @@ class TestContractModel:
             contract_code="C004",
             contract_name="付款测试",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id,
+            sales_owner_id=sample_user.id,
             payment_terms="30%预付，60%进度款，10%质保金"
         )
         db_session.add(contract)
@@ -178,7 +178,7 @@ class TestContractModel:
             contract_code="C005",
             contract_name="描述测试",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id,
+            sales_owner_id=sample_user.id,
             description=desc
         )
         db_session.add(contract)
@@ -193,8 +193,8 @@ class TestContractModel:
                 contract_code=f"C{i:03d}",
                 contract_name=f"合同{i}",
                 customer_id=sample_customer.id,
-                owner_id=sample_user.id,
-                contract_amount=Decimal(f"{i*50000}.00")
+                sales_owner_id=sample_user.id,
+                total_amount=Decimal(f"{i*50000}.00")
             ) for i in range(1, 6)
         ]
         db_session.add_all(contracts)

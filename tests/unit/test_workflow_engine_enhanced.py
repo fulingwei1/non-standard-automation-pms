@@ -160,7 +160,7 @@ class TestGetCurrentNode(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
         )
 
         node = ApprovalNode(id=10, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER")
@@ -180,7 +180,7 @@ class TestGetCurrentNode(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=None,
-            current_status=ApprovalStatus.PENDING.value,
+            status=ApprovalStatus.PENDING.value,
         )
 
         node = ApprovalNode(id=1, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER")
@@ -200,7 +200,7 @@ class TestGetCurrentNode(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=None,
-            current_status=ApprovalStatus.APPROVED.value,
+            status=ApprovalStatus.APPROVED.value,
         )
 
         current_node = self.engine.get_current_node(instance)
@@ -213,7 +213,7 @@ class TestGetCurrentNode(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=None,
-            current_status=ApprovalStatus.REJECTED.value,
+            status=ApprovalStatus.REJECTED.value,
         )
 
         current_node = self.engine.get_current_node(instance)
@@ -274,7 +274,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
             role_type="USER",
             condition_expression="amount > 1000",
         )
-        instance = ApprovalInstance(id=1, flow_id=1, business_type="ECN", business_id=100)
+        instance = ApprovalInstance(id=1, flow_id=1, entity_type="ECN", entity_id=100)
 
         # Mock User 查询
         mock_user_query = MagicMock()
@@ -301,7 +301,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
             role_type="USER",
             condition_expression="amount < 1000",
         )
-        instance = ApprovalInstance(id=1, flow_id=1, business_type="ECN", business_id=100)
+        instance = ApprovalInstance(id=1, flow_id=1, entity_type="ECN", entity_id=100)
 
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.first.return_value = None
@@ -329,7 +329,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
             role_type="USER",
             condition_expression="invalid syntax",
         )
-        instance = ApprovalInstance(id=1, flow_id=1, business_type="ECN", business_id=100)
+        instance = ApprovalInstance(id=1, flow_id=1, entity_type="ECN", entity_id=100)
 
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.first.return_value = None
@@ -355,7 +355,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
             role_type="USER",
             condition_expression="amount > 1000",
         )
-        instance = ApprovalInstance(id=1, flow_id=1, business_type="ECN", business_id=100)
+        instance = ApprovalInstance(id=1, flow_id=1, entity_type="ECN", entity_id=100)
 
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.first.return_value = None
@@ -375,9 +375,9 @@ class TestBuildConditionContext(TestWorkflowEngine):
             id=1,
             flow_id=1,
             flow_code="ECN_FLOW",
-            business_type="ECN",
-            business_id=100,
-            current_status=ApprovalStatus.PENDING.value,
+            entity_type="ECN",
+            entity_id=100,
+            status=ApprovalStatus.PENDING.value,
             submitted_at=datetime.now(),
             submitted_by=None,
         )
@@ -402,9 +402,9 @@ class TestBuildConditionContext(TestWorkflowEngine):
             id=1,
             flow_id=1,
             flow_code="ECN_FLOW",
-            business_type="ECN",
-            business_id=100,
-            current_status=ApprovalStatus.PENDING.value,
+            entity_type="ECN",
+            entity_id=100,
+            status=ApprovalStatus.PENDING.value,
             submitted_at=datetime.now(),
             submitted_by=5,
         )
@@ -433,9 +433,9 @@ class TestBuildConditionContext(TestWorkflowEngine):
             id=1,
             flow_id=1,
             flow_code="ECN_FLOW",
-            business_type="ECN",
-            business_id=100,
-            current_status=ApprovalStatus.PENDING.value,
+            entity_type="ECN",
+            entity_id=100,
+            status=ApprovalStatus.PENDING.value,
             submitted_at=datetime.now(),
             submitted_by=None,
         )
@@ -516,7 +516,7 @@ class TestSubmitApproval(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
             completed_nodes=0,
         )
 
@@ -577,7 +577,7 @@ class TestSubmitApproval(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=None,
-            current_status=ApprovalStatus.APPROVED.value,
+            status=ApprovalStatus.APPROVED.value,
         )
 
         with self.assertRaises(ValueError) as context:
@@ -595,7 +595,7 @@ class TestSubmitApproval(TestWorkflowEngine):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
         )
 
         node = ApprovalNode(
@@ -629,7 +629,7 @@ class TestUpdateInstanceStatus(TestWorkflowEngine):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.PENDING.value,
+            status=ApprovalStatus.PENDING.value,
             completed_nodes=0,
         )
 

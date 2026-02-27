@@ -36,8 +36,8 @@ def auth_headers(client):
 def test_project(db, auth_headers):
     """测试项目"""
     project = Project(
-        code="API_TEST_001",
-        name="API测试项目",
+        project_code="API_TEST_001",
+        project_name="API测试项目",
         status="COMPLETED",
         budget_amount=Decimal("500000.00")
     )
