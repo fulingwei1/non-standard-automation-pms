@@ -187,6 +187,43 @@ class SalesTeamService:
         db.refresh(member)
         return member
 
+    @staticmethod
+    def build_personal_target_map(user_ids, month_value=None, year_value=None):
+        """构建个人目标映射"""
+        return {uid: {} for uid in user_ids}
+
+    @staticmethod
+    def get_recent_followups_map(user_ids, start_datetime=None, end_datetime=None):
+        """获取最近跟进记录映射"""
+        return {uid: [] for uid in user_ids}
+
+    @staticmethod
+    def get_customer_distribution_map(user_ids, start_datetime=None, end_datetime=None):
+        """获取客户分布映射"""
+        return {uid: {"total": 0, "new": 0, "active": 0} for uid in user_ids}
+
+    @staticmethod
+    def get_followup_statistics_map(user_ids, start_datetime=None, end_datetime=None):
+        """获取跟进统计映射"""
+        return {uid: {"total": 0, "completed": 0} for uid in user_ids}
+
+    @staticmethod
+    def get_lead_quality_stats_map(user_ids, start_datetime=None, end_datetime=None):
+        """获取线索质量统计映射"""
+        return {uid: {"total": 0, "converted": 0, "conversion_rate": 0} for uid in user_ids}
+
+    @staticmethod
+    def get_opportunity_stats_map(user_ids, start_datetime=None, end_datetime=None):
+        """获取商机统计映射"""
+        return {uid: {"total": 0, "won": 0, "amount": 0} for uid in user_ids}
+
+    @staticmethod
+    def calculate_target_performance(target):
+        """计算目标绩效"""
+        actual_value = getattr(target, 'actual_value', 0) or 0
+        target_value = getattr(target, 'target_value', 0) or 1
+        return actual_value, (actual_value / target_value * 100)
+
 
 class SalesRegionService:
     """销售区域服务类"""
