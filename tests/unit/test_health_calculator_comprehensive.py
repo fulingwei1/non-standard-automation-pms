@@ -157,7 +157,8 @@ class TestHealthCalculation:
         description="Issue blocking project",
         severity=IssueSeverity.CRITICAL,
         status=IssueStatus.OPEN,
-        )
+        reporter_id=1
+    )
         db_session.add(issue)
         db_session.commit()
 

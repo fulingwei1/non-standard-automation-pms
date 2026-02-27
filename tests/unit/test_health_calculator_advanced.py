@@ -254,7 +254,8 @@ class TestHealthCalculatorEdgeCases:
         title="阻塞问题",
         description="阻塞了项目进度",
         status=IssueStatusEnum.OPEN.value,
-        )
+        reporter_id=1
+    )
         db_session.add(blocking_issue)
         db_session.commit()
 
