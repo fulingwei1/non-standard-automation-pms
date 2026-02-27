@@ -16,7 +16,6 @@ from app.models.sales import SalesTarget
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
-from app.services.sales_team_service import SalesTeamService
 from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import get_user_role_code
