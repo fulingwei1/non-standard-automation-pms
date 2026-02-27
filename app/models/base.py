@@ -446,7 +446,18 @@ def init_db(database_url: Optional[str] = None, drop_all: bool = False):
     engine = get_engine(database_url)
 
     if drop_all:
+        # 对于 SQLite，在 drop_all 前禁用外键约束，避免表删除顺序导致的外键约束失败
+        url = str(engine.url)
+        if url.startswith("sqlite"):
+            with engine.begin() as conn:
+                conn.execute(text("PRAGMA foreign_keys=OFF"))
+        
         Base.metadata.drop_all(bind=engine)
+        
+        # 重新启用外键约束
+        if url.startswith("sqlite"):
+            with engine.begin() as conn:
+                conn.execute(text("PRAGMA foreign_keys=ON"))
 
     Base.metadata.create_all(bind=engine)
 
