@@ -15,13 +15,14 @@ import {
   Activity,
   Shield } from
 'lucide-react';
+import { Button } from "../ui";
 import {
   ALERT_TYPES,
   ALERT_LEVELS,
   ALERT_STATUS,
   STATISTICS_METRICS,
-  CHART_COLORS } from
-'@/lib/constants/alert';
+  CHART_COLORS
+} from '@/lib/constants/alert';
 
 const AlertOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('last_24h');

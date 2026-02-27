@@ -274,7 +274,7 @@ const DeliveryForm = ({ id, onBack }) => {
         message.success('创建成功');
       }
       onBack();
-    } catch (err) {
+    } catch (_err) {
       message.error(isEdit ? '更新失败' : '创建失败');
     } finally {
       setSubmitting(false);

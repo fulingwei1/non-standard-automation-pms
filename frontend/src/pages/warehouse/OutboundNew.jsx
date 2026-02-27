@@ -37,7 +37,7 @@ export default function OutboundNew() {
         items: valid.map((i) => ({ ...i, planned_quantity: parseFloat(i.planned_quantity) })),
       });
       toast?.success?.("出库单创建成功"); navigate("/warehouse/outbound");
-    } catch (e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
+    } catch (_e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
   };
 
   return (

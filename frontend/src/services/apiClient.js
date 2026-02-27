@@ -56,4 +56,5 @@ apiClient.interceptors.response.use(
 );
 
 // 导出
+export { apiClient };
 export default apiClient;

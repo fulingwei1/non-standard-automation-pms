@@ -8,7 +8,7 @@ import { reportCenterApi } from '../services/api';
 export default function ReportTemplates() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [, setShowDialog] = useState(false);
+  const [_showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
     fetchTemplates();

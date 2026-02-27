@@ -110,8 +110,8 @@ export default function LeadPriorityManagement() {
         for (const lead of leads) {
           try {
             await priorityApi.calculateLeadPriority(lead.id);
-          } catch (e) {
-            console.warn(`计算线索 ${lead.id} 优先级失败:`, e);
+          } catch (_e) {
+            console.warn(`计算线索 ${lead.id} 优先级失败:`, _e);
           }
         }
       }
@@ -123,8 +123,8 @@ export default function LeadPriorityManagement() {
         for (const opp of opportunities) {
           try {
             await priorityApi.calculateOpportunityPriority(opp.id);
-          } catch (e) {
-            console.warn(`计算商机 ${opp.id} 优先级失败:`, e);
+          } catch (_e) {
+            console.warn(`计算商机 ${opp.id} 优先级失败:`, _e);
           }
         }
       }

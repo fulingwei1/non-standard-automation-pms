@@ -6,6 +6,7 @@
 
 import { formatDate } from "../../lib/utils";
 import { getStatusBadge, getReviewResultBadge } from "./phaseUtils";
+import { Badge, Button, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
 
 export default function PhaseDetailDialog({ open, onOpenChange, phase }) {
   if (!phase) {return null;}

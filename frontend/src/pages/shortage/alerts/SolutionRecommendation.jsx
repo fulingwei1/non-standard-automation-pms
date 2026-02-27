@@ -19,7 +19,7 @@ const SolutionRecommendation = () => {
   const navigate = useNavigate();
   const [solutions, setSolutions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [, setSelectedSolution] = useState(null);
+  const [_selectedSolution, setSelectedSolution] = useState(null);
 
   // 加载方案数据
   useEffect(() => {

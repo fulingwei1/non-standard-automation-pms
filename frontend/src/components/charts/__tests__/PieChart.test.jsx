@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, _vi } from 'vitest';
 import { render } from '@testing-library/react';
 
 // Mock PieChart component for testing

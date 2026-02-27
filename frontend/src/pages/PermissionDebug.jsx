@@ -23,8 +23,8 @@ export default function PermissionDebug() {
         isSuperuser: user.is_superuser === true || user.isSuperuser === true,
         hasFinance: hasFinanceAccess(user.role, user.is_superuser),
       };
-    } catch (e) {
-      return { error: `解析用户信息失败: ${e.message}` };
+    } catch (_e) {
+      return { error: `解析用户信息失败: ${_e.message}` };
     }
   }, [userStr]);
 

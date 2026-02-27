@@ -20,7 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger } from
 "../ui/popover";
-import { Edit, Delete } from "lucide-react";
+import { Delete, Edit, FileText } from "lucide-react";
 import { cn } from "../../lib/utils";
 import {
   statusConfigs as _statusConfigs,

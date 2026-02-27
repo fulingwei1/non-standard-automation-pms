@@ -55,6 +55,7 @@ import {
   formatCurrency as _formatCurrency,
   formatRelativeTime } from
 "../../lib/utils";
+import { Truck } from "lucide-react";
 import {
   getReadinessStatusConfig as _getReadinessStatusConfig,
   getMaterialTypeConfig as _getMaterialTypeConfig,

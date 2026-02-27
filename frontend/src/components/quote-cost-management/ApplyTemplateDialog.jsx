@@ -1,6 +1,7 @@
 
 
 import { formatCurrency } from "../../lib/utils";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui";
 
 export default function ApplyTemplateDialog({
   open,

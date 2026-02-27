@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import QualificationManagement from '../QualificationManagement';
-import api, { qualificationApi } from '../../services/api';
+import _api, { qualificationApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {
@@ -23,11 +23,8 @@ vi.mock('../../services/api', () => ({
       update: vi.fn().mockResolvedValue({ data: {} }),
       getLevels: vi.fn().mockResolvedValue({ data: {} }),
       getLevel: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       createLevel: vi.fn().mockResolvedValue({ data: {} }),
       updateLevel: vi.fn().mockResolvedValue({ data: {} }),
-      deleteLevel: vi.fn().mockResolvedValue({ data: {} }),
       getModels: vi.fn().mockResolvedValue({ data: {} }),
       getModel: vi.fn().mockResolvedValue({ data: {} }),
       getModelById: vi.fn().mockResolvedValue({ data: {} }),

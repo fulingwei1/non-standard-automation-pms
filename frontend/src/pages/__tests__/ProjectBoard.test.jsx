@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, _within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProjectBoard from '../ProjectBoard';
 import api, { projectApi } from '../../services/api';
@@ -24,7 +24,6 @@ vi.mock('../../services/api', () => ({
       getBoard: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
       create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       getMachines: vi.fn().mockResolvedValue({ data: {} }),
       getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
       recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),

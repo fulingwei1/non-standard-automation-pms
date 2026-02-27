@@ -152,6 +152,7 @@ const AIStatsChart = ({
           </ResponsiveContainer>
         );
       }
+
       default:
         return null;
     }

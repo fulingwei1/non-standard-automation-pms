@@ -17,12 +17,14 @@ import {
   Calendar,
   MessageSquare } from
 'lucide-react';
+import { Alert } from "../ui";
 import {
   APPROVAL_TYPES,
   APPROVAL_STATUS,
   APPROVAL_PRIORITY,
   WORKFLOW_STEPS,
-  CHART_COLORS } from
+  CHART_COLORS
+} from
 '@/lib/constants/approval';
 
 const ApprovalOverview = ({ data, loading, onNavigate }) => {

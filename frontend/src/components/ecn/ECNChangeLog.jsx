@@ -26,6 +26,7 @@ import {
   formatStatus as _formatStatus } from
 "@/lib/constants/ecn";
 import { cn, formatDate } from "../../lib/utils";import { toast } from "sonner";
+import { Button } from "../ui";
 
 export function ECNChangeLog({
   logs,

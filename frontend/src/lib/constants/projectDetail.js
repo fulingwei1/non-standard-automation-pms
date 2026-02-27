@@ -1,7 +1,7 @@
 // Project detail page constants
 // 项目详情页面常量定义
 
-export const PROJECT_STAGES = [
+export const PROJECT_STAGES_DETAIL = [
   {
     code: 'S1',
     name: '需求进入',

@@ -29,6 +29,7 @@ import {
   TabsTrigger } from
 "../components/ui";
 import { leadApi as _leadApi, technicalAssessmentApi } from "../services/api";
+import { Badge } from "../components/ui";
 
 export default function LeadRequirementDetail() {
   const { leadId } = useParams();

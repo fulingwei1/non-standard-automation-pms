@@ -36,7 +36,7 @@ export default function LocationManagement() {
       if (keyword) params.keyword = keyword;
       const res = await warehouseApi.locations.list(params);
       setData(res.data || res);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (_e) { console.error(_e); } finally { setLoading(false); }
   }, [page, whFilter, keyword]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -49,13 +49,13 @@ export default function LocationManagement() {
     setSubmitting(true);
     try {
       const p = { ...form, warehouse_id: form.warehouse_id ? parseInt(form.warehouse_id) : null, capacity: form.capacity ? parseFloat(form.capacity) : null };
-      if (editingId) { const { warehouse_id, location_code, ...u } = p; await warehouseApi.locations.update(editingId, u); }
+      if (editingId) { const { warehouse_id: _warehouse_id, location_code: _location_code, ...u } = p; await warehouseApi.locations.update(editingId, u); }
       else { await warehouseApi.locations.create(p); }
       toast?.success?.(editingId ? "更新成功" : "创建成功"); setShowDialog(false); fetchData();
-    } catch (e) { toast?.error?.("操作失败"); } finally { setSubmitting(false); }
+    } catch (_e) { toast?.error?.("操作失败"); } finally { setSubmitting(false); }
   };
 
-  const handleDelete = async (id) => { if (!confirm("确定禁用该库位？")) return; try { await warehouseApi.locations.delete(id); toast?.success?.("已禁用"); fetchData(); } catch(e) { toast?.error?.("失败"); } };
+  const handleDelete = async (id) => { if (!confirm("确定禁用该库位？")) return; try { await warehouseApi.locations.delete(id); toast?.success?.("已禁用"); fetchData(); } catch (_e) { toast?.error?.("失败"); } };
 
   return (
     <div className="min-h-screen bg-surface-50">

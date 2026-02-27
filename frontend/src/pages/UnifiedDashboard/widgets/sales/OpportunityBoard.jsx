@@ -8,7 +8,7 @@ import { opportunityApi } from '../../../../services/api/sales';
 const stages = ['初步接触', '需求确认', '方案报价', '商务谈判', '赢单'];
 const stageColors = ['bg-blue-50', 'bg-yellow-50', 'bg-orange-50', 'bg-purple-50', 'bg-green-50'];
 
-export default function OpportunityBoard({ view, data: propData }) {
+export default function OpportunityBoard({ _view, data: propData }) {
   const [opps, setOpps] = useState([]);
   const [loading, setLoading] = useState(!propData);
 

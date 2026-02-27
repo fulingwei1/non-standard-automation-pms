@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MaterialReadiness from '../MaterialReadiness';
-import api, { materialApi, projectApi, supplierApi } from '../../services/api';
+import _api, { materialApi, _projectApi, _supplierApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {
@@ -22,8 +22,6 @@ vi.mock('../../services/api', () => ({
       update: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       search: vi.fn().mockResolvedValue({ data: {} }),
       warehouse: {
         statistics: vi.fn().mockResolvedValue({ data: {} }),

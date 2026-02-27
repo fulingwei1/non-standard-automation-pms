@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BiddingCenter from '../BiddingCenter';
-import api, { presaleApi } from '../../services/api';
+import _api, { presaleApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -25,8 +25,6 @@ vi.mock('../../services/api', () => ({
       tickets: {
         list: vi.fn().mockResolvedValue({ data: {} }),
         get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        update: vi.fn().mockResolvedValue({ data: {} }),
         accept: vi.fn().mockResolvedValue({ data: {} }),
         updateProgress: vi.fn().mockResolvedValue({ data: {} }),
         complete: vi.fn().mockResolvedValue({ data: {} }),

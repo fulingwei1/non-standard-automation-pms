@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BOMManagement from '../BOMManagement';
-import api, { bomApi, projectApi, machineApi } from '../../services/api';
+import _api, { bomApi, projectApi, _machineApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -25,8 +25,6 @@ vi.mock('../../services/api', () => ({
       getByMachine: vi.fn().mockResolvedValue({ data: {} }),
       list: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
       getItems: vi.fn().mockResolvedValue({ data: {} }),
       addItem: vi.fn().mockResolvedValue({ data: {} }),
       updateItem: vi.fn().mockResolvedValue({ data: {} }),

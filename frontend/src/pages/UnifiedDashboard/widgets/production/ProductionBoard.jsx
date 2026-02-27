@@ -12,7 +12,7 @@ const statusColors = {
   delayed: 'text-red-600',
 };
 
-export default function ProductionBoard({ view, data: propData }) {
+export default function ProductionBoard({ _view, data: propData }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(!propData);
 

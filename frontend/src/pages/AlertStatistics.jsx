@@ -55,6 +55,7 @@ import {
   AlertDetails } from
 '../components/alert-statistics';
 
+import { CheckCircle } from "lucide-react";
 import {
   ALERT_TYPES,
   ALERT_LEVELS,

@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DepartmentManagement from '../DepartmentManagement';
-import api, { orgApi } from '../../services/api';
+import _api, { orgApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -25,8 +25,6 @@ vi.mock('../../services/api', () => ({
       departments: vi.fn().mockResolvedValue({ data: {} }),
       departmentTree: vi.fn().mockResolvedValue({ data: {} }),
       createDepartment: vi.fn().mockResolvedValue({ data: {} }),
-      updateDepartment: vi.fn().mockResolvedValue({ data: {} }),
-      getDepartment: vi.fn().mockResolvedValue({ data: {} }),
       getDepartmentUsers: vi.fn().mockResolvedValue({ data: {} }),
       employees: vi.fn().mockResolvedValue({ data: {} }),
     }

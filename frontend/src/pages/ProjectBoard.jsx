@@ -6,7 +6,7 @@ import { useRoleFilter } from "../hooks/useRoleFilter";
 import { projectApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { BoardColumn, BoardFilters, ProjectCard } from "../components/board";
-import { Card, Skeleton, ApiIntegrationError, Badge, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
+import { ApiIntegrationError, Badge, Card, CardContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
 import {
   Layers,
   AlertCircle,
@@ -46,8 +46,8 @@ const getStoredUser = () => {
     if (storedUser) {
       return JSON.parse(storedUser);
     }
-  } catch (e) {
-    console.error("Failed to parse user from localStorage:", e);
+  } catch (_e) {
+    console.error("Failed to parse user from localStorage:", _e);
   }
   // 默认用户数据
   return {

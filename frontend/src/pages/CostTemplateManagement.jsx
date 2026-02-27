@@ -55,6 +55,7 @@ import {
 import { cn as _cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { salesTemplateApi } from "../services/api";
+import { DollarSign } from "lucide-react";
 
 export default function CostTemplateManagement() {
   const _navigate = useNavigate();

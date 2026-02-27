@@ -36,7 +36,7 @@ import AssemblyTaskCard from "../components/production/assembler/AssemblyTaskCar
 
 export default function AssemblerTaskCenter() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [shortageDialog, setShortageDialog] = useState({
     open: false,

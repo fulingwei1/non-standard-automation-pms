@@ -40,7 +40,7 @@ function StatusBadge({ status }) {
 // 不良品分析Tab
 function DefectAnalysisTab() {
   const [analyses, setAnalyses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -162,7 +162,7 @@ function DefectAnalysisTab() {
 function ReworkTab() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState({ items: [], total: 0 });
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const page = parseInt(searchParams.get("rw_page") || "1", 10);
@@ -170,7 +170,7 @@ function ReworkTab() {
   const status = searchParams.get("rw_status") || "";
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    _setLoading(true);
     setError(null);
     try {
       const params = { skip: (page - 1) * pageSize, limit: pageSize };
@@ -181,7 +181,7 @@ function ReworkTab() {
     } catch (err) {
       setError(err.response?.data?.detail || err.message || "加载失败");
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   }, [page, status]);
 
@@ -216,7 +216,7 @@ function ReworkTab() {
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">{error}</div>
       )}
 
-      {loading ? (
+      {_loading ? (
         <div className="flex items-center justify-center py-12">
           <RefreshCw className="h-6 w-6 text-violet-400 animate-spin" />
           <span className="ml-2 text-text-muted">加载中...</span>

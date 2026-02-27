@@ -35,7 +35,7 @@ import {
 
 import { businessSupportApi } from "../services/api";
 import { quoteDeliveryApi } from "../services/api/sales";
-import { getItemsCompat } from "../utils/apiResponse";
+import { _getItemsCompat } from "../utils/apiResponse";
 
 const { Title, Text } = Typography;
 
@@ -90,7 +90,7 @@ export default function Shipments() {
         const data = overdueRes.value?.data?.data || overdueRes.value?.data || {};
         setOverdueDeliveries(data.items || []);
       }
-    } catch (err) {
+    } catch (_err) {
       message.error("加载出货数据失败");
     } finally {
       setLoading(false);

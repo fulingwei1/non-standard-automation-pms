@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, _within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AdminDashboard from '../AdminDashboard';
 import api from '../../services/api';

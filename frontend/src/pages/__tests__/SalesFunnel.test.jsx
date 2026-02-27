@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SalesFunnel from '../SalesFunnel';
-import api, { salesStatisticsApi, customerApi, userApi } from '../../services/api';
+import api, { _salesStatisticsApi, _customerApi, userApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -18,7 +18,7 @@ vi.mock('../../services/api', () => ({
     delete: vi.fn().mockResolvedValue({ data: { success: true } }),
     defaults: { baseURL: '/api' },
   },
-    salesStatisticsApi: {
+    _salesStatisticsApi: {
       funnel: vi.fn().mockResolvedValue({ data: {} }),
       opportunitiesByStage: vi.fn().mockResolvedValue({ data: {} }),
       revenueForecast: vi.fn().mockResolvedValue({ data: {} }),
@@ -27,7 +27,7 @@ vi.mock('../../services/api', () => ({
       predictionAccuracy: vi.fn().mockResolvedValue({ data: {} }),
       performance: vi.fn().mockResolvedValue({ data: {} }),
     },
-    customerApi: {
+    _customerApi: {
       list: vi.fn().mockResolvedValue({ data: {} }),
       getCustomers: vi.fn().mockResolvedValue({ data: {} }),
       get: vi.fn().mockResolvedValue({ data: {} }),

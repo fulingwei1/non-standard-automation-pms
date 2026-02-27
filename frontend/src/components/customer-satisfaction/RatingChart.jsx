@@ -36,11 +36,12 @@ import {
   TooltipTrigger } from
 "../../components/ui/tooltip";
 import { cn } from "../../lib/utils";
+import { Progress } from "../ui";
 import {
   getSatisfactionScoreConfig,
   getSatisfactionColor as _getSatisfactionColor,
-  satisfactionConstants } from
-"@/lib/constants/customer";
+  satisfactionConstants
+} from "@/lib/constants/customer";
 
 // 模拟图表数据 - 实际项目中应该来自 props
 const generateChartData = () => {

@@ -4,10 +4,12 @@ import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import {
-  formatCurrencyWan,
-  formatPercent,
-  getCostProgressColor
+import { 
+  _formatCurrency, 
+  formatCurrencyWan, 
+  formatPercent, 
+  getCostStatus,
+  getCostProgressColor 
 } from "../lib/utils/cost";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
@@ -57,6 +59,8 @@ const staggerChild = {
 // Project Card Component with Cost
 function ProjectCardWithCost({ project, onClick, onViewCostDetail, showCost }) {
   const costSummary = project?.cost_summary;
+  const _costStatus = getCostStatus(costSummary);
+
   return (
     <motion.div variants={staggerChild}>
       <Card 

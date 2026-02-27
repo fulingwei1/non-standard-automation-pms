@@ -16,6 +16,7 @@ import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs } from "./acceptanceConfig";
+import { Edit3 } from "lucide-react";
 
 export default function AcceptanceCard({ acceptance, onView }) {
   const type = typeConfigs[acceptance.type] || {

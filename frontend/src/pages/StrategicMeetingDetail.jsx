@@ -15,7 +15,6 @@ import {
   TabsTrigger,
 } from "../components/ui";
 import {
-import { formatDate } from "@/lib/formatters";
   ArrowLeft,
   Calendar,
   Users,
