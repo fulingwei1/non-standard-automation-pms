@@ -238,6 +238,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 预警管理模块加载失败: {e}")
 
+    # ==================== 问题管理 ====================
+    try:
+        from app.api.v1.endpoints.issues import router as issues_router
+        api_router.include_router(issues_router, prefix="/issues", tags=["issues"])
+        print("✓ 问题管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 问题管理模块加载失败: {e}")
+
     # ==================== 奖金管理 ====================
     try:
         from app.api.v1.endpoints.bonus import router as bonus_router
