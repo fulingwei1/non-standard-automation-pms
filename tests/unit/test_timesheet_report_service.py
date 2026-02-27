@@ -50,7 +50,7 @@ def timesheet_report_service(
             "app.services.timesheet_report_service.OvertimeCalculationService",
             return_value=mock_overtime_service,
         ):
-            service = TimesheetReportService(db_session)
+            service = TimesheetReportService()
             service.aggregation_service = mock_aggregation_service
             service.overtime_service = mock_overtime_service
             return service
@@ -62,7 +62,7 @@ class TestTimesheetReportServiceInit:
     def test_init_success(self, db_session):
         """测试成功初始化"""
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", True):
-            service = TimesheetReportService(db_session)
+            service = TimesheetReportService()
             assert service.db == db_session
             assert service.aggregation_service is not None
             assert service.overtime_service is not None
@@ -71,7 +71,7 @@ class TestTimesheetReportServiceInit:
         """测试 Excel 库未安装时抛出异常"""
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", False):
             with pytest.raises(ImportError, match="Excel处理库未安装"):
-                TimesheetReportService(db_session)
+                TimesheetReportService()
 
 
 class TestGenerateHrReportExcel:

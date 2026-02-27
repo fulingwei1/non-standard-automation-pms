@@ -37,7 +37,7 @@ def _make_user(user_id=1, real_name="张三", username="zhangsan"):
 def _make_service(db=None):
     if db is None:
         db = MagicMock()
-    return TimesheetQualityService(db)
+    return TimesheetQualityService()
 
 
 # ─── detect_anomalies ────────────────────────────────────────

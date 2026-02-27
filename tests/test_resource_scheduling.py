@@ -137,7 +137,7 @@ def test_detect_conflicts_success(
     # 直接调用服务层测试
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     conflicts = service.detect_resource_conflicts(
         resource_id=test_user.id,
         resource_type="PERSON",
@@ -301,7 +301,7 @@ def test_generate_suggestions_success(db: Session):
     # 生成方案
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     suggestions = service.generate_scheduling_suggestions(
         conflict_id=conflict.id,
         max_suggestions=3,
@@ -441,7 +441,7 @@ def test_forecast_demand_1month(db: Session):
     
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     forecasts = service.forecast_resource_demand(
         forecast_period="1MONTH",
         resource_type="PERSON",
@@ -512,7 +512,7 @@ def test_analyze_utilization_normal(db: Session, test_user: User):
     
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     
     analysis = service.analyze_resource_utilization(
         resource_id=test_user.id,
@@ -669,7 +669,7 @@ def test_conflict_detection_invalid_resource():
     Session = sessionmaker(bind=engine)
     db = Session()
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     
     # 查询不存在的资源
     conflicts = service.detect_resource_conflicts(
@@ -691,7 +691,7 @@ def test_suggestion_generation_nonexistent_conflict():
     Session = sessionmaker(bind=engine)
     db = Session()
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     
     # 应该抛出异常
     with pytest.raises(ValueError):
@@ -712,7 +712,7 @@ def test_forecast_invalid_period():
     Session = sessionmaker(bind=engine)
     db = Session()
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     
     # 无效周期应使用默认值
     forecasts = service.forecast_resource_demand(
@@ -735,7 +735,7 @@ def test_utilization_analysis_no_timesheets():
     Session = sessionmaker(bind=engine)
     db = Session()
     
-    service = ResourceSchedulingAIService(db)
+    service = ResourceSchedulingAIService()
     
     # 无工时记录应该返回利用率0
     analysis = service.analyze_resource_utilization(

@@ -91,7 +91,7 @@ def test_template(db_session, test_user):
 
 def test_match_templates_by_industry(db_session, test_user, test_template):
     """测试1: 按行业匹配模板"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         industry="汽车",
@@ -107,7 +107,7 @@ def test_match_templates_by_industry(db_session, test_user, test_template):
 
 def test_match_templates_by_equipment_type(db_session, test_user, test_template):
     """测试2: 按设备类型匹配模板"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         equipment_type="装配",
@@ -122,7 +122,7 @@ def test_match_templates_by_equipment_type(db_session, test_user, test_template)
 
 def test_match_templates_by_keywords(db_session, test_user, test_template):
     """测试3: 按关键词匹配模板"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         keywords="汽车 机器人",
@@ -137,7 +137,7 @@ def test_match_templates_by_keywords(db_session, test_user, test_template):
 
 def test_match_templates_empty_result(db_session, test_user):
     """测试4: 无匹配结果"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         industry="不存在的行业",
@@ -165,7 +165,7 @@ def test_match_templates_top_k_limit(db_session, test_user, test_template):
         db_session.add(template)
     db_session.commit()
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         industry="汽车",
@@ -179,7 +179,7 @@ def test_match_templates_top_k_limit(db_session, test_user, test_template):
 
 def test_match_templates_similarity_scoring(db_session, test_user, test_template):
     """测试6: 相似度评分计算"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     score = service._calculate_similarity("汽车 装配 机器人", "汽车 装配")
     
@@ -189,7 +189,7 @@ def test_match_templates_similarity_scoring(db_session, test_user, test_template
 
 def test_match_templates_with_usage_count(db_session, test_user, test_template):
     """测试7: 按使用次数排序"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         industry="汽车",
@@ -203,7 +203,7 @@ def test_match_templates_with_usage_count(db_session, test_user, test_template):
 
 def test_match_templates_performance(db_session, test_user, test_template):
     """测试8: 匹配性能"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = TemplateMatchRequest(
         presale_ticket_id=1,
         industry="汽车",
@@ -220,7 +220,7 @@ def test_match_templates_performance(db_session, test_user, test_template):
 
 def test_generate_solution_basic(db_session, test_user, test_template):
     """测试9: 基本方案生成"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = SolutionGenerationRequest(
         presale_ticket_id=1,
         template_id=test_template.id,
@@ -239,7 +239,7 @@ def test_generate_solution_basic(db_session, test_user, test_template):
 
 def test_generate_solution_with_architecture(db_session, test_user, test_template):
     """测试10: 生成方案包含架构图"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = SolutionGenerationRequest(
         presale_ticket_id=1,
         requirements={"industry": "汽车"},
@@ -254,7 +254,7 @@ def test_generate_solution_with_architecture(db_session, test_user, test_templat
 
 def test_generate_solution_with_bom(db_session, test_user):
     """测试11: 生成方案包含BOM"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = SolutionGenerationRequest(
         presale_ticket_id=1,
         requirements={"industry": "汽车"},
@@ -270,7 +270,7 @@ def test_generate_solution_with_bom(db_session, test_user):
 
 def test_generate_solution_confidence_score(db_session, test_user, test_template):
     """测试12: 置信度评分计算"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     solution = {
         "description": "test",
@@ -287,7 +287,7 @@ def test_generate_solution_confidence_score(db_session, test_user, test_template
 
 def test_generate_solution_without_template(db_session, test_user):
     """测试13: 无模板生成方案"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     request = SolutionGenerationRequest(
         presale_ticket_id=1,
         requirements={"industry": "电子", "type": "贴片"},
@@ -302,7 +302,7 @@ def test_generate_solution_without_template(db_session, test_user):
 
 def test_generate_solution_prompt_building(db_session, test_user, test_template):
     """测试14: 提示词构建"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     requirements = {"industry": "汽车", "capacity": "1000件/天"}
     prompt = service._build_solution_prompt(requirements, test_template)
@@ -314,7 +314,7 @@ def test_generate_solution_prompt_building(db_session, test_user, test_template)
 
 def test_generate_solution_parse_response(db_session, test_user):
     """测试15: 解析AI响应"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     ai_response = {
         "content": '```json\n{"description": "test solution"}\n```'
@@ -328,7 +328,7 @@ def test_generate_solution_parse_response(db_session, test_user):
 
 def test_generate_solution_logging(db_session, test_user):
     """测试16: 生成日志记录"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     service._log_generation(
         solution_id=1,
@@ -351,7 +351,7 @@ def test_generate_solution_logging(db_session, test_user):
 
 def test_generate_architecture_basic(db_session, test_user):
     """测试17: 基本架构图生成"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     result = service.generate_architecture(
         requirements={"type": "装配线"},
@@ -365,7 +365,7 @@ def test_generate_architecture_basic(db_session, test_user):
 
 def test_generate_topology_diagram(db_session, test_user):
     """测试18: 生成拓扑图"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     result = service.generate_architecture(
         requirements={"equipment": ["robot", "plc"]},
@@ -377,7 +377,7 @@ def test_generate_topology_diagram(db_session, test_user):
 
 def test_generate_signal_flow_diagram(db_session, test_user):
     """测试19: 生成信号流程图"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     result = service.generate_architecture(
         requirements={"signals": ["input", "output"]},
@@ -389,7 +389,7 @@ def test_generate_signal_flow_diagram(db_session, test_user):
 
 def test_extract_mermaid_code(db_session, test_user):
     """测试20: 提取Mermaid代码"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     content = "```mermaid\ngraph TB\nA-->B\n```"
     code = service._extract_mermaid_code(content)
@@ -400,7 +400,7 @@ def test_extract_mermaid_code(db_session, test_user):
 
 def test_architecture_prompt_building(db_session, test_user):
     """测试21: 架构图提示词构建"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     requirements = {"type": "装配线", "stations": 5}
     prompt = service._build_architecture_prompt(requirements, "architecture")
@@ -420,7 +420,7 @@ def test_generate_architecture_with_solution_id(db_session, test_user):
     db_session.commit()
     db_session.refresh(solution)
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     result = service.generate_architecture(
         requirements={"type": "test"},
@@ -438,7 +438,7 @@ def test_generate_architecture_with_solution_id(db_session, test_user):
 
 def test_generate_bom_basic(db_session, test_user):
     """测试23: 基本BOM生成"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": "机器人", "model": "ROBOT-500", "quantity": 2}
@@ -456,7 +456,7 @@ def test_generate_bom_basic(db_session, test_user):
 
 def test_generate_bom_without_cost(db_session, test_user):
     """测试24: 生成BOM不含成本"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": "PLC", "quantity": 1}
@@ -473,7 +473,7 @@ def test_generate_bom_without_cost(db_session, test_user):
 
 def test_generate_bom_without_suppliers(db_session, test_user):
     """测试25: 生成BOM不含供应商"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": "传感器", "quantity": 10}
@@ -490,7 +490,7 @@ def test_generate_bom_without_suppliers(db_session, test_user):
 
 def test_generate_bom_item_structure(db_session, test_user):
     """测试26: BOM项结构验证"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment = {
         "name": "机器人",
@@ -509,7 +509,7 @@ def test_generate_bom_item_structure(db_session, test_user):
 
 def test_generate_bom_total_cost(db_session, test_user):
     """测试27: BOM总成本计算"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": "设备A", "quantity": 2},
@@ -535,7 +535,7 @@ def test_generate_bom_with_solution_id(db_session, test_user):
     db_session.commit()
     db_session.refresh(solution)
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": "测试设备", "quantity": 1}
@@ -553,7 +553,7 @@ def test_generate_bom_with_solution_id(db_session, test_user):
 
 def test_generate_bom_empty_list(db_session, test_user):
     """测试29: 空设备列表"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     result = service.generate_bom(
         equipment_list=[],
@@ -566,7 +566,7 @@ def test_generate_bom_empty_list(db_session, test_user):
 
 def test_generate_bom_performance(db_session, test_user):
     """测试30: BOM生成性能"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     equipment_list = [
         {"name": f"设备{i}", "quantity": 1}
@@ -595,7 +595,7 @@ def test_get_solution(db_session, test_user):
     db_session.commit()
     db_session.refresh(solution)
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     retrieved = service.get_solution(solution.id)
     
     assert retrieved is not None
@@ -612,7 +612,7 @@ def test_update_solution(db_session, test_user):
     db_session.commit()
     db_session.refresh(solution)
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     updated = service.update_solution(
         solution.id,
@@ -633,7 +633,7 @@ def test_review_solution(db_session, test_user):
     db_session.commit()
     db_session.refresh(solution)
     
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     reviewed = service.review_solution(
         solution.id,
@@ -649,7 +649,7 @@ def test_review_solution(db_session, test_user):
 
 def test_get_template_library(db_session, test_user, test_template):
     """测试34: 获取模板库"""
-    service = PresaleAIService(db_session)
+    service = PresaleAIService()
     
     templates = service.get_template_library(
         industry="汽车",

@@ -37,7 +37,7 @@ def test_sales_user(db_session: Session):
 
 class TestSalesTeamService:
     def test_init(self, db_session: Session):
-        service = SalesTeamService(db_session)
+        service = SalesTeamService()
         assert service.db is db_session
 
     def test_parse_period_value_monthly(self, sales_team_service):

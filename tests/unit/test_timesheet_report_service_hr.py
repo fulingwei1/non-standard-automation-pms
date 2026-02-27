@@ -31,7 +31,7 @@ class TestTimesheetReportServiceInit:
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", True):
             from app.services.timesheet_report_service import TimesheetReportService
 
-            service = TimesheetReportService(db_session)
+            service = TimesheetReportService()
             assert service.db == db_session
             assert service.aggregation_service is not None
             assert service.overtime_service is not None
@@ -42,7 +42,7 @@ class TestTimesheetReportServiceInit:
             from app.services.timesheet_report_service import TimesheetReportService
 
             with pytest.raises(ImportError) as exc_info:
-                TimesheetReportService(db_session)
+                TimesheetReportService()
 
             assert "Excel处理库未安装" in str(exc_info.value)
 
@@ -56,7 +56,7 @@ class TestGenerateHRReport:
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", True):
             from app.services.timesheet_report_service import TimesheetReportService
 
-            return TimesheetReportService(db_session)
+            return TimesheetReportService()
 
     def test_generate_hr_report_with_empty_data(self, service: TimesheetReportService):
         """Test HR report generation with empty timesheet data"""
@@ -214,7 +214,7 @@ class TestGenerateFinanceReport:
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", True):
             from app.services.timesheet_report_service import TimesheetReportService
 
-            return TimesheetReportService(db_session)
+            return TimesheetReportService()
 
     def test_generate_finance_report_basic(self, service: TimesheetReportService):
         """Test finance report generation"""
@@ -253,7 +253,7 @@ class TestGenerateRDReport:
         with patch("app.services.timesheet_report_service.EXCEL_AVAILABLE", True):
             from app.services.timesheet_report_service import TimesheetReportService
 
-            return TimesheetReportService(db_session)
+            return TimesheetReportService()
 
     def test_generate_rd_report_basic(self, service: TimesheetReportService):
         """Test R&D report generation"""

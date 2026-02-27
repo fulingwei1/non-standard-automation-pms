@@ -23,7 +23,7 @@ from app.services.meeting_report_service import MeetingReportService
 @pytest.fixture
 def meeting_report_service(db_session: Session):
     """创建 MeetingReportService 实例"""
-    return MeetingReportService(db_session)
+    return MeetingReportService()
 
 
 class TestMeetingReportService:
@@ -31,7 +31,7 @@ class TestMeetingReportService:
 
     def test_init(self, db_session: Session):
         """测试服务初始化"""
-        service = MeetingReportService(db_session)
+        service = MeetingReportService()
         assert service is not None
         if hasattr(service, 'db'):
             assert service.db == db_session

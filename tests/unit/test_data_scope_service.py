@@ -52,7 +52,7 @@ class TestDataScopeService:
         """测试DataScopeService实例化"""
         try:
             from app.services.data_scope_service import DataScopeService
-            service = DataScopeService(db_session)
+            service = DataScopeService()
             assert service is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
@@ -67,7 +67,7 @@ class TestUserScopeService:
         """测试UserScopeService实例化"""
         try:
             from app.services.data_scope_service import UserScopeService
-            service = UserScopeService(db_session)
+            service = UserScopeService()
             assert service is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
@@ -82,7 +82,7 @@ class TestProjectFilterService:
         """测试ProjectFilterService实例化"""
         try:
             from app.services.data_scope_service import ProjectFilterService
-            service = ProjectFilterService(db_session)
+            service = ProjectFilterService()
             assert service is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
@@ -97,7 +97,7 @@ class TestIssueFilterService:
         """测试IssueFilterService实例化"""
         try:
             from app.services.data_scope_service import IssueFilterService
-            service = IssueFilterService(db_session)
+            service = IssueFilterService()
             assert service is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
@@ -112,7 +112,7 @@ class TestGenericFilterService:
         """测试GenericFilterService实例化"""
         try:
             from app.services.data_scope_service import GenericFilterService
-            service = GenericFilterService(db_session)
+            service = GenericFilterService()
             assert service is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")

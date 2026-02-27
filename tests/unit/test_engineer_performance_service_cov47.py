@@ -20,7 +20,7 @@ def _make_svc():
         patch("app.services.engineer_performance.engineer_performance_service.PerformanceCalculator"),
         patch("app.services.engineer_performance.engineer_performance_service.RankingService"),
     ):
-        svc = EngineerPerformanceService(db)
+        svc = EngineerPerformanceService()
     return svc
 
 

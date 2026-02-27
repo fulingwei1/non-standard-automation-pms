@@ -38,7 +38,7 @@ class TestAnalyzeChangeImpact:
     async def test_change_not_found_raises(self):
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         with pytest.raises(ValueError, match="变更请求.*不存在"):
             await svc.analyze_change_impact(999, 1)
 
@@ -48,7 +48,7 @@ class TestAnalyzeChangeImpact:
         change = make_change_request(project_id=999)
         # First query returns change, second returns None for project
         db.query.return_value.filter.return_value.first.side_effect = [change, None]
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         with pytest.raises(ValueError, match="项目.*不存在"):
             await svc.analyze_change_impact(1, 1)
 
@@ -56,7 +56,7 @@ class TestAnalyzeChangeImpact:
 class TestCalculateOverallRisk:
     def test_low_risk(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         result = svc._calculate_overall_risk(
             schedule_impact={"level": "NONE", "delay_days": 0},
             cost_impact={"level": "NONE", "amount": 0},
@@ -69,7 +69,7 @@ class TestCalculateOverallRisk:
 
     def test_critical_risk(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         result = svc._calculate_overall_risk(
             schedule_impact={"level": "CRITICAL", "delay_days": 30},
             cost_impact={"level": "CRITICAL", "amount": 500000},
@@ -82,7 +82,7 @@ class TestCalculateOverallRisk:
 
     def test_medium_risk(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         result = svc._calculate_overall_risk(
             schedule_impact={"level": "MEDIUM", "delay_days": 5},
             cost_impact={"level": "LOW", "amount": 5000},
@@ -97,20 +97,20 @@ class TestCalculateOverallRisk:
 class TestCalculateDependencyDepth:
     def test_no_dependencies(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         result = svc._calculate_dependency_depth(1, {})
         assert result == 1
 
     def test_chain_dependencies(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         dep_graph = {1: [2], 2: [3], 3: [4]}
         result = svc._calculate_dependency_depth(1, dep_graph)
         assert result == 4
 
     def test_circular_reference_handled(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         dep_graph = {1: [2], 2: [1]}  # circular
         # Should not infinite loop
         result = svc._calculate_dependency_depth(1, dep_graph)
@@ -120,7 +120,7 @@ class TestCalculateDependencyDepth:
 class TestIdentifyChainReactions:
     def test_no_dependencies(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         change = make_change_request()
         project = make_project()
         context = {"dependencies": [], "tasks": []}
@@ -130,7 +130,7 @@ class TestIdentifyChainReactions:
 
     def test_with_dependencies(self):
         db = make_db()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         change = make_change_request()
         project = make_project()
         context = {
@@ -173,7 +173,7 @@ class TestGatherAnalysisContext:
         mock_q.all.return_value = []
         db.query.return_value = mock_q
 
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         context = svc._gather_analysis_context(change, project)
         assert isinstance(context, dict)
         assert "tasks" in context

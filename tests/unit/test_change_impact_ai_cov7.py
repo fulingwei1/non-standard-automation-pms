@@ -17,13 +17,13 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="module unavailable")
 
 def _make_service():
     db = MagicMock()
-    return ChangeImpactAIService(db), db
+    return ChangeImpactAIService(), db
 
 
 class TestChangeImpactAIServiceInit:
     def test_init(self):
         db = MagicMock()
-        svc = ChangeImpactAIService(db)
+        svc = ChangeImpactAIService()
         assert svc.db is db
 
 
