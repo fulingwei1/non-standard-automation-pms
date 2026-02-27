@@ -2,63 +2,15 @@
 """
 Stub endpoints — 为前端已调用但后端尚未实现的API提供空响应
 避免前端因404/500报错，同时标记这些API为"待开发"
+
+此router在api.py中最后注册，作为fallback。
+只有未匹配到任何已实现endpoint的请求才会到达这里。
 """
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
-
-# 前端调用但后端未实现的模块路径前缀
-STUB_PREFIXES = [
-    "/strategy",
-    "/admin/approvals", "/admin/assets", "/admin/attendance",
-    "/admin/dashboard", "/admin/expenses", "/admin/leave",
-    "/admin/meeting-rooms", "/admin/supplies", "/admin/vehicles",
-    "/assembly",
-    "/business-support",
-    "/analytics",
-    "/service-tickets",
-    "/finance",
-    "/progress",
-    "/workload",
-    "/settlements",
-    "/service-records",
-    "/customer-satisfactions",
-    "/customer-communications",
-    "/budgets",
-    "/technical-spec",
-    "/work-orders",
-    "/work-reports",
-    "/workers",
-    "/workstations",
-    "/milestones",
-    "/members",
-    "/meeting-map",
-    "/meeting-reports",
-    "/personal-goals",
-    "/strategic-meetings",
-    "/stages",
-    "/tasks",
-    "/test",
-    "/wbs-templates",
-    "/wbs-template-tasks",
-    "/kit-checks",
-    "/material-requisitions",
-    "/production-daily-reports",
-    "/production-exceptions",
-    "/production-plans",
-    "/issue-templates",
-    "/import",
-    "/outsourcing",
-    "/pending",
-    "/employees",
-    "/project-members",
-    "/progress-reports",
-    "/purchase-order-items",
-    "/satisfaction-templates",
-    "/ecn-approvals",
-]
 
 
 @router.api_route(
@@ -72,17 +24,8 @@ async def stub_handler(request: Request, path: str):
     GET请求返回空列表/分页，其他请求返回成功响应。
     """
     full_path = f"/{path}"
-    
-    # 只处理已知的stub前缀
-    is_stub = any(full_path.startswith(prefix) for prefix in STUB_PREFIXES)
-    if not is_stub:
-        return JSONResponse(
-            status_code=404,
-            content={"code": 404, "message": f"API not found: {full_path}"}
-        )
-    
+
     if request.method == "GET":
-        # 如果路径看起来像列表请求（不含具体ID或末尾是模块名）
         return JSONResponse(content={
             "items": [],
             "total": 0,
