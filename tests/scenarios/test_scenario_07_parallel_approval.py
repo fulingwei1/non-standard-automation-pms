@@ -18,7 +18,7 @@ class TestParallelApproval:
     def test_01_create_parallel_approval_tasks(self, db_session: Session):
         """测试1：创建并行审批任务"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-001",
+            request_no="PR-PAR-001",
             requester_id=3,
             total_amount=Decimal("200000.00"),
             status="PENDING_APPROVAL",
@@ -67,7 +67,7 @@ class TestParallelApproval:
     def test_02_one_approver_approves_first(self, db_session: Session):
         """测试2：一个审批人先审批"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-002",
+            request_no="PR-PAR-002",
             requester_id=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
@@ -119,7 +119,7 @@ class TestParallelApproval:
     def test_03_all_parallel_approvers_approve(self, db_session: Session):
         """测试3：所有并行审批人都通过"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-003",
+            request_no="PR-PAR-003",
             requester_id=3,
             total_amount=Decimal("220000.00"),
             status="PENDING_APPROVAL",
@@ -181,7 +181,7 @@ class TestParallelApproval:
     def test_04_one_parallel_approver_rejects(self, db_session: Session):
         """测试4：一个并行审批人拒绝"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-004",
+            request_no="PR-PAR-004",
             requester_id=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
@@ -238,7 +238,7 @@ class TestParallelApproval:
     def test_05_parallel_with_minimum_approval_count(self, db_session: Session):
         """测试5：并行审批需要最少通过数量"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-005",
+            request_no="PR-PAR-005",
             requester_id=3,
             total_amount=Decimal("300000.00"),
             status="PENDING_APPROVAL",
@@ -304,7 +304,7 @@ class TestParallelApproval:
     def test_06_parallel_approval_timeout_handling(self, db_session: Session):
         """测试6：并行审批超时处理"""
         pr = PurchaseRequest(
-            request_code="PR-PAR-006",
+            request_no="PR-PAR-006",
             requester_id=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
@@ -358,7 +358,7 @@ class TestParallelApproval:
     def test_07_hybrid_parallel_and_sequential_approval(self, db_session: Session):
         """测试7：混合并行和顺序审批"""
         pr = PurchaseRequest(
-            request_code="PR-HYBRID-001",
+            request_no="PR-HYBRID-001",
             requester_id=3,
             total_amount=Decimal("400000.00"),
             status="PENDING_APPROVAL",
@@ -424,7 +424,7 @@ class TestParallelApproval:
     def test_08_parallel_approval_with_veto_power(self, db_session: Session):
         """测试8：并行审批中的一票否决"""
         pr = PurchaseRequest(
-            request_code="PR-VETO-001",
+            request_no="PR-VETO-001",
             requester_id=3,
             total_amount=Decimal("500000.00"),
             status="PENDING_APPROVAL",
@@ -492,7 +492,7 @@ class TestParallelApproval:
     def test_09_parallel_approval_notification(self, db_session: Session):
         """测试9：并行审批通知"""
         pr = PurchaseRequest(
-            request_code="PR-NOTIF-001",
+            request_no="PR-NOTIF-001",
             requester_id=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
@@ -543,7 +543,7 @@ class TestParallelApproval:
     def test_10_parallel_approval_completion_check(self, db_session: Session):
         """测试10：并行审批完成检查"""
         pr = PurchaseRequest(
-            request_code="PR-CHECK-001",
+            request_no="PR-CHECK-001",
             requester_id=3,
             total_amount=Decimal("280000.00"),
             status="PENDING_APPROVAL",

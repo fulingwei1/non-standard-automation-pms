@@ -417,7 +417,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
 
         # Mock User 对象
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三", department="技术部")
+        user = User(id=5, username="testuser", real_name="张三", department="技术部",
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -564,7 +566,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
         )
 
         from app.models.user import User
-        user = User(id=5, username="approver", real_name="审批人")
+        user = User(id=5, username="approver", real_name="审批人",
+        password_hash="test_hash_123"
+    )
 
         # Mock 多个查询
         def mock_query_side_effect(model):
@@ -644,7 +648,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
     def test_get_approver_name_user_found(self):
         """测试获取审批人姓名（用户存在）"""
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三")
+        user = User(id=5, username="testuser", real_name="张三",
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -665,7 +671,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
     def test_get_approver_name_no_real_name(self):
         """测试获取审批人姓名（无真实姓名时使用用户名）"""
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name=None)
+        user = User(id=5, username="testuser", real_name=None,
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user

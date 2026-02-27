@@ -596,7 +596,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.CRITICAL.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 
@@ -639,7 +640,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.WARNING.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 
@@ -682,7 +684,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.CRITICAL.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 

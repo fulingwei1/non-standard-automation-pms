@@ -49,10 +49,10 @@ def test_data(db):
         user = User(
             id=i,
             username=f"user{i}",
-            name=f"用户{i}",
+            real_name=f"用户{i}",
             email=f"user{i}@test.com",
             department_id=i % 2 + 1,
-            hashed_password="test"
+            password_hash="test"
         )
         db.add(user)
         users.append(user)

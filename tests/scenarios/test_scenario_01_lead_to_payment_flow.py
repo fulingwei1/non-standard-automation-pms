@@ -83,7 +83,7 @@ class TestLeadToPaymentFlow:
             customer_id=sales_customer.id,
             quote_date=date.today(),
             valid_until=date.today() + timedelta(days=30),
-            total_amount=Decimal("520000.00"),
+            total_price=Decimal("520000.00"),
             status="DRAFT",
             created_by=1,
         )
@@ -100,7 +100,7 @@ class TestLeadToPaymentFlow:
             quote_code="QT-2026-002",
             customer_id=sales_customer.id,
             quote_date=date.today(),
-            total_amount=Decimal("480000.00"),
+            total_price=Decimal("480000.00"),
             status="DRAFT",
             created_by=1,
         )
@@ -127,7 +127,7 @@ class TestLeadToPaymentFlow:
             quote_code="QT-2026-003",
             customer_id=sales_customer.id,
             quote_date=date.today(),
-            total_amount=Decimal("500000.00"),
+            total_price=Decimal("500000.00"),
             status="APPROVED",
             created_by=1,
         )
@@ -324,7 +324,7 @@ class TestLeadToPaymentFlow:
             quote_code="QT-FUNNEL-01",
             customer_id=sales_customer.id,
             quote_date=date.today(),
-            total_amount=Decimal("300000.00"),
+            total_price=Decimal("300000.00"),
             status="APPROVED",
             created_by=1,
         )
@@ -355,7 +355,7 @@ class TestLeadToPaymentFlow:
             quote_code="QT-REV-001",
             customer_id=sales_customer.id,
             quote_date=date.today(),
-            total_amount=Decimal("550000.00"),
+            total_price=Decimal("550000.00"),
             status="REJECTED",
             version=1,
             created_by=1,
@@ -368,7 +368,7 @@ class TestLeadToPaymentFlow:
             quote_code="QT-REV-001",
             customer_id=sales_customer.id,
             quote_date=date.today(),
-            total_amount=Decimal("480000.00"),  # 降价
+            total_price=Decimal("480000.00"),  # 降价
             status="APPROVED",
             version=2,
             parent_id=quote_v1.id,

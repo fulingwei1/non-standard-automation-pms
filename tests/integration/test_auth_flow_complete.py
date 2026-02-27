@@ -119,8 +119,9 @@ class TestTokenFlow:
             id=1,
             username="testuser",
             is_active=True,
-            is_superuser=False
-        )
+            is_superuser=False,
+        password_hash="test_hash_123"
+    )
 
     def test_token_generation_and_decode(self, test_user):
         """测试Token生成和解码"""
@@ -199,8 +200,9 @@ class TestPermissionCheckFlow:
             id=1,
             username="testuser",
             is_active=True,
-            is_superuser=False
-        )
+            is_superuser=False,
+        password_hash="test_hash_123"
+    )
         
         role = Role(
             id=2,
@@ -258,8 +260,9 @@ class TestPermissionCheckFlow:
             id=1,
             username="admin",
             is_active=True,
-            is_superuser=True
-        )
+            is_superuser=True,
+        password_hash="test_hash_123"
+    )
         
         # 超级管理员应该拥有所有权限
         has_permission = admin.is_superuser
@@ -271,8 +274,9 @@ class TestPermissionCheckFlow:
             id=1,
             username="inactive",
             is_active=False,
-            is_superuser=False
-        )
+            is_superuser=False,
+        password_hash="test_hash_123"
+    )
         
         # 禁用用户不应该有任何权限
         has_permission = inactive_user.is_active

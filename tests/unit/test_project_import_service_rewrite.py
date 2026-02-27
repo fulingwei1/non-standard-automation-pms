@@ -319,7 +319,9 @@ class TestFindProjectManager(unittest.TestCase):
     def test_find_project_manager_by_real_name(self):
         """测试按真实姓名查找"""
         mock_db = MagicMock()
-        mock_user = User(id=1, username='zhangsan', real_name='张三')
+        mock_user = User(id=1, username='zhangsan', real_name='张三',
+        password_hash="test_hash_123"
+    )
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
         result = find_project_manager(mock_db, '张三')
@@ -330,7 +332,9 @@ class TestFindProjectManager(unittest.TestCase):
     def test_find_project_manager_by_username(self):
         """测试按用户名查找（real_name不匹配时）"""
         mock_db = MagicMock()
-        mock_user = User(id=1, username='zhangsan', real_name='张三')
+        mock_user = User(id=1, username='zhangsan', real_name='张三',
+        password_hash="test_hash_123"
+    )
         
         # 第一次按real_name查找返回None，第二次按username查找返回user
         mock_db.query.return_value.filter.return_value.first.side_effect = [None, mock_user]
@@ -511,7 +515,9 @@ class TestPopulateProjectFromRow(unittest.TestCase):
         row = pd.Series({
             '项目经理': '张三'
         })
-        mock_user = User(id=1, username='zhangsan', real_name='张三')
+        mock_user = User(id=1, username='zhangsan', real_name='张三',
+        password_hash="test_hash_123"
+    )
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
         populate_project_from_row(self.mock_db, self.project, row)
@@ -552,7 +558,9 @@ class TestPopulateProjectFromRow(unittest.TestCase):
         row = pd.Series({
             '项目经理': '张三'
         })
-        mock_user = User(id=1, username='zhangsan', real_name=None)
+        mock_user = User(id=1, username='zhangsan', real_name=None,
+        password_hash="test_hash_123"
+    )
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
         populate_project_from_row(self.mock_db, self.project, row)

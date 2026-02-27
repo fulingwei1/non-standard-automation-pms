@@ -30,9 +30,9 @@ def test_user(db: Session):
     """创建测试用户"""
     user = User(
         username="test_quality_user",
-        full_name="Quality Inspector",
+        real_name="Quality Inspector",
         email="quality@test.com",
-        hashed_password="test_password_hash"
+        password_hash="test_password_hash"
     )
     db.add(user)
     db.commit()
@@ -650,8 +650,9 @@ class TestQualityAlert:
             time_window_hours=24,
             min_sample_size=3,
             alert_level="WARNING",
-            enabled=1
-        )
+            enabled=1,
+        target_type="PROJECT"
+    )
         db.add(rule)
         db.commit()
         

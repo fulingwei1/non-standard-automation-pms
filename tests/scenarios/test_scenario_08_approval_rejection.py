@@ -18,7 +18,7 @@ class TestApprovalRejection:
     def test_01_reject_approval_with_reason(self, db_session: Session):
         """测试1：带理由驳回审批"""
         pr = PurchaseRequest(
-            request_code="PR-REJ-001",
+            request_no="PR-REJ-001",
             requester_id=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
@@ -64,7 +64,7 @@ class TestApprovalRejection:
     def test_02_modify_and_resubmit(self, db_session: Session):
         """测试2：修改后重新提交"""
         pr = PurchaseRequest(
-            request_code="PR-RESUB-001",
+            request_no="PR-RESUB-001",
             requester_id=3,
             total_amount=Decimal("200000.00"),
             status="REJECTED",
@@ -91,7 +91,7 @@ class TestApprovalRejection:
     def test_03_create_new_approval_instance_after_rejection(self, db_session: Session):
         """测试3：驳回后创建新审批实例"""
         pr = PurchaseRequest(
-            request_code="PR-NEWINS-001",
+            request_no="PR-NEWINS-001",
             requester_id=3,
             total_amount=Decimal("180000.00"),
             status="REJECTED",
@@ -135,7 +135,7 @@ class TestApprovalRejection:
     def test_04_rejection_notification(self, db_session: Session):
         """测试4：驳回通知"""
         pr = PurchaseRequest(
-            request_code="PR-NOTIF-001",
+            request_no="PR-NOTIF-001",
             requester_id=3,
             total_amount=Decimal("160000.00"),
             status="PENDING_APPROVAL",
@@ -174,7 +174,7 @@ class TestApprovalRejection:
     def test_05_partial_rejection_in_multi_level(self, db_session: Session):
         """测试5：多级审批中的部分驳回"""
         pr = PurchaseRequest(
-            request_code="PR-PARTIAL-001",
+            request_no="PR-PARTIAL-001",
             requester_id=3,
             total_amount=Decimal("300000.00"),
             status="PENDING_APPROVAL",
@@ -226,7 +226,7 @@ class TestApprovalRejection:
     def test_06_rejection_with_modification_suggestions(self, db_session: Session):
         """测试6：驳回并提供修改建议"""
         pr = PurchaseRequest(
-            request_code="PR-SUGGEST-001",
+            request_no="PR-SUGGEST-001",
             requester_id=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
@@ -265,7 +265,7 @@ class TestApprovalRejection:
     def test_07_automatic_resubmission_limit(self, db_session: Session):
         """测试7：自动限制重新提交次数"""
         pr = PurchaseRequest(
-            request_code="PR-LIMIT-001",
+            request_no="PR-LIMIT-001",
             requester_id=3,
             total_amount=Decimal("170000.00"),
             status="DRAFT",
@@ -297,7 +297,7 @@ class TestApprovalRejection:
     def test_08_rejection_with_escalation(self, db_session: Session):
         """测试8：驳回后升级处理"""
         pr = PurchaseRequest(
-            request_code="PR-ESC-001",
+            request_no="PR-ESC-001",
             requester_id=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
@@ -342,7 +342,7 @@ class TestApprovalRejection:
         requests = []
         for i in range(3):
             pr = PurchaseRequest(
-                request_code=f"PR-BATCH-REJ-{i+1:03d}",
+                request_no=f"PR-BATCH-REJ-{i+1:03d}",
                 requester_id=3,
                 total_amount=Decimal("80000.00"),
                 status="PENDING_APPROVAL",
@@ -365,7 +365,7 @@ class TestApprovalRejection:
     def test_10_rejection_history_tracking(self, db_session: Session):
         """测试10：驳回历史跟踪"""
         pr = PurchaseRequest(
-            request_code="PR-HISTORY-001",
+            request_no="PR-HISTORY-001",
             requester_id=3,
             total_amount=Decimal("190000.00"),
             status="DRAFT",

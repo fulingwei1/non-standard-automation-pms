@@ -45,8 +45,8 @@ def test_user_with_role(db_session: Session, test_employee):
 
     # 创建权限
     perm1 = ApiPermission(
-        permission_name="test:project:read",
-        permission_code="project:read",
+        perm_name="test:project:read",
+        perm_code="project:read",
         module="PROJECT",
         action="read",
     )
@@ -139,8 +139,8 @@ class TestPermissionService:
 
         # 创建权限
         perm = ApiPermission(
-            permission_name="test:project:write",
-            permission_code="project:write",
+            perm_name="test:project:write",
+            perm_code="project:write",
             module="PROJECT",
             action="write",
         )

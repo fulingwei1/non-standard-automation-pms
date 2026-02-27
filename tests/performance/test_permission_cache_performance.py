@@ -89,7 +89,7 @@ class PerformanceTestContext:
             user = User(
                 username=f"test_user_{i}",
                 email=f"test_{i}@example.com",
-                hashed_password="hashed_password",
+                password_hash="hashed_password",
                 is_active=True,
             )
             self.db.add(user)

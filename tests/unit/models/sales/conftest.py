@@ -77,7 +77,7 @@ def sample_quote(db_session, sample_customer, sample_user):
     
     quote = Quote(
         quote_code="QUOTE001",
-        quote_name="测试报价单",
+        quote_code="测试报价单",
         customer_id=sample_customer.id,
         quote_amount=Decimal("150000.00"),
         valid_until=date.today() + timedelta(days=30),

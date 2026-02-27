@@ -120,7 +120,7 @@ class TestMaterialProcurementFlow:
 
         # 创建采购申请
         pr = PurchaseRequest(
-            request_code="PR-MAT-001",
+            request_no="PR-MAT-001",
             requester_id=2,
             total_amount=req.requested_quantity * material.standard_price,
             status="DRAFT",

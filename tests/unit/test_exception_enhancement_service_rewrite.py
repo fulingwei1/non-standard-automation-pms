@@ -68,7 +68,9 @@ class TestExceptionEscalation(unittest.TestCase):
             self.db.refresh.side_effect = mock_refresh
             self.db.query.return_value.filter.return_value.first.side_effect = [
                 None,  # 第一次查询flow
-                User(id=100, username="李经理")  # 第二次查询user
+                User(id=100, username="李经理",
+        password_hash="test_hash_123"
+    )  # 第二次查询user
             ]
             
             result = self.service.escalate_exception(
@@ -137,8 +139,12 @@ class TestFlowTracking(unittest.TestCase):
             title="设备故障",
         )
         
-        user = User(id=100, username="张三")
-        verifier = User(id=200, username="李四")
+        user = User(id=100, username="张三",
+        password_hash="test_hash_123"
+    )
+        verifier = User(id=200, username="李四",
+        password_hash="test_hash_123"
+    )
         
         flow = ExceptionHandlingFlow(
             id=10,
@@ -310,8 +316,12 @@ class TestKnowledgeManagement(unittest.TestCase):
 
     def test_build_knowledge_response_with_users(self):
         """测试构建知识库响应（包含用户信息）"""
-        creator = User(id=1, username="创建者")
-        approver = User(id=2, username="审批者")
+        creator = User(id=1, username="创建者",
+        password_hash="test_hash_123"
+    )
+        approver = User(id=2, username="审批者",
+        password_hash="test_hash_123"
+    )
         
         knowledge = ExceptionKnowledge(
             id=1,

@@ -62,7 +62,7 @@ class TestPurchaseRequestToReceipt:
     def test_01_create_purchase_request(self, db_session: Session, test_material: Material):
         """测试1：创建采购申请"""
         pr = PurchaseRequest(
-            request_code="PR-2026-001",
+            request_no="PR-2026-001",
             request_date=date.today(),
             requester_id=2,
             department="工程部",
@@ -81,7 +81,7 @@ class TestPurchaseRequestToReceipt:
     def test_02_submit_purchase_request_for_approval(self, db_session: Session):
         """测试2：提交采购申请审批"""
         pr = PurchaseRequest(
-            request_code="PR-2026-002",
+            request_no="PR-2026-002",
             request_date=date.today(),
             requester_id=2,
             status="DRAFT",
@@ -102,7 +102,7 @@ class TestPurchaseRequestToReceipt:
     def test_03_approve_purchase_request(self, db_session: Session):
         """测试3：审批采购申请"""
         pr = PurchaseRequest(
-            request_code="PR-2026-003",
+            request_no="PR-2026-003",
             request_date=date.today(),
             requester_id=2,
             status="PENDING_APPROVAL",
@@ -124,7 +124,7 @@ class TestPurchaseRequestToReceipt:
     def test_04_reject_and_resubmit_purchase_request(self, db_session: Session):
         """测试4：驳回采购申请并重新提交"""
         pr = PurchaseRequest(
-            request_code="PR-2026-004",
+            request_no="PR-2026-004",
             request_date=date.today(),
             requester_id=2,
             status="PENDING_APPROVAL",
@@ -158,7 +158,7 @@ class TestPurchaseRequestToReceipt:
         """测试5：从采购申请创建采购订单"""
         # 创建已批准的采购申请
         pr = PurchaseRequest(
-            request_code="PR-2026-005",
+            request_no="PR-2026-005",
             request_date=date.today(),
             requester_id=2,
             status="APPROVED",

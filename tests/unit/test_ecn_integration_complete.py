@@ -55,14 +55,16 @@ class TestFindUsersByDepartment:
         department="工程部",
         is_active=True,
         position="工程师",
-        )
+        password_hash="test_hash_123"
+    )
         inactive_user = User(
         username="inactive_user",
         real_name="非活跃用户",
         department="工程部",
         is_active=False,
         position="工程师",
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([active_user, inactive_user])
         db_session.commit()
 
@@ -97,7 +99,8 @@ class TestFindUsersByDepartment:
         department="质量部",
         is_active=True,
         position="质量工程师",
-        )
+        password_hash="test_hash_123"
+    )
         for i in range(3)
         ]
         db_session.add_all(users_list)
@@ -129,12 +132,14 @@ class TestFindUsersByRole:
         username="manager1",
         real_name="经理1",
         is_active=True,
-        )
+        password_hash="test_hash_123"
+    )
         user2 = User(
         username="manager2",
         real_name="经理2",
         is_active=False,
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([user1, user2])
         db_session.commit()
 
@@ -192,14 +197,16 @@ class TestAutoAssignEvaluation:
         department="工程部",
         is_active=True,
         position="工程部负责人",
-        )
+        password_hash="test_hash_123"
+    )
         engineer = User(
         username="engineer",
         real_name="工程师",
         department="工程部",
         is_active=True,
         position="工程师",
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([leader, engineer])
         db_session.commit()
 
@@ -269,14 +276,16 @@ class TestAutoAssignEvaluation:
         department="质量部",
         is_active=True,
         position="质量部经理",
-        )
+        password_hash="test_hash_123"
+    )
         engineer = User(
         username="quality_eng",
         real_name="质量工程师",
         department="质量部",
         is_active=True,
         position="质量工程师",
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([manager, engineer])
         db_session.commit()
 
@@ -315,7 +324,8 @@ class TestAutoAssignEvaluation:
         department="工程部",
         is_active=True,
         position="工程师",
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add(engineer)
 
         # 创建ECN
@@ -365,12 +375,14 @@ class TestAutoAssignApproval:
         username="pm1",
         real_name="项目经理1",
         is_active=True,
-        )
+        password_hash="test_hash_123"
+    )
         pm2 = User(
         username="pm2",
         real_name="项目经理2",
         is_active=False,
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([pm1, pm2])
         db_session.commit()
 
@@ -442,7 +454,8 @@ class TestAutoAssignApproval:
         username="fin_mgr",
         real_name="财务经理",
         is_active=True,
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add(manager)
         db_session.commit()
 
@@ -771,12 +784,14 @@ class TestEcnWorkflowIntegration:
         username="engineer",
         real_name="工程师",
         is_active=True,
-        )
+        password_hash="test_hash_123"
+    )
         manager = User(
         username="manager",
         real_name="经理",
         is_active=True,
-        )
+        password_hash="test_hash_123"
+    )
         db_session.add_all([engineer, manager])
         db_session.commit()
 

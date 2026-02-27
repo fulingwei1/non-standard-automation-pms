@@ -195,7 +195,7 @@ class TestIdempotency:
 
         # 创建采购申请
         pr = PurchaseRequest(
-            request_code="PR-IDEMP-001",
+            request_no="PR-IDEMP-001",
             requester_id=3,
             total_amount=Decimal("100000.00"),
             status="DRAFT",

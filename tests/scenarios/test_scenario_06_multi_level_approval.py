@@ -36,7 +36,7 @@ class TestMultiLevelApproval:
         """测试1：创建多级审批实例"""
         # 创建采购申请
         pr = PurchaseRequest(
-            request_code="PR-MULTI-001",
+            request_no="PR-MULTI-001",
             requester_id=3,
             total_amount=Decimal("100000.00"),  # 大额采购
             status="PENDING_APPROVAL",
@@ -63,7 +63,7 @@ class TestMultiLevelApproval:
     def test_02_create_approval_tasks_chain(self, db_session: Session):
         """测试2：创建审批任务链"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-002",
+            request_no="PR-MULTI-002",
             requester_id=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
@@ -129,7 +129,7 @@ class TestMultiLevelApproval:
     def test_03_first_level_approval(self, db_session: Session):
         """测试3：第一级审批通过"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-003",
+            request_no="PR-MULTI-003",
             requester_id=3,
             total_amount=Decimal("120000.00"),
             status="PENDING_APPROVAL",
@@ -185,7 +185,7 @@ class TestMultiLevelApproval:
     def test_04_sequential_approval_completion(self, db_session: Session):
         """测试4：顺序审批完成"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-004",
+            request_no="PR-MULTI-004",
             requester_id=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
@@ -255,7 +255,7 @@ class TestMultiLevelApproval:
     def test_05_approval_rejection_at_middle_level(self, db_session: Session):
         """测试5：中间级别审批驳回"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-005",
+            request_no="PR-MULTI-005",
             requester_id=3,
             total_amount=Decimal("200000.00"),
             status="PENDING_APPROVAL",
@@ -323,7 +323,7 @@ class TestMultiLevelApproval:
     def test_06_approval_with_countersignature(self, db_session: Session):
         """测试6：会签审批（同级多人）"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-006",
+            request_no="PR-MULTI-006",
             requester_id=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
@@ -395,7 +395,7 @@ class TestMultiLevelApproval:
     def test_07_approval_delegation(self, db_session: Session):
         """测试7：审批委托"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-007",
+            request_no="PR-MULTI-007",
             requester_id=3,
             total_amount=Decimal("90000.00"),
             status="PENDING_APPROVAL",
@@ -443,7 +443,7 @@ class TestMultiLevelApproval:
         """测试8：条件路由审批"""
         # 金额小于10万，只需部门经理审批
         pr_small = PurchaseRequest(
-            request_code="PR-COND-001",
+            request_no="PR-COND-001",
             requester_id=3,
             total_amount=Decimal("80000.00"),
             status="PENDING_APPROVAL",
@@ -481,7 +481,7 @@ class TestMultiLevelApproval:
 
         # 金额大于等于10万，需要多级审批
         pr_large = PurchaseRequest(
-            request_code="PR-COND-002",
+            request_no="PR-COND-002",
             requester_id=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
@@ -521,7 +521,7 @@ class TestMultiLevelApproval:
     def test_09_approval_time_tracking(self, db_session: Session):
         """测试9：审批时间跟踪"""
         pr = PurchaseRequest(
-            request_code="PR-TIME-001",
+            request_no="PR-TIME-001",
             requester_id=3,
             total_amount=Decimal("100000.00"),
             status="PENDING_APPROVAL",
@@ -600,7 +600,7 @@ class TestMultiLevelApproval:
     def test_10_approval_with_auto_escalation(self, db_session: Session):
         """测试10：审批超时自动升级"""
         pr = PurchaseRequest(
-            request_code="PR-ESC-001",
+            request_no="PR-ESC-001",
             requester_id=3,
             total_amount=Decimal("120000.00"),
             status="PENDING_APPROVAL",

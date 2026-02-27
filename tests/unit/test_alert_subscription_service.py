@@ -283,7 +283,9 @@ class TestMatchSubscriptions:
         service = AlertSubscriptionService(db_session)
 
         # 创建一个规则
-        rule = MockAlertRule(id=1, rule_type="DELAY")
+        rule = MockAlertRule(id=1, rule_type="DELAY",
+        target_type="PROJECT"
+    )
 
         # 创建预警记录
         alert = MockAlertRecord(
@@ -315,7 +317,9 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY")
+        rule = MockAlertRule(id=1, rule_type="DELAY",
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -345,7 +349,9 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY")
+        rule = MockAlertRule(id=1, rule_type="DELAY",
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -385,7 +391,9 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY")
+        rule = MockAlertRule(id=1, rule_type="DELAY",
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -453,7 +461,9 @@ class TestGetNotificationRecipients:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY")
+        rule = MockAlertRule(id=1, rule_type="DELAY",
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -488,7 +498,8 @@ class TestGetNotificationRecipients:
         rule_type="DELAY",
         notify_users=[10, 20],
         notify_channels=["EMAIL", "SMS"],
-        )
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -511,8 +522,9 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         rule = MockAlertRule(
-        id=1, rule_type="DELAY", notify_users=[10], notify_channels=["EMAIL"]
-        )
+        id=1, rule_type="DELAY", notify_users=[10], notify_channels=["EMAIL"],
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,
@@ -539,8 +551,9 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         rule = MockAlertRule(
-        id=1, rule_type="DELAY", notify_users=None, notify_channels=None
-        )
+        id=1, rule_type="DELAY", notify_users=None, notify_channels=None,
+        target_type="PROJECT"
+    )
 
         alert = MockAlertRecord(
         id=1,

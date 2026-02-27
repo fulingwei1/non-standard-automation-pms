@@ -40,8 +40,9 @@ class TestCheckManagerPermission:
 
         user = User(
         username="test_user",
-        employee_id=1
-        )
+        employee_id=1,
+        password_hash="test_hash_123"
+    )
         db_session.add(user)
         db_session.flush()
 

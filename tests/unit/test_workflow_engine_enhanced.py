@@ -411,7 +411,9 @@ class TestBuildConditionContext(TestWorkflowEngine):
 
         # Mock User 对象
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三", department="技术部")
+        user = User(id=5, username="testuser", real_name="张三", department="技术部",
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -538,7 +540,9 @@ class TestSubmitApproval(TestWorkflowEngine):
         )
 
         from app.models.user import User
-        user = User(id=5, username="approver", real_name="审批人")
+        user = User(id=5, username="approver", real_name="审批人",
+        password_hash="test_hash_123"
+    )
 
         # Mock 多个查询
         def mock_query_side_effect(model):
