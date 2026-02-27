@@ -191,23 +191,23 @@ export const timesheetApi = {
 
   // ========== 报表导出 ==========
   getHrReport: (params) =>
-    api.get("/timesheet/reports/hr", {
-      params,
+    api.get("/timesheet/reports/detail", {
+      params: { ...params, type: "hr" },
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getFinanceReport: (params) =>
-    api.get("/timesheet/reports/finance", {
-      params,
+    api.get("/timesheet/reports/detail", {
+      params: { ...params, type: "finance" },
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getRdReport: (params) =>
-    api.get("/timesheet/reports/rd", {
-      params,
+    api.get("/timesheet/reports/detail", {
+      params: { ...params, type: "rd" },
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getProjectReport: (params) =>
-    api.get("/timesheet/reports/project", {
-      params,
+    api.get("/timesheet/reports/detail", {
+      params: { ...params, type: "project" },
       responseType: params.format === "excel" ? "blob" : "json",
     }),
 
