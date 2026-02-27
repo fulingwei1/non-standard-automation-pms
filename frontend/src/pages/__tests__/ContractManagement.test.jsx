@@ -10,15 +10,6 @@ import ContractManagement from '../ContractManagement';
 import api from '../../services/api';
 
 // Mock dependencies
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: [] }),
-    post: vi.fn().mockResolvedValue({ data: {} }),
-    put: vi.fn().mockResolvedValue({ data: {} }),
-    delete: vi.fn().mockResolvedValue({ data: {} }),
-  }
-}));
-
 vi.mock('../../services/contractService', () => ({
   getContracts: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
   getContractDetail: vi.fn().mockResolvedValue({ data: {} }),

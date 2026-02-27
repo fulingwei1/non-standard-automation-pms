@@ -65,6 +65,8 @@ import {
   CustomerAnalytics } from
 '../components/customer-360';
 
+import { customerApi } from '../services/api/crm';
+
 import {
   CUSTOMER_TYPES,
   CUSTOMER_STATUS,
@@ -91,124 +93,6 @@ const Customer360 = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [_dateRange, _setDateRange] = useState(null);
 
-  // 模拟数据
-  const mockCustomerData = {
-    id: customerId,
-    name: '智能制造科技有限公司',
-    type: 'enterprise',
-    status: 'active',
-    level: 'gold',
-    contactPerson: '张总',
-    phone: '13800138000',
-    email: 'zhang@smarttech.com',
-    address: '北京市海淀区中关村科技园A座1201室',
-    industry: '智能制造',
-    sinceDate: '2022-03-15',
-    serviceLevel: 'premium',
-    satisfactionScore: 4.6,
-    lifetimeValue: 2500000,
-    orderCount: 15,
-    avgOrderValue: 166667,
-    projectSuccessRate: 93,
-    growthTrend: 65,
-    loyaltyIndex: 78,
-    notes: '重点客户，合作稳定，有较大增长潜力，建议加强服务和关系维护',
-
-    // 历史订单
-    orders: [
-    {
-      id: 'ORD202401001',
-      date: '2024-01-15',
-      product: '智能生产线解决方案',
-      amount: 500000,
-      status: 'delivered',
-      deliveryDate: '2024-01-20'
-    }
-    // 更多订单数据...
-    ],
-
-    // 历史报价
-    quotes: [
-    {
-      id: 'Q202401001',
-      date: '2024-01-10',
-      title: '自动化改造项目',
-      amount: 300000,
-      status: 'accepted',
-      validUntil: '2024-02-10'
-    }
-    // 更多报价数据...
-    ],
-
-    // 历史合同
-    contracts: [
-    {
-      id: 'CT202401001',
-      title: '年度服务协议',
-      type: 'service',
-      amount: 800000,
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
-      status: 'active'
-    }
-    // 更多合同数据...
-    ],
-
-    // 支付记录
-    payments: [
-    {
-      id: 'PAY202401001',
-      date: '2024-01-18',
-      amount: 150000,
-      method: 'bank_transfer',
-      status: 'paid',
-      orderId: 'ORD202401001'
-    }
-    // 更多支付数据...
-    ],
-
-    // 项目交付
-    projects: [
-    {
-      id: 'PRJ202401001',
-      name: '车间自动化改造',
-      phase: 'deployment',
-      startDate: '2024-01-05',
-      expectedDate: '2024-02-15',
-      progress: 85,
-      satisfaction: null
-    }
-    // 更多项目数据...
-    ],
-
-    // 满意度调查
-    satisfactions: [
-    {
-      id: 'SAT202401001',
-      date: '2024-01-16',
-      type: 'project_completion',
-      score: 4.8,
-      feedback: '项目实施专业，团队服务态度好，效果超出预期',
-      improvements: '希望加强后续技术支持响应速度'
-    }
-    // 更多满意度数据...
-    ],
-
-    // 服务记录
-    services: [
-    {
-      id: 'SRV202401001',
-      date: '2024-01-14',
-      type: 'technical_support',
-      issue: '设备故障排查',
-      resolution: '远程协助解决软件配置问题',
-      satisfaction: 4.5,
-      responseTime: 2.5
-    }
-    // 更多服务数据...
-    ]
-  };
-
   // 数据加载
   useEffect(() => {
     loadCustomerData();
@@ -217,13 +101,11 @@ const Customer360 = () => {
   const loadCustomerData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setCustomer(mockCustomerData);
-        setLoading(false);
-      }, 1000);
+      const response = await customerApi.get360(customerId);
+      setCustomer(response.data || response);
     } catch (_error) {
       message.error('加载客户数据失败');
+    } finally {
       setLoading(false);
     }
   };

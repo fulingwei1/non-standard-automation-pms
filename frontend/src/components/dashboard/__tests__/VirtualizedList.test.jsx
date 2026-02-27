@@ -331,7 +331,7 @@ describe('VirtualizedList', () => {
         />
       );
       
-      const initialCallCount = mockRenderItem.mock.calls.length;
+      const _initialCallCount = mockRenderItem.mock.calls.length;
       mockRenderItem.mockClear();
       
       const scrollContainer = container.querySelector('.overflow-auto');
@@ -339,7 +339,7 @@ describe('VirtualizedList', () => {
       
       // Small scroll should not trigger full re-render
       const afterScrollCallCount = mockRenderItem.mock.calls.length;
-      expect(afterScrollCallCount).toBeLessThanOrEqual(initialCallCount);
+      expect(afterScrollCallCount).toBeLessThanOrEqual(_initialCallCount);
     });
   });
 

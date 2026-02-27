@@ -19,6 +19,8 @@ describe('Projects API', () => {
 
   beforeEach(async () => {
     // 设置测试环境
+    const setup = await setupApiTest();
+    mock = setup.mock;
     
     // 导入项目模块
     const projectsModule = await import('../projects.js');

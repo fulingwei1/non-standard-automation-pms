@@ -4,8 +4,6 @@
 包含：状态定义、状态转换、状态历史
 """
 
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -14,6 +12,7 @@ from app.core import security
 from app.models.sales import Quote, QuoteApproval
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.status_update_service import StatusUpdateService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -143,31 +142,37 @@ def change_quote_status(
     if not new_status:
         raise HTTPException(status_code=400, detail="请指定目标状态")
 
-    current_status = quote.status
-    allowed = STATUS_TRANSITIONS.get(current_status, [])
+    # 使用通用 StatusUpdateService 进行状态转换验证和更新
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=quote,
+        new_status=new_status,
+        operator=current_user,
+        valid_statuses=list(QUOTE_STATUSES.keys()),
+        transition_rules=STATUS_TRANSITIONS,
+        timestamp_fields={},  # quote.updated_at 由 save_obj 处理
+    )
 
-    if new_status not in allowed:
+    if not result.success:
+        old_name = QUOTE_STATUSES.get(result.old_status, {}).get("name", result.old_status)
+        new_name = QUOTE_STATUSES.get(new_status, {}).get("name", new_status)
         raise HTTPException(
             status_code=400,
-            detail=f"不能从 {QUOTE_STATUSES.get(current_status, {}).get('name', current_status)} "
-                   f"转换为 {QUOTE_STATUSES.get(new_status, {}).get('name', new_status)}"
+            detail=f"不能从 {old_name} 转换为 {new_name}",
         )
-
-    old_status = quote.status
-    quote.status = new_status
-    quote.updated_at = datetime.now()
 
     db.commit()
 
+    old_name = QUOTE_STATUSES.get(result.old_status, {}).get("name", result.old_status)
+    new_name = QUOTE_STATUSES.get(result.new_status, {}).get("name", result.new_status)
     return ResponseModel(
         code=200,
-        message=f"状态已从 {QUOTE_STATUSES.get(old_status, {}).get('name', old_status)} "
-                f"变更为 {QUOTE_STATUSES.get(new_status, {}).get('name', new_status)}",
+        message=f"状态已从 {old_name} 变更为 {new_name}",
         data={
             "quote_id": quote_id,
-            "old_status": old_status,
-            "new_status": new_status
-        }
+            "old_status": result.old_status,
+            "new_status": result.new_status,
+        },
     )
 
 

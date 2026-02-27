@@ -7,16 +7,49 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SalesFunnel from '../SalesFunnel';
-import api from '../../services/api';
+import api, { salesStatisticsApi, customerApi, userApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    salesStatisticsApi: {
+      funnel: vi.fn().mockResolvedValue({ data: {} }),
+      opportunitiesByStage: vi.fn().mockResolvedValue({ data: {} }),
+      revenueForecast: vi.fn().mockResolvedValue({ data: {} }),
+      summary: vi.fn().mockResolvedValue({ data: {} }),
+      prediction: vi.fn().mockResolvedValue({ data: {} }),
+      predictionAccuracy: vi.fn().mockResolvedValue({ data: {} }),
+      performance: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    customerApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getCustomers: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      getProjects: vi.fn().mockResolvedValue({ data: {} }),
+      get360: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    userApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      assignRoles: vi.fn().mockResolvedValue({ data: {} }),
+      syncFromEmployees: vi.fn().mockResolvedValue({ data: {} }),
+      createFromEmployee: vi.fn().mockResolvedValue({ data: {} }),
+      toggleActive: vi.fn().mockResolvedValue({ data: {} }),
+      resetPassword: vi.fn().mockResolvedValue({ data: {} }),
+      batchToggleActive: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -123,7 +156,7 @@ describe.skip('SalesFunnel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockImplementation((url) => {
+    userApi.list.mockImplementation((url) => {
       if (url.includes('/sales/funnel')) {
         return Promise.resolve({ data: mockFunnelData });
       }
@@ -190,7 +223,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/sales/funnel'));
+        expect(userApi.list).toHaveBeenCalledWith(expect.stringContaining('/sales/funnel'));
       });
     });
 
@@ -206,7 +239,7 @@ describe.skip('SalesFunnel', () => {
     });
 
     it('should handle API error', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to load'));
+      userApi.list.mockRejectedValueOnce(new Error('Failed to load'));
 
       render(
         <MemoryRouter>
@@ -357,7 +390,7 @@ describe.skip('SalesFunnel', () => {
       fireEvent.click(opportunityStage);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/sales/leads'));
+        expect(userApi.list).toHaveBeenCalledWith(expect.stringContaining('/sales/leads'));
       });
     });
 
@@ -429,7 +462,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const periodFilter = screen.queryByText(/本月|本季度|本年/);
@@ -446,7 +479,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const repFilter = screen.queryByText(/销售|Rep|负责人/);
@@ -463,7 +496,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const productFilter = screen.queryByText(/产品线|Product/);
@@ -509,7 +542,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       // Simulate drag and drop (simplified)
@@ -528,7 +561,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const initialCallCount = api.get.mock.calls.length;
@@ -554,7 +587,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       // Low conversion stages should be highlighted or marked
@@ -570,7 +603,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const trendIndicators = screen.queryAllByText(/↑|↓|上升|下降/);
@@ -585,7 +618,7 @@ describe.skip('SalesFunnel', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(userApi.list).toHaveBeenCalled();
       });
 
       const avgTimeIndicator = screen.queryByText(/平均|Average|天|days/);

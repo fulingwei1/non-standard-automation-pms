@@ -24,21 +24,18 @@ from reportlab.platypus import (
 )
 
 from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
+from app.services.report_framework.renderers.pdf_styles import (
+    FONT_PATHS as _SHARED_FONT_PATHS,
+)
 
 
 class PdfRenderer(Renderer):
     """
-    PDF 渲染器
-
-    使用 reportlab 将报告数据渲染为 PDF 格式
+    PDF 渲染器 — canonical PDF renderer (#40).
+    共享字体注册与颜色常量见 ``pdf_styles.py``。
     """
 
-    # 中文字体路径（可配置）
-    FONT_PATHS = [
-        "/System/Library/Fonts/PingFang.ttc",  # macOS
-        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",  # Linux
-        "C:/Windows/Fonts/msyh.ttc",  # Windows
-    ]
+    FONT_PATHS = _SHARED_FONT_PATHS
 
     def __init__(self, output_dir: str = "reports/pdf"):
         """

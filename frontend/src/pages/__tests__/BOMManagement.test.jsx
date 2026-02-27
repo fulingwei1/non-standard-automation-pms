@@ -7,16 +7,73 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BOMManagement from '../BOMManagement';
-import api from '../../services/api';
+import api, { bomApi, projectApi, machineApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    bomApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getByMachine: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getItems: vi.fn().mockResolvedValue({ data: {} }),
+      addItem: vi.fn().mockResolvedValue({ data: {} }),
+      updateItem: vi.fn().mockResolvedValue({ data: {} }),
+      deleteItem: vi.fn().mockResolvedValue({ data: {} }),
+      getVersions: vi.fn().mockResolvedValue({ data: {} }),
+      compareVersions: vi.fn().mockResolvedValue({ data: {} }),
+      release: vi.fn().mockResolvedValue({ data: {} }),
+      import: vi.fn().mockResolvedValue({ data: {} }),
+      export: vi.fn().mockResolvedValue({ data: {} }),
+      generatePR: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    machineApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      updateProgress: vi.fn().mockResolvedValue({ data: {} }),
+      getBom: vi.fn().mockResolvedValue({ data: {} }),
+      getServiceHistory: vi.fn().mockResolvedValue({ data: {} }),
+      getSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recalculate: vi.fn().mockResolvedValue({ data: {} }),
+      uploadDocument: vi.fn().mockResolvedValue({ data: {} }),
+      getDocuments: vi.fn().mockResolvedValue({ data: {} }),
+      downloadDocument: vi.fn().mockResolvedValue({ data: {} }),
+      getDocumentVersions: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -120,7 +177,7 @@ describe('BOMManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockImplementation((url) => {
+    projectApi.list.mockImplementation((url) => {
       if (url.includes('/bom') && !url.includes('/bom/')) {
         return Promise.resolve({ data: mockBOMs });
       }
@@ -129,9 +186,9 @@ describe('BOMManagement', () => {
       }
       return Promise.resolve({ data: {} });
     });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    bomApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    bomApi.update.mockResolvedValue({ data: { success: true } });
+    bomApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -190,12 +247,12 @@ describe('BOMManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/bom'));
+        expect(projectApi.list).toHaveBeenCalledWith(expect.stringContaining('/bom'));
       });
     });
 
     it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      projectApi.list.mockImplementation(() => new Promise(() => {}));
 
       render(
         <MemoryRouter>
@@ -207,7 +264,7 @@ describe('BOMManagement', () => {
     });
 
     it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
+      projectApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
         <MemoryRouter>
@@ -305,7 +362,7 @@ describe('BOMManagement', () => {
         fireEvent.click(activateButtons[0]);
 
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalledWith(
+          expect(bomApi.update).toHaveBeenCalledWith(
             expect.stringContaining('/bom/'),
             expect.objectContaining({ status: 'active' })
           );
@@ -332,7 +389,7 @@ describe('BOMManagement', () => {
         fireEvent.change(searchInput, { target: { value: '产品A' } });
 
         await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+          expect(projectApi.list).toHaveBeenCalled();
         });
       }
     });
@@ -345,7 +402,7 @@ describe('BOMManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const statusFilter = screen.queryByRole('combobox');
@@ -362,7 +419,7 @@ describe('BOMManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
     });
   });
@@ -510,7 +567,7 @@ describe('BOMManagement', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
+        expect(projectApi.list).toHaveBeenCalled();
       });
 
       const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
@@ -556,7 +613,7 @@ describe('BOMManagement', () => {
         fireEvent.click(copyButtons[0]);
 
         await waitFor(() => {
-          expect(api.post).toHaveBeenCalled();
+          expect(bomApi.create).toHaveBeenCalled();
         });
       }
     });
@@ -579,7 +636,7 @@ describe('BOMManagement', () => {
         fireEvent.click(deleteButtons[0]);
 
         await waitFor(() => {
-          expect(api.delete).toHaveBeenCalled();
+          expect(bomApi.delete).toHaveBeenCalled();
         });
       }
     });

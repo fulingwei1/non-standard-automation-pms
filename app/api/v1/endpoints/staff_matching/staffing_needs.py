@@ -39,10 +39,10 @@ def list_staffing_needs(
     if priority:
         query = query.filter(MesProjectStaffingNeed.priority == priority)
 
-    needs = query.order_by(
+    needs = apply_pagination(query.order_by(
         MesProjectStaffingNeed.priority,
         MesProjectStaffingNeed.created_at.desc()
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     result = []
     for need in needs:

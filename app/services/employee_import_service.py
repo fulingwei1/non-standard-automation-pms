@@ -65,48 +65,12 @@ def find_other_columns(columns: List[str]) -> Dict[str, Optional[str]]:
     }
 
 
-def clean_name(val) -> Optional[str]:
-    """清理姓名"""
-    if pd.isna(val):
-        return None
-    result = str(val).strip()
-    return result if result else None
-
-
-def get_department_name(row: pd.Series, dept_cols: List[str]) -> Optional[str]:
-    """
-    获取部门名称
-
-    Returns:
-        Optional[str]: 部门名称
-    """
-    if not dept_cols:
-        return None
-
-    dept_parts = []
-    for col in dept_cols:
-        val = row.get(col)
-        if pd.notna(val):
-            val_str = str(val).strip()
-            if val_str:
-                dept_parts.append(val_str)
-
-    return '-'.join(dept_parts) if dept_parts else None
-
-
-def is_active_employee(status_val) -> bool:
-    """
-    判断员工是否在职
-
-    Returns:
-        bool: 是否在职
-    """
-    if pd.isna(status_val):
-        return True
-
-    status_str = str(status_val).strip()
-    inactive_statuses = ['离职', '已离职', 'resigned', 'inactive']
-    return status_str not in inactive_statuses
+from app.utils.common import (  # noqa: F401
+    clean_name,
+    clean_phone as _clean_phone,
+    get_department_name,
+    is_active_employee,
+)
 
 
 def generate_employee_code(code_idx: int, existing_codes: Set[str]) -> str:
@@ -149,18 +113,7 @@ def generate_employee_code(code_idx: int, existing_codes: Set[str]) -> str:
     return employee_code
 
 
-def clean_phone(phone) -> Optional[str]:
-    """清理电话号码"""
-    if pd.isna(phone):
-        return None
-    phone_str = str(phone)
-    if 'e' in phone_str.lower() or '.' in phone_str:
-        try:
-            phone_int = int(float(phone_str))
-            phone_str = str(phone_int)
-        except (ValueError, TypeError, OverflowError):
-            pass
-    return phone_str.strip() if phone_str.strip() else None
+clean_phone = _clean_phone  # re-export for backward compat
 
 
 def create_hr_profile_for_employee(

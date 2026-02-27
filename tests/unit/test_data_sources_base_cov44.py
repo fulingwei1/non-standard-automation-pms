@@ -13,18 +13,19 @@ except Exception:
 pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="模块导入失败，跳过测试")
 
 
-class ConcreteDataSource(DataSource):
-    """用于测试的具体数据源实现"""
+if IMPORT_OK:
+    class ConcreteDataSource(DataSource):
+        """用于测试的具体数据源实现"""
 
-    def fetch(self, params):
-        return [{"key": "value"}]
+        def fetch(self, params):
+            return [{"key": "value"}]
 
 
-class ErrorDataSource(DataSource):
-    """抛出错误的数据源"""
+    class ErrorDataSource(DataSource):
+        """抛出错误的数据源"""
 
-    def fetch(self, params):
-        raise DataSourceError("fetch failed")
+        def fetch(self, params):
+            raise DataSourceError("fetch failed")
 
 
 @pytest.fixture

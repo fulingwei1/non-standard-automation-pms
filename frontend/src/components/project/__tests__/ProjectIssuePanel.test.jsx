@@ -4,12 +4,20 @@ import { BrowserRouter } from 'react-router-dom';
 import ProjectIssuePanel from '../ProjectIssuePanel';
 import { projectWorkspaceApi } from '../../../services/api';
 
-vi.mock('../../../services/api', () => ({
-  projectWorkspaceApi: {
-    getIssues: vi.fn(),
-    getSolutions: vi.fn(),
-  },
-}));
+vi.mock('../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
+    },
+  };
+});
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

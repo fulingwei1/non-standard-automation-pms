@@ -3,66 +3,18 @@
 HR档案导入服务
 """
 
-from datetime import datetime
-from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.models.organization import Employee, EmployeeHrProfile
-
-
-def clean_str(val) -> Optional[str]:
-    """清理字符串值"""
-    if pd.isna(val):
-        return None
-    result = str(val).replace('\n', '').strip()
-    if result in ['/', 'NaN', '']:
-        return None
-    return result
-
-
-def clean_phone(phone) -> Optional[str]:
-    """清理电话号码"""
-    if pd.isna(phone):
-        return None
-    phone_str = str(phone)
-    if 'e' in phone_str.lower() or '.' in phone_str:
-        # 可能是科学计数法，尝试转换
-        try:
-            phone_int = int(float(phone_str))
-            phone_str = str(phone_int)
-        except (ValueError, TypeError, OverflowError):
-            pass
-    return phone_str.strip() if phone_str.strip() else None
-
-
-def parse_date(date_val) -> Optional[datetime]:
-    """解析日期值"""
-    if pd.isna(date_val):
-        return None
-    if isinstance(date_val, datetime):
-        return date_val.date()
-    if isinstance(date_val, str):
-        try:
-            return datetime.strptime(date_val, '%Y-%m-%d').date()
-        except ValueError:
-            try:
-                return datetime.strptime(date_val, '%Y/%m/%d').date()
-            except ValueError:
-                return None
-    return None
-
-
-def clean_decimal(val) -> Optional[Decimal]:
-    """清理数值"""
-    if pd.isna(val):
-        return None
-    try:
-        return Decimal(str(val))
-    except (ValueError, TypeError, InvalidOperation):
-        return None
+from app.utils.common import (  # noqa: F401
+    clean_decimal,
+    clean_phone,
+    clean_str,
+    parse_date,
+)
 
 
 def validate_excel_file(filename: str) -> None:

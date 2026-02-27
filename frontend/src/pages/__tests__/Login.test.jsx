@@ -9,13 +9,6 @@ import Login from '../Login';
 import { authApi } from '../../services/api';
 
 // Mock authApi
-vi.mock('../../services/api', () => ({
-  authApi: {
-    login: vi.fn(),
-    me: vi.fn(),
-  },
-}));
-
 // Mock motion components
 vi.mock('framer-motion', () => ({
   motion: {

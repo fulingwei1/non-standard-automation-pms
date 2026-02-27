@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { managementRhythmApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -13,6 +14,7 @@ import {
   DialogTitle } from
 "../components/ui";
 import {
+import { formatDate } from "@/lib/formatters";
   Plus,
   FileText,
   Calendar,
@@ -89,11 +91,6 @@ export default function MeetingReports() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN");
-  };
 
   const renderComparison = (comparison) => {
     if (!comparison) {return null;}

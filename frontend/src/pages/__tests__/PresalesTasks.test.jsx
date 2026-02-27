@@ -7,16 +7,59 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PresalesTasks from '../PresalesTasks';
-import api from '../../services/api';
+import api, { presaleApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    presaleApi: {
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      tickets: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        accept: vi.fn().mockResolvedValue({ data: {} }),
+        updateProgress: vi.fn().mockResolvedValue({ data: {} }),
+        complete: vi.fn().mockResolvedValue({ data: {} }),
+        rate: vi.fn().mockResolvedValue({ data: {} }),
+        getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      solutions: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        review: vi.fn().mockResolvedValue({ data: {} }),
+        getVersions: vi.fn().mockResolvedValue({ data: {} }),
+        getCost: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      templates: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      tenders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        updateResult: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      statistics: {
+        workload: vi.fn().mockResolvedValue({ data: {} }),
+        responseTime: vi.fn().mockResolvedValue({ data: {} }),
+        conversion: vi.fn().mockResolvedValue({ data: {} }),
+        performance: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -72,7 +115,7 @@ describe.skip('PresalesTasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockTasksData });
+    presaleApi.tickets.list.mockResolvedValue({ data: mockTasksData });
   });
 
   afterEach(() => {
@@ -130,14 +173,14 @@ describe.skip('PresalesTasks', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
           expect.stringContaining('/presales/tasks')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      presaleApi.tickets.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -149,7 +192,7 @@ describe.skip('PresalesTasks', () => {
     });
 
     it('should handle empty task list', async () => {
-      api.get.mockResolvedValue({ data: { items: [], total: 0 } });
+      presaleApi.tickets.list.mockResolvedValue({ data: { items: [], total: 0 } });
 
       render(
         <MemoryRouter>
@@ -170,14 +213,14 @@ describe.skip('PresalesTasks', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(presaleApi.tickets.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -218,7 +261,7 @@ describe.skip('PresalesTasks', () => {
       fireEvent.change(statusFilter, { target: { value: 'in_progress' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
           expect.stringContaining('status=in_progress')
         );
       });
@@ -239,7 +282,7 @@ describe.skip('PresalesTasks', () => {
       fireEvent.change(priorityFilter, { target: { value: 'high' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
           expect.stringContaining('priority=high')
         );
       });
@@ -260,14 +303,14 @@ describe.skip('PresalesTasks', () => {
       fireEvent.change(searchInput, { target: { value: '需求调研' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=需求调研')
         );
       });
     });
 
     it('should update task status', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -283,7 +326,7 @@ describe.skip('PresalesTasks', () => {
       fireEvent.click(statusButton);
 
       await waitFor(() => {
-        expect(api.put).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.updateProgress).toHaveBeenCalledWith(
           expect.stringContaining('/presales/tasks/1'),
           expect.any(Object)
         );
@@ -291,7 +334,7 @@ describe.skip('PresalesTasks', () => {
     });
 
     it('should delete task', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      presaleApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -308,12 +351,12 @@ describe.skip('PresalesTasks', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/presales/tasks/1');
+        expect(presaleApi.delete).toHaveBeenCalledWith('/presales/tasks/1');
       });
     });
 
     it('should assign task to user', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -348,7 +391,7 @@ describe.skip('PresalesTasks', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
@@ -358,7 +401,7 @@ describe.skip('PresalesTasks', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      presaleApi.tickets.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -372,7 +415,7 @@ describe.skip('PresalesTasks', () => {
     });
 
     it('should handle create task failure', async () => {
-      api.post.mockRejectedValue(new Error('Create Failed'));
+      presaleApi.tickets.accept.mockRejectedValue(new Error('Create Failed'));
 
       render(
         <MemoryRouter>
@@ -398,7 +441,7 @@ describe.skip('PresalesTasks', () => {
     });
 
     it('should handle update task failure', async () => {
-      api.put.mockRejectedValue(new Error('Update Failed'));
+      presaleApi.tickets.updateProgress.mockRejectedValue(new Error('Update Failed'));
 
       render(
         <MemoryRouter>
@@ -419,7 +462,7 @@ describe.skip('PresalesTasks', () => {
     });
 
     it('should handle delete task failure', async () => {
-      api.delete.mockRejectedValue(new Error('Delete Failed'));
+      presaleApi.delete.mockRejectedValue(new Error('Delete Failed'));
       window.confirm = vi.fn(() => true);
 
       render(

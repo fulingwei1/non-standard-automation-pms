@@ -3,19 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTimesheet } from '../useTimesheet';
 import { timesheetApi, projectApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', () => ({
-    timesheetApi: {
-        getWeek: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        batchCreate: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        submit: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
     },
-    projectApi: {
-        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-    },
-}));
+  };
+});
 
 describe('useTimesheet Hook', () => {
     const mockProjects = [

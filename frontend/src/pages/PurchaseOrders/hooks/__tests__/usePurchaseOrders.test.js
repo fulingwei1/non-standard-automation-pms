@@ -3,18 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePurchaseOrders } from '../usePurchaseOrders';
 import { purchaseApi, supplierApi, projectApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', () => ({
-    purchaseApi: {
-        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        update: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        delete: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        submitApproval: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        receiveGoods: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } })
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
     },
-    supplierApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
-    projectApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
-}));
+  };
+});
 
 vi.mock('react-router-dom', () => ({
     useSearchParams: () => [new URLSearchParams()]

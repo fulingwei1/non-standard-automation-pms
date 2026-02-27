@@ -93,7 +93,7 @@ import {
 '@/lib/constants/contractManagement';
 
 // 导入 API service
-import { getContracts } from '../services/contractService';
+import { getContracts, deleteContract } from '../services/contractService';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -160,14 +160,12 @@ const ContractManagement = () => {
   const handleDeleteContract = async (contractId) => {
     try {
       setLoading(true);
-      // 模拟删除API调用
-      setTimeout(() => {
-        setContracts(contracts.filter((c) => c.id !== contractId));
-        message.success('删除成功');
-        setLoading(false);
-      }, 500);
+      await deleteContract(contractId);
+      setContracts(contracts.filter((c) => c.id !== contractId));
+      message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');
+    } finally {
       setLoading(false);
     }
   };

@@ -10,21 +10,6 @@ import AcceptanceExecution from '../AcceptanceExecution';
 import { acceptanceApi } from '../../services/api';
 
 // Mock dependencies
-vi.mock('../../services/api', () => ({
-  acceptanceApi: {
-    orders: {
-      get: vi.fn(),
-      getItems: vi.fn(),
-      complete: vi.fn(),
-      updateItem: vi.fn(),
-    },
-    issues: {
-      list: vi.fn(),
-      create: vi.fn(),
-    },
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

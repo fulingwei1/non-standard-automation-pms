@@ -41,6 +41,8 @@ import {
   Progress,
   Badge,
   Radio,
+  Modal,
+  Form,
   message } from
 "antd";
 
@@ -69,16 +71,47 @@ import {
   DASHBOARD_LAYOUTS } from
 '@/lib/constants/alert';
 
+import { alertApi } from '@/services/api/alerts';
+
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
 const AlertStatistics = () => {
   const [_selectedAlert, setSelectedAlert] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingAlert, setEditingAlert] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm] = Form.useForm();
 
   const handleEditAlert = (alert) => {
-    setSelectedAlert(alert);
-    message.info("编辑功能待实现");
+    setEditingAlert(alert);
+    editForm.setFieldsValue({
+      title: alert.title,
+      description: alert.description,
+      type: alert.type,
+      level: alert.level,
+      status: alert.status,
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      setEditLoading(true);
+      await alertApi.rules.update(editingAlert.id, values);
+      message.success("告警规则更新成功");
+      setEditModalVisible(false);
+      setEditingAlert(null);
+      editForm.resetFields();
+      loadData();
+    } catch (error) {
+      if (error.errorFields) return; // form validation error
+      message.error("更新告警规则失败");
+    } finally {
+      setEditLoading(false);
+    }
   };
   // 状态管理
   const [loading, setLoading] = useState(false);
@@ -88,49 +121,12 @@ const AlertStatistics = () => {
   const [_selectedLayout, _setSelectedLayout] = useState('grid');
   const [searchText, setSearchText] = useState('');
 
-  // 模拟数据
-  const mockData = {
-    alerts: [
-    {
-      id: 1,
-      title: '系统CPU使用率过高',
-      description: '生产环境服务器CPU使用率达到95%，持续超过10分钟',
-      type: 'system',
-      level: 'critical',
-      status: 'active',
-      source: 'prod-server-01',
-      createdAt: '2024-01-18 14:30:00',
-      updatedAt: '2024-01-18 14:35:00',
-      resolvedAt: null,
-      assignee: '运维团队',
-      tags: ['系统', '性能', '紧急']
-    },
-    {
-      id: 2,
-      title: '数据库连接池耗尽',
-      description: '应用数据库连接池使用率达到100%，新连接被拒绝',
-      type: 'performance',
-      level: 'high',
-      status: 'resolved',
-      source: 'app-db-01',
-      createdAt: '2024-01-18 13:15:00',
-      updatedAt: '2024-01-18 13:45:00',
-      resolvedAt: '2024-01-18 13:45:00',
-      assignee: 'DBA团队',
-      tags: ['数据库', '性能', '连接池']
-    }
-    // 更多模拟数据...
-    ],
-    metrics: {
-      avgResolutionTime: 45,
-      escalationRate: 12.5,
-      falsePositiveRate: 8.3
-    },
-    trend: {
-      direction: 'down',
-      percentage: 12.5
-    }
-  };
+  // API数据
+  const [dashboardData, setDashboardData] = useState({
+    alerts: [],
+    metrics: { avgResolutionTime: 0, escalationRate: 0, falsePositiveRate: 0 },
+    trend: { direction: 'down', percentage: 0 }
+  });
 
   // 数据加载
   useEffect(() => {
@@ -140,13 +136,28 @@ const AlertStatistics = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setAlerts(mockData.alerts);
-        setLoading(false);
-      }, 1000);
+      const [alertsRes, dashboardRes] = await Promise.all([
+        alertApi.list({ type: filters.type, level: filters.level, status: filters.status }),
+        alertApi.dashboard(),
+      ]);
+      const alertsList = alertsRes.data?.items || alertsRes.data || [];
+      setAlerts(alertsList);
+      const db = dashboardRes.data || {};
+      setDashboardData({
+        alerts: alertsList,
+        metrics: {
+          avgResolutionTime: db.avg_resolution_time ?? db.avgResolutionTime ?? 0,
+          escalationRate: db.escalation_rate ?? db.escalationRate ?? 0,
+          falsePositiveRate: db.false_positive_rate ?? db.falsePositiveRate ?? 0,
+        },
+        trend: {
+          direction: db.trend_direction ?? db.trend?.direction ?? 'down',
+          percentage: db.trend_percentage ?? db.trend?.percentage ?? 0,
+        },
+      });
     } catch (_error) {
       message.error('加载告警数据失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -302,7 +313,7 @@ const AlertStatistics = () => {
           概览分析
     </span>,
 
-    content: <AlertOverview data={mockData} loading={loading} onNavigate={setActiveTab} />
+    content: <AlertOverview data={dashboardData} loading={loading} onNavigate={setActiveTab} />
   },
   {
     key: 'trend',
@@ -332,7 +343,7 @@ const AlertStatistics = () => {
           性能指标
     </span>,
 
-    content: <AlertPerformance data={mockData} loading={loading} />
+    content: <AlertPerformance data={dashboardData} loading={loading} />
   },
   {
     key: 'details',
@@ -461,6 +472,51 @@ const AlertStatistics = () => {
           )}
         </Tabs>
       </Card>
+
+      {/* 编辑告警规则弹窗 */}
+      <Modal
+        title="编辑告警规则"
+        open={editModalVisible}
+        onOk={handleEditSubmit}
+        onCancel={() => { setEditModalVisible(false); setEditingAlert(null); editForm.resetFields(); }}
+        confirmLoading={editLoading}
+        destroyOnClose>
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="title" label="告警标题" rules={[{ required: true, message: '请输入告警标题' }]}>
+            <Input placeholder="请输入告警标题" />
+          </Form.Item>
+          <Form.Item name="description" label="告警描述">
+            <Input.TextArea rows={3} placeholder="请输入告警描述" />
+          </Form.Item>
+          <Form.Item name="type" label="告警类型">
+            <Select placeholder="选择告警类型">
+              {Object.values(ALERT_TYPES).map((type) =>
+                <Select.Option key={type.value} value={type.value}>
+                  {type.icon} {type.label}
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+          <Form.Item name="level" label="告警级别">
+            <Select placeholder="选择告警级别">
+              {Object.values(ALERT_LEVELS).map((level) =>
+                <Select.Option key={level.value} value={level.value}>
+                  <Tag color={level.color}>{level.label}</Tag>
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+          <Form.Item name="status" label="状态">
+            <Select placeholder="选择状态">
+              {Object.values(ALERT_STATUS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
+                  <Tag color={status.color}>{status.label}</Tag>
+                </Select.Option>
+              )}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </motion.div>);
 
 };

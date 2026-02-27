@@ -3,6 +3,7 @@
  * 核心入口页面，展示出入库任务、库存预警、盘点任务等
  */
 import React, { useState, useEffect } from "react";
+import { warehouseApi } from "../../services/api/warehouse";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -253,33 +254,38 @@ export default function WarehouseWorkstation() {
   const [stockAlerts, setStockAlerts] = useState([]);
 
   useEffect(() => {
-    // TODO: 从 API 加载数据
-    // 模拟数据
-    setTimeout(() => {
-      setStats({
-        pendingInbound: 5,
-        todayInbound: 2,
-        pendingOutbound: 8,
-        urgentOutbound: 3,
-        alerts: 12,
-        lowStock: 7,
-        countTasks: 3,
-        countCompleted: 1,
-      });
-      setInboundTasks([
-        { code: "IB-2026-0123", materialName: "伺服电机", status: "待入库", priority: "high", description: "型号: R88M-K1K030", time: "14:30", date: "2026-01-22" },
-        { code: "IB-2026-0124", materialName: "直线导轨", status: "待入库", priority: "medium", description: "规格: HGH20CA", time: "10:15", date: "2026-01-22" },
-      ]);
-      setOutboundTasks([
-        { code: "OB-2026-0089", materialName: "伺服电机", status: "拣货中", priority: "high", description: "项目: PJ250108001", time: "16:00", date: "2026-01-22" },
-        { code: "OB-2026-0090", materialName: "控制器", status: "待拣货", priority: "medium", description: "项目: PJ250115002", time: "17:30", date: "2026-01-22" },
-      ]);
-      setStockAlerts([
-        { materialName: "伺服电机", specification: "R88M-K1K030", location: "A01-01-01", currentStock: 5, minStock: 20, type: "低库存" },
-        { materialName: "气缸", specification: "CDJ2B16-45", location: "B02-03-05", currentStock: 0, minStock: 50, type: "缺货" },
-      ]);
-      setLoading(false);
-    }, 500);
+    const loadData = async () => {
+      try {
+        const [statsRes, inboundRes, outboundRes, alertsRes] = await Promise.all([
+          warehouseApi.stats(),
+          warehouseApi.inbound.list({ status: 'pending' }),
+          warehouseApi.outbound.list({ status: 'pending' }),
+          warehouseApi.alerts.list(),
+        ]);
+        const statsData = statsRes.data || statsRes;
+        setStats({
+          pendingInbound: statsData.pendingInbound ?? 0,
+          todayInbound: statsData.todayInbound ?? 0,
+          pendingOutbound: statsData.pendingOutbound ?? 0,
+          urgentOutbound: statsData.urgentOutbound ?? 0,
+          alerts: statsData.alerts ?? 0,
+          lowStock: statsData.lowStock ?? 0,
+          countTasks: statsData.countTasks ?? 0,
+          countCompleted: statsData.countCompleted ?? 0,
+        });
+        const inboundItems = inboundRes.data?.items || inboundRes.data || [];
+        setInboundTasks(Array.isArray(inboundItems) ? inboundItems : []);
+        const outboundItems = outboundRes.data?.items || outboundRes.data || [];
+        setOutboundTasks(Array.isArray(outboundItems) ? outboundItems : []);
+        const alertItems = alertsRes.data?.items || alertsRes.data || [];
+        setStockAlerts(Array.isArray(alertItems) ? alertItems : []);
+      } catch (err) {
+        console.error('Failed to load warehouse workstation data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   return (

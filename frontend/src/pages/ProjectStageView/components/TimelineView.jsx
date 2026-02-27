@@ -387,9 +387,28 @@ export default function TimelineView({ data, loading, stageActions, onRefresh })
   const { stages = [], project_code, project_name, overall_progress } = data;
 
   const handleNodeAction = async (action, nodeId) => {
-    // TODO: 实现节点操作
-    console.log("Node action:", action, nodeId);
-    onRefresh?.();
+    let success = false;
+    try {
+      switch (action) {
+        case "start":
+          success = await stageActions?.startNode(nodeId);
+          break;
+        case "complete":
+          success = await stageActions?.completeNode(nodeId);
+          break;
+        case "skip":
+          success = await stageActions?.skipNode(nodeId);
+          break;
+        default:
+          console.warn("未知节点操作:", action);
+          break;
+      }
+    } catch (err) {
+      console.error("节点操作失败:", err);
+    }
+    if (success) {
+      onRefresh?.();
+    }
   };
 
   const handleStageAction = async (action, stageId) => {

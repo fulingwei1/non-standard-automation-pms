@@ -10,17 +10,6 @@ import AlertCenter from '../AlertCenter';
 import { alertApi } from '../../services/api';
 
 // Mock API
-vi.mock('../../services/api', () => ({
-  alertApi: {
-    list: vi.fn(),
-    getStats: vi.fn(),
-    update: vi.fn(),
-    resolve: vi.fn(),
-    dismiss: vi.fn(),
-  },
-  projectApi: {},
-}));
-
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

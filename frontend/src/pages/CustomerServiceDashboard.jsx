@@ -96,6 +96,8 @@ import {
   DEFAULT_FILTERS } from
 '../lib/constants/service';
 
+import { serviceApi } from '@/services/api/service';
+
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -114,71 +116,12 @@ const CustomerServiceDashboard = () => {
   const [searchText, setSearchText] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // 模拟数据
-  const mockData = {
-    tickets: [
-    {
-      id: 1,
-      title: '光伏系统故障排查',
-      customerName: '绿色能源公司',
-      description: '光伏系统突然停止工作，需要紧急排查故障原因',
-      serviceType: 'technical_support',
-      status: 'in_progress',
-      priority: 'critical',
-      engineer: '张工程师',
-      createdAt: '2024-01-18 09:30',
-      updatedAt: '2024-01-18 14:20',
-      responseTime: 0.5,
-      resolvedDate: null,
-      satisfaction: null
-    }
-    // 更多模拟数据...
-    ],
-    fieldServices: [
-    {
-      id: 1,
-      ticketId: 1,
-      title: '现场设备检修',
-      customerName: '绿色能源公司',
-      location: '北京市海淀区XX园区',
-      servicePhase: 's8',
-      scheduledDate: '2024-01-20',
-      engineer: '李工程师',
-      status: 'scheduled',
-      description: '现场检修光伏逆变器设备'
-    }],
-
-    warrantyProjects: [
-    {
-      id: 1,
-      projectName: '绿色能源光伏项目',
-      customerName: '绿色能源公司',
-      warrantyType: 'standard',
-      startDate: '2023-01-15',
-      endDate: '2025-01-14',
-      status: 'active',
-      remainingDays: 362,
-      totalClaims: 2,
-      resolvedClaims: 1
-    }],
-
-    metrics: {
-      avgResponseTime: 2.5,
-      avgSatisfaction: 4.2,
-      slaAchievement: 94.5,
-      firstContactResolution: 78.5
-    },
-    activities: [
-    {
-      id: 1,
-      type: 'resolved',
-      title: '工单 #1001 已解决',
-      description: '客户对服务结果表示满意',
-      engineer: '张工程师',
-      timestamp: '2024-01-18 15:30'
-    }]
-
-  };
+  // 仪表盘聚合数据
+  const [overviewData, setOverviewData] = useState({
+    tickets: [], fieldServices: [], warrantyProjects: [],
+    metrics: { avgResponseTime: 0, avgSatisfaction: 0, slaAchievement: 0, firstContactResolution: 0 },
+    activities: [],
+  });
 
   // 数据加载
   useEffect(() => {
@@ -188,15 +131,72 @@ const CustomerServiceDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setTickets(mockData.tickets);
-        setFieldServices(mockData.fieldServices);
-        setWarrantyProjects(mockData.warrantyProjects);
-        setLoading(false);
-      }, 1000);
+      const [ticketsRes, recordsRes, dashRes] = await Promise.all([
+        serviceApi.tickets.list({ status: filters.status, priority: filters.priority, service_type: filters.serviceType }),
+        serviceApi.records.list(),
+        serviceApi.dashboardStatistics().catch(() => ({ data: {} })),
+      ]);
+      const ticketList = (ticketsRes.data?.items || ticketsRes.data || []).map((t) => ({
+        id: t.id,
+        title: t.title || t.subject || '',
+        customerName: t.customer_name || t.customerName || '',
+        description: t.description || '',
+        serviceType: t.service_type || t.serviceType || '',
+        status: t.status || '',
+        priority: t.priority || '',
+        engineer: t.engineer || t.assigned_to || '',
+        createdAt: t.created_at || t.createdAt || '',
+        updatedAt: t.updated_at || t.updatedAt || '',
+        responseTime: t.response_time ?? t.responseTime ?? 0,
+        resolvedDate: t.resolved_at || t.resolvedDate || null,
+        satisfaction: t.satisfaction ?? null,
+      }));
+      setTickets(ticketList);
+
+      const recordList = (recordsRes.data?.items || recordsRes.data || []).map((r) => ({
+        id: r.id,
+        ticketId: r.ticket_id || r.ticketId,
+        title: r.title || r.subject || '',
+        customerName: r.customer_name || r.customerName || '',
+        location: r.location || r.address || '',
+        servicePhase: r.service_phase || r.servicePhase || '',
+        scheduledDate: r.scheduled_date || r.scheduledDate || '',
+        engineer: r.engineer || r.assigned_to || '',
+        status: r.status || '',
+        description: r.description || '',
+      }));
+      setFieldServices(recordList);
+
+      const db = dashRes.data || {};
+      const warrantyList = db.warranty_projects || db.warrantyProjects || [];
+      setWarrantyProjects(warrantyList.map((w) => ({
+        id: w.id,
+        projectName: w.project_name || w.projectName || '',
+        customerName: w.customer_name || w.customerName || '',
+        warrantyType: w.warranty_type || w.warrantyType || 'standard',
+        startDate: w.start_date || w.startDate || '',
+        endDate: w.end_date || w.endDate || '',
+        status: w.status || 'active',
+        remainingDays: w.remaining_days ?? w.remainingDays ?? 0,
+        totalClaims: w.total_claims ?? w.totalClaims ?? 0,
+        resolvedClaims: w.resolved_claims ?? w.resolvedClaims ?? 0,
+      })));
+
+      setOverviewData({
+        tickets: ticketList,
+        fieldServices: recordList,
+        warrantyProjects: warrantyList,
+        metrics: {
+          avgResponseTime: db.avg_response_time ?? db.avgResponseTime ?? 0,
+          avgSatisfaction: db.avg_satisfaction ?? db.avgSatisfaction ?? 0,
+          slaAchievement: db.sla_achievement ?? db.slaAchievement ?? 0,
+          firstContactResolution: db.first_contact_resolution ?? db.firstContactResolution ?? 0,
+        },
+        activities: db.activities || db.recent_activities || [],
+      });
     } catch (_error) {
       message.error('加载数据失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -230,18 +230,16 @@ const CustomerServiceDashboard = () => {
   const handleResolveTicket = async (ticketId) => {
     try {
       setLoading(true);
-      // 模拟解决API调用
-      setTimeout(() => {
-        setTickets(tickets.map((t) =>
+      await serviceApi.tickets.close(ticketId, { resolution: 'resolved' });
+      setTickets(tickets.map((t) =>
         t.id === ticketId ?
         { ...t, status: 'resolved', resolvedDate: new Date().toISOString().split('T')[0] } :
         t
-        ));
-        message.success('工单已标记为解决');
-        setLoading(false);
-      }, 500);
+      ));
+      message.success('工单已标记为解决');
     } catch (_error) {
       message.error('操作失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -253,16 +251,14 @@ const CustomerServiceDashboard = () => {
   const handleAssignTicket = async (ticket, engineer) => {
     try {
       setLoading(true);
-      // 模拟分配API调用
-      setTimeout(() => {
-        setTickets(tickets.map((t) =>
+      await serviceApi.tickets.assign(ticket.id, { engineer });
+      setTickets(tickets.map((t) =>
         t.id === ticket.id ? { ...t, engineer, status: 'in_progress' } : t
-        ));
-        message.success('工单分配成功');
-        setLoading(false);
-      }, 500);
+      ));
+      message.success('工单分配成功');
     } catch (_error) {
       message.error('分配失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -527,7 +523,7 @@ const CustomerServiceDashboard = () => {
           key="overview">
 
           <ServiceOverview
-            data={mockData}
+            data={overviewData}
             loading={loading}
             onNavigate={(type) => {
               if (type === 'urgent') {

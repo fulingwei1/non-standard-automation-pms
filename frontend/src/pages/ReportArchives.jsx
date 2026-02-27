@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Download, Search, Eye } from 'lucide-react';
+import { reportCenterApi } from '../services/api';
 
 export default function ReportArchives() {
   const [archives, setArchives] = useState([]);
@@ -20,16 +21,14 @@ export default function ReportArchives() {
   const fetchArchives = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters.report_type) params.append('report_type', filters.report_type);
-      if (filters.period) params.append('period', filters.period);
-      if (filters.status) params.append('status', filters.status);
-      
-      const response = await fetch(`/api/v1/reports/archives?${params}`);
-      const result = await response.json();
-      if (result.code === 0) {
-        setArchives(result.data.items);
-      }
+      const params = {};
+      if (filters.report_type) params.report_type = filters.report_type;
+      if (filters.period) params.period = filters.period;
+      if (filters.status) params.status = filters.status;
+
+      const response = await reportCenterApi.getArchives(params);
+      const data = response.data;
+      setArchives(data?.items || data || []);
     } catch (error) {
       console.error('获取归档列表失败:', error);
     } finally {
@@ -39,8 +38,8 @@ export default function ReportArchives() {
 
   const handleDownload = async (archiveId) => {
     try {
-      const response = await fetch(`/api/v1/reports/archives/${archiveId}/download`);
-      const blob = await response.blob();
+      const response = await reportCenterApi.downloadArchive(archiveId);
+      const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

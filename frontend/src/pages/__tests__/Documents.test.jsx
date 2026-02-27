@@ -7,16 +7,44 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Documents from '../Documents';
-import api from '../../services/api';
+import api, { documentApi, projectApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    documentApi: {
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    projectApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -74,7 +102,7 @@ describe.skip('Documents', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockDocData });
+    projectApi.list.mockResolvedValue({ data: mockDocData });
   });
 
   afterEach(() => {
@@ -119,14 +147,14 @@ describe.skip('Documents', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/documents')
         );
       });
     });
 
     it('should display loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
+      projectApi.list.mockImplementation(() => new Promise(() => {}));
       
       render(
         <MemoryRouter>
@@ -145,14 +173,14 @@ describe.skip('Documents', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(projectApi.list).toHaveBeenCalledTimes(1);
       });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(projectApi.list).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -160,7 +188,7 @@ describe.skip('Documents', () => {
   // 3. 交互测试
   describe('User Interactions', () => {
     it('should upload document', async () => {
-      api.post.mockResolvedValue({ data: { success: true, fileId: 3 } });
+      documentApi.create.mockResolvedValue({ data: { success: true, fileId: 3 } });
 
       render(
         <MemoryRouter>
@@ -180,7 +208,7 @@ describe.skip('Documents', () => {
       fireEvent.change(fileInput, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalled();
+        expect(documentApi.create).toHaveBeenCalled();
       });
     });
 
@@ -199,7 +227,7 @@ describe.skip('Documents', () => {
       fireEvent.change(categoryFilter, { target: { value: '需求文档' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('category=需求文档')
         );
       });
@@ -220,14 +248,14 @@ describe.skip('Documents', () => {
       fireEvent.change(searchInput, { target: { value: '需求' } });
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=需求')
         );
       });
     });
 
     it('should download document', async () => {
-      api.get.mockResolvedValue({ data: new Blob(['content'], { type: 'application/pdf' }) });
+      projectApi.list.mockResolvedValue({ data: new Blob(['content'], { type: 'application/pdf' }) });
 
       render(
         <MemoryRouter>
@@ -243,7 +271,7 @@ describe.skip('Documents', () => {
       fireEvent.click(downloadButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('/documents/1/download')
         );
       });
@@ -269,7 +297,7 @@ describe.skip('Documents', () => {
     });
 
     it('should delete document', async () => {
-      api.delete.mockResolvedValue({ data: { success: true } });
+      documentApi.delete.mockResolvedValue({ data: { success: true } });
       window.confirm = vi.fn(() => true);
 
       render(
@@ -286,12 +314,12 @@ describe.skip('Documents', () => {
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(api.delete).toHaveBeenCalledWith('/documents/1');
+        expect(documentApi.delete).toHaveBeenCalledWith('/documents/1');
       });
     });
 
     it('should share document', async () => {
-      api.post.mockResolvedValue({ data: { success: true, shareLink: 'http://example.com/share' } });
+      documentApi.create.mockResolvedValue({ data: { success: true, shareLink: 'http://example.com/share' } });
 
       render(
         <MemoryRouter>
@@ -312,7 +340,7 @@ describe.skip('Documents', () => {
     });
 
     it('should move document to folder', async () => {
-      api.put.mockResolvedValue({ data: { success: true } });
+      documentApi.update.mockResolvedValue({ data: { success: true } });
 
       render(
         <MemoryRouter>
@@ -347,7 +375,7 @@ describe.skip('Documents', () => {
       fireEvent.click(nextPageButton);
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
+        expect(projectApi.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
       });
@@ -357,7 +385,7 @@ describe.skip('Documents', () => {
   // 4. 错误处理测试
   describe('Error Handling', () => {
     it('should display error message on load failure', async () => {
-      api.get.mockRejectedValue(new Error('Network Error'));
+      projectApi.list.mockRejectedValue(new Error('Network Error'));
 
       render(
         <MemoryRouter>
@@ -371,7 +399,7 @@ describe.skip('Documents', () => {
     });
 
     it('should handle upload failure', async () => {
-      api.post.mockRejectedValue(new Error('Upload Failed'));
+      documentApi.create.mockRejectedValue(new Error('Upload Failed'));
 
       render(
         <MemoryRouter>

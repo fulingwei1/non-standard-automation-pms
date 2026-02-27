@@ -7,16 +7,65 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PurchaseOrderDetail from '../PurchaseOrderDetail';
-import api from '../../services/api';
+import api, { purchaseApi } from '../../services/api';
 
 // Mock API
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    purchaseApi: {
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      orders: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        submit: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        getItems: vi.fn().mockResolvedValue({ data: {} }),
+        createFromBOM: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      requests: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        update: vi.fn().mockResolvedValue({ data: {} }),
+        submit: vi.fn().mockResolvedValue({ data: {} }),
+        approve: vi.fn().mockResolvedValue({ data: {} }),
+        generateOrders: vi.fn().mockResolvedValue({ data: {} }),
+        delete: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      receipts: {
+        list: vi.fn().mockResolvedValue({ data: {} }),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        create: vi.fn().mockResolvedValue({ data: {} }),
+        getItems: vi.fn().mockResolvedValue({ data: {} }),
+        receive: vi.fn().mockResolvedValue({ data: {} }),
+        updateStatus: vi.fn().mockResolvedValue({ data: {} }),
+        inspectItem: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      items: {
+        receive: vi.fn().mockResolvedValue({ data: {} }),
+      },
+      kitRate: {
+        getProject: vi.fn().mockResolvedValue({ data: {} }),
+        getMachine: vi.fn().mockResolvedValue({ data: {} }),
+        getMachineStatus: vi.fn().mockResolvedValue({ data: {} }),
+        getProjectMaterialStatus: vi.fn().mockResolvedValue({ data: {} }),
+        unified: vi.fn().mockResolvedValue({ data: {} }),
+        dashboard: vi.fn().mockResolvedValue({ data: {} }),
+        trend: vi.fn().mockResolvedValue({ data: {} }),
+      },
+    }
 }));
 
 // Mock framer-motion
@@ -107,14 +156,14 @@ describe.skip('PurchaseOrderDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockImplementation((url) => {
+    purchaseApi.orders.get.mockImplementation((url) => {
       if (url.includes('/purchase-orders/1')) {
         return Promise.resolve({ data: mockOrder });
       }
       return Promise.resolve({ data: {} });
     });
 
-    api.put.mockResolvedValue({ data: { success: true } });
+    purchaseApi.update.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -180,12 +229,12 @@ describe.skip('PurchaseOrderDetail', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/purchase-orders/1'));
+        expect(purchaseApi.orders.get).toHaveBeenCalledWith(expect.stringContaining('/purchase-orders/1'));
       });
     });
 
     it('should handle API error', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to load order'));
+      purchaseApi.orders.get.mockRejectedValueOnce(new Error('Failed to load order'));
 
       render(
         <MemoryRouter initialEntries={['/purchase-orders/1']}>
@@ -202,7 +251,7 @@ describe.skip('PurchaseOrderDetail', () => {
     });
 
     it('should handle order not found', async () => {
-      api.get.mockResolvedValueOnce({ data: null });
+      purchaseApi.orders.get.mockResolvedValueOnce({ data: null });
 
       render(
         <MemoryRouter initialEntries={['/purchase-orders/1']}>
@@ -398,7 +447,7 @@ describe.skip('PurchaseOrderDetail', () => {
         fireEvent.click(receiveButton);
         
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(purchaseApi.update).toHaveBeenCalled();
         });
       }
     });

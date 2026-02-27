@@ -48,11 +48,11 @@ def list_ai_clarifications(
         query = query.filter(AIClarification.source_id == source_id)
 
     total = query.count()
-    clarifications = query.order_by(
+    clarifications = apply_pagination(query.order_by(
         desc(AIClarification.source_type),
         desc(AIClarification.source_id),
         desc(AIClarification.round)
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     items = []
     for clarification in clarifications:

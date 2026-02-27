@@ -48,6 +48,7 @@ import {
 "../components/ui";
 import { cn } from "../lib/utils";
 import { opportunityApi, customerApi, userApi, presaleApi } from "../services/api";
+import { formatDateTime } from "@/lib/formatters";
 
 // 商机阶段配置
 const stageConfig = {
@@ -85,16 +86,6 @@ const stageConfig = {
   }
 };
 
-const formatDateTime = (dateStr) => {
-  if (!dateStr) {return "-";}
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-};
 
 const isGatePassed = (status) => {
   const normalized = String(status || "").toUpperCase();

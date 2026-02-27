@@ -7,16 +7,99 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProjectDetail from '../ProjectDetail';
-import api from '../../services/api';
+import api, { projectApi, machineApi, stageApi, milestoneApi, memberApi, costApi, documentApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  }
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
+    projectApi: {
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      getMachines: vi.fn().mockResolvedValue({ data: {} }),
+      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
+      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
+      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
+      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
+      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
+      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      clearCache: vi.fn().mockResolvedValue({ data: {} }),
+      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
+      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
+      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
+      getStats: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    machineApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      updateProgress: vi.fn().mockResolvedValue({ data: {} }),
+      getBom: vi.fn().mockResolvedValue({ data: {} }),
+      getServiceHistory: vi.fn().mockResolvedValue({ data: {} }),
+      getSummary: vi.fn().mockResolvedValue({ data: {} }),
+      recalculate: vi.fn().mockResolvedValue({ data: {} }),
+      uploadDocument: vi.fn().mockResolvedValue({ data: {} }),
+      getDocuments: vi.fn().mockResolvedValue({ data: {} }),
+      downloadDocument: vi.fn().mockResolvedValue({ data: {} }),
+      getDocumentVersions: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    stageApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      statuses: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    milestoneApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      complete: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    memberApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      add: vi.fn().mockResolvedValue({ data: {} }),
+      remove: vi.fn().mockResolvedValue({ data: {} }),
+      batchAdd: vi.fn().mockResolvedValue({ data: {} }),
+      checkConflicts: vi.fn().mockResolvedValue({ data: {} }),
+      getDeptUsers: vi.fn().mockResolvedValue({ data: {} }),
+      notifyDeptManager: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    costApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      getProjectCosts: vi.fn().mockResolvedValue({ data: {} }),
+      getProjectSummary: vi.fn().mockResolvedValue({ data: {} }),
+      getCostAnalysis: vi.fn().mockResolvedValue({ data: {} }),
+      getRevenueDetail: vi.fn().mockResolvedValue({ data: {} }),
+      getProfitAnalysis: vi.fn().mockResolvedValue({ data: {} }),
+      calculateLaborCost: vi.fn().mockResolvedValue({ data: {} }),
+      getBudgetExecution: vi.fn().mockResolvedValue({ data: {} }),
+      getBudgetTrend: vi.fn().mockResolvedValue({ data: {} }),
+      generateCostReview: vi.fn().mockResolvedValue({ data: {} }),
+      checkBudgetAlert: vi.fn().mockResolvedValue({ data: {} }),
+      allocateCost: vi.fn().mockResolvedValue({ data: {} }),
+    },
+    documentApi: {
+      list: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({ data: {} }),
+    }
 }));
 
 vi.mock('framer-motion', () => ({
@@ -123,7 +206,7 @@ describe.skip('ProjectDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    api.get.mockImplementation((url) => {
+    projectApi.get.mockImplementation((url) => {
       if (url.includes('/projects/1')) {
         return Promise.resolve({ data: mockProject });
       }
@@ -133,7 +216,7 @@ describe.skip('ProjectDetail', () => {
       return Promise.resolve({ data: {} });
     });
 
-    api.put.mockResolvedValue({ data: { success: true } });
+    projectApi.update.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -212,7 +295,7 @@ describe.skip('ProjectDetail', () => {
       );
 
       await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/projects/1'));
+        expect(projectApi.get).toHaveBeenCalledWith(expect.stringContaining('/projects/1'));
       });
     });
 
@@ -230,7 +313,7 @@ describe.skip('ProjectDetail', () => {
     });
 
     it('should handle API error', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to load project'));
+      projectApi.get.mockRejectedValueOnce(new Error('Failed to load project'));
 
       render(
         <MemoryRouter initialEntries={['/projects/1']}>
@@ -247,7 +330,7 @@ describe.skip('ProjectDetail', () => {
     });
 
     it('should handle project not found', async () => {
-      api.get.mockResolvedValueOnce({ data: null });
+      projectApi.get.mockResolvedValueOnce({ data: null });
 
       render(
         <MemoryRouter initialEntries={['/projects/1']}>
@@ -556,7 +639,7 @@ describe.skip('ProjectDetail', () => {
         fireEvent.click(statusButton);
         
         await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
+          expect(projectApi.update).toHaveBeenCalled();
         });
       }
     });

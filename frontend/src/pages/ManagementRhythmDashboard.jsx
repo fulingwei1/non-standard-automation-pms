@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { managementRhythmApi } from "../services/api";
@@ -87,16 +88,6 @@ export default function ManagementRhythmDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
   };
 
   const calculateDaysUntil = (dateStr) => {

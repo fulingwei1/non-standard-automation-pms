@@ -10,26 +10,6 @@ import OpportunityManagement from '../OpportunityManagement';
 import { opportunityApi, customerApi, userApi, _presaleApi } from '../../services/api';
 
 // Mock dependencies
-vi.mock('../../services/api', () => ({
-  opportunityApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    updateStage: vi.fn(),
-  },
-  customerApi: {
-    list: vi.fn(),
-  },
-  userApi: {
-    list: vi.fn(),
-  },
-  presaleApi: {
-    list: vi.fn(),
-  }
-}));
-
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {

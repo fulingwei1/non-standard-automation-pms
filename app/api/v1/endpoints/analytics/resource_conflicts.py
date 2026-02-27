@@ -143,10 +143,10 @@ def get_all_conflicts(
         query = query.filter(ResourceConflict.severity == severity)
 
     total = query.count()
-    conflicts = query.order_by(
+    conflicts = apply_pagination(query.order_by(
         ResourceConflict.severity.desc(),
         ResourceConflict.overlap_start,
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     result = [_format_conflict(db, c) for c in conflicts]
 

@@ -3,80 +3,87 @@ import { api } from "./client.js";
 
 
 export const shortageApi = {
-  // 缺料上报
+  // 缺料上报 - /shortage/handling/reports
   reports: {
-    list: (params) => api.get("/shortage/reports", { params }),
-    get: (id) => api.get(`/shortage/reports/${id}`),
-    create: (data) => api.post("/shortage/reports", data),
-    confirm: (id) => api.put(`/shortage/reports/${id}/confirm`),
-    handle: (id, data) => api.put(`/shortage/reports/${id}/handle`, data),
-    resolve: (id) => api.put(`/shortage/reports/${id}/resolve`),
+    list: (params) => api.get("/shortage/handling/reports", { params }),
+    get: (id) => api.get(`/shortage/handling/reports/${id}`),
+    create: (data) => api.post("/shortage/handling/reports", data),
+    confirm: (id) => api.put(`/shortage/handling/reports/${id}/confirm`),
+    handle: (id, data) => api.put(`/shortage/handling/reports/${id}/handle`, data),
+    resolve: (id) => api.put(`/shortage/handling/reports/${id}/resolve`),
+    reject: (id, reason) => api.put(`/shortage/handling/reports/${id}/reject`, { reason }),
   },
-  // 到货跟踪
+  // 到货跟踪 - /shortage/handling/arrivals
   arrivals: {
-    list: (params) => api.get("/shortage/arrivals", { params }),
-    get: (id) => api.get(`/shortage/arrivals/${id}`),
-    create: (data) => api.post("/shortage/arrivals", data),
+    list: (params) => api.get("/shortage/handling/arrivals", { params }),
+    get: (id) => api.get(`/shortage/handling/arrivals/${id}`),
+    create: (data) => api.post("/shortage/handling/arrivals", data),
     updateStatus: (id, status) =>
-      api.put(`/shortage/arrivals/${id}/status`, { status }),
+      api.put(`/shortage/handling/arrivals/${id}/status`, { status }),
     createFollowUp: (id, data) =>
-      api.post(`/shortage/arrivals/${id}/follow-up`, data),
+      api.post(`/shortage/handling/arrivals/${id}/follow-up`, data),
     getFollowUps: (id, params) =>
-      api.get(`/shortage/arrivals/${id}/follow-ups`, { params }),
+      api.get(`/shortage/handling/arrivals/${id}/follow-ups`, { params }),
     receive: (id, receivedQty) =>
-      api.post(`/shortage/arrivals/${id}/receive`, {
+      api.post(`/shortage/handling/arrivals/${id}/receive`, {
         received_qty: receivedQty,
       }),
-    getDelayed: (params) => api.get("/shortage/arrivals/delayed", { params }),
+    getDelayed: (params) => api.get("/shortage/handling/arrivals/delayed", { params }),
   },
-  // 物料替代
+  // 物料替代 - /shortage/handling/substitutions
   substitutions: {
-    list: (params) => api.get("/shortage/substitutions", { params }),
-    get: (id) => api.get(`/shortage/substitutions/${id}`),
-    create: (data) => api.post("/shortage/substitutions", data),
+    list: (params) => api.get("/shortage/handling/substitutions", { params }),
+    get: (id) => api.get(`/shortage/handling/substitutions/${id}`),
+    create: (data) => api.post("/shortage/handling/substitutions", data),
     techApprove: (id, approved, note) =>
-      api.put(`/shortage/substitutions/${id}/tech-approve`, {
+      api.put(`/shortage/handling/substitutions/${id}/tech-approve`, {
         approved,
         approval_note: note,
       }),
     prodApprove: (id, approved, note) =>
-      api.put(`/shortage/substitutions/${id}/prod-approve`, {
+      api.put(`/shortage/handling/substitutions/${id}/prod-approve`, {
         approved,
         approval_note: note,
       }),
     execute: (id, note) =>
-      api.put(`/shortage/substitutions/${id}/execute`, {
+      api.put(`/shortage/handling/substitutions/${id}/execute`, {
         execution_note: note,
       }),
   },
-  // 物料调拨
+  // 物料调拨 - /shortage/handling/transfers
   transfers: {
-    list: (params) => api.get("/shortage/transfers", { params }),
-    get: (id) => api.get(`/shortage/transfers/${id}`),
-    create: (data) => api.post("/shortage/transfers", data),
+    list: (params) => api.get("/shortage/handling/transfers", { params }),
+    get: (id) => api.get(`/shortage/handling/transfers/${id}`),
+    create: (data) => api.post("/shortage/handling/transfers", data),
     approve: (id, approved, note) =>
-      api.put(`/shortage/transfers/${id}/approve`, {
+      api.put(`/shortage/handling/transfers/${id}/approve`, {
         approved,
         approval_note: note,
       }),
     execute: (id, actualQty, note) =>
-      api.put(`/shortage/transfers/${id}/execute`, {
+      api.put(`/shortage/handling/transfers/${id}/execute`, {
         actual_qty: actualQty,
         execution_note: note,
       }),
   },
-  // 统计分析
+  // 统计分析 - /shortage/analytics/...
   statistics: {
-    dashboard: () => api.get("/shortage/dashboard"),
+    dashboard: () => api.get("/shortage/analytics/overview"),
+    causeAnalysis: (params) =>
+      api.get("/shortage/analytics/cause-analysis", { params }),
+    kitRate: (params) =>
+      api.get("/shortage/analytics/kit-rate", { params }),
     supplierDelivery: (params) =>
-      api.get("/shortage/supplier-delivery", { params }),
+      api.get("/shortage/analytics/supplier-delivery", { params }),
     dailyReport: (date) =>
-      api.get("/shortage/daily-report", { params: { report_date: date } }),
-    latestDailyReport: () => api.get("/shortage/daily-report/latest"),
+      api.get("/shortage/analytics/daily-report", { params: { report_date: date } }),
+    latestDailyReport: () => api.get("/shortage/analytics/daily-report/latest"),
     dailyReportByDate: (date) =>
-      api.get("/shortage/daily-report/by-date", {
+      api.get("/shortage/analytics/daily-report/by-date", {
         params: { report_date: date },
       }),
+    trends: (params) =>
+      api.get("/shortage/analytics/trends", { params }),
   },
 };
 
@@ -193,11 +200,17 @@ export const materialDemandApi = {
 };
 
 export const shortageAlertApi = {
-  list: (params) => api.get("/shortage-alerts", { params }),
-  get: (id) => api.get(`/shortage-alerts/${id}`),
-  acknowledge: (id) => api.put(`/shortage-alerts/${id}/acknowledge`),
-  resolve: (id, data) => api.put(`/shortage-alerts/${id}/resolve`, data),
-  getSummary: (params) => api.get("/shortage-alerts/summary", { params }),
+  // 缺料预警检测 - /shortage/detection/alerts
+  list: (params) => api.get("/shortage/detection/alerts", { params }),
+  get: (id) => api.get(`/shortage/detection/alerts/${id}`),
+  acknowledge: (id) => api.put(`/shortage/detection/alerts/${id}/acknowledge`),
+  update: (id, data) => api.patch(`/shortage/detection/alerts/${id}`, data),
+  resolve: (id, data) => api.post(`/shortage/detection/alerts/${id}/resolve`, data),
+  getFollowUps: (id) => api.get(`/shortage/detection/alerts/${id}/follow-ups`),
+  addFollowUp: (id, data) => api.post(`/shortage/detection/alerts/${id}/follow-ups`, data),
+  // 库存预警监控
+  inventoryWarnings: (params) => api.get("/shortage/detection/inventory-warnings", { params }),
+  checkInventory: (data) => api.post("/shortage/detection/inventory-warnings/check", data),
 };
 
 export const bomApi = {

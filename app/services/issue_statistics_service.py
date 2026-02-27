@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 问题统计服务
+
+基于 SyncStatisticsService 重构，消除手动逐状态查询的重复代码。
+保留所有原有函数签名以确保向后兼容。
 """
 
 from datetime import date, datetime
@@ -9,18 +12,41 @@ from typing import Dict
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue, IssueStatisticsSnapshot
+from app.services.statistics.base import SyncStatisticsService
 
+
+class IssueStatistics(SyncStatisticsService):
+    """基于 SyncStatisticsService 的问题统计"""
+
+    model = Issue
+    default_status_field = "status"
+    default_exclude_statuses = ["DELETED"]
+
+    def get_status_distribution(self) -> Dict[str, int]:
+        return self.count_by_field("status")
+
+    def get_severity_distribution(self) -> Dict[str, int]:
+        return self.count_by_field("severity")
+
+    def get_priority_distribution(self) -> Dict[str, int]:
+        return self.count_by_field("priority")
+
+    def get_type_distribution(self) -> Dict[str, int]:
+        return self.count_by_field("issue_type")
+
+    def get_category_distribution(self) -> Dict[str, int]:
+        return self.count_by_field("category")
+
+
+# ---------------------------------------------------------------------------
+# 向后兼容的函数接口（保持原有调用方不变）
+# ---------------------------------------------------------------------------
 
 def check_existing_snapshot(
     db: Session,
     snapshot_date: date
 ) -> bool:
-    """
-    检查指定日期是否已存在快照
-
-    Returns:
-        bool: 如果快照已存在返回True
-    """
+    """检查指定日期是否已存在快照"""
     existing = db.query(IssueStatisticsSnapshot).filter(
         IssueStatisticsSnapshot.snapshot_date == snapshot_date
     ).first()
@@ -28,99 +54,52 @@ def check_existing_snapshot(
 
 
 def count_issues_by_status(db: Session) -> Dict[str, int]:
-    """
-    统计各状态问题数量
-
-    Returns:
-        Dict[str, int]: 状态统计字典
-    """
+    """统计各状态问题数量"""
+    svc = IssueStatistics(db)
+    dist = svc.get_status_distribution()
+    total = svc.count_total()
     return {
-        'total': db.query(Issue).filter(Issue.status != 'DELETED').count(),
-        'open': db.query(Issue).filter(Issue.status == 'OPEN').count(),
-        'processing': db.query(Issue).filter(Issue.status == 'PROCESSING').count(),
-        'resolved': db.query(Issue).filter(Issue.status == 'RESOLVED').count(),
-        'closed': db.query(Issue).filter(Issue.status == 'CLOSED').count(),
-        'cancelled': db.query(Issue).filter(Issue.status == 'CANCELLED').count(),
-        'deferred': db.query(Issue).filter(Issue.status == 'DEFERRED').count(),
+        'total': total,
+        'open': dist.get('OPEN', 0),
+        'processing': dist.get('PROCESSING', 0),
+        'resolved': dist.get('RESOLVED', 0),
+        'closed': dist.get('CLOSED', 0),
+        'cancelled': dist.get('CANCELLED', 0),
+        'deferred': dist.get('DEFERRED', 0),
     }
 
 
 def count_issues_by_severity(db: Session) -> Dict[str, int]:
-    """
-    统计严重程度问题数量
-
-    Returns:
-        Dict[str, int]: 严重程度统计字典
-    """
-    base_filter = Issue.status != 'DELETED'
-
+    """统计严重程度问题数量"""
+    svc = IssueStatistics(db)
+    dist = svc.get_severity_distribution()
     return {
-        'critical': db.query(Issue).filter(
-            Issue.severity == 'CRITICAL',
-            base_filter
-        ).count(),
-        'major': db.query(Issue).filter(
-            Issue.severity == 'MAJOR',
-            base_filter
-        ).count(),
-        'minor': db.query(Issue).filter(
-            Issue.severity == 'MINOR',
-            base_filter
-        ).count(),
+        'critical': dist.get('CRITICAL', 0),
+        'major': dist.get('MAJOR', 0),
+        'minor': dist.get('MINOR', 0),
     }
 
 
 def count_issues_by_priority(db: Session) -> Dict[str, int]:
-    """
-    统计优先级问题数量
-
-    Returns:
-        Dict[str, int]: 优先级统计字典
-    """
-    base_filter = Issue.status != 'DELETED'
-
+    """统计优先级问题数量"""
+    svc = IssueStatistics(db)
+    dist = svc.get_priority_distribution()
     return {
-        'urgent': db.query(Issue).filter(
-            Issue.priority == 'URGENT',
-            base_filter
-        ).count(),
-        'high': db.query(Issue).filter(
-            Issue.priority == 'HIGH',
-            base_filter
-        ).count(),
-        'medium': db.query(Issue).filter(
-            Issue.priority == 'MEDIUM',
-            base_filter
-        ).count(),
-        'low': db.query(Issue).filter(
-            Issue.priority == 'LOW',
-            base_filter
-        ).count(),
+        'urgent': dist.get('URGENT', 0),
+        'high': dist.get('HIGH', 0),
+        'medium': dist.get('MEDIUM', 0),
+        'low': dist.get('LOW', 0),
     }
 
 
 def count_issues_by_type(db: Session) -> Dict[str, int]:
-    """
-    统计类型问题数量
-
-    Returns:
-        Dict[str, int]: 类型统计字典
-    """
-    base_filter = Issue.status != 'DELETED'
-
+    """统计类型问题数量"""
+    svc = IssueStatistics(db)
+    dist = svc.get_type_distribution()
     return {
-        'defect': db.query(Issue).filter(
-            Issue.issue_type == 'DEFECT',
-            base_filter
-        ).count(),
-        'risk': db.query(Issue).filter(
-            Issue.issue_type == 'RISK',
-            base_filter
-        ).count(),
-        'blocker': db.query(Issue).filter(
-            Issue.issue_type == 'BLOCKER',
-            base_filter
-        ).count(),
+        'defect': dist.get('DEFECT', 0),
+        'risk': dist.get('RISK', 0),
+        'blocker': dist.get('BLOCKER', 0),
     }
 
 
@@ -128,12 +107,7 @@ def count_blocking_and_overdue_issues(
     db: Session,
     today: date
 ) -> Dict[str, int]:
-    """
-    统计阻塞和逾期问题数量
-
-    Returns:
-        Dict[str, int]: 阻塞和逾期统计字典
-    """
+    """统计阻塞和逾期问题数量"""
     blocking_count = db.query(Issue).filter(
         Issue.is_blocking,
         Issue.status.in_(['OPEN', 'PROCESSING'])
@@ -152,37 +126,18 @@ def count_blocking_and_overdue_issues(
 
 
 def count_issues_by_category(db: Session) -> Dict[str, int]:
-    """
-    统计分类问题数量
-
-    Returns:
-        Dict[str, int]: 分类统计字典
-    """
-    base_filter = Issue.status != 'DELETED'
-
+    """统计分类问题数量"""
+    svc = IssueStatistics(db)
+    dist = svc.get_category_distribution()
     return {
-        'project': db.query(Issue).filter(
-            Issue.category == 'PROJECT',
-            base_filter
-        ).count(),
-        'task': db.query(Issue).filter(
-            Issue.category == 'TASK',
-            base_filter
-        ).count(),
-        'acceptance': db.query(Issue).filter(
-            Issue.category == 'ACCEPTANCE',
-            base_filter
-        ).count(),
+        'project': dist.get('PROJECT', 0),
+        'task': dist.get('TASK', 0),
+        'acceptance': dist.get('ACCEPTANCE', 0),
     }
 
 
 def count_today_issues(db: Session, today: date) -> Dict[str, int]:
-    """
-    统计今日新增/解决/关闭问题数量
-
-    Returns:
-        Dict[str, int]: 今日统计字典
-    """
+    """统计今日新增/解决/关闭问题数量"""
     today_start = datetime.combine(today, datetime.min.time())
 
     new_today = db.query(Issue).filter(
@@ -208,12 +163,7 @@ def count_today_issues(db: Session, today: date) -> Dict[str, int]:
 
 
 def calculate_avg_resolve_time(db: Session) -> float:
-    """
-    计算平均处理时间（小时）
-
-    Returns:
-        float: 平均处理时间（小时）
-    """
+    """计算平均处理时间（小时）"""
     resolved_issues = db.query(Issue).filter(
         Issue.status.in_(['RESOLVED', 'CLOSED']),
         Issue.resolved_at.isnot(None),
@@ -227,7 +177,7 @@ def calculate_avg_resolve_time(db: Session) -> float:
     for issue in resolved_issues:
         if issue.resolved_at and issue.report_date:
             delta = issue.resolved_at - issue.report_date
-            resolve_times.append(delta.total_seconds() / 3600)  # 转换为小时
+            resolve_times.append(delta.total_seconds() / 3600)
 
     return sum(resolve_times) / len(resolve_times) if resolve_times else 0.0
 
@@ -238,12 +188,7 @@ def build_distribution_data(
     priority_counts: Dict[str, int],
     category_counts: Dict[str, int]
 ) -> Dict[str, Dict[str, int]]:
-    """
-    构建分布数据字典
-
-    Returns:
-        Dict[str, Dict[str, int]]: 分布数据字典
-    """
+    """构建分布数据字典"""
     return {
         'status': {
             'OPEN': status_counts['open'],
@@ -285,12 +230,7 @@ def create_snapshot_record(
     avg_resolve_time: float,
     distributions: Dict[str, Dict[str, int]]
 ) -> IssueStatisticsSnapshot:
-    """
-    创建快照记录
-
-    Returns:
-        IssueStatisticsSnapshot: 快照对象
-    """
+    """创建快照记录"""
     import json
 
     snapshot = IssueStatisticsSnapshot(

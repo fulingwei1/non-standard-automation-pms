@@ -13,6 +13,7 @@ import {
   DialogTitle } from
 "../components/ui";
 import {
+import { formatDate } from "@/lib/formatters";
   Plus,
   Edit,
   Calendar,
@@ -114,15 +115,6 @@ export default function StrategicMeetingManagement() {
     setSearchParams(params);
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-  };
 
   const formatTime = (timeStr) => {
     if (!timeStr) {return "";}

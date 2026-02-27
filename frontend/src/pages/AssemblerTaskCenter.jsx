@@ -7,7 +7,7 @@
  * 4. 装配图纸查看
  * 5. 任务完成确认（含工时填报）
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Wrench,
@@ -18,6 +18,7 @@ import {
   PlayCircle,
   PauseCircle,
 } from "lucide-react";
+import { taskCenterApi } from "../services/api";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -35,6 +36,7 @@ import AssemblyTaskCard from "../components/production/assembler/AssemblyTaskCar
 
 export default function AssemblerTaskCenter() {
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [shortageDialog, setShortageDialog] = useState({
     open: false,
@@ -54,6 +56,27 @@ export default function AssemblerTaskCenter() {
     open: false,
     task: null
   });
+
+  // 加载任务数据
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await taskCenterApi.getMyTasks({
+        task_type: "assembly",
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      });
+      const data = res.data;
+      setTasks(data?.items || data || []);
+    } catch (_err) {
+      console.error("Failed to fetch assembly tasks:", _err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const filteredTasks = tasks.filter((task) => {
     if (statusFilter === "all") {return true;}
@@ -86,29 +109,43 @@ export default function AssemblerTaskCenter() {
         setCompleteDialog({ open: true, task });
         break;
       case "start":
-        setTasks((prev) =>
-        prev.map((t) =>
-        t.id === task.id ? { ...t, status: "in_progress" } : t
-        )
-        );
+        taskCenterApi.updateTask(task.id, { status: "in_progress" }).then(() => {
+          fetchTasks();
+        }).catch(() => {
+          // fallback to local state
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === task.id ? { ...t, status: "in_progress" } : t
+            )
+          );
+        });
         break;
     }
   };
 
-  const handleComplete = (taskId, hours) => {
-    setTasks((prev) =>
-    prev.map((t) =>
-    t.id === taskId ?
-    {
-      ...t,
-      status: "completed",
-      actualHours: hours,
-      progress: 100,
-      completedDate: new Date().toISOString().split("T")[0]
-    } :
-    t
-    )
-    );
+  const handleComplete = async (taskId, hours) => {
+    try {
+      await taskCenterApi.completeTask(taskId);
+      if (hours) {
+        await taskCenterApi.updateTask(taskId, { actual_hours: hours });
+      }
+      fetchTasks();
+    } catch (_err) {
+      // fallback to local state
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                status: "completed",
+                actualHours: hours,
+                progress: 100,
+                completedDate: new Date().toISOString().split("T")[0],
+              }
+            : t
+        )
+      );
+    }
   };
 
   return (

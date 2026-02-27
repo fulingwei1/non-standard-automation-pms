@@ -92,10 +92,10 @@ async def get_scheduling_suggestions(
         query = query.filter(SchedulingSuggestion.project_id == project_id)
 
     total = query.count()
-    suggestions = query.order_by(
+    suggestions = apply_pagination(query.order_by(
         SchedulingSuggestion.priority_score.desc(),
         SchedulingSuggestion.created_at.desc()
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     result = []
     for s in suggestions:

@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Sales API', () => {
   let api, mock;
@@ -19,10 +19,9 @@ describe('Sales API', () => {
   let healthApi, priorityApi;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
     
     const salesModule = await import('../sales.js');
     leadApi = salesModule.leadApi;
@@ -38,14 +37,11 @@ describe('Sales API', () => {
     healthApi = salesModule.healthApi;
     priorityApi = salesModule.priorityApi;
     
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('leadApi - 线索API', () => {

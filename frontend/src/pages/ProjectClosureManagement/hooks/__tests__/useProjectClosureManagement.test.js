@@ -9,19 +9,20 @@ vi.mock('react-router-dom', () => ({
     useNavigate: vi.fn()
 }));
 
-vi.mock('../../../../services/api', () => ({
-    projectApi: {
-        get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-        list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } })
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
     },
-    pmoApi: {
-        closures: {
-            get: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-            create: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-            review: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }),
-            updateLessons: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
-    }
-}));
+  };
+});
 
 describe('useProjectClosureManagement Hook', () => {
     const mockNavigate = vi.fn().mockResolvedValue({ data: { items: [], total: 0 } });

@@ -3,6 +3,7 @@
  * 核心入口页面，展示检验任务、质量问题、验收任务等
  */
 import React, { useState, useEffect } from "react";
+import { qualityApi } from "../../services/api/quality";
 import { motion } from "framer-motion";
 import {
   CheckCircle,
@@ -320,71 +321,37 @@ export default function QualityWorkstation() {
   const [acceptanceTasks, setAcceptanceTasks] = useState([]);
 
   useEffect(() => {
-    // TODO: 从 API 加载数据
-    // 模拟数据
-    setTimeout(() => {
-      setStats({
-        pendingInspection: 12,
-        todayInspection: 5,
-        openIssues: 3,
-        criticalIssues: 1,
-        pendingAcceptance: 2,
-        weekAcceptance: 4,
-        passRate: 98.5,
-        passRateTrend: "+0.5%",
-      });
-      setInspectionTasks([
-        {
-          inspectionNo: "INS-2026-0156",
-          materialName: "伺服电机",
-          projectCode: "PJ250108001",
-          priority: "high",
-          dueDate: "2026-01-22",
-          inspector: "张工",
-        },
-        {
-          inspectionNo: "INS-2026-0157",
-          materialName: "控制器",
-          projectCode: "PJ250115002",
-          priority: "medium",
-          dueDate: "2026-01-23",
-          inspector: "李工",
-        },
-      ]);
-      setQualityIssues([
-        {
-          issueNo: "QI-2026-0023",
-          level: "major",
-          description: "尺寸超差: 主框架孔距",
-          daysOpen: 3,
-          responsible: "王工",
-        },
-        {
-          issueNo: "QI-2026-0024",
-          level: "minor",
-          description: "表面划痕: 外壳面板",
-          daysOpen: 1,
-          responsible: "张工",
-        },
-      ]);
-      setAcceptanceTasks([
-        {
-          projectName: "BMS老化测试设备",
-          projectCode: "PJ250108001",
-          type: "FAT",
-          scheduledDate: "2026-01-25",
-          customer: "客户A",
-        },
-        {
-          projectName: "FCT测试治具",
-          projectCode: "PJ250120003",
-          type: "SAT",
-          scheduledDate: "2026-01-28",
-          customer: "客户B",
-        },
-      ]);
-      setLoading(false);
-    }, 500);
+    const loadData = async () => {
+      try {
+        const [statsRes, inspectionRes, alertsRes] = await Promise.all([
+          qualityApi.statistics(),
+          qualityApi.inspection.list({ status: 'pending' }),
+          qualityApi.alerts.list({ status: 'open' }),
+        ]);
+        const statsData = statsRes.data || statsRes;
+        setStats({
+          pendingInspection: statsData.pendingInspection ?? 0,
+          todayInspection: statsData.todayInspection ?? 0,
+          openIssues: statsData.openIssues ?? 0,
+          criticalIssues: statsData.criticalIssues ?? 0,
+          pendingAcceptance: statsData.pendingAcceptance ?? 0,
+          weekAcceptance: statsData.weekAcceptance ?? 0,
+          passRate: statsData.passRate ?? 0,
+          passRateTrend: statsData.passRateTrend ?? "",
+        });
+        const inspectionItems = inspectionRes.data?.items || inspectionRes.data || [];
+        setInspectionTasks(Array.isArray(inspectionItems) ? inspectionItems : []);
+        const alertItems = alertsRes.data?.items || alertsRes.data || [];
+        setQualityIssues(Array.isArray(alertItems) ? alertItems : []);
+        // acceptanceTasks - use inspection list with acceptance type if available
+        setAcceptanceTasks([]);
+      } catch (err) {
+        console.error('Failed to load quality workstation data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   return (

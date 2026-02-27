@@ -54,10 +54,10 @@ def read_knowledge_base(
 
     # 精选优先，然后按浏览量排序
     total = query.count()
-    items = query.order_by(
+    items = apply_pagination(query.order_by(
         desc(KnowledgeBase.is_featured),
         desc(KnowledgeBase.view_count)
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    ), pagination.offset, pagination.limit).all()
 
     # 获取作者姓名
     for item in items:

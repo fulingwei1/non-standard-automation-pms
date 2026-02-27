@@ -13,61 +13,16 @@ import { ServiceCharts } from "../components/service-analytics/ServiceCharts";
 import { ServicePerformance } from "../components/service-analytics/ServicePerformance";
 import { ServiceTrends } from "../components/service-analytics/ServiceTrends";
 
-// Mock data for fallback
-const _mockData = {
-  ticketTrends: [
-    { month: "2025-10", count: 12, resolved: 10 },
-    { month: "2025-11", count: 15, resolved: 13 },
-    { month: "2025-12", count: 18, resolved: 16 },
-    { month: "2026-01", count: 14, resolved: 12 }
-  ],
-
-  serviceTypeDistribution: [
-    { type: "安装调试", count: 35, percentage: 39.3 },
-    { type: "操作培训", count: 28, percentage: 31.5 },
-    { type: "定期维护", count: 18, percentage: 20.2 },
-    { type: "故障维修", count: 8, percentage: 9.0 }
-  ],
-
-  problemTypeDistribution: [
-    { type: "软件问题", count: 45, percentage: 28.8 },
-    { type: "机械问题", count: 38, percentage: 24.4 },
-    { type: "电气问题", count: 32, percentage: 20.5 },
-    { type: "操作问题", count: 28, percentage: 17.9 },
-    { type: "其他", count: 13, percentage: 8.3 }
-  ],
-
-  satisfactionTrends: [
-    { month: "2025-10", score: 4.1 },
-    { month: "2025-11", score: 4.2 },
-    { month: "2025-12", score: 4.4 },
-    { month: "2026-01", score: 4.3 }
-  ],
-
-  responseTimeDistribution: [
-    { range: "0-2小时", count: 68, percentage: 43.6 },
-    { range: "2-4小时", count: 45, percentage: 28.8 },
-    { range: "4-8小时", count: 28, percentage: 17.9 },
-    { range: "8-24小时", count: 12, percentage: 7.7 },
-    { range: ">24小时", count: 3, percentage: 1.9 }
-  ],
-
-  topCustomers: [
-    { customer: "东莞XX电子", tickets: 23, satisfaction: 4.5 },
-    { customer: "惠州XX电池", tickets: 18, satisfaction: 4.2 },
-    { customer: "深圳XX科技", tickets: 15, satisfaction: 4.6 },
-    { customer: "广州XX制造", tickets: 12, satisfaction: 4.0 }
-  ],
-
-  engineerPerformance: [
-    { engineer: "张工程师", tickets: 45, avgTime: 6.5, satisfaction: 4.5 },
-    { engineer: "王工程师", tickets: 38, avgTime: 7.2, satisfaction: 4.3 },
-    { engineer: "李工程师", tickets: 32, avgTime: 8.1, satisfaction: 4.2 },
-    { engineer: "当前用户", tickets: 41, avgTime: 6.8, satisfaction: 4.4 }
-  ]
+// Empty fallback data (no mock)
+const emptyFallback = {
+  ticketTrends: [],
+  serviceTypeDistribution: [],
+  problemTypeDistribution: [],
+  satisfactionTrends: [],
+  responseTimeDistribution: [],
+  topCustomers: [],
+  engineerPerformance: []
 };
-
-const mockAnalytics = _mockData;
 
 export default function ServiceAnalytics() {
   const [analytics, setAnalytics] = useState(null);
@@ -387,31 +342,31 @@ export default function ServiceAnalytics() {
         ticketTrends:
           ticketTrendsArray.length > 0
             ? ticketTrendsArray
-            : mockAnalytics.ticketTrends,
+            : emptyFallback.ticketTrends,
         serviceTypeDistribution:
           serviceTypeDistribution.length > 0
             ? serviceTypeDistribution
-            : mockAnalytics.serviceTypeDistribution,
+            : emptyFallback.serviceTypeDistribution,
         problemTypeDistribution:
           problemTypeDistribution.length > 0
             ? problemTypeDistribution
-            : mockAnalytics.problemTypeDistribution,
+            : emptyFallback.problemTypeDistribution,
         satisfactionTrends:
           satisfactionTrendsArray.length > 0
             ? satisfactionTrendsArray
-            : mockAnalytics.satisfactionTrends,
+            : emptyFallback.satisfactionTrends,
         responseTimeDistribution:
           responseTimeDistribution.length > 0
             ? responseTimeDistribution
-            : mockAnalytics.responseTimeDistribution,
+            : emptyFallback.responseTimeDistribution,
         topCustomers:
           topCustomersArray.length > 0
             ? topCustomersArray
-            : mockAnalytics.topCustomers,
+            : emptyFallback.topCustomers,
         engineerPerformance:
           engineerPerformanceArray.length > 0
             ? engineerPerformanceArray
-            : mockAnalytics.engineerPerformance
+            : emptyFallback.engineerPerformance
       };
 
       setAnalytics(analyticsData);

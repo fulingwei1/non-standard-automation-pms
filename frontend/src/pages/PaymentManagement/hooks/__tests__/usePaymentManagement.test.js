@@ -3,10 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePaymentManagement } from '../usePaymentManagement';
 import { paymentApi, receivableApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', () => ({
-    paymentApi: { list: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getReminders: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }), getStatistics: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) },
-    receivableApi: { getAging: vi.fn().mockResolvedValue({ data: { items: [], total: 0 } }) }
-}));
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
+      defaults: { baseURL: '/api' },
+    },
+  };
+});
 
 describe('usePaymentManagement Hook', () => {
     beforeEach(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { formatDate } from "@/lib/formatters";
 import { managementRhythmApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card, CardContent, Badge, Button } from "../components/ui";
@@ -73,14 +74,6 @@ export default function MeetingMap() {
     setSearchParams(params);
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) {return "-";}
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
 
   const formatTime = (timeStr) => {
     if (!timeStr) {return "";}

@@ -2,7 +2,8 @@
  * 报表模板管理页面
  */
 import React, { useState, useEffect } from 'react';
-import {  Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { reportCenterApi } from '../services/api';
 
 export default function ReportTemplates() {
   const [templates, setTemplates] = useState([]);
@@ -16,11 +17,9 @@ export default function ReportTemplates() {
   const fetchTemplates = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/reports/templates');
-      const result = await response.json();
-      if (result.code === 0) {
-        setTemplates(result.data.items);
-      }
+      const response = await reportCenterApi.getTemplates();
+      const data = response.data;
+      setTemplates(data?.items || data || []);
     } catch (error) {
       console.error('获取模板列表失败:', error);
     } finally {
@@ -30,13 +29,8 @@ export default function ReportTemplates() {
 
   const handleToggle = async (templateId) => {
     try {
-      const response = await fetch(`/api/v1/reports/templates/${templateId}/toggle`, {
-        method: 'POST'
-      });
-      const result = await response.json();
-      if (result.code === 0) {
-        fetchTemplates();
-      }
+      await reportCenterApi.toggleTemplate(templateId);
+      fetchTemplates();
     } catch (error) {
       console.error('切换模板状态失败:', error);
     }
@@ -44,15 +38,10 @@ export default function ReportTemplates() {
 
   const handleDelete = async (templateId) => {
     if (!confirm('确定要删除此模板吗？')) return;
-    
+
     try {
-      const response = await fetch(`/api/v1/reports/templates/${templateId}`, {
-        method: 'DELETE'
-      });
-      const result = await response.json();
-      if (result.code === 0) {
-        fetchTemplates();
-      }
+      await reportCenterApi.deleteTemplate(templateId);
+      fetchTemplates();
     } catch (error) {
       console.error('删除模板失败:', error);
     }

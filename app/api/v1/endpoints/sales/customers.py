@@ -106,7 +106,7 @@ def read_customers(
         query = query.order_by(order_column)
 
     total = query.count()
-    customers = query.offset(pagination.offset).limit(pagination.limit).all()
+    customers = apply_pagination(query, pagination.offset, pagination.limit).all()
 
     # 构建响应
     customer_responses = []
