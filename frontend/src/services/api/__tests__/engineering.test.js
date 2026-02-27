@@ -42,7 +42,7 @@ describe('Engineering API', () => {
 
   describe('projectReviewApi - 项目复盘API', () => {
     it('list() - 应该获取复盘报告列表', async () => {
-      mock.onGet('/api/v1/projects/project-reviews').reply(200, {
+      mock.onGet('/api/v1/project-reviews').reply(200, {
         success: true,
         data: [{ id: 1, title: 'Review 1' }],
       });
@@ -54,7 +54,7 @@ describe('Engineering API', () => {
 
     it('create() - 应该创建复盘报告', async () => {
       const review = { project_id: 1, title: 'Project Review' };
-      mock.onPost('/api/v1/projects/project-reviews').reply(201, {
+      mock.onPost('/api/v1/project-reviews').reply(201, {
         success: true,
         data: { id: 1, ...review },
       });
@@ -65,7 +65,7 @@ describe('Engineering API', () => {
     });
 
     it('publish() - 应该发布复盘报告', async () => {
-      mock.onPut('/api/v1/projects/project-reviews/1/publish').reply(200, {
+      mock.onPut('/api/v1/project-reviews/1/publish').reply(200, {
         success: true,
         data: { status: 'PUBLISHED' },
       });
@@ -76,7 +76,7 @@ describe('Engineering API', () => {
     });
 
     it('getLessons() - 应该获取经验教训', async () => {
-      mock.onGet('/api/v1/projects/project-reviews/1/lessons').reply(200, {
+      mock.onGet('/api/v1/project-reviews/1/lessons').reply(200, {
         success: true,
         data: [{ id: 1, content: 'Lesson learned' }],
       });
@@ -88,7 +88,7 @@ describe('Engineering API', () => {
 
     it('createLesson() - 应该创建经验教训', async () => {
       const lesson = { content: 'Important lesson', category: 'TECHNICAL' };
-      mock.onPost('/api/v1/projects/project-reviews/1/lessons').reply(201, {
+      mock.onPost('/api/v1/project-reviews/1/lessons').reply(201, {
         success: true,
         data: { id: 1, ...lesson },
       });
@@ -99,7 +99,7 @@ describe('Engineering API', () => {
     });
 
     it('getBestPractices() - 应该获取最佳实践', async () => {
-      mock.onGet('/api/v1/projects/project-reviews/1/best-practices').reply(200, {
+      mock.onGet('/api/v1/project-reviews/1/best-practices').reply(200, {
         success: true,
         data: [{ id: 1, title: 'Best Practice 1' }],
       });
@@ -436,7 +436,7 @@ describe('Engineering API', () => {
 
   describe('错误处理', () => {
     it('应该处理404错误', async () => {
-      mock.onGet('/api/v1/projects/project-reviews/999').reply(404, {
+      mock.onGet('/api/v1/project-reviews/999').reply(404, {
         success: false,
         message: 'Review not found',
       });

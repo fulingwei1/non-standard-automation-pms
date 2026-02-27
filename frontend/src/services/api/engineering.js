@@ -4,47 +4,47 @@ import { api } from "./client.js";
 
 export const projectReviewApi = {
   // 复盘报告
-  list: (params) => api.get("/projects/project-reviews", { params }),
-  get: (id) => api.get(`/projects/project-reviews/${id}`),
-  create: (data) => api.post("/projects/project-reviews", data),
-  update: (id, data) => api.put(`/projects/project-reviews/${id}`, data),
-  delete: (id) => api.delete(`/projects/project-reviews/${id}`),
-  publish: (id) => api.put(`/projects/project-reviews/${id}/publish`),
-  archive: (id) => api.put(`/projects/project-reviews/${id}/archive`),
+  list: (params) => api.get("/project-reviews", { params }),
+  get: (id) => api.get(`/project-reviews/${id}`),
+  create: (data) => api.post("/project-reviews", data),
+  update: (id, data) => api.put(`/project-reviews/${id}`, data),
+  delete: (id) => api.delete(`/project-reviews/${id}`),
+  publish: (id) => api.put(`/project-reviews/${id}/publish`),
+  archive: (id) => api.put(`/project-reviews/${id}/archive`),
 
   // 经验教训
   getLessons: (reviewId, params) =>
-    api.get(`/projects/project-reviews/${reviewId}/lessons`, { params }),
+    api.get(`/project-reviews/${reviewId}/lessons`, { params }),
   createLesson: (reviewId, data) =>
-    api.post(`/projects/project-reviews/${reviewId}/lessons`, data),
+    api.post(`/project-reviews/${reviewId}/lessons`, data),
   getLesson: (lessonId) =>
-    api.get(`/projects/project-reviews/lessons/${lessonId}`),
+    api.get(`/project-reviews/lessons/${lessonId}`),
   updateLesson: (lessonId, data) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}`, data),
+    api.put(`/project-reviews/lessons/${lessonId}`, data),
   deleteLesson: (lessonId) =>
-    api.delete(`/projects/project-reviews/lessons/${lessonId}`),
+    api.delete(`/project-reviews/lessons/${lessonId}`),
   resolveLesson: (lessonId) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}/resolve`),
+    api.put(`/project-reviews/lessons/${lessonId}/resolve`),
 
   // 最佳实践
   getBestPractices: (reviewId, params) =>
-    api.get(`/projects/project-reviews/${reviewId}/best-practices`, { params }),
+    api.get(`/project-reviews/${reviewId}/best-practices`, { params }),
   createBestPractice: (reviewId, data) =>
-    api.post(`/projects/project-reviews/${reviewId}/best-practices`, data),
+    api.post(`/project-reviews/${reviewId}/best-practices`, data),
   getBestPractice: (practiceId) =>
-    api.get(`/projects/project-reviews/best-practices/${practiceId}`),
+    api.get(`/project-reviews/best-practices/${practiceId}`),
   updateBestPractice: (practiceId, data) =>
-    api.put(`/projects/project-reviews/best-practices/${practiceId}`, data),
+    api.put(`/project-reviews/best-practices/${practiceId}`, data),
   deleteBestPractice: (practiceId) =>
-    api.delete(`/projects/project-reviews/best-practices/${practiceId}`),
+    api.delete(`/project-reviews/best-practices/${practiceId}`),
   validateBestPractice: (practiceId, data) =>
     api.put(
-      `/projects/project-reviews/best-practices/${practiceId}/validate`,
+      `/project-reviews/best-practices/${practiceId}/validate`,
       data,
     ),
   reuseBestPractice: (practiceId, data) =>
     api.post(
-      `/projects/project-reviews/best-practices/${practiceId}/reuse`,
+      `/project-reviews/best-practices/${practiceId}/reuse`,
       data,
     ),
 
@@ -67,11 +67,11 @@ export const projectReviewApi = {
     api.get("/projects/lessons-learned/statistics", { params }),
   getLessonCategories: () => api.get("/projects/lessons-learned/categories"),
   updateLessonStatus: (lessonId, status) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}/status`, {
+    api.put(`/project-reviews/lessons/${lessonId}/status`, {
       new_status: status,
     }),
   batchUpdateLessons: (lessonIds, updateData) =>
-    api.post("/projects/project-reviews/lessons/batch-update", {
+    api.post("/project-reviews/lessons/batch-update", {
       lesson_ids: lessonIds,
       update_data: updateData,
     }),
@@ -84,7 +84,7 @@ export const projectReviewApi = {
       params: { limit },
     }),
   applyBestPractice: (practiceId, targetProjectId, notes) =>
-    api.post(`/projects/project-reviews/best-practices/${practiceId}/apply`, {
+    api.post(`/project-reviews/best-practices/${practiceId}/apply`, {
       target_project_id: targetProjectId,
       notes,
     }),
