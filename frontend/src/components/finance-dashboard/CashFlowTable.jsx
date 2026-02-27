@@ -143,7 +143,10 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
       <CardContent className="p-6">
         <h3 className="text-lg font-semibold text-white mb-4">现金流趋势</h3>
 
-        <div className="h-80">
+        <div className="h-80 flex items-center justify-center text-slate-400">
+          {/* TODO: 实现 LineChart 组件 - 需要从 recharts 导入并重构 */}
+          <p>现金流趋势图表 (开发中)</p>
+          {/* 
           <LineChart
             data={chartData}
             xField="month"
@@ -166,6 +169,7 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
                 value: formatter(datum.net || datum.value)
               })
             }} />
+          */}
 
         </div>
       </CardContent>

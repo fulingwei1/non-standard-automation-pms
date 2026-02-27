@@ -131,7 +131,7 @@ export const AssessmentForm = ({
       ASSESSMENT_QUESTIONS[category].forEach((question) => {
         const answer = questionData[question.id];
         if (answer !== undefined && answer !== null) {
-          let questionScore = 0;
+          let questionScore;
 
           switch (question.type) {
             case 'boolean':

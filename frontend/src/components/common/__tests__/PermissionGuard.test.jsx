@@ -13,18 +13,13 @@ vi.mock('../../../hooks/usePermission', () => ({
     const mockUser = JSON.parse(localStorage.getItem('user') || '{}');
     const permissions = mockUser.permissions || [];
     
-    let hasAccess = false;
-    if (mockUser.is_superuser) {
-      hasAccess = true;
-    } else if (Array.isArray(permission)) {
-      if (requireAll) {
-        hasAccess = permission.every(p => permissions.includes(p));
-      } else {
-        hasAccess = permission.some(p => permissions.includes(p));
-      }
-    } else {
-      hasAccess = permissions.includes(permission);
-    }
+    const hasAccess = mockUser.is_superuser
+      ? true
+      : Array.isArray(permission)
+        ? (requireAll 
+            ? permission.every(p => permissions.includes(p))
+            : permission.some(p => permissions.includes(p)))
+        : permissions.includes(permission);
 
     if (!hasAccess) {
       return fallback || null;

@@ -38,12 +38,9 @@ export function AppProtectedRoute({ children }) {
 
   // 只在根路径时重定向
   if (location.pathname === "/" && userStr) {
-    let user = null;
-    let role = null;
-
     try {
-      user = JSON.parse(userStr);
-      role = user.role;
+      const user = JSON.parse(userStr);
+      const role = user?.role;
     } catch (e) {
       // 忽略解析错误，但清除无效的用户数据
       console.warn("Invalid user data in localStorage:", e);

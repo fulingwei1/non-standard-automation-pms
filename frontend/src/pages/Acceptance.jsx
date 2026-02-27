@@ -527,8 +527,8 @@ export default function Acceptance() {
           }
 
           // Load items for this order
-          let items = [];
-          let checklistCategories = [];
+          let items;
+          let checklistCategories;
           try {
             const itemsResponse = await acceptanceApi.orders.getItems(order.id);
             items = itemsResponse.data || [];

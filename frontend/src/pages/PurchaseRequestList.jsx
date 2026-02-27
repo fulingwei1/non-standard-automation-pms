@@ -501,7 +501,7 @@ export default function PurchaseRequestList() {
 
                 <AnimatePresence>
                   {filteredRequests.map((request) =>
-              <RequestCard
+              <PurchaseRequestCard
                 key={request.id}
                 request={request}
                 onView={handleView}

@@ -47,12 +47,11 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} replace />;
   }
 
-  let user = null;
   let role = null;
   let isSuperuser = false;
 
   try {
-    user = JSON.parse(userStr);
+    const user = JSON.parse(userStr);
     role = user.role;
     isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     console.log(
@@ -135,11 +134,10 @@ export function ProcurementProtectedRoute({
 }) {
   const userStr = localStorage.getItem("user");
   let isSuperuser = false;
-  let user = null;
 
   if (userStr) {
     try {
-      user = JSON.parse(userStr);
+      const user = JSON.parse(userStr);
       isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     } catch {
       // ignore

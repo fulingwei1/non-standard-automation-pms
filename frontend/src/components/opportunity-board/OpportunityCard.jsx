@@ -132,8 +132,8 @@ export const OpportunityCard = ({
   const renderExpectedClose = () => {
     if (!daysToClose) {return null;}
 
-    let timeText = "";
-    let timeColor = "";
+    let timeText;
+    let timeColor;
 
     if (daysToClose < 0) {
       timeText = `已过期 ${Math.abs(daysToClose)} 天`;

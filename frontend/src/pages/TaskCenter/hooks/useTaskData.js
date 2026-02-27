@@ -104,7 +104,7 @@ export function useTaskData(filters = {}) {
             await loadTasks();
         } catch (err) {
             console.error('Failed to update task status:', err);
-            throw new Error(err.response?.data?.detail || err.message || '更新任务状态失败');
+            throw new Error(err.response?.data?.detail || err.message || '更新任务状态失败', { cause: err });
         }
     }, [loadTasks]);
 
@@ -139,7 +139,7 @@ export function useTaskData(filters = {}) {
             );
         } catch (err) {
             console.error('Failed to update task step:', err);
-            throw new Error(err.response?.data?.detail || err.message || '更新任务步骤失败');
+            throw new Error(err.response?.data?.detail || err.message || '更新任务步骤失败', { cause: err });
         }
     }, [tasks]);
 

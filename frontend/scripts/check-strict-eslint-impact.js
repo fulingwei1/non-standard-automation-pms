@@ -39,7 +39,7 @@ console.log('✅ 已临时启用严格配置\n')
 
 // 3. 运行 ESLint 检查
 console.log('📋 步骤 3: 运行 ESLint 检查...')
-let lintOutput = ''
+let lintOutput;
 let errorCount = 0
 let warningCount = 0
 
