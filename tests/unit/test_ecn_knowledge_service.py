@@ -54,13 +54,10 @@ def test_customer(db_session: Session):
 @pytest.fixture
 def test_project(db_session: Session, test_engineer, test_customer):
     from app.models.project import Project
-from app.models.enums.project import ProjectStageEnum, ProjectHealthEnum
 
     project = Project(
         project_code="PJ-ECN-001",
         project_name="ECN测试项目",
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
         stage="S2",
         status="ST04",
         health="H1",
@@ -76,18 +73,14 @@ from app.models.enums.project import ProjectStageEnum, ProjectHealthEnum
 @pytest.fixture
 def test_ecn(db_session: Session, test_project, test_engineer):
     ecn = Ecn(
-        ecn_code="ECN-2025001",
+        ecn_no="ECN-2025001",
         ecn_title="测试ECN",
         ecn_type=EcnChangeTypeEnum.DESIGN.value,
         project_id=test_project.id,
-        project_code=test_project.project_code,
-        project_name=test_project.project_name,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        requester_id=test_engineer.id,
-        requester_name=test_engineer.real_name,
+        applicant_id=test_engineer.id,
+        applicant_dept=test_engineer.real_name,
         priority="HIGH",
-        reason="设计优化需要",
+        change_reason="设计优化需要",
         created_at=datetime.now(),
         created_by=test_engineer.id,
     )
@@ -116,19 +109,17 @@ class TestSearchSimilarEcns:
         # 创建相似的ECN
         for i in range(5):
             ecn = Ecn(
-            ecn_code=f"ECN-SIM-{i:04d}",
+            ecn_no=f"ECN-SIM-{i:04d}",
             ecn_title=f"相似ECN{i}",
             ecn_type=EcnChangeTypeEnum.DESIGN.value,
             project_id=test_ecn.project_id,
-            project_code=test_ecn.project_code,
-            project_name=test_ecn.project_name,
-            customer_id=test_ecn.customer_id,
+                    customer_id=test_ecn.customer_id,
             customer_name=test_ecn.customer_name,
-            requester_id=test_ecn.created_by,
-            requester_name="测试用户",
+            applicant_id=test_ecn.created_by,
+            applicant_dept="测试用户",
             priority="NORMAL",
-            reason=f"相似设计变更{i}",
-            change_content="修改XXX参数",
+            change_reason=f"相似设计变更{i}",
+            change_description="修改XXX参数",
             created_at=datetime.now(),
             created_by=test_ecn.created_by,
             )
@@ -154,19 +145,17 @@ class TestSearchByCategory:
         """按设计类型搜索"""
         # 创建设计类型的ECN
         ecn2 = Ecn(
-        ecn_code="ECN-DES-002",
+        ecn_no="ECN-DES-002",
         ecn_title="另一个设计ECN",
         ecn_type=EcnChangeTypeEnum.DESIGN.value,
         project_id=test_ecn.project_id,
-        project_code=test_ecn.project_code,
-        project_name=test_ecn.project_name,
         customer_id=test_ecn.customer_id,
         customer_name=test_ecn.customer_name,
-        requester_id=test_engineer.id,
-        requester_name=test_engineer.real_name,
+        applicant_id=test_engineer.id,
+        applicant_dept=test_engineer.real_name,
         priority="NORMAL",
-        reason="设计优化",
-        change_content="修改参数",
+        change_reason="设计优化",
+        change_description="修改参数",
         created_at=datetime.now(),
         created_by=test_engineer.id,
         )
@@ -185,19 +174,15 @@ class TestSearchByCategory:
     ):
         """按物料类型搜索"""
         ecn_material = Ecn(
-        ecn_code="ECN-MAT-001",
+        ecn_no="ECN-MAT-001",
         ecn_title="物料变更ECN",
         ecn_type=EcnChangeTypeEnum.MATERIAL.value,
         project_id=test_project.id,
-        project_code=test_project.project_code,
-        project_name=test_project.project_name,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        requester_id=test_engineer.id,
-        requester_name=test_engineer.real_name,
+        applicant_id=test_engineer.id,
+        applicant_dept=test_engineer.real_name,
         priority="HIGH",
-        reason="BOM变更",
-        change_content="替换物料",
+        change_reason="BOM变更",
+        change_description="替换物料",
         created_at=datetime.now(),
         created_by=test_engineer.id,
         )
@@ -344,20 +329,16 @@ class TestExtractLessonsLearned:
         # 创建多个ECN
         for i in range(3):
             ecn = Ecn(
-            ecn_code=f"ECN-LESS-{i:04d}",
+            ecn_no=f"ECN-LESS-{i:04d}",
             ecn_title=f"经验提取测试{i}",
             ecn_type=EcnChangeTypeEnum.DESIGN.value,
             project_id=test_project.id,
-            project_code=test_project.project_code,
-            project_name=test_project.project_name,
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            requester_id=test_engineer.id,
-            requester_name=test_engineer.real_name,
+                            applicant_id=test_engineer.id,
+            applicant_dept=test_engineer.real_name,
             priority="NORMAL",
-            reason=f"测试提取{i}",
+            change_reason=f"测试提取{i}",
             outcome="APPROVED" if i % 2 == 0 else "REJECTED",
-            change_content=f"变更内容{i}",
+            change_description=f"变更内容{i}",
             created_at=datetime.now() - timedelta(days=i * 5),
             created_by=test_engineer.id,
             )
@@ -400,18 +381,14 @@ class TestBatchSearchAndAnalysis:
         # 创建多个相似ECN
         for i in range(10):
             ecn = Ecn(
-            ecn_code=f"ECN-BATCH-{i:04d}",
+            ecn_no=f"ECN-BATCH-{i:04d}",
             ecn_title=f"批量搜索{i}",
             ecn_type=EcnChangeTypeEnum.DESIGN.value,
             project_id=test_project.id,
-            project_code=test_project.project_code,
-            project_name=test_project.project_name,
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            requester_id=test_engineer.id,
-            requester_name=test_engineer.real_name,
+                            applicant_id=test_engineer.id,
+            applicant_dept=test_engineer.real_name,
             priority="NORMAL",
-            reason=f"批量搜索{i}",
+            change_reason=f"批量搜索{i}",
             created_at=datetime.now() - timedelta(days=i * 3),
             created_by=test_engineer.id,
             )
@@ -445,20 +422,16 @@ class TestValidateKnowledgeAccuracy:
         for i in range(10):
             outcome = "SUCCESS" if i % 3 != 0 else "FAILURE"
             ecn = Ecn(
-            ecn_code=f"ECN-ACC-{i:04d}",
+            ecn_no=f"ECN-ACC-{i:04d}",
             ecn_title=f"准确度测试{i}",
             ecn_type=EcnChangeTypeEnum.DESIGN.value,
             project_id=test_project.id,
-            project_code=test_project.project_code,
-            project_name=test_project.project_name,
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            requester_id=test_engineer.id,
-            requester_name=test_engineer.real_name,
+                            applicant_id=test_engineer.id,
+            applicant_dept=test_engineer.real_name,
             priority="NORMAL",
-            reason=f"准确度测试{i}",
+            change_reason=f"准确度测试{i}",
             outcome=outcome,
-            change_content=f"变更{i}",
+            change_description=f"变更{i}",
             created_at=datetime.now() - timedelta(days=i * 10),
             created_by=test_engineer.id,
             )
