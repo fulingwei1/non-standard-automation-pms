@@ -222,7 +222,7 @@ export const technicalAssessmentApi = {
 
 export const rdProjectApi = {
   // 研发项目分类
-  getCategories: (params) => api.get("/rd-project-categories", { params }),
+  getCategories: (params) => api.get("/rd-projects/categories", { params }),
 
   // 研发项目管理
   list: (params) => api.get("/rd-projects", { params }),
@@ -234,13 +234,13 @@ export const rdProjectApi = {
   linkProject: (id, data) => api.put(`/rd-projects/${id}/link-project`, data),
 
   // 研发费用类型
-  getCostTypes: (params) => api.get("/rd-cost-types", { params }),
+  getCostTypes: (params) => api.get("/rd-projects/rd-cost-types", { params }),
 
   // 研发费用管理
-  getCosts: (params) => api.get("/rd-costs", { params }),
-  createCost: (data) => api.post("/rd-costs", data),
-  updateCost: (id, data) => api.put(`/rd-costs/${id}`, data),
-  calculateLaborCost: (data) => api.post("/rd-costs/calc-labor", data),
+  getCosts: (params) => api.get("/rd-projects/rd-costs", { params }),
+  createCost: (data) => api.post("/rd-projects/rd-costs", data),
+  updateCost: (id, data) => api.put(`/rd-projects/rd-costs/${id}`, data),
+  calculateLaborCost: (data) => api.post("/rd-projects/rd-costs/calc-labor", data),
 
   // 费用汇总
   getCostSummary: (projectId) =>
@@ -250,9 +250,9 @@ export const rdProjectApi = {
 
   // 费用分摊规则
   getAllocationRules: (params) =>
-    api.get("/rd-cost-allocation-rules", { params }),
+    api.get("/rd-projects/rd-cost-allocation-rules", { params }),
   applyAllocation: (ruleId, data) =>
-    api.post("/rd-costs/apply-allocation", data, {
+    api.post("/rd-projects/rd-costs/apply-allocation", data, {
       params: { rule_id: ruleId, ...data },
     }),
 

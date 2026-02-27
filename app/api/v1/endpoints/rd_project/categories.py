@@ -18,7 +18,7 @@ router = APIRouter()
 
 # ==================== 研发项目分类 ====================
 
-@router.get("/rd-project-categories", response_model=ResponseModel)
+@router.get("/categories", response_model=ResponseModel)
 def get_rd_project_categories(
     db: Session = Depends(deps.get_db),
     category_type: Optional[str] = Query(None, description="分类类型筛选：SELF/ENTRUST/COOPERATION"),
