@@ -19,7 +19,7 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.get("/material-demands/schedule", response_model=List[dict], status_code=status.HTTP_200_OK)
+@router.get("/schedule", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_material_demand_schedule(
     db: Session = Depends(deps.get_db),
     project_ids: Optional[str] = Query(None, description="项目ID列表（逗号分隔）"),

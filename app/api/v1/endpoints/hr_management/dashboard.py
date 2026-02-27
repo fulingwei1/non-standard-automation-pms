@@ -35,7 +35,7 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
         super().__init__()
         # 添加待转正员工列表端点
         self.router.add_api_route(
-            "/hr_management/dashboard/pending-confirmations",
+            "/dashboard/pending-confirmations",
             self._get_pending_confirmations_handler,
             methods=["GET"],
             summary="获取待转正员工列表"

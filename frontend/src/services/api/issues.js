@@ -19,11 +19,10 @@ export const issueApi = {
   getStats: (params) => api.get("/issues/statistics/overview", { params }),
   getTrend: (params) => api.get("/issues/statistics/trend", { params }),
   getEngineerStatistics: (params) =>
-    api.get("/issues/statistics/engineer", { params }),
+    api.get("/issues/statistics/engineer-design-issues", { params }),
   getCauseAnalysis: (params) =>
     api.get("/issues/statistics/cause-analysis", { params }),
   getSnapshots: (params) => api.get("/issues/statistics/snapshots", { params }),
-  getSnapshot: (id) => api.get(`/issues/statistics/snapshots/${id}`),
   getFollowUps: (id) => api.get(`/issues/${id}/follow-ups`),
   addFollowUp: (id, data) => api.post(`/issues/${id}/follow-ups`, data),
   getRelated: (id) => api.get(`/issues/${id}/related`),

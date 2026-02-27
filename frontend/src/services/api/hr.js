@@ -3,11 +3,11 @@ import { api } from "./client.js";
 
 
 export const employeeApi = {
-  list: (params) => api.get("/employees", { params }),
-  get: (id) => api.get(`/employees/${id}`),
-  create: (data) => api.post("/employees", data),
-  update: (id, data) => api.put(`/employees/${id}`, data),
-  delete: (id) => api.delete(`/employees/${id}`),
+  list: (params) => api.get("/org/employees", { params }),
+  get: (id) => api.get(`/org/employees/${id}`),
+  create: (data) => api.post("/org/employees", data),
+  update: (id, data) => api.put(`/org/employees/${id}`, data),
+  delete: (id) => api.delete(`/org/employees/${id}`),
   getStatistics: (params) => api.get("/employees/statistics", { params }),
 };
 

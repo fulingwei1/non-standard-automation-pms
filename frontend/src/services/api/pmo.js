@@ -35,7 +35,7 @@ export const pmoApi = {
   risks: {
     list: (projectId, params) =>
       api.get(`/pmo/projects/${projectId}/risks`, { params }),
-    get: (id) => api.get(`/pmo/risks/${id}`),
+    // Note: Backend doesn't have GET /pmo/risks/{id}, risks are only listed by project
     create: (projectId, data) =>
       api.post(`/pmo/projects/${projectId}/risks`, data),
     assess: (riskId, data) => api.put(`/pmo/risks/${riskId}/assess`, data),

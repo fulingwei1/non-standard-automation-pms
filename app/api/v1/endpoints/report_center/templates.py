@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-报表模板 - 自动生成
-从 report_center.py 拆分
-"""
-
-# -*- coding: utf-8 -*-
-"""
-报表中心 API endpoints
-核心功能：多角色视角报表、智能生成、导出分享
+报表模板
 """
 
 from datetime import datetime
@@ -31,17 +24,11 @@ from app.schemas.report_center import (
     ReportTemplateListResponse,
     ReportTemplateResponse,
 )
-
-router = APIRouter()
-
-
-
-from fastapi import APIRouter
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter(
-    prefix="/report-center/templates",
+    prefix="/templates",
     tags=["templates"]
 )
 

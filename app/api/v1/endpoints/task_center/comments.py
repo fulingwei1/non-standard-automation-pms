@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/task-center/comments",
+    prefix="/comments",
     tags=["comments"]
 )
 

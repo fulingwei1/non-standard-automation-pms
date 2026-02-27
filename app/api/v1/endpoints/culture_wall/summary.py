@@ -17,7 +17,7 @@ from app.schemas.culture_wall import CultureWallSummary
 router = APIRouter()
 
 
-@router.get("/culture-wall/summary", response_model=CultureWallSummary)
+@router.get("/summary", response_model=CultureWallSummary)
 def get_culture_wall_summary(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),

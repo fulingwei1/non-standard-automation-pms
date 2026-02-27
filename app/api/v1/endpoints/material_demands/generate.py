@@ -21,7 +21,7 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.post("/material-demands/generate-pr", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post("/generate-pr", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def generate_purchase_requisition(
     *,
     db: Session = Depends(deps.get_db),

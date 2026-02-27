@@ -18,7 +18,7 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/admin/stats", response_model=ResponseModel)
+@router.get("/stats", response_model=ResponseModel)
 def get_admin_stats(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_superuser),

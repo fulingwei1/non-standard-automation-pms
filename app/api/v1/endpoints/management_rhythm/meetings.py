@@ -47,7 +47,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/management-rhythm/meetings",
+    prefix="/meetings",
     tags=["meetings"]
 )
 

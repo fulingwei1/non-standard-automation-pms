@@ -15,18 +15,14 @@ export const ecnApi = {
   getEvaluation: (evalId) => api.get(`/ecn-evaluations/${evalId}`),
   submitEvaluation: (evalId) => api.put(`/ecn-evaluations/${evalId}/submit`),
   getEvaluationSummary: (id) => api.get(`/ecns/${id}/evaluation-summary`),
-  // Approvals
-  getApprovals: (id) => api.get(`/ecns/${id}/approvals`),
-  createApproval: (id, data) => api.post(`/ecns/${id}/approvals`, data),
-  getApproval: (approvalId) => api.get(`/ecn-approvals/${approvalId}`),
-  approve: (approvalId, comment) =>
-    api.put(`/ecn-approvals/${approvalId}/approve`, null, {
-      params: { approval_comment: comment },
-    }),
-  reject: (approvalId, reason) =>
-    api.put(`/ecn-approvals/${approvalId}/reject`, null, {
-      params: { reason },
-    }),
+  // Approvals - using unified approval engine
+  getApprovals: (id) => api.get(`/ecns/approval/status/${id}`),
+  submitApproval: (data) => api.post("/ecns/approval/submit", data),
+  getPendingApprovals: () => api.get("/ecns/approval/pending"),
+  performApprovalAction: (data) => api.post("/ecns/approval/action", data),
+  batchApprovalAction: (data) => api.post("/ecns/approval/batch-action", data),
+  withdrawApproval: (data) => api.post("/ecns/approval/withdraw", data),
+  getApprovalHistory: () => api.get("/ecns/approval/history"),
   // Tasks
   getTasks: (id) => api.get(`/ecns/${id}/tasks`),
   createTask: (id, data) => api.post(`/ecns/${id}/tasks`, data),

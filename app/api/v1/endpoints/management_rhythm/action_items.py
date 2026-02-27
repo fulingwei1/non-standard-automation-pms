@@ -39,7 +39,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/management-rhythm/action-items",
+    prefix="/action-items",
     tags=["action_items"]
 )
 

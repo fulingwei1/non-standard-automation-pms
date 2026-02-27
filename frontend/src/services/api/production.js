@@ -215,7 +215,7 @@ export const shortageAlertApi = {
 
 export const bomApi = {
   getByMachine: (machineId) =>
-    api.get(`/bom/machines/${machineId}/bom`).then((res) => {
+    api.get(`/bom/machines/${machineId}/`).then((res) => {
       // Get the latest BOM from the list
       const bomList = res.data || res || [];
       if (bomList.length > 0) {
@@ -227,7 +227,7 @@ export const bomApi = {
     }),
   list: (params) => api.get("/bom/", { params }),
   get: (id) => api.get(`/bom/${id}`),
-  create: (machineId, data) => api.post(`/bom/machines/${machineId}/bom`, data),
+  create: (machineId, data) => api.post(`/bom/machines/${machineId}/`, data),
   update: (id, data) => api.put(`/bom/${id}`, data),
   // BOM Items
   getItems: (bomId) => api.get(`/bom/${bomId}/items`),

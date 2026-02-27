@@ -27,7 +27,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/management-rhythm/integrations",
+    prefix="/integrations",
     tags=["integrations"]
 )
 

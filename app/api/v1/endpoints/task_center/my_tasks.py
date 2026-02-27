@@ -39,7 +39,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/task-center/my-tasks",
+    prefix="/my-tasks",
     tags=["my_tasks"]
 )
 
