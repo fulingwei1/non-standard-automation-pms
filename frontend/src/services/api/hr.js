@@ -47,7 +47,7 @@ export const hrApi = {
   },
   // 仪表板
   dashboard: {
-    overview: () => api.get("/hr/dashboard/overview"),
+    overview: () => api.get("/hr/dashboard"),
     pendingConfirmations: (params) =>
       api.get("/hr/dashboard/pending-confirmations", { params }),
   },
@@ -230,17 +230,17 @@ export const timesheetApi = {
 
 export const staffMatchingApi = {
   // 标签管理
-  getTags: (params) => api.get("/staff-matching/tags", { params }),
+  getTags: (params) => api.get("/staff-matching/tags/", { params }),
   getTagTree: (tagType) =>
     api.get("/staff-matching/tags/tree", { params: { tag_type: tagType } }),
-  createTag: (data) => api.post("/staff-matching/tags", data),
+  createTag: (data) => api.post("/staff-matching/tags/", data),
   updateTag: (id, data) => api.put(`/staff-matching/tags/${id}`, data),
   deleteTag: (id) => api.delete(`/staff-matching/tags/${id}`),
 
   // 员工标签评估
   getEvaluations: (params) =>
-    api.get("/staff-matching/evaluations", { params }),
-  createEvaluation: (data) => api.post("/staff-matching/evaluations", data),
+    api.get("/staff-matching/evaluations/", { params }),
+  createEvaluation: (data) => api.post("/staff-matching/evaluations/", data),
   batchCreateEvaluations: (data) =>
     api.post("/staff-matching/evaluations/batch", data),
   updateEvaluation: (id, data) =>
@@ -248,24 +248,24 @@ export const staffMatchingApi = {
   deleteEvaluation: (id) => api.delete(`/staff-matching/evaluations/${id}`),
 
   // 员工档案
-  getProfiles: (params) => api.get("/staff-matching/profiles", { params }),
+  getProfiles: (params) => api.get("/staff-matching/profiles/", { params }),
   getProfile: (employeeId) => api.get(`/staff-matching/profiles/${employeeId}`),
   refreshProfile: (employeeId) =>
     api.post(`/staff-matching/profiles/${employeeId}/refresh`),
 
   // 项目绩效
   getPerformance: (params) =>
-    api.get("/staff-matching/performance", { params }),
-  createPerformance: (data) => api.post("/staff-matching/performance", data),
+    api.get("/staff-matching/performance/", { params }),
+  createPerformance: (data) => api.post("/staff-matching/performance/", data),
   getEmployeePerformanceHistory: (employeeId) =>
     api.get(`/staff-matching/performance/employee/${employeeId}`),
 
   // 人员需求
   getStaffingNeeds: (params) =>
-    api.get("/staff-matching/staffing-needs", { params }),
+    api.get("/staff-matching/staffing-needs/", { params }),
   getStaffingNeed: (id) => api.get(`/staff-matching/staffing-needs/${id}`),
   createStaffingNeed: (data) =>
-    api.post("/staff-matching/staffing-needs", data),
+    api.post("/staff-matching/staffing-needs/", data),
   updateStaffingNeed: (id, data) =>
     api.put(`/staff-matching/staffing-needs/${id}`, data),
   cancelStaffingNeed: (id) =>
@@ -286,7 +286,7 @@ export const staffMatchingApi = {
     api.get("/staff-matching/matching/history", { params }),
 
   // 仪表板
-  getDashboard: () => api.get("/staff-matching/dashboard"),
+  getDashboard: () => api.get("/staff-matching/"),
 };
 
 export const hourlyRateApi = {
@@ -341,7 +341,7 @@ export const hrManagementApi = {
   },
   // 仪表板
   dashboard: {
-    getOverview: () => api.get("/hr/dashboard/overview"),
+    getOverview: () => api.get("/hr/dashboard"),
     getPendingConfirmations: () =>
       api.get("/hr/dashboard/pending-confirmations"),
   },

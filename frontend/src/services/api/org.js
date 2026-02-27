@@ -28,13 +28,13 @@ export const organizationApi = {
   getOrgTree: (params) => api.get("/org/units/tree", { params }),
 
   // 获取组织单元列表
-  listOrgUnits: (params) => api.get("/org/units", { params }),
+  listOrgUnits: (params) => api.get("/org/units/", { params }),
 
   // 获取单个组织单元
   getOrgUnit: (id) => api.get(`/org/units/${id}`),
 
   // 创建组织单元
-  createOrgUnit: (data) => api.post("/org/units", data),
+  createOrgUnit: (data) => api.post("/org/units/", data),
 
   // 更新组织单元
   updateOrgUnit: (id, data) => api.put(`/org/units/${id}`, data),
@@ -50,13 +50,13 @@ export const organizationApi = {
   // ============================================================
 
   // 获取岗位列表
-  listPositions: (params) => api.get("/org/positions", { params }),
+  listPositions: (params) => api.get("/org/positions/", { params }),
 
   // 获取单个岗位
   getPosition: (id) => api.get(`/org/positions/${id}`),
 
   // 创建岗位
-  createPosition: (data) => api.post("/org/positions", data),
+  createPosition: (data) => api.post("/org/positions/", data),
 
   // 更新岗位
   updatePosition: (id, data) => api.put(`/org/positions/${id}`, data),
@@ -75,10 +75,10 @@ export const organizationApi = {
   // ============================================================
 
   // 获取职级列表
-  listJobLevels: (params) => api.get("/org/job-levels", { params }),
+  listJobLevels: (params) => api.get("/org/job-levels/", { params }),
 
   // 创建职级
-  createJobLevel: (data) => api.post("/org/job-levels", data),
+  createJobLevel: (data) => api.post("/org/job-levels/", data),
 
   // 更新职级
   updateJobLevel: (id, data) => api.put(`/org/job-levels/${id}`, data),
@@ -88,14 +88,14 @@ export const organizationApi = {
   // ============================================================
 
   // 获取员工的组织分配
-  getEmployeeAssignments: (employeeId) => api.get(`/org/employees/${employeeId}/assignments`),
+  getEmployeeAssignments: (employeeId) => api.get(`/org/${employeeId}/assignments`),
 
   // 创建员工组织分配
-  createEmployeeAssignment: (data) => api.post("/org/employee-assignments", data),
+  createEmployeeAssignment: (data) => api.post("/org/assignments/", data),
 
   // 更新员工组织分配
-  updateEmployeeAssignment: (id, data) => api.put(`/org/employee-assignments/${id}`, data),
+  updateEmployeeAssignment: (id, data) => api.put(`/org/assignments/${id}`, data),
 
   // 删除员工组织分配
-  deleteEmployeeAssignment: (id) => api.delete(`/org/employee-assignments/${id}`),
+  deleteEmployeeAssignment: (id) => api.delete(`/org/assignments/${id}`),
 };

@@ -51,8 +51,8 @@ export const qualityApi = {
 
   // 外协质检
   outsourcing: {
-    list: (params) => api.get("/outsourcing/outsourcing-inspections", { params }),
-    create: (data) => api.post("/outsourcing/outsourcing-inspections", data),
-    update: (id, params) => api.put(`/outsourcing/outsourcing-inspections/${id}`, null, { params }),
+    list: (params) => api.get("/outsourcing-inspections", { params }),
+    create: (data) => api.post("/outsourcing-inspections", data),
+    update: (id, params) => api.put(`/outsourcing-inspections/${id}`, null, { params }),
   },
 };
