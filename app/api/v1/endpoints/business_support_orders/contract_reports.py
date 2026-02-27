@@ -65,21 +65,25 @@ async def get_contract_report(
         completed_amount = sum(c.contract_amount or Decimal("0") for c in completed_contracts_objs)
 
         # 执行进度（简化处理，使用回款进度）
-        avg_progress_result = db.execute(text("""
-            SELECT AVG(
-                CASE
-                    WHEN SUM(ppp.planned_amount) > 0
-                    THEN (SUM(ppp.actual_amount) / SUM(ppp.planned_amount)) * 100
-                    ELSE 0
-                END
-            ) as avg_progress
-            FROM contracts c
-            LEFT JOIN projects p ON c.project_id = p.id
-            LEFT JOIN project_payment_plans ppp ON p.id = ppp.project_id
-            WHERE c.status IN ('SIGNED', 'EXECUTING')
-            GROUP BY c.id
-        """)).fetchone()
-        average_execution_rate = Decimal(str(avg_progress_result[0])) if avg_progress_result and avg_progress_result[0] else Decimal("0")
+        try:
+            avg_progress_result = db.execute(text("""
+                SELECT AVG(progress) as avg_progress FROM (
+                    SELECT
+                        CASE
+                            WHEN SUM(ppp.planned_amount) > 0
+                            THEN (SUM(ppp.actual_amount) * 1.0 / SUM(ppp.planned_amount)) * 100
+                            ELSE 0
+                        END as progress
+                    FROM contracts c
+                    LEFT JOIN projects p ON c.project_id = p.id
+                    LEFT JOIN project_payment_plans ppp ON p.id = ppp.project_id
+                    WHERE c.status IN ('SIGNED', 'EXECUTING')
+                    GROUP BY c.id
+                ) sub
+            """)).fetchone()
+            average_execution_rate = Decimal(str(avg_progress_result[0])) if avg_progress_result and avg_progress_result[0] else Decimal("0")
+        except Exception:
+            average_execution_rate = Decimal("0")
 
         # 按客户统计（前10名）
         top_customers_result = db.execute(text("""
@@ -88,8 +92,8 @@ async def get_contract_report(
                 COALESCE(SUM(ct.contract_amount), 0) as contract_amount
             FROM contracts ct
             JOIN customers c ON ct.customer_id = c.id
-            WHERE ct.signed_date >= :start_date
-            AND ct.signed_date <= :end_date
+            WHERE ct.signing_date >= :start_date
+            AND ct.signing_date <= :end_date
             GROUP BY c.id, c.customer_name
             ORDER BY contract_amount DESC
             LIMIT 10

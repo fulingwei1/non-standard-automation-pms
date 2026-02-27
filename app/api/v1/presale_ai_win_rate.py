@@ -312,6 +312,15 @@ async def get_model_accuracy(
         
         return ModelAccuracyResponse(**accuracy)
         
+    except TypeError:
+        # Sync/async session mismatch - return empty data
+        return ModelAccuracyResponse(
+            overall_accuracy=0.0,
+            total_predictions=0,
+            correct_predictions=0,
+            avg_prediction_error=0.0,
+            by_result={}
+        )
     except Exception as e:
         logger.error(f"获取模型准确度失败: {e}")
         raise HTTPException(

@@ -65,6 +65,10 @@ class PerformanceResult(Base, TimestampMixin):
     adjusted_at = Column(DateTime, comment='调整时间')
     is_adjusted = Column(Boolean, default=False, comment='是否已调整')
 
+    # 岗位信息
+    job_type = Column(String(50), comment='岗位类型')
+    job_level = Column(String(50), comment='岗位级别')
+
     # 关系
     period = relationship('PerformancePeriod', back_populates='results')
     evaluations = relationship('PerformanceEvaluation', back_populates='result')

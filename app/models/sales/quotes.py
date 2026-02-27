@@ -36,6 +36,7 @@ class Quote(Base, TimestampMixin):
     status = Column(String(20), default=QuoteStatusEnum.DRAFT, comment="状态")
     current_version_id = Column(Integer, ForeignKey("quote_versions.id"), comment="当前版本ID")
     valid_until = Column(Date, comment="有效期至")
+    delivery_date = Column(Date, comment="交付日期")
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
 
     # 关系

@@ -55,7 +55,7 @@ async def get_invoice_report(
             .all()
         )
         total_invoices_count = len(invoices)
-        total_invoices_amount = sum(i.invoice_amount or Decimal("0") for i in invoices)
+        total_invoices_amount = sum(i.amount or Decimal("0") for i in invoices)
         total_tax_amount = sum(i.tax_amount or Decimal("0") for i in invoices)
 
         # 按类型统计（简化处理）
@@ -68,7 +68,7 @@ async def get_invoice_report(
 
         for invoice in invoices:
             special_invoice_count += 1
-            special_invoice_amount += invoice.invoice_amount or Decimal("0")
+            special_invoice_amount += invoice.amount or Decimal("0")
 
         # 开票及时率
         on_time_invoices_count = (
@@ -88,7 +88,7 @@ async def get_invoice_report(
         top_customers_result = db.execute(text("""
             SELECT
                 c.customer_name,
-                COALESCE(SUM(i.invoice_amount), 0) as invoice_amount
+                COALESCE(SUM(i.amount), 0) as invoice_amount
             FROM invoices i
             JOIN contracts ct ON i.contract_id = ct.id
             JOIN customers c ON ct.customer_id = c.id

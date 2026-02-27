@@ -37,7 +37,7 @@ def notify_contract_signed(db: Session, contract_id: int) -> Optional[Notificati
         extra_data={
             "contract_code": contract.contract_code,
             "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-            "signed_date": contract.signed_date.isoformat() if contract.signed_date else None
+            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None
         }
     )
 

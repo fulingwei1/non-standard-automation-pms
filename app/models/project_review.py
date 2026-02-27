@@ -73,6 +73,9 @@ class ProjectReview(Base, TimestampMixin):
     # 状态
     status = Column(String(20), default='DRAFT', comment='状态：DRAFT/PUBLISHED/ARCHIVED')
 
+    # AI标记
+    ai_generated = Column(Boolean, default=False, comment='是否AI生成')
+
     # 关系
     project = relationship('Project', backref='reviews')
     reviewer = relationship('User', foreign_keys=[reviewer_id])
@@ -118,6 +121,9 @@ class ProjectLesson(Base, TimestampMixin):
 
     # 优先级
     priority = Column(String(10), default='MEDIUM', comment='优先级：LOW/MEDIUM/HIGH')
+
+    # AI分析
+    ai_confidence = Column(Numeric(5, 4), comment='AI置信度(0-1)')
 
     # 状态
     status = Column(String(20), default='OPEN', comment='状态：OPEN/IN_PROGRESS/RESOLVED/CLOSED')

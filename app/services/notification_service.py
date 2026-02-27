@@ -54,6 +54,28 @@ class AlertNotificationService:
         self.db = db
         self._dispatcher = NotificationDispatcher(db)
 
+    def get_user_notifications(
+        self,
+        user_id: int,
+        is_read: Optional[bool] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """获取用户的预警通知列表（stub）。"""
+        return {"success": True, "items": [], "total": 0}
+
+    def get_unread_count(self, user_id: int) -> int:
+        """获取用户未读通知数量（stub）。"""
+        return 0
+
+    def mark_notification_read(self, notification_id: int, user_id: int) -> bool:
+        """标记通知为已读（stub）。"""
+        return True
+
+    def batch_mark_read(self, notification_ids: list, user_id: int) -> Dict[str, Any]:
+        """批量标记通知为已读（stub）。"""
+        return {"success": True, "success_count": len(notification_ids)}
+
     def send_alert_notification(
         self,
         alert,

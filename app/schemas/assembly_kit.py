@@ -258,7 +258,7 @@ class ShortageDetailBase(BaseModel):
     in_transit_qty: Decimal = Field(default=0, description="在途数量")
     available_qty: Decimal = Field(..., description="可用数量")
     shortage_qty: Decimal = Field(..., description="缺料数量")
-    shortage_rate: Decimal = Field(..., description="缺料比例(%)")
+    shortage_rate: Decimal = Field(default=Decimal("0"), description="缺料比例(%)")
     expected_arrival_date: Optional[date] = Field(None, description="预计到货日期")
     alert_level: str = Field(default="L4", max_length=10, description="预警级别")
 

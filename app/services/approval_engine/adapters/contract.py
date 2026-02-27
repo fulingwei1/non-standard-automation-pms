@@ -67,8 +67,8 @@ class ContractApprovalAdapter(ApprovalAdapter):
             "customer_id": contract.customer_id,
             "customer_name": contract.customer.name if contract.customer else None,
             "project_id": contract.project_id,
-            "signed_date": contract.signed_date.isoformat()
-            if contract.signed_date
+            "signed_date": contract.signing_date.isoformat()
+            if contract.signing_date
             else None,
             "owner_id": contract.owner_id,
             "owner_name": contract.owner.name if contract.owner else None,
@@ -184,8 +184,8 @@ class ContractApprovalAdapter(ApprovalAdapter):
             else 0,
             "customer_id": contract.customer_id,
             "project_id": contract.project_id,
-            "signed_date": contract.signed_date.isoformat()
-            if contract.signed_date
+            "signed_date": contract.signing_date.isoformat()
+            if contract.signing_date
             else None,
             "payment_terms": contract.payment_terms_summary,
             "acceptance_summary": contract.acceptance_summary,

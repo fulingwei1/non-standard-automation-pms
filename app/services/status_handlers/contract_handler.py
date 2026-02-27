@@ -56,7 +56,7 @@ class ContractStatusHandler:
 
                 project.stage = "S3"
                 project.status = "ST08"
-                project.contract_date = contract.signed_date
+                project.contract_date = contract.signing_date
                 project.contract_amount = (
                     contract.contract_amount or project.contract_amount
                 )
@@ -122,7 +122,7 @@ class ContractStatusHandler:
             contract_no=contract.contract_code,
             customer_contract_no=getattr(contract, "customer_contract_no", None),
             contract_amount=contract.contract_amount or 0,
-            contract_date=contract.signed_date,
+            contract_date=contract.signing_date,
             planned_end_date=planned_end_date,
             stage="S3",
             status="ST08",

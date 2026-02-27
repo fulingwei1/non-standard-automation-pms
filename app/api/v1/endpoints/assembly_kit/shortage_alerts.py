@@ -85,7 +85,7 @@ async def get_shortage_alerts(
     shortages = apply_pagination(query.order_by(
         ShortageDetail.alert_level,
         ShortageDetail.is_blocking.desc(),
-        ShortageDetail.shortage_rate.desc()
+        ShortageDetail.shortage_qty.desc()
     ), pagination.offset, pagination.limit).all()
 
     # 构建预警项

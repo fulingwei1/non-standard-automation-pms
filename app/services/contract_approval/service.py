@@ -114,7 +114,7 @@ class ContractApprovalService:
             "customer_id": contract.customer_id,
             "customer_name": contract.customer.name if contract.customer else None,
             "project_id": contract.project_id,
-            "signed_date": contract.signed_date.isoformat() if contract.signed_date else None,
+            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None,
             "payment_terms_summary": contract.payment_terms_summary,
             "acceptance_summary": contract.acceptance_summary,
         }

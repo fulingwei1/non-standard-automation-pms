@@ -236,9 +236,6 @@ def get_waste_tracing(
         total=result["total"],
         page=result["page"],
         page_size=result["page_size"],
-        extra_data={
-            "summary": result["summary"]
-        }
     )
 
 

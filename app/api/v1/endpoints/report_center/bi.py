@@ -233,8 +233,8 @@ def get_supplier_performance(
 
     # 查询外协订单
     orders = db.query(OutsourcingOrder).filter(
-        OutsourcingOrder.order_date >= start_date,
-        OutsourcingOrder.order_date <= end_date
+        OutsourcingOrder.created_at >= start_date,
+        OutsourcingOrder.created_at <= end_date
     ).all()
 
     # 按供应商统计
@@ -259,7 +259,7 @@ def get_supplier_performance(
 
         stats = vendor_stats[vendor_id]
         stats["total_orders"] += 1
-        stats["total_amount"] += order.order_amount or Decimal("0")
+        stats["total_amount"] += order.total_amount or Decimal("0")
 
         # 检查交付情况
         from app.models.outsourcing import OutsourcingDelivery

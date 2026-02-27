@@ -107,7 +107,7 @@ def get_customer_360_overview(
             contract_code=c.contract_code,
             status=c.status,
             contract_amount=c.contract_amount,
-            signed_date=c.signed_date,
+            signed_date=c.signing_date,
             project_code=c.project.project_code if c.project else None,
         )
         for c in overview["contracts"]

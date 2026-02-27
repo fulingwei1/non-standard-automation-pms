@@ -125,8 +125,6 @@ def list_pitfalls(
         total=total,
         page=page,
         page_size=pagination.limit,
-        pages=pages,
-        message="获取踩坑列表成功"
     )
 
 
