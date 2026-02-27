@@ -36,7 +36,7 @@ router = APIRouter(
 
 # ==================== 报表模板 ====================
 
-@router.get("/templates", response_model=ReportTemplateListResponse, status_code=status.HTTP_200_OK)
+@router.get("", response_model=ReportTemplateListResponse, status_code=status.HTTP_200_OK)
 def get_report_templates(
     *,
     db: Session = Depends(deps.get_db),
@@ -79,7 +79,7 @@ def get_report_templates(
     )
 
 
-@router.post("/templates/apply", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/apply", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED)
 def apply_report_template(
     *,
     db: Session = Depends(deps.get_db),

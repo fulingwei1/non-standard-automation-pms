@@ -275,11 +275,11 @@ export const reportCenterApi = {
   download: (reportId) =>
     api.get(`/reports/download/${reportId}`, { responseType: "blob" }),
   // 报表模板
-  getTemplates: (params) => api.get("/report-center/templates/templates", { params }),
-  createTemplate: (data) => api.post("/report-center/templates/templates", data),
-  toggleTemplate: (id) => api.post(`/report-center/templates/templates/${id}/toggle`),
-  deleteTemplate: (id) => api.delete(`/report-center/templates/templates/${id}`),
-  applyTemplate: (data) => api.post("/report-center/templates/templates/apply", data),
+  getTemplates: (params) => api.get("/report-center/templates", { params }),
+  createTemplate: (data) => api.post("/report-center/templates", data),
+  toggleTemplate: (id) => api.post(`/report-center/templates/${id}/toggle`),
+  deleteTemplate: (id) => api.delete(`/report-center/templates/${id}`),
+  applyTemplate: (data) => api.post("/report-center/templates/apply", data),
   // 报表归档
   getArchives: (params) => api.get("/reports/archives", { params }),
   downloadArchive: (id) =>

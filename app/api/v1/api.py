@@ -369,7 +369,7 @@ def create_api_router() -> APIRouter:
     # ==================== 报表中心 ====================
     try:
         from app.api.v1.endpoints.report_center import router as report_center_router
-        api_router.include_router(report_center_router, tags=["report-center"])
+        api_router.include_router(report_center_router, prefix="/report-center", tags=["report-center"])
         print("✓ 报表中心模块加载成功")
     except Exception as e:
         print(f"✗ 报表中心模块加载失败：{e}")
