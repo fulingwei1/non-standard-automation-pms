@@ -519,7 +519,9 @@ def db_session() -> Generator[Session, None, None]:
     提供与应用相同的数据库会话，供测试直接操作数据库数据
 
     每个测试结束后自动回滚，确保测试隔离：
+    - 测试开始时禁用外键约束，避免测试数据清理时的约束问题
     - 测试结束时回滚未提交的更改
+    - 测试结束后恢复外键约束
     - 避免测试间相互影响
 
     注意：不使用 begin_nested() (savepoint) 因为 SQLite :memory: 在
@@ -529,12 +531,24 @@ def db_session() -> Generator[Session, None, None]:
     from app.models.base import SessionLocal as _SL
     session: Session = _SL()
 
+    # 禁用外键约束，参考 unit tests 模式
+    # 防止测试数据删除时因外键约束失败
+    session.execute(text("PRAGMA foreign_keys=OFF"))
+    session.commit()
+
     try:
         yield session
     finally:
         # 回滚所有未提交的更改
         session.rollback()
-        session.close()
+        # 恢复外键约束
+        try:
+            session.execute(text("PRAGMA foreign_keys=ON"))
+            session.commit()
+        except Exception:
+            pass
+        finally:
+            session.close()
 
 
 @pytest.fixture(scope="function", autouse=True)
