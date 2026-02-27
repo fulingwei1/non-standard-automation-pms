@@ -229,6 +229,150 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 通知中心模块加载失败: {e}")
 
+
+    # ==================== 奖金管理 ====================
+    try:
+        from app.api.v1.endpoints.bonus import router as bonus_router
+        api_router.include_router(bonus_router, tags=["bonus"])
+        print("✓ 奖金管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 奖金管理模块加载失败：{e}")
+
+    # ==================== 工程师绩效 ====================
+    try:
+        from app.api.v1.endpoints.engineer_performance import router as engineer_performance_router
+        api_router.include_router(engineer_performance_router, tags=["engineer-performance"])
+        print("✓ 工程师绩效模块加载成功")
+    except Exception as e:
+        print(f"✗ 工程师绩效模块加载失败：{e}")
+
+    # ==================== 绩效管理 ====================
+    try:
+        from app.api.v1.endpoints.performance import router as performance_router
+        api_router.include_router(performance_router, tags=["performance"])
+        print("✓ 绩效管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 绩效管理模块加载失败：{e}")
+
+    # ==================== 人事管理 ====================
+    try:
+        from app.api.v1.endpoints.hr_management import router as hr_management_router
+        api_router.include_router(hr_management_router, prefix="/hr", tags=["hr-management"])
+        print("✓ 人事管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 人事管理模块加载失败：{e}")
+
+    # ==================== 外包管理 ====================
+    try:
+        from app.api.v1.endpoints.outsourcing import router as outsourcing_router
+        api_router.include_router(outsourcing_router, tags=["outsourcing"])
+        print("✓ 外包管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 外包管理模块加载失败：{e}")
+
+    # ==================== PMO ====================
+    try:
+        from app.api.v1.endpoints.pmo import router as pmo_router
+        api_router.include_router(pmo_router, tags=["pmo"])
+        print("✓ PMO 模块加载成功")
+    except Exception as e:
+        print(f"✗ PMO 模块加载失败：{e}")
+
+    # ==================== 人岗匹配 ====================
+    try:
+        from app.api.v1.endpoints.staff_matching import router as staff_matching_router
+        api_router.include_router(staff_matching_router, prefix="/staff-matching", tags=["staff-matching"])
+        print("✓ 人岗匹配模块加载成功")
+    except Exception as e:
+        print(f"✗ 人岗匹配模块加载失败：{e}")
+
+    # ==================== 任务中心 ====================
+    try:
+        from app.api.v1.endpoints.task_center import router as task_center_router
+        api_router.include_router(task_center_router, prefix="/task-center", tags=["task-center"])
+        print("✓ 任务中心模块加载成功")
+    except Exception as e:
+        print(f"✗ 任务中心模块加载失败：{e}")
+
+    # ==================== 技术评审 ====================
+    try:
+        from app.api.v1.endpoints.technical_review import router as technical_review_router
+        api_router.include_router(technical_review_router, tags=["technical-reviews"])
+        print("✓ 技术评审模块加载成功")
+    except Exception as e:
+        print(f"✗ 技术评审模块加载失败：{e}")
+
+    # ==================== 任务调度 ====================
+    try:
+        from app.api.v1.endpoints.scheduler import router as scheduler_router
+        api_router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
+        print("✓ 任务调度模块加载成功")
+    except Exception as e:
+        print(f"✗ 任务调度模块加载失败：{e}")
+
+    # ==================== 资格认证 ====================
+    try:
+        from app.api.v1.endpoints.qualification import router as qualification_router
+        api_router.include_router(qualification_router, prefix="/qualifications", tags=["qualifications"])
+        print("✓ 资格认证模块加载成功")
+    except Exception as e:
+        print(f"✗ 资格认证模块加载失败：{e}")
+
+    # ==================== 文档管理 ====================
+    try:
+        from app.api.v1.endpoints.documents import router as documents_router
+        api_router.include_router(documents_router, prefix="/documents", tags=["documents"])
+        print("✓ 文档管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 文档管理模块加载失败：{e}")
+
+    # ==================== 工程师管理 ====================
+    try:
+        from app.api.v1.endpoints.engineers import router as engineers_router
+        api_router.include_router(engineers_router, prefix="/engineers", tags=["engineers"])
+        print("✓ 工程师管理模块加载成功")
+    except Exception as e:
+        print(f"✗ 工程师管理模块加载失败：{e}")
+
+    # ==================== 工时费率 ====================
+    try:
+        from app.api.v1.endpoints.hourly_rate import router as hourly_rate_router
+        api_router.include_router(hourly_rate_router, prefix="/hourly-rates", tags=["hourly-rates"])
+        print("✓ 工时费率模块加载成功")
+    except Exception as e:
+        print(f"✗ 工时费率模块加载失败：{e}")
+
+    # ==================== 成套率 ====================
+    try:
+        from app.api.v1.endpoints.kit_rate import router as kit_rate_router
+        api_router.include_router(kit_rate_router, tags=["kit-rates"])
+        print("✓ 成套率模块加载成功")
+    except Exception as e:
+        print(f"✗ 成套率模块加载失败：{e}")
+
+    # ==================== 报表中心 ====================
+    try:
+        from app.api.v1.endpoints.report_center import router as report_center_router
+        api_router.include_router(report_center_router, tags=["report-center"])
+        print("✓ 报表中心模块加载成功")
+    except Exception as e:
+        print(f"✗ 报表中心模块加载失败：{e}")
+
+    # ==================== 管理统计 ====================
+    try:
+        from app.api.v1.endpoints.admin_stats import router as admin_stats_router
+        api_router.include_router(admin_stats_router, prefix="/admin", tags=["admin-stats"])
+        print("✓ 管理统计模块加载成功")
+    except Exception as e:
+        print(f"✗ 管理统计模块加载失败：{e}")
+
+    # ==================== 采购分析 ====================
+    try:
+        from app.api.v1.endpoints.procurement_analysis import router as procurement_analysis_router
+        api_router.include_router(procurement_analysis_router, prefix="/procurement-analysis", tags=["procurement-analysis"])
+        print("✓ 采购分析模块加载成功")
+    except Exception as e:
+        print(f"✗ 采购分析模块加载失败：{e}")
     print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
