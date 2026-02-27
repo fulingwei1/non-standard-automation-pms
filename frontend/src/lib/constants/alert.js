@@ -3,5 +3,5 @@
  *
  * 目前以 alertStatsConstants 作为主源，提供统一 import 路径。
  */
-export * from "@/lib/constants/alert";
-export { default } from "@/lib/constants/alert";
+export * from "../../components/alert-statistics/alertStatsConstants";
+export { default } from "../../components/alert-statistics/alertStatsConstants";

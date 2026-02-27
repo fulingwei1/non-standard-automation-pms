@@ -10,6 +10,7 @@ export function cn(...inputs) {
 }
 
 // formatDate re-exported from formatters
+export { formatDate } from './formatters';
 
 /**
  * Format currency value
