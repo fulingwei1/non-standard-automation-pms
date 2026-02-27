@@ -53,16 +53,17 @@ def test_customer(db_session: Session):
 
 @pytest.fixture
 def test_project(db_session: Session, test_engineer, test_customer):
-    from app.models.project import Project, ProjectStage, ProjectStatus, ProjectHealth
+    from app.models.project import Project
+from app.models.enums.project import ProjectStageEnum, ProjectHealthEnum
 
     project = Project(
         project_code="PJ-ECN-001",
         project_name="ECN测试项目",
         customer_id=test_customer.id,
         customer_name=test_customer.customer_name,
-        stage=ProjectStage.S2.value,
-        status=ProjectStatus.ST04.value,
-        health=ProjectHealth.H1.value,
+        stage="S2",
+        status="ST04",
+        health="H1",
         pm_id=test_engineer.id,
         pm_name=test_engineer.real_name,
         created_by=test_engineer.id,

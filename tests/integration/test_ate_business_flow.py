@@ -67,7 +67,7 @@ class SimpleProject:
         self.start_date = kwargs.get("start_date")
         self.planned_end_date = kwargs.get("planned_end_date")
         self.actual_end_date = kwargs.get("actual_end_date")
-        self.status = kwargs.get("status", ProjectStatus.DRAFT)
+        self.status = kwargs.get("status", "DRAFT")
         self.stage = kwargs.get("stage", "S1")
         self.fat_result = kwargs.get("fat_result")  # None / PASS / FAIL
         self.fat_date = kwargs.get("fat_date")
@@ -153,7 +153,7 @@ class ICTProjectService:
             contract_amount=data.get("contract_amount", data["budget"]),
             start_date=data.get("start_date", date.today()),
             planned_end_date=data["planned_end_date"],
-            status=ProjectStatus.DRAFT,
+            status="DRAFT",
             stage="S1",
         )
         self._projects[project.id] = project
@@ -163,9 +163,9 @@ class ICTProjectService:
     def approve_project(self, project_id: int) -> SimpleProject:
         """审批立项"""
         project = self._projects[project_id]
-        if project.status != ProjectStatus.DRAFT:
+        if project.status != "DRAFT":
             raise ValueError(f"Project {project_id} is not in DRAFT status")
-        project.status = ProjectStatus.APPROVED
+        project.status = "APPROVED"
         return project
 
     def advance_stage(self, project_id: int) -> SimpleProject:
@@ -174,8 +174,8 @@ class ICTProjectService:
         current_idx = self.STAGE_SEQUENCE.index(project.stage)
         if current_idx < len(self.STAGE_SEQUENCE) - 1:
             project.stage = self.STAGE_SEQUENCE[current_idx + 1]
-        if project.status == ProjectStatus.DRAFT:
-            project.status = ProjectStatus.IN_PROGRESS
+        if project.status == "DRAFT":
+            project.status = "IN_PROGRESS"
         return project
 
     def record_fat_result(self, project_id: int, passed: bool, fat_date: date = None) -> SimpleProject:
@@ -184,13 +184,13 @@ class ICTProjectService:
         project.fat_result = "PASS" if passed else "FAIL"
         project.fat_date = fat_date or date.today()
         if passed:
-            project.status = ProjectStatus.FAT_PASSED
+            project.status = "FAT_PASSED"
         return project
 
     def complete_project(self, project_id: int, actual_end_date: date = None) -> SimpleProject:
         """项目结项"""
         project = self._projects[project_id]
-        project.status = ProjectStatus.COMPLETED
+        project.status = "COMPLETED"
         project.actual_end_date = actual_end_date or date.today()
         project.stage = "S9"
         return project
@@ -379,7 +379,7 @@ class TestICTProjectFullLifecycle:
         """立项后状态应为DRAFT，阶段S1"""
         project = project_service.create_project(ict_project_data)
         assert project.id is not None
-        assert project.status == ProjectStatus.DRAFT
+        assert project.status == "DRAFT"
         assert project.stage == "S1"
         assert project.name == ict_project_data["name"]
         assert project.budget == 320000
@@ -390,7 +390,7 @@ class TestICTProjectFullLifecycle:
         """审批立项：状态从DRAFT变为APPROVED"""
         project = project_service.create_project(ict_project_data)
         approved = project_service.approve_project(project.id)
-        assert approved.status == ProjectStatus.APPROVED
+        assert approved.status == "APPROVED"
         assert approved.id == project.id
 
     def test_double_approval_raises_error(self, project_service, ict_project_data):
@@ -405,7 +405,7 @@ class TestICTProjectFullLifecycle:
         project = project_service.create_project(ict_project_data)
         advanced = project_service.advance_stage(project.id)
         assert advanced.stage == "S2"
-        assert advanced.status == ProjectStatus.IN_PROGRESS
+        assert advanced.status == "IN_PROGRESS"
 
     def test_full_stage_progression_s1_to_s7(self, project_service, ict_project_data):
         """项目阶段从S1推进到S7（FAT验收阶段）"""
@@ -415,7 +415,7 @@ class TestICTProjectFullLifecycle:
             project_service.advance_stage(project.id)
         project = project_service.get_project(project.id)
         assert project.stage == "S7"
-        assert project.status == ProjectStatus.IN_PROGRESS
+        assert project.status == "IN_PROGRESS"
 
     def test_fat_pass_result_recorded_correctly(self, project_service, ict_project_data):
         """FAT一次通过：记录PASS结果和日期"""
@@ -426,7 +426,7 @@ class TestICTProjectFullLifecycle:
         )
         assert result.fat_result == "PASS"
         assert result.fat_date == fat_date
-        assert result.status == ProjectStatus.FAT_PASSED
+        assert result.status == "FAT_PASSED"
 
     def test_fat_fail_result_does_not_complete_project(
         self, project_service, ict_project_data
@@ -435,8 +435,8 @@ class TestICTProjectFullLifecycle:
         project = project_service.create_project(ict_project_data)
         result = project_service.record_fat_result(project.id, passed=False)
         assert result.fat_result == "FAIL"
-        assert result.status != ProjectStatus.COMPLETED
-        assert result.status != ProjectStatus.FAT_PASSED
+        assert result.status != "COMPLETED"
+        assert result.status != "FAT_PASSED"
 
     def test_project_completion_with_on_time_delivery(
         self, project_service, ict_project_data
@@ -448,7 +448,7 @@ class TestICTProjectFullLifecycle:
         completed = project_service.complete_project(
             project.id, actual_end_date=actual_end
         )
-        assert completed.status == ProjectStatus.COMPLETED
+        assert completed.status == "COMPLETED"
         assert completed.actual_end_date == actual_end
         assert completed.actual_end_date <= completed.planned_end_date
         assert completed.stage == "S9"
@@ -733,6 +733,6 @@ class TestTimesheetWorkflow:
         project_service.record_fat_result(project.id, passed=True, fat_date=date(2026, 5, 10))
         completed = project_service.complete_project(project.id, actual_end_date=date(2026, 5, 15))
 
-        assert completed.status == ProjectStatus.COMPLETED
+        assert completed.status == "COMPLETED"
         assert completed.fat_result == "PASS"
         assert completed.actual_end_date <= completed.planned_end_date  # 准时交付
