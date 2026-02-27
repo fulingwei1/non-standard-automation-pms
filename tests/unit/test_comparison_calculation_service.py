@@ -30,6 +30,9 @@ def test_metric_definition(db_session: Session):
     metric = ReportMetricDefinition(
         metric_code="TEST_METRIC",
         metric_name="测试指标",
+        category="TEST",
+        data_source="test_table",
+        calculation_type="COUNT",
         support_mom=True,
         support_yoy=True
     )
@@ -215,6 +218,9 @@ class TestComparisonCalculationService:
             metric = ReportMetricDefinition(
             metric_code=f"METRIC_{i}",
             metric_name=f"指标{i}",
+            category="TEST",
+            data_source="test_table",
+            calculation_type="COUNT",
             support_mom=True,
             support_yoy=True
             )
