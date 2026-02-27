@@ -136,8 +136,6 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
 
   }
 
-  const formatter = (value) => formatCurrency(value);
-
   return (
     <Card className="bg-surface-50 border-white/10">
       <CardContent className="p-6">

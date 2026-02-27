@@ -47,11 +47,12 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} replace />;
   }
 
-  let role = null;
-  let isSuperuser = false;
+  let user;
+  let role;
+  let isSuperuser;
 
   try {
-    const user = JSON.parse(userStr);
+    user = JSON.parse(userStr);
     role = user.role;
     isSuperuser = user.is_superuser === true || user.isSuperuser === true;
     console.log(
