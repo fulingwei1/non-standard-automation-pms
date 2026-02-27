@@ -172,7 +172,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
             contracts = (
                 db.query(Contract)
                 .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
-                .order_by(desc(Contract.signed_date))
+                .order_by(desc(Contract.signing_date))
                 .limit(limit)
                 .all()
             )
@@ -311,8 +311,8 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
             new_contracts = (
                 db.query(Contract)
                 .filter(
-                    Contract.signed_date >= month_start,
-                    Contract.signed_date <= month_end,
+                    Contract.signing_date >= month_start,
+                    Contract.signing_date <= month_end,
                     Contract.status.in_(["SIGNED", "EXECUTING"])
                 )
                 .count()

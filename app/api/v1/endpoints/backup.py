@@ -9,7 +9,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from app.services.backup_service import BackupService
-from app.api.v1.dependencies import get_current_user
+from app.core.auth import get_current_user
 from app.models.user import User
 from app.core.auth import is_superuser
 

@@ -60,8 +60,8 @@ class SalesReportAdapter(BaseReportAdapter):
         new_contracts = (
             self.db.query(Contract)
             .filter(
-                Contract.signed_date >= month_start,
-                Contract.signed_date <= month_end,
+                Contract.signing_date >= month_start,
+                Contract.signing_date <= month_end,
                 Contract.status.in_(["SIGNED", "EXECUTING"])
             )
             .all()

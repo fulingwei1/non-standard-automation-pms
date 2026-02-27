@@ -89,15 +89,15 @@ def get_sales_stats(db: Session, current_user: User) -> dict:
 
     # 本月签约金额
     monthly_revenue = db.query(func.sum(Contract.contract_amount)).filter(
-        Contract.signed_date >= month_start,
-        Contract.signed_date <= month_end,
+        Contract.signing_date >= month_start,
+        Contract.signing_date <= month_end,
         Contract.status.in_(['SIGNED', 'ACTIVE', 'COMPLETED'])
     ).scalar() or Decimal('0')
 
     # 上月签约金额（用于计算趋势）
     last_month_revenue = db.query(func.sum(Contract.contract_amount)).filter(
-        Contract.signed_date >= last_month_start,
-        Contract.signed_date <= last_month_end,
+        Contract.signing_date >= last_month_start,
+        Contract.signing_date <= last_month_end,
         Contract.status.in_(['SIGNED', 'ACTIVE', 'COMPLETED'])
     ).scalar() or Decimal('0')
 
