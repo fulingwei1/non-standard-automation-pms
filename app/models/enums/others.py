@@ -178,6 +178,10 @@ class MeetingCycleType(str, Enum):
     PLANNED = "PLANNED"
     AD_HOC = "AD_HOC"
     RECURRING = "RECURRING"
+    DAILY = "DAILY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
 
 
 class ActionItemStatus(str, Enum):

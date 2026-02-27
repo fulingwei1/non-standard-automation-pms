@@ -150,7 +150,7 @@ async def multi_dimensional_comparison(
         results = (
             db.query(
                 Worker.id.label('worker_id'),
-                Worker.worker_code,
+                Worker.worker_no,
                 Worker.worker_name,
                 func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
                 func.avg(WorkerEfficiencyRecord.quality_rate).label('avg_quality_rate'),
@@ -159,14 +159,14 @@ async def multi_dimensional_comparison(
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*filters))
-            .group_by(Worker.id, Worker.worker_code, Worker.worker_name)
+            .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
             .all()
         )
         
         items = [
             {
                 "id": row.worker_id,
-                "code": row.worker_code,
+                "code": row.worker_no,
                 "name": row.worker_name,
                 "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                 "avg_quality_rate": float(row.avg_quality_rate) if row.avg_quality_rate else 0,

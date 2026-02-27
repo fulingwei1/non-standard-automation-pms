@@ -204,7 +204,7 @@ def _generate_detailed_report(db: Session, oee_filters, efficiency_filters):
     # 详细的工人效率数据
     efficiency_details = (
         db.query(
-            Worker.worker_code,
+            Worker.worker_no,
             Worker.worker_name,
             func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
             func.avg(WorkerEfficiencyRecord.quality_rate).label('avg_quality_rate'),
@@ -212,7 +212,7 @@ def _generate_detailed_report(db: Session, oee_filters, efficiency_filters):
         )
         .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
         .filter(and_(*efficiency_filters))
-        .group_by(Worker.worker_code, Worker.worker_name)
+        .group_by(Worker.worker_no, Worker.worker_name)
         .all()
     )
     
@@ -231,7 +231,7 @@ def _generate_detailed_report(db: Session, oee_filters, efficiency_filters):
         ],
         "efficiency_details": [
             {
-                "worker_code": row.worker_code,
+                "worker_code": row.worker_no,
                 "worker_name": row.worker_name,
                 "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                 "avg_quality_rate": float(row.avg_quality_rate) if row.avg_quality_rate else 0,
