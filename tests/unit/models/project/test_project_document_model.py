@@ -15,8 +15,8 @@ class TestProjectDocumentModel:
         """测试创建项目文档"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="需求规格说明书.docx",
-            document_type="需求文档",
+            doc_name="需求规格说明书.docx",
+            doc_type="需求文档",
             file_path="/uploads/docs/req_spec.docx",
             uploaded_by=sample_user.id
         )
@@ -32,8 +32,8 @@ class TestProjectDocumentModel:
         """测试文档-项目关系"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="设计文档.pdf",
-            document_type="设计",
+            doc_name="设计文档.pdf",
+            doc_type="设计",
             file_path="/uploads/design.pdf",
             uploaded_by=sample_user.id
         )
@@ -48,8 +48,8 @@ class TestProjectDocumentModel:
         """测试文档-上传者关系"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="测试报告.xlsx",
-            document_type="测试",
+            doc_name="测试报告.xlsx",
+            doc_type="测试",
             file_path="/uploads/test_report.xlsx",
             uploaded_by=sample_user.id
         )
@@ -64,8 +64,8 @@ class TestProjectDocumentModel:
         """测试文档文件大小"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="架构图.png",
-            document_type="设计",
+            doc_name="架构图.png",
+            doc_type="设计",
             file_path="/uploads/arch.png",
             file_size=2048576,  # 2MB
             uploaded_by=sample_user.id
@@ -82,8 +82,8 @@ class TestProjectDocumentModel:
         """测试文档版本"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="接口文档",
-            document_type="技术文档",
+            doc_name="接口文档",
+            doc_type="技术文档",
             file_path="/uploads/api_v1.md",
             version="1.0",
             uploaded_by=sample_user.id
@@ -104,8 +104,8 @@ class TestProjectDocumentModel:
         desc = "项目初期需求分析文档，包含业务流程和功能清单"
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="需求分析",
-            document_type="需求",
+            doc_name="需求分析",
+            doc_type="需求",
             file_path="/uploads/req.docx",
             description=desc,
             uploaded_by=sample_user.id
@@ -119,8 +119,8 @@ class TestProjectDocumentModel:
         """测试文档分类"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="会议纪要",
-            document_type="会议记录",
+            doc_name="会议纪要",
+            doc_type="会议记录",
             file_path="/uploads/meeting_20260221.docx",
             category="管理",
             uploaded_by=sample_user.id
@@ -134,8 +134,8 @@ class TestProjectDocumentModel:
         """测试更新文档"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="初稿",
-            document_type="草稿",
+            doc_name="初稿",
+            doc_type="草稿",
             file_path="/uploads/draft.docx",
             uploaded_by=sample_user.id
         )
@@ -155,8 +155,8 @@ class TestProjectDocumentModel:
         """测试删除文档"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="临时文档",
-            document_type="临时",
+            doc_name="临时文档",
+            doc_type="临时",
             file_path="/uploads/temp.txt",
             uploaded_by=sample_user.id
         )
@@ -175,8 +175,8 @@ class TestProjectDocumentModel:
         docs = [
             ProjectDocument(
                 project_id=sample_project.id,
-                document_name=f"文档{i}.pdf",
-                document_type="技术",
+                doc_name=f"文档{i}.pdf",
+                doc_type="技术",
                 file_path=f"/uploads/doc{i}.pdf",
                 uploaded_by=sample_user.id
             ) for i in range(1, 6)
@@ -193,8 +193,8 @@ class TestProjectDocumentModel:
         """测试文档时间戳"""
         doc = ProjectDocument(
             project_id=sample_project.id,
-            document_name="时间戳测试",
-            document_type="测试",
+            doc_name="时间戳测试",
+            doc_type="测试",
             file_path="/uploads/ts.txt",
             uploaded_by=sample_user.id
         )

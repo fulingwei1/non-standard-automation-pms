@@ -477,7 +477,7 @@ def setup_test_data(db_session: Session, setup_test_users_and_roles):
     pm_member = ProjectMember(
         project_id=projects["pm_project"].id,
         user_id=users["pm"].id,
-        role="PM",
+        role_code="PM",
         start_date=date.today(),
     )
     db_session.add(pm_member)
@@ -485,7 +485,7 @@ def setup_test_data(db_session: Session, setup_test_users_and_roles):
     engineer_member = ProjectMember(
         project_id=projects["pm_project"].id,
         user_id=users["engineer"].id,
-        role="ENGINEER",
+        role_code="ENGINEER",
         start_date=date.today(),
     )
     db_session.add(engineer_member)

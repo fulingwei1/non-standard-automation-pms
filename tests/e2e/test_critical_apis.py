@@ -30,8 +30,8 @@ class TestTimesheetAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Test Worker",
-            employee_no="T001",
+            name="Test Worker",
+            employee_code="T001",
             department="生产部",
             employment_status="active",
         )
@@ -85,8 +85,8 @@ class TestTimesheetAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Test Worker 2",
-            employee_no="T002",
+            name="Test Worker 2",
+            employee_code="T002",
             department="生产部",
             employment_status="active",
         )
@@ -122,8 +122,8 @@ class TestPurchaseAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Procurement Specialist",
-            employee_no="P001",
+            name="Procurement Specialist",
+            employee_code="P001",
             department="采购部",
             employment_status="active",
         )
@@ -182,8 +182,8 @@ class TestPurchaseAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Procurement Specialist 2",
-            employee_no="P002",
+            name="Procurement Specialist 2",
+            employee_code="P002",
             department="采购部",
             employment_status="active",
         )
@@ -219,8 +219,8 @@ class TestBudgetAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Project Manager",
-            employee_no="M001",
+            name="Project Manager",
+            employee_code="M001",
             department="项目管理部",
             employment_status="active",
         )
@@ -272,8 +272,8 @@ class TestBudgetAPI:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Project Manager 2",
-            employee_no="M002",
+            name="Project Manager 2",
+            employee_code="M002",
             department="项目管理部",
             employment_status="active",
         )
