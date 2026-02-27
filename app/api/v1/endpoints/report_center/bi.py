@@ -342,7 +342,7 @@ def get_executive_dashboard(
 
     # 销售统计（本月）
     month_contracts = db.query(Contract).filter(
-        func.date(Contract.signed_date) >= month_start,
+        func.date(Contract.signing_date) >= month_start,
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).all()
     month_contract_amount = sum([float(c.contract_amount or 0) for c in month_contracts])
@@ -353,7 +353,7 @@ def get_executive_dashboard(
 
     # 合同统计
     total_contracts = db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
-    total_contract_amount = db.query(func.sum(Contract.contract_amount)).filter(
+    total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).scalar() or 0
 
