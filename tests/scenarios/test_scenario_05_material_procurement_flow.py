@@ -150,7 +150,7 @@ class TestMaterialProcurementFlow:
         db_session.commit()
 
         po = PurchaseOrder(
-            order_code="PO-MAT-001",
+            order_no="PO-MAT-001",
             supplier_id=test_vendor.id,
             order_date=date.today(),
             delivery_date=date.today() + timedelta(days=20),
@@ -342,7 +342,7 @@ class TestMaterialProcurementFlow:
 
         # 3. 创建采购订单
         po = PurchaseOrder(
-            order_code="PO-FULL-001",
+            order_no="PO-FULL-001",
             supplier_id=test_vendor.id,
             order_date=date.today(),
             total_amount=Decimal("10000.00"),

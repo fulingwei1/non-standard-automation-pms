@@ -170,7 +170,7 @@ class TestPurchaseRequestToReceipt:
 
         # 创建采购订单
         po = PurchaseOrder(
-            order_code="PO-2026-001",
+            order_no="PO-2026-001",
             request_id=pr.id,
             supplier_id=test_supplier.id,
             order_date=date.today(),
@@ -206,7 +206,7 @@ class TestPurchaseRequestToReceipt:
     def test_06_confirm_purchase_order(self, db_session: Session, test_supplier: Vendor):
         """测试6：确认采购订单"""
         po = PurchaseOrder(
-            order_code="PO-2026-002",
+            order_no="PO-2026-002",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             total_amount=Decimal("25000.00"),
@@ -227,7 +227,7 @@ class TestPurchaseRequestToReceipt:
     def test_07_send_purchase_order_to_supplier(self, db_session: Session, test_supplier: Vendor):
         """测试7：发送采购订单给供应商"""
         po = PurchaseOrder(
-            order_code="PO-2026-003",
+            order_no="PO-2026-003",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             total_amount=Decimal("30000.00"),
@@ -250,7 +250,7 @@ class TestPurchaseRequestToReceipt:
         """测试8：创建采购收货单"""
         # 创建采购订单
         po = PurchaseOrder(
-            order_code="PO-2026-004",
+            order_no="PO-2026-004",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             delivery_date=date.today() + timedelta(days=15),
@@ -310,7 +310,7 @@ class TestPurchaseRequestToReceipt:
     ):
         """测试9：执行质量检验"""
         po = PurchaseOrder(
-            order_code="PO-2026-005",
+            order_no="PO-2026-005",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             status="SENT",
@@ -364,7 +364,7 @@ class TestPurchaseRequestToReceipt:
     def test_10_complete_purchase_receipt(self, db_session: Session, test_supplier: Vendor):
         """测试10：完成采购收货"""
         po = PurchaseOrder(
-            order_code="PO-2026-006",
+            order_no="PO-2026-006",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             status="SENT",
@@ -402,7 +402,7 @@ class TestPurchaseRequestToReceipt:
     ):
         """测试11：处理部分交货"""
         po = PurchaseOrder(
-            order_code="PO-2026-007",
+            order_no="PO-2026-007",
             supplier_id=test_supplier.id,
             order_date=date.today(),
             total_amount=Decimal("30000.00"),
