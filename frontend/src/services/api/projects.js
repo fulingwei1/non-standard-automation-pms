@@ -67,7 +67,7 @@ export const projectApi = {
     }),
   getGateCheckResult: (id, targetStage) =>
     api.get(`/projects/${id}/gate-check/${targetStage}`),
-  advanceStage: (id, data) => api.post(`/projects/${id}/advance-stage`, data),
+  advanceStage: (id, data) => api.post(`/projects/${id}/stage-advance`, data),
   // Sprint 5.3: 缓存管理API
   getCacheStats: () => api.get("/projects/cache/stats"),
   clearCache: (pattern) =>
@@ -78,7 +78,7 @@ export const projectApi = {
   // Sprint 3.3: 项目详情页增强
   getStatusLogs: (id, params) =>
     api.get(`/projects/${id}/status-logs`, { params }),
-  getHealthDetails: (id) => api.get(`/projects/${id}/health-details`),
+  getHealthDetails: (id) => api.get(`/projects/${id}/health/details`),
   // Sprint 3.2: 项目经理统计
   getStats: (params) => api.get("/projects/stats", { params }),
 };

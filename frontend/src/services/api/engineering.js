@@ -9,80 +9,45 @@ export const projectReviewApi = {
   create: (data) => api.post("/project-reviews", data),
   update: (id, data) => api.put(`/project-reviews/${id}`, data),
   delete: (id) => api.delete(`/project-reviews/${id}`),
-  publish: (id) => api.put(`/project-reviews/${id}/publish`),
-  archive: (id) => api.put(`/project-reviews/${id}/archive`),
+  publish: (id) => api.post(`/projects/reviews/${id}/publish`),
 
   // 经验教训
   getLessons: (reviewId, params) =>
-    api.get(`/project-reviews/${reviewId}/lessons`, { params }),
+    api.get("/project-reviews", { params: { review_id: reviewId, ...params } }),
   createLesson: (reviewId, data) =>
-    api.post(`/project-reviews/${reviewId}/lessons`, data),
+    api.post("/project-reviews/extract", { review_id: reviewId, ...data }),
   getLesson: (lessonId) =>
-    api.get(`/project-reviews/lessons/${lessonId}`),
+    api.get(`/project-reviews/${lessonId}`),
   updateLesson: (lessonId, data) =>
-    api.put(`/project-reviews/lessons/${lessonId}`, data),
+    api.patch(`/project-reviews/${lessonId}`, data),
   deleteLesson: (lessonId) =>
-    api.delete(`/project-reviews/lessons/${lessonId}`),
-  resolveLesson: (lessonId) =>
-    api.put(`/project-reviews/lessons/${lessonId}/resolve`),
+    api.delete(`/project-reviews/${lessonId}`),
 
   // 最佳实践
   getBestPractices: (reviewId, params) =>
-    api.get(`/project-reviews/${reviewId}/best-practices`, { params }),
+    api.get("/projects/best-practices", { params: { review_id: reviewId, ...params } }),
   createBestPractice: (reviewId, data) =>
-    api.post(`/project-reviews/${reviewId}/best-practices`, data),
+    api.post("/projects/best-practices", { review_id: reviewId, ...data }),
   getBestPractice: (practiceId) =>
-    api.get(`/project-reviews/best-practices/${practiceId}`),
+    api.get(`/projects/best-practices/${practiceId}`),
   updateBestPractice: (practiceId, data) =>
-    api.put(`/project-reviews/best-practices/${practiceId}`, data),
+    api.put(`/projects/best-practices/${practiceId}`, data),
   deleteBestPractice: (practiceId) =>
-    api.delete(`/project-reviews/best-practices/${practiceId}`),
-  validateBestPractice: (practiceId, data) =>
-    api.put(
-      `/project-reviews/best-practices/${practiceId}/validate`,
-      data,
-    ),
-  reuseBestPractice: (practiceId, data) =>
-    api.post(
-      `/project-reviews/best-practices/${practiceId}/reuse`,
-      data,
-    ),
+    api.delete(`/projects/best-practices/${practiceId}`),
 
   // 最佳实践库
   searchBestPractices: (params) =>
     api.get("/projects/best-practices", { params }),
-  getBestPracticeCategories: () =>
-    api.get("/projects/best-practices/categories"),
-  getBestPracticeStatistics: () =>
-    api.get("/projects/best-practices/statistics"),
 
   // 项目经验教训（从结项记录提取）
   getProjectLessons: (projectId) =>
-    api.get(`/projects/${projectId}/lessons-learned`),
+    api.get(`/projects/${projectId}/lessons`),
 
   // 经验教训高级管理
   searchLessonsLearned: (params) =>
-    api.get("/projects/lessons-learned", { params }),
-  getLessonsStatistics: (params) =>
-    api.get("/projects/lessons-learned/statistics", { params }),
-  getLessonCategories: () => api.get("/projects/lessons-learned/categories"),
-  updateLessonStatus: (lessonId, status) =>
-    api.put(`/project-reviews/lessons/${lessonId}/status`, {
-      new_status: status,
-    }),
-  batchUpdateLessons: (lessonIds, updateData) =>
-    api.post("/project-reviews/lessons/batch-update", {
-      lesson_ids: lessonIds,
-      update_data: updateData,
-    }),
+    api.get("/projects/lessons/search", { params }),
 
   // 最佳实践高级管理
-  recommendBestPractices: (data) =>
-    api.post("/projects/best-practices/recommend", data),
-  getProjectBestPracticeRecommendations: (projectId, limit) =>
-    api.get(`/projects/${projectId}/best-practices/recommend`, {
-      params: { limit },
-    }),
   applyBestPractice: (practiceId, targetProjectId, notes) =>
     api.post(`/project-reviews/best-practices/${practiceId}/apply`, {
       target_project_id: targetProjectId,

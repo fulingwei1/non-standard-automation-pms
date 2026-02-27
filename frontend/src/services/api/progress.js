@@ -32,7 +32,7 @@ export const progressApi = {
     getSummary: (projectId) =>
       api.get(`/projects/${projectId}/progress-summary`),
     getGantt: (projectId) => api.get(`/projects/${projectId}/gantt`),
-    getBoard: (projectId) => api.get(`/projects/${projectId}/progress-board`),
+    getBoard: (projectId) => api.get(`/projects/${projectId}/progress/board`),
     getMilestoneRate: (projectId) =>
       api.get("/reports/milestone-rate", {
         params: projectId ? { project_id: projectId } : {},
@@ -100,6 +100,6 @@ export const progressApi = {
   // Projects WBS Init
   projects: {
     initWBS: (projectId, data) =>
-      api.post(`/projects/${projectId}/init-wbs`, data),
+      api.post(`/projects/${projectId}/stages/init`, data),
   },
 };
