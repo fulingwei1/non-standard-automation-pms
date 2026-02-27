@@ -96,12 +96,12 @@ def get_sales_targets(
     total = query.count()
     targets = apply_pagination(query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit).all()
 
-    team_service = SalesTeamService(db)
-
     # 计算实际完成值和完成率
     items = []
     for target in targets:
-        actual_value, completion_rate = team_service.calculate_target_performance(target)
+        # TODO: 实现目标绩效计算逻辑
+        actual_value = getattr(target, 'actual_value', 0) or 0
+        completion_rate = (actual_value / target.target_value * 100) if target.target_value else 0
 
         # 获取用户/部门名称
         user_name = None

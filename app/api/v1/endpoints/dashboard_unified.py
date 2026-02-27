@@ -68,7 +68,7 @@ def get_unified_dashboard(
             continue
 
     # 按order排序widgets
-    all_widgets.sort(key=lambda w: w.order)
+    all_widgets.sort(key=lambda w: getattr(w, 'order', 0))
 
     return ResponseModel(
         data=UnifiedDashboardResponse(

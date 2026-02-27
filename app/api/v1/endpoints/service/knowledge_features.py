@@ -50,7 +50,7 @@ def get_knowledge_issues(
     query = apply_keyword_filter(query, Issue, keyword, ["title", "description", "solution"])
 
     total = query.count()
-    issues = query.order_by(desc(Issue.resolved_at), apply_pagination(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
+    issues = apply_pagination(query.order_by(desc(Issue.resolved_at), desc(Issue.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建问题库列表
     issue_list = []
@@ -109,7 +109,7 @@ def get_knowledge_solutions(
     query = apply_keyword_filter(query, KnowledgeBase, keyword, ["title", "content"])
 
     total = query.count()
-    articles = query.order_by(desc(KnowledgeBase.view_count), apply_pagination(desc(KnowledgeBase.created_at)), pagination.offset, pagination.limit).all()
+    articles = apply_pagination(query.order_by(desc(KnowledgeBase.view_count), desc(KnowledgeBase.created_at)), pagination.offset, pagination.limit).all()
 
     # 构建方案库列表
     solution_list = []

@@ -4,7 +4,7 @@
 用于成本看板数据传输
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -266,8 +266,14 @@ class DetailedDashboardResponse(BaseModel):
 class UnifiedDashboardResponse(BaseModel):
     """统一仪表盘响应"""
     
-    modules: List[DashboardModuleInfo] = Field(..., description="模块列表")
+    role_code: str = Field(..., description="角色代码")
+    role_name: str = Field("", description="角色名称")
+    stats: List[DashboardStatCard] = Field(default_factory=list, description="统计卡片")
+    widgets: List[DashboardWidget] = Field(default_factory=list, description="组件列表")
+    modules: List[DashboardModuleInfo] = Field(default_factory=list, description="模块列表")
     overview: Optional[Dict] = Field(None, description="总览数据")
+    last_updated: Optional[datetime] = Field(None, description="最后更新时间")
+    refresh_interval: int = Field(300, description="刷新间隔(秒)")
     
     class Config:
         from_attributes = True

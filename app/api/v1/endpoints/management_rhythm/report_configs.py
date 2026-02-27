@@ -66,7 +66,7 @@ def read_report_configs(
         query = query.filter(MeetingReportConfig.is_default == is_default)
 
     total = query.count()
-    configs = query.order_by(desc(MeetingReportConfig.is_default), apply_pagination(desc(MeetingReportConfig.created_at)), pagination.offset, pagination.limit).all()
+    configs = apply_pagination(query.order_by(desc(MeetingReportConfig.is_default), desc(MeetingReportConfig.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for config in configs:

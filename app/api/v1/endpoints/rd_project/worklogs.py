@@ -62,7 +62,7 @@ def get_rd_project_worklogs(
         query = query.filter(Timesheet.status == worklog_status)
 
     total = query.count()
-    timesheets = query.order_by(desc(Timesheet.work_date), apply_pagination(desc(Timesheet.created_at)), pagination.offset, pagination.limit).all()
+    timesheets = apply_pagination(query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for ts in timesheets:
