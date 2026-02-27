@@ -16,7 +16,7 @@ import pytest
 @pytest.fixture
 def service(db_session):
     from app.services.change_impact_ai_service import ChangeImpactAIService
-    return ChangeImpactAIService()
+    return ChangeImpactAIService(db_session)
 
 
 def _make_change(time_impact=5, cost_impact=10000):
@@ -358,7 +358,7 @@ class TestAnalyzeChangeImpact:
     @pytest.mark.asyncio
     async def test_change_not_found_raises(self, db_session):
         from app.services.change_impact_ai_service import ChangeImpactAIService
-        svc = ChangeImpactAIService()
+        svc = ChangeImpactAIService(db_session)
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         with pytest.raises((ValueError, Exception)):
@@ -397,7 +397,7 @@ class TestAnalyzeChangeImpact:
                  "tasks": [], "dependencies": [], "milestones": []}):
             # Should not raise
             try:
-                svc = ChangeImpactAIService()
+                svc = ChangeImpactAIService(db_session)
                 # patch the final commit
                 db_session.commit.return_value = None
                 # Just test analyze_change_impact doesn't error given mocked context

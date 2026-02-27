@@ -16,7 +16,7 @@ import pytest
 def service(db_session):
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
     with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-        svc = ResourceSchedulingAIService()
+        svc = ResourceSchedulingAIService(db_session)
         svc.ai_client = MagicMock()
     return svc
 
@@ -279,7 +279,7 @@ class TestDetectResourceConflicts:
     def test_no_allocations_returns_empty(self, db_session):
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-            svc = ResourceSchedulingAIService()
+            svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
 
         db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = []
@@ -291,7 +291,7 @@ class TestDetectResourceConflicts:
     def test_no_overlap_returns_empty(self, db_session):
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-            svc = ResourceSchedulingAIService()
+            svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
 
         # Two allocations for same resource, NO overlap
@@ -322,7 +322,7 @@ class TestForecastResourceDemand:
         import json
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-            svc = ResourceSchedulingAIService()
+            svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
 
         svc.ai_client.generate_solution.return_value = {
