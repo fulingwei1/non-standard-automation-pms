@@ -167,7 +167,7 @@ export function useApprovalCenter() {
    */
   const approve = useCallback(async (taskId, comment = '') => {
     try {
-      await api.post(`/tasks/${taskId}/approve`, {
+      await api.post(`/approvals/tasks/${taskId}/approve`, {
         comment: comment || '同意',
       });
       // 刷新数据
@@ -184,7 +184,7 @@ export function useApprovalCenter() {
    */
   const reject = useCallback(async (taskId, comment = '') => {
     try {
-      await api.post(`/tasks/${taskId}/reject`, {
+      await api.post(`/approvals/tasks/${taskId}/reject`, {
         comment: comment || '驳回',
       });
       // 刷新数据

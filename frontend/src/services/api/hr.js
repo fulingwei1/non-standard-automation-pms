@@ -65,63 +65,63 @@ export const performanceApi = {
 
   // 月度工作总结
   createMonthlySummary: (data) =>
-    api.post("/performance/monthly-summary", data),
+    api.post("/performance/new/employee/monthly-summary", data),
   saveMonthlySummaryDraft: (period, data) =>
-    api.put("/performance/monthly-summary/draft", data, {
+    api.put("/performance/new/employee/monthly-summary/draft", data, {
       params: { period },
     }),
   getMonthlySummaryHistory: (params) =>
-    api.get("/performance/monthly-summary/history", { params }),
+    api.get("/performance/new/employee/monthly-summary/history", { params }),
 
   // 我的绩效
-  getMyPerformance: () => api.get("/performance/my-performance"),
+  getMyPerformance: () => api.get("/performance/new/employee/my-performance"),
 
   // ========== 经理端 API ==========
 
   // 待评价任务
   getEvaluationTasks: (params) =>
-    api.get("/performance/evaluation-tasks", { params }),
-  getEvaluationDetail: (taskId) => api.get(`/performance/evaluation/${taskId}`),
+    api.get("/performance/new/manager/evaluation-tasks", { params }),
+  getEvaluationDetail: (taskId) => api.get(`/performance/new/manager/evaluation/${taskId}`),
   submitEvaluation: (taskId, data) =>
-    api.post(`/performance/evaluation/${taskId}`, data),
+    api.post(`/performance/new/manager/evaluation/${taskId}`, data),
 
   // ========== HR 端 API ==========
 
   // 权重配置
-  getWeightConfig: () => api.get("/performance/weight-config"),
-  updateWeightConfig: (data) => api.put("/performance/weight-config", data),
+  getWeightConfig: () => api.get("/performance/new/hr/weight-config"),
+  updateWeightConfig: (data) => api.put("/performance/new/hr/weight-config", data),
 
   // 融合绩效
   getIntegratedPerformance: (userId, params) =>
-    api.get(`/performance/integrated/${userId}`, { params }),
+    api.get(`/performance/integration/integrated/${userId}`, { params }),
   calculateIntegratedPerformance: (params) =>
-    api.post("/performance/calculate-integrated", null, { params }),
+    api.post("/performance/integration/calculate-integrated", null, { params }),
 };
 
 export const bonusApi = {
   // 我的奖金
-  getMyBonus: () => api.get("/bonus/my"),
-  getMyBonusStatistics: (params) => api.get("/bonus/statistics", { params }),
+  getMyBonus: () => api.get("/bonus/my/my"),
+  getMyBonusStatistics: (params) => api.get("/bonus/statistics/statistics", { params }),
 
   // 奖金计算记录
-  getCalculations: (params) => api.get("/bonus/calculations", { params }),
-  getCalculation: (id) => api.get(`/bonus/calculations/${id}`),
+  getCalculations: (params) => api.get("/bonus/sales-calc/calculations", { params }),
+  getCalculation: (id) => api.get(`/bonus/sales-calc/calculations/${id}`),
 
   // 奖金发放记录
-  getDistributions: (params) => api.get("/bonus/distributions", { params }),
-  getDistribution: (id) => api.get(`/bonus/distributions/${id}`),
+  getDistributions: (params) => api.get("/bonus/payment/distributions", { params }),
+  getDistribution: (id) => api.get(`/bonus/payment/distributions/${id}`),
 
   // 计算奖金（需要权限）
-  calculateSalesBonus: (data) => api.post("/bonus/calculate/sales", data),
+  calculateSalesBonus: (data) => api.post("/bonus/sales-calc/calculate/sales", data),
   calculateSalesDirectorBonus: (data) =>
-    api.post("/bonus/calculate/sales-director", data),
-  calculatePresaleBonus: (data) => api.post("/bonus/calculate/presale", data),
+    api.post("/bonus/sales-calc/calculate/sales-director", data),
+  calculatePresaleBonus: (data) => api.post("/bonus/sales-calc/calculate/presale", data),
   calculatePerformanceBonus: (data) =>
-    api.post("/bonus/calculate/performance", data),
-  calculateProjectBonus: (data) => api.post("/bonus/calculate/project", data),
+    api.post("/bonus/calculation/calculate/performance", data),
+  calculateProjectBonus: (data) => api.post("/bonus/calculation/calculate/project", data),
   calculateMilestoneBonus: (data) =>
-    api.post("/bonus/calculate/milestone", data),
-  calculateTeamBonus: (data) => api.post("/bonus/calculate/team", data),
+    api.post("/bonus/calculation/calculate/milestone", data),
+  calculateTeamBonus: (data) => api.post("/bonus/calculation/calculate/team", data),
 };
 
 export const qualificationApi = {
@@ -163,69 +163,69 @@ export const timesheetApi = {
   list: (params) => api.get("/timesheets", { params }),
   get: (id) => api.get(`/timesheets/${id}`),
   create: (data) => api.post("/timesheets", data),
-  batchCreate: (data) => api.post("/timesheets/batch", data),
+  batchCreate: (data) => api.post("/timesheet/batch", data),
   update: (id, data) => api.put(`/timesheets/${id}`, data),
   delete: (id) => api.delete(`/timesheets/${id}`),
 
   // ========== 周工时表 ==========
-  getWeek: (params) => api.get("/timesheets/week", { params }),
-  submitWeek: (data) => api.post("/timesheets/week/submit", data),
+  getWeek: (params) => api.get("/timesheet/week", { params }),
+  submitWeek: (data) => api.post("/timesheet/week/submit", data),
 
   // ========== 提交与审批 ==========
-  submit: (data) => api.post("/timesheets/submit", data),
+  submit: (data) => api.post("/timesheet/submit", data),
   getPendingApproval: (params) =>
-    api.get("/timesheets/pending-approval", { params }),
+    api.get("/timesheet/pending-approval", { params }),
   approve: (id, data) => api.put(`/timesheets/${id}/approve`, data),
-  batchApprove: (data) => api.post("/timesheets/approve", data),
+  batchApprove: (data) => api.post("/timesheet/approve", data),
   reject: (id, data) => api.post(`/timesheets/${id}/reject`, data),
 
   // ========== 统计汇总 ==========
-  getStatistics: (params) => api.get("/timesheets/statistics", { params }),
-  getMonthSummary: (params) => api.get("/timesheets/month-summary", { params }),
-  getMySummary: (params) => api.get("/timesheets/my-summary", { params }),
+  getStatistics: (params) => api.get("/timesheet/statistics", { params }),
+  getMonthSummary: (params) => api.get("/timesheet/month-summary", { params }),
+  getMySummary: (params) => api.get("/timesheet/my-summary", { params }),
   getDepartmentSummary: (deptId, params) =>
     api.get(`/timesheets/departments/${deptId}/timesheet-summary`, { params }),
 
   // ========== 数据汇总 ==========
-  aggregate: (data) => api.post("/timesheets/aggregate", data),
+  aggregate: (data) => api.post("/timesheet/aggregate", data),
 
   // ========== 报表导出 ==========
   getHrReport: (params) =>
-    api.get("/timesheets/reports/hr", {
+    api.get("/timesheet/reports/hr", {
       params,
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getFinanceReport: (params) =>
-    api.get("/timesheets/reports/finance", {
+    api.get("/timesheet/reports/finance", {
       params,
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getRdReport: (params) =>
-    api.get("/timesheets/reports/rd", {
+    api.get("/timesheet/reports/rd", {
       params,
       responseType: params.format === "excel" ? "blob" : "json",
     }),
   getProjectReport: (params) =>
-    api.get("/timesheets/reports/project", {
+    api.get("/timesheet/reports/project", {
       params,
       responseType: params.format === "excel" ? "blob" : "json",
     }),
 
   // ========== 数据同步 ==========
-  sync: (params) => api.post("/timesheets/sync", null, { params }),
+  sync: (params) => api.post("/timesheet/sync", null, { params }),
   getSyncStatus: (timesheetId) =>
     api.get(`/timesheets/sync-status/${timesheetId}`),
 
   // ========== 绩效统计 ==========
   getPerformanceStats: (params) =>
-    api.get("/timesheets/performance", { params }),
+    api.get("/timesheet/performance", { params }),
   getResourcePlanning: (params) =>
-    api.get("/timesheets/resource-planning", { params }),
-  getCostAnalysis: (params) => api.get("/timesheets/cost-analysis", { params }),
+    api.get("/timesheet/resource-planning", { params }),
+  getCostAnalysis: (params) => api.get("/timesheet/cost-analysis", { params }),
 
   // ========== 质量检查 ==========
-  getQualityCheck: (params) => api.get("/timesheets/quality-check", { params }),
-  detectAnomalies: (params) => api.get("/timesheets/anomalies", { params }),
+  getQualityCheck: (params) => api.get("/timesheet/quality-check", { params }),
+  detectAnomalies: (params) => api.get("/timesheet/anomalies", { params }),
 };
 
 export const staffMatchingApi = {

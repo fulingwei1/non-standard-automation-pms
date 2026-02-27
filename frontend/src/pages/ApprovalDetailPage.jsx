@@ -94,7 +94,7 @@ const ApprovalDetailPage = () => {
     setError(null);
 
     try {
-      const response = await api.get(`/instances/${id}`);
+      const response = await api.get(`/approvals/instances/${id}`);
       setInstance(response.data);
     } catch (err) {
       console.error("加载审批详情失败:", err);
@@ -147,15 +147,15 @@ const ApprovalDetailPage = () => {
 
     try {
       if (action === "approve") {
-        await api.post(`/tasks/${task.id}/approve`, {
+        await api.post(`/approvals/tasks/${task.id}/approve`, {
           comment: comment || "同意",
         });
       } else if (action === "reject") {
-        await api.post(`/tasks/${task.id}/reject`, {
+        await api.post(`/approvals/tasks/${task.id}/reject`, {
           comment: comment || "驳回",
         });
       } else if (action === "withdraw") {
-        await api.post(`/instances/${id}/withdraw`, {
+        await api.post(`/approvals/instances/${id}/withdraw`, {
           comment: comment || "撤回申请",
         });
       }
@@ -177,7 +177,7 @@ const ApprovalDetailPage = () => {
    */
   const handleUrge = async () => {
     try {
-      await api.post(`/instances/${id}/urge`);
+      await api.post(`/approvals/instances/${id}/urge`);
       // TODO: 显示成功提示
     } catch (err) {
       console.error("催办失败:", err);
