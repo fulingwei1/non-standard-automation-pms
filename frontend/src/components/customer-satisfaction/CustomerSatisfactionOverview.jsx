@@ -96,7 +96,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
               value={overviewStats.avgScore}
               suffix="/ 5.0"
               prefix={<Rate disabled value={parseFloat(overviewStats.avgScore)} />}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }} />
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }} />
 
           </Card>
         </Col>
@@ -108,7 +108,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
               value={overviewStats.completedSurveys}
               suffix={`/ ${overviewStats.totalSurveys}`}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: CHART_COLORS.POSITIVE }} />
+              styles={{ content: { color: CHART_COLORS.POSITIVE } }} />
 
           </Card>
         </Col>
@@ -120,7 +120,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
               value={overviewStats.responseRate}
               suffix="%"
               prefix={<UserOutlined />}
-              valueStyle={{ color: CHART_COLORS.NEUTRAL }} />
+              styles={{ content: { color: CHART_COLORS.NEUTRAL } }} />
 
           </Card>
         </Col>
@@ -133,10 +133,10 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
               suffix="%"
               prefix={overviewStats.trend.direction === 'up' ?
               <RiseOutlined /> : <FallOutlined />}
-              valueStyle={{
+              styles={{ content: {
                 color: overviewStats.trend.direction === 'up' ?
                 CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE
-              }} />
+              } }} />
 
           </Card>
         </Col>

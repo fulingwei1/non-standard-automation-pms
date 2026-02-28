@@ -88,7 +88,7 @@ import {
 import { serviceApi } from '@/services/api/service';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
+// Using Tabs items prop instead of TabPane
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
@@ -350,89 +350,35 @@ const CustomerSatisfaction = () => {
         activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}>
-
-        <TabPane
-          tab={
-          <span>
-              <BarChart3 size={16} />
-              概览分析
-          </span>
-          }
-          key="overview">
-
-          <CustomerSatisfactionOverview
-            data={{ surveys, responses, trend: trendData }}
-            loading={loading}
-            onRefresh={loadData} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <FileText size={16} />
-              调查管理
-          </span>
-          }
-          key="surveys">
-
-          <SurveyManager
-            surveys={filteredSurveys}
-            loading={loading}
-            onCreate={handleCreateSurvey}
-            onEdit={handleEditSurvey}
-            onDelete={handleDeleteSurvey} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <PieChart size={16} />
-              满意度分析
-          </span>
-          }
-          key="analytics">
-
-          <SatisfactionAnalytics
-            surveys={surveys}
-            responses={filteredResponses}
-            loading={loading} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <MessageSquare size={16} />
-              反馈管理
-          </span>
-          }
-          key="feedback">
-
-          <FeedbackManager
-            responses={filteredResponses}
-            loading={loading}
-            onRefresh={loadData} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Settings size={16} />
-              问卷模板
-          </span>
-          }
-          key="templates">
-
-          <SurveyTemplates
-            loading={loading}
-            onUseTemplate={handleCreateSurvey} />
-
-        </TabPane>
-      </Tabs>
+        style={{ marginBottom: '24px' }}
+        items={[
+          {
+            key: 'overview',
+            label: <span><BarChart3 size={16} /> 概览分析</span>,
+            children: <CustomerSatisfactionOverview data={{ surveys, responses, trend: trendData }} loading={loading} onRefresh={loadData} />,
+          },
+          {
+            key: 'surveys',
+            label: <span><FileText size={16} /> 调查管理</span>,
+            children: <SurveyManager surveys={filteredSurveys} loading={loading} onCreate={handleCreateSurvey} onEdit={handleEditSurvey} onDelete={handleDeleteSurvey} />,
+          },
+          {
+            key: 'analytics',
+            label: <span><PieChart size={16} /> 满意度分析</span>,
+            children: <SatisfactionAnalytics surveys={surveys} responses={filteredResponses} loading={loading} />,
+          },
+          {
+            key: 'feedback',
+            label: <span><MessageSquare size={16} /> 反馈管理</span>,
+            children: <FeedbackManager responses={filteredResponses} loading={loading} onRefresh={loadData} />,
+          },
+          {
+            key: 'templates',
+            label: <span><Settings size={16} /> 问卷模板</span>,
+            children: <SurveyTemplates loading={loading} onUseTemplate={handleCreateSurvey} />,
+          },
+        ]}
+      />
 
       {/* 调查详情模态框 */}
       <Modal
