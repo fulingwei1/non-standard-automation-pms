@@ -23,7 +23,7 @@ router = APIRouter()
 # Configuration
 # ============================================================================
 
-DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "app.db"
+DB_PATH = Path(__file__).parent.parent.parent.parent.parent / "data" / "app.db"
 
 SUPPORTED_CURRENCIES = ["CNY", "USD", "EUR", "JPY", "GBP", "KRW", "TWD"]
 

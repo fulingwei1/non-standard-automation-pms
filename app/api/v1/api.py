@@ -401,7 +401,7 @@ def create_api_router() -> APIRouter:
     # ==================== ECN工程变更→BOM联动 ====================
     try:
         from app.api.v1.endpoints.ecn_bom import router as ecn_bom_router
-        api_router.include_router(ecn_bom_router, prefix="/ecn", tags=["ecn-bom"])
+        api_router.include_router(ecn_bom_router, prefix="", tags=["ecn-bom"])
         print("✓ ECN工程变更模块加载成功")
     except Exception as e:
         print(f"✗ ECN工程变更模块加载失败：{e}")
@@ -409,7 +409,7 @@ def create_api_router() -> APIRouter:
     # ==================== 现场调试 ====================
     try:
         from app.api.v1.endpoints.field_commissioning import router as field_router
-        api_router.include_router(field_router, prefix="/field", tags=["field-commissioning"])
+        api_router.include_router(field_router, prefix="", tags=["field-commissioning"])
         print("✓ 现场调试模块加载成功")
     except Exception as e:
         print(f"✗ 现场调试模块加载失败：{e}")
