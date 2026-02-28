@@ -10,17 +10,14 @@
 """
 
 import os
-import random
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
 from app.models.base import get_db_session
-from app.models.business_support import InvoiceRequest
 from app.models.material import (
     BomHeader,
     BomItem,
@@ -28,7 +25,7 @@ from app.models.material import (
     MaterialCategory,
     MaterialSupplier,
 )
-from app.models.organization import Department, Employee
+from app.models.organization import Employee
 from app.models.progress import Task
 from app.models.project import (
     Customer,
@@ -37,9 +34,9 @@ from app.models.project import (
     ProjectMilestone,
     ProjectPaymentPlan,
 )
-from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
-from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, QuoteItem
-from app.models.user import Role, User, UserRole
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteItem
+from app.models.user import User
 from app.models.vendor import Vendor
 
 

@@ -7,7 +7,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 
 def load_coverage_json(filepath: str) -> Dict:

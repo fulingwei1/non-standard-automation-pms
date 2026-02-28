@@ -46,19 +46,6 @@ print()
 
 try:
     # 导入所有核心模型
-    from app.models.base import Base
-    from app.models.tenant import Tenant
-    from app.models.api_key import APIKey
-    from app.models.two_factor import User2FASecret, User2FABackupCode
-    from app.models.user import (
-        User, Role, UserRole, 
-        ApiPermission, RoleApiPermission,
-        SolutionCreditTransaction
-    )
-    from app.models.permission import (
-        MenuPermission, DataScopeRule, RoleDataScope,
-        RoleMenu, PermissionGroup
-    )
     
     print("✅ 所有模型导入成功")
     print()

@@ -6,13 +6,11 @@
 将 presales-project/presales-evaluation-system 中的评估数据迁移到现有系统
 """
 
-import json
-import os
 import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
@@ -26,13 +24,9 @@ from app.models.enums import (
 )
 from app.models.project import Customer
 from app.models.sales import (
-    AIClarification,
     FailureCase,
     Lead,
-    LeadRequirementDetail,
-    OpenItem,
     Opportunity,
-    RequirementFreeze,
     ScoringRule,
     TechnicalAssessment,
 )

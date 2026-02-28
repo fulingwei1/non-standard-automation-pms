@@ -83,7 +83,7 @@ def main():
                     result = db.execute(text(f"DELETE FROM {table} WHERE {column} = :user_id"), {'user_id': user_id})
                     if result.rowcount > 0:
                         print(f"    ✅ 清理 {table}: {result.rowcount} 条记录")
-                except Exception as e:
+                except Exception:
                     pass  # 忽略表不存在的错误
 
             # 关键步骤：先删除employees记录（因为users表有外键指向employees）

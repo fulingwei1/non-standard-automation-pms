@@ -6,7 +6,6 @@
 
 import os
 import sqlite3
-import sys
 from datetime import datetime
 
 import pandas as pd

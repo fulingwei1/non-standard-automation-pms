@@ -3,10 +3,6 @@ Pytest配置和测试夹具
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-from datetime import date, datetime
 
 # 导入应用
 import sys

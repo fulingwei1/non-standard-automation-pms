@@ -1,11 +1,9 @@
 """
 数据库模型定义 - SQLAlchemy ORM
 """
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Optional, List
+from datetime import datetime
 from sqlalchemy import Column, Integer, BigInteger, String, Date, DateTime, Text
-from sqlalchemy import ForeignKey, Index, Boolean, Numeric, SmallInteger
+from sqlalchemy import ForeignKey, Index, Numeric, SmallInteger
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()

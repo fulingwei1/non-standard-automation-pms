@@ -7,7 +7,7 @@
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
 # 颜色定义

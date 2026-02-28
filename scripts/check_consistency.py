@@ -1,5 +1,4 @@
 import os
-import re
 
 
 def check_refactoring_consistency(base_dir):

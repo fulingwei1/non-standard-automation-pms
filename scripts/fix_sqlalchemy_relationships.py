@@ -7,7 +7,7 @@ SQLAlchemy Relationship 自动修复脚本
 import json
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 import shutil
 from datetime import datetime
 

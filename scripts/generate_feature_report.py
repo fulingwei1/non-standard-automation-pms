@@ -27,7 +27,7 @@ def generate_report():
         # 检查表是否存在
         try:
             result = session.execute(text("SELECT 1 FROM system_features LIMIT 1"))
-        except Exception as e:
+        except Exception:
             print("❌ 功能表不存在，请先运行 scan_system_features.py")
             return
 

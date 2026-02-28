@@ -5,7 +5,6 @@
 """
 
 import os
-import re
 import sys
 from datetime import datetime
 from decimal import Decimal
@@ -14,10 +13,8 @@ from decimal import Decimal
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-from sqlalchemy import text
 
-from app.core.security import get_password_hash
-from app.models.base import SessionLocal, get_engine
+from app.models.base import SessionLocal
 from app.models.organization import Department, Employee
 from app.models.staff_matching import (
     HrEmployeeProfile,

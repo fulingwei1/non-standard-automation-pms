@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent

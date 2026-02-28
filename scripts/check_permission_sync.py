@@ -4,7 +4,6 @@
 检查前端和后端的权限配置是否一致
 """
 
-import json
 import re
 from pathlib import Path
 

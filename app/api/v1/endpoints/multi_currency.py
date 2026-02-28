@@ -7,12 +7,12 @@
 """
 
 import sqlite3
-from datetime import datetime, date
-from typing import Any, List, Optional
+from datetime import datetime
+from typing import List, Optional
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.api import deps
 from app.models.user import User

@@ -7,7 +7,6 @@ Create Date: 2026-02-15 10:00:00
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 # revision identifiers
 revision = '20260215_ai_requirement'

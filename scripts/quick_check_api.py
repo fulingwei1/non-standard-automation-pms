@@ -4,9 +4,6 @@
 快速检查API端点是否正常工作
 """
 
-import json
-import os
-import sys
 from json import JSONDecodeError
 
 import requests

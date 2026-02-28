@@ -5,7 +5,6 @@
 """
 
 import sys
-from datetime import datetime
 from pathlib import Path
 
 project_root = Path(__file__).parent.parent

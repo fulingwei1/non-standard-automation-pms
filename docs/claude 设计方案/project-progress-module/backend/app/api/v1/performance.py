@@ -2,15 +2,11 @@
 绩效报告 API
 支持多角色权限的绩效查询和报告生成
 """
-from fastapi import APIRouter, Query, HTTPException, Depends
-from typing import Optional, List
+from fastapi import APIRouter, Query, HTTPException
 from datetime import date, datetime
-from enum import Enum
 
 from app.services.performance_engine import (
-    PerformanceReportGenerator,
     ReportPeriodType,
-    PerformanceViewLevel,
     create_report_generator
 )
 

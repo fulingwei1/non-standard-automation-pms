@@ -9,15 +9,11 @@ import sys
 
 sys.path.insert(0, '.')
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.models.base import get_db_session
-from app.models.project import Project
 from app.models.technical_review import (
-    ReviewChecklistRecord,
     ReviewIssue,
-    ReviewMaterial,
-    ReviewParticipant,
     TechnicalReview,
 )
 from app.models.user import User

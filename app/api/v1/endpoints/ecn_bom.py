@@ -9,11 +9,10 @@ import json
 import logging
 import sqlite3
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
 

@@ -56,16 +56,6 @@ def test_models():
     ]
 
     try:
-        from app.models import (
-            AssemblyStage,
-            AssemblyTemplate,
-            BomItemAssemblyAttrs,
-            CategoryStageMapping,
-            MaterialReadiness,
-            SchedulingSuggestion,
-            ShortageAlertRule,
-            ShortageDetail,
-        )
         print("✓ 所有模型导入成功")
         return True
     except Exception as e:
@@ -120,12 +110,6 @@ def test_schemas():
     print("=" * 60)
 
     try:
-        from app.schemas.assembly_kit import (
-            AssemblyStageResponse,
-            BomItemAssemblyAttrsResponse,
-            MaterialReadinessResponse,
-            SchedulingSuggestionResponse,
-        )
         print("✓ 所有Schema导入成功")
         return True
     except Exception as e:

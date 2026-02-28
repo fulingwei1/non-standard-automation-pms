@@ -5,7 +5,7 @@
 提供现场调试任务管理、签到、进度更新、问题报告等功能
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime

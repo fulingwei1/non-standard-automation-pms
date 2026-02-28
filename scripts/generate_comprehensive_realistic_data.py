@@ -22,20 +22,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 临时解决方案：不设置material_id字段
 from app.models.alert import AlertRecord, AlertRule, ExceptionEvent
 from app.models.base import get_db_session
-from app.models.material import Material, MaterialCategory
-from app.models.organization import Department, Employee
+from app.models.organization import Employee
 from app.models.production import (
-    Equipment,
-    EquipmentMaintenance,
     ProcessDict,
-    ProductionException,
     ProductionPlan,
     Worker,
-    WorkerSkill,
     WorkOrder,
     WorkReport,
     Workshop,
-    Workstation,
 )
 from app.models.project import (
     Customer,
@@ -45,22 +39,16 @@ from app.models.project import (
     ProjectPaymentPlan,
 )
 from app.models.sales import (
-    Contract,
     FailureCase,
-    Invoice,
     Lead,
-    LeadFollowUp,
     LeadRequirementDetail,
-    OpenItem,
     Opportunity,
-    OpportunityRequirement,
     Quote,
     QuoteItem,
     QuoteVersion,
-    RequirementFreeze,
     TechnicalAssessment,
 )
-from app.models.user import Role, User, UserRole
+from app.models.user import User
 
 # ==================== 数据模板 ====================
 

@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from sqlalchemy import desc, text
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps

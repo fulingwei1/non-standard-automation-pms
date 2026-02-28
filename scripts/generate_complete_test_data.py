@@ -8,7 +8,6 @@
     python3 scripts/generate_complete_test_data.py
 """
 
-import json
 import os
 import random
 import sys
@@ -20,9 +19,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
 from app.models.base import get_db_session
-from app.models.material import Material, MaterialCategory, MaterialSupplier
+from app.models.material import Material, MaterialCategory
 from app.models.vendor import Vendor
-from app.models.organization import Department, Employee
+from app.models.organization import Employee
 from app.models.progress import Task
 from app.models.project import (
     Customer,
@@ -34,14 +33,13 @@ from app.models.project import (
     ProjectMilestone,
     ProjectPaymentPlan,
 )
-from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.sales import (
     Contract,
     Invoice,
     Lead,
     Opportunity,
     Quote,
-    QuoteItem,
     QuoteVersion,
 )
 from app.models.user import User
@@ -452,7 +450,6 @@ def create_bom(db, project, machine, materials, suppliers):
         total_amount += qty * unit_price
 
     # 创建BOM版本（使用原始SQL，因为模型可能不匹配）
-    from sqlalchemy import text
     bom_version_sql = text("""
         INSERT INTO bom_versions (project_id, machine_id, version_no, version_name, status, is_current, total_items, total_amount, created_at, updated_at)
         VALUES (:project_id, :machine_id, :version_no, :version_name, :status, :is_current, :total_items, :total_amount, :created_at, :updated_at)

@@ -5,12 +5,10 @@
 统计所有API端点和对应的权限配置
 """
 
-import ast
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent

@@ -4,13 +4,11 @@ SQLAlchemy Relationship Validator
 扫描所有models，检测relationship配置问题
 """
 
-import os
-import re
 import ast
 import json
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
+from typing import Dict
 
 class RelationshipValidator:
     def __init__(self, models_dir: str):

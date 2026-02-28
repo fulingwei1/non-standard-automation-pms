@@ -27,7 +27,7 @@ def register_chinese_font():
             try:
                 pdfmetrics.registerFont(TTFont("ChineseFont", font_path))
                 return "ChineseFont"
-            except (OSError, RuntimeError, Exception) as e:
+            except (OSError, RuntimeError, Exception):
                 continue
     return "Helvetica"
 

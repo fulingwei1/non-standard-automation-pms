@@ -43,5 +43,5 @@ with get_db_session() as session:
                         """))
                         count = result.scalar()
                         print(f"  数据行数: {count}")
-        except Exception as e:
+        except Exception:
             pass  # 忽略错误

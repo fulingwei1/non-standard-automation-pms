@@ -29,7 +29,7 @@ def analyze_python_file(file_path: Path) -> List[Tuple[str, int, int, str]]:
                 func_type = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
 
                 functions.append((str(file_path), line_count, start_line, f"{func_type} {func_name}"))
-    except Exception as e:
+    except Exception:
         pass  # 忽略无法解析的文件
 
     return functions
@@ -84,7 +84,7 @@ def analyze_jsx_file(file_path: Path) -> List[Tuple[str, int, int, str]]:
                     functions.append((str(file_path), line_count, function_start, f"function {function_name}"))
                     in_function = False
                     function_name = ""
-    except Exception as e:
+    except Exception:
         pass
 
     return functions

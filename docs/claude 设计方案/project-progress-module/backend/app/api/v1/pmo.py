@@ -2,11 +2,9 @@
 项目管理部(PMO)模块 API
 项目全生命周期管理、资源管理、风险管理、成本管理
 """
-from fastapi import APIRouter, Query, HTTPException, Body
-from typing import Optional, List, Dict
+from fastapi import APIRouter, Query, Body
+from typing import Optional
 from datetime import datetime, date, timedelta
-from pydantic import BaseModel
-from enum import Enum
 
 router = APIRouter(prefix="/pmo", tags=["项目管理部"])
 

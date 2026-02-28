@@ -3,7 +3,6 @@
 分析前端页面中Mock数据的使用情况
 """
 
-import os
 import re
 from pathlib import Path
 

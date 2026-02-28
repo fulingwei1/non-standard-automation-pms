@@ -15,17 +15,15 @@ Team 4 - AI智能赢率预测模型
 """
 
 import argparse
-import csv
-import json
 import logging
 import sys
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # 添加项目根目录到路径

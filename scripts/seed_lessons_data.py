@@ -6,8 +6,7 @@
 """
 
 import sqlite3
-import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # 数据库路径
 DB_PATH = "data/pms.db"

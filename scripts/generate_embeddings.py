@@ -7,7 +7,6 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.presale_knowledge_case import PresaleKnowledgeCase
 from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService

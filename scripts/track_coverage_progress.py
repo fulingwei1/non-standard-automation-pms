@@ -8,7 +8,7 @@ import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict
 
 
 def get_current_coverage() -> Dict:

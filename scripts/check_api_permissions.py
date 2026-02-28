@@ -8,13 +8,12 @@
 - 生成缺失权限报告
 """
 
-import ast
 import os
 import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

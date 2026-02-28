@@ -4,8 +4,6 @@
 代码质量快速修复脚本
 """
 
-import os
-import re
 import subprocess
 from pathlib import Path
 

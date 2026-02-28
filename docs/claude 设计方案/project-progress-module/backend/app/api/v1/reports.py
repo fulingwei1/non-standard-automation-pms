@@ -2,11 +2,10 @@
 报表模块 API
 支持多角色视角的报表生成和导出
 """
-from fastapi import APIRouter, Query, HTTPException, Depends
+from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import FileResponse
 from typing import Optional, List
-from datetime import date, datetime
-from enum import Enum
+from datetime import datetime
 import tempfile
 import os
 
@@ -293,7 +292,7 @@ async def export_report(
 def _export_to_excel(report_data: dict, filepath: str):
     """导出为Excel"""
     from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+    from openpyxl.styles import Font
     
     wb = Workbook()
     ws = wb.active

@@ -11,7 +11,6 @@ import json
 # 添加项目根目录到路径
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import yaml
 

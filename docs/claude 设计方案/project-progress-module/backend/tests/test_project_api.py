@@ -2,7 +2,6 @@
 项目管理API测试
 """
 import pytest
-from fastapi.testclient import TestClient
 
 
 class TestProjectAPI:

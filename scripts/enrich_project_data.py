@@ -5,7 +5,6 @@
 为"北京智能装备ICT测试设备项目"（PJ250114）添加完整的历史数据
 """
 
-import json
 import os
 import sys
 from datetime import date, datetime, timedelta
@@ -16,11 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
 from app.models.issue import Issue
-from app.models.organization import Department
-from app.models.pmo import PmoProjectRisk
 from app.models.progress import Task
 from app.models.project import (
-    Machine,
     Project,
     ProjectCost,
     ProjectDocument,

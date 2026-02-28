@@ -12,13 +12,12 @@
 import os
 import re
 import sys
-from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 from app.models.base import get_db_session
 
@@ -152,7 +151,7 @@ def update_feature_table(features: List[Dict]):
         # 检查表是否存在
         try:
             session.execute(text("SELECT 1 FROM system_features LIMIT 1"))
-        except Exception as e:
+        except Exception:
             # 创建表
             session.execute(
                 text("""

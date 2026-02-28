@@ -9,14 +9,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import Depends
 from sqlalchemy import text
 
-from app.api.deps import get_db
 from app.core.security import (
     create_access_token,
-    get_current_active_user,
-    get_current_user,
 )
 from app.models.base import get_db_session
 from app.models.user import User

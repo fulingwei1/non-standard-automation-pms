@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """报价 vs 实际成本对比分析"""
 
-from typing import Any, Optional
-from fastapi import APIRouter, Depends, Query
+from typing import Any
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.api import deps

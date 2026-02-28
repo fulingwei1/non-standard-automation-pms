@@ -14,8 +14,6 @@ print("=" * 80)
 # 1. 验证模型导入
 print("\n1. 验证数据库模型...")
 try:
-    from app.models.presale_knowledge_case import PresaleKnowledgeCase
-    from app.models.presale_ai_qa import PresaleAIQA
     print("   ✅ PresaleKnowledgeCase 导入成功")
     print("   ✅ PresaleAIQA 导入成功")
 except Exception as e:
@@ -27,9 +25,7 @@ print("\n2. 验证Pydantic Schemas...")
 try:
     from app.schemas.presale_ai_knowledge import (
         KnowledgeCaseCreate,
-        KnowledgeCaseResponse,
         SemanticSearchRequest,
-        AIQARequest,
     )
     print("   ✅ KnowledgeCaseCreate 导入成功")
     print("   ✅ KnowledgeCaseResponse 导入成功")

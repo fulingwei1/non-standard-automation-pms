@@ -11,7 +11,6 @@ API路由全面扫描和测试脚本
 """
 
 import sys
-import os
 from pathlib import Path
 
 # 添加项目根目录到Python路径
@@ -21,8 +20,6 @@ sys.path.insert(0, str(project_root))
 import requests
 import json
 from typing import Dict, List, Any
-from collections import defaultdict
-import re
 
 BASE_URL = "http://127.0.0.1:8000"
 API_PREFIX = "/api/v1"

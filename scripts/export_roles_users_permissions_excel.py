@@ -14,12 +14,11 @@ Generates an xlsx with multiple sheets:
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, List, Sequence, Tuple
+from typing import Any, List, Sequence, Tuple
 
 import pandas as pd
 

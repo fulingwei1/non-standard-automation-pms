@@ -7,7 +7,6 @@
 """
 
 import os
-import re
 
 
 def fix_syntax_errors():

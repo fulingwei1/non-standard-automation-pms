@@ -9,23 +9,15 @@
 """
 
 import os
-import random
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
-from app.models.material import (
-    BomHeader,
-    BomItem,
-    Material,
-    MaterialCategory,
-    MaterialSupplier,
-)
-from app.models.organization import Department, Employee
+from app.models.organization import Employee
 from app.models.progress import Task
 from app.models.project import (
     Customer,
@@ -34,8 +26,7 @@ from app.models.project import (
     ProjectMilestone,
     ProjectPaymentPlan,
 )
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteItem, QuoteVersion
+from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteVersion
 from app.models.user import User
 
 # 项目阶段配置：S1-S9，每个阶段生成1-2个项目

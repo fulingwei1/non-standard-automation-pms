@@ -1,15 +1,12 @@
 """
 预警服务 - 进度预警规则引擎
 """
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, datetime
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from app.models.models import (
-    Project, WbsTask, TaskAssignment, ProgressAlert, 
-    WorkloadSnapshot
+    Project, WbsTask, ProgressAlert
 )
 
 

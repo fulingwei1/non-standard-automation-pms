@@ -30,7 +30,6 @@ from app.models.base import get_db_session, get_engine
 # 导入子脚本功能
 # 由于这些是脚本文件，我们需要直接调用它们的函数
 # 先导入必要的模块
-from sqlalchemy import inspect as sql_inspect
 
 logging.basicConfig(
     level=logging.INFO,

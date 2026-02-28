@@ -3,10 +3,8 @@
 自动修复前端页面中的 mock 数据和 demo 账号检查
 """
 
-import os
 import re
 from pathlib import Path
-from typing import List
 
 FRONTEND_DIR = Path("/Users/flw/non-standard-automation-pm/frontend/src/pages")
 

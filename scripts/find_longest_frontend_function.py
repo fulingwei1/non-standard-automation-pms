@@ -97,7 +97,7 @@ def find_functions_in_jsx(file_path: Path) -> List[Tuple[str, int, int, str]]:
 
             i += 1
 
-    except Exception as e:
+    except Exception:
         pass
 
     return functions

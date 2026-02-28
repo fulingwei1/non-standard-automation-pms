@@ -8,9 +8,8 @@
 """
 
 import re
-from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict
 
 frontend_pages_dir = Path(__file__).parent.parent / "frontend" / "src" / "pages"
 

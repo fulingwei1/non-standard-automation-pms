@@ -12,7 +12,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import text
 
 from app.models.base import get_db_session
-from app.models.user import User
 from app.schemas.auth import PermissionResponse
 
 

@@ -13,15 +13,13 @@
 import os
 import sqlite3
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # 添加项目根目录到路径
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(script_dir)
 sys.path.insert(0, project_dir)
 
-from app.models.base import get_db_session
-from app.models.organization import Department
 
 
 def find_duplicate_departments(db_path: str) -> List[Dict]:

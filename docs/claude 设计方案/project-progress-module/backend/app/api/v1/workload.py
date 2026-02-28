@@ -2,7 +2,7 @@
 负荷管理API接口
 """
 from fastapi import APIRouter, Query
-from typing import List, Optional
+from typing import Optional
 from datetime import date
 from pydantic import BaseModel
 

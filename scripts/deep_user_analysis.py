@@ -8,10 +8,9 @@ import sys
 
 sys.path.append('/Users/flw/non-standard-automation-pm')
 
-from sqlalchemy import func, text
 
 from app.models.base import SessionLocal
-from app.models.user import Role, User, UserRole
+from app.models.user import User, UserRole
 
 
 def analyze_user_discrepancy():

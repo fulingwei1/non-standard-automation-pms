@@ -8,7 +8,6 @@ Team 5: AI Quotation Generator Tables
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision = '20260215_add_presale_ai_quotation'
