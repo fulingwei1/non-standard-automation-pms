@@ -38,7 +38,7 @@ class ProductionPlanService:
         return ProductionPlanResponse(
             id=plan.id,
             plan_no=plan.plan_no,
-            plan_name=plan.payment_name,
+            plan_name=plan.plan_name,
             plan_type=plan.plan_type,
             project_id=plan.project_id,
             project_name=project_name,
