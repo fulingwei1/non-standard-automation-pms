@@ -17,7 +17,7 @@ class TestInvoiceModel:
         """测试创建发票"""
         invoice = Invoice(
             invoice_code="INV001",
-            invoice_amount=Decimal("10000.00"),
+            amount=Decimal("10000.00"),
             customer_id=sample_customer.id,
             invoice_date=date.today()
         )
@@ -32,7 +32,7 @@ class TestInvoiceModel:
         """测试发票编码唯一性"""
         i1 = Invoice(
             invoice_code="INV001",
-            invoice_amount=Decimal("1000.00"),
+            amount=Decimal("1000.00"),
             customer_id=sample_customer.id
         )
         db_session.add(i1)
@@ -40,7 +40,7 @@ class TestInvoiceModel:
         
         i2 = Invoice(
             invoice_code="INV001",
-            invoice_amount=Decimal("2000.00"),
+            amount=Decimal("2000.00"),
             customer_id=sample_customer.id
         )
         db_session.add(i2)
@@ -52,7 +52,7 @@ class TestInvoiceModel:
         """测试发票金额"""
         invoice = Invoice(
             invoice_code="INV002",
-            invoice_amount=Decimal("10000.00"),
+            amount=Decimal("10000.00"),
             tax_amount=Decimal("1600.00"),
             total_amount=Decimal("11600.00"),
             customer_id=sample_customer.id
@@ -71,7 +71,7 @@ class TestInvoiceModel:
         for i, it in enumerate(types):
             invoice = Invoice(
                 invoice_code=f"INV_TYPE_{i}",
-                invoice_amount=Decimal("1000.00"),
+                amount=Decimal("1000.00"),
                 customer_id=sample_customer.id,
                 invoice_type=it
             )
@@ -98,7 +98,7 @@ class TestInvoiceModel:
         
         invoice = Invoice(
             invoice_code="INV003",
-            invoice_amount=Decimal("5000.00"),
+            amount=Decimal("5000.00"),
             customer_id=sample_customer.id,
             invoice_date=issue_date,
             due_date=due_date
@@ -128,7 +128,7 @@ class TestInvoiceModel:
         """测试删除发票"""
         invoice = Invoice(
             invoice_code="INV_DEL",
-            invoice_amount=Decimal("1000.00"),
+            amount=Decimal("1000.00"),
             customer_id=sample_customer.id
         )
         db_session.add(invoice)
@@ -146,7 +146,7 @@ class TestInvoiceModel:
         invoice = Invoice(
             invoice_code="INV004",
             invoice_number="1234567890",
-            invoice_amount=Decimal("8000.00"),
+            amount=Decimal("8000.00"),
             customer_id=sample_customer.id
         )
         db_session.add(invoice)
@@ -159,7 +159,7 @@ class TestInvoiceModel:
         invoices = [
             Invoice(
                 invoice_code=f"INV{i:03d}",
-                invoice_amount=Decimal(f"{i*1000}.00"),
+                amount=Decimal(f"{i*1000}.00"),
                 customer_id=sample_customer.id
             ) for i in range(1, 6)
         ]
@@ -174,7 +174,7 @@ class TestInvoiceModel:
         desc = "项目阶段性付款发票"
         invoice = Invoice(
             invoice_code="INV005",
-            invoice_amount=Decimal("20000.00"),
+            amount=Decimal("20000.00"),
             customer_id=sample_customer.id,
             description=desc
         )

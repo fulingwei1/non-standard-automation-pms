@@ -345,7 +345,7 @@ class TestNotificationService:
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.notification_service import NotificationService
-        self.svc = NotificationService()
+        self.svc = NotificationService(db=MagicMock())
         self.db = MagicMock()
 
     def _make_unified_service_mock(self, success=True):

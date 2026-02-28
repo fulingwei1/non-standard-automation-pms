@@ -23,7 +23,7 @@ def _make_service():
     db = MagicMock()
     mock_ai = MagicMock()
     with patch("app.services.presale_ai_service.AIClientService", return_value=mock_ai):
-        svc = PresaleAIService(db)
+        svc = PresaleAIService(db_session)
         svc.ai_client = mock_ai
     return svc, db, mock_ai
 

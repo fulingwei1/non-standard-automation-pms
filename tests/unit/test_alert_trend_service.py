@@ -135,7 +135,9 @@ class TestBuildTrendStatistics:
         triggered_at=datetime(2024, 2, 1, 10, 0),
         status="RESOLVED",
         rule_type="PROGRESS",
-        rule=MockAlertRule("PROGRESS"),
+        rule=MockAlertRule("PROGRESS",
+        target_type="PROJECT"
+    ),
         ),
         MockAlertRecord(
         alert_no="ALT002",
@@ -144,7 +146,9 @@ class TestBuildTrendStatistics:
         triggered_at=datetime(2024, 2, 1, 14, 0),
         status="OPEN",
         rule_type="COST",
-        rule=MockAlertRule("COST"),
+        rule=MockAlertRule("COST",
+        target_type="PROJECT"
+    ),
         ),
         MockAlertRecord(
         alert_no="ALT003",
@@ -153,7 +157,9 @@ class TestBuildTrendStatistics:
         triggered_at=datetime(2024, 2, 2, 9, 0),
         status="RESOLVED",
         rule_type="QUALITY",
-        rule=MockAlertRule("QUALITY"),
+        rule=MockAlertRule("QUALITY",
+        target_type="PROJECT"
+    ),
         ),
         ]
 
@@ -182,7 +188,9 @@ class TestBuildTrendStatistics:
         triggered_at=None,
         status="OPEN",
         rule_type="PROGRESS",
-        rule=MockAlertRule("PROGRESS"),
+        rule=MockAlertRule("PROGRESS",
+        target_type="PROJECT"
+    ),
         ),
         MockAlertRecord(
         alert_no="ALT002",
@@ -191,7 +199,9 @@ class TestBuildTrendStatistics:
         triggered_at=datetime(2024, 2, 1, 14, 0),
         status="OPEN",
         rule_type="COST",
-        rule=MockAlertRule("COST"),
+        rule=MockAlertRule("COST",
+        target_type="PROJECT"
+    ),
         ),
         ]
 
@@ -214,7 +224,9 @@ class TestBuildSummaryStatistics:
         triggered_at=datetime(2024, 2, 1, 10, 0),
         status="RESOLVED",
         rule_type="PROGRESS",
-        rule=MockAlertRule("PROGRESS"),
+        rule=MockAlertRule("PROGRESS",
+        target_type="PROJECT"
+    ),
         ),
         MockAlertRecord(
         alert_no="ALT002",
@@ -223,7 +235,9 @@ class TestBuildSummaryStatistics:
         triggered_at=datetime(2024, 2, 1, 14, 0),
         status="OPEN",
         rule_type="COST",
-        rule=MockAlertRule("COST"),
+        rule=MockAlertRule("COST",
+        target_type="PROJECT"
+    ),
         ),
         ]
 
@@ -254,7 +268,9 @@ class TestBuildSummaryStatistics:
         triggered_at=datetime(2024, 2, 1, 10, 0),
         status="OPEN",
         rule_type="PROGRESS",
-        rule=MockAlertRule("PROGRESS"),
+        rule=MockAlertRule("PROGRESS",
+        target_type="PROJECT"
+    ),
         ),
         MockAlertRecord(
         alert_no="ALT002",

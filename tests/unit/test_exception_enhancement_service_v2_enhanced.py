@@ -68,7 +68,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
             flow_query.filter.return_value.first.return_value = None
             
             # Mock User查询
-            escalated_user = User(id=2, username="张三")
+            escalated_user = User(id=2, username="张三",
+        password_hash="test_hash_123"
+    )
             user_query = MagicMock()
             user_query.filter.return_value.first.return_value = escalated_user
             
@@ -126,7 +128,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
             flow_query.filter.return_value.first.return_value = existing_flow
             
             # Mock User查询
-            escalated_user = User(id=3, username="李四")
+            escalated_user = User(id=3, username="李四",
+        password_hash="test_hash_123"
+    )
             user_query = MagicMock()
             user_query.filter.return_value.first.return_value = escalated_user
             
@@ -236,8 +240,12 @@ class TestExceptionEnhancementService(unittest.TestCase):
             exception_no="EXC-003",
             title="测试异常3"
         )
-        escalated_user = User(id=2, username="张三")
-        verifier = User(id=3, username="验证员")
+        escalated_user = User(id=2, username="张三",
+        password_hash="test_hash_123"
+    )
+        verifier = User(id=3, username="验证员",
+        password_hash="test_hash_123"
+    )
         
         flow = ExceptionHandlingFlow(
             id=20,
@@ -354,7 +362,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
             attachments=None
         )
         
-        creator = User(id=1, username="创建者")
+        creator = User(id=1, username="创建者",
+        password_hash="test_hash_123"
+    )
         
         with patch('app.utils.db_helpers.save_obj') as mock_save:
             # Mock save_obj给对象添加必需字段
@@ -535,8 +545,12 @@ class TestExceptionEnhancementService(unittest.TestCase):
             updated_at=datetime.now()
         )
         
-        creator = User(id=1, username="创建者")
-        approver = User(id=2, username="审批者")
+        creator = User(id=1, username="创建者",
+        password_hash="test_hash_123"
+    )
+        approver = User(id=2, username="审批者",
+        password_hash="test_hash_123"
+    )
         
         # Mock用户查询
         def filter_side_effect(condition):
@@ -792,7 +806,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
             mock_save.side_effect = save_obj_side_effect
             
             # Mock用户查询
-            user = User(id=2, username="负责人")
+            user = User(id=2, username="负责人",
+        password_hash="test_hash_123"
+    )
             user_query = MagicMock()
             user_query.filter.return_value.first.return_value = user
             
@@ -836,7 +852,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
         )
         
         with patch('app.utils.db_helpers.get_or_404', return_value=pdca):
-            user = User(id=3, username="执行人")
+            user = User(id=3, username="执行人",
+        password_hash="test_hash_123"
+    )
             exception = ProductionException(id=1, exception_no="EXC-001")
             
             user_query = MagicMock()
@@ -880,7 +898,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
         )
         
         with patch('app.utils.db_helpers.get_or_404', return_value=pdca):
-            user = User(id=4, username="检查人")
+            user = User(id=4, username="检查人",
+        password_hash="test_hash_123"
+    )
             exception = ProductionException(id=1, exception_no="EXC-001")
             
             user_query = MagicMock()
@@ -922,7 +942,9 @@ class TestExceptionEnhancementService(unittest.TestCase):
         )
         
         with patch('app.utils.db_helpers.get_or_404', return_value=pdca):
-            user = User(id=5, username="行动人")
+            user = User(id=5, username="行动人",
+        password_hash="test_hash_123"
+    )
             exception = ProductionException(id=1, exception_no="EXC-001")
             
             user_query = MagicMock()
@@ -1031,10 +1053,18 @@ class TestExceptionEnhancementService(unittest.TestCase):
         
         exception = ProductionException(id=1, exception_no="EXC-001")
         users = {
-            1: User(id=1, username="计划者"),
-            2: User(id=2, username="执行者"),
-            3: User(id=3, username="检查者"),
-            4: User(id=4, username="行动者"),
+            1: User(id=1, username="计划者",
+        password_hash="test_hash_123"
+    ),
+            2: User(id=2, username="执行者",
+        password_hash="test_hash_123"
+    ),
+            3: User(id=3, username="检查者",
+        password_hash="test_hash_123"
+    ),
+            4: User(id=4, username="行动者",
+        password_hash="test_hash_123"
+    ),
         }
         
         def filter_side_effect(condition):

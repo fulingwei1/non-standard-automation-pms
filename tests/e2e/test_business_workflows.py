@@ -29,8 +29,8 @@ class TestProjectLifecycle:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Test Engineer",
-            employee_no="E001",
+            name="Test Engineer",
+            employee_code="E001",
             department="研发部",
             employment_status="active",
         )
@@ -77,8 +77,8 @@ class TestProjectLifecycle:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Project Manager",
-            employee_no="E002",
+            name="Project Manager",
+            employee_code="E002",
             department="项目管理部",
             employment_status="active",
         )
@@ -135,8 +135,8 @@ class TestECNFlow:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Design Engineer",
-            employee_no="E003",
+            name="Design Engineer",
+            employee_code="E003",
             department="研发部",
             employment_status="active",
         )
@@ -193,8 +193,8 @@ class TestPurchaseToFATWorkflow:
         client = TestClient(app)
 
         employee = Employee(
-            real_name="Procurement Specialist",
-            employee_no="E006",
+            name="Procurement Specialist",
+            employee_code="E006",
             department="采购部",
             employment_status="active",
         )

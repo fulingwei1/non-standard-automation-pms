@@ -35,7 +35,6 @@ import {
 
 import { businessSupportApi } from "../services/api";
 import { quoteDeliveryApi } from "../services/api/sales";
-import { getItemsCompat } from "../utils/apiResponse";
 
 const { Title, Text } = Typography;
 

@@ -222,7 +222,7 @@ class TestCrossModelTenantIsolation:
         member = ProjectMember(
             project_id=project_b.id,
             user_id=user_a.id,
-            role="MEMBER"
+            role_code="MEMBER"
         )
         db.add(member)
         

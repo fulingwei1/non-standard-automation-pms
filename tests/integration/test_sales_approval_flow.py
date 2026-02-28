@@ -47,7 +47,7 @@ class TestSalesApprovalFlow:
         """创建测试用的合同"""
         contract = Contract(
             contract_code="CT20250101001",
-            contract_amount=100000.00,
+            total_amount=100000.00,
             customer_id=1,  # 假设有客户ID=1
             project_id=1,  # 假设有项目ID=1
             signed_date=datetime.now().date(),

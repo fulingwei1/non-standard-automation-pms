@@ -314,7 +314,7 @@ class TestPermissions:
         user = User(
             username='no_perm_user',
             email='noperm@test.com',
-            hashed_password='hashed',
+            password_hash='hashed',
             is_active=True
         )
         db.add(user)
@@ -345,7 +345,7 @@ def test_user(db: Session):
     user = User(
         username='test_api_user',
         email='api@test.com',
-        hashed_password='hashed',
+        password_hash='hashed',
         is_active=True
     )
     db.add(user)

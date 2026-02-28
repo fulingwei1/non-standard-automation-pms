@@ -44,8 +44,8 @@ def perf_service(db_session: Session):
 def test_department(db_session: Session):
     """创建测试部门"""
     dept = Department(
-        name="研发部",
-        code="RD001",
+        dept_name="研发部",
+        dept_code="RD001",
         manager_id=None,
         is_active=True,
     )
@@ -59,8 +59,8 @@ def test_department(db_session: Session):
 def test_department_2(db_session: Session):
     """创建第二个测试部门"""
     dept = Department(
-        name="销售部",
-        code="SALES001",
+        dept_name="销售部",
+        dept_code="SALES001",
         manager_id=None,
         is_active=True,
     )
@@ -112,7 +112,7 @@ def superuser(db_session: Session, test_department):
 def dept_manager(db_session: Session, test_department):
     """创建部门经理"""
     from app.core.security import get_password_hash
-    from app.models.permission import Role, UserRole
+    from app.models.user import Role, UserRole
     
     user = User(
         username="dept_manager",
@@ -149,7 +149,7 @@ def dept_manager(db_session: Session, test_department):
 def project_manager(db_session: Session, test_department):
     """创建项目经理"""
     from app.core.security import get_password_hash
-    from app.models.permission import Role, UserRole
+    from app.models.user import Role, UserRole
     
     user = User(
         username="pm_user",
@@ -206,7 +206,7 @@ def test_project(db_session: Session, project_manager):
         stage="S2",
         status="ST02",
         health="H1",
-        progress=50,
+        progress_pct=50,
     )
     db_session.add(project)
     db_session.commit()
@@ -223,6 +223,7 @@ def test_period(db_session: Session):
         start_date=date(2024, 1, 1),
         end_date=date(2024, 3, 31),
         status="FINALIZED",
+        period_code="PP-TEST-001"
     )
     db_session.add(period)
     db_session.commit()
@@ -239,6 +240,7 @@ def test_period_active(db_session: Session):
         start_date=date(2024, 4, 1),
         end_date=date(2024, 6, 30),
         status="ACTIVE",
+        period_code="PP-TEST-001"
     )
     db_session.add(period)
     db_session.commit()
@@ -415,8 +417,8 @@ class TestTeamAndDepartment:
     def test_get_team_members_empty_team(self, perf_service, db_session):
         """测试获取空团队的成员列表"""
         dept = Department(
-            name="空部门",
-            code="EMPTY001",
+            dept_name="空部门",
+            dept_code="EMPTY001",
             is_active=True,
         )
         db_session.add(dept)
@@ -472,7 +474,7 @@ class TestEvaluatorType:
     def test_both_manager_type(self, perf_service, db_session, test_department):
         """测试同时是部门经理和项目经理的用户"""
         from app.core.security import get_password_hash
-        from app.models.permission import Role, UserRole
+        from app.models.user import Role, UserRole
         
         user = User(
             username="both_manager",
@@ -520,7 +522,7 @@ class TestEvaluatorType:
     ):
         """测试中文角色名称的识别"""
         from app.core.security import get_password_hash
-        from app.models.permission import Role, UserRole
+        from app.models.user import Role, UserRole
         
         user = User(
             username="chinese_role_user",

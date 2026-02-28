@@ -49,7 +49,7 @@ def test_db():
         id=1,
         username="test_user",
         email="test@example.com",
-        hashed_password="hashed_password"
+        password_hash="hashed_password"
     )
     db.add(test_user)
     db.commit()

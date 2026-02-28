@@ -57,7 +57,9 @@ class TestDeleteExistingCosts(unittest.TestCase):
         db.delete.assert_not_called()
 
 
-class TestGroupTimesheetsByUser(unittest.TestCase):
+class TestGroupTimesheetsByUser(unittest.TestCase,
+        password_hash="test_hash_123"
+    ):
 
     def test_empty_list(self):
         result = group_timesheets_by_user([])

@@ -26,8 +26,8 @@ class TestDatabaseQueryPerformance:
             projects = []
             for i in range(1000):
                 project = Project(
-                    name=f"Performance Test Project {i}",
-                    code=f"PTP{i:04d}",
+                    project_name=f"Performance Test Project {i}",
+                    project_code=f"PTP{i:04d}",
                     status="active" if i % 3 == 0 else "pending",
                     budget=100000 + (i * 1000),
                     description=f"Test project for performance testing {i}" * 10
@@ -196,8 +196,8 @@ class TestDatabaseQueryPerformance:
             projects = []
             for i in range(batch_size):
                 project = Project(
-                    name=f"Bulk Test Project {i}",
-                    code=f"BTP{i:06d}",
+                    project_name=f"Bulk Test Project {i}",
+                    project_code=f"BTP{i:06d}",
                     status="active",
                     budget=100000
                 )
@@ -256,8 +256,8 @@ class TestDatabaseQueryPerformance:
             try:
                 # 开始事务
                 project = Project(
-                    name=f"Transaction Test {i}",
-                    code=f"TTP{i:04d}",
+                    project_name=f"Transaction Test {i}",
+                    project_code=f"TTP{i:04d}",
                     status="active",
                     budget=100000
                 )

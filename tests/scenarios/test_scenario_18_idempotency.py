@@ -79,7 +79,7 @@ class TestIdempotency:
             customer_name=idempotency_customer.customer_name,
             stage="S1",
             status="ST01",
-            progress=0,
+            progress_pct=0,
             created_by=1,
         )
         db_session.add(project)
@@ -135,7 +135,7 @@ class TestIdempotency:
         material = Material(
             material_code="MAT-IDEMP-001",
             material_name="幂等性测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -195,8 +195,8 @@ class TestIdempotency:
 
         # 创建采购申请
         pr = PurchaseRequest(
-            request_code="PR-IDEMP-001",
-            requester_id=3,
+            request_no="PR-IDEMP-001",
+            requested_by=3,
             total_amount=Decimal("100000.00"),
             status="DRAFT",
             created_by=3,
@@ -215,13 +215,13 @@ class TestIdempotency:
         if not existing_instance:
             # 第一次提交审批
             instance = ApprovalInstance(
-                business_type="PURCHASE_REQUEST",
-                business_id=pr.id,
-                business_code=pr.request_code,
+                entity_type="PURCHASE_REQUEST",
+                entity_id=pr.id,
+                instance_no=pr.request_code,
                 initiator_id=3,
                 status="PENDING",
                 idempotency_key=submission_key,
-                created_by=3,
+                initiator_id=3,
             )
             db_session.add(instance)
             pr.status = "PENDING_APPROVAL"
@@ -390,7 +390,7 @@ class TestIdempotency:
         material = Material(
             material_code="MAT-CONC-IDEMP-001",
             material_name="并发幂等测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,

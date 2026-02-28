@@ -340,7 +340,8 @@ class TestMaterialAlertRule:
             lead_time_days=3,
             buffer_ratio=1.2,
             is_active=True,
-        )
+        target_type="PROJECT"
+    )
         
         db.add(rule)
         db.commit()
@@ -360,7 +361,8 @@ class TestMaterialAlertRule:
             threshold_type="PERCENTAGE",
             threshold_value=30,
             is_active=True,
-        )
+        target_type="PROJECT"
+    )
         
         db.add(rule)
         db.commit()
@@ -377,7 +379,8 @@ class TestMaterialAlertRule:
             threshold_value=20,
             priority=1,
             is_active=True,
-        )
+        target_type="PROJECT"
+    )
         
         rule2 = MaterialAlertRule(
             rule_name="规则2",
@@ -387,7 +390,8 @@ class TestMaterialAlertRule:
             threshold_value=30,
             priority=10,  # 高优先级
             is_active=True,
-        )
+        target_type="PROJECT"
+    )
         
         db.add_all([rule1, rule2])
         db.commit()
@@ -646,8 +650,8 @@ def test_user(db: Session) -> User:
     user = User(
         username="test_user",
         email="test@example.com",
-        hashed_password=get_password_hash("test123"),
-        full_name="测试用户",
+        password_hash=get_password_hash("test123"),
+        real_name="测试用户",
         is_active=True,
     )
     db.add(user)

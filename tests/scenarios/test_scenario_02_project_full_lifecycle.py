@@ -255,7 +255,7 @@ class TestProjectFullLifecycle:
             customer_id=project_customer.id,
             customer_name=project_customer.customer_name,
             stage="S3",
-            progress=0,
+            progress_pct=0,
             created_by=1,
         )
         db_session.add(project)
@@ -467,7 +467,7 @@ class TestProjectFullLifecycle:
             customer_name=project_customer.customer_name,
             stage="S4",
             status="ST02",
-            progress=95,
+            progress_pct=95,
             created_by=1,
         )
         db_session.add(project)

@@ -57,7 +57,9 @@ class TestExceptionEventsService(unittest.TestCase):
         """测试前准备"""
         self.db_mock = MagicMock()
         self.service = ExceptionEventsService(self.db_mock)
-        self.current_user = User(id=1, username="test_user", department="研发部", position="开发")
+        self.current_user = User(id=1, username="test_user", department="研发部", position="开发",
+        password_hash="test_hash_123"
+    )
 
     # ========== get_exception_events() 测试 ==========
 

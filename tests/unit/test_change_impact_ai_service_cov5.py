@@ -15,7 +15,7 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="change_impact_ai_service
 def make_service(db=None):
     if db is None:
         db = MagicMock()
-    return ChangeImpactAIService(db)
+    return ChangeImpactAIService(db_session)
 
 
 class TestCalculateDependencyDepth:

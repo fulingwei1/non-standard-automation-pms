@@ -34,9 +34,8 @@ class TestQuoteToContractFlow:
         quote = Quote(
             quote_code="QT-FLOW-001",
             customer_id=flow_customer.id,
-            quote_date=date.today(),
             valid_until=date.today() + timedelta(days=30),
-            total_amount=Decimal("800000.00"),
+            total_price=Decimal("800000.00"),
             status="DRAFT",
             created_by=1,
         )
@@ -51,8 +50,8 @@ class TestQuoteToContractFlow:
         quote = Quote(
             quote_code="QT-FLOW-002",
             customer_id=flow_customer.id,
-            quote_date=date.today(),
-            total_amount=Decimal("750000.00"),
+            valid_until=date.today(),
+            total_price=Decimal("750000.00"),
             status="APPROVED",
             created_by=1,
         )
@@ -70,8 +69,8 @@ class TestQuoteToContractFlow:
         quote = Quote(
             quote_code="QT-FLOW-003",
             customer_id=flow_customer.id,
-            quote_date=date.today(),
-            total_amount=Decimal("900000.00"),
+            valid_until=date.today(),
+            total_price=Decimal("900000.00"),
             status="ACCEPTED",
             created_by=1,
         )
@@ -242,8 +241,8 @@ class TestQuoteToContractFlow:
             quote = Quote(
                 quote_code=f"QT-CONV-{i+1:03d}",
                 customer_id=flow_customer.id,
-                quote_date=date.today(),
-                total_amount=Decimal("500000.00") + Decimal(i * 100000),
+                valid_until=date.today(),
+                total_price=Decimal("500000.00") + Decimal(i * 100000),
                 status="APPROVED",
                 created_by=1,
             )
@@ -277,8 +276,8 @@ class TestQuoteToContractFlow:
         quote = Quote(
             quote_code="QT-COMPLETE-001",
             customer_id=flow_customer.id,
-            quote_date=date.today(),
-            total_amount=Decimal("1200000.00"),
+            valid_until=date.today(),
+            total_price=Decimal("1200000.00"),
             status="DRAFT",
             created_by=1,
         )

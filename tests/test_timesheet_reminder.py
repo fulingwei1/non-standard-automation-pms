@@ -35,6 +35,7 @@ def test_user(db: Session):
         email="test@example.com",
         real_name="测试工程师",
         is_active=True,
+        password_hash="test_hash_123"
     )
     db.add(user)
     db.commit()

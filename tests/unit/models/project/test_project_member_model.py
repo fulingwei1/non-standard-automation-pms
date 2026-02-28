@@ -18,7 +18,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="开发工程师",
+            role_code="开发工程师",
             allocation_pct=Decimal("80.00")
         )
         db_session.add(member)
@@ -35,7 +35,7 @@ class TestProjectMemberModel:
         member1 = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="工程师"
+            role_code="工程师"
         )
         db_session.add(member1)
         db_session.commit()
@@ -43,7 +43,7 @@ class TestProjectMemberModel:
         member2 = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,  # 同一用户同一项目
-            role="测试工程师"
+            role_code="测试工程师"
         )
         db_session.add(member2)
         
@@ -55,7 +55,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="项目经理"
+            role_code="项目经理"
         )
         db_session.add(member)
         db_session.commit()
@@ -71,7 +71,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="开发",
+            role_code="开发",
             allocation_pct=Decimal("50.00")
         )
         db_session.add(member)
@@ -94,7 +94,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="工程师",
+            role_code="工程师",
             start_date=start,
             end_date=end
         )
@@ -109,7 +109,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="工程师",
+            role_code="工程师",
             is_active=True
         )
         db_session.add(member)
@@ -128,7 +128,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="初级工程师"
+            role_code="初级工程师"
         )
         db_session.add(member)
         db_session.commit()
@@ -146,7 +146,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="临时成员"
+            role_code="临时成员"
         )
         db_session.add(member)
         db_session.commit()
@@ -163,7 +163,7 @@ class TestProjectMemberModel:
         member = ProjectMember(
             project_id=sample_project.id,
             user_id=sample_user.id,
-            role="成员"
+            role_code="成员"
         )
         db_session.add(member)
         db_session.commit()
@@ -181,8 +181,8 @@ class TestProjectMemberModel:
         db_session.add_all([user1, user2])
         db_session.commit()
         
-        member1 = ProjectMember(project_id=sample_project.id, user_id=user1.id, role="开发")
-        member2 = ProjectMember(project_id=sample_project.id, user_id=user2.id, role="测试")
+        member1 = ProjectMember(project_id=sample_project.id, user_id=user1.id, role_code="开发")
+        member2 = ProjectMember(project_id=sample_project.id, user_id=user2.id, role_code="测试")
         db_session.add_all([member1, member2])
         db_session.commit()
         

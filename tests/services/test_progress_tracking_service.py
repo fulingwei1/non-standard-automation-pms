@@ -28,7 +28,7 @@ class TestProgressTrackingService:
         """测试项目"""
         return Project(
             id=1,
-            name="测试项目",
+            project_name="测试项目",
             start_date=date(2026, 1, 1),
             planned_end_date=date(2026, 6, 30),
             current_progress=0,

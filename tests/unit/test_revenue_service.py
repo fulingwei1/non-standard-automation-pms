@@ -20,7 +20,7 @@ from app.services.revenue_service import RevenueService
 @pytest.fixture
 def revenue_service(db_session: Session):
     """创建 RevenueService 实例"""
-    return RevenueService(db_session)
+    return RevenueService()
 
 
 class TestRevenueService:
@@ -28,7 +28,7 @@ class TestRevenueService:
 
     def test_init(self, db_session: Session):
         """测试服务初始化"""
-        service = RevenueService(db_session)
+        service = RevenueService()
         assert service is not None
         if hasattr(service, 'db'):
             assert service.db == db_session

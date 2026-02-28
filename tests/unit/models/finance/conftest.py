@@ -15,7 +15,7 @@ def sample_invoice(db_session, sample_customer):
     
     invoice = Invoice(
         invoice_code="INV001",
-        invoice_amount=Decimal("10000.00"),
+        amount=Decimal("10000.00"),
         customer_id=sample_customer.id,
         invoice_date=date.today()
     )

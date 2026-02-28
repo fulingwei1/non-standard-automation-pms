@@ -510,7 +510,9 @@ class TestConditionEvaluator:
                 self.name = "测试用户"
                 self.role = "admin"
 
-        context = {"user": User()}
+        context = {"user": User(,
+        password_hash="test_hash_123"
+    )}
         result = self.parser._get_field_value("user.name", context)
         assert result == "测试用户"
 

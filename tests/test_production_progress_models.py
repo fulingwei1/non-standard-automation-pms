@@ -298,7 +298,7 @@ def test_user(db: Session):
     user = User(
         username='test_progress_user',
         email='progress@test.com',
-        hashed_password='hashed',
+        password_hash='hashed',
         is_active=True
     )
     db.add(user)

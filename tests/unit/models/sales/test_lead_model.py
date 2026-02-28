@@ -23,7 +23,9 @@ class TestLeadModel:
 
     def test_create_lead(self, db_session):
         """Test creating Lead"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         db_session.add(obj)
         try:
             db_session.commit()
@@ -38,7 +40,9 @@ class TestLeadModel:
 
     def test_update_lead(self, db_session):
         """Test updating Lead"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         db_session.add(obj)
         try:
             db_session.commit()
@@ -49,7 +53,9 @@ class TestLeadModel:
 
     def test_delete_lead(self, db_session):
         """Test deleting Lead"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         db_session.add(obj)
         try:
             db_session.commit()
@@ -63,12 +69,16 @@ class TestLeadModel:
 
     def test_lead_attributes(self, db_session):
         """Test Lead attributes"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         assert hasattr(Lead, '__tablename__') or True
 
     def test_lead_relationships(self, db_session):
         """Test Lead relationships"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         db_session.add(obj)
         try:
             db_session.commit()
@@ -78,12 +88,16 @@ class TestLeadModel:
 
     def test_lead_validation(self, db_session):
         """Test Lead validation"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         assert obj is not None
 
     def test_lead_constraints(self, db_session):
         """Test Lead constraints"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         assert obj is not None
 
     def test_multiple_lead(self, db_session):
@@ -93,7 +107,9 @@ class TestLeadModel:
 
     def test_lead_timestamp(self, db_session):
         """Test Lead timestamp"""
-        obj = Lead()
+        obj = Lead(,
+        lead_code="LD-TEST-001"
+    )
         db_session.add(obj)
         try:
             db_session.commit()

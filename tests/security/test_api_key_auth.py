@@ -247,8 +247,9 @@ class TestAPIKeyAuth:
             username="test_api_user",
             email="test@example.com",
             tenant_id=1,
-            is_active=True
-        )
+            is_active=True,
+        password_hash="test_hash_123"
+    )
         db.add(user)
         db.commit()
         db.refresh(user)

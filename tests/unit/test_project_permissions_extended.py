@@ -36,7 +36,9 @@ class TestDataScopeServiceProjectAccess:
         """测试超级用户始终有项目访问权限"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=True)
+        user = MockUser(is_superuser=True,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # 超级用户检查直接返回 True，不需要额外 mock
@@ -47,7 +49,9 @@ class TestDataScopeServiceProjectAccess:
         """测试 ALL 范围用户有访问权限"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False)
+        user = MockUser(is_superuser=False,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # Mock UserScopeService.get_user_data_scope 返回 ALL
@@ -62,7 +66,9 @@ class TestDataScopeServiceProjectAccess:
         """测试 OWN 范围用户可以访问自己的项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False, user_id=100)
+        user = MockUser(is_superuser=False, user_id=100,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # Mock 项目存在且用户是项目负责人
@@ -88,7 +94,9 @@ class TestDataScopeServiceProjectAccess:
         """测试 OWN 范围用户不能访问别人的项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False, user_id=100)
+        user = MockUser(is_superuser=False, user_id=100,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # Mock 项目存在但用户不是项目负责人
@@ -117,7 +125,9 @@ class TestProjectFilterService:
         """测试项目过滤返回查询对象"""
         from app.services.data_scope import ProjectFilterService
 
-        user = MockUser(is_superuser=True)
+        user = MockUser(is_superuser=True,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
         query = MagicMock()
 
@@ -131,7 +141,9 @@ class TestProjectFilterService:
         """测试超级用户获取所有可访问项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=True)
+        user = MockUser(is_superuser=True,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # Mock 数据库返回项目列表
@@ -151,7 +163,9 @@ class TestUserScopeService:
         """测试超级用户获取 ALL 范围"""
         from app.services.data_scope import UserScopeService
 
-        user = MockUser(is_superuser=True)
+        user = MockUser(is_superuser=True,
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         # UserScopeService.get_user_data_scope 接受 2 个参数: db, user
@@ -162,7 +176,9 @@ class TestUserScopeService:
         """测试普通用户无角色获取 OWN 范围"""
         from app.services.data_scope import UserScopeService
 
-        user = MockUser(is_superuser=False, roles=[])
+        user = MockUser(is_superuser=False, roles=[],
+        password_hash="test_hash_123"
+    )
         db = MagicMock()
 
         result = UserScopeService.get_user_data_scope(db, user)

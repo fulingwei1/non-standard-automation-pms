@@ -11,7 +11,7 @@ class TestTimesheetQualityService:
     def _make_service(self):
         from app.services.timesheet_quality_service import TimesheetQualityService
         db = MagicMock()
-        return TimesheetQualityService(db), db
+        return TimesheetQualityService(db_session), db
 
     # ---------- detect_anomalies ----------
 

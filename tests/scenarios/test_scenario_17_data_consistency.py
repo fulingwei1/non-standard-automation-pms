@@ -165,7 +165,7 @@ class TestDataConsistency:
         material = Material(
             material_code="MAT-CONS-001",
             material_name="一致性测试物料",
-            category="GENERAL",
+            category_id="GENERAL",
             unit="PCS",
             is_active=True,
             created_by=1,
@@ -349,7 +349,7 @@ class TestDataConsistency:
             contract_amount=Decimal("2000000.00"),
             stage="S3",
             status="ST02",
-            progress=0,
+            progress_pct=0,
             created_by=1,
         )
         db_session.add(project)

@@ -690,8 +690,12 @@ class TestTimesheetStatisticsService(unittest.TestCase):
         mock_filter.return_value = query
 
         # Mock User查询
-        user1 = MockUser(id=1, real_name="用户1")
-        user2 = MockUser(id=2, real_name="用户2")
+        user1 = MockUser(id=1, real_name="用户1",
+        password_hash="test_hash_123"
+    )
+        user2 = MockUser(id=2, real_name="用户2",
+        password_hash="test_hash_123"
+    )
 
         def user_query_side_effect(*args):
             user_query = MockQuery([user1])

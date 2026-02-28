@@ -36,7 +36,7 @@ def create_lead(db_session: Session):
 
     lead = Lead(
         owner_id=user.id,
-        lead_name="测试线索",
+        customer_name="测试线索",
         status="NEW",
         customer_type="POTENTIAL",
         expected_value=Decimal("100000"),
@@ -45,6 +45,7 @@ def create_lead(db_session: Session):
         contact_person="测试联系人",
         contact_phone="13800000000",
         description="测试描述",
+        lead_code="LD-TEST-001"
     )
     db_session.add(lead)
     db_session.commit()
@@ -101,7 +102,7 @@ class TestCalculateLeadScore:
         user = UserFactory()
         lead = Lead(
         owner_id=user.id,
-        lead_name="已转换线索",
+        customer_name="已转换线索",
         status="CONVERTED",
         customer_type="POTENTIAL",
         expected_value=Decimal("100000"),
@@ -110,7 +111,8 @@ class TestCalculateLeadScore:
         contact_person="测试联系人",
         contact_phone="13800000000",
         converted_at=datetime.now(),
-        )
+        lead_code="LD-TEST-001"
+    )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -125,7 +127,7 @@ class TestCalculateLeadScore:
         user = UserFactory()
         lead = Lead(
         owner_id=user.id,
-        lead_name="已丢失线索",
+        customer_name="已丢失线索",
         status="LOST",
         customer_type="POTENTIAL",
         expected_value=Decimal("100000"),
@@ -134,7 +136,8 @@ class TestCalculateLeadScore:
         contact_person="测试联系人",
         contact_phone="13800000000",
         lost_reason="预算不足",
-        )
+        lead_code="LD-TEST-001"
+    )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -159,7 +162,7 @@ class TestGetPriorityLevel:
         user = UserFactory()
         lead = Lead(
         owner_id=user.id,
-        lead_name="中等优先级线索",
+        customer_name="中等优先级线索",
         status="NEW",
         customer_type="POTENTIAL",
         expected_value=Decimal("50000"),
@@ -168,7 +171,8 @@ class TestGetPriorityLevel:
         contact_person="测试联系人",
         contact_phone="13800000000",
         days_since_last_followup=15,
-        )
+        lead_code="LD-TEST-001"
+    )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -184,7 +188,7 @@ class TestGetPriorityLevel:
         user = UserFactory()
         lead = Lead(
         owner_id=user.id,
-        lead_name="低优先级线索",
+        customer_name="低优先级线索",
         status="NEW",
         customer_type="POTENTIAL",
         expected_value=Decimal("10000"),
@@ -193,7 +197,8 @@ class TestGetPriorityLevel:
         contact_person="测试联系人",
         contact_phone="13800000000",
         days_since_last_followup=30,
-        )
+        lead_code="LD-TEST-001"
+    )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -248,11 +253,12 @@ class TestEdgeCases:
         user = UserFactory()
         lead = Lead(
         owner_id=user.id,
-        lead_name="线索无期望值",
+        customer_name="线索无期望值",
         status="NEW",
         customer_type="POTENTIAL",
         source="ONLINE",
-        )
+        lead_code="LD-TEST-001"
+    )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)

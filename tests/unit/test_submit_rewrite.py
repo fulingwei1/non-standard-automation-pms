@@ -47,8 +47,9 @@ class TestSubmitCore(unittest.TestCase):
         self.mock_user = User(
             id=100,
             username="zhangsan",
-            real_name="张三"
-        )
+            real_name="张三",
+        password_hash="test_hash_123"
+    )
         
         self.mock_flow = ApprovalFlowDefinition(
             id=10,
@@ -330,8 +331,9 @@ class TestSubmitCore(unittest.TestCase):
         user_no_name = User(
             id=100,
             username="testuser",
-            real_name=None
-        )
+            real_name=None,
+        password_hash="test_hash_123"
+    )
         
         self.db_mock.query.return_value.filter.return_value.first.side_effect = [
             self.mock_template,

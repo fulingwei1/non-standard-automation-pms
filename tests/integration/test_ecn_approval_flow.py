@@ -32,7 +32,7 @@ class TestEcnApprovalFlow:
             ecn_no=f"ECN{datetime.now().strftime('%Y%m%d%H%M%S')}01",
             ecn_title="测试ECN-物料变更",
             ecn_type="物料变更",
-            ecn_source="生产反馈",
+            source_type="生产反馈",
             applicant_id=1,  # 假设有用户ID=1
             applicant_name="测试用户",
             project_id=1,
@@ -209,7 +209,7 @@ class TestEcnApprovalFlow:
             ecn_no=f"ECN{datetime.now().strftime('%Y%m%d%H%M%S')}02",
             ecn_title="测试ECN工艺变更",
             ecn_type="工艺变更",
-            ecn_source="生产反馈",
+            source_type="生产反馈",
             applicant_id=1,
             applicant_name="测试用户",
             project_id=1,

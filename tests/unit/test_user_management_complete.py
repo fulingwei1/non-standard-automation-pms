@@ -315,9 +315,15 @@ class TestUserQueries:
     def sample_users(self):
         """示例用户列表"""
         return [
-            User(id=1, username="admin", real_name="管理员", is_active=True, is_superuser=True),
-            User(id=2, username="user1", real_name="用户1", is_active=True, is_superuser=False),
-            User(id=3, username="user2", real_name="用户2", is_active=False, is_superuser=False),
+            User(id=1, username="admin", real_name="管理员", is_active=True, is_superuser=True,
+        password_hash="test_hash_123"
+    ),
+            User(id=2, username="user1", real_name="用户1", is_active=True, is_superuser=False,
+        password_hash="test_hash_123"
+    ),
+            User(id=3, username="user2", real_name="用户2", is_active=False, is_superuser=False,
+        password_hash="test_hash_123"
+    ),
         ]
 
     def test_query_all_users(self, mock_db, sample_users):
@@ -469,8 +475,9 @@ class TestUserBusinessLogic:
             id=1,
             username="admin",
             is_superuser=True,
-            is_active=True
-        )
+            is_active=True,
+        password_hash="test_hash_123"
+    )
         
         # 业务逻辑：超级管理员不能被禁用
         if admin.is_superuser:
@@ -484,7 +491,9 @@ class TestUserBusinessLogic:
         """测试最后一个超级管理员保护"""
         # 模拟只有一个超级管理员
         superusers = [
-            User(id=1, username="admin", is_superuser=True, is_active=True)
+            User(id=1, username="admin", is_superuser=True, is_active=True,
+        password_hash="test_hash_123"
+    )
         ]
         
         mock_db.query(User).filter().count.return_value = 1

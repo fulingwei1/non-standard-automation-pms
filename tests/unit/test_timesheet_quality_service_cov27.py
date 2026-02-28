@@ -141,15 +141,15 @@ class TestCheckWorkLogCompleteness:
 class TestTimesheetQualityServiceInit:
     def test_init_stores_db(self):
         db = make_db()
-        svc = TimesheetQualityService(db)
+        svc = TimesheetQualityService(db_session)
         assert svc.db is db
 
     def test_max_daily_hours_accessible(self):
         db = make_db()
-        svc = TimesheetQualityService(db)
+        svc = TimesheetQualityService(db_session)
         assert svc.MAX_DAILY_HOURS == 16
 
     def test_max_weekly_hours_accessible(self):
         db = make_db()
-        svc = TimesheetQualityService(db)
+        svc = TimesheetQualityService(db_session)
         assert svc.MAX_WEEKLY_HOURS == 80

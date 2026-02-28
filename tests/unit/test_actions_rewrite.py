@@ -55,7 +55,9 @@ class TestAddCC(unittest.TestCase):
             current_node_id=10,
             status="PENDING"
         )
-        operator = User(id=1, username="admin", real_name="管理员")
+        operator = User(id=1, username="admin", real_name="管理员",
+        password_hash="test_hash_123"
+    )
         cc_records = [
             ApprovalCarbonCopy(id=1, instance_id=1, cc_user_id=2),
             ApprovalCarbonCopy(id=2, instance_id=1, cc_user_id=3),
@@ -130,7 +132,9 @@ class TestWithdraw(unittest.TestCase):
             status="PENDING",
             completed_at=None
         )
-        initiator = User(id=10, username="user1", real_name="用户1")
+        initiator = User(id=10, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             instance,
@@ -196,7 +200,9 @@ class TestWithdraw(unittest.TestCase):
             status="DRAFT",
             completed_at=None
         )
-        initiator = User(id=10, username="user1", real_name="用户1")
+        initiator = User(id=10, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             instance,
@@ -238,7 +244,9 @@ class TestTerminate(unittest.TestCase):
             status="PENDING",
             completed_at=None
         )
-        operator = User(id=1, username="admin", real_name="管理员")
+        operator = User(id=1, username="admin", real_name="管理员",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             instance,
@@ -323,7 +331,9 @@ class TestRemind(unittest.TestCase):
             remind_count=0,
             reminded_at=None
         )
-        reminder = User(id=5, username="user5", real_name="催办人")
+        reminder = User(id=5, username="user5", real_name="催办人",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             task,
@@ -349,7 +359,9 @@ class TestRemind(unittest.TestCase):
             remind_count=2,  # 已催办2次
             reminded_at=datetime(2024, 1, 1)
         )
-        reminder = User(id=5, username="user5", real_name="催办人")
+        reminder = User(id=5, username="user5", real_name="催办人",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             task,
@@ -409,7 +421,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_simple(self):
         """测试简单评论"""
-        user = User(id=1, username="user1", real_name="用户1")
+        user = User(id=1, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
         instance = ApprovalInstance(id=10, status="PENDING")
 
         # Mock查询
@@ -446,7 +460,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_with_reply(self):
         """测试回复评论"""
-        user = User(id=2, username="user2", real_name="用户2")
+        user = User(id=2, username="user2", real_name="用户2",
+        password_hash="test_hash_123"
+    )
         instance = ApprovalInstance(id=10, status="PENDING")
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
@@ -475,7 +491,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_with_mentions(self):
         """测试@提及评论"""
-        user = User(id=1, username="user1", real_name="用户1")
+        user = User(id=1, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
         instance = ApprovalInstance(id=10, status="PENDING")
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
@@ -511,7 +529,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_with_attachments(self):
         """测试带附件评论"""
-        user = User(id=1, username="user1", real_name="用户1")
+        user = User(id=1, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
         instance = ApprovalInstance(id=10, status="PENDING")
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
@@ -568,7 +588,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_no_mentions(self):
         """测试无@提及时不发通知"""
-        user = User(id=1, username="user1", real_name="用户1")
+        user = User(id=1, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
         instance = ApprovalInstance(id=10, status="PENDING")
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
@@ -589,7 +611,9 @@ class TestAddComment(unittest.TestCase):
 
     def test_add_comment_instance_not_found_no_notify(self):
         """测试实例不存在时不发通知"""
-        user = User(id=1, username="user1", real_name="用户1")
+        user = User(id=1, username="user1", real_name="用户1",
+        password_hash="test_hash_123"
+    )
         
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             user,
@@ -618,7 +642,9 @@ class TestEdgeCases(unittest.TestCase):
     def test_add_cc_empty_list(self):
         """测试空抄送列表"""
         instance = ApprovalInstance(id=1, current_node_id=10)
-        operator = User(id=1, username="admin")
+        operator = User(id=1, username="admin",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             instance,
@@ -636,7 +662,9 @@ class TestEdgeCases(unittest.TestCase):
     def test_withdraw_without_comment(self):
         """测试无说明撤回"""
         instance = ApprovalInstance(id=1, initiator_id=10, status="PENDING", completed_at=None)
-        initiator = User(id=10, username="user1")
+        initiator = User(id=10, username="user1",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             instance,
@@ -663,7 +691,9 @@ class TestEdgeCases(unittest.TestCase):
             status="PENDING",
             remind_count=None,  # 初始为None
         )
-        reminder = User(id=5, username="user5")
+        reminder = User(id=5, username="user5",
+        password_hash="test_hash_123"
+    )
 
         self.engine.db.query.return_value.filter.return_value.first.side_effect = [
             task,

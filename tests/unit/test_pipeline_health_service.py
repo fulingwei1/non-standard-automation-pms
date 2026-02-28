@@ -309,12 +309,12 @@ class TestPipelineHealthService:
         pipeline_health_service.db.flush()
 
         contract = Contract(
-        owner_id=test_sales_user.id,
+        sales_owner_id=test_sales_user.id,
         customer_id=test_customer.id,
         contract_code="C001",
         opportunity_id=opp.id,
         project_id=project.id,  # 关联项目
-        contract_amount=Decimal("1000000"),
+        total_amount=Decimal("1000000"),
         status="ACTIVE",
         signed_date=date.today(),
         )
@@ -342,11 +342,11 @@ class TestPipelineHealthService:
         pipeline_health_service.db.flush()
 
         contract = Contract(
-        owner_id=test_sales_user.id,
+        sales_owner_id=test_sales_user.id,
         customer_id=test_customer.id,
         contract_code="C002",
         opportunity_id=opp.id,
-        contract_amount=Decimal("1000000"),
+        total_amount=Decimal("1000000"),
         status="DELAYED",
         signed_date=date.today() - timedelta(days=30),
         )
@@ -374,11 +374,11 @@ class TestPipelineHealthService:
         pipeline_health_service.db.flush()
 
         contract = Contract(
-        owner_id=test_sales_user.id,
+        sales_owner_id=test_sales_user.id,
         customer_id=test_customer.id,
         contract_code="C003",
         opportunity_id=opp.id,
-        contract_amount=Decimal("1000000"),
+        total_amount=Decimal("1000000"),
         status="ACTIVE",
         )
         pipeline_health_service.db.add(contract)
@@ -418,11 +418,11 @@ class TestPipelineHealthService:
         pipeline_health_service.db.flush()
 
         contract = Contract(
-        owner_id=test_sales_user.id,
+        sales_owner_id=test_sales_user.id,
         customer_id=test_customer.id,
         contract_code="C004",
         opportunity_id=opp.id,
-        contract_amount=Decimal("1000000"),
+        total_amount=Decimal("1000000"),
         status="ACTIVE",
         )
         pipeline_health_service.db.add(contract)

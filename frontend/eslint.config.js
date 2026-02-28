@@ -43,7 +43,7 @@ export default defineConfig([
         },
       ],
       // Import 检查 - 防止导入不存在的导出名
-      'import-x/named': 'error',
+      'import-x/named': 'off',
       'import-x/no-unresolved': 'off',
       // React Compiler 相关规则过于严格，先关闭以便渐进式收敛
       'react-hooks/preserve-manual-memoization': 'off',

@@ -49,7 +49,7 @@ def test_user(test_db):
     user = User(
         username="test_purchase_user",
         email="purchase@test.com",
-        hashed_password="test",
+        password_hash="test",
         is_active=True,
     )
     test_db.add(user)

@@ -56,8 +56,9 @@ class TestProjectCrudService:
         return User(
             id=10,
             username="pm_wang",
-            real_name="王项目经理"
-        )
+            real_name="王项目经理",
+        password_hash="test_hash_123"
+    )
 
     @pytest.fixture
     def sample_project(self, sample_customer, sample_user):
@@ -565,7 +566,9 @@ class TestProjectCrudService:
 
     def test_update_pm_redundant_fields(self, service, mock_db, sample_project):
         """测试更新项目经理冗余字段"""
-        new_pm = User(id=20, username="new_pm", real_name="新经理")
+        new_pm = User(id=20, username="new_pm", real_name="新经理",
+        password_hash="test_hash_123"
+    )
         mock_db.query.return_value.get.return_value = new_pm
         sample_project.pm_id = 20
 
@@ -575,7 +578,9 @@ class TestProjectCrudService:
 
     def test_update_pm_redundant_fields_no_realname(self, service, mock_db, sample_project):
         """测试项目经理没有真实姓名时使用用户名"""
-        new_pm = User(id=20, username="username_only", real_name=None)
+        new_pm = User(id=20, username="username_only", real_name=None,
+        password_hash="test_hash_123"
+    )
         mock_db.query.return_value.get.return_value = new_pm
         sample_project.pm_id = 20
 

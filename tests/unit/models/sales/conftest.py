@@ -40,7 +40,7 @@ def sample_opportunity(db_session, sample_user, sample_customer):
         owner_id=sample_user.id,
         stage="需求分析",
         probability=Decimal("60.00"),
-        expected_amount=Decimal("500000.00"),
+        est_amount=Decimal("500000.00"),
         expected_close_date=date.today() + timedelta(days=60)
     )
     db_session.add(opp)
@@ -59,9 +59,9 @@ def sample_contract(db_session, sample_customer, sample_user):
         contract_name="测试合同",
         customer_id=sample_customer.id,
         contract_type="销售合同",
-        contract_amount=Decimal("300000.00"),
+        total_amount=Decimal("300000.00"),
         signing_date=date.today(),
-        owner_id=sample_user.id,
+        sales_owner_id=sample_user.id,
         status="SIGNED"
     )
     db_session.add(contract)
@@ -77,7 +77,7 @@ def sample_quote(db_session, sample_customer, sample_user):
     
     quote = Quote(
         quote_code="QUOTE001",
-        quote_name="测试报价单",
+        quote_code="测试报价单",
         customer_id=sample_customer.id,
         quote_amount=Decimal("150000.00"),
         valid_until=date.today() + timedelta(days=30),

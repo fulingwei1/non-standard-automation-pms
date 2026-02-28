@@ -254,7 +254,8 @@ class TestHealthCalculatorEdgeCases:
         title="阻塞问题",
         description="阻塞了项目进度",
         status=IssueStatusEnum.OPEN.value,
-        )
+        reporter_id=1
+    )
         db_session.add(blocking_issue)
         db_session.commit()
 
@@ -596,7 +597,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.CRITICAL.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 
@@ -639,7 +641,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.WARNING.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 
@@ -682,7 +685,8 @@ class TestHealthCalculatorAlertIntegration:
         rule_type="MATERIAL_SHORTAGE",
         alert_level=AlertLevelEnum.CRITICAL.value,
         is_active=True,
-        )
+        target_type="PROJECT"
+    )
         db_session.add(alert_rule)
         db_session.commit()
 

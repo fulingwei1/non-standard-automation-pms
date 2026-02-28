@@ -102,8 +102,12 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     
     def test_resolve_recipients_by_ids_success(self):
         """测试解析用户ID成功"""
-        user1 = User(id=1, username="user1", email="user1@test.com", is_active=True)
-        user2 = User(id=2, username="user2", email="user2@test.com", is_active=True)
+        user1 = User(id=1, username="user1", email="user1@test.com", is_active=True,
+        password_hash="test_hash_123"
+    )
+        user2 = User(id=2, username="user2", email="user2@test.com", is_active=True,
+        password_hash="test_hash_123"
+    )
         setting1 = NotificationSettings(user_id=1, email_enabled=True)
         
         # Mock数据库查询
@@ -142,8 +146,12 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     def test_resolve_recipients_by_ids_invalid_types(self):
         """测试过滤无效类型的ID"""
         # Mock数据库查询
-        user1 = User(id=1, username="user1", is_active=True)
-        user2 = User(id=2, username="user2", is_active=True)
+        user1 = User(id=1, username="user1", is_active=True,
+        password_hash="test_hash_123"
+    )
+        user2 = User(id=2, username="user2", is_active=True,
+        password_hash="test_hash_123"
+    )
         
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.filter.return_value.all.return_value = [user1, user2]
@@ -276,7 +284,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     def test_resolve_recipient_id_from_user(self):
         """测试从用户对象获取接收者ID"""
         notification = AlertNotification(notify_user_id=None)
-        user = User(id=456)
+        user = User(id=456,
+        password_hash="test_hash_123"
+    )
         result = self.dispatcher._resolve_recipient_id(notification, user)
         self.assertEqual(result, 456)
 
@@ -349,7 +359,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_channel="EMAIL",
             notify_user_id=None,
         )
-        user = User(id=200)
+        user = User(id=200,
+        password_hash="test_hash_123"
+    )
         
         request = self.dispatcher.build_notification_request(
             notification=notification,
@@ -396,7 +408,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_channel="EMAIL",
             notify_user_id=100,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         result = dispatcher.dispatch(notification, alert, user)
         
@@ -428,7 +442,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_user_id=100,
             retry_count=0,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         result = dispatcher.dispatch(notification, alert, user)
         
@@ -457,7 +473,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_user_id=100,
             retry_count=0,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         result = dispatcher.dispatch(notification, alert, user)
         
@@ -494,7 +512,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_user_id=100,
             retry_count=0,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         result = dispatcher.dispatch(notification, alert, user, force_send=False)
         
@@ -521,7 +541,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_channel="EMAIL",
             notify_user_id=100,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         result = dispatcher.dispatch(notification, alert, user, force_send=True)
         
@@ -544,7 +566,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
             notify_channel="EMAIL",
             notify_user_id=100,
         )
-        user = User(id=100)
+        user = User(id=100,
+        password_hash="test_hash_123"
+    )
         
         # 预构建request
         request = NotificationRequest(
@@ -578,8 +602,12 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     ):
         """测试批量分发预警通知成功"""
         # Mock解析接收者
-        user1 = User(id=1, username="user1", email="user1@test.com")
-        user2 = User(id=2, username="user2", email="user2@test.com")
+        user1 = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
+        user2 = User(id=2, username="user2", email="user2@test.com",
+        password_hash="test_hash_123"
+    )
         mock_resolve_recipients.return_value = {
             1: {"user": user1, "settings": None},
             2: {"user": user2, "settings": None},
@@ -638,7 +666,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
         mock_enqueue.return_value = False
         
         # Mock数据库查询（使用 return_value 而不是 side_effect）
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         
         # 创建一个根据参数返回不同结果的函数
         def query_mock(model):
@@ -703,7 +733,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
         mock_enqueue.return_value = True
         
         # Mock数据库查询
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         
         def query_mock(model):
             if model == User:
@@ -744,7 +776,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
         mock_enqueue.return_value = True
         
         # Mock数据库查询
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         
         def query_mock(model):
             if model == AlertNotification:
@@ -785,7 +819,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
         mock_notification_query.filter.return_value.first.return_value = existing_notification
         
         # Mock其他查询
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.filter.return_value.all.return_value = [user]
         
@@ -819,7 +855,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     def test_dispatch_alert_notifications_channel_not_allowed(self, mock_enqueue):
         """测试渠道不允许时跳过"""
         # Mock数据库查询
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.filter.return_value.all.return_value = [user]
         
@@ -847,7 +885,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
     def test_dispatch_alert_notifications_no_target(self, mock_enqueue):
         """测试无法解析目标时跳过"""
         # Mock数据库查询
-        user = User(id=1, username="user1", email=None)  # 无邮箱
+        user = User(id=1, username="user1", email=None,
+        password_hash="test_hash_123"
+    )  # 无邮箱
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.filter.return_value.all.return_value = [user]
         
@@ -887,7 +927,9 @@ class TestNotificationDispatcherCore(unittest.TestCase):
 
     def test_dispatch_alert_notifications_exception_in_resolve_channels(self):
         """测试解析渠道时异常"""
-        user = User(id=1, username="user1", email="user1@test.com")
+        user = User(id=1, username="user1", email="user1@test.com",
+        password_hash="test_hash_123"
+    )
         
         alert = AlertRecord(id=1, alert_title="测试", alert_level="INFO")
         
@@ -941,7 +983,9 @@ class TestNotificationDispatcherEdgeCases(unittest.TestCase):
 
     def test_resolve_recipients_by_ids_with_duplicates(self):
         """测试重复的用户ID"""
-        user = User(id=1, username="user1", is_active=True)
+        user = User(id=1, username="user1", is_active=True,
+        password_hash="test_hash_123"
+    )
         
         mock_user_query = MagicMock()
         mock_user_query.filter.return_value.filter.return_value.all.return_value = [user]

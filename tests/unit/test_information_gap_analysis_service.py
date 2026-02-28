@@ -33,7 +33,8 @@ def test_lead_complete(db_session: Session):
         contact_phone="13800138000",
         demand_summary="需求摘要",
         source="WEB",
-        industry="制造业"
+        industry="制造业",
+        lead_code="LD-TEST-001"
     )
     db_session.add(lead)
     db_session.commit()
@@ -48,7 +49,8 @@ def test_lead_incomplete(db_session: Session):
         customer_name="测试客户",
         contact_name=None,
         contact_phone=None,
-        demand_summary=None
+        demand_summary=None,
+        lead_code="LD-TEST-001"
     )
     db_session.add(lead)
     db_session.commit()
@@ -60,7 +62,7 @@ def test_lead_incomplete(db_session: Session):
 def test_quote_complete(db_session: Session):
     """创建完整信息的报价"""
     quote = Quote(
-        total_amount=Decimal("100000.00"),
+        total_price=Decimal("100000.00"),
         valid_until=date.today() + timedelta(days=30)
     )
     db_session.add(quote)
@@ -73,7 +75,7 @@ def test_quote_complete(db_session: Session):
 def test_quote_incomplete(db_session: Session):
     """创建不完整信息的报价"""
     quote = Quote(
-        total_amount=None,
+        total_price=None,
         valid_until=None
     )
     db_session.add(quote)
@@ -125,8 +127,9 @@ class TestInformationGapAnalysisService:
         for i in range(3):
             lead = Lead(
             customer_name=f"客户{i}",
-            contact_name="联系人" if i % 2 == 0 else None
-            )
+            contact_name="联系人" if i % 2 == 0 else None,
+        lead_code="LD-TEST-001"
+    )
             db_session.add(lead)
             db_session.commit()
         

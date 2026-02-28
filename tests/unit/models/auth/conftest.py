@@ -9,7 +9,7 @@ import pytest
 @pytest.fixture
 def sample_role(db_session):
     """创建示例角色"""
-    from app.models.permission import Role
+    from app.models.user import Role
     
     role = Role(
         role_code="ROLE001",

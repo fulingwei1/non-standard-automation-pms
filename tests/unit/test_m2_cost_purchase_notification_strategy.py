@@ -560,14 +560,14 @@ class TestResourceSchedulingAIService:
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
             db = MagicMock()
-            svc = ResourceSchedulingAIService(db)
+            svc = ResourceSchedulingAIService(db_session)
             assert svc.db is db
 
     def _make_svc(self, db):
         """Helper: create ResourceSchedulingAIService with mocked deps"""
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
-            return ResourceSchedulingAIService(db)
+            return ResourceSchedulingAIService(db_session)
 
     def test_detect_resource_conflicts_no_allocations_returns_empty(self):
         """无分配记录时返回空列表"""

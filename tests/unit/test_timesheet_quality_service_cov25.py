@@ -17,7 +17,7 @@ def db():
 
 @pytest.fixture
 def service(db):
-    return TimesheetQualityService(db)
+    return TimesheetQualityService(db_session)
 
 
 def _make_timesheet(user_id=1, work_date=None, hours=8.0, status="APPROVED"):

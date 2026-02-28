@@ -159,7 +159,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
         )
 
         node = ApprovalNode(
@@ -186,7 +186,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             current_node_id=None,
-            current_status=ApprovalStatus.PENDING.value,
+            status=ApprovalStatus.PENDING.value,
         )
 
         node = ApprovalNode(
@@ -211,7 +211,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.APPROVED.value,
+            status=ApprovalStatus.APPROVED.value,
         )
 
         current_node = self.engine.get_current_node(instance)
@@ -222,7 +222,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.REJECTED.value,
+            status=ApprovalStatus.REJECTED.value,
         )
 
         current_node = self.engine.get_current_node(instance)
@@ -269,8 +269,8 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            business_type="ECN",
-            business_id=100,
+            entity_type="ECN",
+            entity_id=100,
         )
 
         # Mock User 查询
@@ -382,9 +382,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             flow_code="ECN_FLOW",
-            business_type="ECN",
-            business_id=100,
-            current_status=ApprovalStatus.PENDING.value,
+            entity_type="ECN",
+            entity_id=100,
+            status=ApprovalStatus.PENDING.value,
             submitted_at=datetime.now(),
             submitted_by=None,
         )
@@ -409,15 +409,17 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             flow_code="ECN_FLOW",
-            business_type="ECN",
-            business_id=100,
+            entity_type="ECN",
+            entity_id=100,
             submitted_by=5,
             submitted_at=datetime.now(),
         )
 
         # Mock User 对象
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三", department="技术部")
+        user = User(id=5, username="testuser", real_name="张三", department="技术部",
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -439,8 +441,8 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            business_type="ECN",
-            business_id=100,
+            entity_type="ECN",
+            entity_id=100,
             submitted_by=None,
         )
         instance.form_data = {"amount": 5000, "priority": "high", "days": 3}
@@ -543,7 +545,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
             completed_nodes=0,
         )
 
@@ -564,7 +566,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
         )
 
         from app.models.user import User
-        user = User(id=5, username="approver", real_name="审批人")
+        user = User(id=5, username="approver", real_name="审批人",
+        password_hash="test_hash_123"
+    )
 
         # Mock 多个查询
         def mock_query_side_effect(model):
@@ -600,7 +604,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.APPROVED.value,
+            status=ApprovalStatus.APPROVED.value,
         )
 
         with self.assertRaises(ValueError) as ctx:
@@ -618,7 +622,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
             id=1,
             flow_id=1,
             current_node_id=10,
-            current_status=ApprovalStatus.IN_PROGRESS.value,
+            status=ApprovalStatus.IN_PROGRESS.value,
         )
 
         node = ApprovalNode(
@@ -644,7 +648,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
     def test_get_approver_name_user_found(self):
         """测试获取审批人姓名（用户存在）"""
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三")
+        user = User(id=5, username="testuser", real_name="张三",
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -665,7 +671,9 @@ class TestWorkflowEngineCore(unittest.TestCase):
     def test_get_approver_name_no_real_name(self):
         """测试获取审批人姓名（无真实姓名时使用用户名）"""
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name=None)
+        user = User(id=5, username="testuser", real_name=None,
+        password_hash="test_hash_123"
+    )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -713,7 +721,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.PENDING.value,
+            status=ApprovalStatus.PENDING.value,
             completed_nodes=0,
         )
 
@@ -733,7 +741,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         instance = ApprovalInstance(
             id=1,
             flow_id=1,
-            current_status=ApprovalStatus.PENDING.value,
+            status=ApprovalStatus.PENDING.value,
         )
 
         self.engine._update_instance_status(

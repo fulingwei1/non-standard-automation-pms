@@ -24,8 +24,8 @@ from app.models.organization import Employee
 def authenticated_client(db_session: Session):
     """创建已认证的测试客户端。"""
     employee = Employee(
-        real_name="Test User",
-        employee_no="TEST001",
+        name="Test User",
+        employee_code="TEST001",
         department="测试部",
         employment_status="active",
     )

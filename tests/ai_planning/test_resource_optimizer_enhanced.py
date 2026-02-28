@@ -50,8 +50,9 @@ def test_users(db: Session):
         user = User(
             username=f"user_{uuid.uuid4().hex[:6]}",
             real_name=f"用户{i}",
-            is_active=True
-        )
+            is_active=True,
+        password_hash="test_hash_123"
+    )
         db.add(user)
         db.flush()
         users.append(user)

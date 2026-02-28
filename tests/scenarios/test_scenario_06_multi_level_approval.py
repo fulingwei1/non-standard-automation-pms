@@ -36,8 +36,8 @@ class TestMultiLevelApproval:
         """测试1：创建多级审批实例"""
         # 创建采购申请
         pr = PurchaseRequest(
-            request_code="PR-MULTI-001",
-            requester_id=3,
+            request_no="PR-MULTI-001",
+            requested_by=3,
             total_amount=Decimal("100000.00"),  # 大额采购
             status="PENDING_APPROVAL",
             created_by=3,
@@ -47,12 +47,11 @@ class TestMultiLevelApproval:
 
         # 创建审批实例
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -63,8 +62,8 @@ class TestMultiLevelApproval:
     def test_02_create_approval_tasks_chain(self, db_session: Session):
         """测试2：创建审批任务链"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-002",
-            requester_id=3,
+            request_no="PR-MULTI-002",
+            requested_by=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -73,12 +72,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -87,10 +85,9 @@ class TestMultiLevelApproval:
         # 第一级：部门经理
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            approver_name="部门经理",
-            node_name="部门经理审批",
-            sequence=1,
+            assignee_id=4,
+            assignee_name="部门经理",
+            task_order=1,
             status="PENDING",
         )
         db_session.add(task1)
@@ -98,10 +95,9 @@ class TestMultiLevelApproval:
         # 第二级：财务总监
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            approver_name="财务总监",
-            node_name="财务总监审批",
-            sequence=2,
+            assignee_id=5,
+            assignee_name="财务总监",
+            task_order=2,
             status="NOT_STARTED",
         )
         db_session.add(task2)
@@ -109,10 +105,9 @@ class TestMultiLevelApproval:
         # 第三级：总经理
         task3 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=1,
-            approver_name="总经理",
-            node_name="总经理审批",
-            sequence=3,
+            assignee_id=1,
+            assignee_name="总经理",
+            task_order=3,
             status="NOT_STARTED",
         )
         db_session.add(task3)
@@ -129,8 +124,8 @@ class TestMultiLevelApproval:
     def test_03_first_level_approval(self, db_session: Session):
         """测试3：第一级审批通过"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-003",
-            requester_id=3,
+            request_no="PR-MULTI-003",
+            requested_by=3,
             total_amount=Decimal("120000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -139,30 +134,29 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
 
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            node_name="部门经理审批",
-            sequence=1,
+            assignee_id=4,
+            assignee_name="部门经理审批",
+            task_order=1,
             status="PENDING",
         )
         db_session.add(task1)
 
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            node_name="财务总监审批",
-            sequence=2,
+            assignee_id=5,
+            assignee_name="财务总监审批",
+            task_order=2,
             status="NOT_STARTED",
         )
         db_session.add(task2)
@@ -185,8 +179,8 @@ class TestMultiLevelApproval:
     def test_04_sequential_approval_completion(self, db_session: Session):
         """测试4：顺序审批完成"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-004",
-            requester_id=3,
+            request_no="PR-MULTI-004",
+            requested_by=3,
             total_amount=Decimal("180000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -195,12 +189,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -216,9 +209,9 @@ class TestMultiLevelApproval:
         for data in tasks_data:
             task = ApprovalTask(
                 instance_id=instance.id,
-                approver_id=data["approver_id"],
-                node_name=data["node_name"],
-                sequence=data["sequence"],
+                assignee_id=data["approver_id"],
+                assignee_name=data["node_name"],
+                task_order=data["sequence"],
                 status="PENDING" if data["sequence"] == 1 else "NOT_STARTED",
             )
             db_session.add(task)
@@ -255,8 +248,8 @@ class TestMultiLevelApproval:
     def test_05_approval_rejection_at_middle_level(self, db_session: Session):
         """测试5：中间级别审批驳回"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-005",
-            requester_id=3,
+            request_no="PR-MULTI-005",
+            requested_by=3,
             total_amount=Decimal("200000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -265,12 +258,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -278,21 +270,21 @@ class TestMultiLevelApproval:
         tasks = [
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=4,
-                sequence=1,
+                assignee_id=4,
+                task_order=1,
                 status="APPROVED",
                 approved_at=datetime.now(),
             ),
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=5,
-                sequence=2,
+                assignee_id=5,
+                task_order=2,
                 status="PENDING",
             ),
             ApprovalTask(
                 instance_id=instance.id,
-                approver_id=1,
-                sequence=3,
+                assignee_id=1,
+                task_order=3,
                 status="NOT_STARTED",
             ),
         ]
@@ -323,8 +315,8 @@ class TestMultiLevelApproval:
     def test_06_approval_with_countersignature(self, db_session: Session):
         """测试6：会签审批（同级多人）"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-006",
-            requester_id=3,
+            request_no="PR-MULTI-006",
+            requested_by=3,
             total_amount=Decimal("250000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -333,12 +325,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -346,9 +337,9 @@ class TestMultiLevelApproval:
         # 第一级：部门经理（单人）
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            node_name="部门经理",
-            sequence=1,
+            assignee_id=4,
+            assignee_name="部门经理",
+            task_order=1,
             status="APPROVED",
             approved_at=datetime.now(),
         )
@@ -357,16 +348,16 @@ class TestMultiLevelApproval:
         # 第二级：技术总监和财务总监会签
         task2a = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            node_name="财务总监会签",
-            sequence=2,
+            assignee_id=5,
+            assignee_name="财务总监会签",
+            task_order=2,
             status="PENDING",
         )
         task2b = ApprovalTask(
             instance_id=instance.id,
-            approver_id=6,
-            node_name="技术总监会签",
-            sequence=2,
+            assignee_id=6,
+            assignee_name="技术总监会签",
+            task_order=2,
             status="PENDING",
         )
         db_session.add(task2a)
@@ -395,8 +386,8 @@ class TestMultiLevelApproval:
     def test_07_approval_delegation(self, db_session: Session):
         """测试7：审批委托"""
         pr = PurchaseRequest(
-            request_code="PR-MULTI-007",
-            requester_id=3,
+            request_no="PR-MULTI-007",
+            requested_by=3,
             total_amount=Decimal("90000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -405,12 +396,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -418,8 +408,8 @@ class TestMultiLevelApproval:
         # 原审批人
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            node_name="部门经理",
+            assignee_id=4,
+            assignee_name="部门经理",
             status="PENDING",
         )
         db_session.add(task)
@@ -443,8 +433,8 @@ class TestMultiLevelApproval:
         """测试8：条件路由审批"""
         # 金额小于10万，只需部门经理审批
         pr_small = PurchaseRequest(
-            request_code="PR-COND-001",
-            requester_id=3,
+            request_no="PR-COND-001",
+            requested_by=3,
             total_amount=Decimal("80000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -453,12 +443,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance_small = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr_small.id,
-            business_code=pr_small.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr_small.id,
+            instance_no=pr_small.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance_small)
         db_session.commit()
@@ -466,9 +455,9 @@ class TestMultiLevelApproval:
         # 只创建一级审批
         task_small = ApprovalTask(
             instance_id=instance_small.id,
-            approver_id=4,
-            node_name="部门经理",
-            sequence=1,
+            assignee_id=4,
+            assignee_name="部门经理",
+            task_order=1,
             status="APPROVED",
             approved_at=datetime.now(),
         )
@@ -481,8 +470,8 @@ class TestMultiLevelApproval:
 
         # 金额大于等于10万，需要多级审批
         pr_large = PurchaseRequest(
-            request_code="PR-COND-002",
-            requester_id=3,
+            request_no="PR-COND-002",
+            requested_by=3,
             total_amount=Decimal("150000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -491,12 +480,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance_large = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr_large.id,
-            business_code=pr_large.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr_large.id,
+            instance_no=pr_large.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance_large)
         db_session.commit()
@@ -505,8 +493,8 @@ class TestMultiLevelApproval:
         for i, approver_id in enumerate([4, 5, 1], 1):
             task = ApprovalTask(
                 instance_id=instance_large.id,
-                approver_id=approver_id,
-                sequence=i,
+                assignee_id=approver_id,
+                task_order=i,
                 status="PENDING" if i == 1 else "NOT_STARTED",
             )
             db_session.add(task)
@@ -521,8 +509,8 @@ class TestMultiLevelApproval:
     def test_09_approval_time_tracking(self, db_session: Session):
         """测试9：审批时间跟踪"""
         pr = PurchaseRequest(
-            request_code="PR-TIME-001",
-            requester_id=3,
+            request_no="PR-TIME-001",
+            requested_by=3,
             total_amount=Decimal("100000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -531,13 +519,12 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
             created_at=datetime.now() - timedelta(days=5),
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -547,8 +534,8 @@ class TestMultiLevelApproval:
         task1_end = datetime.now() - timedelta(days=4)
         task1 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            sequence=1,
+            assignee_id=4,
+            task_order=1,
             status="APPROVED",
             created_at=task1_start,
             approved_at=task1_end,
@@ -560,8 +547,8 @@ class TestMultiLevelApproval:
         task2_end = datetime.now() - timedelta(days=2)
         task2 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=5,
-            sequence=2,
+            assignee_id=5,
+            task_order=2,
             status="APPROVED",
             created_at=task2_start,
             approved_at=task2_end,
@@ -573,8 +560,8 @@ class TestMultiLevelApproval:
         task3_end = datetime.now()
         task3 = ApprovalTask(
             instance_id=instance.id,
-            approver_id=1,
-            sequence=3,
+            assignee_id=1,
+            task_order=3,
             status="APPROVED",
             created_at=task3_start,
             approved_at=task3_end,
@@ -600,8 +587,8 @@ class TestMultiLevelApproval:
     def test_10_approval_with_auto_escalation(self, db_session: Session):
         """测试10：审批超时自动升级"""
         pr = PurchaseRequest(
-            request_code="PR-ESC-001",
-            requester_id=3,
+            request_no="PR-ESC-001",
+            requested_by=3,
             total_amount=Decimal("120000.00"),
             status="PENDING_APPROVAL",
             created_by=3,
@@ -610,12 +597,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         instance = ApprovalInstance(
-            business_type="PURCHASE_REQUEST",
-            business_id=pr.id,
-            business_code=pr.request_code,
+            entity_type="PURCHASE_REQUEST",
+            entity_id=pr.id,
+            instance_no=pr.request_code,
             initiator_id=3,
             status="PENDING",
-            created_by=3,
         )
         db_session.add(instance)
         db_session.commit()
@@ -623,8 +609,8 @@ class TestMultiLevelApproval:
         # 审批任务超时
         task = ApprovalTask(
             instance_id=instance.id,
-            approver_id=4,
-            node_name="部门经理",
+            assignee_id=4,
+            assignee_name="部门经理",
             status="PENDING",
             created_at=datetime.now() - timedelta(days=3),  # 超时3天
             due_date=datetime.now() - timedelta(days=1),

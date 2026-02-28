@@ -195,7 +195,7 @@ class TestPmoInitiationServiceCreate(unittest.TestCase):
             project_level="A",
             customer_name="测试客户",
             contract_no="CT001",
-            contract_amount=Decimal("100000.00"),
+            total_amount=Decimal("100000.00"),
             required_start_date=date(2026, 3, 1),
             required_end_date=date(2026, 6, 30),
             requirement_summary="需求概述",
@@ -266,7 +266,7 @@ class TestPmoInitiationServiceUpdate(unittest.TestCase):
             id=1,
             status="DRAFT",
             project_name="原项目名",
-            contract_amount=Decimal("50000"),
+            total_amount=Decimal("50000"),
         )
         
         mock_query = MagicMock()
@@ -277,7 +277,7 @@ class TestPmoInitiationServiceUpdate(unittest.TestCase):
         # 准备更新数据
         update_data = InitiationUpdate(
             project_name="新项目名",
-            contract_amount=Decimal("80000"),
+            total_amount=Decimal("80000"),
         )
 
         result = self.service.update_initiation(initiation_id=1, initiation_in=update_data)
@@ -581,7 +581,7 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
             project_name="新项目",
             customer_name="新客户",
             contract_no="CT001",
-            contract_amount=Decimal("100000"),
+            total_amount=Decimal("100000"),
             required_start_date=date(2026, 3, 1),
             required_end_date=date(2026, 6, 30),
             project_type="NEW",
@@ -651,7 +651,7 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
             project_name="项目B",
             customer_name="老客户",
             contract_no="CT002",
-            contract_amount=None,  # 测试空金额
+            total_amount=None,  # 测试空金额
             required_start_date=date(2026, 4, 1),
             required_end_date=date(2026, 7, 31),
             project_type="UPGRADE",
@@ -704,7 +704,7 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
             project_name="项目C",
             customer_name="客户C",
             contract_no="CT003",
-            contract_amount=Decimal("200000"),
+            total_amount=Decimal("200000"),
             required_start_date=date(2026, 5, 1),
             required_end_date=date(2026, 8, 31),
             project_type="NEW",

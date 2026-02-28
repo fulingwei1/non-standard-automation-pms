@@ -69,7 +69,8 @@ class TestApprove:
             id=user_id,
             username=username,
             real_name=real_name,
-        )
+        password_hash="test_hash_123"
+    )
         return user
 
     def test_approve_success_with_next_node(self):

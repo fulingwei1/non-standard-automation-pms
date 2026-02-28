@@ -11,7 +11,9 @@ except ImportError:
 import time
 
 
-class ProjectUser(HttpUser):
+class ProjectUser(HttpUser,
+        password_hash="test_hash_123"
+    ):
     """项目用户负载测试"""
     wait_time = between(1, 3)
     

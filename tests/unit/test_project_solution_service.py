@@ -150,8 +150,9 @@ class TestCreateSolutionTemplateFromIssue:
         issue = Issue(
         issue_no='ISS001',
         title='测试问题',
-        solution=None
-        )
+        solution=None,
+        reporter_id=1
+    )
         db_session.add(issue)
         db_session.flush()
 
@@ -173,8 +174,9 @@ class TestCreateSolutionTemplateFromIssue:
         title='测试问题',
         solution='解决方案内容',
         issue_type='MECHANICAL',
-        category='设计问题'
-        )
+        category='设计问题',
+        reporter_id=1
+    )
         db_session.add(issue)
         db_session.flush()
 
@@ -196,8 +198,9 @@ class TestCreateSolutionTemplateFromIssue:
         issue_no='ISS002',
         title='测试问题2',
         solution='解决方案内容2',
-        issue_type='ELECTRICAL'
-        )
+        issue_type='ELECTRICAL',
+        reporter_id=1
+    )
         db_session.add(issue)
         db_session.flush()
 

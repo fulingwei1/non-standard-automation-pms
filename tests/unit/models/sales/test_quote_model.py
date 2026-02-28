@@ -17,7 +17,7 @@ class TestQuoteModel:
         """测试创建报价单"""
         quote = Quote(
             quote_code="QUOTE001",
-            quote_name="测试报价单",
+            quote_code="测试报价单",
             customer_id=sample_customer.id,
             quote_amount=Decimal("150000.00"),
             valid_until=date.today() + timedelta(days=30),
@@ -34,7 +34,7 @@ class TestQuoteModel:
         """测试报价单编码唯一性"""
         q1 = Quote(
             quote_code="Q001",
-            quote_name="报价1",
+            quote_code="报价1",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -43,7 +43,7 @@ class TestQuoteModel:
         
         q2 = Quote(
             quote_code="Q001",
-            quote_name="报价2",
+            quote_code="报价2",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -59,7 +59,7 @@ class TestQuoteModel:
         
         quote = Quote(
             quote_code="Q002",
-            quote_name="有效期测试",
+            quote_code="有效期测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             valid_from=valid_from,
@@ -75,13 +75,13 @@ class TestQuoteModel:
         """测试报价金额分解"""
         quote = Quote(
             quote_code="Q003",
-            quote_name="金额测试",
+            quote_code="金额测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             quote_amount=Decimal("100000.00"),
             discount_amount=Decimal("5000.00"),
             tax_amount=Decimal("16000.00"),
-            total_amount=Decimal("111000.00")
+            total_price=Decimal("111000.00")
         )
         db_session.add(quote)
         db_session.commit()
@@ -120,7 +120,7 @@ class TestQuoteModel:
         """测试删除报价"""
         quote = Quote(
             quote_code="Q_DEL",
-            quote_name="待删除",
+            quote_code="待删除",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -138,7 +138,7 @@ class TestQuoteModel:
         """测试报价版本"""
         quote = Quote(
             quote_code="Q004",
-            quote_name="版本测试",
+            quote_code="版本测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             version="1.0"
@@ -153,7 +153,7 @@ class TestQuoteModel:
         desc = "包含软硬件集成方案的系统报价"
         quote = Quote(
             quote_code="Q005",
-            quote_name="描述测试",
+            quote_code="描述测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             description=desc
@@ -168,7 +168,7 @@ class TestQuoteModel:
         quotes = [
             Quote(
                 quote_code=f"Q{i:03d}",
-                quote_name=f"报价{i}",
+                quote_code=f"报价{i}",
                 customer_id=sample_customer.id,
                 created_by=sample_user.id,
                 quote_amount=Decimal(f"{i*10000}.00")

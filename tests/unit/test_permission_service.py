@@ -11,7 +11,9 @@ from app.services.permission_service import PermissionService
 
 def test_superuser_always_has_permission(db_session: Session):
     """Superuser always returns True regardless of permissions."""
-    user = User(username="admin", is_superuser=True)
+    user = User(username="admin", is_superuser=True,
+        password_hash="test_hash_123"
+    )
     db_session.add(user)
     db_session.flush()
 
@@ -24,7 +26,9 @@ def test_superuser_always_has_permission(db_session: Session):
 
 def test_user_has_direct_roles(db_session: Session):
     """User with direct assigned roles only."""
-    user = User(username="testuser", is_superuser=False)
+    user = User(username="testuser", is_superuser=False,
+        password_hash="test_hash_123"
+    )
     db_session.add(user)
     db_session.flush()
 

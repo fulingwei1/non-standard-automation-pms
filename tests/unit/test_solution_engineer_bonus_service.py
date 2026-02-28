@@ -40,7 +40,9 @@ class TestCalculateSolutionBonus:
 
             # 创建考核周期
         period = PerformancePeriod(
+        period_code='202501',
         period_name='2025-01',
+        period_type='MONTHLY',
         start_date=date(2025, 1, 1),
         end_date=date(2025, 1, 31),
         status='ACTIVE'
@@ -81,7 +83,9 @@ class TestCalculateSolutionBonus:
         from datetime import date
 
         period = PerformancePeriod(
+        period_code='202501',
         period_name='2025-01',
+        period_type='MONTHLY',
         start_date=date(2025, 1, 1),
         end_date=date(2025, 1, 31),
         status='ACTIVE'
@@ -199,7 +203,9 @@ class TestBonusResultStructure:
         from datetime import date
 
         period = PerformancePeriod(
+        period_code='202501',
         period_name='2025-01',
+        period_type='MONTHLY',
         start_date=date(2025, 1, 1),
         end_date=date(2025, 1, 31),
         status='ACTIVE'
@@ -226,7 +232,9 @@ class TestBonusResultStructure:
         from datetime import date
 
         period = PerformancePeriod(
+        period_code='202501',
         period_name='2025-01',
+        period_type='MONTHLY',
         start_date=date(2025, 1, 1),
         end_date=date(2025, 1, 31),
         status='ACTIVE'

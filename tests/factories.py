@@ -56,6 +56,7 @@ from app.models.sales import (
 )
 from app.models.ecn import Ecn
 from app.models.user import Role, User
+from app.models.vendor import Vendor
 
 # ============== 基础配置 ==============
 
@@ -200,8 +201,8 @@ class ProjectFactory(BaseFactory):
     class Meta:
         model = Project
 
-    project_code = factory.LazyFunction(
-        lambda: f"PJ{date.today().strftime('%y%m%d')}{random.randint(100, 999)}{random.randint(100, 999)}"
+    project_code = factory.Sequence(
+        lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:06d}"
     )
     project_name = factory.Sequence(lambda n: f"测试项目{n}")
     short_name = factory.Sequence(lambda n: f"项目{n}")
@@ -235,12 +236,30 @@ class MachineFactory(BaseFactory):
     class Meta:
         model = Machine
 
-    machine_code = factory.LazyFunction(
-        lambda: f"PN{random.randint(100, 999)}{random.randint(100, 999)}"
+    project = factory.SubFactory(ProjectFactory)
+    project_id = factory.LazyAttribute(lambda o: o.project.id)
+    machine_code = factory.Sequence(
+        lambda n: f"PN{n:06d}"
     )
     machine_name = factory.Sequence(lambda n: f"测试机台{n}")
     machine_type = "TEST_EQUIPMENT"
     status = "DESIGN"
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        project = kwargs.pop("project", None)
+        if project is None and "project_id" not in kwargs:
+            project = ProjectFactory()
+            kwargs["project_id"] = project.id
+        elif project is not None:
+            kwargs["project_id"] = project.id
+        with get_session() as session:
+            obj = model_class(*args, **kwargs)
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+            session.expunge(obj)
+            return obj
 
 
 class ProjectStageFactory(BaseFactory):
@@ -447,8 +466,8 @@ class LeadFactory(BaseFactory):
     class Meta:
         model = Lead
 
-    lead_code = factory.LazyFunction(
-        lambda: f"LD{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+    lead_code = factory.Sequence(
+        lambda n: f"LD{date.today().strftime('%y%m%d')}{n:05d}"
     )
     lead_name = factory.Sequence(lambda n: f"测试线索{n}")
     company_name = factory.Sequence(lambda n: f"潜在客户公司{n}")
@@ -469,8 +488,8 @@ class OpportunityFactory(BaseFactory):
     class Meta:
         model = Opportunity
 
-    opportunity_code = factory.LazyFunction(
-        lambda: f"OP{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+    opportunity_code = factory.Sequence(
+        lambda n: f"OP{date.today().strftime('%y%m%d')}{n:05d}"
     )
     opportunity_name = factory.Sequence(lambda n: f"测试商机{n}")
     stage = "INITIAL"
@@ -490,8 +509,8 @@ class QuoteFactory(BaseFactory):
     class Meta:
         model = Quote
 
-    quote_code = factory.LazyFunction(
-        lambda: f"QT{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+    quote_code = factory.Sequence(
+        lambda n: f"QT{date.today().strftime('%y%m%d')}{n:05d}"
     )
     quote_name = factory.Sequence(lambda n: f"测试报价{n}")
     version = 1
@@ -508,8 +527,8 @@ class ContractFactory(BaseFactory):
     class Meta:
         model = Contract
 
-    contract_code = factory.LazyFunction(
-        lambda: f"CT{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+    contract_code = factory.Sequence(
+        lambda n: f"CT{date.today().strftime('%y%m%d')}{n:05d}"
     )
     contract_name = factory.Sequence(lambda n: f"测试合同{n}")
     contract_type = "SALES"
@@ -602,8 +621,8 @@ class AcceptanceOrderFactory(BaseFactory):
     class Meta:
         model = AcceptanceOrder
 
-    order_no = factory.LazyFunction(
-        lambda: f"ACC{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
+    order_no = factory.Sequence(
+        lambda n: f"ACC{date.today().strftime('%y%m%d')}{n:05d}"
     )
     acceptance_type = "FAT"
     status = "DRAFT"
@@ -696,18 +715,8 @@ def create_complete_project_setup():
         customer_id=customer.id, customer_name=customer.customer_name
     )
 
-    # 创建供应商（Supplier已废弃，使用Vendor代替）
-    # supplier = SupplierFactory()  # 已废弃
-    from app.models.vendor import Vendor
-    supplier = Vendor(
-        supplier_code=f"SUP{random.randint(10000, 99999)}",
-        supplier_name="测试供应商",
-        vendor_type="STANDARD",
-        status="ACTIVE"
-    )
-    db_session.add(supplier)
-    db_session.commit()
-    db_session.refresh(supplier)
+    # 创建供应商
+    supplier = SupplierFactory()
 
     # 创建物料
     materials = MaterialFactory.create_batch(5)
@@ -739,8 +748,8 @@ class AcceptanceIssueFactory(BaseFactory):
     class Meta:
         model = AcceptanceIssue
 
-    issue_no = factory.LazyFunction(
-        lambda: f"ISS{random.randint(10000, 99999)}"
+    issue_no = factory.Sequence(
+        lambda n: f"ISS{n:06d}"
     )
     title = factory.Sequence(lambda n: f"测试问题{n}")
     issue_type = "FUNCTIONAL"
@@ -771,6 +780,19 @@ class ProjectCostFactory(BaseFactory):
 # ============================================================================
 # 服务测试辅助函数（非 Factory 类）
 # ============================================================================
+
+
+class SupplierFactory(BaseFactory):
+    """供应商工厂（使用 Vendor 模型，向后兼容）"""
+
+    class Meta:
+        model = Vendor
+
+    supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
+    supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
+    vendor_type = "STANDARD"
+    status = "ACTIVE"
+
 
 def create_mock_timesheet_data():
     """创建模拟工时数据（用于服务测试）"""

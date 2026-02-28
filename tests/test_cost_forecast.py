@@ -181,6 +181,7 @@ def test_cost_alert_rule_model_creation(db: Session, test_user: User):
         is_enabled=True,
         priority=10,
         created_by=test_user.id,
+        target_type="PROJECT"
     )
 
     db.add(rule)
@@ -489,6 +490,7 @@ def test_alert_rules_loading(
         alert_type="OVERSPEND",
         rule_config={"warning_threshold": 70, "critical_threshold": 90},
         is_enabled=True,
+        target_type="PROJECT"
     )
     db.add(rule)
     db.commit()
