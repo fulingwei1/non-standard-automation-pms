@@ -64,7 +64,7 @@ def main():
     # 9. 物料
     print("创建物料...")
     for mid,code,name,unit,price in [(1,'MAT001','PCB测试主板','块',2500),(2,'MAT002','三菱PLC FX5U','台',8500),(3,'MAT003','伺服电机 750W','台',3200),(4,'MAT004','SMC气缸','个',450),(5,'MAT005','基恩士激光传感器','个',6800),(6,'MAT006','欧姆龙继电器','个',85),(7,'MAT007','铝型材 4040','米',65),(8,'MAT008','威纶触摸屏','台',2800),(9,'MAT009','海康工业相机','台',4500),(10,'MAT010','测试治具针床','套',15000),(11,'MAT011','线缆屏蔽','米',12),(12,'MAT012','断路器 3P','个',180),(13,'MAT013','开关电源 24V','台',350),(14,'MAT014','老化负载电阻','个',120),(15,'MAT015','烧录座 QFN48','个',850),(16,'MAT016','步进驱动器','台',680),(17,'MAT017','光纤传感器','个',520),(18,'MAT018','导轨 MGN12H','套',280),(19,'MAT019','电磁阀 5/2','个',320),(20,'MAT020','工控机 i7','台',7500)]:
-        c.execute("INSERT OR REPLACE INTO materials (id,material_code,material_name,unit,standard_price,is_active,created_at,updated_at) VALUES (?,?,?,?,?,1,?,?)", (mid,code,name,unit,price,now,now))
+        c.execute("INSERT OR REPLACE INTO materials (id,material_code,material_name,unit,standard_price,source_type,last_price,safety_stock,current_stock,lead_time_days,is_key_material,is_active,created_at,updated_at) VALUES (?,?,?,?,?,"PURCHASE",?,10,0,7,0,1,?,?)", (mid,code,name,unit,price,price,now,now))
 
     # 10. 采购订单
     print("创建采购订单...")
