@@ -90,7 +90,7 @@ export default function PurchaseRequestNew() {
     const loadProjects = async () => {
       try {
         const res = await projectApi.list({ page_size: 1000 });
-        setProjects(res.data?.items || res.data || []);
+        setProjects(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load projects:", err);
       }
@@ -111,7 +111,7 @@ export default function PurchaseRequestNew() {
           page: 1,
           page_size: 100
         });
-        const machineList = response.data?.items || response.data || [];
+        const machineList = response.data?.items || response.data?.items || response.data || [];
         setMachines(
           machineList.map((m) => ({
             id: m.id,
@@ -132,7 +132,7 @@ export default function PurchaseRequestNew() {
     const loadMaterials = async () => {
       try {
         const res = await materialApi.list({ page_size: 1000 });
-        setMaterials(res.data?.items || res.data || []);
+        setMaterials(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load materials:", err);
       }
@@ -145,7 +145,7 @@ export default function PurchaseRequestNew() {
     const loadSuppliers = async () => {
       try {
         const res = await supplierApi.list({ page: 1, page_size: 1000 });
-        setSuppliers(res.data?.items || res.data || []);
+        setSuppliers(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load suppliers:", err);
       }

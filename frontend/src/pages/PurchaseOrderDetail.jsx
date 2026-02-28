@@ -234,7 +234,7 @@ export default function PurchaseOrderDetail() {
         const receiptsResponse = await purchaseApi.goodsReceipts.list({
           purchase_order_id: orderId
         });
-        receipts = receiptsResponse.data?.items || receiptsResponse.data || [];
+        receipts = receiptsResponse.data?.items || receiptsResponse.data?.items || receiptsResponse.data || [];
       } catch (err) {
         console.error("Failed to load receipts:", err);
       }

@@ -43,12 +43,12 @@ export function useECNDetail(ecnId) {
       ]);
 
       setEcn(ecnRes.data || ecnRes);
-      setEvaluations(evalsRes.data || []);
-      setApprovals(approvalsRes.data || []);
-      setTasks(tasksRes.data || []);
-      setAffectedMaterials(materialsRes.data || []);
-      setAffectedOrders(ordersRes.data || []);
-      setLogs(logsRes.data || []);
+      setEvaluations(evalsRes.data?.items || evalsRes.data || []);
+      setApprovals(approvalsRes.data?.items || approvalsRes.data || []);
+      setTasks(tasksRes.data?.items || tasksRes.data || []);
+      setAffectedMaterials(materialsRes.data?.items || materialsRes.data || []);
+      setAffectedOrders(ordersRes.data?.items || ordersRes.data || []);
+      setLogs(logsRes.data?.items || logsRes.data || []);
       setEvaluationSummary(summaryRes.data);
     } catch (error) {
       console.error("Failed to fetch ECN detail:", error);

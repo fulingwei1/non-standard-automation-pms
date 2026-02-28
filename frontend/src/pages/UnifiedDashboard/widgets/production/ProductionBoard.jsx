@@ -19,7 +19,7 @@ export default function ProductionBoard({ _view, data: propData }) {
   useEffect(() => {
     if (propData) { setItems(propData); return; }
     productionApi.productionPlans.list({ page_size: 10 }).then(res => {
-      setItems(res.data?.items || res.data || []);
+      setItems(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData]);
 

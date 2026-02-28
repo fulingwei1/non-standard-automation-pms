@@ -14,7 +14,7 @@ export function useDependencyCheck() {
             if (filters.project_id) params.project_id = filters.project_id;
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             const response = await dependencyApi.list(params);
-            setDependencies(response.data?.items || response.data || []);
+            setDependencies(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

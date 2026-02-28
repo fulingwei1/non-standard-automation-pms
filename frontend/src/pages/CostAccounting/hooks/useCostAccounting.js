@@ -15,7 +15,7 @@ export function useCostAccounting() {
             // 否则提示需要选择项目（跨项目查询功能可能需要通过 analytics 模块实现）
             if (project_id) {
                 const response = await costApi.list(project_id, otherParams);
-                setCosts(response.data?.items || response.data || []);
+                setCosts(response.data?.items || response.data?.items || response.data || []);
             } else {
                 // 如果没有指定项目ID，返回空数组或提示用户选择项目
                 console.warn('成本查询需要指定项目ID，请先选择项目');

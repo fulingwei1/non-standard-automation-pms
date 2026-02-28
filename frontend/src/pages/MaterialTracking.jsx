@@ -301,7 +301,7 @@ export default function MaterialTracking() {
         is_active: true
       });
       const materialsData =
-      materialsResponse.data?.items || materialsResponse.data || [];
+      materialsResponse.data?.items || materialsResponse.data?.items || materialsResponse.data || [];
 
       // Load purchase order items to get arrival status
       const purchaseResponse = await purchaseApi.orders.list({
@@ -309,14 +309,14 @@ export default function MaterialTracking() {
         page_size: 100
       });
       const purchaseOrders =
-      purchaseResponse.data?.items || purchaseResponse.data || [];
+      purchaseResponse.data?.items || purchaseResponse.data?.items || purchaseResponse.data || [];
 
       // Get all purchase order items
       const allPurchaseItems = [];
       for (const order of purchaseOrders) {
         try {
           const itemsResponse = await purchaseApi.orders.getItems(order.id);
-          const items = itemsResponse.data || [];
+          const items = itemsResponse.data?.items || itemsResponse.data || [];
           allPurchaseItems.push(...items);
         } catch (err) {
           console.error(`Failed to load items for order ${order.id}:`, err);
@@ -394,7 +394,7 @@ export default function MaterialTracking() {
     const loadCategories = async () => {
       try {
         const res = await materialApi.categories.list();
-        setCategories(res.data?.items || res.data || []);
+        setCategories(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load categories:", err);
       }

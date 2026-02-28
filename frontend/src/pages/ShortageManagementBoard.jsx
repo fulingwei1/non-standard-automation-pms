@@ -114,7 +114,7 @@ export default function ShortageManagementBoard() {
   const fetchAlerts = async () => {
     try {
       const res = await shortageAlertApi.list({ page_size: 10 });
-      const alertList = res.data?.items || res.data || [];
+      const alertList = res.data?.items || res.data?.items || res.data || [];
       setAlerts(alertList);
     } catch (error) {
       console.error("Failed to fetch alerts:", error);
@@ -123,7 +123,7 @@ export default function ShortageManagementBoard() {
   const fetchArrivals = async () => {
     try {
       const res = await shortageApi.arrivals.list({ page_size: 10 });
-      const arrivalList = res.data?.items || res.data || [];
+      const arrivalList = res.data?.items || res.data?.items || res.data || [];
       setArrivals(arrivalList);
     } catch (error) {
       console.error("Failed to fetch arrivals:", error);

@@ -79,7 +79,7 @@ export default function QuoteCostAnalysis() {
 
       // Load versions
       const versionsRes = await quoteApi.getVersions(id);
-      const versionsList = versionsRes.data?.data || versionsRes.data || [];
+      const versionsList = versionsRes.data?.data || versionsRes.data?.items || versionsRes.data || [];
       setVersions(versionsList);
 
       // Set default selected versions (latest two)

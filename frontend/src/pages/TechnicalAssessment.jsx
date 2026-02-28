@@ -110,12 +110,12 @@ export default function TechnicalAssessment() {
         const response = await technicalAssessmentApi.getLeadAssessments(
           parseInt(sourceId)
         );
-        assessments = response.data.items || response.data || [];
+        assessments = response.data.items || response.data?.items || response.data || [];
       } else if (sourceType === "opportunity") {
         const response = await technicalAssessmentApi.getOpportunityAssessments(
           parseInt(sourceId)
         );
-        assessments = response.data.items || response.data || [];
+        assessments = response.data.items || response.data?.items || response.data || [];
       }
 
       setAssessments(assessments);

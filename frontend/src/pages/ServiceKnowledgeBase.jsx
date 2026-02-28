@@ -149,7 +149,7 @@ export default function ServiceKnowledgeBase() {
       }
 
       const response = await serviceApi.knowledgeBase.list(params);
-      const articlesData = response.data?.items || response.data || [];
+      const articlesData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform backend data to frontend format
       const transformedArticles = articlesData.map((article) => ({

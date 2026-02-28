@@ -580,7 +580,7 @@ function OrderSelectionForm({ onSelect }) {
           page_size: 100,
           status: "APPROVED" // Only show approved orders
         });
-        const data = res.data?.items || res.data || [];
+        const data = res.data?.items || res.data?.items || res.data || [];
         setOrders(data);
       } catch (err) {
         console.error("Failed to load orders:", err);

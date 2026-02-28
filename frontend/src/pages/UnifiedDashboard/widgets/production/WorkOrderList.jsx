@@ -19,7 +19,7 @@ export default function WorkOrderList({ filter, data: propData }) {
   useEffect(() => {
     if (propData) { setOrders(propData); return; }
     productionApi.workOrders.list({ page_size: 10, ...filter }).then(res => {
-      setOrders(res.data?.items || res.data || []);
+      setOrders(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData, filter]);
 

@@ -18,7 +18,7 @@ export function useTechnicalAssessment() {
             if (filters.type && filters.type !== 'all') params.type = filters.type;
 
             const response = await assessmentApi.list(params);
-            setAssessments(response.data?.items || response.data || []);
+            setAssessments(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

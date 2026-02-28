@@ -521,7 +521,7 @@ export default function Acceptance() {
           let issues = [];
           try {
             const issuesResponse = await acceptanceApi.issues.list(order.id);
-            issues = issuesResponse.data || [];
+            issues = issuesResponse.data?.items || issuesResponse.data || [];
           } catch (err) {
             console.error(`Failed to load issues for order ${order.id}:`, err);
           }
@@ -531,7 +531,7 @@ export default function Acceptance() {
           let checklistCategories;
           try {
             const itemsResponse = await acceptanceApi.orders.getItems(order.id);
-            items = itemsResponse.data || [];
+            items = itemsResponse.data?.items || itemsResponse.data || [];
 
             // Group items by category
             const categoryMap = {};
@@ -617,7 +617,7 @@ export default function Acceptance() {
   const fetchProjects = useCallback(async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -689,8 +689,8 @@ export default function Acceptance() {
           acceptanceApi.issues.list(acceptance._original.id),
         ]);
 
-        const items = itemsResponse.data || [];
-        const issues = issuesResponse.data || [];
+        const items = itemsResponse.data?.items || itemsResponse.data || [];
+        const issues = issuesResponse.data?.items || issuesResponse.data || [];
 
         // Update acceptance with full details
         const updatedAcceptance = {

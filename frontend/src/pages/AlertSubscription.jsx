@@ -49,7 +49,7 @@ export default function AlertSubscription() {
       }
 
       const res = await alertApi.subscriptions.list({ page: 1, page_size: 1000 });
-      const items = res.data?.items || res.data || [];
+      const items = res.data?.items || res.data?.items || res.data || [];
       setSubscriptions(Array.isArray(items) ? items : []);
 
       // best-effort: load notification settings if backend supports it

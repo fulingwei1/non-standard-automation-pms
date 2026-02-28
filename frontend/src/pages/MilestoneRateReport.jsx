@@ -57,7 +57,7 @@ export default function MilestoneRateReport() {
     const loadProjects = async () => {
       try {
         const res = await projectApi.list({ page: 1, page_size: 100 });
-        const items = res.data?.items || res.data || [];
+        const items = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(items) ? items : []);
       } catch (error) {
         console.warn("Failed to load projects:", error);

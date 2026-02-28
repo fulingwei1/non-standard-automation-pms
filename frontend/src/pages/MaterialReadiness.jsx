@@ -135,9 +135,9 @@ export default function MaterialReadiness() {
       supplierApi.list({ page_size: 1000 })]
       );
 
-      setMaterials(materialsRes.data || []);
-      setProjects(projectsRes.data || []);
-      setSuppliers(suppliersRes.data || []);
+      setMaterials(materialsRes.data?.items || materialsRes.data || []);
+      setProjects(projectsRes.data?.items || projectsRes.data || []);
+      setSuppliers(suppliersRes.data?.items || suppliersRes.data || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
       toast.error("加载数据失败");

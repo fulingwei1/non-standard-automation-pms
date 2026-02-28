@@ -26,7 +26,7 @@ export default function LocationManagement() {
   const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data || [])).catch(() => {}); }, []);
+  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data?.items || r.data || [])).catch(() => {}); }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

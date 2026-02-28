@@ -30,7 +30,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
         page_size: 100,
         is_active: true,
       });
-      const items = response.data?.items || response.data || [];
+      const items = response.data?.items || response.data?.items || response.data || [];
       const mapped = (Array.isArray(items) ? items : []).map((t) => ({
         id: t.id,
         template_name: t.template_name,

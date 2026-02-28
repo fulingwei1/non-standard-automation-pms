@@ -633,7 +633,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
       }
 
       const response = await presaleApi.tickets.list(params);
-      const ticketsData = response.data?.items || response.data || [];
+      const ticketsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tickets to tasks
       const transformedTasks = ticketsData.map((ticket) => {

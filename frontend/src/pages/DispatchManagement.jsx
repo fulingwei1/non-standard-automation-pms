@@ -76,7 +76,7 @@ export default function DispatchManagement() {
   const fetchWorkshops = async () => {
     try {
       const res = await productionApi.workshops.list({ page_size: 1000 });
-      setWorkshops(res.data?.items || res.data || []);
+      setWorkshops(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch workshops:", error);
     }
@@ -84,7 +84,7 @@ export default function DispatchManagement() {
   const fetchWorkers = async () => {
     try {
       const res = await productionApi.workers.list({ page_size: 1000 });
-      setWorkers(res.data?.items || res.data || []);
+      setWorkers(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch workers:", error);
       setWorkers([]);
@@ -96,7 +96,7 @@ export default function DispatchManagement() {
       const params = { status: filterStatus || "PENDING" };
       if (filterWorkshop) {params.workshop_id = filterWorkshop;}
       const res = await productionApi.workOrders.list(params);
-      const orderList = res.data?.items || res.data || [];
+      const orderList = res.data?.items || res.data?.items || res.data || [];
       setWorkOrders(orderList);
     } catch (error) {
       console.error("Failed to fetch work orders:", error);

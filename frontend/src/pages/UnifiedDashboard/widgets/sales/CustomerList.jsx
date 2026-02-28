@@ -18,7 +18,7 @@ export default function CustomerList({ limit = 5, data: propData }) {
   useEffect(() => {
     if (propData) { setCustomers(propData.slice(0, limit)); return; }
     customerApi.list({ page_size: limit }).then(res => {
-      setCustomers(res.data?.items || res.data || []);
+      setCustomers(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData, limit]);
 

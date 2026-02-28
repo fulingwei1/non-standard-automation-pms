@@ -18,7 +18,7 @@ export function useSalesProjectTrack() {
             if (filters.owner) params.owner_id = filters.owner;
 
             const response = await salesProjectApi.list(params);
-            setProjects(response.data?.items || response.data || []);
+            setProjects(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

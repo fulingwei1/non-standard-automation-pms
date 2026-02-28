@@ -48,7 +48,7 @@ export default function AIClarificationChat() {
         source_type: sourceType?.toUpperCase(),
         source_id: parseInt(sourceId)
       });
-      const items = response.data.items || response.data || [];
+      const items = response.data.items || response.data?.items || response.data || [];
       setClarifications(items);
       if (items.length > 0) {
         const maxRound = Math.max(...items.map((item) => item.round));

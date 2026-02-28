@@ -10,7 +10,7 @@ export function useTimesheetBatchOperations() {
         try {
             setLoading(true);
             const response = await timesheetApi.listPending();
-            setTimesheets(response.data?.items || response.data || []);
+            setTimesheets(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     }, []);

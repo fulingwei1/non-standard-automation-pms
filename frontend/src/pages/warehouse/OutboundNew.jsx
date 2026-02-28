@@ -23,7 +23,7 @@ export default function OutboundNew() {
   const [form, setForm] = useState({ order_type: "PRODUCTION", warehouse_id: null, target_no: "", department: "", planned_date: "", remark: "", is_urgent: false });
   const [items, setItems] = useState([{ ...emptyItem }]);
 
-  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data || [])).catch(() => {}); }, []);
+  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data?.items || r.data || [])).catch(() => {}); }, []);
   const updateItem = (idx, field, value) => { const n = [...items]; n[idx] = { ...n[idx], [field]: value }; setItems(n); };
 
   const handleSubmit = async () => {

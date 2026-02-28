@@ -43,7 +43,7 @@ export function ServiceTicketAssignDialog({ ticketId, onClose, onSubmit, submitt
           })
         });
         
-        const userList = response.data?.items || response.data || [];
+        const userList = response.data?.items || response.data?.items || response.data || [];
         setUsers(
           userList.map((u) => ({
             id: u.id,

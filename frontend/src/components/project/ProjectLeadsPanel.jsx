@@ -133,7 +133,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
     setLoading(true);
     try {
       const response = await projectRoleApi.getOverview(projectId);
-      setRoleOverview(response.data || []);
+      setRoleOverview(response.data?.items || response.data || []);
     } catch (error) {
       console.error("加载项目角色概览失败:", error);
       setRoleOverview([]);

@@ -98,7 +98,7 @@ export default function AcceptanceTemplateManagement() {
       if (filterType) {params.template_type = filterType;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await acceptanceApi.templates.list(params);
-      const templateList = res.data?.items || res.data || [];
+      const templateList = res.data?.items || res.data?.items || res.data || [];
       setTemplates(templateList);
     } catch (error) {
       console.error("Failed to fetch templates:", error);

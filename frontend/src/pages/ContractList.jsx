@@ -100,7 +100,7 @@ export default function ContractList() {
       setError(null);
       try {
         const res = await contractApi.list();
-        const data = res.data?.items || res.data || [];
+        const data = res.data?.items || res.data?.items || res.data || [];
         setContracts(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Contract API error:", err);

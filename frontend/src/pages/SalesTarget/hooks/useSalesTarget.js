@@ -14,7 +14,7 @@ export function useSalesTarget() {
         try {
             setLoading(true);
             const response = await salesTargetApi.list({ year });
-            setTargets(response.data?.items || response.data || []);
+            setTargets(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

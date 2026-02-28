@@ -14,7 +14,7 @@ export function useLeadAssessment() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.result && filters.result !== 'all') params.result = filters.result;
             const response = await leadAssessmentApi.list(params);
-            setAssessments(response.data?.items || response.data || []);
+            setAssessments(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

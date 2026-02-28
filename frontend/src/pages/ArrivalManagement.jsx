@@ -92,7 +92,7 @@ export default function ArrivalManagement() {
         {params.project_id = filterProject;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await purchaseApi.receipts.list(params);
-      const receiptList = res.data?.items || res.data || [];
+      const receiptList = res.data?.items || res.data?.items || res.data || [];
       setReceipts(receiptList);
     } catch (error) {
       console.error("Failed to fetch receipts:", error);

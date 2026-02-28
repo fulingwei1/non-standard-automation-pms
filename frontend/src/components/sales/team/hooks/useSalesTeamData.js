@@ -48,7 +48,7 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
       try {
         const res = await orgApi.departments({ page: 1, page_size: 100 });
         const payload = res.data?.data || res.data || res;
-        const list = payload.items || payload.data || [];
+        const list = payload.items || payload.data?.items || payload.data || [];
         const options = Array.isArray(list) ?
         list.map((dept) => ({
           label: dept.dept_name || dept.name || `部门${dept.id}`,

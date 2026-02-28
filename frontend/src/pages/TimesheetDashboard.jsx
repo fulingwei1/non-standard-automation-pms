@@ -74,7 +74,7 @@ export default function TimesheetDashboard() {
 
       setStats(statsRes.data?.data || statsRes.data);
       setMonthSummary(summaryRes.data?.data || summaryRes.data);
-      setAnomalies(anomaliesRes.data?.data || anomaliesRes.data || []);
+      setAnomalies(anomaliesRes.data?.data || anomaliesRes.data?.items || anomaliesRes.data || []);
 
       // 加载部门统计
       if (summaryRes.data?.data?.departments) {

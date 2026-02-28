@@ -18,7 +18,7 @@ export function usePresalesTasks() {
             if (filters.type && filters.type !== 'all') params.type = filters.type;
 
             const response = await presaleApi.getMyTasks(params);
-            setTasks(response.data?.items || response.data || []);
+            setTasks(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

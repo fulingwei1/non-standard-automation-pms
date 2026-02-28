@@ -18,7 +18,7 @@ export function useIssueStatistics() {
             if (dateRange.end) params.end_date = dateRange.end;
 
             const response = await issueApi.list(params);
-            setIssues(response.data?.items || response.data || []);
+            setIssues(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

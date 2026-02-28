@@ -19,7 +19,7 @@ export function useMaterialTracking() {
             if (filters.keyword) params.keyword = filters.keyword;
 
             const response = await materialApi.listTracking(params);
-            setMaterials(response.data?.items || response.data || []);
+            setMaterials(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

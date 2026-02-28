@@ -19,7 +19,7 @@ export function useExceptionManagement() {
             if (filters.severity && filters.severity !== 'all') params.severity = filters.severity;
 
             const response = await exceptionApi.list(params);
-            setExceptions(response.data?.items || response.data || []);
+            setExceptions(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

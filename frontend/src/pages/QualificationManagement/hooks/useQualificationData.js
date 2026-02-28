@@ -18,7 +18,7 @@ export function useQualificationData() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
 
             const response = await qualificationApi.list(params);
-            setQualifications(response.data?.items || response.data || []);
+            setQualifications(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

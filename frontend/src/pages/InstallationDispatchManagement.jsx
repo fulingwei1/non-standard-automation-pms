@@ -140,7 +140,7 @@ export default function InstallationDispatchManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data || []);
+      setProjects(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
       toast.error("获取项目列表失败");
@@ -152,7 +152,7 @@ export default function InstallationDispatchManagement() {
       const res = await machineApi.list(projectId, {
         page_size: 1000,
       });
-      setMachines(res.data || []);
+      setMachines(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch machines:", error);
       toast.error("获取设备列表失败");
@@ -173,7 +173,7 @@ export default function InstallationDispatchManagement() {
       if (searchQuery) params.search = searchQuery;
 
       const res = await installationDispatchApi.list(params);
-      setOrders(res.data || []);
+      setOrders(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       toast.error("获取派工单列表失败");

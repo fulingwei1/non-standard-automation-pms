@@ -80,7 +80,7 @@ export function usePurchaseOrders() {
             };
 
             const response = await purchaseApi.list(params);
-            let ordersData = response.data?.data || response.data?.items || response.data || [];
+            let ordersData = response.data?.data || response.data?.items || response.data?.items || response.data || [];
 
             if (!Array.isArray(ordersData)) {
                 ordersData = [];
@@ -151,8 +151,8 @@ export function usePurchaseOrders() {
                     projectApi.list({ page_size: 1000 })
                 ]);
 
-                const suppliersData = suppliersRes.data?.items || suppliersRes.data || [];
-                const projectsData = projectsRes.data?.items || projectsRes.data || [];
+                const suppliersData = suppliersRes.data?.items || suppliersRes.data?.items || suppliersRes.data || [];
+                const projectsData = projectsRes.data?.items || projectsRes.data?.items || projectsRes.data || [];
 
                 setSuppliers(suppliersData);
                 setProjects(projectsData);

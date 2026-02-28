@@ -82,7 +82,7 @@ export default function WorkerManagement() {
       const params = { page: 1, page_size: 100 };
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workers.list(params);
-      const workerList = res.data?.items || res.data || [];
+      const workerList = res.data?.items || res.data?.items || res.data || [];
       setWorkers(workerList);
     } catch (error) {
       console.error("Failed to fetch workers:", error);

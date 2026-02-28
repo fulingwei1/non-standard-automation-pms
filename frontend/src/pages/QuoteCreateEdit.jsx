@@ -83,7 +83,7 @@ export default function QuoteCreateEdit() {
         page_size: 1000,
         stage: "PROPOSING",
       });
-      setOpportunities(res.data?.items || res.data || []);
+      setOpportunities(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch opportunities:", error);
     }

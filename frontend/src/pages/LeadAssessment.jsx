@@ -139,7 +139,7 @@ const LeadAssessment = () => {
         qualification: filters.qualification || undefined,
         industry: filters.industry || undefined,
       });
-      const leadsData = leadsRes.data?.items || leadsRes.data || [];
+      const leadsData = leadsRes.data?.items || leadsRes.data?.items || leadsRes.data || [];
       // 将后端字段映射到前端字段
       const mappedLeads = leadsData.map((lead) => ({
         id: lead.id,
@@ -170,7 +170,7 @@ const LeadAssessment = () => {
       for (const lead of mappedLeads.slice(0, 20)) { // 限制请求数
         try {
           const fuRes = await leadApi.getFollowUps(lead.id);
-          const fuData = fuRes.data?.items || fuRes.data || [];
+          const fuData = fuRes.data?.items || fuRes.data?.items || fuRes.data || [];
           fuData.forEach((fu) => {
             allFollowUps.push({
               id: fu.id,

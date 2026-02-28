@@ -58,7 +58,7 @@ export default function MobileMaterialRequisition() {
   const fetchMaterials = async () => {
     try {
       const res = await materialApi.list({ page: 1, page_size: 100 });
-      const materialsList = res.data?.items || res.data || [];
+      const materialsList = res.data?.items || res.data?.items || res.data || [];
       setMaterials(materialsList);
     } catch (error) {
       console.error("Failed to fetch materials:", error);

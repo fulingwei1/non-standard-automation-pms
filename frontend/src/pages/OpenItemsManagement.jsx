@@ -86,7 +86,7 @@ export default function OpenItemsManagement() {
         source_type: sourceType?.toUpperCase(),
         source_id: parseInt(sourceId)
       });
-      setItems(response.data.items || response.data || []);
+      setItems(response.data.items || response.data?.items || response.data || []);
     } catch (error) {
       console.error("加载未决事项失败:", error);
     } finally {

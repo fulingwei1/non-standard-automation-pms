@@ -235,7 +235,7 @@ export default function AdvantageProducts({
       setLoading(true);
       setError(null);
       const response = await advantageProductApi.getProductsGrouped();
-      setGroupedData(response.data || []);
+      setGroupedData(response.data?.items || response.data || []);
       // 默认展开第一个类别
       if (response.data?.length > 0) {
         setExpandedCategories(new Set([response.data[0].category.code]));
@@ -431,7 +431,7 @@ export function AdvantageProductSelect({
     try {
       setLoading(true);
       const response = await advantageProductApi.getProductsSimple();
-      setProducts(response.data || []);
+      setProducts(response.data?.items || response.data || []);
     } catch (err) {
       console.error("Failed to load products:", err);
     } finally {

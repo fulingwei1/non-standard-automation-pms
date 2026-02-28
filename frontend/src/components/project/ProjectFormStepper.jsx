@@ -133,10 +133,10 @@ export default function ProjectFormStepper({
             projectApi.getStats?.() || Promise.resolve({ data: { by_pm: [] } }), // Sprint 3.2: 加载项目经理统计
             stageViewsApi.templates.list({ is_active: true }), // 加载阶段模板
           ]);
-          setCustomers(custRes.data || []);
-          setEmployees(empRes.data || []);
-          setFilteredCustomers(custRes.data || []);
-          setStageTemplates(stageTemplatesRes.data?.items || stageTemplatesRes.data || []);
+          setCustomers(custRes.data?.items || custRes.data || []);
+          setEmployees(empRes.data?.items || empRes.data || []);
+          setFilteredCustomers(custRes.data?.items || custRes.data || []);
+          setStageTemplates(stageTemplatesRes.data?.items || stageTemplatesRes.data?.items || stageTemplatesRes.data || []);
 
           // Sprint 3.2: 构建项目经理统计映射
           if (statsRes.data?.by_pm) {

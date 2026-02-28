@@ -92,7 +92,7 @@ export function handleResponse(response, options = {}) {
 /**
  * 兼容旧代码的便捷方法
  * 
- * 保持与旧代码的兼容性：response.data?.items || response.data || []
+ * 保持与旧代码的兼容性：response.data?.items || response.data?.items || response.data || []
  */
 export function getItemsCompat(response) {
   const responseData = response?.data || response;

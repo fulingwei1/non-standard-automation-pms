@@ -118,7 +118,7 @@ export default function QuoteCostManagement() {
       const quoteData = quoteRes.data?.data || quoteRes.data;
       if (quoteData.current_version_id) {
         const versionsRes = await quoteApi.getVersions(id);
-        const versions = versionsRes.data?.data || versionsRes.data || [];
+        const versions = versionsRes.data?.data || versionsRes.data?.items || versionsRes.data || [];
         const currentVersion =
           versions.find((v) => v.id === quoteData.current_version_id) ||
           versions[0];
@@ -127,7 +127,7 @@ export default function QuoteCostManagement() {
         // Load items from separate API
         try {
           const itemsRes = await quoteApi.getItems(id, currentVersion.id);
-          const itemsList = itemsRes.data?.data || itemsRes.data || [];
+          const itemsList = itemsRes.data?.data || itemsRes.data?.items || itemsRes.data || [];
           setItems(itemsList);
         } catch (_e) {
           // Fallback to version.items if API not available
@@ -148,7 +148,7 @@ export default function QuoteCostManagement() {
       // Load approval history
       try {
         const historyRes = await quoteApi.getCostApprovalHistory(id);
-        setApprovalHistory(historyRes.data?.data || historyRes.data || []);
+        setApprovalHistory(historyRes.data?.data || historyRes.data?.items || historyRes.data || []);
       } catch (_e) {
         console.log("Approval history not available:", _e);
       }

@@ -94,7 +94,7 @@ export default function ProjectSettlement() {
       setError(null);
       try {
         const res = await settlementApi.list();
-        const data = res.data?.items || res.data || [];
+        const data = res.data?.items || res.data?.items || res.data || [];
         setSettlements(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load settlements:", err);

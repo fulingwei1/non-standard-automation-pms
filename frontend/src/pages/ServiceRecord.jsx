@@ -177,7 +177,7 @@ export default function ServiceRecord() {
         page_size: 1000
       };
       const response = await serviceApi.records.list(params);
-      const recordsData = response.data?.items || response.data || [];
+      const recordsData = response.data?.items || response.data?.items || response.data || [];
 
       // 转换后端数据为前端格式
       const transformedRecords = recordsData.map((record) => ({

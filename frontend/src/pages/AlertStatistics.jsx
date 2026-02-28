@@ -140,7 +140,7 @@ const AlertStatistics = () => {
         alertApi.list({ type: filters.type, level: filters.level, status: filters.status }),
         alertApi.dashboard(),
       ]);
-      const alertsList = alertsRes.data?.items || alertsRes.data || [];
+      const alertsList = alertsRes.data?.items || alertsRes.data?.items || alertsRes.data || [];
       setAlerts(alertsList);
       const db = dashboardRes.data || {};
       setDashboardData({

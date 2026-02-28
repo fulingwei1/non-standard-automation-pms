@@ -54,7 +54,7 @@ export function ServiceTicketBatchActions({
           })
         });
         
-        const userList = response.data?.items || response.data || [];
+        const userList = response.data?.items || response.data?.items || response.data || [];
         setUsers(
           userList.map((u) => ({
             id: u.id,

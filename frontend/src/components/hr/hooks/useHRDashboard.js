@@ -27,7 +27,7 @@ export function useHRDashboard() {
         limit: 100,
       };
       const response = await employeeApi.list(params);
-      const employeeList = response.data || [];
+      const employeeList = response.data?.items || response.data || [];
 
       // 前端筛选（临时方案，待后端支持keyword/department/is_active参数）
       let filtered = employeeList;
@@ -68,7 +68,7 @@ export function useHRDashboard() {
   const loadDepartments = useCallback(async () => {
     try {
       const response = await departmentApi.list({});
-      setDepartments(response.data || []);
+      setDepartments(response.data?.items || response.data || []);
     } catch (error) {
       console.error("加载部门列表失败:", error);
       // 部门加载失败不影响主流程，使用空数组

@@ -168,7 +168,7 @@ export default function SalesProjectTrack() {
       setError(null);
       try {
         const res = await projectApi.list();
-        const data = res.data?.items || res.data || [];
+        const data = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load sales projects:", err);

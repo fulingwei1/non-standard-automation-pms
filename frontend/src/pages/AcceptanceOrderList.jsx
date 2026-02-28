@@ -101,7 +101,7 @@ export default function AcceptanceOrderList() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -115,7 +115,7 @@ export default function AcceptanceOrderList() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await acceptanceApi.orders.list(params);
-      const orderList = res.data?.items || res.data || [];
+      const orderList = res.data?.items || res.data?.items || res.data || [];
       setOrders(orderList);
     } catch (error) {
       console.error("Failed to fetch orders:", error);

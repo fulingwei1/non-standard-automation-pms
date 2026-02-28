@@ -11,7 +11,7 @@ export function useContractApproval() {
         try {
             setLoading(true);
             const response = await contractApprovalApi.list({ tab, page_size: 50 });
-            setApprovals(response.data?.items || response.data || []);
+            setApprovals(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [tab]);

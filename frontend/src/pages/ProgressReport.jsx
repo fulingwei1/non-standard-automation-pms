@@ -79,7 +79,7 @@ export default function ProgressReport() {
     try {
       setLoading(true);
       const res = await progressApi.tasks.list({ project_id: id });
-      const taskList = res.data?.items || res.data || [];
+      const taskList = res.data?.items || res.data?.items || res.data || [];
       setTasks(taskList);
       // Initialize task progress
       const progressMap = {};

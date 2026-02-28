@@ -59,7 +59,7 @@ export default function MobileMyShortageReports() {
         params.status = filterStatus;
       }
       const res = await shortageApi.reports.list(params);
-      const allReports = res.data?.items || res.data || [];
+      const allReports = res.data?.items || res.data?.items || res.data || [];
 
       // 这里应该根据当前登录用户筛选，暂时显示所有
       setReports(allReports);

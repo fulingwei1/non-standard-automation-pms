@@ -52,7 +52,7 @@ export default function KitRateBoard() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }

@@ -339,9 +339,9 @@ export default function QualityWorkstation() {
           passRate: statsData.passRate ?? 0,
           passRateTrend: statsData.passRateTrend ?? "",
         });
-        const inspectionItems = inspectionRes.data?.items || inspectionRes.data || [];
+        const inspectionItems = inspectionRes.data?.items || inspectionRes.data?.items || inspectionRes.data || [];
         setInspectionTasks(Array.isArray(inspectionItems) ? inspectionItems : []);
-        const alertItems = alertsRes.data?.items || alertsRes.data || [];
+        const alertItems = alertsRes.data?.items || alertsRes.data?.items || alertsRes.data || [];
         setQualityIssues(Array.isArray(alertItems) ? alertItems : []);
         // acceptanceTasks - use inspection list with acceptance type if available
         setAcceptanceTasks([]);

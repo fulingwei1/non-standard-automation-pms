@@ -273,11 +273,11 @@ export default function WarehouseWorkstation() {
           countTasks: statsData.countTasks ?? 0,
           countCompleted: statsData.countCompleted ?? 0,
         });
-        const inboundItems = inboundRes.data?.items || inboundRes.data || [];
+        const inboundItems = inboundRes.data?.items || inboundRes.data?.items || inboundRes.data || [];
         setInboundTasks(Array.isArray(inboundItems) ? inboundItems : []);
-        const outboundItems = outboundRes.data?.items || outboundRes.data || [];
+        const outboundItems = outboundRes.data?.items || outboundRes.data?.items || outboundRes.data || [];
         setOutboundTasks(Array.isArray(outboundItems) ? outboundItems : []);
-        const alertItems = alertsRes.data?.items || alertsRes.data || [];
+        const alertItems = alertsRes.data?.items || alertsRes.data?.items || alertsRes.data || [];
         setStockAlerts(Array.isArray(alertItems) ? alertItems : []);
       } catch (err) {
         console.error('Failed to load warehouse workstation data:', err);

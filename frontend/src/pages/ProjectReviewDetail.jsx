@@ -147,7 +147,7 @@ export default function ProjectReviewDetail() {
       const response = await projectReviewApi.lessons.list({
         review: reviewId
       });
-      setLessons(response.data?.results || response.data || []);
+      setLessons(response.data?.results || response.data?.items || response.data || []);
     } catch (err) {
       console.error("Failed to fetch lessons:", err);
     }
@@ -159,7 +159,7 @@ export default function ProjectReviewDetail() {
       const response = await projectReviewApi.practices.list({
         review: reviewId
       });
-      setBestPractices(response.data?.results || response.data || []);
+      setBestPractices(response.data?.results || response.data?.items || response.data || []);
     } catch (err) {
       console.error("Failed to fetch best practices:", err);
     }

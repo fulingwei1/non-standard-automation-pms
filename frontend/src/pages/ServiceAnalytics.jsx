@@ -64,12 +64,12 @@ export default function ServiceAnalytics() {
           .catch(() => ({ data: { items: [] } }))
       ]);
 
-      const tickets = ticketsList.data?.items || ticketsList.data || [];
-      const records = recordsList.data?.items || recordsList.data || [];
+      const tickets = ticketsList.data?.items || ticketsList.data?.items || ticketsList.data || [];
+      const records = recordsList.data?.items || recordsList.data?.items || recordsList.data || [];
       const communications =
-        communicationsList.data?.items || communicationsList.data || [];
+        communicationsList.data?.items || communicationsList.data?.items || communicationsList.data || [];
       const satisfactions =
-        satisfactionList.data?.items || satisfactionList.data || [];
+        satisfactionList.data?.items || satisfactionList.data?.items || satisfactionList.data || [];
       const ticketsStatsData = ticketsStats.data || {};
       const satisfactionStatsData = {
         ...(satisfactionStats.data || {}),

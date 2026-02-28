@@ -204,7 +204,7 @@ export default function PositionManagement() {
     setSelectedPosition(position);
     try {
       const response = await organizationApi.getPositionRoles(position.id);
-      setSelectedRoleIds(response.data?.role_ids || response.data || []);
+      setSelectedRoleIds(response.data?.role_ids || response.data?.items || response.data || []);
     } catch (error) {
       console.error("获取岗位角色失败:", error);
       setSelectedRoleIds([]);

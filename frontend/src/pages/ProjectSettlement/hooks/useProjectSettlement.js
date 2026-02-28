@@ -14,7 +14,7 @@ export function useProjectSettlement() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.project_id) params.project_id = filters.project_id;
             const response = await projectSettlementApi.list(params);
-            setSettlements(response.data?.items || response.data || []);
+            setSettlements(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

@@ -136,7 +136,7 @@ const CustomerServiceDashboard = () => {
         serviceApi.records.list(),
         serviceApi.dashboardStatistics().catch(() => ({ data: {} })),
       ]);
-      const ticketList = (ticketsRes.data?.items || ticketsRes.data || []).map((t) => ({
+      const ticketList = (ticketsRes.data?.items || ticketsRes.data?.items || ticketsRes.data || []).map((t) => ({
         id: t.id,
         title: t.title || t.subject || '',
         customerName: t.customer_name || t.customerName || '',
@@ -153,7 +153,7 @@ const CustomerServiceDashboard = () => {
       }));
       setTickets(ticketList);
 
-      const recordList = (recordsRes.data?.items || recordsRes.data || []).map((r) => ({
+      const recordList = (recordsRes.data?.items || recordsRes.data?.items || recordsRes.data || []).map((r) => ({
         id: r.id,
         ticketId: r.ticket_id || r.ticketId,
         title: r.title || r.subject || '',

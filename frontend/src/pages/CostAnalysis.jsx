@@ -86,7 +86,7 @@ export default function CostAnalysis() {
           start_date: startDate,
           end_date: endDate
         });
-        orders = ordersRes.data?.items || ordersRes.data || [];
+        orders = ordersRes.data?.items || ordersRes.data?.items || ordersRes.data || [];
       } catch (error) {
         console.error("获取采购订单失败:", error);
         // 如果获取采购订单失败，使用空数组继续执行，不影响其他数据的展示

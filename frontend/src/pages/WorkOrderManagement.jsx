@@ -115,7 +115,7 @@ export default function WorkOrderManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -129,7 +129,7 @@ export default function WorkOrderManagement() {
       if (filterPriority) {params.priority = filterPriority;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workOrders.list(params);
-      const orderList = res.data?.items || res.data || [];
+      const orderList = res.data?.items || res.data?.items || res.data || [];
       setWorkOrders(orderList);
     } catch (error) {
       console.error("Failed to fetch work orders:", error);

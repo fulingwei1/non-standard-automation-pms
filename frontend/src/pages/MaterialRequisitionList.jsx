@@ -91,7 +91,7 @@ export default function MaterialRequisitionList() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -104,7 +104,7 @@ export default function MaterialRequisitionList() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.materialRequisitions.list(params);
-      const reqList = res.data?.items || res.data || [];
+      const reqList = res.data?.items || res.data?.items || res.data || [];
       setRequisitions(reqList);
     } catch (error) {
       console.error("Failed to fetch requisitions:", error);

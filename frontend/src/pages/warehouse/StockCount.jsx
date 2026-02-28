@@ -27,7 +27,7 @@ export default function StockCount() {
   const [createForm, setCreateForm] = useState({ warehouse_id: null, count_type: "FULL", planned_date: "", remark: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data || [])).catch(() => {}); }, []);
+  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data?.items || r.data || [])).catch(() => {}); }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

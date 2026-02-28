@@ -131,7 +131,7 @@ export default function BomAssemblyAttrs() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -143,7 +143,7 @@ export default function BomAssemblyAttrs() {
         project_id: selectedProject,
         page_size: 100
       });
-      setBoms(res.data?.items || res.data || []);
+      setBoms(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch BOMs:", error);
       setBoms([]);

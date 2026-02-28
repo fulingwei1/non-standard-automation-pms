@@ -78,7 +78,7 @@ export default function SubstitutionNew() {
         page_size: 100,
         is_active: true
       });
-      setMaterials(res.data.items || res.data || []);
+      setMaterials(res.data.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("加载物料列表失败", error);
     }

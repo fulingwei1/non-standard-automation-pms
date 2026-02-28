@@ -226,7 +226,7 @@ export default function PurchaseRequestList() {
     const loadProjects = async () => {
       try {
         const res = await projectApi.list({ page_size: 1000 });
-        setProjects(res.data?.items || res.data || []);
+        setProjects(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load projects:", err);
       }

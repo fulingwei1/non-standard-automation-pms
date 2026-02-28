@@ -15,7 +15,7 @@ export default function OpportunityBoard({ _view, data: propData }) {
   useEffect(() => {
     if (propData) { setOpps(propData); return; }
     opportunityApi.list({ page_size: 20 }).then(res => {
-      setOpps(res.data?.items || res.data || []);
+      setOpps(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData]);
 

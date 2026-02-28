@@ -85,7 +85,7 @@ export default function IssueManagement() {
 
       const response = await issueApi.getIssues(apiParams);
       // API 返回 {items: [...], total, page, page_size, pages}
-      const rawData = response.data?.items || response.data || [];
+      const rawData = response.data?.items || response.data?.items || response.data || [];
       const dataItems = Array.isArray(rawData) ? rawData : [];
       const hasActiveFilters = Object.values(filters).some(
         (value) => value && value !== "all"

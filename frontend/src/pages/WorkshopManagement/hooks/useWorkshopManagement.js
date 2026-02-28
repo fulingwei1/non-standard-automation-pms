@@ -14,7 +14,7 @@ export function useWorkshopManagement() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.type && filters.type !== 'all') params.type = filters.type;
             const response = await workshopApi.list(params);
-            setWorkshops(response.data?.items || response.data || []);
+            setWorkshops(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

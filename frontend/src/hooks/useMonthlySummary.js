@@ -48,7 +48,7 @@ export const useMonthlySummary = () => {
       setIsLoading(true);
       setError(null);
       const response = await performanceApi.getMonthlySummaryHistory();
-      setHistory(response.data || []);
+      setHistory(response.data?.items || response.data || []);
     } catch (err) {
       console.error("加载历史记录失败:", err);
       // 使用 Mock 数据作为fallback

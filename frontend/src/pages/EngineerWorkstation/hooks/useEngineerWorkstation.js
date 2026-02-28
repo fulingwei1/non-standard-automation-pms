@@ -19,8 +19,8 @@ export function useEngineerWorkstation() {
                 projectApi.getMyProjects({ page_size: 50 }),
             ]);
 
-            setTasks(tasksRes.data?.items || tasksRes.data || []);
-            setProjects(projectsRes.data?.items || projectsRes.data || []);
+            setTasks(tasksRes.data?.items || tasksRes.data?.items || tasksRes.data || []);
+            setProjects(projectsRes.data?.items || projectsRes.data?.items || projectsRes.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

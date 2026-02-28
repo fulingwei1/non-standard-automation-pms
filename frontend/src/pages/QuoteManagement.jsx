@@ -129,7 +129,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       };
       const response = await quoteApi.getQuotes(apiParams);
       // 处理分页响应：如果返回 {items, total, ...} 格式，提取 items
-      const quotesData = response.data?.items || response.data || [];
+      const quotesData = response.data?.items || response.data?.items || response.data || [];
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
     } catch (error) {
       const { useMockData: _useMockData } = handleApiError(error, '获取报价列表');
@@ -282,7 +282,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
   const fetchOpportunities = useCallback(async () => {
     try {
       const response = await opportunityApi.getOpportunities();
-      setOpportunities(response.data || []);
+      setOpportunities(response.data?.items || response.data || []);
     } catch (error) {
       handleApiError(error, '获取商机列表');
       // 使用模拟数据
@@ -298,7 +298,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
   const fetchCustomers = useCallback(async () => {
     try {
       const response = await customerApi.getCustomers();
-      setCustomers(response.data || []);
+      setCustomers(response.data?.items || response.data || []);
     } catch (error) {
       handleApiError(error, '获取客户列表');
       // 使用模拟数据
@@ -384,7 +384,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
         start_date: startDateStr,
         end_date: endDate,
       });
-      const orders = response.data?.items || response.data || [];
+      const orders = response.data?.items || response.data?.items || response.data || [];
 
       let totalCost = 0;
       const categories = new Map();

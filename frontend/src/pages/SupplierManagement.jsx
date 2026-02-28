@@ -328,7 +328,7 @@ export default function SupplierManagement() {
       setError(null);
       try {
         const response = await supplierApi.list();
-        const data = response.data?.items || response.data || [];
+        const data = response.data?.items || response.data?.items || response.data || [];
         setSuppliers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load suppliers:", err);

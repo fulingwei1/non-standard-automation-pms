@@ -13,7 +13,7 @@ export function usePositionManagement() {
         try {
             setLoading(true);
             const response = await positionApi.list({ page_size: 100 });
-            setPositions(response.data?.items || response.data || []);
+            setPositions(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

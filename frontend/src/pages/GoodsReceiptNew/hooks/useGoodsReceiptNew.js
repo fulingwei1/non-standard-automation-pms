@@ -10,7 +10,7 @@ export function useGoodsReceiptNew() {
         try {
             setLoading(true);
             const response = await purchaseOrderApi.getPending({ page_size: 100 });
-            setOrders(response.data?.items || response.data || []);
+            setOrders(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     }, []);

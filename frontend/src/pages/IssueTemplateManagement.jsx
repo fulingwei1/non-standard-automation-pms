@@ -103,7 +103,7 @@ export default function IssueTemplateManagement() {
       }
 
       const res = await issueTemplateApi.list(params);
-      const items = res.data?.items || res.data?.data?.items || res.data || [];
+      const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setTemplates(items);
     } catch (error) {
       console.error("Failed to load templates:", error);
@@ -116,7 +116,7 @@ export default function IssueTemplateManagement() {
   const loadProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      const items = res.data?.items || res.data?.data?.items || res.data || [];
+      const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setProjects(items);
     } catch (error) {
       console.error("Failed to load projects:", error);
@@ -128,7 +128,7 @@ export default function IssueTemplateManagement() {
       const res = await machineApi.list(projectId, {
         page_size: 1000,
       });
-      const items = res.data?.items || res.data?.data?.items || res.data || [];
+      const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setMachines(items);
     } catch (error) {
       console.error("Failed to load machines:", error);

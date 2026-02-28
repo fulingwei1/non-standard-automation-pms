@@ -70,7 +70,7 @@ export default function RequirementFreezeManagement() {
         sourceType,
         parseInt(sourceId)
       );
-      setFreezes(response.data || []);
+      setFreezes(response.data?.items || response.data || []);
     } catch (error) {
       console.error("加载冻结记录失败:", error);
     } finally {

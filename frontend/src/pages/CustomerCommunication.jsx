@@ -203,9 +203,9 @@ export default function CustomerCommunication() {
       userApi.list({ page_size: 1000 })]
       );
 
-      const commData = commRes.data?.items || commRes.data || [];
-      const customerData = customerRes.data?.items || customerRes.data || [];
-      const userData = userRes.data?.items || userRes.data || [];
+      const commData = commRes.data?.items || commRes.data?.items || commRes.data || [];
+      const customerData = customerRes.data?.items || customerRes.data?.items || customerRes.data || [];
+      const userData = userRes.data?.items || userRes.data?.items || userRes.data || [];
 
       const transformedCommunications = commData.map((comm) => ({
         ...comm,

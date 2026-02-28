@@ -17,7 +17,7 @@ export default function InventoryList() {
   const [warehouseId, setWarehouseId] = useState("all");
   const [page, setPage] = useState(1);
 
-  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data || [])).catch(() => {}); }, []);
+  useEffect(() => { warehouseApi.warehouses().then((r) => setWarehouses(r.data?.items || r.data || [])).catch(() => {}); }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

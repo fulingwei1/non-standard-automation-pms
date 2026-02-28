@@ -102,12 +102,12 @@ export default function ContractApproval() {
       try {
         // Fetch pending contracts (awaiting approval)
         const pendingRes = await contractApi.list({ approval_status: "pending" });
-        const pendingData = pendingRes.data?.items || pendingRes.data || [];
+        const pendingData = pendingRes.data?.items || pendingRes.data?.items || pendingRes.data || [];
         setPendingApprovals(Array.isArray(pendingData) ? pendingData : []);
 
         // Fetch approved/rejected contracts (history)
         const historyRes = await contractApi.list({ approval_status: "completed" });
-        const historyData = historyRes.data?.items || historyRes.data || [];
+        const historyData = historyRes.data?.items || historyRes.data?.items || historyRes.data || [];
         setApprovalHistory(Array.isArray(historyData) ? historyData : []);
       } catch (err) {
         console.error("Failed to load contract approvals:", err);

@@ -42,7 +42,7 @@ export function useMachineData(projectId) {
                 params.search = filters.searchKeyword;
             }
             const res = await machineApi.list(projectId, params);
-            const machineList = res.data?.items || res.data || [];
+            const machineList = res.data?.items || res.data?.items || res.data || [];
             setMachines(machineList);
         } catch (error) {
             console.error('Failed to fetch machines:', error);

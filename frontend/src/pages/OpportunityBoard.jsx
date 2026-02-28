@@ -120,7 +120,7 @@ export default function OpportunityBoard() {
     setLoading(true);
     try {
       const response = await opportunityApi.list({ page: 1, page_size: 1000 });
-      const data = response.data?.items || response.data || [];
+      const data = response.data?.items || response.data?.items || response.data || [];
 
       // 转换数据格式
       const transformedOpps = data.map((opp) => {

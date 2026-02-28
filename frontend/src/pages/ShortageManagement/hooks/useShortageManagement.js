@@ -14,7 +14,7 @@ export function useShortageManagement() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.priority && filters.priority !== 'all') params.priority = filters.priority;
             const response = await shortageApi.reports.list(params);
-            setShortages(response.data?.items || response.data || []);
+            setShortages(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

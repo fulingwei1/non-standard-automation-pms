@@ -11,7 +11,7 @@ export function useProductionPlanList() {
             setLoading(true);
             const params = { ...filters };
             const response = await productionApi.listPlans(params);
-            setPlans(response.data?.items || response.data || []);
+            setPlans(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     }, [filters]);

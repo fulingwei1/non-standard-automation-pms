@@ -72,7 +72,7 @@ export default function WorkReportList() {
       if (filterType) {params.report_type = filterType;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workReports.list(params);
-      const reportList = res.data?.items || res.data || [];
+      const reportList = res.data?.items || res.data?.items || res.data || [];
       setReports(reportList);
     } catch (error) {
       console.error("Failed to fetch reports:", error);

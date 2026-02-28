@@ -74,7 +74,7 @@ export default function WorkloadBoard() {
       if (dateRange.start) {params.start_date = dateRange.start;}
       if (dateRange.end) {params.end_date = dateRange.end;}
       const res = await workloadApi.team(params);
-      const teamList = res.data?.items || res.data || [];
+      const teamList = res.data?.items || res.data?.items || res.data || [];
       setTeamWorkload(teamList);
     } catch (error) {
       console.error("Failed to fetch team workload:", error);

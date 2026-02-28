@@ -101,7 +101,7 @@ export default function ProjectBoard() {
     try {
       const response = await projectApi.list();
       // API返回分页格式：{ items: [], total: 0, page: 1, page_size: 20, pages: 0 }
-      const items = response.data?.items || response.data || [];
+      const items = response.data?.items || response.data?.items || response.data || [];
       setProjects(Array.isArray(items) ? items : []);
     } catch (err) {
       console.error("Failed to fetch projects:", err);

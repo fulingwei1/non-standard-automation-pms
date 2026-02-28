@@ -151,7 +151,7 @@ export default function PresalesWorkstation() {
         page_size: 50,
         status: "PENDING,ACCEPTED,IN_PROGRESS"
       });
-      const tickets = ticketsResponse.data?.items || ticketsResponse.data || [];
+      const tickets = ticketsResponse.data?.items || ticketsResponse.data?.items || ticketsResponse.data || [];
 
       const transformedTasks = await Promise.all(
         tickets.map(async (ticket) => {
@@ -163,7 +163,7 @@ export default function PresalesWorkstation() {
               page_size: 1
             });
             const solutions =
-            solutionsResponse.data?.items || solutionsResponse.data || [];
+            solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
             if (solutions.length > 0) {
               solutionId = solutions[0].id;
             }
@@ -199,7 +199,7 @@ export default function PresalesWorkstation() {
         status: "DRAFT,REVIEWING,SUBMITTED"
       });
       const solutions =
-      solutionsResponse.data?.items || solutionsResponse.data || [];
+      solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
 
       const transformedSolutions = solutions.map((solution) => ({
         id: solution.id,
@@ -230,7 +230,7 @@ export default function PresalesWorkstation() {
         page: 1,
         page_size: 10
       });
-      const tenders = tendersResponse.data?.items || tendersResponse.data || [];
+      const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
 
       const transformedTenders = tenders.map((tender) => ({
         id: tender.id,
@@ -252,7 +252,7 @@ export default function PresalesWorkstation() {
         stage: "QUALIFICATION,PROPOSAL"
       });
       const opportunities =
-      opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
+      opportunitiesResponse.data?.items || opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
 
       const transformedOpportunities = opportunities.map((opp) => ({
         id: opp.id,
@@ -371,7 +371,7 @@ export default function PresalesWorkstation() {
           page_size: 1
         });
         const solutions =
-        solutionsResponse.data?.items || solutionsResponse.data || [];
+        solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
 
         if (solutions.length > 0) {
           await presaleApi.solutions.update(solutions[0].id, {

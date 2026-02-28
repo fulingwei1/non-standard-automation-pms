@@ -19,7 +19,7 @@ export function useBOMManagement() {
             if (filters.keyword) params.keyword = filters.keyword;
 
             const response = await bomApi.list(params);
-            setBoms(response.data?.items || response.data || []);
+            setBoms(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

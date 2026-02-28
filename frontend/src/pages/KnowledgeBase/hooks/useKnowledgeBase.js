@@ -15,7 +15,7 @@ export function useKnowledgeBase() {
             if (filters.category && filters.category !== 'all') params.category = filters.category;
             if (filters.keyword) params.keyword = filters.keyword;
             const response = await knowledgeBaseApi.listArticles(params);
-            setArticles(response.data?.items || response.data || []);
+            setArticles(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

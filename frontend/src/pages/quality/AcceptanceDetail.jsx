@@ -60,7 +60,7 @@ export default function AcceptanceDetail() {
         setOrder(res.data || res);
         try {
           const itemsRes = await acceptanceApi.orders.getItems(id);
-          setItems((itemsRes.data || itemsRes)?.items || itemsRes.data || []);
+          setItems((itemsRes.data || itemsRes)?.items || itemsRes.data?.items || itemsRes.data || []);
         } catch { /* ignore */ }
       } catch (err) {
         setError(err.response?.data?.detail || err.message || "加载失败");

@@ -83,7 +83,7 @@ export default function MobileScanStart() {
         search: input,
         page_size: 10
       });
-      const orders = res.data?.items || res.data || [];
+      const orders = res.data?.items || res.data?.items || res.data || [];
       const order = orders.find((o) => o.work_order_no === input);
 
       if (!order) {

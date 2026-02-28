@@ -83,7 +83,7 @@ export default function QualityIssues() {
       const res = await issueApi.list(params);
       const resData = res.data || res;
       setData({
-        items: resData.items || resData.data || [],
+        items: resData.items || resData.data?.items || resData.data || [],
         total: resData.total || 0,
       });
     } catch (err) {

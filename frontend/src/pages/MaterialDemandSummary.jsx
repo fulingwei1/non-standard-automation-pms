@@ -82,7 +82,7 @@ export default function MaterialDemandSummary() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -97,7 +97,7 @@ export default function MaterialDemandSummary() {
       if (endDate) {params.end_date = endDate;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await materialDemandApi.list(params);
-      const demandList = res.data?.items || res.data || [];
+      const demandList = res.data?.items || res.data?.items || res.data || [];
       setDemands(demandList);
       // Calculate summary
       const totalDemand = demandList.reduce(

@@ -19,7 +19,7 @@ export function useInventoryAnalysis() {
             if (filters.warehouse && filters.warehouse !== 'all') params.warehouse = filters.warehouse;
 
             const response = await inventoryApi.list(params);
-            setInventory(response.data?.items || response.data || []);
+            setInventory(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

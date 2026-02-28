@@ -14,7 +14,7 @@ export function useProjectStaffingNeed() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.project_id) params.project_id = filters.project_id;
             const response = await staffingApi.listNeeds(params);
-            setNeeds(response.data?.items || response.data || []);
+            setNeeds(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

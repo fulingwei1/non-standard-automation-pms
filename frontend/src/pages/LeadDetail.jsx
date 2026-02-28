@@ -122,7 +122,7 @@ export default function LeadDetail() {
   const fetchCustomers = async () => {
     try {
       const res = await customerApi.list({ page_size: 1000 });
-      setCustomers(res.data?.items || res.data || []);
+      setCustomers(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
     }

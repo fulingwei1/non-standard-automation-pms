@@ -114,7 +114,7 @@ export default function ProductionExceptionList() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -129,7 +129,7 @@ export default function ProductionExceptionList() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.exceptions.list(params);
-      const excList = res.data?.items || res.data || [];
+      const excList = res.data?.items || res.data?.items || res.data || [];
       setExceptions(excList);
     } catch (error) {
       console.error("Failed to fetch exceptions:", error);

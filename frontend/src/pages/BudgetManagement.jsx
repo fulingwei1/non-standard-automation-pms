@@ -63,7 +63,7 @@ export default function BudgetManagement() {
       setLoading(true);
       // Load projects with budget information
       const res = await projectApi.list({ page: 1, page_size: 100 });
-      const projects = res.data?.items || res.data || [];
+      const projects = res.data?.items || res.data?.items || res.data || [];
 
       // Transform projects to budget format
       const budgetsData = await Promise.all(

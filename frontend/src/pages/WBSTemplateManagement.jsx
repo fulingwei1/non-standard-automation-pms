@@ -90,7 +90,7 @@ export default function WBSTemplateManagement() {
       if (filterType) {params.project_type = filterType;}
       if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await progressApi.wbsTemplates.list(params);
-      setTemplates(res.data?.items || res.data || []);
+      setTemplates(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch templates:", error);
       setTemplates([]); // 不再使用mock数据，显示空列表
@@ -101,7 +101,7 @@ export default function WBSTemplateManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -109,7 +109,7 @@ export default function WBSTemplateManagement() {
   const fetchTemplateTasks = async (templateId) => {
     try {
       const res = await progressApi.wbsTemplates.getTasks(templateId);
-      setTemplateTasks(res.data || []);
+      setTemplateTasks(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch template tasks:", error);
       setTemplateTasks([]); // 不再使用mock数据，显示空列表

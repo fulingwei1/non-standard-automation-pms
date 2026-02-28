@@ -39,7 +39,7 @@ export const usePurchaseOrderData = (initialFilters = {}) => {
       };
 
       const response = await purchaseApi.list(params);
-      let ordersData = response.data?.items || response.data || [];
+      let ordersData = response.data?.items || response.data?.items || response.data || [];
 
       // 转换 API 响应为组件格式
       const transformedOrders = ordersData.map((order) => {
@@ -109,8 +109,8 @@ export const usePurchaseOrderData = (initialFilters = {}) => {
         projectApi.list({ page_size: 1000 }),
       ]);
 
-      const suppliersData = suppliersRes.data?.items || suppliersRes.data || [];
-      const projectsData = projectsRes.data?.items || projectsRes.data || [];
+      const suppliersData = suppliersRes.data?.items || suppliersRes.data?.items || suppliersRes.data || [];
+      const projectsData = projectsRes.data?.items || projectsRes.data?.items || projectsRes.data || [];
 
       setSuppliers(suppliersData);
       setProjects(projectsData);

@@ -87,7 +87,7 @@ export default function OutsourcingOrderDetail() {
   const fetchDeliveries = async () => {
     try {
       const res = await outsourcingApi.orders.getDeliveries(id);
-      const deliveryList = res.data?.items || res.data || [];
+      const deliveryList = res.data?.items || res.data?.items || res.data || [];
       setDeliveries(deliveryList);
     } catch (error) {
       console.error("Failed to fetch deliveries:", error);
@@ -96,7 +96,7 @@ export default function OutsourcingOrderDetail() {
   const fetchInspections = async () => {
     try {
       const res = await outsourcingApi.orders.getInspections(id);
-      const inspectionList = res.data?.items || res.data || [];
+      const inspectionList = res.data?.items || res.data?.items || res.data || [];
       setInspections(inspectionList);
     } catch (error) {
       console.error("Failed to fetch inspections:", error);

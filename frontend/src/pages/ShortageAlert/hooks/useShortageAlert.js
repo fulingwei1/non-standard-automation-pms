@@ -14,7 +14,7 @@ export function useShortageAlert() {
             if (filters.level && filters.level !== 'all') params.level = filters.level;
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             const response = await shortageAlertApi.list(params);
-            setAlerts(response.data?.items || response.data || []);
+            setAlerts(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

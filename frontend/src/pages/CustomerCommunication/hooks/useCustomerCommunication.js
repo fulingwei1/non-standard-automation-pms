@@ -18,7 +18,7 @@ export function useCustomerCommunication() {
             if (customerId) params.customer_id = customerId;
 
             const response = await communicationApi.list(params);
-            setRecords(response.data?.items || response.data || []);
+            setRecords(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -29,7 +29,7 @@ export function useCustomerCommunication() {
     const loadCustomers = useCallback(async () => {
         try {
             const response = await customerApi.list({ page_size: 100 });
-            setCustomers(response.data?.items || response.data || []);
+            setCustomers(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             console.error('Failed to load customers:', err);
         }

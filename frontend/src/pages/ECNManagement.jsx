@@ -53,7 +53,7 @@ export default function ECNManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      const allProjects = res.data?.items || res.data || [];
+      const allProjects = res.data?.items || res.data?.items || res.data || [];
       setProjects(allProjects);
 
       // 获取用户参与的项目
@@ -78,7 +78,7 @@ export default function ECNManagement() {
       for (const project of allProjects) {
         try {
           const membersRes = await memberApi.list({ project_id: project.id });
-          const members = membersRes.data?.items || membersRes.data || [];
+          const members = membersRes.data?.items || membersRes.data?.items || membersRes.data || [];
           const isMember = members.some(m => m.user_id === userId);
           if (isMember) {
             userProjectIds.push(project.id);
@@ -106,7 +106,7 @@ export default function ECNManagement() {
       for (const project of projects) {
         try {
           const machinesRes = await projectApi.getMachines(project.id);
-          const machines = machinesRes.data?.items || machinesRes.data || [];
+          const machines = machinesRes.data?.items || machinesRes.data?.items || machinesRes.data || [];
           allMachines.push(...machines);
         } catch (_error) {
           // 忽略单个项目的设备获取失败
@@ -140,7 +140,7 @@ export default function ECNManagement() {
       }
 
       const res = await ecnApi.list(params);
-      setEcns(res.data?.items || res.data || []);
+      setEcns(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch ECNs:", error);
     } finally {

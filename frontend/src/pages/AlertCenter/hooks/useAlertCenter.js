@@ -19,7 +19,7 @@ export function useAlertCenter() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
 
             const response = await alertApi.list(params);
-            setAlerts(response.data?.items || response.data || []);
+            setAlerts(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

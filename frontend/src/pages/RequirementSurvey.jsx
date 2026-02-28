@@ -576,7 +576,7 @@ export default function RequirementSurvey() {
       }
 
       const response = await presaleApi.tickets.list(params);
-      const ticketsData = response.data?.items || response.data || [];
+      const ticketsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tickets to surveys
       const transformedSurveys = ticketsData.map((ticket) => {

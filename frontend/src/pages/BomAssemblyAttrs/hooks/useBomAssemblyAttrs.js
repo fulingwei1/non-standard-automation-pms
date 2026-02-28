@@ -15,7 +15,7 @@ export function useBomAssemblyAttrs() {
         try {
             setLoading(true);
             const response = await bomApi.list({ page_size: 100 });
-            setBoms(response.data?.items || response.data || []);
+            setBoms(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

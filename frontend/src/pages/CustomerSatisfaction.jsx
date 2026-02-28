@@ -120,7 +120,7 @@ const CustomerSatisfaction = () => {
         serviceApi.satisfaction.list(),
         serviceApi.satisfaction.statistics().catch(() => ({ data: {} })),
       ]);
-      const satisfactionList = satisfactionRes.data?.items || satisfactionRes.data || [];
+      const satisfactionList = satisfactionRes.data?.items || satisfactionRes.data?.items || satisfactionRes.data || [];
       // 将满意度记录映射为 surveys 和 responses 格式
       const surveyItems = satisfactionList.map((item) => ({
         id: item.id,

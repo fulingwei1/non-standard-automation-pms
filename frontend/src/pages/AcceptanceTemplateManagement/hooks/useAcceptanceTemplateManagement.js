@@ -14,7 +14,7 @@ export function useAcceptanceTemplateManagement() {
             if (filters.type && filters.type !== 'all') params.type = filters.type;
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             const response = await acceptanceTemplateApi.list(params);
-            setTemplates(response.data?.items || response.data || []);
+            setTemplates(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

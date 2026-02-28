@@ -18,7 +18,7 @@ export function useRequirementSurvey() {
             if (filters.customer_id) params.customer_id = filters.customer_id;
 
             const response = await surveyApi.list(params);
-            setSurveys(response.data?.items || response.data || []);
+            setSurveys(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

@@ -10,7 +10,7 @@ export function useKitCheck() {
         try {
             setLoading(true);
             const response = await kitApi.list(filters);
-            setKits(response.data?.items || response.data || []);
+            setKits(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     }, [filters]);

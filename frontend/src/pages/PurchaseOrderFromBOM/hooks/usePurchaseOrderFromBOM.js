@@ -39,7 +39,7 @@ export function usePurchaseOrderFromBOM() {
         const loadSuppliers = async () => {
             try {
                 const res = await supplierApi.list({ page_size: 1000 });
-                setSuppliers(res.data?.items || res.data || []);
+                setSuppliers(res.data?.items || res.data?.items || res.data || []);
             } catch (err) {
                 console.error("Failed to load suppliers:", err);
             }

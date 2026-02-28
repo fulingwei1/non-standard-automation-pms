@@ -50,7 +50,7 @@ const AIWorkbench = () => {
     try {
       setLoading(true);
       const response = await presaleApi.tickets.list({ page_size: 50 });
-      const items = response.data?.items || response.data || [];
+      const items = response.data?.items || response.data?.items || response.data || [];
       // Map backend ticket fields to component's expected shape
       const mapped = items.map((t) => ({
         id: t.id,

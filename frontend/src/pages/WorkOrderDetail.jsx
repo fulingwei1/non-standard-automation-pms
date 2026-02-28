@@ -82,7 +82,7 @@ export default function WorkOrderDetail() {
   const fetchWorkReports = async () => {
     try {
       const res = await productionApi.workOrders.getReports(id);
-      const reportList = res.data?.items || res.data?.reports || res.data || [];
+      const reportList = res.data?.items || res.data?.reports || res.data?.items || res.data || [];
       setWorkReports(reportList);
     } catch (error) {
       console.error("Failed to fetch work reports:", error);

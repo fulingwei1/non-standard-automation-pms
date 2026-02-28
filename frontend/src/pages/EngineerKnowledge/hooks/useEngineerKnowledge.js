@@ -13,7 +13,7 @@ export function useEngineerKnowledge() {
             if (filters.category) params.category = filters.category;
             if (filters.tag) params.tag = filters.tag;
             const response = await engineerKnowledgeApi.list(params);
-            setArticles(response.data?.items || response.data || []);
+            setArticles(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     }, [filters]);

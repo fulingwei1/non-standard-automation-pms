@@ -20,8 +20,8 @@ export function usePresalesManagerWorkstation() {
                 presaleApi.getTeamMembers(),
             ]);
 
-            setOpportunities(oppsRes.data?.items || oppsRes.data || []);
-            setTasks(tasksRes.data?.items || tasksRes.data || []);
+            setOpportunities(oppsRes.data?.items || oppsRes.data?.items || oppsRes.data || []);
+            setTasks(tasksRes.data?.items || tasksRes.data?.items || tasksRes.data || []);
             setTeamMembers(teamRes.data || teamRes || []);
         } catch (err) {
             setError(err.message);

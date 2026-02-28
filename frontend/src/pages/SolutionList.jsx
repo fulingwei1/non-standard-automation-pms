@@ -359,7 +359,7 @@ export default function SolutionList({ embedded = false } = {}) {
       }
 
       const response = await presaleApi.solutions.list(params);
-      const solutionsData = response.data?.items || response.data || [];
+      const solutionsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform solutions
       const transformedSolutions = solutionsData.map((solution) => ({

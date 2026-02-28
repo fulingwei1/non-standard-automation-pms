@@ -18,7 +18,7 @@ export function useAcceptanceData() {
             if (filters.project_id) params.project_id = filters.project_id;
 
             const response = await acceptanceApi.list(params);
-            setAcceptances(response.data?.items || response.data || []);
+            setAcceptances(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

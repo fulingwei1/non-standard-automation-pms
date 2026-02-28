@@ -18,7 +18,7 @@ export function useFinancialReports() {
             if (filters.period && filters.period !== 'all') params.period = filters.period;
 
             const response = await reportApi.listFinancial(params);
-            setReports(response.data?.items || response.data || []);
+            setReports(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

@@ -20,7 +20,7 @@ export default function EcnList({ filter, limit = 5, data: propData }) {
   useEffect(() => {
     if (propData) { setEcns(propData.slice(0, limit)); return; }
     ecnApi.list({ page_size: limit, ...filter }).then(res => {
-      setEcns(res.data?.items || res.data || []);
+      setEcns(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData, limit, filter]);
 

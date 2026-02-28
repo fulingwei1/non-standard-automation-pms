@@ -19,7 +19,7 @@ export default function LeadsList({ limit = 5, data: propData }) {
   useEffect(() => {
     if (propData) { setLeads(propData.slice(0, limit)); return; }
     leadApi.list({ page_size: limit }).then(res => {
-      setLeads(res.data?.items || res.data || []);
+      setLeads(res.data?.items || res.data?.items || res.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [propData, limit]);
 

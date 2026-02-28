@@ -103,7 +103,7 @@ export default function ProductionPlanList() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -111,7 +111,7 @@ export default function ProductionPlanList() {
   const fetchWorkshops = async () => {
     try {
       const res = await productionApi.workshops.list({ page_size: 1000 });
-      setWorkshops(res.data?.items || res.data || []);
+      setWorkshops(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch workshops:", error);
     }
@@ -126,7 +126,7 @@ export default function ProductionPlanList() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.productionPlans.list(params);
-      const planList = res.data?.items || res.data || [];
+      const planList = res.data?.items || res.data?.items || res.data || [];
       setPlans(planList);
     } catch (error) {
       console.error("Failed to fetch plans:", error);

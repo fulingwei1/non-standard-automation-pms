@@ -80,7 +80,7 @@ export default function PresalesManagerWorkstation() {
         status: "DRAFT,REVIEWING,SUBMITTED"
       });
       const solutions =
-      solutionsResponse.data?.items || solutionsResponse.data || [];
+      solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
       setOngoingSolutions(Array.isArray(solutions) ? solutions : []);
       const activeSolutions = solutions.length;
       const pendingReview = solutions.filter(
@@ -92,7 +92,7 @@ export default function PresalesManagerWorkstation() {
         page: 1,
         page_size: 100
       });
-      const tenders = tendersResponse.data?.items || tendersResponse.data || [];
+      const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
       setBiddingProjects(Array.isArray(tenders) ? tenders : []);
       const activeBids = tenders.length;
       const urgentBids = tenders.filter((t) => {

@@ -432,7 +432,7 @@ export default function UserManagement() {
     }
     try {
       const response = await roleApi.list({ page_size: 100 });
-      const allRoles = response.data?.items || response.data || [];
+      const allRoles = response.data?.items || response.data?.items || response.data || [];
       setAvailableRoles(allRoles);
       setBulkSelectedRoles([]);
       setShowBulkDialog(true);

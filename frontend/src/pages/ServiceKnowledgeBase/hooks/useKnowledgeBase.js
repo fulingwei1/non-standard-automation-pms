@@ -19,7 +19,7 @@ export function useKnowledgeBase() {
             if (filters.category && filters.category !== 'all') params.category = filters.category;
 
             const response = await knowledgeApi.list(params);
-            setArticles(response.data?.items || response.data || []);
+            setArticles(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

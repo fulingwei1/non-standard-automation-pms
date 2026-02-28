@@ -118,7 +118,7 @@ export default function BOMManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -126,7 +126,7 @@ export default function BOMManagement() {
   const fetchMachines = async (projId) => {
     try {
       const res = await machineApi.list(projId);
-      setMachines(res.data?.items || res.data || []);
+      setMachines(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch machines:", error);
     }
@@ -140,7 +140,7 @@ export default function BOMManagement() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await bomApi.list(params);
-      const bomList = res.data?.items || res.data || [];
+      const bomList = res.data?.items || res.data?.items || res.data || [];
       setBoms(bomList);
     } catch (error) {
       console.error("Failed to fetch BOMs:", error);

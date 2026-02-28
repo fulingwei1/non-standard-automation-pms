@@ -18,7 +18,7 @@ export function useCostTemplateManagement() {
             if (filters.status && filters.status !== 'all') params.status = filters.status;
 
             const response = await costTemplateApi.list(params);
-            setTemplates(response.data?.items || response.data || []);
+            setTemplates(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

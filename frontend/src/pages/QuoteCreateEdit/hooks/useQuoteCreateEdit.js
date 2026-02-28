@@ -20,7 +20,7 @@ export function useQuoteCreateEdit(quoteId) {
     const loadCustomers = useCallback(async () => {
         try {
             const response = await customerApi.list({ page_size: 100 });
-            setCustomers(response.data?.items || response.data || []);
+            setCustomers(response.data?.items || response.data?.items || response.data || []);
         } catch (err) { console.error(err); }
     }, []);
 

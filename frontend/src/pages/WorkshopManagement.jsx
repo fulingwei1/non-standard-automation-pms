@@ -94,7 +94,7 @@ export default function WorkshopManagement() {
   const fetchManagers = async () => {
     try {
       const res = await userApi.list({ page_size: 1000 });
-      setManagers(res.data?.items || res.data || []);
+      setManagers(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch managers:", error);
     }
@@ -108,7 +108,7 @@ export default function WorkshopManagement() {
       if (filterActive !== "") {params.is_active = filterActive === "true";}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workshops.list(params);
-      const workshopList = res.data?.items || res.data || [];
+      const workshopList = res.data?.items || res.data?.items || res.data || [];
       setWorkshops(workshopList);
     } catch (error) {
       console.error("Failed to fetch workshops:", error);

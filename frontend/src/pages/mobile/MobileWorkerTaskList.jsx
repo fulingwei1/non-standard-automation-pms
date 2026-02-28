@@ -52,7 +52,7 @@ export default function MobileWorkerTaskList() {
       setLoading(true);
       const params = { page: 1, page_size: 100 };
       const res = await productionApi.workOrders.list(params);
-      const allOrders = res.data?.items || res.data || [];
+      const allOrders = res.data?.items || res.data?.items || res.data || [];
 
       // 筛选已派工的任务
       const myTasks = allOrders.filter(

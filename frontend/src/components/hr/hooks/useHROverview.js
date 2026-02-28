@@ -44,7 +44,7 @@ export function useHROverview() {
   const loadDepartmentDistribution = useCallback(async () => {
     try {
       const response = await hrApi.departments.statistics();
-      setDepartmentDistribution(response.data || []);
+      setDepartmentDistribution(response.data?.items || response.data || []);
     } catch (err) {
       console.error("加载部门分布失败:", err);
       setDepartmentDistribution([]);
@@ -55,7 +55,7 @@ export function useHROverview() {
   const loadPerformanceDistribution = useCallback(async () => {
     try {
       const response = await hrApi.performance.distribution();
-      setPerformanceDistribution(response.data || []);
+      setPerformanceDistribution(response.data?.items || response.data || []);
     } catch (err) {
       console.error("加载绩效分布失败:", err);
       setPerformanceDistribution([]);

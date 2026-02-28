@@ -528,7 +528,7 @@ export default function EngineerWorkstation() {
       }
 
       const response = await taskCenterApi.myTasks(params);
-      const tasksData = response.data?.items || response.data || [];
+      const tasksData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform backend tasks to frontend format
       const transformedTasks = tasksData.map((task) => ({

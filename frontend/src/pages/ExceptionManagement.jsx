@@ -118,7 +118,7 @@ export default function ExceptionManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -133,7 +133,7 @@ export default function ExceptionManagement() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await exceptionApi.list(params);
-      const exceptionList = res.data?.items || res.data || [];
+      const exceptionList = res.data?.items || res.data?.items || res.data || [];
       setExceptions(exceptionList);
     } catch (error) {
       console.error("Failed to fetch exceptions:", error);

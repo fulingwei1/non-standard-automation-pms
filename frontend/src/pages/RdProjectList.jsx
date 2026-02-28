@@ -499,7 +499,7 @@ export default function RdProjectList() {
   const fetchCategories = async () => {
     try {
       const response = await rdProjectApi.getCategories();
-      const data = response.data?.data || response.data || [];
+      const data = response.data?.data || response.data?.items || response.data || [];
       setCategories(data);
     } catch (err) {
       console.error("Failed to fetch categories:", err);

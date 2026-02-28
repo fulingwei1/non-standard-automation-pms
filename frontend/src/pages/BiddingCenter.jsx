@@ -689,7 +689,7 @@ export default function BiddingCenter() {
       }
 
       const response = await presaleApi.tenders.list(params);
-      const tendersData = response.data?.items || response.data || [];
+      const tendersData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tenders
       const transformedTenders = tendersData.map((tender) => {

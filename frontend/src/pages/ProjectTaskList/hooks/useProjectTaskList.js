@@ -57,7 +57,7 @@ export function useProjectTaskList(projectId) {
             if (filters.keyword) params.search = filters.keyword;
 
             const tasksRes = await progressApi.tasks.list(params);
-            setTasks(tasksRes.data?.items || tasksRes.data || []);
+            setTasks(tasksRes.data?.items || tasksRes.data?.items || tasksRes.data || []);
 
         } catch (error) {
             console.error("Failed to load project data:", error);

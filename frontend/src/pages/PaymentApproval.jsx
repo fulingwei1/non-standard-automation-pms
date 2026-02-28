@@ -145,7 +145,7 @@ export default function PaymentApproval() {
       catch(() => ({ data: { items: [] } }));
 
       const invoices =
-      invoiceResponse.data?.items || invoiceResponse.data || [];
+      invoiceResponse.data?.items || invoiceResponse.data?.items || invoiceResponse.data || [];
 
       // Transform invoices to payment format
       const invoicePayments = invoices.map((inv) => ({
@@ -179,7 +179,7 @@ export default function PaymentApproval() {
       }).
       catch(() => ({ data: { items: [] } }));
 
-      const purchaseOrders = poResponse.data?.items || poResponse.data || [];
+      const purchaseOrders = poResponse.data?.items || poResponse.data?.items || poResponse.data || [];
       const poPayments = purchaseOrders.map((po) => ({
         id: po.id,
         type: "purchase",

@@ -69,7 +69,7 @@ export default function IssueDetail() {
         setItem(res.data || res);
         try {
           const fuRes = await issueApi.getFollowUps(id);
-          setFollowUps((fuRes.data || fuRes)?.items || fuRes.data || []);
+          setFollowUps((fuRes.data || fuRes)?.items || fuRes.data?.items || fuRes.data || []);
         } catch { /* ignore */ }
       } catch (err) {
         setError(err.response?.data?.detail || err.message || "加载失败");

@@ -92,7 +92,7 @@ export default function ServiceTicketManagement() {
         order_by: sortField,
         order_direction: sortDirection
       });
-      const ticketList = response.data?.items || response.data || [];
+      const ticketList = response.data?.items || response.data?.items || response.data || [];
       setTickets(ticketList);
     } catch (error) {
       console.error("Failed to load tickets:", error);

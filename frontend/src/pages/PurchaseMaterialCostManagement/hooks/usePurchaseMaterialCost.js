@@ -20,7 +20,7 @@ export function usePurchaseMaterialCost() {
             if (filters.supplier_id) params.supplier_id = filters.supplier_id;
 
             const response = await materialApi.listWithCost(params);
-            setMaterials(response.data?.items || response.data || []);
+            setMaterials(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -31,7 +31,7 @@ export function usePurchaseMaterialCost() {
     const loadSuppliers = useCallback(async () => {
         try {
             const response = await purchaseApi.listSuppliers({ page_size: 100 });
-            setSuppliers(response.data?.items || response.data || []);
+            setSuppliers(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             console.error('Failed to load suppliers:', err);
         }
