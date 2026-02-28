@@ -169,6 +169,7 @@ export const defaultNavGroups = [
     label: "人力资源",
     items: [
       { name: "绩效管理", path: "/performance", icon: "TrendingUp", permission: "performance:manage", permissionLabel: "绩效管理" },
+      { name: "绩效合约", path: "/performance-contract", icon: "FileSignature", permission: "performance:manage", permissionLabel: "绩效合约" },
       { name: "资质管理", path: "/qualifications", icon: "Award", permission: "qualification:read", permissionLabel: "资质管理" },
       { name: "评价配置", path: "/evaluation-weight-config", icon: "Settings", permission: "evaluation:config:manage", permissionLabel: "评价配置" },
       { name: "标签管理", path: "/staff-matching/tags", icon: "Layers", permission: "staff:tag:manage", permissionLabel: "标签管理" },

@@ -18,6 +18,7 @@ import QualificationAssessmentList from "../../pages/QualificationAssessmentList
 import EngineerPerformanceDashboard from "../../pages/EngineerPerformanceDashboard";
 import EngineerPerformanceRanking from "../../pages/EngineerPerformanceRanking";
 import EngineerPerformanceDetail from "../../pages/EngineerPerformanceDetail";
+import PerformanceContract from "../../pages/PerformanceContract";
 import EngineerCollaboration from "../../pages/EngineerCollaboration";
 import EngineerKnowledge from "../../pages/EngineerKnowledge";
 
@@ -26,6 +27,7 @@ export function HRRoutes() {
     <>
       <Route path="/performance" element={<PerformanceManagement />} />
       <Route path="/performance/ranking" element={<PerformanceRanking />} />
+      <Route path="/performance-contract" element={<PerformanceContract />} />
       <Route
         path="/performance/indicators"
         element={<PerformanceIndicators />}

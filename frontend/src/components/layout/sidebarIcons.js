@@ -54,7 +54,8 @@ import {
   Workflow,
   Gauge,
   GitBranch,
-  Coins
+  Coins,
+  FileSignature
 } from "lucide-react";
 
 // Icon mapping
@@ -110,5 +111,6 @@ export const iconMap = {
   Workflow,
   Gauge,
   GitBranch,
-  Coins
+  Coins,
+  FileSignature
 };
