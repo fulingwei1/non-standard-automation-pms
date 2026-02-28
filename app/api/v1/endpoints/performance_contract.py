@@ -299,6 +299,93 @@ def list_contracts(
     )
 
 
+
+@router.get("/dashboard", response_model=ResponseModel)
+def get_dashboard(
+    year: Optional[int] = Query(None, description="年度筛选"),
+    db: Session = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    """获取绩效合约总览"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 构建年度筛选条件
+    year_condition = "AND year = ?" if year else ""
+    year_params = [year] if year else []
+    
+    # 各类型合约数量
+    cursor.execute(f"""
+        SELECT contract_type, status, COUNT(*) as count
+        FROM performance_contracts
+        WHERE 1=1 {year_condition}
+        GROUP BY contract_type, status
+    """, year_params)
+    
+    type_status_counts = {}
+    for row in cursor.fetchall():
+        contract_type = row['contract_type']
+        status = row['status']
+        count = row['count']
+        
+        if contract_type not in type_status_counts:
+            type_status_counts[contract_type] = {}
+        type_status_counts[contract_type][status] = count
+    
+    # 总计
+    cursor.execute(f"""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'pending_sign' THEN 1 ELSE 0 END) as pending_sign,
+            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+            AVG(total_weight) as avg_weight
+        FROM performance_contracts
+        WHERE 1=1 {year_condition}
+    """, year_params)
+    
+    summary = dict(cursor.fetchone())
+    
+    # 平均得分（仅计算已评分的条目）
+    cursor.execute(f"""
+        SELECT AVG(score) as avg_score
+        FROM performance_contract_items
+        WHERE score IS NOT NULL
+        AND contract_id IN (
+            SELECT id FROM performance_contracts WHERE 1=1 {year_condition}
+        )
+    """, year_params)
+    
+    avg_score_result = cursor.fetchone()
+    avg_score = avg_score_result['avg_score'] if avg_score_result else 0
+    
+    # 签署进度
+    cursor.execute(f"""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN signer_signature IS NOT NULL THEN 1 ELSE 0 END) as signer_signed,
+            SUM(CASE WHEN counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as counterpart_signed,
+            SUM(CASE WHEN signer_signature IS NOT NULL AND counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as fully_signed
+        FROM performance_contracts
+        WHERE status IN ('pending_sign', 'active') {year_condition}
+    """, year_params)
+    
+    signing_progress = dict(cursor.fetchone())
+    
+    conn.close()
+    
+    return ResponseModel(
+        code=200,
+        message="查询成功",
+        data={
+            "summary": summary,
+            "avg_score": avg_score,
+            "type_status_breakdown": type_status_counts,
+            "signing_progress": signing_progress
+        }
+    )
+
+
 @router.get("/{contract_id}", response_model=ResponseModel)
 def get_contract(
     contract_id: int,
@@ -850,91 +937,6 @@ def evaluate_contract(
 # ============================================
 # Dashboard 总览
 # ============================================
-
-@router.get("/dashboard", response_model=ResponseModel)
-def get_dashboard(
-    year: Optional[int] = Query(None, description="年度筛选"),
-    db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
-):
-    """获取绩效合约总览"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # 构建年度筛选条件
-    year_condition = "AND year = ?" if year else ""
-    year_params = [year] if year else []
-    
-    # 各类型合约数量
-    cursor.execute(f"""
-        SELECT contract_type, status, COUNT(*) as count
-        FROM performance_contracts
-        WHERE 1=1 {year_condition}
-        GROUP BY contract_type, status
-    """, year_params)
-    
-    type_status_counts = {}
-    for row in cursor.fetchall():
-        contract_type = row['contract_type']
-        status = row['status']
-        count = row['count']
-        
-        if contract_type not in type_status_counts:
-            type_status_counts[contract_type] = {}
-        type_status_counts[contract_type][status] = count
-    
-    # 总计
-    cursor.execute(f"""
-        SELECT
-            COUNT(*) as total,
-            SUM(CASE WHEN status = 'pending_sign' THEN 1 ELSE 0 END) as pending_sign,
-            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
-            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-            AVG(total_weight) as avg_weight
-        FROM performance_contracts
-        WHERE 1=1 {year_condition}
-    """, year_params)
-    
-    summary = dict(cursor.fetchone())
-    
-    # 平均得分（仅计算已评分的条目）
-    cursor.execute(f"""
-        SELECT AVG(score) as avg_score
-        FROM performance_contract_items
-        WHERE score IS NOT NULL
-        AND contract_id IN (
-            SELECT id FROM performance_contracts WHERE 1=1 {year_condition}
-        )
-    """, year_params)
-    
-    avg_score_result = cursor.fetchone()
-    avg_score = avg_score_result['avg_score'] if avg_score_result else 0
-    
-    # 签署进度
-    cursor.execute(f"""
-        SELECT
-            COUNT(*) as total,
-            SUM(CASE WHEN signer_signature IS NOT NULL THEN 1 ELSE 0 END) as signer_signed,
-            SUM(CASE WHEN counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as counterpart_signed,
-            SUM(CASE WHEN signer_signature IS NOT NULL AND counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as fully_signed
-        FROM performance_contracts
-        WHERE status IN ('pending_sign', 'active') {year_condition}
-    """, year_params)
-    
-    signing_progress = dict(cursor.fetchone())
-    
-    conn.close()
-    
-    return ResponseModel(
-        code=200,
-        message="查询成功",
-        data={
-            "summary": summary,
-            "avg_score": avg_score,
-            "type_status_breakdown": type_status_counts,
-            "signing_progress": signing_progress
-        }
-    )
 
 
 @router.post("/{contract_id}/generate-from-strategy", response_model=ResponseModel)
