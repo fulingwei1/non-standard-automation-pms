@@ -21,16 +21,15 @@ export const defaultNavGroups = [
       { name: "知识文档", path: "/knowledge-base", icon: "BookOpen", permission: "knowledge:read", permissionLabel: "知识文档" }
     ]
   },
-  // 2. 战略管理 (BEM) - 已隐藏
-  // {
-  //   label: "战略管理",
-  //   items: [
-  //     { name: "决策驾驶舱", path: "/executive-dashboard", icon: "Gauge", permission: "executive:dashboard:read", permissionLabel: "决策驾驶舱" },
-  //     { name: "战略分析", path: "/strategy", icon: "Target", permission: "strategy:dashboard:read", permissionLabel: "战略分析" },
-  //     { name: "关键决策", path: "/key-decisions", icon: "Lightbulb", permission: "executive:decision:read", permissionLabel: "关键决策" },
-  //     { name: "管理节拍", path: "/management-rhythm-dashboard", icon: "Activity", permission: "pmo:rhythm:read", permissionLabel: "管理节拍" }
-  //   ]
-  // },
+    {
+    label: "战略管理",
+    items: [
+      { name: "决策驾驶舱", path: "/executive-dashboard", icon: "Gauge", permission: "executive:dashboard:read", permissionLabel: "决策驾驶舱" },
+      { name: "战略分析", path: "/strategy", icon: "Target", permission: "strategy:dashboard:read", permissionLabel: "战略分析" },
+      { name: "关键决策", path: "/key-decisions", icon: "Lightbulb", permission: "executive:decision:read", permissionLabel: "关键决策" },
+      { name: "管理节拍", path: "/management-rhythm-dashboard", icon: "Activity", permission: "pmo:rhythm:read", permissionLabel: "管理节拍" }
+    ]
+  },
   // 2. 销售管理
   {
     label: "销售管理",
