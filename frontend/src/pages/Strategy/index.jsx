@@ -283,10 +283,10 @@ export default function StrategyDashboard() {
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      {(() => { const DynIcon = config.icon; return <DynIcon
+                      (() => { const DynIcon = config.icon; return <DynIcon
                         className="w-5 h-5"
                         style={{ color: config.color }}
-                       />; })()}
+                       />; })()
                       {config.name}
                     </CardTitle>
                     <p className="text-sm text-slate-400">{config.description}</p>

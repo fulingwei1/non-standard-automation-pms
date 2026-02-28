@@ -217,7 +217,7 @@ export const SatisfactionCard = ({
                 <div className="p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
                   <div className="flex items-center justify-between mb-2">
                     <div className={`p-2 rounded-lg ${stat.iconBg}`}>
-                      {(() => { const DynIcon = stat.icon; return <DynIcon className={`w-5 h-5 ${stat.iconColor}`}  />; })()}
+                      (() => { const DynIcon = stat.icon; return <DynIcon className={`w-5 h-5 ${stat.iconColor}`}  />; })()
                     </div>
                     <div className="text-right">
                       {stat.progress !== undefined &&

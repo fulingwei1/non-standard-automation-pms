@@ -205,7 +205,7 @@ export const QuoteListManager = ({
     const config = getQuoteStatusConfig(status);
     return (
       <Badge variant="outline" className={config.color}>
-        {(() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+        (() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()
         {config.label}
       </Badge>);
 

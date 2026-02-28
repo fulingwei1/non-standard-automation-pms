@@ -447,7 +447,7 @@ export default function Login({ onLoginSuccess }) {
                 className="flex items-start gap-4">
 
                   <div className="p-3 rounded-xl bg-primary/15 border border-primary/25">
-                    {(() => { const DynIcon = feature.icon; return <DynIcon className="h-5 w-5 text-primary"  />; })()}
+                    (() => { const DynIcon = feature.icon; return <DynIcon className="h-5 w-5 text-primary"  />; })()
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">{feature.title}</h4>

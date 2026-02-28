@@ -340,7 +340,7 @@ export default function MyBonus() {
                   onClick={() => setActiveTab(tab.key)}
                   className="gap-2">
 
-                    {(() => { const DynIcon = tab.icon; return <DynIcon className="w-4 h-4"  />; })()}
+                    (() => { const DynIcon = tab.icon; return <DynIcon className="w-4 h-4"  />; })()
                     {tab.label}
                 </Button>
                 )}
@@ -421,7 +421,7 @@ export default function MyBonus() {
                                   {typeConfig.label}
                                 </Badge>
                                 <Badge className={status.color}>
-                                  {(() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+                                  (() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()
                                   {status.label}
                                 </Badge>
                               </div>
@@ -485,7 +485,7 @@ export default function MyBonus() {
                                 {typeConfig.label}
                               </Badge>
                               <Badge className={status.color}>
-                                {(() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+                                (() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()
                                 {status.label}
                               </Badge>
                             </div>
@@ -550,7 +550,7 @@ export default function MyBonus() {
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <Badge className={status.color}>
-                                {(() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+                                (() => { const DynIcon = status.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()
                                 {status.label}
                               </Badge>
                               {dist.distribution_code &&

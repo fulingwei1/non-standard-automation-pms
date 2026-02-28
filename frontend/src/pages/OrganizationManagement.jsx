@@ -139,7 +139,7 @@ function OrgTreeNode({ unit, level = 0, onEdit, onView, onDelete, onAddChild, al
                     key={childType.value}
                     onClick={() => onAddChild(unit, childType.value)}
                   >
-                    {(() => { const DynIcon = childType.icon; return <DynIcon className={cn("h-4 w-4 mr-2", childType.color)}  />; })()}
+                    (() => { const DynIcon = childType.icon; return <DynIcon className={cn("h-4 w-4 mr-2", childType.color)}  />; })()
                     添加{childType.label}
                   </DropdownMenuItem>
                 ))}
@@ -598,7 +598,7 @@ export default function OrganizationManagement() {
                   {UNIT_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
-                        {(() => { const DynIcon = type.icon; return <DynIcon className={cn("h-4 w-4", type.color)}  />; })()}
+                        (() => { const DynIcon = type.icon; return <DynIcon className={cn("h-4 w-4", type.color)}  />; })()
                         {type.label}
                       </div>
                     </SelectItem>

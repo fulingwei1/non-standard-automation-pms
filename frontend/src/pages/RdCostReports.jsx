@@ -233,13 +233,13 @@ export default function RdCostReports() {
                   reportType === report.id ? "bg-primary/20" : "bg-white/5"
                 )}>
 
-                  {(() => { const DynIcon = report.icon; return <DynIcon
+                  (() => { const DynIcon = report.icon; return <DynIcon
                   className={cn(
                     "h-5 w-5",
                     reportType === report.id ?
                     "text-primary" :
                     "text-slate-400"
-                  )}  />; })()}
+                  )}  />; })()
 
                 </div>
                 <h3
@@ -306,7 +306,7 @@ export default function RdCostReports() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              {(() => { const DynIcon = selectedReport.icon; return <DynIcon className="h-5 w-5 text-primary"  />; })()}
+              (() => { const DynIcon = selectedReport.icon; return <DynIcon className="h-5 w-5 text-primary"  />; })()
               {selectedReport.name}
             </h3>
           </div>

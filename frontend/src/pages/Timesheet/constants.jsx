@@ -16,7 +16,7 @@ export const getStatusBadge = (status) => {
     const config = STATUS_CONFIGS[statusUpper] || STATUS_CONFIGS.DRAFT;
     return (
         <Badge variant={config.variant} className="gap-1">
-            {(() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3"  />; })()}
+            (() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3"  />; })()
             {config.label}
         </Badge>
     );

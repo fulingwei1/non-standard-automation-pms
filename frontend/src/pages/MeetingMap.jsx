@@ -245,7 +245,7 @@ export default function MeetingMap() {
                               <div
                                 className={`p-1 rounded ${config.color} text-white`}
                               >
-                                {(() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3"  />; })()}
+                                (() => { const DynIcon = config.icon; return <DynIcon className="w-3 h-3"  />; })()
                               </div>
                             )}
                             <div>
