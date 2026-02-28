@@ -308,7 +308,7 @@ export default function RdProjectDetail() {
               value={tab.id}
               className="flex items-center gap-2"
             >
-              (() => { const DynIcon = tab.icon; return <DynIcon className="h-4 w-4"  />; })()
+              {(() => { const DynIcon = tab.icon; return <DynIcon className="h-4 w-4"  />; })()}
               {tab.name}
             </TabsTrigger>
           ))}

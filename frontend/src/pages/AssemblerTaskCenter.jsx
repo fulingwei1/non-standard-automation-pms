@@ -232,7 +232,7 @@ export default function AssemblerTaskCenter() {
                     {stat.value}
                   </p>
                 </div>
-                (() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-6 h-6", stat.color)}  />; })()
+                {(() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-6 h-6", stat.color)}  />; })()}
               </div>
             </CardContent>
         </Card>
