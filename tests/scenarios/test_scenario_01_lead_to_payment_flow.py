@@ -81,7 +81,6 @@ class TestLeadToPaymentFlow:
         quote = Quote(
             quote_code="QT-2026-001",
             customer_id=sales_customer.id,
-            valid_until=date.today(),
             valid_until=date.today() + timedelta(days=30),
             total_price=Decimal("520000.00"),
             status="DRAFT",

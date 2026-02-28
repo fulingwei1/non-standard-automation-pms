@@ -221,7 +221,6 @@ class TestIdempotency:
                 initiator_id=3,
                 status="PENDING",
                 idempotency_key=submission_key,
-                initiator_id=3,
             )
             db_session.add(instance)
             pr.status = "PENDING_APPROVAL"
