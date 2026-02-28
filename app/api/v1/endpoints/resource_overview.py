@@ -312,8 +312,6 @@ def get_department_summary(
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
     """按部门汇总资源分配情况。"""
-    today = date.today()
-
     sql = text("""
         SELECT 
             u.department,
