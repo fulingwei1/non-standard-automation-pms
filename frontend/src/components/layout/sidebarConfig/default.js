@@ -26,6 +26,13 @@ export const defaultNavGroups = [
     items: [
       { name: "决策驾驶舱", path: "/executive-dashboard", icon: "Gauge", permission: "executive:dashboard:read", permissionLabel: "决策驾驶舱" },
       { name: "战略分析", path: "/strategy", icon: "Target", permission: "strategy:dashboard:read", permissionLabel: "战略分析" },
+      { name: "战略地图", path: "/strategy/map", icon: "Map", permission: "strategy:dashboard:read", permissionLabel: "战略地图" },
+      { name: "CSF 管理", path: "/strategy/csf", icon: "Layers", permission: "strategy:csf:read", permissionLabel: "CSF 管理" },
+      { name: "KPI 管理", path: "/strategy/kpi", icon: "Activity", permission: "strategy:kpi:read", permissionLabel: "KPI 管理" },
+      { name: "年度重点工作", path: "/strategy/annual-work", icon: "Briefcase", permission: "strategy:annual-work:read", permissionLabel: "年度重点工作" },
+      { name: "目标分解", path: "/strategy/decomposition", icon: "GitBranch", permission: "strategy:decomposition:read", permissionLabel: "目标分解" },
+      { name: "战略日历", path: "/strategy/calendar", icon: "Calendar", permission: "strategy:calendar:read", permissionLabel: "战略日历" },
+      { name: "同比分析", path: "/strategy/comparison", icon: "TrendingUp", permission: "strategy:comparison:read", permissionLabel: "同比分析" },
       { name: "关键决策", path: "/key-decisions", icon: "Lightbulb", permission: "executive:decision:read", permissionLabel: "关键决策" },
       { name: "管理节拍", path: "/management-rhythm-dashboard", icon: "Activity", permission: "pmo:rhythm:read", permissionLabel: "管理节拍" }
     ]
