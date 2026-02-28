@@ -12,17 +12,17 @@ export const presaleApi = {
     updateProgress: (id, data) =>
       api.put(`/presale/tickets/${id}/progress`, data),
     complete: (id, data) => api.put(`/presale/tickets/${id}/complete`, data),
-    rate: (id, data) => api.put(`/presale/tickets/${id}/rate`, data),
+    rate: (id, data) => api.put(`/presale/tickets/${id}/rating`, data),
     getBoard: (params) => api.get("/presale/tickets/board", { params }),
   },
   solutions: {
-    list: (params) => api.get("/presale/solutions", { params }),
-    get: (id) => api.get(`/presale/solutions/${id}`),
-    create: (data) => api.post("/presale/solutions", data),
-    update: (id, data) => api.put(`/presale/solutions/${id}`, data),
-    review: (id, data) => api.put(`/presale/solutions/${id}/review`, data),
-    getVersions: (id) => api.get(`/presale/solutions/${id}/versions`),
-    getCost: (id) => api.get(`/presale/solutions/${id}/cost`),
+    list: (params) => api.get("/presale/proposals/solutions", { params }),
+    get: (id) => api.get(`/presale/proposals/solutions/${id}`),
+    create: (data) => api.post("/presale/proposals/solutions", data),
+    update: (id, data) => api.put(`/presale/proposals/solutions/${id}`, data),
+    review: (id, data) => api.put(`/presale/proposals/solutions/${id}/review`, data),
+    getVersions: (id) => api.get(`/presale/proposals/solutions/${id}/versions`),
+    getCost: (id) => api.get(`/presale/proposals/solutions/${id}/cost`),
   },
   templates: {
     list: (params) => api.get("/presale/templates", { params }),
@@ -38,11 +38,11 @@ export const presaleApi = {
     updateResult: (id, data) => api.put(`/presale/tenders/${id}/result`, data),
   },
   statistics: {
-    workload: (params) => api.get("/presale/stats/workload", { params }),
+    workload: (params) => api.get("/presale/statistics/stats/workload", { params }),
     responseTime: (params) =>
-      api.get("/presale/stats/response-time", { params }),
-    conversion: (params) => api.get("/presale/stats/conversion", { params }),
-    performance: (params) => api.get("/presale/stats/performance", { params }),
+      api.get("/presale/statistics/stats/response-time", { params }),
+    conversion: (params) => api.get("/presale/statistics/stats/conversion", { params }),
+    performance: (params) => api.get("/presale/statistics/stats/performance", { params }),
   },
 };
 

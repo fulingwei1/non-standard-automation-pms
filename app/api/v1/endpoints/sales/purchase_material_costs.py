@@ -53,7 +53,7 @@ def get_purchase_material_costs(
         query = query.filter(PurchaseMaterialCost.is_active == is_active)
 
     total = query.count()
-    costs = query.order_by(desc(PurchaseMaterialCost.match_priority), apply_pagination(desc(PurchaseMaterialCost.created_at)), pagination.offset, pagination.limit).all()
+    costs = apply_pagination(query.order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for cost in costs:

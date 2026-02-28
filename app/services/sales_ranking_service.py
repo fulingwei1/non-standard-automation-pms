@@ -108,7 +108,7 @@ class SalesRankingService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.team_service = SalesTeamService(db)
+        self.team_service = SalesTeamService()
 
     # -------------------------------
     # 配置管理

@@ -114,14 +114,7 @@ export const HEALTH_CONFIG = {
   },
 };
 
-// 项目状态配置
-export const PROJECT_STATUS = {
-  ACTIVE: { label: "进行中", color: "emerald" },
-  PENDING: { label: "待启动", color: "amber" },
-  COMPLETED: { label: "已完成", color: "blue" },
-  SUSPENDED: { label: "暂停", color: "orange" },
-  CANCELLED: { label: "取消", color: "red" },
-};
+// PROJECT_STATUS 已移至 projectDetail.js（更完整的版本），避免 star export 冲突
 
 // 获取健康度配置
 export function getHealthConfig(healthCode) {

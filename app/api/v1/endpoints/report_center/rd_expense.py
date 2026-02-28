@@ -27,7 +27,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/report-center/rd-expense",
+    prefix="/rd-expense",
     tags=["rd_expense"]
 )
 

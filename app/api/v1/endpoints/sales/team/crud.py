@@ -46,7 +46,7 @@ def list_sales_teams(
     query = apply_keyword_filter(query, SalesTeam, keyword, ["team_name", "team_code"])
 
     total = query.count()
-    teams = query.order_by(SalesTeam.sort_order, apply_pagination(SalesTeam.id), pagination.offset, pagination.limit).all()
+    teams = apply_pagination(query.order_by(SalesTeam.sort_order, SalesTeam.id), pagination.offset, pagination.limit).all()
 
     items = []
     for team in teams:

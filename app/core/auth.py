@@ -119,29 +119,17 @@ def validate_user_tenant_consistency(user: User) -> None:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码
-    
-    bcrypt has a 72-byte password limit. Truncate automatically if needed.
-    """
-    # Ensure password is at most 72 bytes (bcrypt limit) - must match get_password_hash
-    if isinstance(plain_password, str):
-        password_bytes = plain_password.encode('utf-8')
-        if len(password_bytes) > 72:
-            plain_password = password_bytes[:72].decode('utf-8', errors='ignore')
-    return pwd_context.verify(plain_password, hashed_password)
+    """验证密码 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
+    import bcrypt
+    password_bytes = plain_password.encode('utf-8')[:72]
+    return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 
 
 def get_password_hash(password: str) -> str:
-    """生成密码哈希
-    
-    bcrypt has a 72-byte password limit. Truncate automatically if needed.
-    """
-    # Ensure password is at most 72 bytes (bcrypt limit)
-    if isinstance(password, str):
-        password_bytes = password.encode('utf-8')
-        if len(password_bytes) > 72:
-            password = password_bytes[:72].decode('utf-8', errors='ignore')
-    return pwd_context.hash(password)
+    """生成密码哈希 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
+    import bcrypt
+    password_bytes = password.encode('utf-8')[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode('utf-8')
 
 
 def create_access_token(

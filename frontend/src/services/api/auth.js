@@ -70,7 +70,7 @@ export const roleApi = {
   getMyNavGroups: () => api.get("/roles/my/nav-groups"),
   getAllConfig: () => api.get("/roles/config/all"),
   // 角色继承相关
-  getDetail: (id) => api.get(`/roles/${id}/detail`),
+  getDetail: (id) => api.get(`/roles/${id}`),
   getInheritanceTree: () => api.get("/roles/hierarchy/tree"),
   compare: (roleIds) => api.post("/roles/compare", roleIds),
   // 角色模板相关
@@ -85,8 +85,8 @@ export const roleApi = {
 
 // 权限矩阵 API
 export const permissionApi = {
-  getMatrix: () => api.get("/permissions/matrix"),
-  getDependencies: () => api.get("/permissions/dependencies"),
+  getMatrix: () => api.get("/permissions/modules"),
+  getDependencies: () => api.get("/permissions/modules"),
   getByRole: (roleId, includeInherited = true) =>
-    api.get(`/permissions/by-role/${roleId}`, { params: { include_inherited: includeInherited } }),
+    api.get(`/permissions/roles/${roleId}`, { params: { include_inherited: includeInherited } }),
 };

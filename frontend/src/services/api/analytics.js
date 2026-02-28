@@ -14,15 +14,15 @@ export const workloadAnalyticsApi = {
    * @param {Object} params - { start_date, end_date }
    */
   departmentSummary: (deptId, params) =>
-    api.get(`/departments/${deptId}/workload/summary`, { params }),
+    api.get(`/departments/${deptId}/workload`, { params }),
 
   /**
    * 获取部门工作负载分布（用于可视化）
    * @param {number} deptId - 部门ID
-   * @param {Object} params - { start_date, end_date }
+   * @param {Object} params - { start_date, end_date, view: 'distribution' }
    */
   departmentDistribution: (deptId, params) =>
-    api.get(`/departments/${deptId}/workload/distribution`, { params }),
+    api.get(`/departments/${deptId}/workload`, { params: { ...params, view: 'distribution' } }),
 
   // ==================== 全局分析 ====================
 

@@ -95,7 +95,7 @@ describe('Approval API', () => {
     it('应该成功通过审批', async () => {
       const comment = 'Approved, looks good';
 
-      mock.onPost('/api/v1/approvals/1/approve').reply(200, {
+      mock.onPost('/api/v1/approvals/tasks/1/approve').reply(200, {
         success: true,
         data: {
           instance_id: 1,
@@ -113,7 +113,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理无权限审批错误', async () => {
-      mock.onPost('/api/v1/approvals/1/approve').reply(403, {
+      mock.onPost('/api/v1/approvals/tasks/1/approve').reply(403, {
         success: false,
         message: 'Not authorized to approve',
       });
@@ -126,7 +126,7 @@ describe('Approval API', () => {
     it('应该成功驳回审批', async () => {
       const comment = 'Needs more information';
 
-      mock.onPost('/api/v1/approvals/1/reject').reply(200, {
+      mock.onPost('/api/v1/approvals/tasks/1/reject').reply(200, {
         success: true,
         data: {
           instance_id: 1,
@@ -493,7 +493,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理业务逻辑错误', async () => {
-      mock.onPost('/api/v1/approvals/1/approve').reply(400, {
+      mock.onPost('/api/v1/approvals/tasks/1/approve').reply(400, {
         success: false,
         message: 'Approval already processed',
       });

@@ -142,7 +142,7 @@ class PaymentPlanService:
         """计算计划收款日期"""
         if payment_no == 1:
             # 预付款：合同签订后7天
-            return contract.signed_date + timedelta(days=7) if contract.signed_date else None
+            return contract.signing_date + timedelta(days=7) if contract.signing_date else None
         elif payment_no == 2:
             # 发货款：预计项目中期
             if project.planned_end_date and project.planned_start_date:

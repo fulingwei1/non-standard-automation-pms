@@ -154,8 +154,8 @@ class SalesBonusCalculator(BonusCalculatorBase):
 
         # 查询周期内签订的合同
         contracts = self.db.query(Contract).filter(
-            Contract.signed_date >= period_start,
-            Contract.signed_date <= period_end,
+            Contract.signing_date >= period_start,
+            Contract.signing_date <= period_end,
             Contract.status == 'SIGNED'
         ).all()
 

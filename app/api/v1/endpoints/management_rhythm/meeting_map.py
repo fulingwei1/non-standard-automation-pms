@@ -45,7 +45,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/management-rhythm/meeting-map",
+    prefix="/meeting-map",
     tags=["meeting_map"]
 )
 
@@ -53,7 +53,7 @@ router = APIRouter(
 
 # ==================== 会议地图 ====================
 
-@router.get("/meeting-map", response_model=MeetingMapResponse)
+@router.get("/", response_model=MeetingMapResponse)
 def read_meeting_map(
     rhythm_level: Optional[str] = Query(None, description="会议层级筛选"),
     cycle_type: Optional[str] = Query(None, description="周期类型筛选"),
@@ -134,7 +134,7 @@ def read_meeting_map(
     )
 
 
-@router.get("/meeting-map/calendar", response_model=List[MeetingCalendarResponse])
+@router.get("/calendar", response_model=List[MeetingCalendarResponse])
 def read_meeting_calendar(
     start_date: date = Query(..., description="开始日期"),
     end_date: date = Query(..., description="结束日期"),
@@ -201,7 +201,7 @@ def read_meeting_calendar(
     return result
 
 
-@router.get("/meeting-map/statistics", response_model=MeetingStatisticsResponse)
+@router.get("/statistics", response_model=MeetingStatisticsResponse)
 def read_meeting_statistics(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),

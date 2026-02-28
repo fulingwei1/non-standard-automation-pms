@@ -124,7 +124,7 @@ class CapacityAnalysisService:
         low_efficiency_workers = (
             self.db.query(
                 Worker.id.label("worker_id"),
-                Worker.worker_code,
+                Worker.worker_no,
                 Worker.worker_name,
                 func.count(WorkerEfficiencyRecord.id).label("record_count"),
                 func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
@@ -133,7 +133,7 @@ class CapacityAnalysisService:
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*worker_filter))
-            .group_by(Worker.id, Worker.worker_code, Worker.worker_name)
+            .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
             .having(func.avg(WorkerEfficiencyRecord.efficiency) < 80)
             .order_by(func.avg(WorkerEfficiencyRecord.efficiency).asc())
             .limit(limit)
@@ -176,7 +176,7 @@ class CapacityAnalysisService:
                 {
                     "type": "工人",
                     "worker_id": row.worker_id,
-                    "worker_code": row.worker_code,
+                    "worker_code": row.worker_no,
                     "worker_name": row.worker_name,
                     "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                     "total_hours": float(row.total_hours) if row.total_hours else 0,

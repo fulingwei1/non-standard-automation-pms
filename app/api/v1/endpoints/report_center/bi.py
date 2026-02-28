@@ -35,7 +35,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/report-center/bi",
+    prefix="/bi",
     tags=["bi"]
 )
 
@@ -233,8 +233,8 @@ def get_supplier_performance(
 
     # 查询外协订单
     orders = db.query(OutsourcingOrder).filter(
-        OutsourcingOrder.order_date >= start_date,
-        OutsourcingOrder.order_date <= end_date
+        OutsourcingOrder.created_at >= start_date,
+        OutsourcingOrder.created_at <= end_date
     ).all()
 
     # 按供应商统计
@@ -259,7 +259,7 @@ def get_supplier_performance(
 
         stats = vendor_stats[vendor_id]
         stats["total_orders"] += 1
-        stats["total_amount"] += order.order_amount or Decimal("0")
+        stats["total_amount"] += order.total_amount or Decimal("0")
 
         # 检查交付情况
         from app.models.outsourcing import OutsourcingDelivery
@@ -342,7 +342,7 @@ def get_executive_dashboard(
 
     # 销售统计（本月）
     month_contracts = db.query(Contract).filter(
-        func.date(Contract.signed_date) >= month_start,
+        func.date(Contract.signing_date) >= month_start,
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).all()
     month_contract_amount = sum([float(c.contract_amount or 0) for c in month_contracts])
@@ -353,7 +353,7 @@ def get_executive_dashboard(
 
     # 合同统计
     total_contracts = db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
-    total_contract_amount = db.query(func.sum(Contract.contract_amount)).filter(
+    total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).scalar() or 0
 

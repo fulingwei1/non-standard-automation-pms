@@ -53,8 +53,8 @@ class DataSyncService:
             updated_fields.append("contract_amount")
 
         # 同步合同日期
-        if contract.signed_date and contract.signed_date != project.contract_date:
-            project.contract_date = contract.signed_date
+        if contract.signing_date and contract.signing_date != project.contract_date:
+            project.contract_date = contract.signing_date
             updated_fields.append("contract_date")
 
         # 同步交期（如果有）
@@ -214,7 +214,7 @@ class DataSyncService:
                 "project_id": contract.project_id,
                 "synced": True,
                 "amount_synced": contract.contract_amount == project.contract_amount,
-                "date_synced": contract.signed_date == project.contract_date,
+                "date_synced": contract.signing_date == project.contract_date,
             }
 
         return {"success": False, "message": "请提供 project_id 或 contract_id"}

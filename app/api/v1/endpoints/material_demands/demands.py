@@ -24,7 +24,7 @@ from app.schemas.common import PaginatedResponse
 router = APIRouter()
 
 
-@router.get("/material-demands", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+@router.get("/", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_material_demands(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -127,7 +127,7 @@ def read_material_demands(
     )
 
 
-@router.get("/material-demands/vs-stock", response_model=List[dict], status_code=status.HTTP_200_OK)
+@router.get("/vs-stock", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_material_demands_vs_stock(
     db: Session = Depends(deps.get_db),
     project_ids: Optional[str] = Query(None, description="项目ID列表（逗号分隔）"),

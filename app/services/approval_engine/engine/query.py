@@ -35,6 +35,7 @@ class ApprovalQueryMixin:
         user_id: int,
         page: int = 1,
         page_size: int = 20,
+        **kwargs,
     ) -> Dict[str, Any]:
         """获取用户待审批的任务"""
         query = (
@@ -46,17 +47,14 @@ class ApprovalQueryMixin:
             .order_by(ApprovalTask.created_at.desc())
         )
 
-        pagination = get_pagination_params(page=page, page_size=page_size)
-        total = query.count()
-        query = apply_pagination(query, pagination.offset, pagination.limit)
-        tasks = query.all()
+        entity_type = kwargs.get("entity_type")
+        if entity_type:
+            query = query.join(ApprovalTask.instance).filter(
+                ApprovalInstance.entity_type == entity_type
+            )
 
-        return {
-            "total": total,
-            "page": pagination.page,
-            "page_size": pagination.page_size,
-            "items": tasks,
-        }
+        tasks = query.all()
+        return tasks
 
     def get_initiated_instances(
         self: ApprovalEngineCore,

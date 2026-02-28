@@ -141,19 +141,21 @@ def get_cost_benchmark(
     ).first()
 
     # 毛利率分布
+    from sqlalchemy import case as sa_case
+    margin_range = sa_case(
+        (QuoteVersion.gross_margin < 10, "0-10%"),
+        (QuoteVersion.gross_margin < 20, "10-20%"),
+        (QuoteVersion.gross_margin < 30, "20-30%"),
+        else_="30%+"
+    ).label("range")
     distribution = db.query(
-        func.case(
-            (QuoteVersion.gross_margin < 10, "0-10%"),
-            (QuoteVersion.gross_margin < 20, "10-20%"),
-            (QuoteVersion.gross_margin < 30, "20-30%"),
-            else_="30%+"
-        ).label("range"),
+        margin_range,
         func.count(Quote.id).label("count")
     ).join(
         QuoteVersion, Quote.current_version_id == QuoteVersion.id
     ).filter(
         Quote.created_at >= ninety_days_ago
-    ).group_by("range").all()
+    ).group_by(margin_range).all()
 
     return ResponseModel(
         code=200,

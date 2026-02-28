@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-报表模板 - 自动生成
-从 report_center.py 拆分
-"""
-
-# -*- coding: utf-8 -*-
-"""
-报表中心 API endpoints
-核心功能：多角色视角报表、智能生成、导出分享
+报表模板
 """
 
 from datetime import datetime
@@ -31,17 +24,11 @@ from app.schemas.report_center import (
     ReportTemplateListResponse,
     ReportTemplateResponse,
 )
-
-router = APIRouter()
-
-
-
-from fastapi import APIRouter
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter(
-    prefix="/report-center/templates",
+    prefix="/templates",
     tags=["templates"]
 )
 
@@ -49,7 +36,7 @@ router = APIRouter(
 
 # ==================== 报表模板 ====================
 
-@router.get("/templates", response_model=ReportTemplateListResponse, status_code=status.HTTP_200_OK)
+@router.get("", response_model=ReportTemplateListResponse, status_code=status.HTTP_200_OK)
 def get_report_templates(
     *,
     db: Session = Depends(deps.get_db),
@@ -66,7 +53,7 @@ def get_report_templates(
         query = query.filter(ReportTemplate.report_type == report_type)
 
     total = query.count()
-    templates = query.order_by(desc(ReportTemplate.use_count), apply_pagination(desc(ReportTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for template in templates:
@@ -92,7 +79,7 @@ def get_report_templates(
     )
 
 
-@router.post("/templates/apply", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/apply", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED)
 def apply_report_template(
     *,
     db: Session = Depends(deps.get_db),

@@ -168,12 +168,20 @@ class MeetingRhythmLevel(str, Enum):
     BI_WEEKLY = "BI_WEEKLY"
     MONTHLY = "MONTHLY"
     QUARTERLY = "QUARTERLY"
+    STRATEGIC = "STRATEGIC"
+    OPERATIONAL = "OPERATIONAL"
+    OPERATION = "OPERATION"
+    TASK = "TASK"
 
 
 class MeetingCycleType(str, Enum):
     PLANNED = "PLANNED"
     AD_HOC = "AD_HOC"
     RECURRING = "RECURRING"
+    DAILY = "DAILY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
 
 
 class ActionItemStatus(str, Enum):
@@ -188,6 +196,9 @@ class RhythmHealthStatus(str, Enum):
     HEALTHY = "HEALTHY"
     AT_RISK = "AT_RISK"
     UNHEALTHY = "UNHEALTHY"
+    GREEN = "GREEN"
+    YELLOW = "YELLOW"
+    RED = "RED"
 
 
 class DataScopeEnum(str, Enum):

@@ -6,13 +6,13 @@ export const purchaseApi = {
   // 顶层便捷方法
   list: (params) => api.get("/purchase-orders/", { params }),
   get: (id) => api.get(`/purchase-orders/${id}`),
-  create: (data) => api.post("/purchase-orders", data),
+  create: (data) => api.post("/purchase-orders/", data),
   update: (id, data) => api.put(`/purchase-orders/${id}`, data),
 
   orders: {
     list: (params) => api.get("/purchase-orders/", { params }),
     get: (id) => api.get(`/purchase-orders/${id}`),
-    create: (data) => api.post("/purchase-orders", data),
+    create: (data) => api.post("/purchase-orders/", data),
     update: (id, data) => api.put(`/purchase-orders/${id}`, data),
     submit: (id) => api.put(`/purchase-orders/${id}/submit`),
     approve: (id, data) => api.put(`/purchase-orders/${id}/approve`, data),
@@ -90,7 +90,7 @@ export const outsourcingApi = {
     get: (id) => api.get(`/outsourcing-orders/${id}`),
     create: (data) => api.post("/outsourcing-orders", data),
     update: (id, data) => api.put(`/outsourcing-orders/${id}`, data),
-    submit: (id) => api.put(`/outsourcing-orders/${id}/submit`),
+    submit: (id) => api.post("/outsourcing-orders/workflow/submit", { order_id: id }),
     approve: (id, data) => api.put(`/outsourcing-orders/${id}/approve`, data),
     getItems: (id) => api.get(`/outsourcing-orders/${id}/items`),
     addItem: (id, data) => api.post(`/outsourcing-orders/${id}/items`, data),
@@ -107,15 +107,15 @@ export const outsourcingApi = {
     getProgress: (id) => api.get(`/outsourcing-orders/${id}/progress-logs`),
   },
   deliveries: {
-    list: (orderId) => api.get(`/outsourcing-orders/${orderId}/deliveries`),
+    list: (orderId) => api.get("/outsourcing-deliveries", { params: { order_id: orderId, page_size: 1000 } }),
     create: (orderId, data) =>
-      api.post(`/outsourcing-orders/${orderId}/deliveries`, data),
+      api.post("/outsourcing-deliveries", { ...data, order_id: orderId }),
     get: (id) => api.get(`/outsourcing-deliveries/${id}`),
   },
   inspections: {
-    list: (orderId) => api.get(`/outsourcing-orders/${orderId}/inspections`),
+    list: (orderId) => api.get("/outsourcing-inspections", { params: { order_id: orderId, page_size: 1000 } }),
     create: (orderId, data) =>
-      api.post(`/outsourcing-orders/${orderId}/inspections`, data),
+      api.post("/outsourcing-inspections", { ...data, order_id: orderId }),
     get: (id) => api.get(`/outsourcing-inspections/${id}`),
   },
   progress: {
@@ -124,9 +124,9 @@ export const outsourcingApi = {
       api.post(`/outsourcing-orders/${orderId}/progress`, data),
   },
   payments: {
-    list: (orderId) => api.get(`/outsourcing-orders/${orderId}/payments`),
+    list: (orderId) => api.get("/outsourcing-payments", { params: { order_id: orderId, page_size: 1000 } }),
     create: (orderId, data) =>
-      api.post(`/outsourcing-orders/${orderId}/payments`, data),
+      api.post("/outsourcing-payments", { ...data, order_id: orderId }),
     update: (id, data) => api.put(`/outsourcing-payments/${id}`, data),
   },
 };

@@ -23,7 +23,7 @@ from app.services.report_framework.engine import (
 )
 
 router = APIRouter(
-    prefix="/management-rhythm/reports-unified",
+    prefix="/reports-unified",
     tags=["meeting-reports-unified"],
 )
 

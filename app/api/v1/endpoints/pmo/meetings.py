@@ -73,7 +73,7 @@ def read_meetings(
     query = apply_keyword_filter(query, PmoMeeting, keyword, ["meeting_name"])
 
     total = query.count()
-    meetings = query.order_by(desc(PmoMeeting.meeting_date), apply_pagination(desc(PmoMeeting.created_at)), pagination.offset, pagination.limit).all()
+    meetings = apply_pagination(query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for meeting in meetings:

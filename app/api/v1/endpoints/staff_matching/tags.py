@@ -38,7 +38,7 @@ def list_tags(
         query = query.filter(HrTagDict.is_active == is_active)
     query = apply_keyword_filter(query, HrTagDict, keyword, ["tag_code", "tag_name"])
 
-    tags = query.order_by(HrTagDict.tag_type, apply_pagination(HrTagDict.sort_order), pagination.offset, pagination.limit).all()
+    tags = apply_pagination(query.order_by(HrTagDict.tag_type, HrTagDict.sort_order), pagination.offset, pagination.limit).all()
     return tags
 
 

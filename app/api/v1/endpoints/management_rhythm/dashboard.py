@@ -41,7 +41,7 @@ class ManagementRhythmDashboardEndpoint(BaseDashboardEndpoint):
         """初始化路由"""
         # 先创建router，不调用super().__init__()，因为需要自定义路由路径
         self.router = APIRouter(
-            prefix="/management-rhythm/dashboard",
+            prefix="/dashboard",
             tags=["dashboard"]
         )
         self._register_custom_routes()
@@ -58,7 +58,7 @@ class ManagementRhythmDashboardEndpoint(BaseDashboardEndpoint):
         
         # 主dashboard端点（保持原有路径）
         self.router.add_api_route(
-            "/management-rhythm/dashboard",
+            "/",
             dashboard_endpoint,
             methods=["GET"],
             summary="获取节律仪表盘数据",

@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("/bottlenecks")
-async def identify_bottlenecks(
+def identify_bottlenecks(
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
@@ -121,7 +121,7 @@ async def identify_bottlenecks(
     low_efficiency_workers = (
         db.query(
             Worker.id.label('worker_id'),
-            Worker.worker_code,
+            Worker.worker_no,
             Worker.worker_name,
             func.count(WorkerEfficiencyRecord.id).label('record_count'),
             func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
@@ -130,7 +130,7 @@ async def identify_bottlenecks(
         )
         .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
         .filter(and_(*worker_filter))
-        .group_by(Worker.id, Worker.worker_code, Worker.worker_name)
+        .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
         .having(func.avg(WorkerEfficiencyRecord.efficiency) < 80)
         .order_by(func.avg(WorkerEfficiencyRecord.efficiency).asc())
         .limit(limit)
@@ -176,7 +176,7 @@ async def identify_bottlenecks(
                 {
                     "type": "工人",
                     "worker_id": row.worker_id,
-                    "worker_code": row.worker_code,
+                    "worker_no": row.worker_no,
                     "worker_name": row.worker_name,
                     "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                     "total_hours": float(row.total_hours) if row.total_hours else 0,
@@ -269,7 +269,7 @@ async def get_capacity_utilization(
         query = (
             db.query(
                 Worker.id,
-                Worker.worker_code,
+                Worker.worker_no,
                 Worker.worker_name,
                 func.avg(WorkerEfficiencyRecord.utilization_rate).label('avg_utilization'),
                 func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
@@ -278,7 +278,7 @@ async def get_capacity_utilization(
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*filters))
-            .group_by(Worker.id, Worker.worker_code, Worker.worker_name)
+            .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
         )
         
         total = query.count()
@@ -287,7 +287,7 @@ async def get_capacity_utilization(
         items = [
             {
                 "id": row.id,
-                "code": row.worker_code,
+                "code": row.worker_no,
                 "name": row.worker_name,
                 "utilization_rate": float(row.avg_utilization) if row.avg_utilization else 0,
                 "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,

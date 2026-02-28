@@ -52,7 +52,7 @@ def sign_contract(
     """
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
-    contract.signed_date = sign_request.signed_date
+    contract.signing_date = sign_request.signed_date
     contract.status = "SIGNED"
 
     # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
@@ -156,7 +156,7 @@ def create_contract_project(
         contract_no=contract.contract_code,
         customer_contract_no=getattr(contract, "customer_contract_no", None),
         contract_amount=contract.contract_amount,
-        contract_date=contract.signed_date,
+        contract_date=contract.signing_date,
         pm_id=project_request.pm_id,
         planned_start_date=project_request.planned_start_date,
         planned_end_date=project_request.planned_end_date,

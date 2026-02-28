@@ -172,7 +172,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
             contracts = (
                 db.query(Contract)
                 .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
-                .order_by(desc(Contract.signed_date))
+                .order_by(desc(Contract.signing_date))
                 .limit(limit)
                 .all()
             )
@@ -204,7 +204,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
                     "projectName": contract.project.project_name if contract.project else None,
                     "customerName": contract.customer.customer_name if contract.customer else None,
                     "contractAmount": float(contract.contract_amount) if contract.contract_amount else 0,
-                    "signedDate": contract.signed_date.strftime("%Y-%m-%d") if contract.signed_date else None,
+                    "signedDate": contract.signing_date.strftime("%Y-%m-%d") if contract.signing_date else None,
                     "paidAmount": float(total_actual),
                     "paymentProgress": float(payment_progress),
                     "invoiceCount": invoice_count,
@@ -311,8 +311,8 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
             new_contracts = (
                 db.query(Contract)
                 .filter(
-                    Contract.signed_date >= month_start,
-                    Contract.signed_date <= month_end,
+                    Contract.signing_date >= month_start,
+                    Contract.signing_date <= month_end,
                     Contract.status.in_(["SIGNED", "EXECUTING"])
                 )
                 .count()

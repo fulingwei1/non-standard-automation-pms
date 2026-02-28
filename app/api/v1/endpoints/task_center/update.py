@@ -22,7 +22,7 @@ from .detail import get_task_detail
 from .batch_helpers import log_task_operation
 
 router = APIRouter(
-    prefix="/task-center/update",
+    prefix="",
     tags=["update"],
 )
 

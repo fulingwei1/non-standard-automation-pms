@@ -25,7 +25,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 router = APIRouter()
 
 
-@router.get("/culture-wall/config", response_model=CultureWallConfigResponse)
+@router.get("/config", response_model=CultureWallConfigResponse)
 def get_culture_wall_config(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
@@ -81,7 +81,7 @@ def get_culture_wall_config(
     return config
 
 
-@router.get("/culture-wall/config/list", response_model=PaginatedResponse)
+@router.get("/config/list", response_model=PaginatedResponse)
 def list_culture_wall_configs(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -115,7 +115,7 @@ def list_culture_wall_configs(
     )
 
 
-@router.post("/culture-wall/config", response_model=CultureWallConfigResponse)
+@router.post("/config", response_model=CultureWallConfigResponse)
 def create_culture_wall_config(
     config_data: CultureWallConfigCreate,
     db: Session = Depends(deps.get_db),
@@ -156,7 +156,7 @@ def create_culture_wall_config(
 
 
 @router.put(
-    "/culture-wall/config/{config_id}", response_model=CultureWallConfigResponse
+    "/config/{config_id}", response_model=CultureWallConfigResponse
 )
 def update_culture_wall_config(
     config_id: int,
@@ -198,7 +198,7 @@ def update_culture_wall_config(
     return config
 
 
-@router.delete("/culture-wall/config/{config_id}")
+@router.delete("/config/{config_id}")
 def delete_culture_wall_config(
     config_id: int,
     db: Session = Depends(deps.get_db),

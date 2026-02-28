@@ -13,13 +13,12 @@ export const APPROVAL_TABS = {
 
 /**
  * 标签页对应的 API 端点
- * 注意：approvals 路由在 api.py 中没有 prefix，所以路径是 /pending/xxx 而不是 /approvals/pending/xxx
  */
 const TAB_ENDPOINTS = {
-  [APPROVAL_TABS.PENDING]: '/pending/mine',
-  [APPROVAL_TABS.INITIATED]: '/pending/initiated',
-  [APPROVAL_TABS.CC]: '/pending/cc',
-  [APPROVAL_TABS.PROCESSED]: '/pending/processed',
+  [APPROVAL_TABS.PENDING]: '/approvals/pending/mine',
+  [APPROVAL_TABS.INITIATED]: '/approvals/pending/initiated',
+  [APPROVAL_TABS.CC]: '/approvals/pending/cc',
+  [APPROVAL_TABS.PROCESSED]: '/approvals/pending/processed',
 };
 
 /**
@@ -69,7 +68,7 @@ export function useApprovalCenter() {
    */
   const loadCounts = useCallback(async () => {
     try {
-      const response = await api.get('/pending/counts');
+      const response = await api.get('/approvals/pending/counts');
       const data = response.data?.data || response.data || {};
       setCounts({
         pending: data.pending || 0,
@@ -168,7 +167,7 @@ export function useApprovalCenter() {
    */
   const approve = useCallback(async (taskId, comment = '') => {
     try {
-      await api.post(`/tasks/${taskId}/approve`, {
+      await api.post(`/approvals/tasks/${taskId}/approve`, {
         comment: comment || '同意',
       });
       // 刷新数据
@@ -185,7 +184,7 @@ export function useApprovalCenter() {
    */
   const reject = useCallback(async (taskId, comment = '') => {
     try {
-      await api.post(`/tasks/${taskId}/reject`, {
+      await api.post(`/approvals/tasks/${taskId}/reject`, {
         comment: comment || '驳回',
       });
       // 刷新数据

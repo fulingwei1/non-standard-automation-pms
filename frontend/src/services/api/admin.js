@@ -259,14 +259,14 @@ export const dataImportExportApi = {
 
 export const reportCenterApi = {
   // 报表配置
-  getRoles: () => api.get("/reports/roles"),
-  getTypes: () => api.get("/reports/types"),
-  getRoleReportMatrix: () => api.get("/reports/role-report-matrix"),
+  getRoles: () => api.get("/report-center/configs/roles"),
+  getTypes: () => api.get("/report-center/configs/types"),
+  getRoleReportMatrix: () => api.get("/report-center/configs/role-report-matrix"),
   // 报表生成
   generate: (data) => api.post("/reports/generate", data),
   preview: (reportType, params) =>
-    api.get(`/reports/preview/${reportType}`, { params }),
-  previewByTemplate: (params) => api.get("/reports/preview", { params }),
+    api.get(`/reports/${reportType}/preview`, { params }),
+  previewByTemplate: (params) => api.get(`/reports/${params.report_code}/preview`, { params }),
   compareRoles: (data) => api.post("/reports/compare-roles", data),
   // 报表导出
   exportReport: (data) => api.post("/reports/export", data),
@@ -275,30 +275,30 @@ export const reportCenterApi = {
   download: (reportId) =>
     api.get(`/reports/download/${reportId}`, { responseType: "blob" }),
   // 报表模板
-  getTemplates: (params) => api.get("/reports/templates", { params }),
-  createTemplate: (data) => api.post("/reports/templates", data),
-  toggleTemplate: (id) => api.post(`/reports/templates/${id}/toggle`),
-  deleteTemplate: (id) => api.delete(`/reports/templates/${id}`),
-  applyTemplate: (data) => api.post("/reports/templates/apply", data),
+  getTemplates: (params) => api.get("/report-center/templates", { params }),
+  createTemplate: (data) => api.post("/report-center/templates", data),
+  toggleTemplate: (id) => api.post(`/report-center/templates/${id}/toggle`),
+  deleteTemplate: (id) => api.delete(`/report-center/templates/${id}`),
+  applyTemplate: (data) => api.post("/report-center/templates/apply", data),
   // 报表归档
   getArchives: (params) => api.get("/reports/archives", { params }),
   downloadArchive: (id) =>
     api.get(`/reports/archives/${id}/download`, { responseType: "blob" }),
   // BI 报表
-  getDeliveryRate: (params) => api.get("/reports/delivery-rate", { params }),
-  getHealthDistribution: () => api.get("/reports/health-distribution"),
-  getUtilization: (params) => api.get("/reports/utilization", { params }),
+  getDeliveryRate: (params) => api.get("/report-center/bi/delivery-rate", { params }),
+  getHealthDistribution: () => api.get("/report-center/bi/health-distribution"),
+  getUtilization: (params) => api.get("/report-center/bi/utilization", { params }),
   getSupplierPerformance: (params) =>
-    api.get("/reports/supplier-performance", { params }),
-  getExecutiveDashboard: () => api.get("/reports/dashboard/executive"),
+    api.get("/report-center/bi/supplier-performance", { params }),
+  getExecutiveDashboard: () => api.get("/report-center/bi/dashboard/executive"),
   // 研发费用报表
   getRdAuxiliaryLedger: (params) =>
-    api.get("/reports/rd-auxiliary-ledger", { params }),
+    api.get("/report-center/rd-expense/rd-auxiliary-ledger", { params }),
   getRdDeductionDetail: (params) =>
-    api.get("/reports/rd-deduction-detail", { params }),
-  getRdHighTech: (params) => api.get("/reports/rd-high-tech", { params }),
-  getRdIntensity: (params) => api.get("/reports/rd-intensity", { params }),
-  getRdPersonnel: (params) => api.get("/reports/rd-personnel", { params }),
+    api.get("/report-center/rd-expense/rd-deduction-detail", { params }),
+  getRdHighTech: (params) => api.get("/report-center/rd-expense/rd-high-tech", { params }),
+  getRdIntensity: (params) => api.get("/report-center/rd-expense/rd-intensity", { params }),
+  getRdPersonnel: (params) => api.get("/report-center/rd-expense/rd-personnel", { params }),
   exportRdReport: (params) =>
-    api.get("/reports/rd-export", { params, responseType: "blob" }),
+    api.get("/report-center/rd-expense/rd-export", { params, responseType: "blob" }),
 };

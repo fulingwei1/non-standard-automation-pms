@@ -52,4 +52,4 @@ export {
 } from '@/lib/constants/finance';
 
 // 默认导出
-export { default as paymentManagementConstants } from '@/lib/constants/finance';
+export * as paymentManagementConstants from '@/lib/constants/finance';

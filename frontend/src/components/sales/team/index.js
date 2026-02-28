@@ -5,7 +5,6 @@
 
 // ==================== 常量配置 ====================
 export {
-  formatDateInput,
   getDefaultDateRange,
   getWeekDateRange,
   QUICK_RANGE_PRESETS,

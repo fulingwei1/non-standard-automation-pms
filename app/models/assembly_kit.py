@@ -275,6 +275,7 @@ class ShortageDetail(Base, TimestampMixin):
     in_transit_qty = Column(Numeric(12, 4), default=0, comment='在途数量')
     available_qty = Column(Numeric(12, 4), default=0, comment='可用数量')
     shortage_qty = Column(Numeric(12, 4), default=0, comment='缺料数量')
+    shortage_rate = Column(Numeric(8, 4), default=0, comment='缺料比例(%)')
 
     # 金额
     unit_price = Column(Numeric(12, 4), default=0, comment='单价')

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models import (
     AssemblyStage,
     Machine,
@@ -84,7 +85,7 @@ async def get_shortage_alerts(
     shortages = apply_pagination(query.order_by(
         ShortageDetail.alert_level,
         ShortageDetail.is_blocking.desc(),
-        ShortageDetail.shortage_rate.desc()
+        ShortageDetail.shortage_qty.desc()
     ), pagination.offset, pagination.limit).all()
 
     # 构建预警项

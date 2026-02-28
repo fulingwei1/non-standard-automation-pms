@@ -160,14 +160,14 @@ class CapacityDashboardEndpoint(BaseDashboardEndpoint):
         top_workers = (
             db.query(
                 Worker.id,
-                Worker.worker_code,
+                Worker.worker_no,
                 Worker.worker_name,
                 func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
                 func.sum(WorkerEfficiencyRecord.completed_qty).label("total_completed"),
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*efficiency_filters))
-            .group_by(Worker.id, Worker.worker_code, Worker.worker_name)
+            .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
             .order_by(func.avg(WorkerEfficiencyRecord.efficiency).desc())
             .limit(5)
             .all()
@@ -256,7 +256,7 @@ class CapacityDashboardEndpoint(BaseDashboardEndpoint):
             "top_workers": [
                 {
                     "id": row.id,
-                    "code": row.worker_code,
+                    "code": row.worker_no,
                     "name": row.worker_name,
                     "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                     "total_completed": row.total_completed or 0,

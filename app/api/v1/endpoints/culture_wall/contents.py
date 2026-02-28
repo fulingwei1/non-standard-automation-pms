@@ -26,7 +26,7 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/culture-wall/contents", response_model=PaginatedResponse)
+@router.get("/contents", response_model=PaginatedResponse)
 def read_culture_wall_contents(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -49,7 +49,7 @@ def read_culture_wall_contents(
     query = apply_keyword_filter(query, CultureWallContent, keyword, ["title", "content", "summary"])
 
     total = query.count()
-    contents = query.order_by(desc(CultureWallContent.priority), apply_pagination(desc(CultureWallContent.created_at)), pagination.offset, pagination.limit).all()
+    contents = apply_pagination(query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for content in contents:
@@ -87,7 +87,7 @@ def read_culture_wall_contents(
     )
 
 
-@router.post("/culture-wall/contents", response_model=CultureWallContentResponse)
+@router.post("/contents", response_model=CultureWallContentResponse)
 def create_culture_wall_content(
     content_data: CultureWallContentCreate,
     db: Session = Depends(deps.get_db),
@@ -146,7 +146,7 @@ def create_culture_wall_content(
     )
 
 
-@router.get("/culture-wall/contents/{content_id}", response_model=CultureWallContentResponse)
+@router.get("/contents/{content_id}", response_model=CultureWallContentResponse)
 def read_culture_wall_content(
     content_id: int,
     db: Session = Depends(deps.get_db),

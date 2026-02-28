@@ -17,31 +17,31 @@ export const financialCostApi = {
 };
 
 export const projectWorkspaceApi = {
-  getWorkspace: (projectId) => api.get(`/projects/${projectId}/workspace`),
-  getBonuses: (projectId) => api.get(`/projects/${projectId}/bonuses`),
+  getWorkspace: (projectId) => api.get(`/project-workspace/projects/${projectId}/workspace`),
+  getBonuses: (projectId) => api.get(`/project-workspace/projects/${projectId}/bonuses`),
   getMeetings: (projectId, params) =>
-    api.get(`/projects/${projectId}/meetings`, { params }),
+    api.get(`/project-workspace/projects/${projectId}/meetings`, { params }),
   linkMeeting: (projectId, meetingId, isPrimary) =>
-    api.post(`/projects/${projectId}/meetings/${meetingId}/link`, null, {
+    api.post(`/project-workspace/projects/${projectId}/meetings/${meetingId}/link`, null, {
       params: { is_primary: isPrimary },
     }),
   getIssues: (projectId, params) =>
-    api.get(`/projects/${projectId}/issues`, { params }),
+    api.get(`/project-workspace/projects/${projectId}/issues`, { params }),
   getSolutions: (projectId, params) =>
-    api.get(`/projects/${projectId}/solutions`, { params }),
+    api.get(`/project-workspace/projects/${projectId}/solutions`, { params }),
 };
 
 export const projectContributionApi = {
   getContributions: (projectId, params) =>
-    api.get(`/projects/${projectId}/contributions`, { params }),
+    api.get(`/project-contributions/projects/${projectId}/contributions`, { params }),
   rateMember: (projectId, userId, data) =>
-    api.post(`/projects/${projectId}/contributions/${userId}/rate`, data),
+    api.post(`/project-contributions/projects/${projectId}/contributions/${userId}/rate`, data),
   getReport: (projectId, params) =>
-    api.get(`/projects/${projectId}/contributions/report`, { params }),
+    api.get(`/project-contributions/projects/${projectId}/contributions/report`, { params }),
   getUserContributions: (userId, params) =>
-    api.get(`/users/${userId}/project-contributions`, { params }),
+    api.get(`/project-contributions/users/${userId}/project-contributions`, { params }),
   calculate: (projectId, period) =>
-    api.post(`/projects/${projectId}/contributions/calculate`, null, {
+    api.post(`/project-contributions/projects/${projectId}/contributions/calculate`, null, {
       params: { period },
     }),
 };
@@ -55,7 +55,7 @@ export const projectApi = {
   update: (id, data) => api.put(`/projects/${id}`, data),
   getMachines: (id) => api.get(`/projects/${id}/machines`),
   getInProductionSummary: (params) =>
-    api.get("/projects/in-production/summary", { params }),
+    api.get("/projects/in-production-summary", { params }),
   // Sprint 3 & 4: 模板和阶段门校验相关API
   recommendTemplates: (params) =>
     api.get("/projects/templates/recommend", { params }),
@@ -67,7 +67,7 @@ export const projectApi = {
     }),
   getGateCheckResult: (id, targetStage) =>
     api.get(`/projects/${id}/gate-check/${targetStage}`),
-  advanceStage: (id, data) => api.post(`/projects/${id}/advance-stage`, data),
+  advanceStage: (id, data) => api.post(`/projects/${id}/stage-advance`, data),
   // Sprint 5.3: 缓存管理API
   getCacheStats: () => api.get("/projects/cache/stats"),
   clearCache: (pattern) =>
@@ -77,8 +77,8 @@ export const projectApi = {
   resetCacheStats: () => api.post("/projects/cache/reset-stats"),
   // Sprint 3.3: 项目详情页增强
   getStatusLogs: (id, params) =>
-    api.get(`/projects/${id}/status-logs`, { params }),
-  getHealthDetails: (id) => api.get(`/projects/${id}/health-details`),
+    api.get(`/projects/${id}/status-history`, { params }),
+  getHealthDetails: (id) => api.get(`/projects/${id}/health/details`),
   // Sprint 3.2: 项目经理统计
   getStats: (params) => api.get("/projects/stats", { params }),
 };

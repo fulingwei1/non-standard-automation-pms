@@ -73,6 +73,10 @@ router = APIRouter()
 # 聚合所有子路由（保持原有路由路径）
 # 注意：路由的顺序很重要，更具体的路由应该放在前面
 
+# 看板路由（静态路径必须在/{project_id}之前）
+from .project_board import router as project_board_router
+router.include_router(project_board_router, tags=["projects-board"])
+
 # 模板路由（放在最前面，避免与/{project_id}冲突）
 router.include_router(templates.router, tags=["projects-templates"])
 
@@ -232,3 +236,4 @@ router.include_router(
     prefix="/schedule",
     tags=["projects-schedule-overview"],
 )
+

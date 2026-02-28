@@ -24,7 +24,7 @@ import { api } from "./client.js";
  * @returns {Promise} 审批实例信息
  */
 export const submitApproval = (data) => {
-  return api.post("/approvals/submit", data);
+  return api.post("/approvals/instances/submit", data);
 };
 
 /**
@@ -36,7 +36,7 @@ export const submitApproval = (data) => {
  * @returns {Promise} 审批结果
  */
 export const approveApproval = (instance_id, comment) => {
-  return api.post(`/approvals/${instance_id}/approve`, {
+  return api.post(`/approvals/tasks/${instance_id}/approve`, {
     decision: "APPROVE",
     comment: comment
   });
@@ -51,7 +51,7 @@ export const approveApproval = (instance_id, comment) => {
  * @returns {Promise} 审批结果
  */
 export const rejectApproval = (instance_id, comment) => {
-  return api.post(`/approvals/${instance_id}/reject`, {
+  return api.post(`/approvals/tasks/${instance_id}/reject`, {
     decision: "REJECT",
     comment: comment
   });
@@ -67,8 +67,8 @@ export const rejectApproval = (instance_id, comment) => {
  * @returns {Promise} 委托结果
  */
 export const delegateApproval = (instance_id, delegate_to_id, comment) => {
-  return api.post(`/approvals/${instance_id}/delegate`, {
-    decision: "DELEGATE",
+  return api.post(`/approvals/delegates`, {
+    instance_id: instance_id,
     delegate_to_id: delegate_to_id,
     comment: comment
   });
@@ -83,7 +83,7 @@ export const delegateApproval = (instance_id, delegate_to_id, comment) => {
  * @returns {Promise} 撤回结果
  */
 export const withdrawApproval = (instance_id, comment) => {
-  return api.post(`/approvals/${instance_id}/withdraw`, {
+  return api.post(`/approvals/instances/${instance_id}/withdraw`, {
     decision: "WITHDRAW",
     comment: comment
   });
@@ -97,7 +97,7 @@ export const withdrawApproval = (instance_id, comment) => {
  * @returns {Promise} 审批历史记录
  */
 export const getApprovalHistory = (instance_id) => {
-  return api.get(`/approvals/${instance_id}/history`);
+  return api.get(`/approvals/tasks/instances/${instance_id}/comments`);
 };
 
 /**
@@ -108,7 +108,7 @@ export const getApprovalHistory = (instance_id) => {
  * @returns {Promise} 审批实例详情
  */
 export const getApprovalDetail = (instance_id) => {
-  return api.get(`/approvals/${instance_id}/detail`);
+  return api.get(`/approvals/instances/${instance_id}`);
 };
 
 /**
@@ -117,7 +117,7 @@ export const getApprovalDetail = (instance_id) => {
  * @returns {Promise} 待审批任务列表
  */
 export const getMyApprovalTasks = () => {
-  return api.get("/approvals/my-tasks");
+  return api.get("/approvals/pending/mine");
 };
 
 /**

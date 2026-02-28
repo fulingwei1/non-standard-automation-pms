@@ -32,6 +32,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     machine_id = Column(Integer, ForeignKey('machines.id'), comment='设备ID')
 
     # 订单信息
+    order_date = Column(Date, comment='下单日期')
     order_type = Column(String(20), nullable=False, comment='订单类型')
     order_title = Column(String(200), nullable=False, comment='订单标题')
     order_description = Column(Text, comment='订单说明')

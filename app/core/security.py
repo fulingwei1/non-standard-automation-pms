@@ -77,4 +77,10 @@ __all__ = [
     "has_sales_approval_access",
     "require_sales_approval_permission",
     "check_sales_approval_permission",
+    "is_admin",
 ]
+
+
+def is_admin(user) -> bool:
+    """检查用户是否为管理员"""
+    return getattr(user, "is_superuser", False) or is_system_admin(user)

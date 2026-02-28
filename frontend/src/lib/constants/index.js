@@ -1,42 +1,14 @@
 /**
  * Constants Index - 统一常量导出入口
- * 所有常量文件统一从此处导出
+ * 
+ * 注意：由于各模块存在大量同名导出（如 getStatusColor, TABLE_CONFIG 等），
+ * 不能使用 export * 全量导出。各页面应直接从具体模块文件导入。
+ * 
+ * 此 index 仅导出通用常量（common.js），供历史代码兼容使用。
  */
 
-// 通用常量
+// 通用常量（common.js 是基础）
 export * from './common';
 
-// 按模块导出
-export * from './project';
-export * from './projectDetail';
-export * from './projectReview';
-export * from './sales';
-export * from './salesTeam';
-export * from './quote';
-export * from './opportunityBoard';
-export * from './procurement';
-export * from './procurementAnalysis';
-export * from './finance';
-export * from './hr';
-export * from './userManagement';
-export * from './service';
-export * from './serviceRecord';
-export * from './customer';
-export * from './customer360';
-export * from './material';
-export * from './materialReadiness';
-export * from './materialAnalysis';
-export * from './production';
-export * from './ecn';
-export * from './issue';
-export * from './leadManagement';
-export * from './leadAssessment';
-export * from './approval';
-export * from './contractManagement';
-export * from './installationDispatch';
-export * from './meetingManagement';
-export * from './workerWorkstation';
-export * from './strategy';
-export * from './alert';
-export * from './alertCenter';
-export * from './knowledge';
+// projectDetail 中的 PROJECT_STATUS 更完整
+export { PROJECT_STATUS } from './projectDetail';

@@ -4,87 +4,52 @@ import { api } from "./client.js";
 
 export const projectReviewApi = {
   // 复盘报告
-  list: (params) => api.get("/projects/project-reviews", { params }),
-  get: (id) => api.get(`/projects/project-reviews/${id}`),
-  create: (data) => api.post("/projects/project-reviews", data),
-  update: (id, data) => api.put(`/projects/project-reviews/${id}`, data),
-  delete: (id) => api.delete(`/projects/project-reviews/${id}`),
-  publish: (id) => api.put(`/projects/project-reviews/${id}/publish`),
-  archive: (id) => api.put(`/projects/project-reviews/${id}/archive`),
+  list: (params) => api.get("/project-reviews", { params }),
+  get: (id) => api.get(`/project-reviews/${id}`),
+  create: (data) => api.post("/project-reviews", data),
+  update: (id, data) => api.put(`/project-reviews/${id}`, data),
+  delete: (id) => api.delete(`/project-reviews/${id}`),
+  publish: (id) => api.post(`/projects/reviews/${id}/publish`),
 
   // 经验教训
   getLessons: (reviewId, params) =>
-    api.get(`/projects/project-reviews/${reviewId}/lessons`, { params }),
+    api.get("/project-reviews", { params: { review_id: reviewId, ...params } }),
   createLesson: (reviewId, data) =>
-    api.post(`/projects/project-reviews/${reviewId}/lessons`, data),
+    api.post("/project-reviews/extract", { review_id: reviewId, ...data }),
   getLesson: (lessonId) =>
-    api.get(`/projects/project-reviews/lessons/${lessonId}`),
+    api.get(`/project-reviews/${lessonId}`),
   updateLesson: (lessonId, data) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}`, data),
+    api.patch(`/project-reviews/${lessonId}`, data),
   deleteLesson: (lessonId) =>
-    api.delete(`/projects/project-reviews/lessons/${lessonId}`),
-  resolveLesson: (lessonId) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}/resolve`),
+    api.delete(`/project-reviews/${lessonId}`),
 
   // 最佳实践
   getBestPractices: (reviewId, params) =>
-    api.get(`/projects/project-reviews/${reviewId}/best-practices`, { params }),
+    api.get("/projects/best-practices", { params: { review_id: reviewId, ...params } }),
   createBestPractice: (reviewId, data) =>
-    api.post(`/projects/project-reviews/${reviewId}/best-practices`, data),
+    api.post("/projects/best-practices", { review_id: reviewId, ...data }),
   getBestPractice: (practiceId) =>
-    api.get(`/projects/project-reviews/best-practices/${practiceId}`),
+    api.get(`/projects/best-practices/${practiceId}`),
   updateBestPractice: (practiceId, data) =>
-    api.put(`/projects/project-reviews/best-practices/${practiceId}`, data),
+    api.put(`/projects/best-practices/${practiceId}`, data),
   deleteBestPractice: (practiceId) =>
-    api.delete(`/projects/project-reviews/best-practices/${practiceId}`),
-  validateBestPractice: (practiceId, data) =>
-    api.put(
-      `/projects/project-reviews/best-practices/${practiceId}/validate`,
-      data,
-    ),
-  reuseBestPractice: (practiceId, data) =>
-    api.post(
-      `/projects/project-reviews/best-practices/${practiceId}/reuse`,
-      data,
-    ),
+    api.delete(`/projects/best-practices/${practiceId}`),
 
   // 最佳实践库
   searchBestPractices: (params) =>
     api.get("/projects/best-practices", { params }),
-  getBestPracticeCategories: () =>
-    api.get("/projects/best-practices/categories"),
-  getBestPracticeStatistics: () =>
-    api.get("/projects/best-practices/statistics"),
 
   // 项目经验教训（从结项记录提取）
   getProjectLessons: (projectId) =>
-    api.get(`/projects/${projectId}/lessons-learned`),
+    api.get(`/projects/${projectId}/lessons`),
 
   // 经验教训高级管理
   searchLessonsLearned: (params) =>
-    api.get("/projects/lessons-learned", { params }),
-  getLessonsStatistics: (params) =>
-    api.get("/projects/lessons-learned/statistics", { params }),
-  getLessonCategories: () => api.get("/projects/lessons-learned/categories"),
-  updateLessonStatus: (lessonId, status) =>
-    api.put(`/projects/project-reviews/lessons/${lessonId}/status`, {
-      new_status: status,
-    }),
-  batchUpdateLessons: (lessonIds, updateData) =>
-    api.post("/projects/project-reviews/lessons/batch-update", {
-      lesson_ids: lessonIds,
-      update_data: updateData,
-    }),
+    api.get("/projects/lessons/search", { params }),
 
   // 最佳实践高级管理
-  recommendBestPractices: (data) =>
-    api.post("/projects/best-practices/recommend", data),
-  getProjectBestPracticeRecommendations: (projectId, limit) =>
-    api.get(`/projects/${projectId}/best-practices/recommend`, {
-      params: { limit },
-    }),
   applyBestPractice: (practiceId, targetProjectId, notes) =>
-    api.post(`/projects/project-reviews/best-practices/${practiceId}/apply`, {
+    api.post(`/project-reviews/best-practices/${practiceId}/apply`, {
       target_project_id: targetProjectId,
       notes,
     }),
@@ -222,7 +187,7 @@ export const technicalAssessmentApi = {
 
 export const rdProjectApi = {
   // 研发项目分类
-  getCategories: (params) => api.get("/rd-project-categories", { params }),
+  getCategories: (params) => api.get("/rd-projects/categories", { params }),
 
   // 研发项目管理
   list: (params) => api.get("/rd-projects", { params }),
@@ -234,13 +199,13 @@ export const rdProjectApi = {
   linkProject: (id, data) => api.put(`/rd-projects/${id}/link-project`, data),
 
   // 研发费用类型
-  getCostTypes: (params) => api.get("/rd-cost-types", { params }),
+  getCostTypes: (params) => api.get("/rd-projects/rd-cost-types", { params }),
 
   // 研发费用管理
-  getCosts: (params) => api.get("/rd-costs", { params }),
-  createCost: (data) => api.post("/rd-costs", data),
-  updateCost: (id, data) => api.put(`/rd-costs/${id}`, data),
-  calculateLaborCost: (data) => api.post("/rd-costs/calc-labor", data),
+  getCosts: (params) => api.get("/rd-projects/rd-costs", { params }),
+  createCost: (data) => api.post("/rd-projects/rd-costs", data),
+  updateCost: (id, data) => api.put(`/rd-projects/rd-costs/${id}`, data),
+  calculateLaborCost: (data) => api.post("/rd-projects/rd-costs/calc-labor", data),
 
   // 费用汇总
   getCostSummary: (projectId) =>
@@ -250,9 +215,9 @@ export const rdProjectApi = {
 
   // 费用分摊规则
   getAllocationRules: (params) =>
-    api.get("/rd-cost-allocation-rules", { params }),
+    api.get("/rd-projects/rd-cost-allocation-rules", { params }),
   applyAllocation: (ruleId, data) =>
-    api.post("/rd-costs/apply-allocation", data, {
+    api.post("/rd-projects/rd-costs/apply-allocation", data, {
       params: { rule_id: ruleId, ...data },
     }),
 
@@ -280,22 +245,22 @@ export const rdProjectApi = {
 export const rdReportApi = {
   // 研发费用辅助账
   getAuxiliaryLedger: (params) =>
-    api.get("/reports/rd-auxiliary-ledger", { params }),
+    api.get("/report-center/rd-expense/rd-auxiliary-ledger", { params }),
 
   // 研发费用加计扣除明细
   getDeductionDetail: (params) =>
-    api.get("/reports/rd-deduction-detail", { params }),
+    api.get("/report-center/rd-expense/rd-deduction-detail", { params }),
 
   // 高新企业研发费用表
-  getHighTechReport: (params) => api.get("/reports/rd-high-tech", { params }),
+  getHighTechReport: (params) => api.get("/report-center/rd-expense/rd-high-tech", { params }),
 
   // 研发投入强度报表
-  getIntensityReport: (params) => api.get("/reports/rd-intensity", { params }),
+  getIntensityReport: (params) => api.get("/report-center/rd-expense/rd-intensity", { params }),
 
   // 研发人员统计
-  getPersonnelReport: (params) => api.get("/reports/rd-personnel", { params }),
+  getPersonnelReport: (params) => api.get("/report-center/rd-expense/rd-personnel", { params }),
 
   // 导出研发费用报表
   exportReport: (params) =>
-    api.get("/reports/rd-export", { params, responseType: "blob" }),
+    api.get("/report-center/rd-expense/rd-export", { params, responseType: "blob" }),
 };

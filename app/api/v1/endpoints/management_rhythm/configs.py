@@ -38,7 +38,7 @@ router = APIRouter()
 from fastapi import APIRouter
 
 router = APIRouter(
-    prefix="/management-rhythm/configs",
+    prefix="/configs",
     tags=["configs"]
 )
 
@@ -46,7 +46,7 @@ router = APIRouter(
 
 # ==================== 管理节律配置 ====================
 
-@router.get("/management-rhythm/configs", response_model=PaginatedResponse)
+@router.get("/", response_model=PaginatedResponse)
 def read_rhythm_configs(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -101,7 +101,7 @@ def read_rhythm_configs(
     )
 
 
-@router.post("/management-rhythm/configs", response_model=RhythmConfigResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RhythmConfigResponse, status_code=status.HTTP_201_CREATED)
 def create_rhythm_config(
     config_data: RhythmConfigCreate,
     db: Session = Depends(deps.get_db),
@@ -142,7 +142,7 @@ def create_rhythm_config(
     )
 
 
-@router.get("/management-rhythm/configs/{config_id}", response_model=RhythmConfigResponse)
+@router.get("/{config_id}", response_model=RhythmConfigResponse)
 def read_rhythm_config(
     config_id: int,
     db: Session = Depends(deps.get_db),
@@ -171,7 +171,7 @@ def read_rhythm_config(
     )
 
 
-@router.put("/management-rhythm/configs/{config_id}", response_model=RhythmConfigResponse)
+@router.put("/{config_id}", response_model=RhythmConfigResponse)
 def update_rhythm_config(
     config_id: int,
     config_data: RhythmConfigUpdate,
@@ -208,7 +208,7 @@ def update_rhythm_config(
     )
 
 
-@router.get("/management-rhythm/strategic-structure-template", response_model=StrategicStructureTemplate)
+@router.get("/strategic-structure-template", response_model=StrategicStructureTemplate)
 def get_strategic_structure_template(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:

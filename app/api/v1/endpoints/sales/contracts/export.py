@@ -71,7 +71,7 @@ def export_contracts(
         "contract_name": contract.contract_name or '',
         "customer_name": contract.customer.customer_name if contract.customer else '',
         "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-        "signed_date": contract.signed_date,
+        "signed_date": contract.signing_date,
         "delivery_deadline": contract.delivery_deadline,
         "status": contract.status,
         "project_code": contract.project.project_code if contract.project else '',
@@ -106,7 +106,7 @@ def export_contract_pdf(
         "contract_name": contract.contract_name or '',
         "customer_name": contract.customer.customer_name if contract.customer else '',
         "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-        "signed_date": contract.signed_date,
+        "signed_date": contract.signing_date,
         "delivery_deadline": contract.delivery_deadline,
         "status": contract.status,
     }

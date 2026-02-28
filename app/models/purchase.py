@@ -212,6 +212,7 @@ class GoodsReceiptItem(Base, TimestampMixin):
     warehoused_qty = Column(Numeric(10, 4), default=0, comment='入库数量')
     warehouse_location = Column(String(100), comment='库位')
 
+    amount = Column(Numeric(14, 2), default=0, comment='金额')
     remark = Column(Text, comment='备注')
 
     # 关系

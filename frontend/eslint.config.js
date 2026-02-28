@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import react from 'eslint-plugin-react'
+import importX from 'eslint-plugin-import-x'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -16,6 +17,7 @@ export default defineConfig([
     ],
     plugins: {
       react,
+      'import-x': importX,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -40,6 +42,9 @@ export default defineConfig([
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      // Import 检查 - 防止导入不存在的导出名
+      'import-x/named': 'error',
+      'import-x/no-unresolved': 'off',
       // React Compiler 相关规则过于严格，先关闭以便渐进式收敛
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/static-components': 'off',
@@ -130,6 +135,7 @@ export default defineConfig([
         },
       ],
       'react-hooks/globals': 'off',
+      'import-x/named': 'off',
     },
   },
 ])

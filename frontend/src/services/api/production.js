@@ -94,43 +94,43 @@ export const productionApi = {
     latestDaily: () => api.get("/production-daily-reports/latest"),
   },
   workshops: {
-    list: (params) => api.get("/workshops", { params }),
-    get: (id) => api.get(`/workshops/${id}`),
-    create: (data) => api.post("/workshops", data),
-    update: (id, data) => api.put(`/workshops/${id}`, data),
+    list: (params) => api.get("/production/workshops", { params }),
+    get: (id) => api.get(`/production/workshops/${id}`),
+    create: (data) => api.post("/production/workshops", data),
+    update: (id, data) => api.put(`/production/workshops/${id}`, data),
     getWorkstations: (id) =>
       api.get(`/production/workshops/${id}/workstations`),
     addWorkstation: (id, data) =>
       api.post(`/production/workshops/${id}/workstations`, data),
   },
   workstations: {
-    list: (params) => api.get("/workstations", { params }),
-    get: (id) => api.get(`/workstations/${id}`),
-    getStatus: (id) => api.get(`/workstations/${id}/status`),
+    list: (params) => api.get("/production/workshops", { params }),
+    get: (id) => api.get(`/production/workshops/${id}`),
+    getStatus: (id) => api.get(`/production/workstations/${id}/status`),
   },
   productionPlans: {
-    list: (params) => api.get("/production-plans", { params }),
-    get: (id) => api.get(`/production-plans/${id}`),
-    create: (data) => api.post("/production-plans", data),
-    update: (id, data) => api.put(`/production-plans/${id}`, data),
+    list: (params) => api.get("/production/production-plans", { params }),
+    get: (id) => api.get(`/production/production-plans/${id}`),
+    create: (data) => api.post("/production/production-plans", data),
+    update: (id, data) => api.put(`/production/production-plans/${id}`, data),
     submit: (id) => api.put(`/production/production-plans/${id}/submit`),
     approve: (id) => api.put(`/production/production-plans/${id}/approve`),
-    publish: (id) => api.put(`/production-plans/${id}/publish`),
-    calendar: (params) => api.get("/production-plans/calendar", { params }),
+    publish: (id) => api.put(`/production/production-plans/${id}/publish`),
+    calendar: (params) => api.get("/production/production-plans/calendar", { params }),
   },
   workOrders: {
-    list: (params) => api.get("/work-orders", { params }),
-    get: (id) => api.get(`/work-orders/${id}`),
-    create: (data) => api.post("/work-orders", data),
-    update: (id, data) => api.put(`/work-orders/${id}`, data),
-    assign: (id, data) => api.put(`/work-orders/${id}/assign`, data),
-    start: (id) => api.put(`/work-orders/${id}/start`),
-    pause: (id) => api.put(`/work-orders/${id}/pause`),
-    resume: (id) => api.put(`/work-orders/${id}/resume`),
-    complete: (id, data) => api.put(`/work-orders/${id}/complete`, data),
-    getProgress: (id) => api.get(`/work-orders/${id}/progress`),
+    list: (params) => api.get("/production/work-orders", { params }),
+    get: (id) => api.get(`/production/work-orders/${id}`),
+    create: (data) => api.post("/production/work-orders", data),
+    update: (id, data) => api.put(`/production/work-orders/${id}`, data),
+    assign: (id, data) => api.put(`/production/work-orders/${id}/assign`, data),
+    start: (id) => api.put(`/production/work-orders/${id}/start`),
+    pause: (id) => api.put(`/production/work-orders/${id}/pause`),
+    resume: (id) => api.put(`/production/work-orders/${id}/resume`),
+    complete: (id, data) => api.put(`/production/work-orders/${id}/complete`, data),
+    getProgress: (id) => api.get(`/production/work-orders/${id}/progress`),
     getReports: (id) =>
-      api.get("/work-reports", {
+      api.get("/production/work-reports", {
         params: { work_order_id: id, page_size: 1000 },
       }),
   },
@@ -141,14 +141,14 @@ export const productionApi = {
     update: (id, data) => api.put(`/workers/${id}`, data),
   },
   workReports: {
-    list: (params) => api.get("/work-reports", { params }),
-    get: (id) => api.get(`/work-reports/${id}`),
-    create: (data) => api.post("/work-reports", data),
+    list: (params) => api.get("/production/work-reports", { params }),
+    get: (id) => api.get(`/production/work-reports/${id}`),
+    create: (data) => api.post("/production/work-reports", data),
     start: (data) => api.post("/production/work-reports/start", data),
     progress: (data) => api.post("/production/work-reports/progress", data),
     complete: (data) => api.post("/production/work-reports/complete", data),
-    approve: (id) => api.put(`/work-reports/${id}/approve`),
-    my: (params) => api.get("/work-reports/my", { params }),
+    approve: (id) => api.put(`/production/work-reports/${id}/approve`),
+    my: (params) => api.get("/production/work-reports/my", { params }),
   },
   materialRequisitions: {
     list: (params) => api.get("/material-requisitions", { params }),
@@ -165,7 +165,7 @@ export const productionApi = {
     handle: (id, data) => api.put(`/production-exceptions/${id}/handle`, data),
     close: (id) => api.put(`/production-exceptions/${id}/close`),
   },
-  taskBoard: (workshopId) => api.get(`/workshops/${workshopId}/task-board`),
+  taskBoard: (workshopId) => api.get(`/production/workshops/${workshopId}/task-board`),
   reports: {
     workerPerformance: (params) =>
       api.get("/production/reports/worker-performance", { params }),
@@ -215,7 +215,7 @@ export const shortageAlertApi = {
 
 export const bomApi = {
   getByMachine: (machineId) =>
-    api.get(`/bom/machines/${machineId}/bom`).then((res) => {
+    api.get(`/bom/machines/${machineId}/`).then((res) => {
       // Get the latest BOM from the list
       const bomList = res.data || res || [];
       if (bomList.length > 0) {
@@ -227,7 +227,7 @@ export const bomApi = {
     }),
   list: (params) => api.get("/bom/", { params }),
   get: (id) => api.get(`/bom/${id}`),
-  create: (machineId, data) => api.post(`/bom/machines/${machineId}/bom`, data),
+  create: (machineId, data) => api.post(`/bom/machines/${machineId}/`, data),
   update: (id, data) => api.put(`/bom/${id}`, data),
   // BOM Items
   getItems: (bomId) => api.get(`/bom/${bomId}/items`),

@@ -407,7 +407,7 @@ describe('Projects API', () => {
 
   describe('projectWorkspaceApi - 项目工作空间API', () => {
     it('getWorkspace() - 应该获取工作空间', async () => {
-      mock.onGet('/api/v1/projects/1/workspace').reply(200, {
+      mock.onGet('/api/v1/project-workspace/projects/1/workspace').reply(200, {
         success: true,
         data: { meetings: [], issues: [] },
       });
@@ -418,7 +418,7 @@ describe('Projects API', () => {
     });
 
     it('linkMeeting() - 应该关联会议', async () => {
-      mock.onPost('/api/v1/projects/1/meetings/1/link').reply(200, {
+      mock.onPost('/api/v1/project-workspace/projects/1/meetings/1/link').reply(200, {
         success: true,
       });
 
@@ -431,7 +431,7 @@ describe('Projects API', () => {
 
   describe('projectContributionApi - 项目贡献API', () => {
     it('getContributions() - 应该获取贡献列表', async () => {
-      mock.onGet('/api/v1/projects/1/contributions').reply(200, {
+      mock.onGet('/api/v1/project-contributions/projects/1/contributions').reply(200, {
         success: true,
         data: [{ user_id: 1, score: 95 }],
       });
@@ -443,7 +443,7 @@ describe('Projects API', () => {
 
     it('rateMember() - 应该评价成员', async () => {
       const rating = { score: 95, comment: 'Great work' };
-      mock.onPost('/api/v1/projects/1/contributions/1/rate').reply(200, {
+      mock.onPost('/api/v1/project-contributions/projects/1/contributions/1/rate').reply(200, {
         success: true,
         data: rating,
       });
@@ -454,7 +454,7 @@ describe('Projects API', () => {
     });
 
     it('calculate() - 应该计算贡献', async () => {
-      mock.onPost('/api/v1/projects/1/contributions/calculate').reply(200, {
+      mock.onPost('/api/v1/project-contributions/projects/1/contributions/calculate').reply(200, {
         success: true,
         data: { calculated: true },
       });

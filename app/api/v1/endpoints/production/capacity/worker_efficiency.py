@@ -84,7 +84,7 @@ async def get_worker_efficiency_analysis(
         grouped_data = (
             db.query(
                 WorkerEfficiencyRecord.worker_id,
-                Worker.worker_code,
+                Worker.worker_no,
                 Worker.worker_name,
                 func.count(WorkerEfficiencyRecord.id).label('record_count'),
                 func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
@@ -99,7 +99,7 @@ async def get_worker_efficiency_analysis(
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*filters) if filters else True)
-            .group_by(WorkerEfficiencyRecord.worker_id, Worker.worker_code, Worker.worker_name)
+            .group_by(WorkerEfficiencyRecord.worker_id, Worker.worker_no, Worker.worker_name)
             .offset((page - 1) * page_size)
             .limit(page_size)
             .all()
@@ -108,7 +108,7 @@ async def get_worker_efficiency_analysis(
         items = [
             {
                 "worker_id": row.worker_id,
-                "worker_code": row.worker_code,
+                "worker_code": row.worker_no,
                 "worker_name": row.worker_name,
                 "record_count": row.record_count,
                 "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,

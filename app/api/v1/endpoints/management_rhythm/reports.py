@@ -38,7 +38,7 @@ from fastapi import APIRouter
 from app.common.query_filters import apply_pagination
 
 router = APIRouter(
-    prefix="/management-rhythm/reports",
+    prefix="/reports",
     tags=["reports"]
 )
 
@@ -214,7 +214,7 @@ def read_meeting_reports(
         query = query.filter(MeetingReport.rhythm_level == rhythm_level)
 
     total = query.count()
-    reports = query.order_by(desc(MeetingReport.period_start), apply_pagination(desc(MeetingReport.created_at)), pagination.offset, pagination.limit).all()
+    reports = apply_pagination(query.order_by(desc(MeetingReport.period_start), desc(MeetingReport.created_at)), pagination.offset, pagination.limit).all()
 
     items = []
     for report in reports:
