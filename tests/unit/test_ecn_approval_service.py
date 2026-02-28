@@ -705,9 +705,7 @@ class TestWithdrawEcnApproval(unittest.TestCase):
         self.assertIn("只能撤回自己提交的审批", str(ctx.exception))
 
 
-class TestGetApprovalHistoryForUser(unittest.TestCase,
-        password_hash="test_hash_123"
-    ):
+class TestGetApprovalHistoryForUser(unittest.TestCase):
     """测试获取审批历史"""
 
     def setUp(self):
