@@ -28,7 +28,7 @@ export function ServiceTicketListHeader({
   onSortChange,
   sortOrder,
   onSortOrderChange,
-  dateRange,
+  dateRange = { start: '', end: '' },
   onDateRangeChange,
   onCreateTicket,
   onRefresh,
