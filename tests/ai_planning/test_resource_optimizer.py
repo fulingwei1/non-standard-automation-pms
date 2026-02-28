@@ -31,13 +31,13 @@ def sample_project(db: Session):
 def sample_users(db: Session):
     """创建测试用户"""
     users = [
-        User(username="dev1", real_name="开发1", role="高级开发", is_active=True,
+        User(username="dev1", real_name="开发1", position="高级开发", is_active=True,
         password_hash="test_hash_123"
     ),
-        User(username="dev2", real_name="开发2", role="中级开发", is_active=True,
+        User(username="dev2", real_name="开发2", position="中级开发", is_active=True,
         password_hash="test_hash_123"
     ),
-        User(username="test1", real_name="测试1", role="测试工程师", is_active=True,
+        User(username="test1", real_name="测试1", position="测试工程师", is_active=True,
         password_hash="test_hash_123"
     ),
     ]
