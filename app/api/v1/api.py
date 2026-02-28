@@ -278,6 +278,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 绩效合约模块加载失败：{e}")
 
+    # ==================== AI战略辅助 ====================
+    try:
+        from app.api.v1.endpoints.ai_strategy import router as ai_strategy_router
+        api_router.include_router(ai_strategy_router, prefix="/ai-strategy", tags=["AI战略辅助"])
+        print("✓ AI战略辅助模块加载成功")
+    except Exception as e:
+        print(f"✗ AI战略辅助模块加载失败：{e}")
+
     # ==================== 人事管理 ====================
     try:
         from app.api.v1.endpoints.hr_management import router as hr_management_router

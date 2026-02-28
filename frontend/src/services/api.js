@@ -36,6 +36,7 @@ export * from "./api/warehouse.js";
 export * from "./api/supplierPriceTrend.js";
 export * from "./api/ganttDependency.js";
 export * from "./api/performanceContract.js";
+export * from "./api/aiStrategy.js";
 export * from "./api/ecnBom.js";
 export * from "./api/fieldCommissioning.js";
 export * from "./api/multiCurrency.js";

@@ -11,6 +11,7 @@ import AnnualWorkList from "../../pages/AnnualWorkList";
 import Decomposition from "../../pages/Decomposition";
 import StrategyCalendar from "../../pages/StrategyCalendar";
 import YearComparison from "../../pages/YearComparison";
+import AIStrategyAssistant from "../../pages/AIStrategyAssistant";
 import { StrategyProtectedRoute } from "../../components/common/ProtectedRoute";
 
 export function StrategyRoutes() {
@@ -100,6 +101,16 @@ export function StrategyRoutes() {
         element={
           <StrategyProtectedRoute>
             <YearComparison />
+          </StrategyProtectedRoute>
+        }
+      />
+
+      {/* AI战略辅助 */}
+      <Route
+        path="/strategy/ai-assistant"
+        element={
+          <StrategyProtectedRoute>
+            <AIStrategyAssistant />
           </StrategyProtectedRoute>
         }
       />
