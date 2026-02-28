@@ -60,7 +60,7 @@ def sample_project_data():
     """示例项目数据"""
     return {
         "project_id": 1,
-        "project_code": "PJ250108001",
+        "project_code": f"PJ250108001-{uuid.uuid4().hex[:8]}",
         "project_name": "测试项目",
         "priority": "P2",
         "contract_amount": 500000,
@@ -75,18 +75,18 @@ def sample_bom_data():
     """示例BOM数据"""
     return {
         "bom_id": 1,
-        "bom_no": "BOM001",
+        "bom_no": f"BOM001-{uuid.uuid4().hex[:8]}",
         "items": [
             {
                 "material_id": 1,
-                "material_code": "MAT001",
+                "material_code": f"MAT001-{uuid.uuid4().hex[:8]}",
                 "material_name": "测试物料1",
                 "quantity": 10,
                 "required_date": date.today() + timedelta(days=14)
             },
             {
                 "material_id": 2,
-                "material_code": "MAT002",
+                "material_code": f"MAT002-{uuid.uuid4().hex[:8]}",
                 "material_name": "测试物料2",
                 "quantity": 5,
                 "required_date": date.today() + timedelta(days=21)
@@ -221,7 +221,7 @@ class TestSchedulingSuggestionService:
 
         # 测试紧急交期（≤7天）
         project_urgent = Project(
-            project_code="PJ_URGENT",
+            project_code=f"PJ_URGENT-{uuid.uuid4().hex[:8]}",
             project_name="紧急项目",
             planned_end_date=date.today() + timedelta(days=5)
         )
@@ -230,7 +230,7 @@ class TestSchedulingSuggestionService:
 
         # 测试正常交期（≤30天）
         project_normal = Project(
-            project_code="PJ_NORMAL",
+            project_code=f"PJ_NORMAL-{uuid.uuid4().hex[:8]}",
             project_name="正常项目",
             planned_end_date=date.today() + timedelta(days=20)
         )

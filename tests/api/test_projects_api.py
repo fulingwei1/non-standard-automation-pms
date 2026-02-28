@@ -26,6 +26,13 @@ from tests.factories import (
     UserFactory,
 )
 
+import uuid
+
+_TPL_DETAIL_001 = f"TPL_DETAIL_001-{uuid.uuid4().hex[:8]}"
+_TPL_DUP_001 = f"TPL_DUP_001-{uuid.uuid4().hex[:8]}"
+_TPL_TEST_001 = f"TPL_TEST_001-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.fixture
 def api_client(db_session: Session) -> TestClient:
@@ -88,7 +95,7 @@ class TestProjectsAPI:
         """测试 POST /api/v1/projects/templates - 创建项目模板"""
         # 准备测试数据
         template_data = {
-            "template_code": "TPL_TEST_001",
+            "template_code": _TPL_TEST_001,
             "template_name": "测试模板",
             "project_type": "NEW",
             "description": "这是一个测试模板",
@@ -104,17 +111,17 @@ class TestProjectsAPI:
         assert data["code"] == 200
         assert data["message"] == "模板创建成功"
         assert "data" in data
-        assert data["data"]["template_code"] == "TPL_TEST_001"
+        assert data["data"]["template_code"] == _TPL_TEST_001
         assert data["data"]["template_name"] == "测试模板"
 
     def test_post_projects_templates_duplicate_code(self, api_client, db_session):
         """测试 POST /api/v1/projects/templates - 重复编码"""
         # 准备测试数据 - 创建已存在的模板
-        existing_template = ProjectTemplateFactory(template_code="TPL_DUP_001")
+        existing_template = ProjectTemplateFactory(template_code=_TPL_DUP_001)
         
         # 尝试创建相同编码的模板
         template_data = {
-            "template_code": "TPL_DUP_001",
+            "template_code": _TPL_DUP_001,
             "template_name": "重复模板",
             "project_type": "NEW"
         }
@@ -129,7 +136,7 @@ class TestProjectsAPI:
         """测试 GET /api/v1/projects/templates/{template_id} - 获取模板详情"""
         # 准备测试数据
         template = ProjectTemplateFactory(
-            template_code="TPL_DETAIL_001",
+            template_code=_TPL_DETAIL_001,
             template_name="详情测试模板",
             project_type="NEW"
         )
@@ -142,7 +149,7 @@ class TestProjectsAPI:
         data = response.json()
         assert data["code"] == 200
         assert data["data"]["id"] == template.id
-        assert data["data"]["template_code"] == "TPL_DETAIL_001"
+        assert data["data"]["template_code"] == _TPL_DETAIL_001
         assert data["data"]["template_name"] == "详情测试模板"
 
     def test_get_projects_templates_template_id_not_found(self, api_client):
@@ -550,7 +557,7 @@ class TestProjectsAPI:
         project = ProjectWithCustomerFactory()
         response = api_client.post(
             f"/api/v1/projects/{project.id}/clone",
-            json={"project_code": "PJ_CLONE_001", "project_name": "克隆项目"}
+            json={"project_code": f"PJ_CLONE_001-{uuid.uuid4().hex[:8]}", "project_name": "克隆项目"}
         )
         assert response.status_code in [200, 201, 400, 404]
         if response.status_code in [200, 201]:

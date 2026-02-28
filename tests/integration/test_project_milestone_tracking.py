@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 项目管理集成测试 - 项目里程碑跟踪
@@ -28,7 +29,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目
         project_data = {
             "project_name": "智能生产线项目",
-            "project_code": "PRJ-SMART-LINE-2024",
+            "project_code": f"PRJ-SMART-LINE-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -109,7 +110,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目和里程碑
         project_data = {
             "project_name": "MES系统实施",
-            "project_code": "PRJ-MES-IMPL-2024",
+            "project_code": f"PRJ-MES-IMPL-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "信息化建设",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -186,7 +187,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目和里程碑
         project_data = {
             "project_name": "仓储自动化项目",
-            "project_code": "PRJ-WH-AUTO-2024",
+            "project_code": f"PRJ-WH-AUTO-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -260,7 +261,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目和里程碑
         project_data = {
             "project_name": "质量追溯系统",
-            "project_code": "PRJ-TRACE-SYS-2024",
+            "project_code": f"PRJ-TRACE-SYS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -341,7 +342,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目
         project_data = {
             "project_name": "数字化车间建设",
-            "project_code": "PRJ-DIGITAL-WS-2024",
+            "project_code": f"PRJ-DIGITAL-WS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "数字化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -424,7 +425,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目和里程碑
         project_data = {
             "project_name": "供应链管理系统",
-            "project_code": "PRJ-SCM-SYS-2024",
+            "project_code": f"PRJ-SCM-SYS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -505,7 +506,7 @@ class TestProjectMilestoneTracking:
         # 1. 创建项目和多个里程碑
         project_data = {
             "project_name": "智能工厂升级",
-            "project_code": "PRJ-SMART-UP-2024",
+            "project_code": f"PRJ-SMART-UP-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today() - timedelta(days=180)),

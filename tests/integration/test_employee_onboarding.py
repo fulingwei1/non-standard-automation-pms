@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """人事管理集成测试 - 员工入职流程"""
 import pytest
@@ -13,7 +14,7 @@ class TestEmployeeOnboarding:
         assert response.status_code in [200, 201, 404]
     
     def test_employee_registration(self, client: TestClient, db: Session, auth_headers, test_employee):
-        data = {"name": "张三", "employee_code": "EMP-001", "department_id": 1}
+        data = {"name": "张三", "employee_code": f"EMP-001-{uuid.uuid4().hex[:8]}", "department_id": 1}
         response = client.post("/api/v1/hr/employees", json=data, headers=auth_headers)
         assert response.status_code in [200, 201, 404]
     

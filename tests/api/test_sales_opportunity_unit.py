@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 O1组 API层单元测试 - sales/opportunity_crud.py
@@ -211,7 +212,7 @@ class TestCreateOpportunity:
             "opp_name": "比亚迪商机",
             "customer_id": 999,
             "owner_id": 1,
-            "opp_code": "OPP9999",
+            "opp_code": f"OPP9999-{uuid.uuid4().hex[:8]}",
         }
 
         # First call: code check -> None (not duplicate), then customer -> None
@@ -233,7 +234,7 @@ class TestCreateOpportunity:
         opp_in = MagicMock()
         opp_in.requirement = None
         opp_in.model_dump.return_value = {
-            "opp_code": "EXISTING001",
+            "opp_code": f"EXISTING001-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
         }
 

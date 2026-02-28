@@ -24,6 +24,12 @@ os.environ.setdefault("ENABLE_SCHEDULER", "false")
 import pytest
 from fastapi import HTTPException
 
+import uuid
+
+_P0001 = f"P0001-{uuid.uuid4().hex[:8]}"
+_P0002 = f"P0002-{uuid.uuid4().hex[:8]}"
+
+
 
 # ──────────────────────────────────────────────
 # Helpers
@@ -95,9 +101,9 @@ class TestCreateProject:
         db.query.return_value.get.side_effect = [customer_mock, pm_mock]
 
         project_in = MagicMock()
-        project_in.project_code = "P0001"
+        project_in.project_code = _P0001
         project_in.model_dump.return_value = {
-            "project_code": "P0001",
+            "project_code": _P0001,
             "project_name": "比亚迪ADAS ICT测试系统",
             "customer_id": 1,
             "pm_id": 1,
@@ -124,8 +130,8 @@ class TestCreateProject:
         db.query.return_value.filter.return_value.first.return_value = _make_project()
 
         project_in = MagicMock()
-        project_in.project_code = "P0001"
-        project_in.model_dump.return_value = {"project_code": "P0001"}
+        project_in.project_code = _P0001
+        project_in.model_dump.return_value = {"project_code": _P0001}
 
         with pytest.raises(HTTPException) as exc_info:
             create_project(db=db, project_in=project_in, current_user=current_user)
@@ -145,9 +151,9 @@ class TestCreateProject:
         db.query.return_value.get.return_value = None
 
         project_in = MagicMock()
-        project_in.project_code = "P0002"
+        project_in.project_code = _P0002
         project_in.model_dump.return_value = {
-            "project_code": "P0002",
+            "project_code": _P0002,
             "project_name": "无客户项目",
             "customer_id": None,
             "pm_id": None,

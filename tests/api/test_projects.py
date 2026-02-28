@@ -117,7 +117,7 @@ class TestProjectCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         project_data = {
-            "project_code": "PJ250101003",
+            "project_code": f"PJ250101003-{uuid.uuid4().hex[:8]}",
             "project_name": "自动初始化阶段测试",
             "customer_id": 1,
             # 不指定stage，应该自动初始化为S1

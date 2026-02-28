@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 销售管理集成测试 - CRM完整流程
@@ -160,7 +161,7 @@ class TestCRMCompleteFlow:
         # 1. 创建客户档案
         customer_data = {
             "customer_name": "智能装备制造集团",
-            "customer_code": "CUST-2024-001",
+            "customer_code": f"CUST-2024-001-{uuid.uuid4().hex[:8]}",
             "industry": "装备制造",
             "company_scale": "大型企业",
             "registered_capital": 50000000.00,
@@ -207,7 +208,7 @@ class TestCRMCompleteFlow:
         # 1. 创建客户
         customer_data = {
             "customer_name": "电子制造公司",
-            "customer_code": "CUST-2024-002",
+            "customer_code": f"CUST-2024-002-{uuid.uuid4().hex[:8]}",
             "industry": "电子制造",
             "contact_name": "刘经理",
             "contact_phone": "13500135001",
@@ -383,7 +384,7 @@ class TestCRMCompleteFlow:
         # 1. 创建客户
         customer_data = {
             "customer_name": "高端制造公司",
-            "customer_code": "CUST-2024-003",
+            "customer_code": f"CUST-2024-003-{uuid.uuid4().hex[:8]}",
             "industry": "高端装备",
             "contact_name": "赵总",
             "contact_phone": "13400134001"

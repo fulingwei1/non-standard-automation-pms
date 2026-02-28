@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 预警管理集成测试 - 预警规则触发
@@ -28,7 +29,7 @@ class TestAlertRuleTrigger:
         # 1. 创建项目
         project_data = {
             "project_name": "智能制造项目",
-            "project_code": "PRJ-SMART-2024",
+            "project_code": f"PRJ-SMART-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today() - timedelta(days=60)),
             "expected_end_date": str(date.today() + timedelta(days=30)),
@@ -80,7 +81,7 @@ class TestAlertRuleTrigger:
         # 1. 创建项目和预算
         project_data = {
             "project_name": "ERP系统实施",
-            "project_code": "PRJ-ERP-2024",
+            "project_code": f"PRJ-ERP-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 8000000.00,
@@ -128,7 +129,7 @@ class TestAlertRuleTrigger:
         # 1. 创建项目
         project_data = {
             "project_name": "软件开发项目",
-            "project_code": "PRJ-DEV-2024",
+            "project_code": f"PRJ-DEV-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 5000000.00,
@@ -245,7 +246,7 @@ class TestAlertRuleTrigger:
         
         # 2. 更新库存（触发预警）
         inventory_update = {
-            "material_code": "MAT-001",
+            "material_code": f"MAT-001-{uuid.uuid4().hex[:8]}",
             "material_name": "电机",
             "stock_quantity": 80,
             "safety_stock": 150,
@@ -316,7 +317,7 @@ class TestAlertRuleTrigger:
         # 1. 创建项目
         project_data = {
             "project_name": "关键项目",
-            "project_code": "PRJ-CRITICAL-2024",
+            "project_code": f"PRJ-CRITICAL-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 15000000.00,

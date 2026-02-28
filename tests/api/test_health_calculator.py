@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 项目管理模块 - 健康度计算单元测试
@@ -33,7 +34,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H01",
+            "project_code": f"PJ250101H01-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-已结项",
             "customer_id": 1,
             "status": "ST30",  # 已结项
@@ -68,7 +69,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H02",
+            "project_code": f"PJ250101H02-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-已取消",
             "customer_id": 1,
             "status": "ST99",  # 项目取消
@@ -103,7 +104,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H03",
+            "project_code": f"PJ250101H03-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-缺料阻塞",
             "customer_id": 1,
             "status": "ST14",  # 缺料阻塞
@@ -138,7 +139,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H04",
+            "project_code": f"PJ250101H04-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-技术阻塞",
             "customer_id": 1,
             "status": "ST19",  # 技术阻塞
@@ -173,7 +174,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H05",
+            "project_code": f"PJ250101H05-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-FAT整改中",
             "customer_id": 1,
             "status": "ST22",  # FAT整改中
@@ -211,7 +212,7 @@ class TestHealthCalculator:
         deadline = date.today() + timedelta(days=5)
 
         project_data = {
-            "project_code": "PJ250101H06",
+            "project_code": f"PJ250101H06-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-交期临近",
             "customer_id": 1,
             "status": "ST01",
@@ -250,7 +251,7 @@ class TestHealthCalculator:
         deadline = date.today() + timedelta(days=30)
 
         project_data = {
-            "project_code": "PJ250101H07",
+            "project_code": f"PJ250101H07-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度测试-正常",
             "customer_id": 1,
             "status": "ST01",
@@ -286,7 +287,7 @@ class TestHealthCalculator:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101H08",
+            "project_code": f"PJ250101H08-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度详情测试",
             "customer_id": 1,
             "status": "ST01",
@@ -366,7 +367,7 @@ class TestHealthCalculator:
 
         # 创建同时满足H2和H3条件的项目（应该返回H3）
         project_data = {
-            "project_code": "PJ250101H10",
+            "project_code": f"PJ250101H10-{uuid.uuid4().hex[:8]}",
             "project_name": "健康度优先级测试",
             "customer_id": 1,
             "status": "ST14",  # 缺料阻塞（H3）

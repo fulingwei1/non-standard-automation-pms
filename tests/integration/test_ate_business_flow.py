@@ -25,6 +25,15 @@ from tests.fixtures.industry_data import (
     make_mock_db_with_projects,
 )
 
+import uuid
+
+_MAT_KK_001 = f"MAT-KK-001-{uuid.uuid4().hex[:8]}"
+_MAT_KK_004 = f"MAT-KK-004-{uuid.uuid4().hex[:8]}"
+_MAT_NI_001 = f"MAT-NI-001-{uuid.uuid4().hex[:8]}"
+_MAT_NI_002 = f"MAT-NI-002-{uuid.uuid4().hex[:8]}"
+_PJ260201001 = f"PJ260201001-{uuid.uuid4().hex[:8]}"
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 业务领域模型（内嵌轻量实现，替代重量级ORM导入）
 # ─────────────────────────────────────────────────────────────────────────────
@@ -339,7 +348,7 @@ def timesheet_service():
 def ict_project_data():
     """比亚迪ADAS域控制器ICT项目测试数据"""
     return {
-        "project_code": "PJ260201001",
+        "project_code": _PJ260201001,
         "name": "比亚迪电子ADAS域控制器ICT测试系统",
         "customer_name": "比亚迪电子",
         "type": "ICT",
@@ -355,13 +364,13 @@ def ict_project_data():
 def ict_bom_items():
     """ICT项目典型BOM"""
     return [
-        BOMItem(material_code="MAT-NI-001", material_name="NI PXI机箱",
+        BOMItem(material_code=_MAT_NI_001, material_name="NI PXI机箱",
                 required_qty=1, received_qty=0, unit_price=35000, lead_time_days=30),
-        BOMItem(material_code="MAT-NI-002", material_name="NI数字IO板卡",
+        BOMItem(material_code=_MAT_NI_002, material_name="NI数字IO板卡",
                 required_qty=6, received_qty=0, unit_price=8500, lead_time_days=21),
-        BOMItem(material_code="MAT-KK-001", material_name="气缸",
+        BOMItem(material_code=_MAT_KK_001, material_name="气缸",
                 required_qty=20, received_qty=15, unit_price=280, lead_time_days=7),
-        BOMItem(material_code="MAT-KK-004", material_name="铝合金型材",
+        BOMItem(material_code=_MAT_KK_004, material_name="铝合金型材",
                 required_qty=50, received_qty=50, unit_price=45, lead_time_days=3),
     ]
 
@@ -481,19 +490,19 @@ class TestBOMShortageAndPurchaseRequestFlow:
         # MAT-NI-002: 需6个，已0个（缺货）
         # MAT-KK-001: 需20个，已15个（缺货5个）
         # MAT-KK-004: 需50个，已50个（充足）
-        shortages = bom_service.check_bom_shortage("PJ260201001", ict_bom_items)
+        shortages = bom_service.check_bom_shortage(_PJ260201001, ict_bom_items)
         shortage_codes = {s.material_code for s in shortages}
-        assert "MAT-NI-001" in shortage_codes
-        assert "MAT-NI-002" in shortage_codes
-        assert "MAT-KK-001" in shortage_codes
-        assert "MAT-KK-004" not in shortage_codes  # 充足，不应出现
+        assert _MAT_NI_001 in shortage_codes
+        assert _MAT_NI_002 in shortage_codes
+        assert _MAT_KK_001 in shortage_codes
+        assert _MAT_KK_004 not in shortage_codes  # 充足，不应出现
         assert len(shortages) == 3
 
     def test_shortage_quantity_calculation_accuracy(self, ict_bom_items):
         """缺货数量计算精确性"""
-        ni_001 = next(i for i in ict_bom_items if i.material_code == "MAT-NI-001")
-        ni_002 = next(i for i in ict_bom_items if i.material_code == "MAT-NI-002")
-        kk_001 = next(i for i in ict_bom_items if i.material_code == "MAT-KK-001")
+        ni_001 = next(i for i in ict_bom_items if i.material_code == _MAT_NI_001)
+        ni_002 = next(i for i in ict_bom_items if i.material_code == _MAT_NI_002)
+        kk_001 = next(i for i in ict_bom_items if i.material_code == _MAT_KK_001)
 
         assert ni_001.shortage_qty == 1    # 需1个，有0个
         assert ni_002.shortage_qty == 6    # 需6个，有0个
@@ -504,13 +513,13 @@ class TestBOMShortageAndPurchaseRequestFlow:
     ):
         """缺料触发采购申请：申请信息正确"""
         shortage_item = next(
-            i for i in ict_bom_items if i.material_code == "MAT-NI-001"
+            i for i in ict_bom_items if i.material_code == _MAT_NI_001
         )
-        pr = bom_service.trigger_purchase_request("PJ260201001", shortage_item)
+        pr = bom_service.trigger_purchase_request(_PJ260201001, shortage_item)
 
         assert pr.id is not None
-        assert pr.project_code == "PJ260201001"
-        assert pr.material_code == "MAT-NI-001"
+        assert pr.project_code == _PJ260201001
+        assert pr.material_code == _MAT_NI_001
         assert pr.requested_qty == 1
         assert pr.total_amount == 1 * 35000  # 1 × 35000元
         assert pr.status == PurchaseRequestStatus.PENDING
@@ -520,9 +529,9 @@ class TestBOMShortageAndPurchaseRequestFlow:
         self, bom_service, ict_bom_items
     ):
         """为所有缺料物料批量触发采购申请"""
-        shortages = bom_service.check_bom_shortage("PJ260201001", ict_bom_items)
+        shortages = bom_service.check_bom_shortage(_PJ260201001, ict_bom_items)
         prs = [
-            bom_service.trigger_purchase_request("PJ260201001", item)
+            bom_service.trigger_purchase_request(_PJ260201001, item)
             for item in shortages
         ]
         assert len(prs) == 3
@@ -533,9 +542,9 @@ class TestBOMShortageAndPurchaseRequestFlow:
     def test_purchase_request_approval_flow(self, bom_service, ict_bom_items):
         """采购申请审批流程：PENDING → APPROVED"""
         shortage_item = next(
-            i for i in ict_bom_items if i.material_code == "MAT-NI-002"
+            i for i in ict_bom_items if i.material_code == _MAT_NI_002
         )
-        pr = bom_service.trigger_purchase_request("PJ260201001", shortage_item)
+        pr = bom_service.trigger_purchase_request(_PJ260201001, shortage_item)
         assert pr.status == PurchaseRequestStatus.PENDING
 
         approved_pr = bom_service.approve_purchase_request(pr.id)
@@ -543,11 +552,11 @@ class TestBOMShortageAndPurchaseRequestFlow:
 
     def test_material_received_updates_bom_stock(self, bom_service, ict_bom_items):
         """物料到货：BOM中的已收量更新"""
-        kk_001 = next(i for i in ict_bom_items if i.material_code == "MAT-KK-001")
+        kk_001 = next(i for i in ict_bom_items if i.material_code == _MAT_KK_001)
         initial_received = kk_001.received_qty  # 15个
 
         # 触发采购申请（5个气缸）
-        pr = bom_service.trigger_purchase_request("PJ260201001", kk_001)
+        pr = bom_service.trigger_purchase_request(_PJ260201001, kk_001)
         assert pr.requested_qty == 5
 
         # 模拟到货
@@ -557,14 +566,14 @@ class TestBOMShortageAndPurchaseRequestFlow:
 
     def test_bom_shortage_resolved_after_receipt(self, bom_service, ict_bom_items):
         """到货后BOM缺料消除：Kit Rate提升到目标水平"""
-        shortages = bom_service.check_bom_shortage("PJ260201001", ict_bom_items)
+        shortages = bom_service.check_bom_shortage(_PJ260201001, ict_bom_items)
         # 逐一触发并标记到货
         for item in shortages:
-            pr = bom_service.trigger_purchase_request("PJ260201001", item)
+            pr = bom_service.trigger_purchase_request(_PJ260201001, item)
             bom_service.mark_received(pr.id, item)
 
         # 再次检查，应无缺料
-        remaining_shortages = bom_service.check_bom_shortage("PJ260201001", ict_bom_items)
+        remaining_shortages = bom_service.check_bom_shortage(_PJ260201001, ict_bom_items)
         assert len(remaining_shortages) == 0
 
         # Kit Rate应达到100%

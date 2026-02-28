@@ -1,3 +1,4 @@
+import uuid
 """
 项目复盘API端点测试
 """
@@ -36,7 +37,7 @@ def auth_headers(client):
 def test_project(db, auth_headers):
     """测试项目"""
     project = Project(
-        project_code="API_TEST_001",
+        project_code=f"API_TEST_001-{uuid.uuid4().hex[:8]}",
         project_name="API测试项目",
         status="COMPLETED",
         budget_amount=Decimal("500000.00")

@@ -36,6 +36,15 @@ from sqlalchemy.pool import StaticPool
 # ─── 导入所有模型（触发元数据注册）──────────────────────────────────────────
 import app.models  # noqa: F401
 
+import uuid
+
+_CTR260217001 = f"CTR260217001-{uuid.uuid4().hex[:8]}"
+_LD260217001 = f"LD260217001-{uuid.uuid4().hex[:8]}"
+_MAT_HK_001 = f"MAT-HK-001-{uuid.uuid4().hex[:8]}"
+_MAT_NI_001 = f"MAT-NI-001-{uuid.uuid4().hex[:8]}"
+_MAT_SMC_001 = f"MAT-SMC-001-{uuid.uuid4().hex[:8]}"
+
+
 
 # ════════════════════════════════════════════════════════════════════════════
 #  数据库 Fixture（模块级，共享同一个 SQLite 内存实例）
@@ -99,7 +108,7 @@ def sales_user(db):
     from app.models.user import User
 
     emp = Employee(
-        employee_code="EMP-S001",
+        employee_code=f"EMP-S001-{uuid.uuid4().hex[:8]}",
         name="张伟",
         department="销售部",
         role="SALES_ENGINEER",
@@ -131,7 +140,7 @@ def pm_user(db):
     from app.models.user import User
 
     emp = Employee(
-        employee_code="EMP-PM001",
+        employee_code=f"EMP-PM001-{uuid.uuid4().hex[:8]}",
         name="李明",
         department="项目部",
         role="PROJECT_MANAGER",
@@ -162,7 +171,7 @@ def byd_customer(db):
     from app.models.project import Customer
 
     customer = Customer(
-        customer_code="CUST-BYD-001",
+        customer_code=f"CUST-BYD-001-{uuid.uuid4().hex[:8]}",
         customer_name="比亚迪电子",
         short_name="比亚迪",
         customer_type="A",
@@ -186,7 +195,7 @@ def ni_vendor(db):
     from app.models.vendor import Vendor
 
     vendor = Vendor(
-        supplier_code="VND-NI-001",
+        supplier_code=f"VND-NI-001-{uuid.uuid4().hex[:8]}",
         supplier_name="美国国家仪器（NI）有限公司",
         vendor_type="MATERIAL",
         contact_person="陈工",
@@ -207,7 +216,7 @@ def smc_vendor(db):
     from app.models.vendor import Vendor
 
     vendor = Vendor(
-        supplier_code="VND-SMC-001",
+        supplier_code=f"VND-SMC-001-{uuid.uuid4().hex[:8]}",
         supplier_name="SMC（中国）有限公司",
         vendor_type="MATERIAL",
         contact_person="赵工",
@@ -258,7 +267,7 @@ class TestSalesLeadToDelivery:
 
         # 1-a 创建线索
         lead = Lead(
-            lead_code="LD260217001",
+            lead_code=_LD260217001,
             source="展会-慕尼黑上海电子展",
             customer_name="比亚迪电子",
             industry="汽车电子",
@@ -308,7 +317,7 @@ class TestSalesLeadToDelivery:
 
         # ── 断言 ──
         assert lead.id is not None, "线索应成功保存到数据库"
-        assert lead.lead_code == "LD260217001"
+        assert lead.lead_code == _LD260217001
         assert score >= 70, f"ICT线索评分 {score} 应 ≥ 70（A级线索阈值）"
         assert lead.priority_score >= 70
         assert lead.status == "QUALIFIED"
@@ -382,7 +391,7 @@ class TestSalesLeadToDelivery:
 
         # 3-a 创建商机
         opp = Opportunity(
-            opp_code="OPP260217001",
+            opp_code=f"OPP260217001-{uuid.uuid4().hex[:8]}",
             customer_id=byd_customer.id,
             opp_name="比亚迪ADAS域控制器ICT测试系统商机",
             project_type="ICT",
@@ -398,7 +407,7 @@ class TestSalesLeadToDelivery:
 
         # 3-b 创建报价主表
         quote = Quote(
-            quote_code="QT260217001",
+            quote_code=f"QT260217001-{uuid.uuid4().hex[:8]}",
             opportunity_id=opp.id,
             customer_id=byd_customer.id,
             status="DRAFT",
@@ -484,7 +493,7 @@ class TestSalesLeadToDelivery:
 
         # 4-a 创建合同
         contract = Contract(
-            contract_code="CTR260217001",
+            contract_code=_CTR260217001,
             contract_name="比亚迪电子ADAS ICT测试系统销售合同",
             contract_type="sales",
             customer_id=byd_customer.id,
@@ -616,7 +625,7 @@ class TestSalesLeadToDelivery:
             short_name="BYD-ADAS-ICT",
             customer_id=byd_customer.id,
             customer_name="比亚迪电子",
-            contract_no=f"CTR260217001",
+            contract_no=f_CTR260217001,
             project_type="ICT",
             industry="汽车电子",
             project_category="销售",
@@ -679,17 +688,17 @@ class TestSalesLeadToDelivery:
 
         # 6-a 创建物料分类
         cat_instrument = MaterialCategory(
-            category_code="CAT-INST",
+            category_code=f"CAT-INST-{uuid.uuid4().hex[:8]}",
             category_name="仪器仪表",
             level=1,
         )
         cat_pneumatic = MaterialCategory(
-            category_code="CAT-PNEU",
+            category_code=f"CAT-PNEU-{uuid.uuid4().hex[:8]}",
             category_name="气动元件",
             level=1,
         )
         cat_vision = MaterialCategory(
-            category_code="CAT-VIS",
+            category_code=f"CAT-VIS-{uuid.uuid4().hex[:8]}",
             category_name="视觉器件",
             level=1,
         )
@@ -698,7 +707,7 @@ class TestSalesLeadToDelivery:
 
         # 6-b 创建物料主数据
         ni_pxi = Material(
-            material_code="MAT-NI-001",
+            material_code=_MAT_NI_001,
             material_name="NI PXI机箱",
             category_id=cat_instrument.id,
             specification="PXIe-1082, 8-slot, 500W",
@@ -710,7 +719,7 @@ class TestSalesLeadToDelivery:
             default_supplier_id=ni_vendor.id,
         )
         cylinder = Material(
-            material_code="MAT-SMC-001",
+            material_code=_MAT_SMC_001,
             material_name="气缸（SMC CQ2B32-50D）",
             category_id=cat_pneumatic.id,
             specification="CQ2B32-50D, 双轴, 行程50mm",
@@ -722,7 +731,7 @@ class TestSalesLeadToDelivery:
             default_supplier_id=smc_vendor.id,
         )
         camera = Material(
-            material_code="MAT-HK-001",
+            material_code=_MAT_HK_001,
             material_name="工业相机（海康MV-CS050-10GM）",
             category_id=cat_vision.id,
             specification="500万像素, 全局快门, GigE接口",
@@ -875,7 +884,7 @@ class TestSalesLeadToDelivery:
         pr_ni_item = PurchaseRequestItem(
             request_id=pr_ni.id,
             material_id=flow_state["ni_pxi_material_id"],
-            material_code="MAT-NI-001",
+            material_code=_MAT_NI_001,
             material_name="NI PXI机箱",
             specification="PXIe-1082, 8-slot, 500W",
             unit="台",
@@ -905,7 +914,7 @@ class TestSalesLeadToDelivery:
         pr_cyl_item = PurchaseRequestItem(
             request_id=pr_other.id,
             material_id=flow_state["cylinder_material_id"],
-            material_code="MAT-SMC-001",
+            material_code=_MAT_SMC_001,
             material_name="气缸（SMC CQ2B32-50D）",
             unit="个",
             quantity=Decimal("8"),
@@ -916,7 +925,7 @@ class TestSalesLeadToDelivery:
         pr_cam_item = PurchaseRequestItem(
             request_id=pr_other.id,
             material_id=flow_state["camera_material_id"],
-            material_code="MAT-HK-001",
+            material_code=_MAT_HK_001,
             material_name="工业相机（海康）",
             unit="台",
             quantity=Decimal("2"),
@@ -969,7 +978,7 @@ class TestSalesLeadToDelivery:
 
         # 8-a 先生成采购单（PR → PO）
         po = PurchaseOrder(
-            order_no="PO260217001",
+            order_no=f"PO260217001-{uuid.uuid4().hex[:8]}",
             supplier_id=ni_vendor.id,
             project_id=flow_state["project_id"],
             source_request_id=flow_state["pr_ni_id"],
@@ -991,7 +1000,7 @@ class TestSalesLeadToDelivery:
             order_id=po.id,
             item_no=1,
             material_id=flow_state["ni_pxi_material_id"],
-            material_code="MAT-NI-001",
+            material_code=_MAT_NI_001,
             material_name="NI PXI机箱",
             specification="PXIe-1082, 8-slot",
             unit="台",
@@ -1021,7 +1030,7 @@ class TestSalesLeadToDelivery:
         receipt_item = GoodsReceiptItem(
             receipt_id=receipt.id,
             order_item_id=po_item.id,
-            material_code="MAT-NI-001",
+            material_code=_MAT_NI_001,
             material_name="NI PXI机箱",
             delivery_qty=Decimal("1"),
             received_qty=Decimal("1"),

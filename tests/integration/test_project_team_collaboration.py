@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 项目管理集成测试 - 项目成员协作流程
@@ -27,7 +28,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目
         project_data = {
             "project_name": "智能工厂改造项目",
-            "project_code": "PRJ-SMART-FACTORY-2024",
+            "project_code": f"PRJ-SMART-FACTORY-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -68,7 +69,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目
         project_data = {
             "project_name": "ERP系统开发",
-            "project_code": "PRJ-ERP-DEV-2024",
+            "project_code": f"PRJ-ERP-DEV-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -112,7 +113,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目
         project_data = {
             "project_name": "产品原型设计",
-            "project_code": "PRJ-PROTO-2024",
+            "project_code": f"PRJ-PROTO-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "研发设计",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -161,7 +162,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目并添加成员
         project_data = {
             "project_name": "自动化产线升级",
-            "project_code": "PRJ-AUTO-UPGRADE-2024",
+            "project_code": f"PRJ-AUTO-UPGRADE-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -215,7 +216,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目并添加成员
         project_data = {
             "project_name": "库存管理系统",
-            "project_code": "PRJ-WMS-2024",
+            "project_code": f"PRJ-WMS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -269,7 +270,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建两个项目
         project1_data = {
             "project_name": "项目A",
-            "project_code": "PRJ-A-2024",
+            "project_code": f"PRJ-A-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -280,7 +281,7 @@ class TestProjectTeamCollaboration:
         
         project2_data = {
             "project_name": "项目B",
-            "project_code": "PRJ-B-2024",
+            "project_code": f"PRJ-B-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -334,7 +335,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目并添加成员
         project_data = {
             "project_name": "质量管理系统",
-            "project_code": "PRJ-QMS-2024",
+            "project_code": f"PRJ-QMS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -403,7 +404,7 @@ class TestProjectTeamCollaboration:
         # 1. 创建项目
         project_data = {
             "project_name": "移动端APP开发",
-            "project_code": "PRJ-MOBILE-2024",
+            "project_code": f"PRJ-MOBILE-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),

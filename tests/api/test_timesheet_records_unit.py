@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 O1组 API层单元测试 - timesheet/records.py
@@ -265,7 +266,7 @@ class TestCreateTimesheet:
         ts_in.description = "编写测试代码"
         ts_in.task_id = None
 
-        project_mock = MagicMock(project_code="P0001", project_name="比亚迪项目")
+        project_mock = MagicMock(project_code=f"P0001-{uuid.uuid4().hex[:8]}", project_name="比亚迪项目")
         user_mock = MagicMock(real_name="管理员", username="admin", department_id=1)
         department_mock = MagicMock(id=1, name="技术部")
         ts_instance = _make_timesheet()

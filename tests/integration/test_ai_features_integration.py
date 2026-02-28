@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 AI 功能集成测试
@@ -281,7 +282,7 @@ class TestAIResultStorageToDatabase:
         alert = ShortageAlert(
             alert_no=f"ALERT_AI_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             material_id=None,  # 测试环境中无真实物料
-            material_code="TEST_MAT_001",
+            material_code=f"TEST_MAT_001-{uuid.uuid4().hex[:8]}",
             material_name="测试物料-AI方案",
             project_id=None,
             required_qty=Decimal("100"),

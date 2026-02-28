@@ -22,6 +22,11 @@ from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 
+import uuid
+
+_MAT001 = f"MAT001-{uuid.uuid4().hex[:8]}"
+
+
 
 class TestPurchaseOrderCRUD:
     """采购订单 CRUD 测试"""
@@ -66,7 +71,7 @@ class TestPurchaseOrderCRUD:
             "required_date": (date.today() + timedelta(days=7)).isoformat(),
             "items": [
                 {
-                    "material_code": "MAT001",
+                    "material_code": _MAT001,
                     "material_name": "测试物料1",
                     "specification": "规格A",
                     "unit": "个",
@@ -75,7 +80,7 @@ class TestPurchaseOrderCRUD:
                     "tax_rate": 13,
                 },
                 {
-                    "material_code": "MAT002",
+                    "material_code": f"MAT002-{uuid.uuid4().hex[:8]}",
                     "material_name": "测试物料2",
                     "specification": "规格B",
                     "unit": "件",
@@ -110,7 +115,7 @@ class TestPurchaseOrderCRUD:
             "order_title": "测试订单",
             "items": [
                 {
-                    "material_code": "MAT001",
+                    "material_code": _MAT001,
                     "material_name": "测试物料",
                     "unit": "个",
                     "quantity": 100,
@@ -443,7 +448,7 @@ class TestPurchaseRequest:
             "required_date": (date.today() + timedelta(days=14)).isoformat(),
             "items": [
                 {
-                    "material_code": "MAT001",
+                    "material_code": _MAT001,
                     "material_name": "测试物料",
                     "specification": "规格A",
                     "unit": "个",
@@ -557,7 +562,7 @@ class TestPurchaseRequest:
             "request_reason": "待删除申请",
             "items": [
                 {
-                    "material_code": "MAT999",
+                    "material_code": f"MAT999-{uuid.uuid4().hex[:8]}",
                     "material_name": "待删除物料",
                     "unit": "个",
                     "quantity": 10,

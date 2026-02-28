@@ -27,6 +27,11 @@ from app.models.project import Customer, Project, ProjectMember
 from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 from tests.integration.api_test_helper import APITestHelper
 
+import uuid
+
+_PJ_PM_TEST = f"PJ-PM-TEST-{uuid.uuid4().hex[:8]}"
+
+
 
 class PermissionTestReport:
     """测试报告生成器"""
@@ -435,7 +440,7 @@ def setup_test_data(db_session: Session, setup_test_users_and_roles):
 
     # 创建客户
     customer = Customer(
-        customer_code="CUST-TEST-PERM",
+        customer_code=f"CUST-TEST-PERM-{uuid.uuid4().hex[:8]}",
         customer_name="权限测试客户",
         contact_person="联系人",
         contact_phone="13800138000",
@@ -447,7 +452,7 @@ def setup_test_data(db_session: Session, setup_test_users_and_roles):
     # 创建项目
     projects = {
         "pm_project": Project(
-            project_code="PJ-PM-TEST",
+            project_code=_PJ_PM_TEST,
             project_name="PM负责的项目",
             customer_id=customer.id,
             customer_name=customer.customer_name,
@@ -458,7 +463,7 @@ def setup_test_data(db_session: Session, setup_test_users_and_roles):
             pm_id=users["pm"].id,
         ),
         "other_project": Project(
-            project_code="PJ-OTHER-TEST",
+            project_code=f"PJ-OTHER-TEST-{uuid.uuid4().hex[:8]}",
             project_name="其他项目",
             customer_id=customer.id,
             customer_name=customer.customer_name,
@@ -794,7 +799,7 @@ class TestDataScopeFiltering:
 
             # PM应该能看到自己负责的项目
             pm_project_visible = any(
-                p.get("project_code") == "PJ-PM-TEST" for p in items
+                p.get("project_code") == _PJ_PM_TEST for p in items
             )
 
             passed = pm_project_visible
@@ -837,7 +842,7 @@ class TestDataScopeFiltering:
 
             # 工程师应该能看到自己参与的项目
             project_visible = any(
-                p.get("project_code") == "PJ-PM-TEST" for p in items
+                p.get("project_code") == _PJ_PM_TEST for p in items
             )
 
             passed = project_visible

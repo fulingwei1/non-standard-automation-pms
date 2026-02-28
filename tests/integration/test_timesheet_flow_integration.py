@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 K2组集成测试 - 工时录入到报表全流程
@@ -53,7 +54,7 @@ def ts_engineer(db):
     from app.core.security import get_password_hash
 
     emp = Employee(
-        employee_code="EMP-TS-ENG-001",
+        employee_code=f"EMP-TS-ENG-001-{uuid.uuid4().hex[:8]}",
         name="工程师小王",
         department="工程部",
         role="ENGINEER",
@@ -84,7 +85,7 @@ def ts_manager(db):
     from app.core.security import get_password_hash
 
     emp = Employee(
-        employee_code="EMP-TS-PM-001",
+        employee_code=f"EMP-TS-PM-001-{uuid.uuid4().hex[:8]}",
         name="项目经理老李",
         department="项目管理部",
         role="PM",
@@ -113,7 +114,7 @@ def ts_project(db, ts_manager):
     from app.models.project import Customer, Project
 
     cust = Customer(
-        customer_code="CUST-TS-001",
+        customer_code=f"CUST-TS-001-{uuid.uuid4().hex[:8]}",
         customer_name="工时测试客户",
         contact_person="张客户",
         contact_phone="13900000010",
@@ -123,7 +124,7 @@ def ts_project(db, ts_manager):
     db.flush()
 
     project = Project(
-        project_code="PJ-TS-001",
+        project_code=f"PJ-TS-001-{uuid.uuid4().hex[:8]}",
         project_name="工时测试项目",
         customer_id=cust.id,
         customer_name=cust.customer_name,

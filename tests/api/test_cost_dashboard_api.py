@@ -10,6 +10,11 @@ from unittest.mock import patch, MagicMock
 from app.main import app
 from app.models.user import User
 
+import uuid
+
+_P001 = f"P001-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.fixture
 def client():
@@ -95,7 +100,7 @@ class TestTopProjectsAPI:
                 "top_cost_projects": [
                     {
                         "project_id": 1,
-                        "project_code": "P001",
+                        "project_code": _P001,
                         "project_name": "项目1",
                         "actual_cost": 100000,
                         "budget_amount": 120000,
@@ -159,7 +164,7 @@ class TestCostAlertsAPI:
                 "alerts": [
                     {
                         "project_id": 1,
-                        "project_code": "P001",
+                        "project_code": _P001,
                         "project_name": "超支项目",
                         "alert_type": "overrun",
                         "alert_level": "high",
@@ -195,7 +200,7 @@ class TestProjectDashboardAPI:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.return_value = {
                 "project_id": 1,
-                "project_code": "P001",
+                "project_code": _P001,
                 "project_name": "测试项目",
                 "budget_amount": 100000,
                 "actual_cost": 80000,

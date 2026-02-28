@@ -39,6 +39,12 @@ from app.models.acceptance import (
 from app.models.base import get_session
 from app.models.project import Machine, Project, ProjectStage, ProjectStatus
 
+import uuid
+
+_ELEC = f"ELEC-{uuid.uuid4().hex[:8]}"
+_FUNC = f"FUNC-{uuid.uuid4().hex[:8]}"
+
+
 
 class Colors:
     GREEN = "\033[0;32m"
@@ -215,7 +221,7 @@ def run_acceptance_flow() -> Dict[str, any]:
                 "description": "脚本生成",
                 "categories": [
                     {
-                        "category_code": "ELEC",
+                        "category_code": _ELEC,
                         "category_name": "电气安全",
                         "weight": 60,
                         "sort_order": 1,
@@ -237,7 +243,7 @@ def run_acceptance_flow() -> Dict[str, any]:
                         ],
                     },
                     {
-                        "category_code": "FUNC",
+                        "category_code": _FUNC,
                         "category_name": "功能验证",
                         "weight": 40,
                         "sort_order": 2,

@@ -17,6 +17,11 @@ from app.models.material import Material
 from app.models.shortage.smart_alert import ShortageAlert
 from app.models.project import Project
 
+import uuid
+
+_PERF_MAT001 = f"PERF_MAT001-{uuid.uuid4().hex[:8]}"
+
+
 
 class TestInventoryQueryPerformance:
     """库存查询性能测试"""
@@ -130,7 +135,7 @@ class TestShortageAlertScanPerformance:
         
         # 创建测试物料
         material = Material(
-            material_code="PERF_MAT001",
+            material_code=_PERF_MAT001,
             material_name="性能测试物料",
             unit="件",
             material_type="RAW_MATERIAL",
@@ -166,7 +171,7 @@ class TestShortageAlertScanPerformance:
         
         # 清理测试数据
         db.query(Project).filter(Project.project_code.like('PERF_PRJ%')).delete()
-        db.query(Material).filter(Material.material_code == 'PERF_MAT001').delete()
+        db.query(Material).filter(Material.material_code == _PERF_MAT001).delete()
         db.commit()
 
 
@@ -246,7 +251,7 @@ class TestConcurrentStockUpdate:
         
         # 创建测试物料
         material = Material(
-            material_code="CONCURRENT_TEST",
+            material_code=f"CONCURRENT_TEST-{uuid.uuid4().hex[:8]}",
             material_name="并发测试物料",
             unit="件",
             material_type="RAW_MATERIAL",
@@ -307,7 +312,7 @@ class TestConcurrentStockUpdate:
         
         # 创建测试物料
         material = Material(
-            material_code="HIGH_CONCURRENT",
+            material_code=f"HIGH_CONCURRENT-{uuid.uuid4().hex[:8]}",
             material_name="高并发测试物料",
             unit="件",
             material_type="RAW_MATERIAL",

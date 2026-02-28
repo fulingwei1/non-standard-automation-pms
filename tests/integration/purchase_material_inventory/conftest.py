@@ -13,15 +13,24 @@ from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.user import User
 
+import uuid
+
+_M001 = f"M001-{uuid.uuid4().hex[:8]}"
+_M002 = f"M002-{uuid.uuid4().hex[:8]}"
+_M003 = f"M003-{uuid.uuid4().hex[:8]}"
+_PRJ2026001 = f"PRJ2026001-{uuid.uuid4().hex[:8]}"
+_RAW_METAL = f"RAW_METAL-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.fixture
 def test_materials(db: Session):
     """创建测试物料数据"""
     # 创建或获取物料分类
-    category = db.query(MaterialCategory).filter_by(category_code="RAW_METAL").first()
+    category = db.query(MaterialCategory).filter_by(category_code=_RAW_METAL).first()
     if not category:
         category = MaterialCategory(
-            category_code="RAW_METAL",
+            category_code=_RAW_METAL,
             category_name="原材料-金属",
             level=1,
             is_active=True
@@ -30,12 +39,12 @@ def test_materials(db: Session):
         db.flush()
     
     # 创建或获取测试物料
-    material_codes = ["M001", "M002", "M003"]
+    material_codes = [_M001, _M002, _M003]
     materials = []
     
     material_configs = [
         {
-            "material_code": "M001",
+            "material_code": _M001,
             "material_name": "不锈钢板 304",
             "specification": "1.5mm*1220*2440",
             "unit": "张",
@@ -49,7 +58,7 @@ def test_materials(db: Session):
             "is_key_material": True
         },
         {
-            "material_code": "M002",
+            "material_code": _M002,
             "material_name": "铝合金型材 6061",
             "specification": "50*50*3mm",
             "unit": "米",
@@ -63,7 +72,7 @@ def test_materials(db: Session):
             "is_key_material": False
         },
         {
-            "material_code": "M003",
+            "material_code": _M003,
             "material_name": "电机 AC220V",
             "specification": "0.75KW 1400rpm",
             "unit": "台",
@@ -97,7 +106,7 @@ def test_suppliers(db: Session):
     """创建测试供应商数据"""
     supplier_configs = [
         {
-            "supplier_code": "SUP001",
+            "supplier_code": f"SUP001-{uuid.uuid4().hex[:8]}",
             "supplier_name": "上海金属材料有限公司",
             "vendor_type": "MATERIAL",
             "contact_person": "张经理",
@@ -109,7 +118,7 @@ def test_suppliers(db: Session):
             "payment_terms": "月结30天"
         },
         {
-            "supplier_code": "SUP002",
+            "supplier_code": f"SUP002-{uuid.uuid4().hex[:8]}",
             "supplier_name": "广东铝材供应商",
             "vendor_type": "MATERIAL",
             "contact_person": "李总",
@@ -121,7 +130,7 @@ def test_suppliers(db: Session):
             "payment_terms": "货到付款"
         },
         {
-            "supplier_code": "SUP003",
+            "supplier_code": f"SUP003-{uuid.uuid4().hex[:8]}",
             "supplier_name": "江苏电机制造厂",
             "vendor_type": "MATERIAL",
             "contact_person": "王工",
@@ -153,12 +162,12 @@ def test_suppliers(db: Session):
 def test_project(db: Session):
     """创建测试项目"""
     # 检查项目是否已存在
-    existing_project = db.query(Project).filter_by(project_code="PRJ2026001").first()
+    existing_project = db.query(Project).filter_by(project_code=_PRJ2026001).first()
     if existing_project:
         return existing_project
     
     project = Project(
-        project_code="PRJ2026001",
+        project_code=_PRJ2026001,
         project_name="自动化生产线项目A",
         project_type="CUSTOM",
         status="ST01",

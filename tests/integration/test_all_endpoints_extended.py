@@ -520,7 +520,7 @@ class TestPurchaseOrdersAPI:
             "required_date": (date.today() + timedelta(days=7)).isoformat(),
             "items": [
                 {
-                    "material_code": "MAT-001",
+                    "material_code": f"MAT-001-{uuid.uuid4().hex[:8]}",
                     "material_name": "测试物料",
                     "quantity": 10,
                     "unit_price": 100.00,
@@ -1098,7 +1098,7 @@ class TestOutsourcingOrdersAPI:
             "required_date": (date.today() + timedelta(days=10)).isoformat(),
             "items": [
                 {
-                    "material_code": "MAT-OS-001",
+                    "material_code": f"MAT-OS-001-{uuid.uuid4().hex[:8]}",
                     "material_name": "外协物料",
                     "quantity": 10,
                     "unit_price": 100.00,

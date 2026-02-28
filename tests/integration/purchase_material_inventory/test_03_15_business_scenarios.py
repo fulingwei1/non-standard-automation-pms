@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 场景3-15: 其他业务流程集成测试
@@ -102,7 +103,7 @@ class TestSubstituteMaterialUsage:
         
         # 创建替代料
         substitute = Material(
-            material_code="M001-SUB",
+            material_code=f"M001-SUB-{uuid.uuid4().hex[:8]}",
             material_name="不锈钢板 316",
             category_id=primary_material.category_id,
             specification="1.5mm*1220*2440",

@@ -15,6 +15,11 @@ from sqlalchemy.orm import Session
 
 from tests.factories import ProjectWithCustomerFactory, MachineFactory
 
+import uuid
+
+_PN001 = f"PN001-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.fixture
 def api_client(db_session: Session) -> TestClient:
@@ -52,7 +57,7 @@ class TestMachinesAPI:
         project = ProjectWithCustomerFactory()
         
         machine_data = {
-            "machine_code": "PN001",
+            "machine_code": _PN001,
             "machine_name": "测试机台",
             "machine_type": "TEST_EQUIPMENT",
             "status": "DESIGN"
@@ -65,7 +70,7 @@ class TestMachinesAPI:
         
         assert response.status_code in [200, 201]
         data = response.json()
-        assert data.get("machine_code") == "PN001" or "code" in data or "machine_code" in data
+        assert data.get("machine_code") == _PN001 or "code" in data or "machine_code" in data
 
     def test_put_machines_machine_id_progress(self, api_client, db_session):
         """测试 PUT /api/v1/projects/{project_id}/machines/{machine_id}/progress - 更新进度"""

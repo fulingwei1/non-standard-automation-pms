@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 Sales审批流程集成测试
@@ -32,7 +33,7 @@ class TestSalesApprovalFlow:
     def quote_version_sample(self, db_session: Session):
         """创建测试用的报价版本"""
         quote = QuoteVersion(
-            quote_code="QV20250101001",
+            quote_code=f"QV20250101001-{uuid.uuid4().hex[:8]}",
             quote_total=50000.00,
             margin_percent=15.5,
             status="DRAFT",
@@ -46,7 +47,7 @@ class TestSalesApprovalFlow:
     def contract_sample(self, db_session: Session):
         """创建测试用的合同"""
         contract = Contract(
-            contract_code="CT20250101001",
+            contract_code=f"CT20250101001-{uuid.uuid4().hex[:8]}",
             total_amount=100000.00,
             customer_id=1,  # 假设有客户ID=1
             project_id=1,  # 假设有项目ID=1
@@ -62,7 +63,7 @@ class TestSalesApprovalFlow:
     def invoice_sample(self, db_session: Session):
         """创建测试用的发票"""
         invoice = Invoice(
-            invoice_code="INV20250101001",
+            invoice_code=f"INV20250101001-{uuid.uuid4().hex[:8]}",
             invoice_type="INVOICE",
             amount=30000.00,
             tax_rate=0.13,
@@ -107,7 +108,7 @@ class TestSalesApprovalFlow:
         """测试高金额报价审批流程"""
         # 创建高金额报价
         quote = QuoteVersion(
-            quote_code="QV20250101002",
+            quote_code=f"QV20250101002-{uuid.uuid4().hex[:8]}",
             quote_total=150000.00,
             margin_percent=12.0,
             status="DRAFT",
@@ -273,7 +274,7 @@ class TestSalesApprovalFlow:
         """测试发票金额阈值审批"""
         # 创建大金额发票
         invoice = Invoice(
-            invoice_code="INV20250101002",
+            invoice_code=f"INV20250101002-{uuid.uuid4().hex[:8]}",
             invoice_type="INVOICE",
             amount=80000.00,
             tax_rate=0.13,

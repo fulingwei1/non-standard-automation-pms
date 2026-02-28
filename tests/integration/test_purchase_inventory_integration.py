@@ -8,6 +8,12 @@ import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
+import uuid
+
+_MAT_PURCH_001 = f"MAT-PURCH-001-{uuid.uuid4().hex[:8]}"
+_PO_PURCH_001 = f"PO-PURCH-001-{uuid.uuid4().hex[:8]}"
+
+
 
 # ============================================================
 # SQLite 内存数据库 fixture
@@ -50,7 +56,7 @@ def tenant(db):
     """创建测试租户（MaterialTransaction 必须关联租户）"""
     from app.models.tenant import Tenant
     t = Tenant(
-        tenant_code="TENANT-PURCH-001",
+        tenant_code=f"TENANT-PURCH-001-{uuid.uuid4().hex[:8]}",
         tenant_name="测试租户",
         status="ACTIVE",
         plan_type="ENTERPRISE",
@@ -69,7 +75,7 @@ def purchase_user(db):
     from app.core.security import get_password_hash
 
     emp = Employee(
-        employee_code="EMP-PURCH-001",
+        employee_code=f"EMP-PURCH-001-{uuid.uuid4().hex[:8]}",
         name="李采购",
         department="采购部",
         role="PURCHASE",
@@ -97,7 +103,7 @@ def purchase_customer(db):
     """创建关联客户"""
     from app.models.project import Customer
     c = Customer(
-        customer_code="CUST-PURCH-001",
+        customer_code=f"CUST-PURCH-001-{uuid.uuid4().hex[:8]}",
         customer_name="采购测试客户",
         contact_person="测试联系人",
         contact_phone="13900000002",
@@ -114,7 +120,7 @@ def purchase_project(db, purchase_customer, purchase_user):
     """创建关联项目"""
     from app.models.project import Project
     p = Project(
-        project_code="PJ-PURCH-001",
+        project_code=f"PJ-PURCH-001-{uuid.uuid4().hex[:8]}",
         project_name="采购闭环测试项目",
         customer_id=purchase_customer.id,
         customer_name=purchase_customer.customer_name,
@@ -134,7 +140,7 @@ def purchase_supplier(db, purchase_user):
     """创建供应商"""
     from app.models.vendor import Vendor
     v = Vendor(
-        supplier_code="SUP-PURCH-001",
+        supplier_code=f"SUP-PURCH-001-{uuid.uuid4().hex[:8]}",
         supplier_name="精密零件供应商",
         vendor_type="MATERIAL",
         contact_person="赵供应",
@@ -153,7 +159,7 @@ def test_material(db, purchase_user):
     """创建测试物料，初始库存为0（模拟缺料）"""
     from app.models.material import Material
     m = Material(
-        material_code="MAT-PURCH-001",
+        material_code=_MAT_PURCH_001,
         material_name="精密轴承 6205-2RS",
         specification="内径25mm 外径52mm 厚15mm",
         brand="NSK",
@@ -187,7 +193,7 @@ class TestPurchaseInventoryIntegration:
 
         # 创建 BOM 表头
         bom = BomHeader(
-            bom_no="BOM-PURCH-001",
+            bom_no=f"BOM-PURCH-001-{uuid.uuid4().hex[:8]}",
             bom_name="装配机主体 BOM",
             project_id=purchase_project.id,
             version="V1.0",
@@ -221,7 +227,7 @@ class TestPurchaseInventoryIntegration:
         shortage_qty = float(bom_item.quantity) - float(test_material.current_stock)
         assert shortage_qty == 50.0
         assert float(test_material.current_stock) == 0.0
-        assert bom_item.material_code == "MAT-PURCH-001"
+        assert bom_item.material_code == _MAT_PURCH_001
 
     # ─── 2. 创建采购申请 ──────────────────────────────────────
     def test_purchase_request_created_from_shortage(self, db, purchase_project,
@@ -233,7 +239,7 @@ class TestPurchaseInventoryIntegration:
 
         bom_item = db.query(BomItem).filter(
             BomItem.bom_id == db.query(BomItem).filter(
-                BomItem.material_code == "MAT-PURCH-001"
+                BomItem.material_code == _MAT_PURCH_001
             ).first().bom_id
         ).first()
 
@@ -324,7 +330,7 @@ class TestPurchaseInventoryIntegration:
 
         # 创建采购订单
         order = PurchaseOrder(
-            order_no="PO-PURCH-001",
+            order_no=_PO_PURCH_001,
             supplier_id=purchase_supplier.id,
             project_id=purchase_project.id,
             source_request_id=request.id,
@@ -382,7 +388,7 @@ class TestPurchaseInventoryIntegration:
         from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
 
         order = db.query(PurchaseOrder).filter(
-            PurchaseOrder.order_no == "PO-PURCH-001"
+            PurchaseOrder.order_no == _PO_PURCH_001
         ).first()
         order_item = db.query(PurchaseOrderItem).filter(
             PurchaseOrderItem.order_id == order.id
@@ -488,7 +494,7 @@ class TestPurchaseInventoryIntegration:
             batch_number="BATCH-20260217",
             related_order_id=receipt.order_id,
             related_order_type="PURCHASE_ORDER",
-            related_order_no="PO-PURCH-001",
+            related_order_no=_PO_PURCH_001,
             transaction_date=datetime.now(),
             operator_id=purchase_user.id,
             cost_method="WEIGHTED_AVG",
@@ -518,13 +524,13 @@ class TestPurchaseInventoryIntegration:
             PurchaseRequest.request_no == "PR-PURCH-001"
         ).first()
         order = db.query(PurchaseOrder).filter(
-            PurchaseOrder.order_no == "PO-PURCH-001"
+            PurchaseOrder.order_no == _PO_PURCH_001
         ).first()
         receipt = db.query(GoodsReceipt).filter(
             GoodsReceipt.receipt_no == "GR-PURCH-001"
         ).first()
         txn = db.query(MaterialTransaction).filter(
-            MaterialTransaction.related_order_no == "PO-PURCH-001"
+            MaterialTransaction.related_order_no == _PO_PURCH_001
         ).first()
 
         # 链路关联校验
@@ -539,7 +545,7 @@ class TestPurchaseInventoryIntegration:
 
         # BOM 缺料数量已满足（需求50，到货48，仍缺2件）
         bom_item = db.query(BomItem).filter(
-            BomItem.material_code == "MAT-PURCH-001"
+            BomItem.material_code == _MAT_PURCH_001
         ).first()
         remaining_shortage = float(bom_item.quantity) - float(test_material.current_stock)
         assert remaining_shortage == 2.0   # 2件不合格，仍有少量缺口

@@ -23,6 +23,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.models.base import Base
 
+import uuid
+
+_TMPL_001 = f"TMPL-001-{uuid.uuid4().hex[:8]}"
+
+
 
 # ---------------------------------------------------------------------------
 # Fixture
@@ -84,7 +89,7 @@ def _make_user(db, username="approver01", real_name="审批人"):
     return user
 
 
-def _make_template(db, user_id, code="TMPL-001", name="项目立项审批"):
+def _make_template(db, user_id, code=_TMPL_001, name="项目立项审批"):
     from app.models.approval import ApprovalTemplate
     tmpl = ApprovalTemplate(
         template_code=code,
@@ -171,7 +176,7 @@ class TestApprovalTemplateSetup:
         db.commit()
 
         from app.models.approval import ApprovalTemplate
-        saved = db.query(ApprovalTemplate).filter_by(template_code="TMPL-001").one()
+        saved = db.query(ApprovalTemplate).filter_by(template_code=_TMPL_001).one()
         assert saved.template_name == "项目立项审批"
         assert saved.category == "PROJECT"
         assert saved.is_published is True

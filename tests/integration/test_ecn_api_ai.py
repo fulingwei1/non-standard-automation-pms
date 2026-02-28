@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 ECN变更管理API集成测试（AI辅助生成）
@@ -353,7 +354,7 @@ class TestECNAffectedMaterials:
         # 添加受影响物料
         material_data = {
             "material_id": 1,
-            "material_code": "MAT-TEST-001",
+            "material_code": f"MAT-TEST-001-{uuid.uuid4().hex[:8]}",
             "material_name": "测试物料",
             "specification": "测试规格",
             "change_type": "UPDATE",

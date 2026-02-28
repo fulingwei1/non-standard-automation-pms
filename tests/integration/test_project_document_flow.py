@@ -18,6 +18,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 import base64
 
+import uuid
+
+_DES = f"DES-{uuid.uuid4().hex[:8]}"
+_DEV = f"DEV-{uuid.uuid4().hex[:8]}"
+_REQ = f"REQ-{uuid.uuid4().hex[:8]}"
+_TEST = f"TEST-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.mark.integration
 class TestProjectDocumentFlow:
@@ -28,7 +36,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "智能制造项目",
-            "project_code": "PRJ-SMART-MFG-2024",
+            "project_code": f"PRJ-SMART-MFG-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -91,7 +99,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "ERP升级项目",
-            "project_code": "PRJ-ERP-UP-2024",
+            "project_code": f"PRJ-ERP-UP-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -153,7 +161,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "生产线自动化",
-            "project_code": "PRJ-AUTO-LINE-2024",
+            "project_code": f"PRJ-AUTO-LINE-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -223,7 +231,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "数字化转型项目",
-            "project_code": "PRJ-DIGITAL-2024",
+            "project_code": f"PRJ-DIGITAL-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "信息化建设",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -285,7 +293,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "仓储管理系统",
-            "project_code": "PRJ-WMS-SYS-2024",
+            "project_code": f"PRJ-WMS-SYS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -352,7 +360,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "产品开发项目",
-            "project_code": "PRJ-PROD-DEV-2024",
+            "project_code": f"PRJ-PROD-DEV-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "研发项目",
             "customer_id": 1,
             "start_date": str(date.today() - timedelta(days=365)),
@@ -412,7 +420,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "质量体系认证",
-            "project_code": "PRJ-ISO-2024",
+            "project_code": f"PRJ-ISO-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "体系认证",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -495,7 +503,7 @@ class TestProjectDocumentFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "知识管理系统",
-            "project_code": "PRJ-KMS-2024",
+            "project_code": f"PRJ-KMS-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "软件开发",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -510,10 +518,10 @@ class TestProjectDocumentFlow:
         
         # 2. 创建文档分类
         categories = [
-            {"category_name": "需求文档", "category_code": "REQ", "parent_id": None},
-            {"category_name": "设计文档", "category_code": "DES", "parent_id": None},
-            {"category_name": "开发文档", "category_code": "DEV", "parent_id": None},
-            {"category_name": "测试文档", "category_code": "TEST", "parent_id": None},
+            {"category_name": "需求文档", "category_code": _REQ, "parent_id": None},
+            {"category_name": "设计文档", "category_code": _DES, "parent_id": None},
+            {"category_name": "开发文档", "category_code": _DEV, "parent_id": None},
+            {"category_name": "测试文档", "category_code": _TEST, "parent_id": None},
         ]
         
         category_ids = {}
@@ -528,10 +536,10 @@ class TestProjectDocumentFlow:
         
         # 3. 上传文档并分类
         documents = [
-            {"document_name": "用户需求说明书", "category": "REQ"},
-            {"document_name": "概要设计文档", "category": "DES"},
-            {"document_name": "详细设计文档", "category": "DES"},
-            {"document_name": "测试计划", "category": "TEST"},
+            {"document_name": "用户需求说明书", "category": _REQ},
+            {"document_name": "概要设计文档", "category": _DES},
+            {"document_name": "详细设计文档", "category": _DES},
+            {"document_name": "测试计划", "category": _TEST},
         ]
         
         for doc in documents:

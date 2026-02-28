@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 项目管理模块 - 阶段门校验单元测试
@@ -28,7 +29,7 @@ class TestProjectGateCheck:
 
         # 创建满足条件的项目
         project_data = {
-            "project_code": "PJ250101G01",
+            "project_code": f"PJ250101G01-{uuid.uuid4().hex[:8]}",
             "project_name": "G1门校验测试-通过",
             "customer_id": 1,
             "customer_name": "测试客户",
@@ -68,7 +69,7 @@ class TestProjectGateCheck:
 
         # 创建缺少客户信息的项目
         project_data = {
-            "project_code": "PJ250101G02",
+            "project_code": f"PJ250101G02-{uuid.uuid4().hex[:8]}",
             "project_name": "G1门校验测试-失败",
             "stage": "S1",
             # 缺少customer_id, customer_name等
@@ -105,7 +106,7 @@ class TestProjectGateCheck:
 
         # 创建项目并推进到S2
         project_data = {
-            "project_code": "PJ250101G03",
+            "project_code": f"PJ250101G03-{uuid.uuid4().hex[:8]}",
             "project_name": "G2门校验测试-通过",
             "customer_id": 1,
             "stage": "S2",
@@ -145,7 +146,7 @@ class TestProjectGateCheck:
 
         # 创建项目并推进到S5
         project_data = {
-            "project_code": "PJ250101G05",
+            "project_code": f"PJ250101G05-{uuid.uuid4().hex[:8]}",
             "project_name": "G5门校验测试-通过",
             "customer_id": 1,
             "stage": "S5",
@@ -181,7 +182,7 @@ class TestProjectGateCheck:
 
         # 创建满足条件的项目
         project_data = {
-            "project_code": "PJ250101G06",
+            "project_code": f"PJ250101G06-{uuid.uuid4().hex[:8]}",
             "project_name": "阶段推进测试-通过",
             "customer_id": 1,
             "customer_name": "测试客户",
@@ -225,7 +226,7 @@ class TestProjectGateCheck:
 
         # 创建不满足条件的项目
         project_data = {
-            "project_code": "PJ250101G07",
+            "project_code": f"PJ250101G07-{uuid.uuid4().hex[:8]}",
             "project_name": "阶段推进测试-失败",
             "stage": "S1",
             # 缺少必要信息
@@ -264,7 +265,7 @@ class TestProjectGateCheck:
 
         # 创建不满足条件的项目
         project_data = {
-            "project_code": "PJ250101G08",
+            "project_code": f"PJ250101G08-{uuid.uuid4().hex[:8]}",
             "project_name": "阶段推进测试-跳过校验",
             "stage": "S1",
         }
@@ -301,7 +302,7 @@ class TestProjectGateCheck:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101G09",
+            "project_code": f"PJ250101G09-{uuid.uuid4().hex[:8]}",
             "project_name": "无效阶段测试",
             "customer_id": 1,
             "stage": "S1",
@@ -335,7 +336,7 @@ class TestProjectGateCheck:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         project_data = {
-            "project_code": "PJ250101G10",
+            "project_code": f"PJ250101G10-{uuid.uuid4().hex[:8]}",
             "project_name": "所有门校验测试",
             "customer_id": 1,
             "stage": "S1",

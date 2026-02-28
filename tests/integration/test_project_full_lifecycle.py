@@ -27,6 +27,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.models.base import Base
 
+import uuid
+
+_PJ_LC_001 = f"PJ-LC-001-{uuid.uuid4().hex[:8]}"
+
+
 
 def _create_test_engine():
     """
@@ -109,7 +114,7 @@ def _make_customer(db, code="CUST-001", name="测试客户"):
     return customer
 
 
-def _make_project(db, customer_id, user_id, code="PJ-LC-001", name="全流程测试项目"):
+def _make_project(db, customer_id, user_id, code=_PJ_LC_001, name="全流程测试项目"):
     """创建处于 S1 阶段的初始项目。"""
     from app.models.project import Project
     project = Project(
@@ -142,7 +147,7 @@ class TestProjectCreation:
         db.commit()
 
         from app.models.project import Project
-        saved = db.query(Project).filter_by(project_code="PJ-LC-001").one()
+        saved = db.query(Project).filter_by(project_code=_PJ_LC_001).one()
 
         assert saved.id is not None
         assert saved.project_name == "全流程测试项目"

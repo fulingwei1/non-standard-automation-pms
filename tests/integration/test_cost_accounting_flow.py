@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 财务管理集成测试 - 成本核算流程
@@ -28,7 +29,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "自动化产线项目",
-            "project_code": "PRJ-AUTO-2024",
+            "project_code": f"PRJ-AUTO-2024-{uuid.uuid4().hex[:8]}",
             "project_type": "自动化改造",
             "customer_id": 1,
             "start_date": str(date.today()),
@@ -110,7 +111,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "MES系统实施",
-            "project_code": "PRJ-MES-2024",
+            "project_code": f"PRJ-MES-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 8000000.00,
@@ -214,7 +215,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "智能仓储项目",
-            "project_code": "PRJ-WMS-2024",
+            "project_code": f"PRJ-WMS-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today() - timedelta(days=60)),
             "contract_amount": 7000000.00,
@@ -254,7 +255,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目和预算
         project_data = {
             "project_name": "生产管理系统",
-            "project_code": "PRJ-PMS-2024",
+            "project_code": f"PRJ-PMS-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 6000000.00,
@@ -304,7 +305,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "ERP升级项目",
-            "project_code": "PRJ-ERP-UP-2024",
+            "project_code": f"PRJ-ERP-UP-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today() - timedelta(days=90)),
             "contract_amount": 12000000.00,
@@ -348,7 +349,7 @@ class TestCostAccountingFlow:
         # 1. 创建项目
         project_data = {
             "project_name": "产线改造项目",
-            "project_code": "PRJ-LINE-UP-2024",
+            "project_code": f"PRJ-LINE-UP-2024-{uuid.uuid4().hex[:8]}",
             "customer_id": 1,
             "start_date": str(date.today()),
             "contract_amount": 9000000.00,

@@ -120,7 +120,7 @@ class TestProjectWorkflow:
 
         # 1. 创建项目
         project_data = {
-            "project_code": "PJ250101WF02",
+            "project_code": f"PJ250101WF02-{uuid.uuid4().hex[:8]}",
             "project_name": "集成测试-机台管理",
             "customer_id": 1,
             "stage": "S1",
@@ -137,7 +137,7 @@ class TestProjectWorkflow:
 
             # 2. 创建机台
             machine_data = {
-                "machine_code": "PN001",
+                "machine_code": f"PN001-{uuid.uuid4().hex[:8]}",
                 "machine_name": "测试机台",
             }
 
@@ -169,7 +169,7 @@ class TestProjectWorkflow:
 
         # 1. 创建项目
         project_data = {
-            "project_code": "PJ250101WF03",
+            "project_code": f"PJ250101WF03-{uuid.uuid4().hex[:8]}",
             "project_name": "集成测试-里程碑管理",
             "customer_id": 1,
             "stage": "S1",
@@ -226,7 +226,7 @@ class TestProjectWorkflow:
 
         # 1. 创建项目
         project_data = {
-            "project_code": "PJ250101WF04",
+            "project_code": f"PJ250101WF04-{uuid.uuid4().hex[:8]}",
             "project_name": "集成测试-成员管理",
             "customer_id": 1,
             "stage": "S1",
@@ -276,7 +276,7 @@ class TestProjectWorkflow:
 
         # 1. 创建项目
         project_data = {
-            "project_code": "PJ250101WF05",
+            "project_code": f"PJ250101WF05-{uuid.uuid4().hex[:8]}",
             "project_name": "集成测试-状态健康联动",
             "customer_id": 1,
             "status": "ST01",

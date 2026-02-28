@@ -8,6 +8,14 @@ import pytest
 from datetime import date, datetime
 from decimal import Decimal
 
+import uuid
+
+_CT_FLOW_001 = f"CT-FLOW-001-{uuid.uuid4().hex[:8]}"
+_LD_FLOW_001 = f"LD-FLOW-001-{uuid.uuid4().hex[:8]}"
+_OPP_FLOW_001 = f"OPP-FLOW-001-{uuid.uuid4().hex[:8]}"
+_QT_FLOW_001 = f"QT-FLOW-001-{uuid.uuid4().hex[:8]}"
+
+
 
 # ============================================================
 # SQLite 内存数据库 fixture
@@ -53,7 +61,7 @@ def sales_user(db):
     from app.core.security import get_password_hash
 
     emp = Employee(
-        employee_code="EMP-SALES-001",
+        employee_code=f"EMP-SALES-001-{uuid.uuid4().hex[:8]}",
         name="张销售",
         department="销售部",
         role="SALES",
@@ -83,7 +91,7 @@ def sales_customer(db):
     from app.models.project import Customer
 
     customer = Customer(
-        customer_code="CUST-FLOW-001",
+        customer_code=f"CUST-FLOW-001-{uuid.uuid4().hex[:8]}",
         customer_name="智造科技有限公司",
         contact_person="王总",
         contact_phone="13900000001",
@@ -107,7 +115,7 @@ class TestSalesFlowIntegration:
         from app.models.sales.leads import Lead
 
         lead = Lead(
-            lead_code="LD-FLOW-001",
+            lead_code=_LD_FLOW_001,
             source="REFERRAL",
             customer_name="智造科技有限公司",
             industry="汽车零部件",
@@ -123,7 +131,7 @@ class TestSalesFlowIntegration:
 
         assert lead.id is not None
         assert lead.status == "NEW"
-        assert lead.lead_code == "LD-FLOW-001"
+        assert lead.lead_code == _LD_FLOW_001
         assert lead.demand_summary == "需要一条全自动装配线"
 
     # ─── 2. 线索评估 → 状态转为 QUALIFIED ───────────────────
@@ -132,7 +140,7 @@ class TestSalesFlowIntegration:
         from app.models.sales.leads import Lead, Opportunity
 
         # 获取已创建的线索
-        lead = db.query(Lead).filter(Lead.lead_code == "LD-FLOW-001").first()
+        lead = db.query(Lead).filter(Lead.lead_code == _LD_FLOW_001).first()
         assert lead is not None
 
         # 评估通过 → 更新状态
@@ -142,7 +150,7 @@ class TestSalesFlowIntegration:
 
         # 创建商机
         opp = Opportunity(
-            opp_code="OPP-FLOW-001",
+            opp_code=_OPP_FLOW_001,
             lead_id=lead.id,
             customer_id=sales_customer.id,
             opp_name="全自动装配线项目",
@@ -169,7 +177,7 @@ class TestSalesFlowIntegration:
         from app.models.sales.leads import Opportunity
 
         opp = db.query(Opportunity).filter(
-            Opportunity.opp_code == "OPP-FLOW-001"
+            Opportunity.opp_code == _OPP_FLOW_001
         ).first()
         assert opp is not None
 
@@ -188,12 +196,12 @@ class TestSalesFlowIntegration:
         from app.models.sales.quotes import Quote, QuoteVersion, QuoteItem
 
         opp = db.query(Opportunity).filter(
-            Opportunity.opp_code == "OPP-FLOW-001"
+            Opportunity.opp_code == _OPP_FLOW_001
         ).first()
 
         # 创建报价主表
         quote = Quote(
-            quote_code="QT-FLOW-001",
+            quote_code=_QT_FLOW_001,
             opportunity_id=opp.id,
             customer_id=sales_customer.id,
             status="DRAFT",
@@ -281,7 +289,7 @@ class TestSalesFlowIntegration:
         """报价提交审批后，状态变为 PENDING_APPROVAL"""
         from app.models.sales import Quote, QuoteApproval
 
-        quote = db.query(Quote).filter(Quote.quote_code == "QT-FLOW-001").first()
+        quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
         assert quote is not None
 
         # 提交审批
@@ -313,7 +321,7 @@ class TestSalesFlowIntegration:
         """审批人通过报价，状态变为 APPROVED"""
         from app.models.sales import Quote, QuoteApproval
 
-        quote = db.query(Quote).filter(Quote.quote_code == "QT-FLOW-001").first()
+        quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
         approval = db.query(QuoteApproval).filter(
             QuoteApproval.quote_id == quote.id
         ).first()
@@ -339,13 +347,13 @@ class TestSalesFlowIntegration:
         from app.models.sales import Quote, QuoteVersion
         from app.models.sales.contracts import Contract
 
-        quote = db.query(Quote).filter(Quote.quote_code == "QT-FLOW-001").first()
+        quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
         version = db.query(QuoteVersion).filter(
             QuoteVersion.id == quote.current_version_id
         ).first()
 
         contract = Contract(
-            contract_code="CT-FLOW-001",
+            contract_code=_CT_FLOW_001,
             contract_name="全自动装配线采购合同",
             contract_type="sales",
             customer_id=sales_customer.id,
@@ -365,7 +373,7 @@ class TestSalesFlowIntegration:
         db.refresh(contract)
 
         assert contract.id is not None
-        assert contract.contract_code == "CT-FLOW-001"
+        assert contract.contract_code == _CT_FLOW_001
         assert contract.status == "draft"
         assert float(contract.total_amount) == 850000.00
         assert contract.customer_id == sales_customer.id
@@ -379,7 +387,7 @@ class TestSalesFlowIntegration:
 
         # 合同通过审批并签署
         contract = db.query(Contract).filter(
-            Contract.contract_code == "CT-FLOW-001"
+            Contract.contract_code == _CT_FLOW_001
         ).first()
         contract.status = "signed"
         db.flush()
@@ -399,11 +407,11 @@ class TestSalesFlowIntegration:
         db.commit()
 
         # ── 全流程闭环校验 ──
-        lead = db.query(Lead).filter(Lead.lead_code == "LD-FLOW-001").first()
-        opp = db.query(Opportunity).filter(Opportunity.opp_code == "OPP-FLOW-001").first()
-        quote = db.query(Quote).filter(Quote.quote_code == "QT-FLOW-001").first()
+        lead = db.query(Lead).filter(Lead.lead_code == _LD_FLOW_001).first()
+        opp = db.query(Opportunity).filter(Opportunity.opp_code == _OPP_FLOW_001).first()
+        quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
         contract = db.query(Contract).filter(
-            Contract.contract_code == "CT-FLOW-001"
+            Contract.contract_code == _CT_FLOW_001
         ).first()
 
         # 验证链路完整

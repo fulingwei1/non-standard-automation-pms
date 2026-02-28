@@ -24,6 +24,30 @@ os.environ["REDIS_URL"] = ""
 os.environ.setdefault("DEBUG", "true")
 # Disable schedulers during tests to avoid background writes.
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
+# Disable rate limiting during tests to avoid "登录请求过于频繁" errors
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+os.environ["RATE_LIMIT_LOGIN"] = "99999/minute"
+os.environ["RATE_LIMIT_DEFAULT"] = "99999/minute"
+
+# Mock slowapi limiter to be a no-op during tests
+from unittest.mock import patch as _patch
+_noop_decorator = lambda *a, **kw: (lambda f: f)
+_mock_limiter = MagicMock()
+_mock_limiter.limit = _noop_decorator
+_mock_limiter.shared_limit = _noop_decorator
+sys.modules.setdefault("slowapi", MagicMock())
+# Patch the limiter instances so they don't actually rate-limit
+import importlib
+try:
+    import app.core.rate_limiting as _rl_mod
+    _rl_mod.limiter.limit = _noop_decorator
+    _rl_mod.limiter.shared_limit = _noop_decorator
+    if hasattr(_rl_mod, 'user_limiter'):
+        _rl_mod.user_limiter.limit = _noop_decorator
+    if hasattr(_rl_mod, 'strict_limiter'):
+        _rl_mod.strict_limiter.limit = _noop_decorator
+except Exception:
+    pass
 
 import uuid
 from pathlib import Path
@@ -371,6 +395,8 @@ def _get_auth_token(
     db.commit()
 
     # 通过登录接口获取 token
+    if getattr(app.state, "limiter", None) is not None:
+        app.state.limiter.enabled = False
     client = TestClient(app)
     login_data = {
         "username": username,

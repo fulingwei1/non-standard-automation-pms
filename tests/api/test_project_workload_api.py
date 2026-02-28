@@ -1,3 +1,4 @@
+import uuid
 # -*- coding: utf-8 -*-
 """
 项目中心工作量API测试
@@ -327,7 +328,7 @@ class TestProjectWorkloadEdgeCases:
 
         # 创建一个新项目（没有分配团队成员）
         project_data = {
-            "project_code": "PJ-WORKLOAD-TEST",
+            "project_code": f"PJ-WORKLOAD-TEST-{uuid.uuid4().hex[:8]}",
             "project_name": "工作量测试项目",
             "stage": "S1",
         }

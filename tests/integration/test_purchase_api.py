@@ -7,6 +7,11 @@ Covers: app/api/v1/endpoints/purchases.py
 import pytest
 from datetime import date
 
+import uuid
+
+_PO001 = f"PO001-{uuid.uuid4().hex[:8]}"
+
+
 
 class TestPurchaseOrdersAPI:
     """采购订单API集成测试"""
@@ -151,7 +156,7 @@ class TestPurchaseOrdersAPIAuth:
         """测试无token创建"""
         response = client.post(
             "/api/v1/purchase-orders/",
-            json={"order_no": "PO001"}
+            json={"order_no": _PO001}
         )
         assert response.status_code == 401
 

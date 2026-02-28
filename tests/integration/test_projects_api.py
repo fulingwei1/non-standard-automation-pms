@@ -20,6 +20,11 @@ from app.main import app
 from app.models.project import Project
 from app.core.config import settings
 
+import uuid
+
+_PJ250119001 = f"PJ250119001-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.mark.api
 @pytest.mark.integration
@@ -48,7 +53,7 @@ class TestProjectsAPI:
     def test_project(self, db_session: Session):
         """创建测试项目"""
         project = Project(
-            project_code="PJ250119001",
+            project_code=_PJ250119001,
             project_name="测试项目",
             customer_name="测试客户",
             contract_amount=100000.00,
@@ -140,7 +145,7 @@ class TestProjectsAPI:
     def test_create_project_success(self, client: TestClient, auth_headers: dict):
         """测试创建项目成功"""
         project_data = {
-            "project_code": "PJ250119002",
+            "project_code": f"PJ250119002-{uuid.uuid4().hex[:8]}",
             "project_name": "新建测试项目",
             "customer_name": "测试客户公司",
             "contract_amount": 200000.00,
@@ -172,7 +177,7 @@ class TestProjectsAPI:
     ):
         """测试创建重复项目编码"""
         project_data = {
-            "project_code": "PJ250119001",
+            "project_code": _PJ250119001,
             "project_name": "重复编码项目",
             "customer_name": "测试客户",
             "contract_amount": 100000.00,

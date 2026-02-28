@@ -18,6 +18,11 @@ from sqlalchemy.orm import Session
 
 from tests.factories import ProjectStageFactory, ProjectWithCustomerFactory
 
+import uuid
+
+_S10 = f"S10-{uuid.uuid4().hex[:8]}"
+
+
 
 @pytest.fixture
 def api_client(db_session: Session) -> TestClient:
@@ -37,7 +42,7 @@ class TestStagesAPI:
     def test_post_stages(self, api_client, db_session):
         """测试 POST /api/v1/stages - 创建阶段"""
         stage_data = {
-            "stage_code": "S10",
+            "stage_code": _S10,
             "stage_name": "测试阶段",
             "stage_order": 10,
             "is_active": True
@@ -50,7 +55,7 @@ class TestStagesAPI:
             pytest.skip("Stages endpoint not implemented")
         assert response.status_code in [200, 201]
         data = response.json()
-        assert data.get("stage_code") == "S10" or "code" in data
+        assert data.get("stage_code") == _S10 or "code" in data
 
     def test_put_stages_stage_id(self, api_client, db_session):
         """测试 PUT /api/v1/stages/{stage_id} - 更新阶段"""
