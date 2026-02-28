@@ -64,6 +64,8 @@ export const defaultNavGroups = [
       { name: "预算管理", path: "/budgets", icon: "CreditCard", permission: "budget:read", permissionLabel: "预算管理" },
       { name: "项目看板", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目看板" },
       { name: "甘特图", path: "/gantt", icon: "GitBranch", permission: "project:read", permissionLabel: "甘特图" },
+      { name: "ECN变更", path: "/ecn", icon: "FileText", permission: "project:read", permissionLabel: "ECN变更" },
+      { name: "现场调试", path: "/field-commissioning", icon: "Wrench", permission: "project:read", permissionLabel: "现场调试" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目结项" },
       { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" },
       { name: "经验教训", path: "/lessons-learned", icon: "BookOpen", permission: "project:read", permissionLabel: "经验教训" },
@@ -151,7 +153,8 @@ export const defaultNavGroups = [
       { name: "成本归集", path: "/cost-collection", icon: "ArrowDownToLine", permission: "cost:accounting:read", permissionLabel: "成本归集" },
       { name: "报价对比", path: "/quote-compare", icon: "ArrowLeftRight", permission: "cost:accounting:read", permissionLabel: "报价对比" },
       { name: "成本偏差", path: "/cost-variance", icon: "AlertTriangle", permission: "cost:accounting:read", permissionLabel: "成本偏差分析" },
-      { name: "人工成本", path: "/labor-cost", icon: "Users", permission: "cost:accounting:read", permissionLabel: "人工成本明细" }
+      { name: "人工成本", path: "/labor-cost", icon: "Users", permission: "cost:accounting:read", permissionLabel: "人工成本明细" },
+      { name: "多币种", path: "/multi-currency", icon: "Coins", permission: "finance:read", permissionLabel: "多币种管理" }
     ],
     roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"]
   },

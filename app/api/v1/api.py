@@ -398,6 +398,30 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 供应商价格趋势模块加载失败：{e}")
 
+    # ==================== ECN工程变更→BOM联动 ====================
+    try:
+        from app.api.v1.endpoints.ecn_bom import router as ecn_bom_router
+        api_router.include_router(ecn_bom_router, prefix="/ecn", tags=["ecn-bom"])
+        print("✓ ECN工程变更模块加载成功")
+    except Exception as e:
+        print(f"✗ ECN工程变更模块加载失败：{e}")
+
+    # ==================== 现场调试 ====================
+    try:
+        from app.api.v1.endpoints.field_commissioning import router as field_router
+        api_router.include_router(field_router, prefix="/field", tags=["field-commissioning"])
+        print("✓ 现场调试模块加载成功")
+    except Exception as e:
+        print(f"✗ 现场调试模块加载失败：{e}")
+
+    # ==================== 多币种 ====================
+    try:
+        from app.api.v1.endpoints.multi_currency import router as currency_router
+        api_router.include_router(currency_router, prefix="/currency", tags=["multi-currency"])
+        print("✓ 多币种模块加载成功")
+    except Exception as e:
+        print(f"✗ 多币种模块加载失败：{e}")
+
     # ==================== ECN 工程变更 ====================
     try:
         from app.api.v1.endpoints.ecn import router as ecn_router
