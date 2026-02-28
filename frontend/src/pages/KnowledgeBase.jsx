@@ -212,7 +212,7 @@ const KnowledgeBase = () => {
 
   // 过滤数据
   const filteredDocuments = useMemo(() => {
-    return documents.filter((doc) => {
+    return (documents || []).filter((doc) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchesSearch = !searchText ||
       (doc.title || "").toLowerCase().includes(searchLower) ||
@@ -247,7 +247,7 @@ const KnowledgeBase = () => {
       setLoading(true);
       // 调用真实删除API
       await serviceApi.knowledgeBase.delete(docId);
-      setDocuments(documents.filter((d) => d.id !== docId));
+      setDocuments((documents || []).filter((d) => d.id !== docId));
       message.success('删除成功');
     } catch (error) {
       console.error('删除文档失败:', error);
@@ -258,7 +258,7 @@ const KnowledgeBase = () => {
   };
 
   const handleToggleFavorite = (docId) => {
-    setDocuments(documents.map((doc) =>
+    setDocuments((documents || []).map((doc) =>
     doc.id === docId ?
     { ...doc, isFavorite: !doc.isFavorite } :
     doc
@@ -269,7 +269,7 @@ const KnowledgeBase = () => {
   const handleDocumentView = (doc) => {
     setSelectedDocument(doc);
     // 更新浏览次数
-    setDocuments(documents.map((d) =>
+    setDocuments((documents || []).map((d) =>
     d.id === doc.id ?
     { ...d, viewCount: (d.viewCount || 0) + 1 } :
     d
@@ -279,7 +279,7 @@ const KnowledgeBase = () => {
   const handleDownload = (doc) => {
     message.success(`正在下载: ${doc.title}`);
     // 更新下载次数
-    setDocuments(documents.map((d) =>
+    setDocuments((documents || []).map((d) =>
     d.id === doc.id ?
     { ...d, downloadCount: (d.downloadCount || 0) + 1 } :
     d
@@ -404,7 +404,7 @@ const KnowledgeBase = () => {
   // 渲染文档网格
   const renderDocumentGrid = () =>
   <Row gutter={[16, 16]}>
-      {filteredDocuments.map((doc) => {
+      {(filteredDocuments || []).map((doc) => {
       const typeConfig = KNOWLEDGE_TYPES[doc.type?.toUpperCase()];
       const fileConfig = FILE_TYPES[doc.fileType?.toUpperCase()];
 

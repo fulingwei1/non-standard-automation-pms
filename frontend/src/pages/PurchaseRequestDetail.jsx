@@ -404,7 +404,7 @@ export default function PurchaseRequestDetail() {
                 <CardTitle className="text-slate-200">物料明细</CardTitle>
               </CardHeader>
               <CardContent>
-                {!request.items || request.items.length === 0 ? (
+                {!request.items || request.items?.length === 0 ? (
                   <EmptyState
                     icon={Package}
                     title="暂无物料明细"
@@ -442,7 +442,7 @@ export default function PurchaseRequestDetail() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {request.items.map((item, index) => (
+                        {(request.items || []).map((item, index) => (
                           <TableRow
                             key={item.id || index}
                             className="border-slate-700"
@@ -549,9 +549,9 @@ export default function PurchaseRequestDetail() {
                   </Badge>
                 </div>
                 {request.generated_orders &&
-                request.generated_orders.length > 0 ? (
+                request.generated_orders?.length > 0 ? (
                   <div className="space-y-3">
-                    {request.generated_orders.map((order) => (
+                    {(request.generated_orders || []).map((order) => (
                       <div
                         key={order.id}
                         className="p-3 rounded-lg border border-slate-700 bg-slate-900/40"

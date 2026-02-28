@@ -236,9 +236,9 @@ const TimelineNode = ({ node, isLast, previousNodeTime }) => {
         )}
 
         {/* 附件 */}
-        {node.attachments && node.attachments.length > 0 && (
+        {node.attachments && node.attachments?.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {node.attachments.map((attachment, idx) => (
+            {(node.attachments || []).map((attachment, idx) => (
               <a
                 key={idx}
                 href={attachment.url}
@@ -274,8 +274,8 @@ export const transformToTimelineNodes = (instance) => {
   });
 
   // 2. 根据 tasks 构建审批节点
-  if (instance.tasks && instance.tasks.length > 0) {
-    instance.tasks.forEach((task, index) => {
+  if (instance.tasks && instance.tasks?.length > 0) {
+    (instance.tasks || []).forEach((task, index) => {
       let status = "pending";
 
       if (task.status === "COMPLETED") {
@@ -363,7 +363,7 @@ const ApprovalTimeline = ({
         审批进度
       </h3>
       <div className="pl-1">
-        {timelineNodes.map((node, index) => (
+        {(timelineNodes || []).map((node, index) => (
           <TimelineNode
             key={index}
             node={node}

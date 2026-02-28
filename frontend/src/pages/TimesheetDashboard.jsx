@@ -379,7 +379,7 @@ export default function TimesheetDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {departmentStats.map((dept, index) =>
+                  {(departmentStats || []).map((dept, index) =>
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-slate-700/50 rounded">
@@ -407,7 +407,7 @@ export default function TimesheetDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {projectStats.map((project, index) =>
+                  {(projectStats || []).map((project, index) =>
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-slate-700/50 rounded">
@@ -451,7 +451,7 @@ export default function TimesheetDashboard() {
                 </div> :
 
                 <div className="space-y-2">
-                    {anomalies.map((anomaly, index) =>
+                    {(anomalies || []).map((anomaly, index) =>
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-red-900/20 border border-red-500/30 rounded">

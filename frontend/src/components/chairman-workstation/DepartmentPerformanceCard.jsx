@@ -31,7 +31,7 @@ export const DepartmentPerformanceCard = ({ departmentPerformance }) => {
         <CardContent>
           <div className="space-y-3">
             {departmentPerformance && departmentPerformance.length > 0 ?
-            departmentPerformance.map((dept) => {
+            (departmentPerformance || []).map((dept) => {
               const deptName =
               dept.name || dept.department_name || "";
               const manager = dept.manager || dept.manager_name || "";

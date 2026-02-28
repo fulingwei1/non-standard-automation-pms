@@ -20,7 +20,7 @@ export default function WorkOrderList({ orders, loading, onAction }) {
     );
   }
 
-  if (orders.length === 0) {
+  if (orders?.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-slate-400 mb-2">暂无工单</div>
@@ -31,7 +31,7 @@ export default function WorkOrderList({ orders, loading, onAction }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {orders.map((order) => (
+      {(orders || []).map((order) => (
         <WorkOrderCard
           key={order.id}
           order={order}

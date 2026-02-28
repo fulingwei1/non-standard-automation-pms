@@ -69,10 +69,10 @@ export default function AttendanceManagement() {
   }, [dateFilter]);
 
   const overallStats = useMemo(() => {
-    const total = attendanceStats.reduce((sum, s) => sum + s.total, 0);
-    const present = attendanceStats.reduce((sum, s) => sum + s.present, 0);
-    const leave = attendanceStats.reduce((sum, s) => sum + s.leave, 0);
-    const late = attendanceStats.reduce((sum, s) => sum + s.late, 0);
+    const total = (attendanceStats || []).reduce((sum, s) => sum + s.total, 0);
+    const present = (attendanceStats || []).reduce((sum, s) => sum + s.present, 0);
+    const leave = (attendanceStats || []).reduce((sum, s) => sum + s.leave, 0);
+    const late = (attendanceStats || []).reduce((sum, s) => sum + s.late, 0);
     const attendanceRate = total > 0 ? present / total * 100 : 0;
     return { total, present, leave, late, attendanceRate };
   }, [attendanceStats]);
@@ -181,7 +181,7 @@ export default function AttendanceManagement() {
 
         <TabsContent value="statistics" className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {attendanceStats.map((stat, index) =>
+            {(attendanceStats || []).map((stat, index) =>
             <Card key={index}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -253,7 +253,7 @@ export default function AttendanceManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockLeaveApplications.map((app) =>
+                {(mockLeaveApplications || []).map((app) =>
                 <div
                   key={app.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">

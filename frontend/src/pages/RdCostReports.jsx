@@ -185,7 +185,7 @@ export default function RdCostReports() {
   }
 
   const selectedReport =
-  reportTypes.find((r) => r.id === reportType) || reportTypes[0];
+  (reportTypes || []).find((r) => r.id === reportType) || reportTypes[0];
 
   return (
     <motion.div initial="hidden" animate="visible">
@@ -216,7 +216,7 @@ export default function RdCostReports() {
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {reportTypes.map((report) =>
+            {(reportTypes || []).map((report) =>
             <button
               key={report.id}
               onClick={() => setReportType(report.id)}
@@ -339,7 +339,7 @@ export default function RdCostReports() {
             }
 
               {/* Table Data */}
-              {reportData.items && reportData.items.length > 0 &&
+              {reportData.items && reportData.items?.length > 0 &&
             <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -355,7 +355,7 @@ export default function RdCostReports() {
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.items.map((row, idx) =>
+                      {(reportData.items || []).map((row, idx) =>
                   <tr
                     key={idx}
                     className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
@@ -390,7 +390,7 @@ export default function RdCostReports() {
             }
 
               {/* No Data */}
-              {(!reportData.items || reportData.items.length === 0) &&
+              {(!reportData.items || reportData.items?.length === 0) &&
             !reportData.summary &&
             <div className="text-center py-12 text-slate-500">
                     <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />

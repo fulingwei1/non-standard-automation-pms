@@ -142,7 +142,7 @@ export default function TaskCard({ task, onStatusChange }) {
         {/* Tags */}
         {task.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
-            {task.tags.map((tag) => (
+            {(task.tags || []).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-[10px] px-1.5">
                 {tag}
               </Badge>
@@ -158,7 +158,7 @@ export default function TaskCard({ task, onStatusChange }) {
               className="w-full flex items-center justify-between text-xs text-slate-400 hover:text-white transition-colors"
             >
               <span>
-                子任务 ({task.subTasks.filter((st) => st.completed).length}/{task.subTasks.length})
+                子任务 ({(task.subTasks || []).filter((st) => st.completed).length}/{task.subTasks?.length})
               </span>
               <motion.span animate={{ rotate: expanded ? 90 : 0 }}>
                 <ChevronRight className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function TaskCard({ task, onStatusChange }) {
                   className="overflow-hidden"
                 >
                   <div className="space-y-1 mt-2">
-                    {task.subTasks.map((subTask) => (
+                    {(task.subTasks || []).map((subTask) => (
                       <div key={subTask.id} className="flex items-center gap-2 text-xs">
                         <div
                           className={cn(

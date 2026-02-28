@@ -52,7 +52,7 @@ export default function HRTransactionsTab() {
 
   // 筛选事务
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) => {
+    return (transactions || []).filter((t) => {
       if (filter.searchText) {
         const search = filter.searchText.toLowerCase();
         const name = t.employee?.name?.toLowerCase() || "";
@@ -176,7 +176,7 @@ export default function HRTransactionsTab() {
             />
           ) : (
             <div className="space-y-3">
-              {filteredTransactions.map((transaction) => {
+              {(filteredTransactions || []).map((transaction) => {
                 const typeConfig =
                   transactionTypeMap[transaction.transaction_type] || {};
                 const statusConfig = statusMap[transaction.status] || {};

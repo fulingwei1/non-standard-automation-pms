@@ -139,16 +139,16 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
       </div>
 
       {/* Tags */}
-      {tags.length > 0 && (
+      {tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {tags.slice(0, 3).map((tag, index) => (
             <Badge key={index} variant="secondary" className="text-xs">
               {tag}
             </Badge>
           ))}
-          {tags.length > 3 && (
+          {tags?.length > 3 && (
             <Badge variant="secondary" className="text-xs">
-              +{tags.length - 3}
+              +{tags?.length - 3}
             </Badge>
           )}
         </div>

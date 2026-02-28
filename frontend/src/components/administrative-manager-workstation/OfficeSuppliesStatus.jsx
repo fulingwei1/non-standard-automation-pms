@@ -32,7 +32,7 @@ const OfficeSuppliesStatus = ({ officeSupplies }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {officeSupplies.map((item) =>
+            {(officeSupplies || []).map((item) =>
             <div
               key={item.id}
               className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors">

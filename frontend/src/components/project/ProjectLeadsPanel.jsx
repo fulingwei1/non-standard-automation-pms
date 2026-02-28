@@ -165,7 +165,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
   // 打开配置对话框
   const handleConfigClick = () => {
     setRoleConfigs(
-      roleOverview.map((ro) => ({
+      (roleOverview || []).map((ro) => ({
         role_type_id: ro.role_type.id,
         role_name: ro.role_type.role_name,
         role_code: ro.role_type.role_code,
@@ -294,8 +294,8 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
     return CATEGORY_COLORS[category] || CATEGORY_COLORS.GENERAL;
   };
 
-  const enabledRoles = roleOverview.filter((ro) => ro.is_enabled);
-  const disabledRoles = roleOverview.filter((ro) => !ro.is_enabled);
+  const enabledRoles = (roleOverview || []).filter((ro) => ro.is_enabled);
+  const disabledRoles = (roleOverview || []).filter((ro) => !ro.is_enabled);
 
   return (
     <div className="space-y-6">
@@ -308,7 +308,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
           <div>
             <h3 className="text-lg font-semibold text-white">项目负责人</h3>
             <p className="text-sm text-slate-400">
-              已配置 {enabledRoles.filter((ro) => ro.has_lead).length}/
+              已配置 {(enabledRoles || []).filter((ro) => ro.has_lead).length}/
               {enabledRoles.length} 个角色
             </p>
           </div>
@@ -336,7 +336,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
-            {enabledRoles.map((roleItem, index) => {
+            {(enabledRoles || []).map((roleItem, index) => {
               const IconComponent = getRoleIcon(roleItem.role_type.role_code);
               const categoryColor = getCategoryColor(
                 roleItem.role_type.role_category,
@@ -466,7 +466,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                                       className="overflow-hidden"
                                     >
                                       <div className="mt-2 space-y-1 pl-6">
-                                        {teamMembers.map((member) => (
+                                        {(teamMembers || []).map((member) => (
                                           <div
                                             key={member.id}
                                             className="flex items-center gap-2 text-sm text-slate-300 py-1"
@@ -541,7 +541,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
         <div className="mt-6">
           <p className="text-sm text-slate-500 mb-2">
             未启用的角色 ({disabledRoles.length})：
-            {disabledRoles.map((ro) => ro.role_type.role_name).join("、")}
+            {(disabledRoles || []).map((ro) => ro.role_type.role_name).join("、")}
           </p>
         </div>
       )}
@@ -560,7 +560,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
               选择此项目需要的角色类型，已启用的角色可以指定负责人。
             </p>
             <div className="space-y-2">
-              {roleConfigs.map((config, index) => (
+              {(roleConfigs || []).map((config, index) => (
                 <div
                   key={config.role_type_id}
                   className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5"
@@ -636,7 +636,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                   <SelectValue placeholder="请选择人员" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) => (
+                  {(users || []).map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username}
                       {user.department && ` (${user.department})`}

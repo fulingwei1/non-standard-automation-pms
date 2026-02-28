@@ -88,7 +88,7 @@ export default function PaymentTimeline({ payments = [], compact = false }) {
 
       {/* Payment items */}
       <div className="space-y-4">
-        {sortedPayments.map((payment, index) => (
+        {(sortedPayments || []).map((payment, index) => (
           <PaymentTimelineItem key={payment.id || index} payment={payment} />
         ))}
       </div>
@@ -236,7 +236,7 @@ function PaymentListItem({ payment }) {
 
 // Stats summary component
 export function PaymentStats({ payments = [] }) {
-  const stats = payments.reduce(
+  const stats = (payments || []).reduce(
     (acc, p) => {
       const isOverdue =
         p.status === "pending" && new Date(p.dueDate) < new Date();

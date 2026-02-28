@@ -9,7 +9,7 @@ import { ROOT_CAUSE_TYPES } from '../../constants';
 import { AlertCircle } from 'lucide-react';
 
 const RootCauseBarChart = ({ data = [] }) => {
-  if (data.length === 0) {
+  if (data?.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -21,7 +21,7 @@ const RootCauseBarChart = ({ data = [] }) => {
   }
 
   // 转换数据格式
-  const chartData = data.map((item) => ({
+  const chartData = (data || []).map((item) => ({
     ...item,
     label: ROOT_CAUSE_TYPES[item.cause_type]?.label || item.cause_type,
     color: ROOT_CAUSE_TYPES[item.cause_type]?.color || '#6B7280',
@@ -55,7 +55,7 @@ const RootCauseBarChart = ({ data = [] }) => {
             />
             <Legend />
             <Bar dataKey="count" name="发生次数" radius={[8, 8, 0, 0]}>
-              {chartData.map((entry, index) => (
+              {(chartData || []).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Bar>
@@ -64,7 +64,7 @@ const RootCauseBarChart = ({ data = [] }) => {
 
         {/* 详细统计 */}
         <div className="mt-6 space-y-3">
-          {chartData.map((item, index) => (
+          {(chartData || []).map((item, index) => (
             <div
               key={index}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

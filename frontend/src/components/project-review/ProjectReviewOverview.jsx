@@ -73,7 +73,7 @@ export function ProjectReviewOverview({
   const evaluationDetails = useMemo(() => {
     if (!review.evaluations) {return [];}
 
-    return review.evaluations.map((evaluation) => {
+    return (review.evaluations || []).map((evaluation) => {
       const metric = getEvaluationMetric(evaluation.metric);
       return {
         ...evaluation,
@@ -251,7 +251,7 @@ export function ProjectReviewOverview({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {evaluationDetails.map((evaluation, index) =>
+            {(evaluationDetails || []).map((evaluation, index) =>
             <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -315,7 +315,7 @@ export function ProjectReviewOverview({
       </Card>
 
       {/* 改进建议 */}
-      {metrics.recommendations.length > 0 &&
+      {metrics.recommendations?.length > 0 &&
       <Card className="bg-slate-800/50 border-slate-700/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
@@ -325,7 +325,7 @@ export function ProjectReviewOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {metrics.recommendations.map((recommendation, index) =>
+              {(metrics.recommendations || []).map((recommendation, index) =>
             <div key={index} className="p-4 rounded-lg border border-slate-700/50">
                   <div className="flex items-center gap-2 mb-2">
                     {recommendation.type === 'critical' && <AlertCircle className="w-4 h-4 text-red-400" />}
@@ -336,7 +336,7 @@ export function ProjectReviewOverview({
                   <p className="text-slate-300 text-sm mb-2">{recommendation.description}</p>
                   {recommendation.actions &&
               <ul className="text-slate-400 text-sm space-y-1">
-                      {recommendation.actions.map((action, actionIndex) =>
+                      {(recommendation.actions || []).map((action, actionIndex) =>
                 <li key={actionIndex} className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                           {action}

@@ -122,14 +122,14 @@ export default function Documents() {
         // Load documents for all projects
         // Since API requires project_id, we'll load from all projects
         const allDocs = [];
-        if (projects.length > 0) {
+        if (projects?.length > 0) {
           const promises = projects.
           slice(0, 20).
           map((project) =>
           documentApi.list(project.id).catch(() => ({ data: [] }))
           );
           const results = await Promise.allSettled(promises);
-          results.forEach((result) => {
+          (results || []).forEach((result) => {
             if (result.status === "fulfilled") {
               const data = result.value.data || result.value;
               const docs = Array.isArray(data) ? data : data.items || [];
@@ -155,7 +155,7 @@ export default function Documents() {
   }, [loadProjects]);
 
   useEffect(() => {
-    if (projects.length > 0 || selectedProject === "all") {
+    if (projects?.length > 0 || selectedProject === "all") {
       loadDocuments();
     }
   }, [loadDocuments, selectedProject]);
@@ -233,7 +233,7 @@ export default function Documents() {
   };
 
   // Filter documents
-  const filteredDocuments = documents.filter((doc) => {
+  const filteredDocuments = (documents || []).filter((doc) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -248,13 +248,13 @@ export default function Documents() {
 
   // Get project name
   const getProjectName = (projectId) => {
-    const project = projects.find(
+    const project = (projects || []).find(
       (p) => p.id === projectId || p.project_code === projectId
     );
     return project?.project_name || "未知项目";
   };
 
-  if (loading && documents.length === 0) {
+  if (loading && documents?.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <PageHeader title="文件管理" />
@@ -303,7 +303,7 @@ export default function Documents() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部项目</SelectItem>
-                      {projects.map((project) =>
+                      {(projects || []).map((project) =>
                       <SelectItem
                         key={project.id || project.project_code}
                         value={project.id || project.project_code}>
@@ -320,7 +320,7 @@ export default function Documents() {
         </motion.div>
 
         {/* Documents List */}
-        {error && !documents.length ?
+        {error && !documents?.length ?
         <ErrorMessage error={error} onRetry={loadDocuments} /> :
         filteredDocuments.length === 0 ?
         <EmptyState
@@ -339,7 +339,7 @@ export default function Documents() {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-            {filteredDocuments.map((doc) => {
+            {(filteredDocuments || []).map((doc) => {
             const FileIcon = getFileIcon(doc.file_name || doc.name);
             return (
               <motion.div key={doc.id} variants={fadeIn}>
@@ -434,7 +434,7 @@ export default function Documents() {
                     <SelectValue placeholder="选择关联项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) =>
+                    {(projects || []).map((project) =>
                     <SelectItem
                       key={project.id || project.project_code}
                       value={project.id || project.project_code}>

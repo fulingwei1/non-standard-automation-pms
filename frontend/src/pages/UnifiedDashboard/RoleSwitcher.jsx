@@ -32,7 +32,7 @@ export function RoleSwitcher({
   className = '',
 }) {
   const currentRoleName = useMemo(() => {
-    const role = roles.find(r => r.role_code === currentRole);
+    const role = (roles || []).find(r => r.role_code === currentRole);
     return role?.role_name || '选择角色视图';
   }, [roles, currentRole]);
 
@@ -55,7 +55,7 @@ export function RoleSwitcher({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {roles.map((role) => (
+          {(roles || []).map((role) => (
             <SelectItem
               key={role.role_code}
               value={role.role_code}
@@ -87,7 +87,7 @@ export function RoleSwitcherCompact({
   className = '',
 }) {
   const currentRoleName = useMemo(() => {
-    const role = roles.find(r => r.role_code === currentRole);
+    const role = (roles || []).find(r => r.role_code === currentRole);
     return role?.role_name || '选择';
   }, [roles, currentRole]);
 
@@ -101,7 +101,7 @@ export function RoleSwitcherCompact({
         <SelectValue>{currentRoleName}</SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {roles.map((role) => (
+        {(roles || []).map((role) => (
           <SelectItem key={role.role_code} value={role.role_code}>
             {role.role_name}
           </SelectItem>

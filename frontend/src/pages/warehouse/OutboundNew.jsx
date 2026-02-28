@@ -27,14 +27,14 @@ export default function OutboundNew() {
   const updateItem = (idx, field, value) => { const n = [...items]; n[idx] = { ...n[idx], [field]: value }; setItems(n); };
 
   const handleSubmit = async () => {
-    const valid = items.filter((i) => i.material_code && i.planned_quantity > 0);
+    const valid = (items || []).filter((i) => i.material_code && i.planned_quantity > 0);
     if (!valid.length) { alert("请至少添加一个物料明细"); return; }
     setSubmitting(true);
     try {
       await warehouseApi.outbound.create({
         ...form, warehouse_id: form.warehouse_id ? parseInt(form.warehouse_id) : null,
         planned_date: form.planned_date || null,
-        items: valid.map((i) => ({ ...i, planned_quantity: parseFloat(i.planned_quantity) })),
+        items: (valid || []).map((i) => ({ ...i, planned_quantity: parseFloat(i.planned_quantity) })),
       });
       toast?.success?.("出库单创建成功"); navigate("/warehouse/outbound");
     } catch (_e) { toast?.error?.("创建失败"); } finally { setSubmitting(false); }
@@ -55,7 +55,7 @@ export default function OutboundNew() {
             <div className="space-y-2"><Label>来源仓库</Label>
               <Select value={form.warehouse_id?.toString() || ""} onValueChange={(v) => setForm({ ...form, warehouse_id: v })}>
                 <SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger>
-                <SelectContent>{warehouses.map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
               </Select></div>
             <div className="space-y-2"><Label>计划出库日期</Label><Input type="date" value={form.planned_date} onChange={(e) => setForm({ ...form, planned_date: e.target.value })} /></div>
             <div className="space-y-2"><Label>目标单号</Label><Input value={form.target_no} onChange={(e) => setForm({ ...form, target_no: e.target.value })} placeholder="工单号等" /></div>
@@ -73,7 +73,7 @@ export default function OutboundNew() {
               <div className="col-span-2">物料编码*</div><div className="col-span-3">物料名称</div><div className="col-span-2">规格型号</div>
               <div className="col-span-1">单位</div><div className="col-span-2">计划数量*</div><div className="col-span-1">备注</div><div className="col-span-1"></div>
             </div>
-            {items.map((item, idx) => (
+            {(items || []).map((item, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                 <Input className="col-span-2" value={item.material_code} onChange={(e) => updateItem(idx, "material_code", e.target.value)} placeholder="编码" />
                 <Input className="col-span-3" value={item.material_name} onChange={(e) => updateItem(idx, "material_name", e.target.value)} placeholder="名称" />
@@ -82,7 +82,7 @@ export default function OutboundNew() {
                 <Input className="col-span-2" type="number" value={item.planned_quantity} onChange={(e) => updateItem(idx, "planned_quantity", e.target.value)} />
                 <Input className="col-span-1" value={item.remark} onChange={(e) => updateItem(idx, "remark", e.target.value)} />
                 <div className="col-span-1 flex justify-center">
-                  <Button variant="ghost" size="icon" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length <= 1}><Trash2 className="h-4 w-4 text-red-400" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setItems((items || []).filter((_, i) => i !== idx))} disabled={items?.length <= 1}><Trash2 className="h-4 w-4 text-red-400" /></Button>
                 </div>
               </div>
             ))}

@@ -34,7 +34,7 @@ export function TechnicalReviewFilter({
                         className="bg-slate-800/50 border-slate-700"
                     >
                         <option value="">全部项目</option>
-                        {projectList.map((p) => (
+                        {(projectList || []).map((p) => (
                             <option key={p.id} value={p.id}>
                                 {p.project_code} - {p.project_name}
                             </option>

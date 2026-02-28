@@ -29,7 +29,7 @@ const AIStatsChart = ({
   height = 300,
   colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
 }) => {
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
         暂无数据
@@ -117,7 +117,7 @@ const AIStatsChart = ({
                 outerRadius={80}
                 label
               >
-                {data.map((entry, index) => (
+                {(data || []).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
@@ -138,7 +138,7 @@ const AIStatsChart = ({
               <YAxis />
               <Tooltip />
               <Legend />
-              {keys.map((key, index) => (
+              {(keys || []).map((key, index) => (
                 <Line
                   key={key}
                   type="monotone"

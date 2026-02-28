@@ -29,7 +29,7 @@ const AttendanceStatistics = ({ attendanceStats }) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {attendanceStats.map((stat, index) =>
+          {(attendanceStats || []).map((stat, index) =>
           <div
             key={index}
             className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">

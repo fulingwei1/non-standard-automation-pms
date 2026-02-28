@@ -152,7 +152,7 @@ export default function ServiceKnowledgeBase() {
       const articlesData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform backend data to frontend format
-      const transformedArticles = articlesData.map((article) => ({
+      const transformedArticles = (articlesData || []).map((article) => ({
         id: article.id,
         article_no: article.article_no || "",
         title: article.title || "",
@@ -197,10 +197,10 @@ export default function ServiceKnowledgeBase() {
       // Calculate from local articles as fallback
       setStats({
         total: articles.length,
-        published: articles.filter((a) => a.status === "已发布").length,
-        faq: articles.filter((a) => a.is_faq).length,
-        featured: articles.filter((a) => a.is_featured).length,
-        totalViews: articles.reduce((sum, a) => sum + a.view_count, 0)
+        published: (articles || []).filter((a) => a.status === "已发布").length,
+        faq: (articles || []).filter((a) => a.is_faq).length,
+        featured: (articles || []).filter((a) => a.is_featured).length,
+        totalViews: (articles || []).reduce((sum, a) => sum + a.view_count, 0)
       });
     }
   }, [articles]);
@@ -211,7 +211,7 @@ export default function ServiceKnowledgeBase() {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(
+      result = (result || []).filter(
         (article) =>
         (article.title || "").toLowerCase().includes(query) ||
         (article.content || "").toLowerCase().includes(query) ||
@@ -222,14 +222,14 @@ export default function ServiceKnowledgeBase() {
 
     // Category filter
     if (categoryFilter !== "ALL") {
-      result = result.filter((article) => article.category === categoryFilter);
+      result = (result || []).filter((article) => article.category === categoryFilter);
     }
 
     // FAQ filter
     if (faqFilter === "FAQ_ONLY") {
-      result = result.filter((article) => article.is_faq);
+      result = (result || []).filter((article) => article.is_faq);
     } else if (faqFilter === "NON_FAQ") {
-      result = result.filter((article) => !article.is_faq);
+      result = (result || []).filter((article) => !article.is_faq);
     }
 
     return result.sort((a, b) => {
@@ -465,7 +465,7 @@ export default function ServiceKnowledgeBase() {
             } /> :
 
 
-          filteredArticles.map((article) => {
+          (filteredArticles || []).map((article) => {
             const category =
             categoryConfig[article.category] || categoryConfig["其他"];
             const status =
@@ -529,7 +529,7 @@ export default function ServiceKnowledgeBase() {
                           {/* Tags and Footer */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-wrap">
-                              {article.tags.map((tag, index) =>
+                              {(article.tags || []).map((tag, index) =>
                             <Badge
                               key={index}
                               variant="secondary"
@@ -638,7 +638,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
   };
 
   const handleRemoveTag = (tag) => {
-    setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
+    setFormData({ ...formData, tags: (formData.tags || []).filter((t) => t !== tag) });
   };
 
   return (
@@ -709,7 +709,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                   className="bg-slate-800/50 border-slate-700 font-mono text-sm" />
 
                 <div className="absolute bottom-2 right-2 text-xs text-slate-500">
-                  {formData.content.length} 字符
+                  {formData.content?.length} 字符
                 </div>
               </div>
               {/* Markdown Preview Toggle */}
@@ -753,9 +753,9 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              {formData.tags.length > 0 &&
+              {formData.tags?.length > 0 &&
               <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags.map((tag, index) =>
+                  {(formData.tags || []).map((tag, index) =>
                 <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                       <XCircle
@@ -898,7 +898,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
 
                 {formData.content &&
               <div className="mt-2 text-xs text-slate-500">
-                    {formData.content.length} 字符
+                    {formData.content?.length} 字符
               </div>
               }
               </div>
@@ -917,11 +917,11 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 </div>
               </div>
 
-              {article.tags && article.tags.length > 0 &&
+              {article.tags && article.tags?.length > 0 &&
             <div>
                   <p className="text-sm text-slate-400 mb-2">标签</p>
                   <div className="flex flex-wrap gap-2">
-                    {article.tags.map((tag, index) =>
+                    {(article.tags || []).map((tag, index) =>
                 <Badge
                   key={index}
                   variant="secondary"

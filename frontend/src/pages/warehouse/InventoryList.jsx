@@ -52,7 +52,7 @@ export default function InventoryList() {
           <Select value={warehouseId} onValueChange={(v) => { setWarehouseId(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue placeholder="全部仓库" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部仓库</SelectItem>
-              {warehouses.map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
+              {(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
           </Select>
           <Button variant={lowStockOnly ? "default" : "outline"} size="sm" onClick={() => { setLowStockOnly(!lowStockOnly); setPage(1); }} className="gap-1">
             <AlertTriangle className="h-4 w-4" /> 仅低库存
@@ -67,8 +67,8 @@ export default function InventoryList() {
             <TableHead>状态</TableHead><TableHead>批次号</TableHead>
           </TableRow></TableHeader><TableBody>
             {loading ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-text-muted">加载中...</TableCell></TableRow>
-            : data.items.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
-            : data.items.map((row) => {
+            : data.items?.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
+            : (data.items || []).map((row) => {
               const s = getStatus(row);
               return (<TableRow key={row.id}>
                 <TableCell className="font-mono text-sm">{row.material_code}</TableCell>

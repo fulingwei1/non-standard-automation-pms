@@ -276,7 +276,7 @@ export default function WeeklyReport() {
 
             {project_updates && project_updates.length > 0 ?
             <div className="divide-y divide-white/5">
-                {project_updates.map((project) => {
+                {(project_updates || []).map((project) => {
                 const healthBadge = getHealthBadge(project.health || "H1");
                 return (
                   <Link

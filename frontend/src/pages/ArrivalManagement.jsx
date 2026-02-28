@@ -133,7 +133,7 @@ export default function ArrivalManagement() {
     }
   };
   const filteredReceipts = useMemo(() => {
-    return receipts.filter((receipt) => {
+    return (receipts || []).filter((receipt) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -270,7 +270,7 @@ export default function ArrivalManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReceipts.map((receipt) => (
+                  {(filteredReceipts || []).map((receipt) => (
                     <TableRow key={receipt.id} className="border-slate-700">
                       <TableCell className="font-mono text-sm text-slate-200">
                         {receipt.receipt_no}
@@ -419,7 +419,7 @@ export default function ArrivalManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {receiptItems.map((item) => (
+                        {(receiptItems || []).map((item) => (
                           <TableRow key={item.id} className="border-slate-700">
                             <TableCell className="font-mono text-sm text-slate-300">
                               {item.material_code}

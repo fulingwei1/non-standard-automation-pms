@@ -36,7 +36,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
     coordinates: { x: 50, y: 50 },
     status: 'active'
   },
-  ...deliveries.map((delivery, index) => ({
+  ...(deliveries || []).map((delivery, index) => ({
     id: delivery.delivery_no,
     type: 'delivery',
     name: delivery.recipient_name,
@@ -117,7 +117,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
         </svg>
 
         {/* 地图标记 */}
-        {mapMarkers.map((marker) => {
+        {(mapMarkers || []).map((marker) => {
           const isSelected = selectedDelivery?.delivery_no === marker.id;
           const statusConfig = marker.type === 'delivery' ?
           getStatusConfig(marker.status) :
@@ -165,7 +165,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
       </div>
 
       {/* 模拟实时路线 */}
-      {deliveries.filter((d) => d.status === 'IN_TRANSIT').length > 0 &&
+      {(deliveries || []).filter((d) => d.status === 'IN_TRANSIT').length > 0 &&
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <path
           d="M 50 50 Q 70 30, 85 20 T 95 25"
@@ -252,7 +252,7 @@ export const TrackingMap = ({
   const [isRealtime, setIsRealtime] = useState(true);
 
   // 过滤在途配送
-  const inTransitDeliveries = deliveries.filter((d) => d.status === 'IN_TRANSIT');
+  const inTransitDeliveries = (deliveries || []).filter((d) => d.status === 'IN_TRANSIT');
   const allDeliveries = isRealtime ? inTransitDeliveries : deliveries;
 
   return (
@@ -281,9 +281,9 @@ export const TrackingMap = ({
             onClick={() => setIsRealtime(false)}>
 
             全部配送
-            {deliveries.length > 0 &&
+            {deliveries?.length > 0 &&
             <Badge className="ml-2 bg-blue-500">
-                {deliveries.length}
+                {deliveries?.length}
             </Badge>
             }
           </Button>
@@ -323,7 +323,7 @@ export const TrackingMap = ({
       }
 
       {/* 追踪提示 */}
-      {inTransitDeliveries.length === 0 && deliveries.length > 0 &&
+      {inTransitDeliveries.length === 0 && deliveries?.length > 0 &&
       <Card>
           <CardContent className="py-6 text-center">
             <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
@@ -335,7 +335,7 @@ export const TrackingMap = ({
       </Card>
       }
 
-      {deliveries.length === 0 &&
+      {deliveries?.length === 0 &&
       <Card>
           <CardContent className="py-6 text-center">
             <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />

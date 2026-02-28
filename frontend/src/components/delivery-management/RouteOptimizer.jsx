@@ -117,7 +117,7 @@ const RouteStats = ({ stats }) => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {statConfigs.map((stat) =>
+          {(statConfigs || []).map((stat) =>
           <div key={stat.key} className="text-center">
               <div className="text-2xl mb-1">{stat.icon}</div>
               <div className="text-2xl font-bold text-blue-600">
@@ -227,7 +227,7 @@ export const RouteOptimizer = ({
       }];
 
 
-      currentRoute.steps.forEach((step, index) => {
+      (currentRoute.steps || []).forEach((step, index) => {
         nodes.push({
           type: 'delivery',
           index: index + 1,
@@ -318,7 +318,7 @@ export const RouteOptimizer = ({
         <CardContent>
           {routeNodes.length > 0 ?
           <div className="space-y-2">
-              {routeNodes.map((node, index) =>
+              {(routeNodes || []).map((node, index) =>
             <motion.div
               key={index}
               variants={slideIn}

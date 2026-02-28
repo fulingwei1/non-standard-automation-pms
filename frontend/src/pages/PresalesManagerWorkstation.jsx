@@ -83,7 +83,7 @@ export default function PresalesManagerWorkstation() {
       solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
       setOngoingSolutions(Array.isArray(solutions) ? solutions : []);
       const activeSolutions = solutions.length;
-      const pendingReview = solutions.filter(
+      const pendingReview = (solutions || []).filter(
         (s) => s.status === "REVIEWING"
       ).length;
 
@@ -95,7 +95,7 @@ export default function PresalesManagerWorkstation() {
       const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
       setBiddingProjects(Array.isArray(tenders) ? tenders : []);
       const activeBids = tenders.length;
-      const urgentBids = tenders.filter((t) => {
+      const urgentBids = (tenders || []).filter((t) => {
         const deadline = new Date(t.submission_deadline);
         const now = new Date();
         const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
@@ -103,7 +103,7 @@ export default function PresalesManagerWorkstation() {
       }).length;
 
       // Calculate monthly output (sum of estimated values)
-      const monthlyOutput = solutions.reduce(
+      const monthlyOutput = (solutions || []).reduce(
         (sum, s) => sum + (s.estimated_cost || s.suggested_price || 0),
         0
       );
@@ -183,10 +183,10 @@ export default function PresalesManagerWorkstation() {
         allSolutionsResponse?.data?.items || allSolutionsResponse?.data || [];
         if (allSolutions.length > 0) {
           // Calculate quality based on approved/reviewed solutions
-          const approvedSolutions = allSolutions.filter(
+          const approvedSolutions = (allSolutions || []).filter(
             (s) => s.status === "APPROVED" || s.status === "PUBLISHED"
           ).length;
-          const reviewedSolutions = allSolutions.filter(
+          const reviewedSolutions = (allSolutions || []).filter(
             (s) => s.status !== "DRAFT"
           ).length;
           if (reviewedSolutions > 0) {
@@ -206,7 +206,7 @@ export default function PresalesManagerWorkstation() {
         performance({}).
         catch(() => null);
         if (performanceResponse?.data?.data?.performance) {
-          teamPerformanceData = performanceResponse.data.data.performance.map(
+          teamPerformanceData = (performanceResponse.data.data.performance || []).map(
             (p) => ({
               id: p.user_id,
               name: p.user_name,
@@ -390,7 +390,7 @@ export default function PresalesManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {teamPerformance.map((member, index) =>
+                  {(teamPerformance || []).map((member, index) =>
                   <div
                     key={member.id}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors">
@@ -491,7 +491,7 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {ongoingSolutions.map((solution, _index) =>
+                {(ongoingSolutions || []).map((solution, _index) =>
                 <div
                   key={solution.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer">
@@ -568,7 +568,7 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {pendingReviews.map((item) =>
+                {(pendingReviews || []).map((item) =>
                 <div
                   key={item.id}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer">
@@ -636,7 +636,7 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {biddingProjects.map((bid) =>
+                {(biddingProjects || []).map((bid) =>
                 <div
                   key={bid.id}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer">

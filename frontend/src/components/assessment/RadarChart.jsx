@@ -34,7 +34,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
 
   // 计算每个维度的坐标点
   const points = useMemo(() => {
-    return dimensions.map((dim, index) => {
+    return (dimensions || []).map((dim, index) => {
       const angle = index * angleStep - Math.PI / 2;
       const normalizedScore = dim.score / maxScore;
       const r = radius * normalizedScore;
@@ -54,7 +54,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
     return Array.from({ length: gridLevels }, (_, i) => {
       const level = (i + 1) / gridLevels;
       const levelRadius = radius * level;
-      return dimensions.map((_, index) => {
+      return (dimensions || []).map((_, index) => {
         const angle = index * angleStep - Math.PI / 2;
         return {
           x: centerX + levelRadius * Math.cos(angle),
@@ -66,7 +66,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
 
   // 生成数据区域路径
   const dataPath = useMemo(() => {
-    return points.map((p) => `${p.x},${p.y}`).join(" ");
+    return (points || []).map((p) => `${p.x},${p.y}`).join(" ");
   }, [points]);
 
   return (
@@ -74,10 +74,10 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
       <svg width={size} height={size} className="overflow-visible">
         {/* 网格线 */}
         <g opacity="0.2">
-          {gridLines.map((line, i) => (
+          {(gridLines || []).map((line, i) => (
             <polygon
               key={i}
-              points={line.map((p) => `${p.x},${p.y}`).join(" ")}
+              points={(line || []).map((p) => `${p.x},${p.y}`).join(" ")}
               fill="none"
               stroke="currentColor"
               strokeWidth="1"
@@ -88,7 +88,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
 
         {/* 轴线 */}
         <g opacity="0.3">
-          {dimensions.map((_, index) => {
+          {(dimensions || []).map((_, index) => {
             const angle = index * angleStep - Math.PI / 2;
             const x2 = centerX + radius * Math.cos(angle);
             const y2 = centerY + radius * Math.sin(angle);
@@ -116,7 +116,7 @@ export function RadarChart({ data, size = 300, maxScore = 20 }) {
         />
 
         {/* 数据点 */}
-        {points.map((point, index) => (
+        {(points || []).map((point, index) => (
           <g key={index}>
             <circle cx={point.x} cy={point.y} r="4" fill="rgb(59, 130, 246)" />
             {/* 标签 */}

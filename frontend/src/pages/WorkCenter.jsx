@@ -128,10 +128,10 @@ export default function WorkCenter() {
 
         // 计算工作日志统计
         const today = new Date().toISOString().split("T")[0];
-        const todayLogs = workLogs.filter(
+        const todayLogs = (workLogs || []).filter(
           (log) => log.work_date === today
         ).length;
-        const thisMonthLogs = workLogs.filter((log) => {
+        const thisMonthLogs = (workLogs || []).filter((log) => {
           const logDate = new Date(log.work_date);
           const now = new Date();
           return (
@@ -152,13 +152,13 @@ export default function WorkCenter() {
         const taskData = tasksRes.value.data?.data || tasksRes.value.data || {};
         const tasks = taskData.items || taskData || [];
 
-        const pendingTasks = tasks.filter(
+        const pendingTasks = (tasks || []).filter(
           (task) => task.status === "pending" || task.status === "in_progress"
         ).length;
-        const completedTasks = tasks.filter(
+        const completedTasks = (tasks || []).filter(
           (task) => task.status === "completed"
         ).length;
-        const todayTasks = tasks.filter((task) => {
+        const todayTasks = (tasks || []).filter((task) => {
           const taskDate = new Date(task.due_date);
           const today = new Date();
           return taskDate.toDateString() === today.toDateString();
@@ -332,7 +332,7 @@ export default function WorkCenter() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {quickActions.map((action, index) =>
+                {(quickActions || []).map((action, index) =>
                 <button
                   key={index}
                   onClick={action.action}
@@ -369,7 +369,7 @@ export default function WorkCenter() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity) =>
+                {(recentActivities || []).map((activity) =>
                 <div key={activity.id} className="flex items-start gap-3">
                     {getActivityIcon(activity.type)}
                     <div className="flex-1">

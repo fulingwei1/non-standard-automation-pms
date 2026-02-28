@@ -85,7 +85,7 @@ export default function FunnelChart({
     rest,
   ]);
 
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <div
         className="flex items-center justify-center text-slate-400"

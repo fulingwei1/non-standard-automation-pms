@@ -84,7 +84,7 @@ export default function HROverviewTab({
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPendingRecruitments.map((recruitment, index) => (
+                {(mockPendingRecruitments || []).map((recruitment, index) => (
                   <motion.div
                     key={recruitment.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -169,7 +169,7 @@ export default function HROverviewTab({
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPendingReviews.map((review) => (
+                {(mockPendingReviews || []).map((review) => (
                   <motion.div
                     key={review.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -299,7 +299,7 @@ export default function HROverviewTab({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockPerformanceDistribution.map((item, index) => (
+                {(mockPerformanceDistribution || []).map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function HROverviewTab({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockDepartmentDistribution.map((dept) => (
+              {(mockDepartmentDistribution || []).map((dept) => (
                 <div
                   key={dept.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"

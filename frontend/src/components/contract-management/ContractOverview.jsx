@@ -28,17 +28,17 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.contracts) {return {};}
 
-    const totalContracts = data.contracts.length;
-    const activeContracts = data.contracts.filter((c) =>
+    const totalContracts = data.contracts?.length;
+    const activeContracts = (data.contracts || []).filter((c) =>
     ['signed', 'executing'].includes(c.status)
     ).length;
-    const totalValue = data.contracts.reduce((acc, c) => acc + (c.value || 0), 0);
-    const pendingSignatures = data.contracts.filter((c) =>
+    const totalValue = (data.contracts || []).reduce((acc, c) => acc + (c.value || 0), 0);
+    const pendingSignatures = (data.contracts || []).filter((c) =>
     c.signatureStatus === 'pending'
     ).length;
 
     const monthlyGrowth = data.monthlyStats?.growth || 8.5;
-    const completionRate = data.contracts.filter((c) => c.status === 'completed').length / totalContracts * 100 || 0;
+    const completionRate = (data.contracts || []).filter((c) => c.status === 'completed').length / totalContracts * 100 || 0;
 
     return {
       totalContracts,
@@ -58,7 +58,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.contracts.forEach((contract) => {
+    (data.contracts || []).forEach((contract) => {
       if (contract.status && CONTRACT_STATUS[contract.status.toUpperCase()]) {
         distribution[contract.status.toUpperCase()]++;
       }
@@ -216,7 +216,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
 
             {upcomingDeadlines.length > 0 ?
             <Timeline>
-                {upcomingDeadlines.map(renderDeadlineItem)}
+                {(upcomingDeadlines || []).map(renderDeadlineItem)}
             </Timeline> :
 
             <Alert
@@ -237,7 +237,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
         loading={loading}>
 
           <Alert
-          title={`发现 ${data.riskContracts.length} 个高风险合同需要关注`}
+          title={`发现 ${data.riskContracts?.length} 个高风险合同需要关注`}
           description="建议及时处理高风险合同，避免潜在损失"
           type="warning"
           showIcon

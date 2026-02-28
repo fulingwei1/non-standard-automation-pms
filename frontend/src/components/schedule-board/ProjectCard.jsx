@@ -72,7 +72,7 @@ export default function ProjectCard({ project }) {
           <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-border" />
 
           <div className="space-y-3">
-            {project.milestones.map((milestone, index) => (
+            {(project.milestones || []).map((milestone, index) => (
               <div key={index} className="flex items-start gap-3 relative">
                 <div
                   className={cn(
@@ -97,12 +97,12 @@ export default function ProjectCard({ project }) {
       </div>
 
       {/* Alerts */}
-      {project.alerts && project.alerts.length > 0 && (
+      {project.alerts && project.alerts?.length > 0 && (
         <div className="p-3 bg-red-500/10 border-t border-red-500/20">
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <div className="text-xs text-red-300">
-              {project.alerts.map((alert, i) => (
+              {(project.alerts || []).map((alert, i) => (
                 <div key={i}>{alert}</div>
               ))}
             </div>
@@ -114,7 +114,7 @@ export default function ProjectCard({ project }) {
       <div className="p-3 border-t border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex -space-x-2">
-            {project.resources.map((resource, index) => (
+            {(project.resources || []).map((resource, index) => (
               <div
                 key={index}
                 className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-[10px] font-medium text-white border-2 border-surface-1"

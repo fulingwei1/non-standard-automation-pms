@@ -15,7 +15,7 @@ export function SolutionHistoryTab({ solution }) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-6">
-                    {solution.versionHistory.map((version, index) => (
+                    {(solution.versionHistory || []).map((version, index) => (
                         <div key={index} className="flex gap-4">
                             <div className="flex flex-col items-center">
                                 <div
@@ -26,7 +26,7 @@ export function SolutionHistoryTab({ solution }) {
                                 >
                                     <History className="w-4 h-4 text-white" />
                                 </div>
-                                {index < solution.versionHistory.length - 1 && (
+                                {index < solution.versionHistory?.length - 1 && (
                                     <div className="w-px h-full bg-slate-700 my-2" />
                                 )}
                             </div>

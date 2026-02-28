@@ -162,14 +162,14 @@ export default function DispatchList({
                 加载中...
               </TableCell>
             </TableRow>
-          ) : orders.length === 0 ? (
+          ) : orders?.length === 0 ? (
             <TableRow>
               <TableCell colSpan={10} className="text-center py-8">
                 暂无派工单
               </TableCell>
             </TableRow>
           ) : (
-            orders.map((order) => (
+            (orders || []).map((order) => (
               <TableRow key={order.id}>
                 <TableCell>
                   <Square

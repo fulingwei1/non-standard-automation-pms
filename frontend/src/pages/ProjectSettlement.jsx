@@ -108,7 +108,7 @@ export default function ProjectSettlement() {
 
   // Filter settlements
   const filteredSettlements = useMemo(() => {
-    return settlements.filter((settlement) => {
+    return (settlements || []).filter((settlement) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
       !searchTerm ||
@@ -128,25 +128,25 @@ export default function ProjectSettlement() {
   const stats = useMemo(() => {
     return {
       total: filteredSettlements.length,
-      totalContractAmount: filteredSettlements.reduce(
+      totalContractAmount: (filteredSettlements || []).reduce(
         (sum, s) => sum + s.contractAmount,
         0
       ),
-      totalCost: filteredSettlements.reduce((sum, s) => sum + s.totalCost, 0),
-      totalProfit: filteredSettlements.reduce(
+      totalCost: (filteredSettlements || []).reduce((sum, s) => sum + s.totalCost, 0),
+      totalProfit: (filteredSettlements || []).reduce(
         (sum, s) => sum + s.grossProfit,
         0
       ),
       averageMargin:
       filteredSettlements.length > 0 ?
-      filteredSettlements.reduce((sum, s) => sum + s.grossMargin, 0) /
+      (filteredSettlements || []).reduce((sum, s) => sum + s.grossMargin, 0) /
       filteredSettlements.length :
       0,
-      totalReceived: filteredSettlements.reduce(
+      totalReceived: (filteredSettlements || []).reduce(
         (sum, s) => sum + s.receivedAmount,
         0
       ),
-      totalReceivable: filteredSettlements.reduce(
+      totalReceivable: (filteredSettlements || []).reduce(
         (sum, s) => sum + s.receivableAmount,
         0
       )
@@ -325,7 +325,7 @@ export default function ProjectSettlement() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredSettlements.map((settlement) => {
+              {(filteredSettlements || []).map((settlement) => {
                 const statusConf = statusConfig[settlement.status];
                 const StatusIcon = statusConf?.icon || FileText;
                 return (
@@ -564,7 +564,7 @@ export default function ProjectSettlement() {
                   收款节点
                 </h3>
                 <div className="space-y-2">
-                  {selectedSettlement.milestones.map((milestone, index) =>
+                  {(selectedSettlement.milestones || []).map((milestone, index) =>
                 <div
                   key={index}
                   className={cn(

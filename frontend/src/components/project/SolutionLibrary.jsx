@@ -52,7 +52,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
     }
   };
 
-  const filteredTemplates = templates.filter((template) => {
+  const filteredTemplates = (templates || []).filter((template) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       if (
@@ -120,7 +120,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
         {/* 模板列表 */}
         {filteredTemplates.length > 0 ?
         <div className="space-y-3">
-            {filteredTemplates.map((template) =>
+            {(filteredTemplates || []).map((template) =>
           <div
             key={template.id}
             className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -141,7 +141,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                 }
                     <div className="p-3 bg-gray-50 rounded text-sm">
                       {template.solution.substring(0, 300)}
-                      {template.solution.length > 300 && "..."}
+                      {template.solution?.length > 300 && "..."}
                     </div>
                   </div>
                 </div>

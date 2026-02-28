@@ -107,10 +107,10 @@ const DeliveryPlan = ({ deliveries = [], loading }) => {
         extra={
           <Space>
             <Tag icon={<Package size={14} />} color="gold">
-              待发货/准备中：{deliveries.length}
+              待发货/准备中：{deliveries?.length}
             </Tag>
             <Tag icon={<Truck size={14} />} color="cyan">
-              已发货/在途：{deliveries.filter((d) => d.status === "shipped" || d.status === "in_transit").length}
+              已发货/在途：{(deliveries || []).filter((d) => d.status === "shipped" || d.status === "in_transit").length}
             </Tag>
           </Space>
         }

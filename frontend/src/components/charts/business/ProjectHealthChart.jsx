@@ -43,7 +43,7 @@ export default function ProjectHealthChart({
   }, [data]);
 
   const total = useMemo(() => {
-    return chartData.reduce((sum, item) => sum + item.value, 0);
+    return (chartData || []).reduce((sum, item) => sum + item.value, 0);
   }, [chartData]);
 
   const handleReady = (plot) => {
@@ -76,7 +76,7 @@ export default function ProjectHealthChart({
       height,
       radius: 0.85,
       innerRadius: chartType === "donut" ? 0.6 : 0,
-      color: chartData.map((d) => d.color),
+      color: (chartData || []).map((d) => d.color),
       label: {
         type: "outer",
         content: ({ percent, type }) =>
@@ -146,7 +146,7 @@ export default function ProjectHealthChart({
     yField: "value",
     height,
     color: ({ type }) => {
-      const item = chartData.find((d) => d.type === type);
+      const item = (chartData || []).find((d) => d.type === type);
       return item?.color || "#64748b";
     },
     columnWidthRatio: 0.5,

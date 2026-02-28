@@ -14,20 +14,20 @@ export function TrendChart({ data, height = 250, showPoints = true }) {
   // data格式: [{ date: '2026-01-07', value: 75, label: '评估1' }, ...]
 
   const maxValue = useMemo(() => {
-    return Math.max(...data.map((d) => d.value), 100);
+    return Math.max(...(data || []).map((d) => d.value), 100);
   }, [data]);
 
   const minValue = useMemo(() => {
-    return Math.min(...data.map((d) => d.value), 0);
+    return Math.min(...(data || []).map((d) => d.value), 0);
   }, [data]);
 
   const valueRange = maxValue - minValue || 100;
   const padding = 40;
 
   const points = useMemo(() => {
-    return data.map((item, index) => {
+    return (data || []).map((item, index) => {
       const x =
-        padding + (index / (data.length - 1 || 1)) * (height - padding * 2);
+        padding + (index / (data?.length - 1 || 1)) * (height - padding * 2);
       const y =
         height -
         padding -
@@ -105,7 +105,7 @@ export function TrendChart({ data, height = 250, showPoints = true }) {
 
         {/* 数据点 */}
         {showPoints &&
-          points.map((point, index) => (
+          (points || []).map((point, index) => (
             <g key={index}>
               <circle
                 cx={point.x}

@@ -168,7 +168,7 @@ export function DashboardRenderer({
 
   return (
     <div className={cn('grid gap-4 p-4', layoutClass)}>
-      {widgets.map((widget, index) => (
+      {(widgets || []).map((widget, index) => (
         <WidgetRenderer
           key={`${widget.id}-${index}`}
           widget={widget}

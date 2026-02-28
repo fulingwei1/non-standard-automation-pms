@@ -40,7 +40,7 @@ export function RuleFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">全部类型</SelectItem>
-              {ruleTypeOptions.map((opt) => (
+              {(ruleTypeOptions || []).map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
@@ -53,7 +53,7 @@ export function RuleFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">全部对象</SelectItem>
-              {targetTypeOptions.map((opt) => (
+              {(targetTypeOptions || []).map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>

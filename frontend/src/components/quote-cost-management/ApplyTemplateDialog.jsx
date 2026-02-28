@@ -25,7 +25,7 @@ export default function ApplyTemplateDialog({
             <Select
               value={selectedTemplate?.id?.toString()}
               onValueChange={(value) => {
-                const template = costTemplates.find(
+                const template = (costTemplates || []).find(
                   (t) => t.id.toString() === value
                 );
                 onTemplateSelect(template);
@@ -35,7 +35,7 @@ export default function ApplyTemplateDialog({
                 <SelectValue placeholder="选择成本模板" />
               </SelectTrigger>
               <SelectContent>
-                {costTemplates.map((template) => (
+                {(costTemplates || []).map((template) => (
                   <SelectItem
                     key={template.id}
                     value={template.id.toString()}

@@ -59,7 +59,7 @@ export default function SalesTeamPerformance({
 
   // 过滤团队成员
   const filteredTeam = useMemo(() => {
-    return teamPerformance.filter((member) => {
+    return (teamPerformance || []).filter((member) => {
       const matchesSearch = !searchQuery ||
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -280,7 +280,7 @@ export default function SalesTeamPerformance({
           <div>
             <h4 className="font-medium mb-3 text-slate-200">当前指标 (权重总和: {metricValidation.totalWeight.toFixed(2)})</h4>
             <div className="space-y-2">
-              {configDraft.map((metric, index) =>
+              {(configDraft || []).map((metric, index) =>
               <div key={index} className="flex items-center gap-3 p-3 border border-slate-700 rounded-lg bg-slate-800/50">
                   <span className="font-medium flex-1 text-slate-200">{metric.label}</span>
                   <input
@@ -300,7 +300,7 @@ export default function SalesTeamPerformance({
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    const newDraft = configDraft.filter((_, i) => i !== index);
+                    const newDraft = (configDraft || []).filter((_, i) => i !== index);
                     setConfigDraft(newDraft);
                   }}>
 
@@ -321,7 +321,7 @@ export default function SalesTeamPerformance({
                 className="flex-1 px-3 py-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200">
 
                 <option value="">选择指标...</option>
-                {availableMetricOptions.map((metric) =>
+                {(availableMetricOptions || []).map((metric) =>
                 <option key={metric.value} value={metric.value}>
                     {metric.label} - {metric.description}
                 </option>
@@ -377,7 +377,7 @@ export default function SalesTeamPerformance({
               <Trophy className="w-8 h-8 text-yellow-400" />
               <div>
                 <div className="text-2xl font-bold text-slate-100">
-                  {teamPerformance.filter((m) => (m.performanceScore || 0) >= 90).length}
+                  {(teamPerformance || []).filter((m) => (m.performanceScore || 0) >= 90).length}
                 </div>
                 <div className="text-sm text-slate-400">优秀成员</div>
               </div>
@@ -391,7 +391,7 @@ export default function SalesTeamPerformance({
               <Target className="w-8 h-8 text-green-400" />
               <div>
                 <div className="text-2xl font-bold text-slate-100">
-                  {Math.round(teamPerformance.reduce((sum, m) => sum + (m.performanceScore || 0), 0) / Math.max(teamPerformance.length, 1))}
+                  {Math.round((teamPerformance || []).reduce((sum, m) => sum + (m.performanceScore || 0), 0) / Math.max(teamPerformance.length, 1))}
                 </div>
                 <div className="text-sm text-slate-400">平均得分</div>
               </div>
@@ -405,7 +405,7 @@ export default function SalesTeamPerformance({
               <Award className="w-8 h-8 text-purple-400" />
               <div>
                 <div className="text-2xl font-bold text-slate-100">
-                  {formatCurrency(teamPerformance.reduce((sum, m) => sum + (m.totalRevenue || 0), 0))}
+                  {formatCurrency((teamPerformance || []).reduce((sum, m) => sum + (m.totalRevenue || 0), 0))}
                 </div>
                 <div className="text-sm text-slate-400">总收入</div>
               </div>
@@ -483,7 +483,7 @@ export default function SalesTeamPerformance({
               <span className="font-medium text-slate-300">当前排名指标</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {displayRankingMetrics.map((metric, index) =>
+              {(displayRankingMetrics || []).map((metric, index) =>
             <Badge key={index} variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-300">
                   {metric.label} ({formatPercentage((metric.weight || 0) * 100)})
             </Badge>
@@ -495,7 +495,7 @@ export default function SalesTeamPerformance({
 
       {/* 团队成员排名 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {sortedTeam.map(renderMemberCard)}
+        {(sortedTeam || []).map(renderMemberCard)}
       </div>
 
       {sortedTeam.length === 0 &&

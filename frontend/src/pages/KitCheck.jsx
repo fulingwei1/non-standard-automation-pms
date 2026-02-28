@@ -317,7 +317,7 @@ export default function KitCheck() {
           </div> :
 
           <div className="space-y-3">
-              {workOrders.map((wo) => {
+              {(workOrders || []).map((wo) => {
               const status =
               kitStatusConfigs[wo.kit_status] || kitStatusConfigs.shortage;
               return (

@@ -69,16 +69,16 @@ const PipelineColumn = ({
 
   // 过滤当前阶段的机会
   const stageOpportunities = useMemo(() => {
-    return opportunities.filter((opp) => opp.stage === stage);
+    return (opportunities || []).filter((opp) => opp.stage === stage);
   }, [opportunities, stage]);
 
   // 计算统计信息
   const stageStats = useMemo(() => {
     const total = stageOpportunities.length;
-    const highValue = stageOpportunities.filter((opp) =>
+    const highValue = (stageOpportunities || []).filter((opp) =>
     (opp.expected_amount || 0) > 1000000
     ).length;
-    const totalAmount = stageOpportunities.reduce(
+    const totalAmount = (stageOpportunities || []).reduce(
       (sum, opp) => sum + (opp.expected_amount || 0), 0
     );
 
@@ -134,7 +134,7 @@ const PipelineColumn = ({
             <p className="text-sm">暂无商机</p>
         </div> :
 
-        stageOpportunities.map((opportunity) =>
+        (stageOpportunities || []).map((opportunity) =>
         <OpportunityCard
           key={opportunity.id}
           opportunity={opportunity}
@@ -352,7 +352,7 @@ export const OpportunityPipeline = ({
             {selectedView === "kanban" &&
             <div className="flex-1 overflow-x-auto">
                 <div className="flex gap-4 min-w-max">
-                  {opportunityStageFlow.map((stage) =>
+                  {(opportunityStageFlow || []).map((stage) =>
                 <div
                   key={stage}
                   className="w-80 flex-shrink-0">
@@ -377,7 +377,7 @@ export const OpportunityPipeline = ({
             {selectedView === "list" &&
             <div className="flex-1">
                 <div className="space-y-3">
-                  {filteredOpportunities.map((opportunity) =>
+                  {(filteredOpportunities || []).map((opportunity) =>
                 <OpportunityCard
                   key={opportunity.id}
                   opportunity={opportunity}
@@ -405,9 +405,9 @@ export const OpportunityPipeline = ({
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        {opportunityStageFlow.map((stage) => {
+                        {(opportunityStageFlow || []).map((stage) => {
                         const stageConfig = opportunityStageConfig[stage];
-                        const stageCount = filteredOpportunities.filter(
+                        const stageCount = (filteredOpportunities || []).filter(
                           (opp) => opp.stage === stage
                         ).length;
                         const percentage = stats.total > 0 ?
@@ -459,7 +459,7 @@ export const OpportunityPipeline = ({
                             <span>最大金额</span>
                             <span>
                               {formatCurrency(
-                              Math.max(...filteredOpportunities.map((opp) => opp.expected_amount || 0), 0)
+                              Math.max(...(filteredOpportunities || []).map((opp) => opp.expected_amount || 0), 0)
                             )}
                             </span>
                           </div>
@@ -476,10 +476,10 @@ export const OpportunityPipeline = ({
                     <CardContent>
                       <div className="space-y-3">
                         {opportunityStageFlow.slice(0, -1).map((stage, index) => {
-                        const stageCount = filteredOpportunities.filter(
+                        const stageCount = (filteredOpportunities || []).filter(
                           (opp) => opp.stage === stage
                         ).length;
-                        const nextStageCount = filteredOpportunities.filter(
+                        const nextStageCount = (filteredOpportunities || []).filter(
                           (opp) => opp.stage === opportunityStageFlow[index + 1]
                         ).length;
                         const conversionRate = stageCount > 0 ?

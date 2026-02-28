@@ -150,7 +150,7 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
         if (data?.notifications) {
           const items = data.notifications.slice(0, limit);
           setNotifications(items);
-          setUnreadCount(items.filter(n => !n.read).length);
+          setUnreadCount((items || []).filter(n => !n.read).length);
           return;
         }
 
@@ -163,7 +163,7 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
           if (payload?.items) {
             const items = payload.items.slice(0, limit);
             setNotifications(items);
-            setUnreadCount(items.filter(n => !n.read).length);
+            setUnreadCount((items || []).filter(n => !n.read).length);
             return;
           }
         } catch {
@@ -173,7 +173,7 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
         // 使用默认数据
         const items = defaultNotifications.slice(0, limit);
         setNotifications(items);
-        setUnreadCount(items.filter(n => !n.read).length);
+        setUnreadCount((items || []).filter(n => !n.read).length);
       } finally {
         setLoading(false);
       }
@@ -221,14 +221,14 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
               <div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
-        ) : notifications.length === 0 ? (
+        ) : notifications?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Bell className="h-8 w-8 mb-2" />
             <p className="text-sm">暂无通知</p>
           </div>
         ) : (
           <div className="space-y-1">
-            {notifications.map((notification, index) => (
+            {(notifications || []).map((notification, index) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}

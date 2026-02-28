@@ -49,7 +49,7 @@ export function CustomerTable({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {customers.map((customer) => (
+                                {(customers || []).map((customer) => (
                                     <tr key={customer.id}>
                                         <td className="px-4 py-2 text-sm text-foreground font-mono">
                                             {customer.customer_code}

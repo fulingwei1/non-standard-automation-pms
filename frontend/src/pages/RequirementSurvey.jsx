@@ -85,19 +85,19 @@ const surveyStatuses = [
 // Mock data - 已移除，使用真实API
 // 获取状态样式
 const getStatusStyle = (status) => {
-  const config = surveyStatuses.find((s) => s.id === status);
+  const config = (surveyStatuses || []).find((s) => s.id === status);
   return config?.color || "bg-slate-500";
 };
 
 // 获取状态名称
 const getStatusName = (status) => {
-  const config = surveyStatuses.find((s) => s.id === status);
+  const config = (surveyStatuses || []).find((s) => s.id === status);
   return config?.name || status;
 };
 
 // 获取调研方式图标
 const getMethodIcon = (method) => {
-  const config = surveyMethods.find((m) => m.id === method);
+  const config = (surveyMethods || []).find((m) => m.id === method);
   return config || surveyMethods[0];
 };
 
@@ -173,11 +173,11 @@ function SurveyCard({ survey, onClick }) {
         </span>
       </div>
 
-      {survey.pendingQuestions.length > 0 && (
+      {survey.pendingQuestions?.length > 0 && (
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="w-3 h-3 text-amber-400" />
           <span className="text-xs text-amber-400">
-            {survey.pendingQuestions.length} 个待确认问题
+            {survey.pendingQuestions?.length} 个待确认问题
           </span>
         </div>
       )}
@@ -193,10 +193,10 @@ function SurveyCard({ survey, onClick }) {
             {survey.engineer}
           </span>
         </div>
-        {survey.attachments.length > 0 && (
+        {survey.attachments?.length > 0 && (
           <span className="flex items-center gap-1 text-slate-500">
             <Paperclip className="w-3 h-3" />
-            {survey.attachments.length}
+            {survey.attachments?.length}
           </span>
         )}
       </div>
@@ -320,14 +320,14 @@ function SurveyDetailPanel({ survey, onClose }) {
           )}
 
           {/* 测试需求 */}
-          {survey.testRequirements.length > 0 && (
+          {survey.testRequirements?.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-slate-400 flex items-center gap-2">
                 <Settings className="w-4 h-4 text-primary" />
                 测试需求
               </h4>
               <div className="flex flex-wrap gap-2">
-                {survey.testRequirements.map((item, index) => (
+                {(survey.testRequirements || []).map((item, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
                     {item}
                   </Badge>
@@ -434,11 +434,11 @@ function SurveyDetailPanel({ survey, onClose }) {
           </div>
 
           {/* 竞争情况 */}
-          {survey.competitors.length > 0 && (
+          {survey.competitors?.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-slate-400">竞争情况</h4>
               <div className="flex flex-wrap gap-2">
-                {survey.competitors.map((item, index) => (
+                {(survey.competitors || []).map((item, index) => (
                   <Badge key={index} variant="destructive" className="text-xs">
                     {item}
                   </Badge>
@@ -448,14 +448,14 @@ function SurveyDetailPanel({ survey, onClose }) {
           )}
 
           {/* 待确认问题 */}
-          {survey.pendingQuestions.length > 0 && (
+          {survey.pendingQuestions?.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-amber-400 flex items-center gap-2">
                 <HelpCircle className="w-4 h-4" />
                 待确认问题
               </h4>
               <div className="space-y-2">
-                {survey.pendingQuestions.map((question, index) => (
+                {(survey.pendingQuestions || []).map((question, index) => (
                   <div
                     key={index}
                     className="flex items-center gap-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20"
@@ -469,14 +469,14 @@ function SurveyDetailPanel({ survey, onClose }) {
           )}
 
           {/* 附件 */}
-          {survey.attachments.length > 0 && (
+          {survey.attachments?.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-slate-400 flex items-center gap-2">
                 <Paperclip className="w-4 h-4 text-primary" />
-                附件 ({survey.attachments.length})
+                附件 ({survey.attachments?.length})
               </h4>
               <div className="space-y-2">
-                {survey.attachments.map((file, index) => (
+                {(survey.attachments || []).map((file, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between bg-surface-50 p-3 rounded-lg"
@@ -579,10 +579,10 @@ export default function RequirementSurvey() {
       const ticketsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tickets to surveys
-      const transformedSurveys = ticketsData.map((ticket) => {
+      const transformedSurveys = (ticketsData || []).map((ticket) => {
         const method = mapTicketTypeToMethod(ticket.ticket_type);
         const methodConfig =
-          surveyMethods.find((m) => m.id === method) || surveyMethods[0];
+          (surveyMethods || []).find((m) => m.id === method) || surveyMethods[0];
         return {
           id: ticket.id,
           code: ticket.ticket_no || `SUR-${ticket.id}`,
@@ -629,7 +629,7 @@ export default function RequirementSurvey() {
   }, [loadSurveys]);
 
   // 筛选调研记录
-  const filteredSurveys = surveys.filter((survey) => {
+  const filteredSurveys = (surveys || []).filter((survey) => {
     const matchesStatus =
       selectedStatus === "all" || survey.status === selectedStatus;
     const matchesMethod =
@@ -645,10 +645,10 @@ export default function RequirementSurvey() {
   // 统计数据
   const stats = {
     total: surveys.length,
-    scheduled: surveys.filter((s) => s.status === "scheduled").length,
-    completed: surveys.filter((s) => s.status === "completed").length,
-    pendingQuestions: surveys.reduce(
-      (acc, s) => acc + s.pendingQuestions.length,
+    scheduled: (surveys || []).filter((s) => s.status === "scheduled").length,
+    completed: (surveys || []).filter((s) => s.status === "completed").length,
+    pendingQuestions: (surveys || []).reduce(
+      (acc, s) => acc + s.pendingQuestions?.length,
       0,
     ),
   };
@@ -764,7 +764,7 @@ export default function RequirementSurvey() {
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              {surveyStatuses.map((status) => (
+              {(surveyStatuses || []).map((status) => (
                 <option key={status.id} value={status.id}>
                   {status.name}
                 </option>
@@ -776,7 +776,7 @@ export default function RequirementSurvey() {
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="all">全部方式</option>
-              {surveyMethods.map((method) => (
+              {(surveyMethods || []).map((method) => (
                 <option key={method.id} value={method.id}>
                   {method.name}
                 </option>
@@ -808,7 +808,7 @@ export default function RequirementSurvey() {
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
         >
           {filteredSurveys.length > 0 ? (
-            filteredSurveys.map((survey) => (
+            (filteredSurveys || []).map((survey) => (
               <SurveyCard
                 key={survey.id}
                 survey={survey}

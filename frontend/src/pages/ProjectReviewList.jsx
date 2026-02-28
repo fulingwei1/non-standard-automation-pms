@@ -182,7 +182,7 @@ export default function ProjectReviewList() {
       const res = await projectReviewApi.list(params);
       const data = res.data || res;
       setReviews(data.items || data || []);
-      setTotal(data.total || data.length || 0);
+      setTotal(data.total || data?.length || 0);
     } catch (err) {
       console.error("Failed to fetch reviews:", err);
       // API 调用失败时，使用 mock 数据让用户仍能看到界面
@@ -264,7 +264,7 @@ export default function ProjectReviewList() {
               className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">全部项目</option>
-              {projectList.map((proj) => (
+              {(projectList || []).map((proj) => (
                 <option key={proj.id} value={proj.id}>
                   {proj.project_name}
                 </option>
@@ -331,7 +331,7 @@ export default function ProjectReviewList() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {reviews.map((review) => (
+          {(reviews || []).map((review) => (
             <motion.div key={review.id} variants={staggerChild}>
               <Card className="hover:bg-white/[0.03] transition-colors">
                 <CardContent className="p-6">

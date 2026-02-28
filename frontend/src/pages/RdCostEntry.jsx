@@ -192,7 +192,7 @@ export default function RdCostEntry() {
 
   }
 
-  const selectedCostType = costTypes.find(
+  const selectedCostType = (costTypes || []).find(
     (t) => t.id === parseInt(formData.cost_type_id)
   );
   const isLaborType = selectedCostType?.cost_type_code === "LABOR";
@@ -260,8 +260,8 @@ export default function RdCostEntry() {
           <h3 className="text-lg font-semibold text-white mb-4">费用明细</h3>
           {costs.length > 0 ?
           <div className="space-y-3">
-              {costs.map((cost) => {
-              const costType = costTypes.find(
+              {(costs || []).map((cost) => {
+              const costType = (costTypes || []).find(
                 (t) => t.id === cost.cost_type_id
               );
               return (
@@ -347,7 +347,7 @@ export default function RdCostEntry() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__empty__">请选择费用类型</SelectItem>
-                      {costTypes.map((type) =>
+                      {(costTypes || []).map((type) =>
                       <SelectItem key={type.id} value={type.id.toString()}>
                           {type.cost_type_name}
                       </SelectItem>

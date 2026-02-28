@@ -284,7 +284,7 @@ export default function LossAnalysis() {
               {analysisData.reason_analysis &&
             <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {analysisData.reason_analysis.top_reasons.map((reason, index) =>
+                    {(analysisData.reason_analysis.top_reasons || []).map((reason, index) =>
                 <div
                   key={index}
                   className="p-4 bg-slate-50 rounded-lg border-l-4 border-blue-500">
@@ -353,7 +353,7 @@ export default function LossAnalysis() {
                   </div>
 
                   {/* 按人员统计 */}
-                  {analysisData.investment_analysis.by_person.length > 0 &&
+                  {analysisData.investment_analysis.by_person?.length > 0 &&
               <div>
                       <h3 className="text-lg font-semibold mb-3">按人员统计</h3>
                       <Table>
@@ -367,7 +367,7 @@ export default function LossAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {analysisData.investment_analysis.by_person.map((person) =>
+                          {(analysisData.investment_analysis.by_person || []).map((person) =>
                     <TableRow key={person.person_id}>
                               <TableCell>{person.person_name}</TableCell>
                               <TableCell>{person.department || "-"}</TableCell>
@@ -393,13 +393,13 @@ export default function LossAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysisData.pattern_analysis.detailed_design_loss_patterns.length > 0 &&
+                  {analysisData.pattern_analysis.detailed_design_loss_patterns?.length > 0 &&
               <div>
                       <h3 className="text-lg font-semibold mb-3">
                         详细设计后未中标的主要原因
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {analysisData.pattern_analysis.detailed_design_loss_patterns.map(
+                        {(analysisData.pattern_analysis.detailed_design_loss_patterns || []).map(
                     (pattern, index) =>
                     <div
                       key={index}
@@ -419,7 +419,7 @@ export default function LossAnalysis() {
               </div>
               }
 
-                  {analysisData.pattern_analysis.salesperson_patterns.length > 0 &&
+                  {analysisData.pattern_analysis.salesperson_patterns?.length > 0 &&
               <div>
                       <h3 className="text-lg font-semibold mb-3">
                         高投入但未中标率高的销售人员
@@ -434,7 +434,7 @@ export default function LossAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {analysisData.pattern_analysis.salesperson_patterns.map((sp) =>
+                          {(analysisData.pattern_analysis.salesperson_patterns || []).map((sp) =>
                     <TableRow key={sp.person_id}>
                               <TableCell>{sp.person_name}</TableCell>
                               <TableCell>{sp.lost_count}</TableCell>

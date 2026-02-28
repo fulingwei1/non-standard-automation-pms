@@ -169,7 +169,7 @@ export default function QualityReports() {
                       </tr>
                     </thead>
                     <tbody>
-                      {trendData.data_points.map((point, idx) => (
+                      {(trendData.data_points || []).map((point, idx) => (
                         <tr key={idx} className="border-b border-white/5">
                           <td className="px-4 py-2 text-text-primary">{point.date || point.period}</td>
                           <td className="px-4 py-2 text-right text-text-primary">{point.total_qty ?? point.inspection_count ?? "-"}</td>
@@ -201,7 +201,7 @@ export default function QualityReports() {
 
               {paretoData?.items?.length > 0 ? (
                 <div className="space-y-3">
-                  {paretoData.items.map((item, idx) => {
+                  {(paretoData.items || []).map((item, idx) => {
                     const maxCount = paretoData.items[0]?.count || 1;
                     const widthPct = Math.max(5, (item.count / maxCount) * 100);
                     return (

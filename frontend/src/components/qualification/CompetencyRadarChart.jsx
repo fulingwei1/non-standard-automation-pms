@@ -50,7 +50,7 @@ export function CompetencyRadarChart({
   // 计算每个维度的坐标点
   const points = useMemo(() => {
     if (dimensions.length === 0) {return [];}
-    return dimensions.map((dim, index) => {
+    return (dimensions || []).map((dim, index) => {
       const angle = index * angleStep - Math.PI / 2;
       const normalizedScore = Math.min(dim.score / maxScore, 1);
       const r = radius * normalizedScore;
@@ -72,7 +72,7 @@ export function CompetencyRadarChart({
     return Array.from({ length: gridLevels }, (_, i) => {
       const level = (i + 1) / gridLevels;
       const levelRadius = radius * level;
-      return dimensions.map((_, index) => {
+      return (dimensions || []).map((_, index) => {
         const angle = index * angleStep - Math.PI / 2;
         return {
           x: centerX + levelRadius * Math.cos(angle),
@@ -85,13 +85,13 @@ export function CompetencyRadarChart({
   // 生成数据区域路径
   const dataPath = useMemo(() => {
     if (points.length === 0) {return "";}
-    return points.map((p) => `${p.x},${p.y}`).join(" ");
+    return (points || []).map((p) => `${p.x},${p.y}`).join(" ");
   }, [points]);
 
   // 计算平均分
   const avgScore = useMemo(() => {
     if (dimensions.length === 0) {return 0;}
-    const sum = dimensions.reduce((acc, dim) => acc + dim.score, 0);
+    const sum = (dimensions || []).reduce((acc, dim) => acc + dim.score, 0);
     return Math.round(sum / dimensions.length);
   }, [dimensions]);
 
@@ -108,10 +108,10 @@ export function CompetencyRadarChart({
       <svg width={size} height={size} className="overflow-visible">
         {/* 网格线 */}
         <g opacity="0.15">
-          {gridLines.map((line, i) =>
+          {(gridLines || []).map((line, i) =>
           <polygon
             key={i}
-            points={line.map((p) => `${p.x},${p.y}`).join(" ")}
+            points={(line || []).map((p) => `${p.x},${p.y}`).join(" ")}
             fill="none"
             stroke="currentColor"
             strokeWidth="1"
@@ -122,7 +122,7 @@ export function CompetencyRadarChart({
 
         {/* 轴线 */}
         <g opacity="0.3">
-          {dimensions.map((_, index) => {
+          {(dimensions || []).map((_, index) => {
             const angle = index * angleStep - Math.PI / 2;
             const x2 = centerX + radius * Math.cos(angle);
             const y2 = centerY + radius * Math.sin(angle);
@@ -153,7 +153,7 @@ export function CompetencyRadarChart({
         }
 
         {/* 数据点 */}
-        {points.map((point, index) =>
+        {(points || []).map((point, index) =>
         <g key={index}>
             <circle
             cx={point.x}

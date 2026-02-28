@@ -31,11 +31,11 @@ export default function ProductionBoard({ _view, data: propData }) {
       <CardContent>
         {loading ? (
           <div className="text-sm text-muted-foreground text-center py-4">加载中...</div>
-        ) : items.length === 0 ? (
+        ) : items?.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-4">暂无生产计划</div>
         ) : (
           <div className="space-y-2">
-            {items.map((item, i) => (
+            {(items || []).map((item, i) => (
               <div key={item.id || i} className="text-sm border-b pb-2 last:border-0">
                 <div className="flex justify-between items-center">
                   <span className="font-medium truncate flex-1">{item.name || item.title || item.plan_name}</span>

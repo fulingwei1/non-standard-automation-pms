@@ -170,7 +170,7 @@ export default function SalesReports() {
 
   const currentMonth = monthlySales[monthlySales.length - 1];
   const avgAchievement =
-  monthlySales.reduce((sum, m) => sum + m.achieved / m.target * 100, 0) /
+  (monthlySales || []).reduce((sum, m) => sum + m.achieved / m.target * 100, 0) /
   monthlySales.length;
 
   return (
@@ -274,7 +274,7 @@ export default function SalesReports() {
                 <p className="text-sm text-slate-400">累计销售额</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(
-                    monthlySales.reduce((sum, m) => sum + m.achieved, 0)
+                    (monthlySales || []).reduce((sum, m) => sum + m.achieved, 0)
                   )}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">近7个月累计</p>
@@ -317,7 +317,7 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {monthlySales.map((item, _index) => {
+                {(monthlySales || []).map((item, _index) => {
                   const achievementRate = item.achieved / item.target * 100;
                   return (
                     <div key={item.month} className="space-y-2">
@@ -362,7 +362,7 @@ export default function SalesReports() {
             <CardContent>
               <div className="space-y-4">
                 {customerAnalysis && customerAnalysis.length > 0 ?
-                customerAnalysis.map((customer, index) =>
+                (customerAnalysis || []).map((customer, index) =>
                 <div
                   key={customer.name}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -431,7 +431,7 @@ export default function SalesReports() {
             <CardContent>
               <div className="space-y-4">
                 {productAnalysis && productAnalysis.length > 0 ?
-                productAnalysis.map((product, _index) =>
+                (productAnalysis || []).map((product, _index) =>
                 <div
                   key={product.name}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -478,7 +478,7 @@ export default function SalesReports() {
             <CardContent>
               <div className="space-y-4">
                 {regionalAnalysis && regionalAnalysis.length > 0 ?
-                regionalAnalysis.map((region, _index) =>
+                (regionalAnalysis || []).map((region, _index) =>
                 <div
                   key={region.region}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -504,7 +504,7 @@ export default function SalesReports() {
                       <Progress
                     value={
                     region.amount /
-                    regionalAnalysis.reduce(
+                    (regionalAnalysis || []).reduce(
                       (sum, r) => sum + r.amount,
                       0
                     ) *

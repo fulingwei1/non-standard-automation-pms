@@ -203,7 +203,7 @@ export function EmployeeManager({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
-                  {filteredEmployees.map((employee) => {
+                  {(filteredEmployees || []).map((employee) => {
                   const statusConfig = getEmployeeStatusConfig(employee.status);
                   const deptConfig = getDepartmentConfig(employee.department);
 

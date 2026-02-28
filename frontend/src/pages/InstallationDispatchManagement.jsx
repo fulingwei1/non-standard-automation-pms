@@ -317,10 +317,10 @@ export default function InstallationDispatchManagement() {
   };
 
   const handleSelectAll = () => {
-    if (selectedOrders.size === orders.length) {
+    if (selectedOrders.size === orders?.length) {
       setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(orders.map((order) => order.id)));
+      setSelectedOrders(new Set((orders || []).map((order) => order.id)));
     }
   };
 

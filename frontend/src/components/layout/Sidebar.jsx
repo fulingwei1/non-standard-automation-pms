@@ -120,7 +120,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
         // 使用统一响应格式处理
         const data = response.formatted || response.data;
         // Only use dynamic menu if it has content
-        if (data?.nav_groups && data.nav_groups.length > 0) {
+        if (data?.nav_groups && data.nav_groups?.length > 0) {
           setDynamicNavGroups(data.nav_groups);
         }
       } catch (error) {
@@ -161,10 +161,10 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   // Toggle favorite
   const toggleFavorite = (itemPath, itemName, itemIcon) => {
     setFavorites((prev) => {
-      const isFavorite = prev.some((fav) => fav.path === itemPath);
+      const isFavorite = (prev || []).some((fav) => fav.path === itemPath);
       let newFavorites;
       if (isFavorite) {
-        newFavorites = prev.filter((fav) => fav.path !== itemPath);
+        newFavorites = (prev || []).filter((fav) => fav.path !== itemPath);
       } else {
         newFavorites = [
           ...prev,
@@ -185,7 +185,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     const query = debouncedSearchQuery.toLowerCase();
     return navGroups
       .map((group) => {
-        const filteredItems = group.items.filter(
+        const filteredItems = (group.items || []).filter(
           (item) =>
             item.name.toLowerCase().includes(query) ||
             item.path.toLowerCase().includes(query) ||
@@ -196,7 +196,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
           items: filteredItems
         };
       })
-      .filter((group) => group.items.length > 0);
+      .filter((group) => group.items?.length > 0);
   }, [navGroups, debouncedSearchQuery]);
 
   // Get favorite items as a group
@@ -206,7 +206,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     }
     return {
       label: "我的收藏",
-      items: favorites.map((fav) => ({
+      items: (favorites || []).map((fav) => ({
         name: fav.name,
         path: fav.path,
         icon: fav.icon
@@ -315,7 +315,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
               </motion.p>
             </div>
             <div className="space-y-1">
-              {favoriteGroup.items.map((item) => (
+              {(favoriteGroup.items || []).map((item) => (
                 <NavItem
                   key={item.path}
                   item={item}
@@ -331,7 +331,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
         )}
 
         {/* Regular menu groups */}
-        {filteredNavGroups.map((group, gi) => {
+        {(filteredNavGroups || []).map((group, gi) => {
           // Default to expanded (false means not collapsed)
           const isGroupCollapsed = collapsedGroups[group.label] === true;
           return (

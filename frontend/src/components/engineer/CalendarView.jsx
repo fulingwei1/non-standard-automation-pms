@@ -164,19 +164,19 @@ function DayCell({
   selectedTaskId,
   viewMode,
 }) {
-  const dayTasks = tasks.filter((task) => {
+  const dayTasks = (tasks || []).filter((task) => {
     const start = parseDate(task.plannedStart);
     const end = parseDate(task.plannedEnd);
     return isDateInRange(date, start, end);
   });
 
   // Tasks that start on this day
-  const startingTasks = dayTasks.filter((task) =>
+  const startingTasks = (dayTasks || []).filter((task) =>
     isSameDay(parseDate(task.plannedStart), date),
   );
 
   // Tasks that are due on this day
-  const dueTasks = dayTasks.filter(
+  const dueTasks = (dayTasks || []).filter(
     (task) =>
       isSameDay(parseDate(task.plannedEnd), date) &&
       task.status !== "completed",
@@ -419,7 +419,7 @@ export default function CalendarView({ tasks, onTaskSelect, selectedTaskId }) {
         )}
       >
         <AnimatePresence mode="wait">
-          {calendarDays.map((day) => (
+          {(calendarDays || []).map((day) => (
             <motion.div
               key={formatDateKey(day.date)}
               initial={{ opacity: 0 }}

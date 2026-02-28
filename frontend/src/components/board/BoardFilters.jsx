@@ -299,7 +299,7 @@ const BoardFilters = memo(function BoardFilters({
                 >
                   全部
                 </button>
-                {availableTemplates.map((template) => (
+                {(availableTemplates || []).map((template) => (
                   <button
                     key={template.id}
                     onClick={() => onTemplateFilterChange?.(template.id)}

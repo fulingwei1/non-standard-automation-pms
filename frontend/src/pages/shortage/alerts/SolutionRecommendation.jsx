@@ -101,7 +101,7 @@ const SolutionRecommendation = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {solutions.map((solution) => (
+              {(solutions || []).map((solution) => (
                 <SolutionCard
                   key={solution.id}
                   solution={solution}

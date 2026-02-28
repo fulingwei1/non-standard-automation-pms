@@ -83,7 +83,7 @@ export default function ProgressReport() {
       setTasks(taskList);
       // Initialize task progress
       const progressMap = {};
-      taskList.forEach((task) => {
+      (taskList || []).forEach((task) => {
         progressMap[task.id] = task.progress || 0;
       });
       setTaskProgress(progressMap);
@@ -217,11 +217,11 @@ export default function ProgressReport() {
         <CardContent>
           {loading ?
           <div className="text-center py-8 text-slate-400">加载中...</div> :
-          tasks.length === 0 ?
+          tasks?.length === 0 ?
           <div className="text-center py-8 text-slate-400">暂无任务</div> :
 
           <div className="space-y-3">
-              {tasks.map((task) => {
+              {(tasks || []).map((task) => {
               const progress = taskProgress[task.id] || task.progress || 0;
               return (
                 <div

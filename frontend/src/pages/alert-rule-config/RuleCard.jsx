@@ -71,14 +71,14 @@ export function RuleCard({ rule, onToggle, onEdit, onDelete }) {
                 <div>
                   <span className="text-slate-500">规则类型:</span>{" "}
                   <span className="text-white">
-                    {ruleTypeOptions.find((o) => o.value === rule.rule_type)
+                    {(ruleTypeOptions || []).find((o) => o.value === rule.rule_type)
                       ?.label || rule.rule_type}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-500">监控对象:</span>{" "}
                   <span className="text-white">
-                    {targetTypeOptions.find((o) => o.value === rule.target_type)
+                    {(targetTypeOptions || []).find((o) => o.value === rule.target_type)
                       ?.label || rule.target_type}
                   </span>
                 </div>
@@ -103,7 +103,7 @@ export function RuleCard({ rule, onToggle, onEdit, onDelete }) {
                       {" "}
                       <span className="text-slate-500">运算符:</span>{" "}
                       <span className="text-white">
-                        {operatorOptions.find(
+                        {(operatorOptions || []).find(
                           (o) => o.value === rule.condition_operator
                         )?.label || rule.condition_operator}
                       </span>

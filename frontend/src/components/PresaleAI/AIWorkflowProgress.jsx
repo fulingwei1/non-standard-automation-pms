@@ -127,7 +127,7 @@ const AIWorkflowProgress = ({ workflowStatus }) => {
 
         {/* Steps */}
         <div className="space-y-4">
-          {steps.map((step, index) => {
+          {(steps || []).map((step, index) => {
             const status = getStepStatus(step.key);
             const StepIcon = step.icon;
             const StatusIcon = getStepIcon(status);
@@ -203,7 +203,7 @@ const AIWorkflowProgress = ({ workflowStatus }) => {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">当前步骤:</span>
             <span className="font-medium">
-              {steps.find((s) => s.key === workflowStatus.current_step)?.label ||
+              {(steps || []).find((s) => s.key === workflowStatus.current_step)?.label ||
                 '已完成'}
             </span>
           </div>

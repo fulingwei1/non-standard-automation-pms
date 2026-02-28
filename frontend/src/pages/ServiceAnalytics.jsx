@@ -78,15 +78,15 @@ export default function ServiceAnalytics() {
 
       // Calculate overview
       const totalTickets = ticketsStatsData.total || tickets.length;
-      const totalRecords = records.length;
+      const totalRecords = records?.length;
       const totalCommunications = communications.length;
       const totalSurveys = satisfactionStatsData.total || 0;
 
       // Calculate average response time (from tickets)
-      const ticketsWithResponseTime = tickets.filter((t) => t.response_time);
+      const ticketsWithResponseTime = (tickets || []).filter((t) => t.response_time);
       const avgResponseTime =
         ticketsWithResponseTime.length > 0
-          ? ticketsWithResponseTime.reduce((sum, t) => {
+          ? (ticketsWithResponseTime || []).reduce((sum, t) => {
               const responseTime =
                 new Date(t.response_time) -
                 new Date(t.reported_time || t.created_at);
@@ -95,12 +95,12 @@ export default function ServiceAnalytics() {
           : 2.5;
 
       // Calculate average resolution time (from tickets)
-      const resolvedTickets = tickets.filter(
+      const resolvedTickets = (tickets || []).filter(
         (t) => t.resolved_time && t.reported_time
       );
       const avgResolutionTime =
         resolvedTickets.length > 0
-          ? resolvedTickets.reduce((sum, t) => {
+          ? (resolvedTickets || []).reduce((sum, t) => {
               const resolutionTime =
                 new Date(t.resolved_time) -
                 new Date(t.reported_time || t.created_at);
@@ -112,7 +112,7 @@ export default function ServiceAnalytics() {
       const avgSatisfaction = satisfactionStatsData.average_score || 4.3;
 
       // Calculate completion rate
-      const completedTickets = tickets.filter(
+      const completedTickets = (tickets || []).filter(
         (t) => t.status === "CLOSED" || t.status === "已关闭"
       ).length;
       const completionRate =
@@ -120,11 +120,11 @@ export default function ServiceAnalytics() {
 
       // Calculate service type distribution (from records)
       const serviceTypeCounts = {};
-      records.forEach((r) => {
+      (records || []).forEach((r) => {
         const type = r.service_type || "其他";
         serviceTypeCounts[type] = (serviceTypeCounts[type] || 0) + 1;
       });
-      const totalRecordsCount = records.length;
+      const totalRecordsCount = records?.length;
       const serviceTypeDistribution = Object.entries(serviceTypeCounts).map(
         ([type, count]) => ({
           type,
@@ -138,7 +138,7 @@ export default function ServiceAnalytics() {
 
       // Calculate problem type distribution (from tickets)
       const problemTypeCounts = {};
-      tickets.forEach((t) => {
+      (tickets || []).forEach((t) => {
         const type = t.problem_type || "其他";
         problemTypeCounts[type] = (problemTypeCounts[type] || 0) + 1;
       });
@@ -162,7 +162,7 @@ export default function ServiceAnalytics() {
         "8-24小时": 0,
         ">24小时": 0
       };
-      ticketsWithResponseTime.forEach((t) => {
+      (ticketsWithResponseTime || []).forEach((t) => {
         const hours =
           (new Date(t.response_time) -
             new Date(t.reported_time || t.created_at)) /
@@ -193,7 +193,7 @@ export default function ServiceAnalytics() {
 
       // Group tickets by month for trends
       const ticketTrends = {};
-      tickets.forEach((t) => {
+      (tickets || []).forEach((t) => {
         const date = new Date(t.reported_time || t.created_at);
         const month = `${date.getFullYear()}-${String(
           date.getMonth() + 1
@@ -214,7 +214,7 @@ export default function ServiceAnalytics() {
       // Calculate satisfaction trends from satisfaction data
       const satisfactionTrendsData = {};
       if (satisfactionStatsData.items) {
-        satisfactionStatsData.items.forEach((s) => {
+        (satisfactionStatsData.items || []).forEach((s) => {
           const date = new Date(s.created_at || s.survey_date);
           const month = `${date.getFullYear()}-${String(
             date.getMonth() + 1
@@ -242,14 +242,14 @@ export default function ServiceAnalytics() {
       // Calculate top customers from tickets
       const customerTicketCounts = {};
       const customerSatisfaction = {};
-      tickets.forEach((t) => {
+      (tickets || []).forEach((t) => {
         const customerName = t.customer_name || t.customer || "未知客户";
         customerTicketCounts[customerName] =
           (customerTicketCounts[customerName] || 0) + 1;
       });
       // Get satisfaction scores for customers
       if (satisfactionStatsData.items) {
-        satisfactionStatsData.items.forEach((s) => {
+        (satisfactionStatsData.items || []).forEach((s) => {
           const customerName = s.customer_name || "未知客户";
           if (!customerSatisfaction[customerName]) {
             customerSatisfaction[customerName] = { total: 0, sum: 0 };
@@ -278,7 +278,7 @@ export default function ServiceAnalytics() {
 
       // Calculate engineer performance from tickets
       const engineerStats = {};
-      tickets.forEach((t) => {
+      (tickets || []).forEach((t) => {
         const engineerName =
           t.engineer_name || t.assignee_name || t.assignee || "未知工程师";
         if (!engineerStats[engineerName]) {
@@ -299,7 +299,7 @@ export default function ServiceAnalytics() {
       });
       // Get satisfaction for engineers
       if (satisfactionStatsData.items) {
-        satisfactionStatsData.items.forEach((s) => {
+        (satisfactionStatsData.items || []).forEach((s) => {
           const engineerName = s.engineer_name || "未知工程师";
           if (engineerStats[engineerName]) {
             engineerStats[engineerName].satisfactionCount++;
@@ -406,22 +406,22 @@ export default function ServiceAnalytics() {
           平均满意度: analytics.overview.averageSatisfaction,
           完成率: `${analytics.overview.completionRate}%`
         },
-        工单趋势: analytics.ticketTrends.map((t) => ({
+        工单趋势: (analytics.ticketTrends || []).map((t) => ({
           月份: t.month,
           工单数: t.count,
           已解决: t.resolved
         })),
-        服务类型分布: analytics.serviceTypeDistribution.map((d) => ({
+        服务类型分布: (analytics.serviceTypeDistribution || []).map((d) => ({
           类型: d.type,
           数量: d.count,
           占比: `${d.percentage}%`
         })),
-        问题类型分布: analytics.problemTypeDistribution.map((d) => ({
+        问题类型分布: (analytics.problemTypeDistribution || []).map((d) => ({
           类型: d.type,
           数量: d.count,
           占比: `${d.percentage}%`
         })),
-        响应时间分布: analytics.responseTimeDistribution.map((d) => ({
+        响应时间分布: (analytics.responseTimeDistribution || []).map((d) => ({
           时间范围: d.range,
           数量: d.count,
           占比: `${d.percentage}%`
@@ -460,40 +460,40 @@ export default function ServiceAnalytics() {
         csvRows.push("");
 
         // 工单趋势
-        if (exportData.工单趋势.length > 0) {
+        if (exportData.工单趋势?.length > 0) {
           csvRows.push("=== 工单趋势 ===");
           csvRows.push("月份,工单数,已解决");
-          exportData.工单趋势.forEach((t) => {
+          (exportData.工单趋势 || []).forEach((t) => {
             csvRows.push(`"${t.月份}",${t.工单数},${t.已解决}`);
           });
           csvRows.push("");
         }
 
         // 服务类型分布
-        if (exportData.服务类型分布.length > 0) {
+        if (exportData.服务类型分布?.length > 0) {
           csvRows.push("=== 服务类型分布 ===");
           csvRows.push("类型,数量,占比");
-          exportData.服务类型分布.forEach((d) => {
+          (exportData.服务类型分布 || []).forEach((d) => {
             csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
           });
           csvRows.push("");
         }
 
         // 问题类型分布
-        if (exportData.问题类型分布.length > 0) {
+        if (exportData.问题类型分布?.length > 0) {
           csvRows.push("=== 问题类型分布 ===");
           csvRows.push("类型,数量,占比");
-          exportData.问题类型分布.forEach((d) => {
+          (exportData.问题类型分布 || []).forEach((d) => {
             csvRows.push(`"${d.类型}",${d.数量},"${d.占比}"`);
           });
           csvRows.push("");
         }
 
         // 响应时间分布
-        if (exportData.响应时间分布.length > 0) {
+        if (exportData.响应时间分布?.length > 0) {
           csvRows.push("=== 响应时间分布 ===");
           csvRows.push("时间范围,数量,占比");
-          exportData.响应时间分布.forEach((d) => {
+          (exportData.响应时间分布 || []).forEach((d) => {
             csvRows.push(`"${d.时间范围}",${d.数量},"${d.占比}"`);
           });
         }
@@ -554,36 +554,36 @@ export default function ServiceAnalytics() {
     html += "</table><br>";
 
     // 工单趋势
-    if (data.工单趋势.length > 0) {
+    if (data.工单趋势?.length > 0) {
       html += '<table><tr class="section-title"><th colspan="3">工单趋势</th></tr><tr><th>月份</th><th>工单数</th><th>已解决</th></tr>';
-      data.工单趋势.forEach((t) => {
+      (data.工单趋势 || []).forEach((t) => {
         html += `<tr><td>${t.月份}</td><td>${t.工单数}</td><td>${t.已解决}</td></tr>`;
       });
       html += "</table><br>";
     }
 
     // 服务类型分布
-    if (data.服务类型分布.length > 0) {
+    if (data.服务类型分布?.length > 0) {
       html += '<table><tr class="section-title"><th colspan="3">服务类型分布</th></tr><tr><th>类型</th><th>数量</th><th>占比</th></tr>';
-      data.服务类型分布.forEach((d) => {
+      (data.服务类型分布 || []).forEach((d) => {
         html += `<tr><td>${d.类型}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
       });
       html += "</table><br>";
     }
 
     // 问题类型分布
-    if (data.问题类型分布.length > 0) {
+    if (data.问题类型分布?.length > 0) {
       html += '<table><tr class="section-title"><th colspan="3">问题类型分布</th></tr><tr><th>类型</th><th>数量</th><th>占比</th></tr>';
-      data.问题类型分布.forEach((d) => {
+      (data.问题类型分布 || []).forEach((d) => {
         html += `<tr><td>${d.类型}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
       });
       html += "</table><br>";
     }
 
     // 响应时间分布
-    if (data.响应时间分布.length > 0) {
+    if (data.响应时间分布?.length > 0) {
       html += '<table><tr class="section-title"><th colspan="3">响应时间分布</th></tr><tr><th>时间范围</th><th>数量</th><th>占比</th></tr>';
-      data.响应时间分布.forEach((d) => {
+      (data.响应时间分布 || []).forEach((d) => {
         html += `<tr><td>${d.时间范围}</td><td>${d.数量}</td><td>${d.占比}</td></tr>`;
       });
       html += "</table>";

@@ -113,7 +113,7 @@ const ApprovalDetailPage = () => {
    */
   const getCurrentUserTask = () => {
     if (!instance?.tasks) return null;
-    return instance.tasks.find(
+    return (instance.tasks || []).find(
       (task) => task.assignee_id === currentUserId && task.status === "PENDING"
     );
   };

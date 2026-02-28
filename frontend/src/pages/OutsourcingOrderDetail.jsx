@@ -283,7 +283,7 @@ export default function OutsourcingOrderDetail() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-slate-500 mb-1">交付次数</div>
-                <div className="text-2xl font-bold">{deliveries.length}</div>
+                <div className="text-2xl font-bold">{deliveries?.length}</div>
               </div>
               <Factory className="w-8 h-8 text-purple-500" />
             </div>
@@ -312,7 +312,7 @@ export default function OutsourcingOrderDetail() {
               <TabsTrigger value="progress">进度记录</TabsTrigger>
             </TabsList>
             <TabsContent value="items" className="mt-4">
-              {order.items && order.items.length > 0 ? (
+              {order.items && order.items?.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -331,7 +331,7 @@ export default function OutsourcingOrderDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items.map((item) => (
+                    {(order.items || []).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{item.item_no}</TableCell>
                         <TableCell className="font-mono text-sm">
@@ -381,7 +381,7 @@ export default function OutsourcingOrderDetail() {
               )}
             </TabsContent>
             <TabsContent value="deliveries" className="mt-4">
-              {deliveries.length === 0 ? (
+              {deliveries?.length === 0 ? (
                 <div className="text-center py-8 text-slate-400">
                   暂无交付记录
                 </div>
@@ -400,7 +400,7 @@ export default function OutsourcingOrderDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deliveries.map((delivery) => (
+                    {(deliveries || []).map((delivery) => (
                       <TableRow key={delivery.id}>
                         <TableCell className="font-mono text-sm">
                           {delivery.delivery_no}
@@ -462,7 +462,7 @@ export default function OutsourcingOrderDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {inspections.map((inspection) => (
+                    {(inspections || []).map((inspection) => (
                       <TableRow key={inspection.id}>
                         <TableCell className="font-mono text-sm">
                           {inspection.inspection_no}
@@ -521,7 +521,7 @@ export default function OutsourcingOrderDetail() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {progressLogs.map((progress) => (
+                  {(progressLogs || []).map((progress) => (
                     <Card key={progress.id}>
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-3">

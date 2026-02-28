@@ -25,7 +25,7 @@ const AlertList = ({ alerts = [], loading = false }) => {
     );
   }
 
-  if (alerts.length === 0) {
+  if (alerts?.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -38,7 +38,7 @@ const AlertList = ({ alerts = [], loading = false }) => {
 
   return (
     <div className="space-y-4">
-      {alerts.map((alert) => {
+      {(alerts || []).map((alert) => {
         const levelConfig = ALERT_LEVELS[alert.alert_level];
         const statusConfig = ALERT_STATUS[alert.status];
 

@@ -261,7 +261,7 @@ export default function MaterialTracking() {
   // Map backend status to frontend status
   const mapMaterialStatus = (material, purchaseItems) => {
     // Find related purchase order items
-    const relatedItems = purchaseItems.filter(
+    const relatedItems = (purchaseItems || []).filter(
       (item) => item.material_code === material.material_code
     );
 
@@ -269,11 +269,11 @@ export default function MaterialTracking() {
       return "not-arrived";
     }
 
-    const totalQty = relatedItems.reduce(
+    const totalQty = (relatedItems || []).reduce(
       (sum, item) => sum + (item.quantity || 0),
       0
     );
-    const receivedQty = relatedItems.reduce(
+    const receivedQty = (relatedItems || []).reduce(
       (sum, item) => sum + (item.received_quantity || 0),
       0
     );
@@ -324,17 +324,17 @@ export default function MaterialTracking() {
       }
 
       // Transform materials data
-      const transformedMaterials = materialsData.map((material) => {
+      const transformedMaterials = (materialsData || []).map((material) => {
         const status = mapMaterialStatus(material, allPurchaseItems);
-        const relatedItems = allPurchaseItems.filter(
+        const relatedItems = (allPurchaseItems || []).filter(
           (item) => item.material_code === material.material_code
         );
 
-        const totalQuantity = relatedItems.reduce(
+        const totalQuantity = (relatedItems || []).reduce(
           (sum, item) => sum + (item.quantity || 0),
           0
         );
-        const arrivedQuantity = relatedItems.reduce(
+        const arrivedQuantity = (relatedItems || []).reduce(
           (sum, item) => sum + (item.received_quantity || 0),
           0
         );
@@ -403,7 +403,7 @@ export default function MaterialTracking() {
   }, []);
 
   const filteredMaterials = useMemo(() => {
-    return materials.filter((m) => {
+    return (materials || []).filter((m) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchSearch =
       (m.name || "").toLowerCase().includes(searchLower) ||
@@ -418,12 +418,12 @@ export default function MaterialTracking() {
 
   const stats = useMemo(() => {
     return {
-      total: materials.length,
-      fullArrived: materials.filter((m) => m.status === "fully-arrived").length,
-      notArrived: materials.filter((m) => m.status === "not-arrived").length,
-      totalValue: materials.reduce((sum, m) => sum + m.totalValue, 0),
-      arrivedValue: materials.reduce((sum, m) => sum + m.arrivedValue, 0),
-      usedValue: materials.reduce((sum, m) => sum + m.usedValue, 0)
+      total: materials?.length,
+      fullArrived: (materials || []).filter((m) => m.status === "fully-arrived").length,
+      notArrived: (materials || []).filter((m) => m.status === "not-arrived").length,
+      totalValue: (materials || []).reduce((sum, m) => sum + m.totalValue, 0),
+      arrivedValue: (materials || []).reduce((sum, m) => sum + m.arrivedValue, 0),
+      usedValue: (materials || []).reduce((sum, m) => sum + m.usedValue, 0)
     };
   }, [materials]);
 
@@ -441,7 +441,7 @@ export default function MaterialTracking() {
 
   }
 
-  if (error && materials.length === 0) {
+  if (error && materials?.length === 0) {
     return (
       <div className="space-y-6 pb-8">
         <PageHeader
@@ -590,7 +590,7 @@ export default function MaterialTracking() {
 
         <AnimatePresence>
           {filteredMaterials.length > 0 ?
-          filteredMaterials.map((material) =>
+          (filteredMaterials || []).map((material) =>
           <MaterialRow
             key={material.id}
             material={material}
@@ -613,7 +613,7 @@ export default function MaterialTracking() {
       </motion.div>
 
       {/* Alert Summary */}
-      {materials.some(
+      {(materials || []).some(
         (m) => m.status === "not-arrived" && m.daysUntilExpiry
       ) &&
       <Card className="bg-red-500/5 border-red-500/20">
@@ -777,7 +777,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">无分类</SelectItem>
-                  {categories.map((cat) =>
+                  {(categories || []).map((cat) =>
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.category_name}
                   </SelectItem>

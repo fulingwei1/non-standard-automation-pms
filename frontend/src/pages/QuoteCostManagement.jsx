@@ -57,7 +57,7 @@ export default function QuoteCostManagement() {
   // Group items by category
   const groupedItems = useMemo(() => {
     const groups = {};
-    items.forEach((item) => {
+    (items || []).forEach((item) => {
       const category = item.cost_category || "其他";
       if (!groups[category]) {
         groups[category] = [];
@@ -69,12 +69,12 @@ export default function QuoteCostManagement() {
 
   // Calculate totals
   const totals = useMemo(() => {
-    const totalPrice = items.reduce(
+    const totalPrice = (items || []).reduce(
       (sum, item) =>
         sum + parseFloat(item.unit_price || 0) * parseFloat(item.qty || 0),
       0
     );
-    const totalCost = items.reduce(
+    const totalCost = (items || []).reduce(
       (sum, item) =>
         sum + parseFloat(item.cost || 0) * parseFloat(item.qty || 0),
       0
@@ -120,7 +120,7 @@ export default function QuoteCostManagement() {
         const versionsRes = await quoteApi.getVersions(id);
         const versions = versionsRes.data?.data || versionsRes.data?.items || versionsRes.data || [];
         const currentVersion =
-          versions.find((v) => v.id === quoteData.current_version_id) ||
+          (versions || []).find((v) => v.id === quoteData.current_version_id) ||
           versions[0];
         setVersion(currentVersion);
 
@@ -243,7 +243,7 @@ export default function QuoteCostManagement() {
 
   const handleItemChange = (itemId, field, value) => {
     setItems(
-      items.map((item) =>
+      (items || []).map((item) =>
         item.id === itemId ? { ...item, [field]: value } : item
       )
     );
@@ -296,7 +296,7 @@ export default function QuoteCostManagement() {
 
       // 准备应用数据
       const applyData = {
-        suggestions: costSuggestions.suggestions.map((s) => ({
+        suggestions: (costSuggestions.suggestions || []).map((s) => ({
           item_id: s.item_id,
           cost:
             editedSuggestions[s.item_id]?.cost ||
@@ -356,7 +356,7 @@ export default function QuoteCostManagement() {
 
       // 准备批量更新数据
       const batchData = {
-        items: items.map((item) => ({
+        items: (items || []).map((item) => ({
           id: item.id,
           item_type: item.item_type,
           item_name: item.item_name,

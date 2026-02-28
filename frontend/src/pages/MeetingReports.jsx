@@ -208,7 +208,7 @@ export default function MeetingReports() {
             </CardContent>
         </Card> :
 
-        reports.map((report) =>
+        (reports || []).map((report) =>
         <Card key={report.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">

@@ -116,7 +116,7 @@ export default function SalesTeam() {
   const filteredMembers = useMemo(() => {
     if (!searchTerm) {return teamMembers;}
     const keyword = searchTerm.toLowerCase();
-    return teamMembers.filter((member) => {
+    return (teamMembers || []).filter((member) => {
       const name = member.name?.toLowerCase?.() || "";
       const role = member.role?.toLowerCase?.() || "";
       const regionText = member.region?.toLowerCase?.() || "";

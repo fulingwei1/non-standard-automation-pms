@@ -38,7 +38,7 @@ export function ImportPreviewResult({ previewData }) {
                         </div>
                     </div>
 
-                    {previewData.errors && previewData.errors.length > 0 && (
+                    {previewData.errors && previewData.errors?.length > 0 && (
                         <div>
                             <div className="text-sm font-semibold mb-2">错误列表：</div>
                             <div className="max-h-60 overflow-y-auto space-y-1">
@@ -50,16 +50,16 @@ export function ImportPreviewResult({ previewData }) {
                                         第 {error.row} 行，字段 {error.field}：{error.message}
                                     </div>
                                 ))}
-                                {previewData.errors.length > 20 && (
+                                {previewData.errors?.length > 20 && (
                                     <div className="text-sm text-gray-500">
-                                        还有 {previewData.errors.length - 20} 个错误...
+                                        还有 {previewData.errors?.length - 20} 个错误...
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    {previewData.preview_data && previewData.preview_data.length > 0 && (
+                    {previewData.preview_data && previewData.preview_data?.length > 0 && (
                         <div>
                             <div className="text-sm font-semibold mb-2">
                                 预览数据（前10行）：
@@ -78,7 +78,7 @@ export function ImportPreviewResult({ previewData }) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {previewData.preview_data.map((row, idx) => (
+                                        {(previewData.preview_data || []).map((row, idx) => (
                                             <tr key={idx} className="border-b">
                                                 {Object.values(row).map((value, cellIdx) => (
                                                     <td key={cellIdx} className="p-2">

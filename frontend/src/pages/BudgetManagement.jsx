@@ -67,7 +67,7 @@ export default function BudgetManagement() {
 
       // Transform projects to budget format
       const budgetsData = await Promise.all(
-        projects.map(async (project) => {
+        (projects || []).map(async (project) => {
           try {
             const costSummary = await costApi.getProjectSummary(project.id);
             const summary = costSummary.data || {};
@@ -102,7 +102,7 @@ export default function BudgetManagement() {
         })
       );
 
-      setBudgets(budgetsData.filter(Boolean));
+      setBudgets((budgetsData || []).filter(Boolean));
     } catch (error) {
       console.error("Failed to load budgets:", error);
       setBudgets([]);
@@ -116,7 +116,7 @@ export default function BudgetManagement() {
   }, [loadBudgets]);
 
   const filteredBudgets = useMemo(() => {
-    return budgets.filter((budget) => {
+    return (budgets || []).filter((budget) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -146,11 +146,11 @@ export default function BudgetManagement() {
   }, [budgets, searchKeyword, filterStatus, filterUsageRate]);
 
   const stats = useMemo(() => {
-    const total = budgets.reduce((sum, b) => sum + b.budget_amount, 0);
-    const used = budgets.reduce((sum, b) => sum + b.used_amount, 0);
-    const remaining = budgets.reduce((sum, b) => sum + b.remaining_amount, 0);
-    const critical = budgets.filter((b) => b.status === "CRITICAL").length;
-    const warning = budgets.filter((b) => b.status === "WARNING").length;
+    const total = (budgets || []).reduce((sum, b) => sum + b.budget_amount, 0);
+    const used = (budgets || []).reduce((sum, b) => sum + b.used_amount, 0);
+    const remaining = (budgets || []).reduce((sum, b) => sum + b.remaining_amount, 0);
+    const critical = (budgets || []).filter((b) => b.status === "CRITICAL").length;
+    const warning = (budgets || []).filter((b) => b.status === "WARNING").length;
 
     return {
       total,
@@ -333,7 +333,7 @@ export default function BudgetManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBudgets.map((budget) =>
+                  {(filteredBudgets || []).map((budget) =>
                 <TableRow key={budget.id} className="border-slate-700">
                       <TableCell className="font-mono text-sm text-slate-200">
                         {budget.project_code}

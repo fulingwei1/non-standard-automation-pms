@@ -178,7 +178,7 @@ const LossReasonDistribution = ({ data }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {sortedReasons.map((item, index) =>
+          {(sortedReasons || []).map((item, index) =>
           <div key={index} className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${item.color}`} />
               <span className="text-sm text-slate-700 flex-1">
@@ -302,7 +302,7 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
                 {sp.top_loss_reasons?.length > 0 &&
                 <div className="mt-2 flex items-center gap-1 flex-wrap">
                     <span className="text-xs text-slate-500">主要原因:</span>
-                    {sp.top_loss_reasons.map((r, i) =>
+                    {(sp.top_loss_reasons || []).map((r, i) =>
                   <Badge key={i} variant="outline" className="text-xs">
                         {LOSS_REASONS[r.reason]?.label || r.reason} ({r.count})
                   </Badge>
@@ -348,7 +348,7 @@ const MonthlyWasteTrend = ({ data }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {data.map((item, index) =>
+          {(data || []).map((item, index) =>
           <div
             key={index}
             className="grid grid-cols-12 gap-2 items-center text-xs">

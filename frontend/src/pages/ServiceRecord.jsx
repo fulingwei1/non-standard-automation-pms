@@ -127,7 +127,7 @@ export default function ServiceRecord() {
     // 搜索筛选
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(
+      result = (result || []).filter(
         (record) =>
         (record.record_no || "").toLowerCase().includes(query) ||
         (record.project_name || "").toLowerCase().includes(query) ||
@@ -139,18 +139,18 @@ export default function ServiceRecord() {
 
     // 类型筛选
     if (typeFilter !== "ALL") {
-      result = result.filter((record) => record.service_type === typeFilter);
+      result = (result || []).filter((record) => record.service_type === typeFilter);
     }
 
     // 状态筛选
     if (statusFilter !== "ALL") {
-      result = result.filter((record) => record.status === statusFilter);
+      result = (result || []).filter((record) => record.status === statusFilter);
     }
 
     // 日期筛选
     if (dateFilter.start) {
       const startDate = new Date(dateFilter.start);
-      result = result.filter((record) => {
+      result = (result || []).filter((record) => {
         const recordDate = new Date(record.service_date);
         return recordDate >= startDate;
       });
@@ -158,7 +158,7 @@ export default function ServiceRecord() {
 
     if (dateFilter.end) {
       const endDate = new Date(dateFilter.end);
-      result = result.filter((record) => {
+      result = (result || []).filter((record) => {
         const recordDate = new Date(record.service_date);
         return recordDate <= endDate;
       });
@@ -180,7 +180,7 @@ export default function ServiceRecord() {
       const recordsData = response.data?.items || response.data?.items || response.data || [];
 
       // 转换后端数据为前端格式
-      const transformedRecords = recordsData.map((record) => ({
+      const transformedRecords = (recordsData || []).map((record) => ({
         id: record.id,
         record_no: record.record_no || "",
         service_type: record.service_type || "",
@@ -227,19 +227,19 @@ export default function ServiceRecord() {
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
       setStats({
-        total: records.length,
-        inProgress: records.filter(
+        total: records?.length,
+        inProgress: (records || []).filter(
           (r) => r.status === "进行中" || r.status === "IN_PROGRESS"
         ).length,
-        completed: records.filter(
+        completed: (records || []).filter(
           (r) => r.status === "已完成" || r.status === "COMPLETED"
         ).length,
-        thisMonth: records.filter((r) => {
+        thisMonth: (records || []).filter((r) => {
           if (!r.service_date) {return false;}
           const recordDate = new Date(r.service_date);
           return recordDate >= thisMonthStart;
         }).length,
-        totalHours: records.reduce(
+        totalHours: (records || []).reduce(
           (sum, r) => sum + (r.service_duration || 0),
           0
         )
@@ -255,7 +255,7 @@ export default function ServiceRecord() {
   }, []);
 
   useEffect(() => {
-    if (records.length > 0 || !loading) {
+    if (records?.length > 0 || !loading) {
       loadStatistics();
     }
   }, [records, loading, loadStatistics]);
@@ -324,7 +324,7 @@ export default function ServiceRecord() {
         break;
       case 'customerFeedback':
         // 筛选有反馈的记录
-        setRecords(records.filter((r) => r.customer_feedback));
+        setRecords((records || []).filter((r) => r.customer_feedback));
         break;
     }
   };
@@ -332,7 +332,7 @@ export default function ServiceRecord() {
   // 照片上传处理
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newPhotos = files.map((file) => ({
+    const newPhotos = (files || []).map((file) => ({
       file,
       url: URL.createObjectURL(file),
       name: file.name
@@ -346,7 +346,7 @@ export default function ServiceRecord() {
   const removePhoto = (index) => {
     setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photos: (prev.photos || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -364,7 +364,7 @@ export default function ServiceRecord() {
     return iconMap[typeConfig.icon] || FileText;
   };
 
-  if (loading && records.length === 0) {
+  if (loading && records?.length === 0) {
     return (
       <LoadingCard message="加载服务记录中..." />);
 
@@ -492,7 +492,7 @@ export default function ServiceRecord() {
               </CardContent>
           </Card> :
 
-          filteredRecords.map((record, index) => {
+          (filteredRecords || []).map((record, index) => {
             const statusConfig = getServiceStatusConfig(record.status);
             const typeConfig = getServiceTypeConfig(record.service_type);
             const TypeIcon = getServiceTypeIcon(record.service_type);
@@ -554,11 +554,11 @@ export default function ServiceRecord() {
                         </div>
                         }
 
-                          {record.photos && record.photos.length > 0 &&
+                          {record.photos && record.photos?.length > 0 &&
                         <div className="flex items-center gap-2 text-sm">
                               <Camera className="h-4 w-4 text-slate-400" />
                               <span className="text-slate-300">照片:</span>
-                              <span className="text-white">{record.photos.length} 张</span>
+                              <span className="text-white">{record.photos?.length} 张</span>
                         </div>
                         }
                         </div>
@@ -750,9 +750,9 @@ export default function ServiceRecord() {
               </label>
             </div>
             
-            {formData.photos.length > 0 &&
+            {formData.photos?.length > 0 &&
             <div className="mt-4 grid grid-cols-4 gap-2">
-                {formData.photos.map((photo, index) =>
+                {(formData.photos || []).map((photo, index) =>
               <div key={index} className="relative">
                     <img
                   src={photo.url}
@@ -849,11 +849,11 @@ export default function ServiceRecord() {
               </div>
 
               {/* 照片展示 */}
-              {selectedRecord.photos && selectedRecord.photos.length > 0 &&
+              {selectedRecord.photos && selectedRecord.photos?.length > 0 &&
             <div>
                   <h3 className="text-lg font-semibold text-white mb-4">服务照片</h3>
                   <div className="grid grid-cols-4 gap-4">
-                    {selectedRecord.photos.map((photo, index) =>
+                    {(selectedRecord.photos || []).map((photo, index) =>
                 <img
                   key={index}
                   src={photo.url || photo}

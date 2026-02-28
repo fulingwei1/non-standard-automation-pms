@@ -27,7 +27,7 @@ export function ServicePerformance({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.topCustomers.map((customer, index) => (
+              {(analytics.topCustomers || []).map((customer, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
@@ -76,7 +76,7 @@ export function ServicePerformance({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.engineerPerformance.map((engineer, index) => (
+              {(analytics.engineerPerformance || []).map((engineer, index) => (
                 <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-white font-medium">

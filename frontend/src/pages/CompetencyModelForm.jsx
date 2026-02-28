@@ -325,7 +325,7 @@ export default function CompetencyModelForm() {
                     <SelectValue placeholder="选择等级" />
                   </SelectTrigger>
                   <SelectContent>
-                    {levels.map((level) =>
+                    {(levels || []).map((level) =>
                     <SelectItem key={level.id} value={level.id.toString()}>
                         {level.level_code} - {level.level_name}
                     </SelectItem>
@@ -351,7 +351,7 @@ export default function CompetencyModelForm() {
                   </p>
                 </div>
 
-                {availableDimensions.map((dimKey) => {
+                {(availableDimensions || []).map((dimKey) => {
                 const dimension = competencyDimensions[dimKey] || {
                   name: dimensionLabels[dimKey],
                   weight: 0,

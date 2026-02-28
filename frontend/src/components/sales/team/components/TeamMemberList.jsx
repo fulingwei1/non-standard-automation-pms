@@ -33,7 +33,7 @@ export default function TeamMemberList({
             </div>
           ) : (
             <div className="space-y-4">
-              {members.map((member, index) => (
+              {(members || []).map((member, index) => (
                 <TeamMemberCard
                   key={member.id}
                   member={member}

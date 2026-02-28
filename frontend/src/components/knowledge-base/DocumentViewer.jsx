@@ -58,9 +58,9 @@ const DocumentViewer = ({ document, onClose }) => {
           {document.description || '暂无描述'}
         </Paragraph>
 
-        {Array.isArray(document.tags) && document.tags.length > 0 && (
+        {Array.isArray(document.tags) && document.tags?.length > 0 && (
           <Space wrap>
-            {document.tags.map((t) => (
+            {(document.tags || []).map((t) => (
               <Tag key={t}>{t}</Tag>
             ))}
           </Space>

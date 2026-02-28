@@ -95,14 +95,14 @@ export default function CostAnalysis() {
       }
 
       // Calculate statistics
-      const totalCost = orders.reduce(
+      const totalCost = (orders || []).reduce(
         (sum, o) => sum + parseFloat(o.total_amount || 0),
         0
       );
 
       // Group by category
       const byCategory = {};
-      orders.forEach((order) => {
+      (orders || []).forEach((order) => {
         order.items?.forEach((item) => {
           const category = item.material_category || item.category || "其他";
           const itemAmount = parseFloat(
@@ -114,7 +114,7 @@ export default function CostAnalysis() {
 
       // Group by supplier
       const bySupplier = {};
-      orders.forEach((order) => {
+      (orders || []).forEach((order) => {
         const supplier =
         order.supplier_name || order.supplier?.name || "未知供应商";
         if (!bySupplier[supplier]) {
@@ -126,7 +126,7 @@ export default function CostAnalysis() {
 
       // Calculate monthly trend
       const monthlyTrendMap = {};
-      orders.forEach((order) => {
+      (orders || []).forEach((order) => {
         const orderDate = order.order_date || order.created_at;
         if (orderDate) {
           const date = new Date(orderDate);
@@ -290,7 +290,7 @@ export default function CostAnalysis() {
                 <div>
                   <p className="text-sm text-slate-400 mb-2">供应商数量</p>
                   <p className="text-2xl font-bold text-purple-400">
-                    {analysisData.bySupplier.length}
+                    {analysisData.bySupplier?.length}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">活跃供应商</p>
                 </div>
@@ -307,7 +307,7 @@ export default function CostAnalysis() {
                 <div>
                   <p className="text-sm text-slate-400 mb-2">物料类别</p>
                   <p className="text-2xl font-bold text-amber-400">
-                    {analysisData.byCategory.length}
+                    {analysisData.byCategory?.length}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">主要类别</p>
                 </div>
@@ -367,7 +367,7 @@ export default function CostAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analysisData.byCategory.map((item, idx) =>
+                    {(analysisData.byCategory || []).map((item, idx) =>
                     <div key={idx} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-300">
@@ -459,7 +459,7 @@ export default function CostAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysisData.byCategory.map((item, idx) =>
+                  {(analysisData.byCategory || []).map((item, idx) =>
                   <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-slate-200 font-medium">
@@ -557,9 +557,9 @@ export default function CostAnalysis() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {analysisData.monthlyTrend.length > 0 ?
+                {analysisData.monthlyTrend?.length > 0 ?
                 <div className="space-y-4">
-                    {analysisData.monthlyTrend.map((item, idx) =>
+                    {(analysisData.monthlyTrend || []).map((item, idx) =>
                   <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-slate-200 font-medium">

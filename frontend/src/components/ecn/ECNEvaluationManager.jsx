@@ -168,7 +168,7 @@ export function ECNEvaluationManager({
       </Card> :
 
       <div className="space-y-4">
-          {evaluations.map((evaluation) =>
+          {(evaluations || []).map((evaluation) =>
         <Card key={evaluation.id} className="border-l-4 border-l-blue-500">
               <CardHeader>
                 <div className="flex justify-between items-start">

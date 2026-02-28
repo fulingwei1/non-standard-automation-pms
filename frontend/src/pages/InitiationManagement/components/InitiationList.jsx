@@ -82,7 +82,7 @@ export function InitiationList({
                 animate="visible"
                 className="grid grid-cols-1 gap-4"
             >
-                {initiations.map((initiation) => {
+                {(initiations || []).map((initiation) => {
                     if (!initiation || !initiation.id) return null;
                     const statusBadge = getStatusBadge(initiation.status);
 

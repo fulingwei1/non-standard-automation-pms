@@ -67,7 +67,7 @@ const ApprovalDetailDialog = ({
               <div className="mb-2">
                     <p className="text-sm text-slate-400 mb-1">物品清单:</p>
                     <div className="flex flex-wrap gap-2">
-                      {selectedApproval.items.map((item, idx) =>
+                      {(selectedApproval.items || []).map((item, idx) =>
                   <Badge key={idx} variant="outline">
                           {item}
                   </Badge>

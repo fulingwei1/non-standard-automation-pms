@@ -12,12 +12,12 @@ import { fadeIn } from '../../../lib/animations';
 export function TaskStats({ tasks }) {
     const stats = useMemo(() => {
         return {
-            total: tasks.length,
-            pending: tasks.filter(t => t.status === 'pending').length,
-            inProgress: tasks.filter(t => t.status === 'in_progress').length,
-            blocked: tasks.filter(t => t.status === 'blocked').length,
-            completed: tasks.filter(t => t.status === 'completed').length,
-            overdue: tasks.filter(
+            total: tasks?.length,
+            pending: (tasks || []).filter(t => t.status === 'pending').length,
+            inProgress: (tasks || []).filter(t => t.status === 'in_progress').length,
+            blocked: (tasks || []).filter(t => t.status === 'blocked').length,
+            completed: (tasks || []).filter(t => t.status === 'completed').length,
+            overdue: (tasks || []).filter(
                 t => t.status !== 'completed' && new Date(t.dueDate) < new Date()
             ).length
         };
@@ -56,7 +56,7 @@ export function TaskStats({ tasks }) {
 
     return (
         <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {statCards.map((stat, index) => {
+            {(statCards || []).map((stat, index) => {
                 const Icon = stat.icon;
                 return (
                     <Card key={index} className={cn('bg-surface-1/50', stat.bg)}>

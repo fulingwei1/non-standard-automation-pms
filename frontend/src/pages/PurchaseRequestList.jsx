@@ -282,7 +282,7 @@ export default function PurchaseRequestList() {
   // Filter requests
   const filteredRequests = useMemo(() => {
     if (!Array.isArray(requests)) {return [];}
-    return requests.filter((req) => {
+    return (requests || []).filter((req) => {
       if (
       searchQuery &&
       !req.request_no?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -308,10 +308,10 @@ export default function PurchaseRequestList() {
     {return { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };}
     return {
       total: requests.length,
-      draft: requests.filter((r) => r.status === "DRAFT").length,
-      submitted: requests.filter((r) => r.status === "SUBMITTED").length,
-      approved: requests.filter((r) => r.status === "APPROVED").length,
-      rejected: requests.filter((r) => r.status === "REJECTED").length
+      draft: (requests || []).filter((r) => r.status === "DRAFT").length,
+      submitted: (requests || []).filter((r) => r.status === "SUBMITTED").length,
+      approved: (requests || []).filter((r) => r.status === "APPROVED").length,
+      rejected: (requests || []).filter((r) => r.status === "REJECTED").length
     };
   }, [requests]);
 
@@ -466,7 +466,7 @@ export default function PurchaseRequestList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {projects.map((project) =>
+                  {(projects || []).map((project) =>
                   <SelectItem key={project.id} value={String(project.id)}>
                       {project.project_name}
                   </SelectItem>
@@ -500,7 +500,7 @@ export default function PurchaseRequestList() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <AnimatePresence>
-                  {filteredRequests.map((request) =>
+                  {(filteredRequests || []).map((request) =>
               <PurchaseRequestCard
                 key={request.id}
                 request={request}

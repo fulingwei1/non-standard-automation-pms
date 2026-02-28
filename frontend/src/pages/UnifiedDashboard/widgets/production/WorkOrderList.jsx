@@ -31,11 +31,11 @@ export default function WorkOrderList({ filter, data: propData }) {
       <CardContent>
         {loading ? (
           <div className="text-sm text-muted-foreground text-center py-4">加载中...</div>
-        ) : orders.length === 0 ? (
+        ) : orders?.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-4">暂无工单</div>
         ) : (
           <div className="space-y-2">
-            {orders.map((o, i) => (
+            {(orders || []).map((o, i) => (
               <div key={o.id || i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{o.order_no || o.work_order_no || `WO-${o.id}`}</div>

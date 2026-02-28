@@ -84,11 +84,11 @@ export default function LeadInsights({ leads = [], onViewLead, onViewAll }) {
   // 来源分布统计
   const sourceDistribution = useMemo(() => {
     const dist = {};
-    sourceOptions.forEach((s) => {
+    (sourceOptions || []).forEach((s) => {
       dist[s.value] = { count: 0, label: s.label };
     });
 
-    leads.forEach((lead) => {
+    (leads || []).forEach((lead) => {
       if (lead.source && dist[lead.source]) {
         dist[lead.source].count++;
       }
@@ -187,7 +187,7 @@ export default function LeadInsights({ leads = [], onViewLead, onViewAll }) {
             <p className="text-sm text-slate-500 text-center py-4">暂无热门线索</p>
           ) : (
             <div className="space-y-2">
-              {hotLeads.map((lead) => (
+              {(hotLeads || []).map((lead) => (
                 <div
                   key={lead.id}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/50 cursor-pointer transition-colors"
@@ -242,7 +242,7 @@ export default function LeadInsights({ leads = [], onViewLead, onViewAll }) {
             <p className="text-sm text-slate-500 text-center py-4">暂无即将跟进</p>
           ) : (
             <div className="space-y-2">
-              {upcomingFollowUps.map((lead) => {
+              {(upcomingFollowUps || []).map((lead) => {
                 const dateText = formatDate(lead.next_action_at);
                 const isOverdue = dateText.includes("已过期");
                 const isToday = dateText === "今天";

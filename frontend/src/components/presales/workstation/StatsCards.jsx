@@ -11,7 +11,7 @@ export default function StatsCards({ stats }) {
       variants={fadeIn}
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
     >
-      {stats.map((stat) => (
+      {(stats || []).map((stat) => (
         <Card
           key={stat.id}
           className="bg-surface-100/50 backdrop-blur-lg border border-white/5 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"

@@ -40,7 +40,7 @@ export default function PurchaseOrderList({
   }
 
   // 空状态
-  if (orders.length === 0) {
+  if (orders?.length === 0) {
     return (
       <div className="text-center py-12">
         <Package className="h-16 w-16 text-slate-500 mx-auto mb-4 opacity-50" />
@@ -63,7 +63,7 @@ export default function PurchaseOrderList({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <AnimatePresence mode="popLayout">
-        {orders.map((order) => (
+        {(orders || []).map((order) => (
           <motion.div
             key={order.id}
             initial="hidden"

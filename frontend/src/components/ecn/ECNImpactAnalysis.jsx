@@ -174,10 +174,10 @@ export function ECNImpactAnalysis({
               </div>
             </div>
             
-            {bomImpactSummary.bom_impacts && bomImpactSummary.bom_impacts.length > 0 &&
+            {bomImpactSummary.bom_impacts && bomImpactSummary.bom_impacts?.length > 0 &&
           <div className="space-y-2">
                 <div className="text-sm font-medium">BOM影响明细：</div>
-                {bomImpactSummary.bom_impacts.map((impact, idx) =>
+                {(bomImpactSummary.bom_impacts || []).map((impact, idx) =>
             <div key={idx} className="p-2 bg-white rounded text-sm">
                     BOM #{impact.bom_id}: {impact.affected_item_count}
                     项受影响, 成本影响¥{impact.cost_impact?.toLocaleString()}, 
@@ -201,7 +201,7 @@ export function ECNImpactAnalysis({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {obsoleteRisks.map((risk, idx) =>
+              {(obsoleteRisks || []).map((risk, idx) =>
             <Card key={idx} className="p-3">
                   <div className="flex justify-between items-start">
                     <div>

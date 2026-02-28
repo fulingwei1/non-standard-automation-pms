@@ -71,7 +71,7 @@ export function AlertTable({
 
     // 应用搜索过滤
     if (searchTerm) {
-      filtered = filtered.filter((alert) =>
+      filtered = (filtered || []).filter((alert) =>
       alert.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.alert_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,17 +81,17 @@ export function AlertTable({
 
     // 应用状态过滤
     if (statusFilter !== "all") {
-      filtered = filtered.filter((alert) => alert.status === statusFilter);
+      filtered = (filtered || []).filter((alert) => alert.status === statusFilter);
     }
 
     // 应用级别过滤
     if (levelFilter !== "all") {
-      filtered = filtered.filter((alert) => alert.alert_level === levelFilter);
+      filtered = (filtered || []).filter((alert) => alert.alert_level === levelFilter);
     }
 
     // 应用类型过滤
     if (typeFilter !== "all") {
-      filtered = filtered.filter((alert) => alert.alert_type === typeFilter);
+      filtered = (filtered || []).filter((alert) => alert.alert_type === typeFilter);
     }
 
     // 排序
@@ -236,7 +236,7 @@ export function AlertTable({
   };
 
   // 无数据时的显示
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <Card className={className}>
         <CardContent className="flex items-center justify-center h-full">
@@ -408,7 +408,7 @@ export function AlertTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedData.map((alert) =>
+                {(paginatedData || []).map((alert) =>
                 <TableRow key={alert.id || alert.alert_no}>
                     <TableCell className="font-medium text-sm">
                       {alert.alert_no}

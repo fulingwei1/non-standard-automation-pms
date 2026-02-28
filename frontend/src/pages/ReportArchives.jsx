@@ -132,7 +132,7 @@ export default function ReportArchives() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {archives.map((archive) => (
+              {(archives || []).map((archive) => (
                 <tr key={archive.id}>
                   <td className="px-6 py-4">{archive.report_type}</td>
                   <td className="px-6 py-4">{archive.period}</td>

@@ -264,7 +264,7 @@ export default function PositionManagement() {
   const toggleRole = (roleId) => {
     setSelectedRoleIds((prev) => {
       if (prev.includes(roleId)) {
-        return prev.filter((id) => id !== roleId);
+        return (prev || []).filter((id) => id !== roleId);
       } else {
         return [...prev, roleId];
       }
@@ -273,7 +273,7 @@ export default function PositionManagement() {
 
   // 统计信息
   const stats = POSITION_CATEGORIES.reduce((acc, cat) => {
-    acc[cat.value] = positions.filter((p) => p.position_category === cat.value).length;
+    acc[cat.value] = (positions || []).filter((p) => p.position_category === cat.value).length;
     return acc;
   }, {});
 
@@ -357,7 +357,7 @@ export default function PositionManagement() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {positions.map((position) => {
+                      {(positions || []).map((position) => {
                         const catConfig = getCategoryConfig(position.position_category);
                         return (
                           <tr key={position.id}>
@@ -384,7 +384,7 @@ export default function PositionManagement() {
                                 )}
                                 {position.roles?.length > 3 && (
                                   <Badge variant="outline" className="text-xs">
-                                    +{position.roles.length - 3}
+                                    +{position.roles?.length - 3}
                                   </Badge>
                                 )}
                               </div>
@@ -524,7 +524,7 @@ export default function PositionManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">不限制组织</SelectItem>
-                  {orgUnits.map((org) => (
+                  {(orgUnits || []).map((org) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
                       {org.unit_name}
                     </SelectItem>
@@ -610,7 +610,7 @@ export default function PositionManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">不限制组织</SelectItem>
-                  {orgUnits.map((org) => (
+                  {(orgUnits || []).map((org) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
                       {org.unit_name}
                     </SelectItem>
@@ -702,7 +702,7 @@ export default function PositionManagement() {
                   <Label className="text-muted-foreground">默认角色</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedPosition.roles?.length > 0 ? (
-                      selectedPosition.roles.map((role, idx) => (
+                      (selectedPosition.roles || []).map((role, idx) => (
                         <Badge key={idx} variant="secondary">
                           <Shield className="h-3 w-3 mr-1" />
                           {role.role_name || role}
@@ -743,7 +743,7 @@ export default function PositionManagement() {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto py-4">
             <div className="space-y-2">
-              {roles.map((role) => (
+              {(roles || []).map((role) => (
                 <label
                   key={role.id}
                   className={cn(

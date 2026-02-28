@@ -93,7 +93,7 @@ export default function QuotationList() {
 
   // Filter quotations
   const filteredQuotations = useMemo(() => {
-    return mockQuotations.filter((quote) => {
+    return (mockQuotations || []).filter((quote) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
       !searchTerm ||
@@ -123,14 +123,14 @@ export default function QuotationList() {
 
     return {
       total: mockQuotations.length,
-      pending: mockQuotations.filter(
+      pending: (mockQuotations || []).filter(
         (q) => q.status === "sent" || q.status === "pending_approval"
       ).length,
-      accepted: mockQuotations.filter((q) => q.status === "accepted").length,
-      rejected: mockQuotations.filter((q) => q.status === "rejected").length,
-      totalValue: mockQuotations.reduce((sum, q) => sum + q.finalAmount, 0),
+      accepted: (mockQuotations || []).filter((q) => q.status === "accepted").length,
+      rejected: (mockQuotations || []).filter((q) => q.status === "rejected").length,
+      totalValue: (mockQuotations || []).reduce((sum, q) => sum + q.finalAmount, 0),
       avgDiscount: (
-      mockQuotations.reduce((sum, q) => sum + q.discountPercent, 0) /
+      (mockQuotations || []).reduce((sum, q) => sum + q.discountPercent, 0) /
       mockQuotations.length).
       toFixed(1)
     };
@@ -310,7 +310,7 @@ export default function QuotationList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredQuotations.map((quote) => {
+                  {(filteredQuotations || []).map((quote) => {
                   const statusConf = statusConfig[quote.status];
                   const isExpired =
                   new Date(quote.validUntil) < new Date() &&
@@ -431,7 +431,7 @@ export default function QuotationList() {
         </Card> :
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredQuotations.map((quote) => {
+            {(filteredQuotations || []).map((quote) => {
             const statusConf = statusConfig[quote.status];
             const isExpired =
             new Date(quote.validUntil) < new Date() &&
@@ -718,7 +718,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
                 </tr>
               </thead>
               <tbody>
-                {quotation.items.map((item, index) =>
+                {(quotation.items || []).map((item, index) =>
                 <tr key={index} className="border-t border-white/5">
                     <td className="p-3 text-white">{item.name}</td>
                     <td className="p-3 text-center text-slate-400">

@@ -95,7 +95,7 @@ export default function AdministrativeApprovals() {
   }, []);
 
   const filteredApprovals = useMemo(() => {
-    return approvals.filter((approval) => {
+    return (approvals || []).filter((approval) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchSearch =
       (approval.title || "").toLowerCase().includes(searchLower) ||
@@ -109,18 +109,18 @@ export default function AdministrativeApprovals() {
 
   const stats = useMemo(() => {
     const total = approvals.length;
-    const urgent = approvals.filter((a) => a.priority === "high").length;
-    const officeSupplies = approvals.filter(
+    const urgent = (approvals || []).filter((a) => a.priority === "high").length;
+    const officeSupplies = (approvals || []).filter(
       (a) => a.type === "office_supplies"
     ).length;
-    const vehicle = approvals.filter((a) => a.type === "vehicle").length;
+    const vehicle = (approvals || []).filter((a) => a.type === "vehicle").length;
     return { total, urgent, officeSupplies, vehicle };
   }, [approvals]);
 
   const handleApprove = async (id) => {
     try {
       await adminApi.approvals.approve(id, { comment: "同意" });
-      setApprovals((prev) => prev.filter((a) => a.id !== id));
+      setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
       console.error("Failed to approve request");
     }
@@ -129,7 +129,7 @@ export default function AdministrativeApprovals() {
   const handleReject = async (id) => {
     try {
       await adminApi.approvals.reject(id, { reason: "不符合要求" });
-      setApprovals((prev) => prev.filter((a) => a.id !== id));
+      setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
       console.error("Failed to reject request");
     }
@@ -258,18 +258,18 @@ export default function AdministrativeApprovals() {
                   { label: "车辆", value: stats.vehicle, color: "#06b6d4" },
                   {
                     label: "资产",
-                    value: approvals.filter((a) => a.type === "asset").length,
+                    value: (approvals || []).filter((a) => a.type === "asset").length,
                     color: "#a855f7"
                   },
                   {
                     label: "会议",
-                    value: approvals.filter((a) => a.type === "meeting").
+                    value: (approvals || []).filter((a) => a.type === "meeting").
                     length,
                     color: "#10b981"
                   },
                   {
                     label: "请假",
-                    value: approvals.filter((a) => a.type === "leave").length,
+                    value: (approvals || []).filter((a) => a.type === "leave").length,
                     color: "#f472b6"
                   }]
                   }
@@ -354,7 +354,7 @@ export default function AdministrativeApprovals() {
 
           {/* Approvals List */}
           <div className="space-y-4">
-            {filteredApprovals.map((approval) => {
+            {(filteredApprovals || []).map((approval) => {
               const TypeIcon = getTypeIcon(approval.type);
               return (
                 <Card key={approval.id}>
@@ -450,7 +450,7 @@ export default function AdministrativeApprovals() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {approvedList.map((approval) => {
+              {(approvedList || []).map((approval) => {
                 const TypeIcon = getTypeIcon(approval.type);
                 return (
                   <Card key={approval.id}>
@@ -530,7 +530,7 @@ export default function AdministrativeApprovals() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {rejectedList.map((approval) => {
+              {(rejectedList || []).map((approval) => {
                 const TypeIcon = getTypeIcon(approval.type);
                 return (
                   <Card key={approval.id}>
@@ -617,8 +617,8 @@ export default function AdministrativeApprovals() {
             <div className="space-y-4">
               {/* Combine and sort by time - approved items marked with status */}
               {[
-                ...approvedList.map(item => ({ ...item, status: 'approved' })),
-                ...rejectedList.map(item => ({ ...item, status: 'rejected' }))
+                ...(approvedList || []).map(item => ({ ...item, status: 'approved' })),
+                ...(rejectedList || []).map(item => ({ ...item, status: 'rejected' }))
               ]
                 .sort((a, b) => {
                   const timeA = a.approvedTime || a.rejectedTime || a.submitTime || '';

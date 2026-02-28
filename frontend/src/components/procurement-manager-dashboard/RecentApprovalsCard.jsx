@@ -26,7 +26,7 @@ export default function RecentApprovalsCard({ approvals }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {approvals.map((approval, index) => (
+        {(approvals || []).map((approval, index) => (
           <motion.div
             key={approval.id}
             initial={{ opacity: 0, y: 10 }}

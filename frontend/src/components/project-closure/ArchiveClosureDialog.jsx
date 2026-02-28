@@ -70,7 +70,7 @@ export default function ArchiveClosureDialog({ open, onOpenChange, onSubmit }) {
                 </div>
                 <div className="max-h-32 overflow-y-auto pr-2">
                   <div className="space-y-1">
-                    {parsedPaths.map((p) => (
+                    {(parsedPaths || []).map((p) => (
                       <div
                         key={p}
                         className="text-xs text-slate-400 font-mono break-all"

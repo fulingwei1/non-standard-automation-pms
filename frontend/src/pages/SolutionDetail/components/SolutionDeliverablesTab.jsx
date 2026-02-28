@@ -17,7 +17,7 @@ export function SolutionDeliverablesTab({ solution }) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
-                    {solution.deliverables.map((item) => {
+                    {(solution.deliverables || []).map((item) => {
                         const statusConfig = getDeliverableStatus(item.status);
                         const StatusIcon = statusConfig.icon;
                         return (

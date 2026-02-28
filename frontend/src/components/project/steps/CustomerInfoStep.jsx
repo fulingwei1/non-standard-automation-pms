@@ -31,7 +31,7 @@ export const CustomerInfoStep = ({
           {customerSearch && (
             <div className="max-h-48 overflow-y-auto border border-white/10 rounded-lg bg-slate-900/50">
               {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
+                (filteredCustomers || []).map((customer) => (
                   <div
                     key={customer.id}
                     className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"

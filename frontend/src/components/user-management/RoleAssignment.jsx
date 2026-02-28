@@ -72,7 +72,7 @@ export function RoleAssignment({
   className
 }) {
   const [selectedRoles, setSelectedRoles] = useState([]);
-  const [selectedPermissions, setSelectedPermissions] = useState({});
+  const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [dataScope, setDataScope] = useState("OWN");
   const [showPermissionDetails, setShowPermissionDetails] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -80,13 +80,13 @@ export function RoleAssignment({
   // 初始化选中状态
   useEffect(() => {
     if (user?.roles) {
-      const roleIds = user.roles.map((ur) => ur.role_id);
+      const roleIds = (user.roles || []).map((ur) => ur.role_id);
       setSelectedRoles(roleIds);
 
       // 初始化权限选中状态
       const permissions = {};
-      user.roles.forEach((ur) => {
-        ur.role.permissions.forEach((rp) => {
+      (user.roles || []).forEach((ur) => {
+        (ur.role.permissions || []).forEach((rp) => {
           permissions[rp.permission_id] = true;
         });
       });
@@ -99,7 +99,7 @@ export function RoleAssignment({
     if (checked) {
       setSelectedRoles([...selectedRoles, roleId]);
     } else {
-      setSelectedRoles(selectedRoles.filter((id) => id !== roleId));
+      setSelectedRoles((selectedRoles || []).filter((id) => id !== roleId));
     }
   };
 
@@ -121,7 +121,7 @@ export function RoleAssignment({
 
   // 获取角色包含的权限
   const _getRolePermissions = (roleId) => {
-    const role = availableRoles.find((r) => r.id === roleId);
+    const role = (availableRoles || []).find((r) => r.id === roleId);
     return role?.permissions || [];
   };
 
@@ -164,7 +164,7 @@ export function RoleAssignment({
   <div className="space-y-3">
       <Label className="text-sm font-medium">选择角色</Label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-        {availableRoles.map((role) => {
+        {(availableRoles || []).map((role) => {
         const isSelected = selectedRoles.includes(role.id);
         const roleConfig = userRoleConfigs[role.role_code];
 
@@ -217,7 +217,7 @@ export function RoleAssignment({
   const renderPermissionSelection = () => {
     // 按模块分组权限
     const permissionsByModule = {};
-    availablePermissions.forEach((permission) => {
+    (availablePermissions || []).forEach((permission) => {
       if (!permissionsByModule[permission.module]) {
         permissionsByModule[permission.module] = [];
       }
@@ -238,7 +238,7 @@ export function RoleAssignment({
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {permissions.map((permission) =>
+                {(permissions || []).map((permission) =>
               <div key={permission.id} className="flex items-start gap-2">
                     <Checkbox
                   id={`permission-${permission.id}`}
@@ -334,8 +334,8 @@ export function RoleAssignment({
   // 渲染权限冲突提示
   const renderPermissionConflicts = () => {
     const conflicts = [];
-    const hasSuperAdmin = selectedRoles.some((roleId) => {
-      const role = availableRoles.find((r) => r.id === roleId);
+    const hasSuperAdmin = (selectedRoles || []).some((roleId) => {
+      const role = (availableRoles || []).find((r) => r.id === roleId);
       return role?.role_code === "SUPER_ADMIN";
     });
 
@@ -355,7 +355,7 @@ export function RoleAssignment({
 
     return conflicts.length > 0 ?
     <div className="space-y-2">
-        {conflicts.map((conflict, index) =>
+        {(conflicts || []).map((conflict, index) =>
       <Alert key={index} variant={conflict.type === "warning" ? "default" : "destructive"}>
             {conflict.type === "warning" ?
         <AlertTriangle className="h-4 w-4" /> :

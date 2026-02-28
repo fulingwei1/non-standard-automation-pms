@@ -25,7 +25,7 @@ export function SolutionEquipmentTab({ solution }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {solution.equipment.main.map((item, index) => (
+                                {(solution.equipment.main || []).map((item, index) => (
                                     <tr key={index} className="border-b border-white/5">
                                         <td className="py-3 text-white">{item.name}</td>
                                         <td className="py-3 text-slate-400">{item.model}</td>
@@ -64,7 +64,7 @@ export function SolutionEquipmentTab({ solution }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {solution.equipment.auxiliary.map((item, index) => (
+                                {(solution.equipment.auxiliary || []).map((item, index) => (
                                     <tr key={index} className="border-b border-white/5">
                                         <td className="py-3 text-white">{item.name}</td>
                                         <td className="py-3 text-slate-400">{item.model}</td>
@@ -92,7 +92,7 @@ export function SolutionEquipmentTab({ solution }) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {solution.equipment.software.map((item, index) => (
+                        {(solution.equipment.software || []).map((item, index) => (
                             <div
                                 key={index}
                                 className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
@@ -117,7 +117,7 @@ export function SolutionEquipmentTab({ solution }) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {solution.equipment.fixtures.map((item, index) => (
+                        {(solution.equipment.fixtures || []).map((item, index) => (
                             <div
                                 key={index}
                                 className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"

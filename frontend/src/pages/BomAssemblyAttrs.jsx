@@ -102,7 +102,7 @@ export default function BomAssemblyAttrs() {
 
   const [_bomItems, _setBomItems] = useState([]);
   const [assemblyAttrs, setAssemblyAttrs] = useState([]);
-  const [editedAttrs, setEditedAttrs] = useState({});
+  const [editedAttrs, setEditedAttrs] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
 
   const [autoAssignDialogOpen, setAutoAssignDialogOpen] = useState(false);
@@ -177,7 +177,7 @@ export default function BomAssemblyAttrs() {
 
       // 初始化编辑状态
       const initialEdits = {};
-      attrs.forEach((attr) => {
+      (attrs || []).forEach((attr) => {
         initialEdits[attr.bom_item_id] = { ...attr };
       });
       setEditedAttrs(initialEdits);
@@ -210,7 +210,7 @@ export default function BomAssemblyAttrs() {
         (attr) => attr.assembly_stage
       );
 
-      if (items.length === 0) {
+      if (items?.length === 0) {
         console.error("没有需要保存的配置");
         return;
       }
@@ -311,7 +311,7 @@ export default function BomAssemblyAttrs() {
   };
 
   // 过滤显示的数据
-  const filteredAttrs = assemblyAttrs.filter((attr) => {
+  const filteredAttrs = (assemblyAttrs || []).filter((attr) => {
     if (filterStage !== "all" && attr.assembly_stage !== filterStage)
     {return false;}
     if (filterBlocking === "blocking" && !attr.is_blocking) {return false;}
@@ -329,17 +329,17 @@ export default function BomAssemblyAttrs() {
   });
 
   // 按阶段分组统计
-  const stageStats = stageOptions.map((stage) => {
-    const items = assemblyAttrs.filter((a) => a.assembly_stage === stage.value);
+  const stageStats = (stageOptions || []).map((stage) => {
+    const items = (assemblyAttrs || []).filter((a) => a.assembly_stage === stage.value);
     return {
       ...stage,
-      total: items.length,
-      blocking: items.filter((i) => i.is_blocking).length
+      total: items?.length,
+      blocking: (items || []).filter((i) => i.is_blocking).length
     };
   });
 
   const getStageOption = (code) =>
-  stageOptions.find((s) => s.value === code) || stageOptions[1];
+  (stageOptions || []).find((s) => s.value === code) || stageOptions[1];
 
   return (
     <div className="space-y-6 p-6">
@@ -407,7 +407,7 @@ export default function BomAssemblyAttrs() {
                   <SelectValue placeholder="选择项目" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map((proj) =>
+                  {(projects || []).map((proj) =>
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                       {proj.name || proj.project_name}
                   </SelectItem>
@@ -426,7 +426,7 @@ export default function BomAssemblyAttrs() {
                   <SelectValue placeholder="选择BOM" />
                 </SelectTrigger>
                 <SelectContent>
-                  {boms.map((bom) =>
+                  {(boms || []).map((bom) =>
                   <SelectItem key={bom.id} value={bom.id.toString()}>
                       {bom.bom_no} - {bom.name || bom.description}
                   </SelectItem>
@@ -442,7 +442,7 @@ export default function BomAssemblyAttrs() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部阶段</SelectItem>
-                  {stageOptions.map((stage) =>
+                  {(stageOptions || []).map((stage) =>
                   <SelectItem key={stage.value} value={stage.value}>
                       {stage.label}
                   </SelectItem>
@@ -483,7 +483,7 @@ export default function BomAssemblyAttrs() {
       {/* Stage Statistics */}
       {selectedBom && assemblyAttrs.length > 0 &&
       <div className="grid grid-cols-6 gap-4">
-          {stageStats.map((stage) => {
+          {(stageStats || []).map((stage) => {
           const Icon = stage.icon;
           return (
             <Card
@@ -550,7 +550,7 @@ export default function BomAssemblyAttrs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAttrs.map((attr) => {
+                  {(filteredAttrs || []).map((attr) => {
                 const edited = editedAttrs[attr.bom_item_id] || attr;
                 const stageOpt = getStageOption(edited.assembly_stage);
                 const StageIcon = stageOpt.icon;
@@ -589,7 +589,7 @@ export default function BomAssemblyAttrs() {
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {stageOptions.map((stage) => {
+                              {(stageOptions || []).map((stage) => {
                             const Icon = stage.icon;
                             return (
                               <SelectItem
@@ -626,7 +626,7 @@ export default function BomAssemblyAttrs() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {importanceOptions.map((imp) =>
+                              {(importanceOptions || []).map((imp) =>
                           <SelectItem key={imp.value} value={imp.value}>
                                   <Badge className={imp.color}>
                                     {imp.label}
@@ -781,7 +781,7 @@ export default function BomAssemblyAttrs() {
                   <SelectValue placeholder="选择模板" />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates.map((tpl) =>
+                  {(templates || []).map((tpl) =>
                   <SelectItem key={tpl.id} value={tpl.id.toString()}>
                       <div>
                         <span className="font-medium">{tpl.template_name}</span>

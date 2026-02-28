@@ -25,7 +25,7 @@ export function AddEntryDialog({
     const [tasks, setTasks] = useState([]);
     const [loadingTasks, setLoadingTasks] = useState(false);
 
-    const selectedProject = projects.find((p) => p.id === Number(selectedProjectId));
+    const selectedProject = (projects || []).find((p) => p.id === Number(selectedProjectId));
 
     // Load tasks when project selected
     useEffect(() => {
@@ -65,7 +65,7 @@ export function AddEntryDialog({
                 project_id: Number(selectedProjectId),
                 project_name: selectedProject?.project_name,
                 task_id: Number(selectedTaskId),
-                task_name: tasks.find((t) => t.id === Number(selectedTaskId))?.task_name,
+                task_name: (tasks || []).find((t) => t.id === Number(selectedTaskId))?.task_name,
                 hours,
             });
             setSelectedProjectId("");
@@ -95,7 +95,7 @@ export function AddEntryDialog({
                             className="w-full h-10 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-blue-500 focus:outline-none disabled:opacity-50"
                         >
                             <option value="">选择项目</option>
-                            {projects.map((project) => (
+                            {(projects || []).map((project) => (
                                 <option key={project.id} value={project.id}>
                                     {project.project_code} - {project.project_name}
                                 </option>
@@ -115,7 +115,7 @@ export function AddEntryDialog({
                             <option value="">
                                 {loadingTasks ? "加载中..." : "选择任务（可选）"}
                             </option>
-                            {tasks.map((task) => (
+                            {(tasks || []).map((task) => (
                                 <option key={task.id} value={task.id}>
                                     {task.task_name || task.title}
                                 </option>
@@ -127,7 +127,7 @@ export function AddEntryDialog({
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-300">工时</label>
                         <div className="grid grid-cols-7 gap-2">
-                            {weekDates.map((date, index) => (
+                            {(weekDates || []).map((date, index) => (
                                 <div key={index} className="text-center">
                                     <div className="text-xs text-slate-500 mb-1">
                                         {DAY_NAMES[index]}

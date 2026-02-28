@@ -11,8 +11,8 @@ const { Text } = Typography;
 
 const SatisfactionTracker = ({ tickets = [], loading = false }) => {
   const stats = useMemo(() => {
-    const scored = tickets.filter((t) => t.satisfaction != null);
-    const avg = scored.length > 0 ? scored.reduce((acc, t) => acc + Number(t.satisfaction || 0), 0) / scored.length : 0;
+    const scored = (tickets || []).filter((t) => t.satisfaction != null);
+    const avg = scored.length > 0 ? (scored || []).reduce((acc, t) => acc + Number(t.satisfaction || 0), 0) / scored.length : 0;
     return { scoredCount: scored.length, avg: Number(avg.toFixed(2)) };
   }, [tickets]);
 

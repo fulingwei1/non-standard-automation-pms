@@ -58,7 +58,7 @@ export default function CreateEditOrderDialog({
                   <SelectValue placeholder="选择供应商" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {suppliers.map((supplier) =>
+                  {(suppliers || []).map((supplier) =>
                   <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
                   </SelectItem>
@@ -77,7 +77,7 @@ export default function CreateEditOrderDialog({
                   <SelectValue placeholder="选择项目" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {projects.map((project) =>
+                  {(projects || []).map((project) =>
                   <SelectItem key={project.id} value={project.id}>
                       {project.name}
                   </SelectItem>

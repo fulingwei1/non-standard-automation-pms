@@ -262,7 +262,7 @@ const SupplierCard = ({ supplier, onView }) => {
         </div>
 
         {/* Issues or Risk Alert */}
-        {(supplier.issues.length > 0 || supplier.riskLevel !== "low") &&
+        {(supplier.issues?.length > 0 || supplier.riskLevel !== "low") &&
         <div
           className={cn(
             "rounded-lg p-3 border text-sm",
@@ -271,7 +271,7 @@ const SupplierCard = ({ supplier, onView }) => {
             "bg-amber-500/10 border-amber-500/30"
           )}>
 
-            {supplier.issues.length > 0 &&
+            {supplier.issues?.length > 0 &&
           <div>
                 <p
               className={cn(
@@ -342,7 +342,7 @@ export default function SupplierManagement() {
   }, []);
 
   const filteredSuppliers = useMemo(() => {
-    return suppliers.filter((s) => {
+    return (suppliers || []).filter((s) => {
       const searchLower = searchText.toLowerCase();
       const matchSearch =
       (s.name || "").toLowerCase().includes(searchLower) ||
@@ -358,11 +358,11 @@ export default function SupplierManagement() {
   const stats = useMemo(() => {
     return {
       total: suppliers.length,
-      aGrade: suppliers.filter((s) => s.level === "A级").length,
-      bGrade: suppliers.filter((s) => s.level === "B级").length,
-      active: suppliers.filter((s) => s.status === "active").length,
+      aGrade: (suppliers || []).filter((s) => s.level === "A级").length,
+      bGrade: (suppliers || []).filter((s) => s.level === "B级").length,
+      active: (suppliers || []).filter((s) => s.status === "active").length,
       avgRating: (
-      suppliers.reduce((sum, s) => sum + s.overallRating, 0) /
+      (suppliers || []).reduce((sum, s) => sum + s.overallRating, 0) /
       suppliers.length).
       toFixed(2)
     };
@@ -495,7 +495,7 @@ export default function SupplierManagement() {
 
         <AnimatePresence>
           {filteredSuppliers.length > 0 ?
-          filteredSuppliers.map((supplier) =>
+          (filteredSuppliers || []).map((supplier) =>
           <SupplierCard
             key={supplier.id}
             supplier={supplier}
@@ -518,7 +518,7 @@ export default function SupplierManagement() {
       </motion.div>
 
       {/* Supplier Risk Summary */}
-      {suppliers.some((s) => s.riskLevel !== "low") &&
+      {(suppliers || []).some((s) => s.riskLevel !== "low") &&
       <Card className="bg-amber-500/5 border-amber-500/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
@@ -541,7 +541,7 @@ export default function SupplierManagement() {
                         {s.name}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
-                        {s.issues.length > 0 ?
+                        {s.issues?.length > 0 ?
                   `${s.issues[0].issue}` :
                   "存在多项问题需要关注"}
                       </p>

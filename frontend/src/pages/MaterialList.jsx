@@ -169,9 +169,9 @@ export default function MaterialList() {
     }
   };
   const filteredMaterials = useMemo(() => {
-    if (!materials || materials.length === 0) {return [];}
+    if (!materials || materials?.length === 0) {return [];}
 
-    return materials.filter((material) => {
+    return (materials || []).filter((material) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -229,7 +229,7 @@ export default function MaterialList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
-                  {categories.map((cat) =>
+                  {(categories || []).map((cat) =>
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                   </SelectItem>
@@ -242,7 +242,7 @@ export default function MaterialList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部供应商</SelectItem>
-                  {suppliers.map((supplier) =>
+                  {(suppliers || []).map((supplier) =>
                   <SelectItem
                     key={supplier.id}
                     value={supplier.id.toString()}>
@@ -291,7 +291,7 @@ export default function MaterialList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMaterials.map((material) =>
+                  {(filteredMaterials || []).map((material) =>
                 <TableRow key={material.id}>
                       <TableCell className="font-mono text-sm">
                         {material.material_code}
@@ -415,7 +415,7 @@ export default function MaterialList() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {categories.map((cat) =>
+                      {(categories || []).map((cat) =>
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
                       </SelectItem>
@@ -466,7 +466,7 @@ export default function MaterialList() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {suppliers.map((supplier) =>
+                      {(suppliers || []).map((supplier) =>
                       <SelectItem
                         key={supplier.id}
                         value={supplier.id.toString()}>

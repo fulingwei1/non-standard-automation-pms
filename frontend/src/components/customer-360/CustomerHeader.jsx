@@ -318,7 +318,7 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                 {/* 最新动态 */}
                 <div>
                   <div className="text-xs text-slate-500 mb-2">最新动态</div>
-                  {customerData.recent_activities && customerData.recent_activities.length > 0 ?
+                  {customerData.recent_activities && customerData.recent_activities?.length > 0 ?
                   <div className="space-y-2 max-h-20 overflow-y-auto">
                       {customerData.recentActivities.slice(0, 3).map((activity, index) =>
                     <div key={index} className="text-xs text-slate-300">
@@ -349,7 +349,7 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {customer360TabConfigs.map((tab) =>
+            {(customer360TabConfigs || []).map((tab) =>
             <button
               key={tab.value}
               onClick={() => onTabChange && onTabChange(tab.value)}

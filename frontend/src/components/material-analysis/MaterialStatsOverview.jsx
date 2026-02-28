@@ -54,7 +54,7 @@ export function MaterialStatsOverview({
 
   // 计算总体统计数据
   const overallStats = useMemo(() => {
-    if (projects.length === 0) {
+    if (projects?.length === 0) {
       return {
         totalProjects: 0,
         totalMaterials: 0,
@@ -65,7 +65,7 @@ export function MaterialStatsOverview({
       };
     }
 
-    const stats = projects.reduce(
+    const stats = (projects || []).reduce(
       (acc, project) => {
         const materialStats = project.materialStats || {};
         acc.totalMaterials += materialStats.total || 0;
@@ -89,18 +89,18 @@ export function MaterialStatsOverview({
     0;
 
     // 计算风险项目数量
-    const riskCount = projects.filter(
+    const riskCount = (projects || []).filter(
       (p) => p.readyRate < 80 || (p.materialStats?.delayed || 0) > 5
     ).length;
 
     // 计算关键物料数量
-    const criticalMaterials = projects.reduce(
+    const criticalMaterials = (projects || []).reduce(
       (acc, project) => acc + (project.criticalMaterials?.length || 0),
       0
     );
 
     return {
-      totalProjects: projects.length,
+      totalProjects: projects?.length,
       totalMaterials: stats.totalMaterials,
       readyRate,
       onTimeDelivery,
@@ -113,7 +113,7 @@ export function MaterialStatsOverview({
   const statusDistribution = useMemo(() => {
     const statusCount = {};
 
-    projects.forEach((project) => {
+    (projects || []).forEach((project) => {
       const stats = project.materialStats || {};
       statusCount.arrived = (statusCount.arrived || 0) + (stats.arrived || 0);
       statusCount.delayed = (statusCount.delayed || 0) + (stats.delayed || 0);
@@ -155,7 +155,7 @@ export function MaterialStatsOverview({
   const typeDistribution = useMemo(() => {
     const typeCount = {};
 
-    materials.forEach((material) => {
+    (materials || []).forEach((material) => {
       const type = getMaterialType(material.type);
       typeCount[type.label] = (typeCount[type.label] || 0) + 1;
     });
@@ -169,7 +169,7 @@ export function MaterialStatsOverview({
 
   // 风险分析数据
   const riskAnalysis = useMemo(() => {
-    const risks = projects.map((project) => {
+    const risks = (projects || []).map((project) => {
       const riskScore = 100 - project.readyRate;
       const riskLevel = riskScore > 30 ? 'high' : riskScore > 15 ? 'medium' : 'low';
 
@@ -215,7 +215,7 @@ export function MaterialStatsOverview({
       });
       const trendResponse = response?.data?.data || response?.data || {};
       const trendItems = trendResponse.trend_data || [];
-      const normalized = trendItems.map((item) => ({
+      const normalized = (trendItems || []).map((item) => ({
         label: item.date || "",
         value: Number(item.kit_rate || 0)
       }));
@@ -383,11 +383,11 @@ export function MaterialStatsOverview({
                 data={statusDistribution}
                 valueKey="value"
                 nameKey="name"
-                colors={statusDistribution.map((d) => d.color)} />
+                colors={(statusDistribution || []).map((d) => d.color)} />
 
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {statusDistribution.map((item, index) =>
+              {(statusDistribution || []).map((item, index) =>
               <div key={index} className="flex items-center gap-2">
                   <div
                   className="w-3 h-3 rounded-full"
@@ -432,7 +432,7 @@ export function MaterialStatsOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {riskAnalysis.map((risk, index) =>
+              {(riskAnalysis || []).map((risk, index) =>
               <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

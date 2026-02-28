@@ -337,7 +337,7 @@ export default function ArrivalDetail() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {followUps.map((followUp) => (
+                  {(followUps || []).map((followUp) => (
                     <div
                       key={followUp.id}
                       className="p-4 rounded-lg border border-border bg-surface-1"

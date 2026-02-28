@@ -27,7 +27,7 @@ export default function RecentTendersCard({ tenders }) {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {tenders.map((bid, index) => (
+        {(tenders || []).map((bid, index) => (
           <motion.div
             key={bid.id}
             initial={{ opacity: 0, x: 20 }}

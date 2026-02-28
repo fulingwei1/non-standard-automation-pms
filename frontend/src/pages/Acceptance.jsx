@@ -106,7 +106,7 @@ function AcceptanceCard({ acceptance, onView }) {
   };
   const StatusIcon = status.icon;
 
-  const openIssues = acceptance.issues.filter(
+  const openIssues = (acceptance.issues || []).filter(
     (i) => i.status === "open",
   ).length;
 
@@ -281,7 +281,7 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
           <div className="flex gap-2 border-b border-border">
             {[
               { id: "checklist", label: "检查清单" },
-              { id: "issues", label: `问题记录 (${acceptance.issues.length})` },
+              { id: "issues", label: `问题记录 (${acceptance.issues?.length})` },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -301,8 +301,8 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
           {/* Checklist Tab */}
           {activeTab === "checklist" && (
             <div className="space-y-3">
-              {acceptance.checklistCategories.length > 0 ? (
-                acceptance.checklistCategories.map((category, index) => (
+              {acceptance.checklistCategories?.length > 0 ? (
+                (acceptance.checklistCategories || []).map((category, index) => (
                   <div key={index} className="p-3 rounded-lg bg-surface-2">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-white">
@@ -339,8 +339,8 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
           {/* Issues Tab */}
           {activeTab === "issues" && (
             <div className="space-y-3">
-              {acceptance.issues.length > 0 ? (
-                acceptance.issues.map((issue) => (
+              {acceptance.issues?.length > 0 ? (
+                (acceptance.issues || []).map((issue) => (
                   <div
                     key={issue.id}
                     className={cn(
@@ -393,9 +393,9 @@ function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
                     <p className="text-sm text-slate-300">
                       {issue.description}
                     </p>
-                    {issue.photos.length > 0 && (
+                    {issue.photos?.length > 0 && (
                       <div className="flex gap-2 mt-2">
-                        {issue.photos.map((photo, i) => (
+                        {(issue.photos || []).map((photo, i) => (
                           <div
                             key={i}
                             className="w-16 h-16 rounded bg-surface-0 flex items-center justify-center"
@@ -516,7 +516,7 @@ export default function Acceptance() {
 
       // Transform backend data to frontend format
       const transformedAcceptances = await Promise.all(
-        ordersData.map(async (order) => {
+        (ordersData || []).map(async (order) => {
           // Load issues for this order
           let issues = [];
           try {
@@ -535,7 +535,7 @@ export default function Acceptance() {
 
             // Group items by category
             const categoryMap = {};
-            items.forEach((item) => {
+            (items || []).forEach((item) => {
               const category = item.category_name || "其他";
               if (!categoryMap[category]) {
                 categoryMap[category] = {
@@ -576,7 +576,7 @@ export default function Acceptance() {
               order.total_items -
               (order.passed_items || 0) -
               (order.failed_items || 0),
-            issues: issues.map((issue) => ({
+            issues: (issues || []).map((issue) => ({
               id: issue.id?.toString(),
               item: issue.title || "",
               category: issue.category || "",
@@ -657,7 +657,7 @@ export default function Acceptance() {
 
   // Client-side filtering (for additional filtering beyond API)
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  const filteredAcceptances = acceptances.filter((acceptance) => {
+  const filteredAcceptances = (acceptances || []).filter((acceptance) => {
     if (!normalizedQuery) {
       return true;
     }
@@ -672,9 +672,9 @@ export default function Acceptance() {
 
   const stats = {
     total: acceptances.length,
-    pending: acceptances.filter((a) => a.status === "pending").length,
-    inProgress: acceptances.filter((a) => a.status === "in_progress").length,
-    completed: acceptances.filter((a) => a.status === "completed").length,
+    pending: (acceptances || []).filter((a) => a.status === "pending").length,
+    inProgress: (acceptances || []).filter((a) => a.status === "in_progress").length,
+    completed: (acceptances || []).filter((a) => a.status === "completed").length,
   };
 
   const handleView = async (acceptance) => {
@@ -696,7 +696,7 @@ export default function Acceptance() {
         const updatedAcceptance = {
           ...acceptance,
           items,
-          issues: issues.map((issue) => ({
+          issues: (issues || []).map((issue) => ({
             id: issue.id?.toString(),
             item: issue.title || "",
             category: issue.category || "",
@@ -875,7 +875,7 @@ export default function Acceptance() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
             {filteredAcceptances.length > 0 ? (
-              filteredAcceptances.map((acceptance) => (
+              (filteredAcceptances || []).map((acceptance) => (
                 <AcceptanceCard
                   key={acceptance.id}
                   acceptance={acceptance}
@@ -934,7 +934,7 @@ export default function Acceptance() {
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
-                      {projects.map((proj) => (
+                      {(projects || []).map((proj) => (
                         <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
                         </SelectItem>

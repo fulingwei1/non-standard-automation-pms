@@ -119,7 +119,7 @@ export default function SchedulerMonitoringDashboard() {
     let filtered = metrics;
 
     if (searchTerm) {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (m) =>
         m.job_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.job_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,7 +128,7 @@ export default function SchedulerMonitoringDashboard() {
     }
 
     if (filterCategory !== "all") {
-      filtered = filtered.filter((m) => m.category === filterCategory);
+      filtered = (filtered || []).filter((m) => m.category === filterCategory);
     }
 
     return filtered;
@@ -137,11 +137,11 @@ export default function SchedulerMonitoringDashboard() {
   // Statistics
   const stats = useMemo(() => {
     const total = metrics.length;
-    const totalSuccess = metrics.reduce(
+    const totalSuccess = (metrics || []).reduce(
       (sum, m) => sum + (m.success_count || 0),
       0
     );
-    const totalFailure = metrics.reduce(
+    const totalFailure = (metrics || []).reduce(
       (sum, m) => sum + (m.failure_count || 0),
       0
     );
@@ -149,9 +149,9 @@ export default function SchedulerMonitoringDashboard() {
     const successRate =
     totalRuns > 0 ? (totalSuccess / totalRuns * 100).toFixed(1) : 0;
     const avgDuration =
-    metrics.reduce((sum, m) => sum + (m.avg_duration_ms || 0), 0) / (
+    (metrics || []).reduce((sum, m) => sum + (m.avg_duration_ms || 0), 0) / (
     total || 1);
-    const jobsWithFailures = metrics.filter(
+    const jobsWithFailures = (metrics || []).filter(
       (m) => (m.failure_count || 0) > 0
     ).length;
 
@@ -168,14 +168,14 @@ export default function SchedulerMonitoringDashboard() {
 
   // Categories
   const categories = useMemo(() => {
-    const cats = new Set(metrics.map((m) => m.category).filter(Boolean));
+    const cats = new Set((metrics || []).map((m) => m.category).filter(Boolean));
     return Array.from(cats).sort();
   }, [metrics]);
 
   // Failure heatmap data (group by category)
   const failureHeatmap = useMemo(() => {
     const heatmap = {};
-    metrics.forEach((m) => {
+    (metrics || []).forEach((m) => {
       const cat = m.category || "Unknown";
       if (!heatmap[cat]) {
         heatmap[cat] = {
@@ -200,7 +200,7 @@ export default function SchedulerMonitoringDashboard() {
 
   // Notification chain metrics (find send_alert_notifications job)
   const notificationMetrics = useMemo(() => {
-    return metrics.find((m) => m.job_id === "send_alert_notifications") || null;
+    return (metrics || []).find((m) => m.job_id === "send_alert_notifications") || null;
   }, [metrics]);
 
   // Export Prometheus metrics
@@ -475,7 +475,7 @@ export default function SchedulerMonitoringDashboard() {
                     className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm">
 
                     <option value="all">所有类别</option>
-                    {categories.map((cat) =>
+                    {(categories || []).map((cat) =>
                     <option key={cat} value={cat}>
                         {cat}
                     </option>
@@ -506,7 +506,7 @@ export default function SchedulerMonitoringDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredMetrics.map((metric) => {
+                      {(filteredMetrics || []).map((metric) => {
                       const totalRuns =
                       (metric.success_count || 0) + (
                       metric.failure_count || 0);
@@ -602,9 +602,9 @@ export default function SchedulerMonitoringDashboard() {
               <EmptyState message="暂无失败记录" /> :
 
               <div className="space-y-4">
-                  {failureHeatmap.map((item) => {
+                  {(failureHeatmap || []).map((item) => {
                   const maxFailures = Math.max(
-                    ...failureHeatmap.map((i) => i.totalFailures),
+                    ...(failureHeatmap || []).map((i) => i.totalFailures),
                     1
                   );
                   const intensity = item.totalFailures / maxFailures * 100;
@@ -637,9 +637,9 @@ export default function SchedulerMonitoringDashboard() {
                             </span>
                           </div>
                         </div>
-                        {item.jobs.length > 0 &&
+                        {item.jobs?.length > 0 &&
                       <div className="ml-6 space-y-1">
-                            {item.jobs.map((job) =>
+                            {(item.jobs || []).map((job) =>
                         <div
                           key={job.job_id}
                           className="text-sm text-muted-foreground flex items-center gap-2">

@@ -17,19 +17,19 @@ import { PurchaseOrderUtils, ORDER_STATUS_CONFIGS } from "@/lib/constants/procur
 export default function PurchaseOrdersOverview({ orders = [] }) {
   // 计算统计数据
   const stats = {
-    total: orders.length || 0,
-    pending: orders.filter(o => o.status === 'pending').length || 0,
-    completed: orders.filter(o => o.status === 'completed').length || 0,
-    delayed: orders.filter(o => o.status === 'delayed').length || 0,
-    totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 0,
-    averageAmount: orders.length > 0 
-      ? (orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders.length).toFixed(2)
+    total: orders?.length || 0,
+    pending: (orders || []).filter(o => o.status === 'pending').length || 0,
+    completed: (orders || []).filter(o => o.status === 'completed').length || 0,
+    delayed: (orders || []).filter(o => o.status === 'delayed').length || 0,
+    totalAmount: (orders || []).reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 0,
+    averageAmount: orders?.length > 0 
+      ? ((orders || []).reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders?.length).toFixed(2)
       : 0,
   };
 
   // 计算状态分布
   const statusDistribution = Object.keys(ORDER_STATUS_CONFIGS).map(status => {
-    const count = orders.filter(o => o.status === status).length;
+    const count = (orders || []).filter(o => o.status === status).length;
     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
     return {
       status,
@@ -53,7 +53,7 @@ export default function PurchaseOrdersOverview({ orders = [] }) {
     }));
 
   // 获取今日到期订单
-  const todayOrders = orders.filter(order => {
+  const todayOrders = (orders || []).filter(order => {
     const expectedDate = new Date(order.expected_date);
     const today = new Date();
     return expectedDate.toDateString() === today.toDateString();
@@ -136,7 +136,7 @@ export default function PurchaseOrdersOverview({ orders = [] }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {statusDistribution.map((item) => (
+            {(statusDistribution || []).map((item) => (
               <motion.div
                 key={item.status}
                 whileHover={{ scale: 1.05 }}
@@ -165,7 +165,7 @@ export default function PurchaseOrdersOverview({ orders = [] }) {
           <CardContent>
             {delayedOrders.length > 0 ? (
               <div className="space-y-3">
-                {delayedOrders.map((order) => (
+                {(delayedOrders || []).map((order) => (
                   <div
                     key={order.id}
                     className="flex items-center justify-between p-3 bg-surface-2 rounded-lg"

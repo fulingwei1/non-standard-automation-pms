@@ -83,10 +83,10 @@ export function ContractCard({
   onDownload,
   showActions = true,
 }) {
-  const paidStages = contract.paymentStages.filter(
+  const paidStages = (contract.paymentStages || []).filter(
     (s) => s.status === "paid",
   ).length;
-  const totalStages = contract.paymentStages.length;
+  const totalStages = contract.paymentStages?.length;
 
   return (
     <motion.div
@@ -144,7 +144,7 @@ export function ContractCard({
 
       {/* Payment Stages */}
       <div className="mb-4 space-y-1.5">
-        {contract.paymentStages.map((stage, idx) => (
+        {(contract.paymentStages || []).map((stage, idx) => (
           <PaymentStageItem key={idx} stage={stage} index={idx} />
         ))}
       </div>

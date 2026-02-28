@@ -99,7 +99,7 @@ export default function ECNOverdueAlerts() {
     if (filterType === "all") {
       setFilteredAlerts(alerts);
     } else {
-      setFilteredAlerts(alerts.filter((alert) => alert.type === filterType));
+      setFilteredAlerts((alerts || []).filter((alert) => alert.type === filterType));
     }
   };
 
@@ -119,7 +119,7 @@ export default function ECNOverdueAlerts() {
     } else {
       setSelectedAlerts(
         new Set(
-          filteredAlerts.map(
+          (filteredAlerts || []).map(
             (a) =>
             `${a.type}-${a.ecn_id}-${a.task_id || a.approval_level || a.dept || ""}`
           )
@@ -148,7 +148,7 @@ export default function ECNOverdueAlerts() {
 
     try {
       // 根据选中的 alertId 找到对应的提醒数据
-      const selectedAlertList = filteredAlerts.filter((alert) => {
+      const selectedAlertList = (filteredAlerts || []).filter((alert) => {
         let alertId = "";
         if (alert.type === "EVALUATION_OVERDUE") {
           alertId = `${alert.type}-${alert.ecn_id}-${alert.dept || ""}`;
@@ -214,7 +214,7 @@ export default function ECNOverdueAlerts() {
       APPROVAL_OVERDUE: [],
       TASK_OVERDUE: []
     };
-    alerts.forEach((alert) => {
+    (alerts || []).forEach((alert) => {
       if (groups[alert.type]) {
         groups[alert.type].push(alert);
       }
@@ -224,9 +224,9 @@ export default function ECNOverdueAlerts() {
 
   const groupedAlerts = groupAlertsByType(filteredAlerts);
   const totalCount = filteredAlerts.length;
-  const evaluationCount = groupedAlerts.EVALUATION_OVERDUE.length;
-  const approvalCount = groupedAlerts.APPROVAL_OVERDUE.length;
-  const taskCount = groupedAlerts.TASK_OVERDUE.length;
+  const evaluationCount = groupedAlerts.EVALUATION_OVERDUE?.length;
+  const approvalCount = groupedAlerts.APPROVAL_OVERDUE?.length;
+  const taskCount = groupedAlerts.TASK_OVERDUE?.length;
 
   return (
     <div className="space-y-6 p-6">
@@ -338,12 +338,12 @@ export default function ECNOverdueAlerts() {
 
       <div className="space-y-4">
           {/* 评估超时 */}
-          {groupedAlerts.EVALUATION_OVERDUE.length > 0 &&
+          {groupedAlerts.EVALUATION_OVERDUE?.length > 0 &&
         <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-500" />
-                  评估超时 ({groupedAlerts.EVALUATION_OVERDUE.length})
+                  评估超时 ({groupedAlerts.EVALUATION_OVERDUE?.length})
                 </CardTitle>
                 <CardDescription>评估任务超过3天未完成</CardDescription>
               </CardHeader>
@@ -355,9 +355,9 @@ export default function ECNOverdueAlerts() {
                         <Checkbox
                       checked={
                       selectedAlerts.size ===
-                      groupedAlerts.EVALUATION_OVERDUE.length &&
-                      groupedAlerts.EVALUATION_OVERDUE.length > 0 &&
-                      groupedAlerts.EVALUATION_OVERDUE.every((a) =>
+                      groupedAlerts.EVALUATION_OVERDUE?.length &&
+                      groupedAlerts.EVALUATION_OVERDUE?.length > 0 &&
+                      (groupedAlerts.EVALUATION_OVERDUE || []).every((a) =>
                       selectedAlerts.has(
                         `${a.type}-${a.ecn_id}-${a.dept || ""}`
                       )
@@ -366,7 +366,7 @@ export default function ECNOverdueAlerts() {
                       onCheckedChange={(checked) => {
                         if (checked) {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
+                          (groupedAlerts.EVALUATION_OVERDUE || []).forEach((a) => {
                             newSelected.add(
                               `${a.type}-${a.ecn_id}-${a.dept || ""}`
                             );
@@ -374,7 +374,7 @@ export default function ECNOverdueAlerts() {
                           setSelectedAlerts(newSelected);
                         } else {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
+                          (groupedAlerts.EVALUATION_OVERDUE || []).forEach((a) => {
                             newSelected.delete(
                               `${a.type}-${a.ecn_id}-${a.dept || ""}`
                             );
@@ -392,7 +392,7 @@ export default function ECNOverdueAlerts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groupedAlerts.EVALUATION_OVERDUE.map((alert, index) => {
+                    {(groupedAlerts.EVALUATION_OVERDUE || []).map((alert, index) => {
                   const alertId = `${alert.type}-${alert.ecn_id}-${alert.dept || ""}`;
                   return (
                     <TableRow key={index}>
@@ -440,12 +440,12 @@ export default function ECNOverdueAlerts() {
         }
 
           {/* 审批超时 */}
-          {groupedAlerts.APPROVAL_OVERDUE.length > 0 &&
+          {groupedAlerts.APPROVAL_OVERDUE?.length > 0 &&
         <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-red-500" />
-                  审批超时 ({groupedAlerts.APPROVAL_OVERDUE.length})
+                  审批超时 ({groupedAlerts.APPROVAL_OVERDUE?.length})
                 </CardTitle>
                 <CardDescription>审批任务超过截止日期未完成</CardDescription>
               </CardHeader>
@@ -457,9 +457,9 @@ export default function ECNOverdueAlerts() {
                         <Checkbox
                       checked={
                       selectedAlerts.size ===
-                      groupedAlerts.APPROVAL_OVERDUE.length &&
-                      groupedAlerts.APPROVAL_OVERDUE.length > 0 &&
-                      groupedAlerts.APPROVAL_OVERDUE.every((a) =>
+                      groupedAlerts.APPROVAL_OVERDUE?.length &&
+                      groupedAlerts.APPROVAL_OVERDUE?.length > 0 &&
+                      (groupedAlerts.APPROVAL_OVERDUE || []).every((a) =>
                       selectedAlerts.has(
                         `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
                       )
@@ -468,7 +468,7 @@ export default function ECNOverdueAlerts() {
                       onCheckedChange={(checked) => {
                         if (checked) {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
+                          (groupedAlerts.APPROVAL_OVERDUE || []).forEach((a) => {
                             newSelected.add(
                               `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
                             );
@@ -476,7 +476,7 @@ export default function ECNOverdueAlerts() {
                           setSelectedAlerts(newSelected);
                         } else {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
+                          (groupedAlerts.APPROVAL_OVERDUE || []).forEach((a) => {
                             newSelected.delete(
                               `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
                             );
@@ -495,7 +495,7 @@ export default function ECNOverdueAlerts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groupedAlerts.APPROVAL_OVERDUE.map((alert, index) => {
+                    {(groupedAlerts.APPROVAL_OVERDUE || []).map((alert, index) => {
                   const alertId = `${alert.type}-${alert.ecn_id}-${alert.approval_level || ""}`;
                   return (
                     <TableRow key={index}>
@@ -546,12 +546,12 @@ export default function ECNOverdueAlerts() {
         }
 
           {/* 任务超时 */}
-          {groupedAlerts.TASK_OVERDUE.length > 0 &&
+          {groupedAlerts.TASK_OVERDUE?.length > 0 &&
         <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-orange-500" />
-                  任务超时 ({groupedAlerts.TASK_OVERDUE.length})
+                  任务超时 ({groupedAlerts.TASK_OVERDUE?.length})
                 </CardTitle>
                 <CardDescription>
                   执行任务超过计划完成日期未完成
@@ -565,9 +565,9 @@ export default function ECNOverdueAlerts() {
                         <Checkbox
                       checked={
                       selectedAlerts.size ===
-                      groupedAlerts.TASK_OVERDUE.length &&
-                      groupedAlerts.TASK_OVERDUE.length > 0 &&
-                      groupedAlerts.TASK_OVERDUE.every((a) =>
+                      groupedAlerts.TASK_OVERDUE?.length &&
+                      groupedAlerts.TASK_OVERDUE?.length > 0 &&
+                      (groupedAlerts.TASK_OVERDUE || []).every((a) =>
                       selectedAlerts.has(
                         `${a.type}-${a.ecn_id}-${a.task_id || ""}`
                       )
@@ -576,7 +576,7 @@ export default function ECNOverdueAlerts() {
                       onCheckedChange={(checked) => {
                         if (checked) {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.TASK_OVERDUE.forEach((a) => {
+                          (groupedAlerts.TASK_OVERDUE || []).forEach((a) => {
                             newSelected.add(
                               `${a.type}-${a.ecn_id}-${a.task_id || ""}`
                             );
@@ -584,7 +584,7 @@ export default function ECNOverdueAlerts() {
                           setSelectedAlerts(newSelected);
                         } else {
                           const newSelected = new Set(selectedAlerts);
-                          groupedAlerts.TASK_OVERDUE.forEach((a) => {
+                          (groupedAlerts.TASK_OVERDUE || []).forEach((a) => {
                             newSelected.delete(
                               `${a.type}-${a.ecn_id}-${a.task_id || ""}`
                             );
@@ -602,7 +602,7 @@ export default function ECNOverdueAlerts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groupedAlerts.TASK_OVERDUE.map((alert, index) => {
+                    {(groupedAlerts.TASK_OVERDUE || []).map((alert, index) => {
                   const alertId = `${alert.type}-${alert.ecn_id}-${alert.task_id || ""}`;
                   return (
                     <TableRow key={index}>

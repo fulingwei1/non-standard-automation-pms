@@ -79,7 +79,7 @@ export default function StageGantt({ stages }) {
 
       {/* 阶段条形图 */}
       <div className="space-y-3">
-        {stages.map((stage) => {
+        {(stages || []).map((stage) => {
           const startPercent = getPositionPercent(stage.planned_start_date);
           const widthPercent = getWidthPercent(
             stage.planned_start_date,

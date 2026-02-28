@@ -71,7 +71,7 @@ const addDays = (date, days) => {
 
 // Helper: Get date range for tasks
 const getDateRange = (tasks) => {
-  if (tasks.length === 0) {
+  if (tasks?.length === 0) {
     const today = new Date();
     return {
       start: addDays(today, -7),
@@ -82,7 +82,7 @@ const getDateRange = (tasks) => {
   let minDate = new Date(tasks[0].plannedStart);
   let maxDate = new Date(tasks[0].plannedEnd);
 
-  tasks.forEach((task) => {
+  (tasks || []).forEach((task) => {
     const start = new Date(task.plannedStart);
     const end = new Date(task.plannedEnd);
     if (start < minDate) {minDate = start;}
@@ -261,7 +261,7 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
   // Group tasks by project
   const groupedTasks = useMemo(() => {
     const groups = {};
-    tasks.forEach((task) => {
+    (tasks || []).forEach((task) => {
       if (!groups[task.projectId]) {
         groups[task.projectId] = {
           projectId: task.projectId,
@@ -401,7 +401,7 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
       <div className="flex">
         {/* Task Names Column */}
         <div className="w-[200px] flex-shrink-0 border-r border-border bg-surface-2/20">
-          {groupedTasks.map((group) => (
+          {(groupedTasks || []).map((group) => (
             <div key={group.projectId}>
               {/* Project Header */}
               <div className="px-3 py-2 bg-surface-2/50 border-b border-border">
@@ -411,7 +411,7 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
               </div>
 
               {/* Tasks */}
-              {group.tasks.map((task) => (
+              {(group.tasks || []).map((task) => (
                 <div
                   key={task.id}
                   onClick={() => onTaskSelect(task)}
@@ -482,13 +482,13 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
             )}
 
             {/* Task Rows */}
-            {groupedTasks.map((group) => (
+            {(groupedTasks || []).map((group) => (
               <div key={group.projectId}>
                 {/* Project spacer */}
                 <div className="h-[33px] border-b border-border" />
 
                 {/* Task bars */}
-                {group.tasks.map((task) => {
+                {(group.tasks || []).map((task) => {
                   const { startOffset, width } = getTaskPosition(task);
                   return (
                     <div

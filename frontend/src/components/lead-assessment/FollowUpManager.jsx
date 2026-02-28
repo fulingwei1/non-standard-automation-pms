@@ -17,7 +17,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
 };
 
 const FollowUpManager = ({ followUps = [], leads = [], loading, onRefresh }) => {
-  const leadMap = new Map(leads.map((l) => [l.id, l]));
+  const leadMap = new Map((leads || []).map((l) => [l.id, l]));
 
   return (
     <Card

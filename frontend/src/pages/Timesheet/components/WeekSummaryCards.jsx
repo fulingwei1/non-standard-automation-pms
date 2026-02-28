@@ -22,7 +22,7 @@ export function WeekSummaryCards({ weeklyTotal, entries }) {
         },
         {
             label: "参与项目",
-            value: new Set(entries.map((e) => e.project_id).filter(Boolean)).size,
+            value: new Set((entries || []).map((e) => e.project_id).filter(Boolean)).size,
             icon: Briefcase,
             color: "text-emerald-400",
             desc: "个项目",
@@ -38,7 +38,7 @@ export function WeekSummaryCards({ weeklyTotal, entries }) {
 
     return (
         <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
+            {(stats || []).map((stat, index) => (
                 <Card key={index} className="bg-surface-1/50">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">

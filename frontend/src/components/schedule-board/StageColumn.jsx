@@ -4,7 +4,7 @@ import { stageColors } from "./scheduleConfig";
 import ProjectCard from "./ProjectCard";
 
 export default function StageColumn({ stage, stageName, projects }) {
-  const stageProjects = projects.filter((p) => p.stage === stage);
+  const stageProjects = (projects || []).filter((p) => p.stage === stage);
   const stageColor = stageColors[stage];
 
   return (
@@ -21,7 +21,7 @@ export default function StageColumn({ stage, stageName, projects }) {
       {/* Projects */}
       <div className="space-y-4">
         {stageProjects.length > 0 ? (
-          stageProjects.map((project) => (
+          (stageProjects || []).map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))
         ) : (

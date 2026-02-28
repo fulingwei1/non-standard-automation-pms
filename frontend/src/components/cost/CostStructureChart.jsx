@@ -11,7 +11,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
 
   const total = useMemo(() => {
     if (!data || !Array.isArray(data)) {return 0;}
-    return data.reduce((sum, item) => sum + (item.amount || 0), 0);
+    return (data || []).reduce((sum, item) => sum + (item.amount || 0), 0);
   }, [data]);
 
   const radius = size / 2 - 20;
@@ -19,12 +19,12 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
   const centerY = size / 2;
 
   const segments = useMemo(() => {
-    if (!data || !Array.isArray(data) || data.length === 0 || total === 0) {
+    if (!data || !Array.isArray(data) || data?.length === 0 || total === 0) {
       return [];
     }
 
     // Use reduce to accumulate angle without mutation
-    return data.reduce(
+    return (data || []).reduce(
       (acc, item, index) => {
         const amount = item.amount || 0;
         const percentage = (amount / total) * 100;
@@ -52,7 +52,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
         ].join(" ");
 
         // Generate color based on index
-        const hue = (index * 360) / data.length;
+        const hue = (index * 360) / data?.length;
         const color = `hsl(${hue}, 70%, 50%)`;
 
         return {
@@ -76,7 +76,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
   }, [data, total, radius, centerX, centerY]);
 
   // Early return after all hooks
-  if (!data || data.length === 0 || total === 0) {
+  if (!data || data?.length === 0 || total === 0) {
     return (
       <div
         className="flex items-center justify-center"
@@ -95,7 +95,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
         style={{ width: `${size}px`, height: `${size}px` }}
       >
         <svg width={size} height={size} className="transform -rotate-90">
-          {segments.map((segment, index) => (
+          {(segments || []).map((segment, index) => (
             <g key={index}>
               <path
                 d={segment.pathData}
@@ -122,7 +122,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
       {/* Legend */}
       {showLegend && (
         <div className="flex-1 space-y-3">
-          {segments.map((segment, index) => (
+          {(segments || []).map((segment, index) => (
             <div key={index} className="flex items-center gap-3">
               <div
                 className="w-4 h-4 rounded"

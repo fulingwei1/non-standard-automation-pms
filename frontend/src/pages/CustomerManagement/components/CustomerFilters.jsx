@@ -37,7 +37,7 @@ export function CustomerFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">所有行业</SelectItem>
-                        {industries.map((industry) => (
+                        {(industries || []).map((industry) => (
                             <SelectItem key={industry} value={industry}>
                                 {industry}
                             </SelectItem>

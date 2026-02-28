@@ -330,7 +330,7 @@ const ApprovalCenter = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
+            {(items || []).map((item) => {
               const urgencyConfig = URGENCY_CONFIG[item.instance_urgency] || URGENCY_CONFIG.NORMAL;
               const entityConfig = ENTITY_TYPE_CONFIG[item.instance?.entity_type] || {};
               const instanceId = item.instance_id || item.instance?.id;
@@ -402,7 +402,7 @@ const ApprovalCenter = () => {
           </TableBody>
         </Table>
 
-        {items.length === 0 && !loading && (
+        {items?.length === 0 && !loading && (
           <div className="text-center py-12 text-slate-400">
             <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-emerald-500" />
             <p>暂无待审批任务</p>
@@ -436,7 +436,7 @@ const ApprovalCenter = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
+            {(items || []).map((item) => {
               const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.PENDING;
               const entityConfig = ENTITY_TYPE_CONFIG[item.entity_type] || {};
 
@@ -482,7 +482,7 @@ const ApprovalCenter = () => {
           </TableBody>
         </Table>
 
-        {items.length === 0 && !loading && (
+        {items?.length === 0 && !loading && (
           <div className="text-center py-12 text-slate-400">
             <FileText className="h-12 w-12 mx-auto mb-2" />
             <p>暂无发起的审批</p>
@@ -515,7 +515,7 @@ const ApprovalCenter = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
+            {(items || []).map((item) => {
               const isRead = item.is_read;
 
               return (
@@ -580,7 +580,7 @@ const ApprovalCenter = () => {
           </TableBody>
         </Table>
 
-        {items.length === 0 && !loading && (
+        {items?.length === 0 && !loading && (
           <div className="text-center py-12 text-slate-400">
             <Mail className="h-12 w-12 mx-auto mb-2" />
             <p>暂无抄送记录</p>
@@ -613,7 +613,7 @@ const ApprovalCenter = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => {
+            {(items || []).map((item) => {
               const actionLabel = item.action === "APPROVE" ? "通过" : item.action === "REJECT" ? "驳回" : item.action;
               const actionColor = item.action === "APPROVE" ? "bg-emerald-500" : "bg-red-500";
               const instanceId = item.instance_id || item.instance?.id;
@@ -657,7 +657,7 @@ const ApprovalCenter = () => {
           </TableBody>
         </Table>
 
-        {items.length === 0 && !loading && (
+        {items?.length === 0 && !loading && (
           <div className="text-center py-12 text-slate-400">
             <FileText className="h-12 w-12 mx-auto mb-2" />
             <p>暂无已处理记录</p>

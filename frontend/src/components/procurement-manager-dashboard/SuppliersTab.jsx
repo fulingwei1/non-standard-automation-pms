@@ -43,7 +43,7 @@ export default function SuppliersTab({ suppliers }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {suppliers.map((supplier, index) => (
+              {(suppliers || []).map((supplier, index) => (
                 <motion.tr
                   key={supplier.id}
                   initial={{ opacity: 0, y: 10 }}

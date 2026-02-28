@@ -140,7 +140,7 @@ export function HealthScoreCard({ healthStats }) {
             <div className="space-y-2 pt-4 border-t border-slate-700/50">
               <p className="text-xs text-slate-400">各维度健康度</p>
               <div className="space-y-2">
-                {dimensions.map((d) => (
+                {(dimensions || []).map((d) => (
                   <div key={d.dimension} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-300">{d.name}</span>

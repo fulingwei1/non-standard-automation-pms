@@ -104,7 +104,7 @@ const DEFAULT_PERMISSION_MODULES = [
 
 const cloneRolePermissions = (roles) => {
   if (!Array.isArray(roles)) {return [];}
-  return roles.map((role) => ({
+  return (roles || []).map((role) => ({
     ...role,
     permissions: Array.isArray(role.permissions) ? [...role.permissions] : []
   }));
@@ -174,22 +174,22 @@ export default function AdminDashboard() {
   };
 
   const selectedRole =
-  rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null;
+  (rolePermissions || []).find((role) => role.roleCode === selectedRoleCode) || null;
 
   const isRolePermissionsChanged = (role) => {
     if (!role) {return false;}
-    const savedRole = savedRolePermissions.find(
+    const savedRole = (savedRolePermissions || []).find(
       (item) => item.roleCode === role.roleCode
     );
     if (!savedRole) {return true;}
-    if (savedRole.permissions.length !== role.permissions.length) {return true;}
+    if (savedRole.permissions?.length !== role.permissions?.length) {return true;}
     const savedSet = new Set(savedRole.permissions);
-    return role.permissions.some((perm) => !savedSet.has(perm));
+    return (role.permissions || []).some((perm) => !savedSet.has(perm));
   };
 
   const keyword = roleSearchKeyword.trim().toLowerCase();
   const _filteredRoles = keyword ?
-  rolePermissions.filter((role) => {
+  (rolePermissions || []).filter((role) => {
     const roleName = (role.role || "").toLowerCase();
     const roleCode = (role.roleCode || "").toLowerCase();
     const desc = (role.description || "").toLowerCase();
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
   }) :
   rolePermissions;
 
-  const hasPendingChanges = rolePermissions.some((role) =>
+  const hasPendingChanges = (rolePermissions || []).some((role) =>
   isRolePermissionsChanged(role)
   );
   const _selectedRoleChanged = isRolePermissionsChanged(selectedRole);
@@ -213,13 +213,13 @@ export default function AdminDashboard() {
   const _handleTogglePermission = (moduleCode) => {
     if (!selectedRoleCode) {return;}
     setRolePermissions((prev) =>
-    prev.map((role) => {
+    (prev || []).map((role) => {
       if (role.roleCode !== selectedRoleCode) {return role;}
       const hasPermission = role.permissions.includes(moduleCode);
       return {
         ...role,
         permissions: hasPermission ?
-        role.permissions.filter((code) => code !== moduleCode) :
+        (role.permissions || []).filter((code) => code !== moduleCode) :
         [...role.permissions, moduleCode]
       };
     })

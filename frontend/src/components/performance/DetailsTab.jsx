@@ -9,7 +9,7 @@ import { cn } from "../../lib/utils";
  */
 export const DetailsTab = ({ history }) => {
   const recordsWithComments = history.filter(
-    (record) => record.comments && record.comments.length > 0,
+    (record) => record.comments && record.comments?.length > 0,
   );
 
   if (recordsWithComments.length === 0) {
@@ -37,7 +37,7 @@ export const DetailsTab = ({ history }) => {
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {recordsWithComments.map((record, index) => (
+      {(recordsWithComments || []).map((record, index) => (
         <motion.div
           key={record.period}
           initial={{ opacity: 0, y: 10 }}
@@ -62,7 +62,7 @@ export const DetailsTab = ({ history }) => {
           </div>
 
           <div className="space-y-4">
-            {record.comments.map((comment, idx) => (
+            {(record.comments || []).map((comment, idx) => (
               <div
                 key={idx}
                 className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50"

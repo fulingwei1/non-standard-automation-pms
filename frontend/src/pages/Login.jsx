@@ -115,7 +115,7 @@ export default function Login({ onLoginSuccess }) {
             // 权限列表已从后端获取，直接使用
             logger.debug(
               "[Login] 用户权限列表:",
-              userData.permissions.length,
+              userData.permissions?.length,
               "个权限"
             );
           } else {
@@ -127,7 +127,7 @@ export default function Login({ onLoginSuccess }) {
           let userRole = "user";
 
           // 优先从角色名称中提取角色代码
-          if (userData.roles && userData.roles.length > 0) {
+          if (userData.roles && userData.roles?.length > 0) {
             const firstRole = userData.roles[0];
   const roleName = typeof firstRole === "object" ? (firstRole.role_code || firstRole.role_name || firstRole) : firstRole;
             // 尝试匹配角色代码（支持中英文和常见变体）
@@ -251,7 +251,7 @@ export default function Login({ onLoginSuccess }) {
           localStorage.setItem("user", JSON.stringify(frontendUser));
           logger.debug(
             "[Login] 用户权限已保存:",
-            frontendUser.permissions.length,
+            frontendUser.permissions?.length,
             "个权限"
           );
           onLoginSuccess();
@@ -438,7 +438,7 @@ export default function Login({ onLoginSuccess }) {
 
             {/* Features */}
             <div className="space-y-5">
-              {features.map((feature, i) =>
+              {(features || []).map((feature, i) =>
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -20 }}

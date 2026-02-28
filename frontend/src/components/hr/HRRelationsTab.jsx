@@ -212,14 +212,14 @@ const HRRelationsTab = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {issues.length === 0 ?
+              {issues?.length === 0 ?
               <div className="py-8 text-center text-slate-400">
                   <Heart className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无员工关系问题</p>
                   <p className="text-xs text-slate-500 mt-1">良好的员工关系是企业发展的基石</p>
               </div> :
 
-              issues.map((issue, index) => {
+              (issues || []).map((issue, index) => {
                 const typeConfig = issueTypes[issue.type] || issueTypes.other;
                 const Icon = typeConfig.icon;
                 const statusCfg = statusConfig[issue.status] || statusConfig.pending;

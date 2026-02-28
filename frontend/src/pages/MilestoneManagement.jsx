@@ -211,7 +211,7 @@ export default function MilestoneManagement() {
           <div className="text-center py-8 text-slate-400">暂无里程碑</div> :
 
           <div className="space-y-4">
-              {milestones.map((milestone, _index) => {
+              {(milestones || []).map((milestone, _index) => {
               const overdue = isOverdue(milestone);
               const status = overdue ? "OVERDUE" : milestone.status;
               const config = statusConfigs[status] || statusConfigs.PENDING;

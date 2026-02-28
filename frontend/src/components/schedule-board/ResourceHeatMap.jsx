@@ -32,13 +32,13 @@ export default function ResourceHeatMap() {
             )}
           </div>
           <div className="space-y-2">
-            {engineers.map((engineer, index) => (
+            {(engineers || []).map((engineer, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="w-24 text-sm text-slate-400 truncate">
                   {engineer.name}
                 </div>
                 <div className="flex-1 grid grid-cols-7 gap-1">
-                  {engineer.loads.map((load, i) => (
+                  {(engineer.loads || []).map((load, i) => (
                     <div
                       key={i}
                       className={cn(

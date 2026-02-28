@@ -212,7 +212,7 @@ export default function ProjectTaskList() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部阶段</SelectItem>
-                                {stageOptions.map(opt => (
+                                {(stageOptions || []).map(opt => (
                                     <SelectItem key={opt.value} value={opt.value}>
                                         {opt.label}
                                     </SelectItem>
@@ -231,7 +231,7 @@ export default function ProjectTaskList() {
                 <CardContent>
                     {loading ? (
                         <div className="text-center py-8 text-slate-400">加载中...</div>
-                    ) : tasks.length === 0 ? (
+                    ) : tasks?.length === 0 ? (
                         <div className="text-center py-8 text-slate-400">暂无任务</div>
                     ) : (
                         <Table>
@@ -248,7 +248,7 @@ export default function ProjectTaskList() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {tasks.map((task) => {
+                                {(tasks || []).map((task) => {
                                     const progress = task.progress || 0;
                                     const isOverdue =
                                         task.planned_end_date &&
@@ -383,7 +383,7 @@ export default function ProjectTaskList() {
                                         <SelectValue placeholder="选择阶段" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {stageOptions.map(opt => (
+                                        {(stageOptions || []).map(opt => (
                                             <SelectItem key={opt.value} value={opt.value}>
                                                 {opt.label}
                                             </SelectItem>

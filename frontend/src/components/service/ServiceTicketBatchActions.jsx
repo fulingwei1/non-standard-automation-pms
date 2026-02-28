@@ -56,7 +56,7 @@ export function ServiceTicketBatchActions({
         
         const userList = response.data?.items || response.data?.items || response.data || [];
         setUsers(
-          userList.map((u) => ({
+          (userList || []).map((u) => ({
             id: u.id,
             name: u.real_name || u.username,
             role: u.position || u.roles?.[0] || "工程师",
@@ -115,7 +115,7 @@ export function ServiceTicketBatchActions({
   const handleExport = async () => {
     try {
       setSubmitting(true);
-      const ticketsToExport = tickets.filter(ticket => 
+      const ticketsToExport = (tickets || []).filter(ticket => 
         selectedTickets.includes(ticket.id)
       );
       await onBatchExport(ticketsToExport);
@@ -222,7 +222,7 @@ export function ServiceTicketBatchActions({
                     <option value="">
                       {loadingUsers ? "加载中..." : "选择负责人"}
                     </option>
-                    {users.map((user) => (
+                    {(users || []).map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.name} ({user.role})
                       </option>

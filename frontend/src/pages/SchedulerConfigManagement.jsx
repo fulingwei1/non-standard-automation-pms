@@ -244,7 +244,7 @@ export default function SchedulerConfigManagement() {
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (config) =>
         config.task_name?.toLowerCase().includes(term) ||
         config.task_id?.toLowerCase().includes(term) ||
@@ -258,7 +258,7 @@ export default function SchedulerConfigManagement() {
 
   // 获取分类列表
   const categories = useMemo(() => {
-    const cats = new Set(configs.map((c) => c.category).filter(Boolean));
+    const cats = new Set((configs || []).map((c) => c.category).filter(Boolean));
     return Array.from(cats).sort();
   }, [configs]);
 
@@ -329,7 +329,7 @@ export default function SchedulerConfigManagement() {
               <div>
                 <p className="text-sm text-muted-foreground">已启用</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {configs.filter((c) => c.is_enabled).length}
+                  {(configs || []).filter((c) => c.is_enabled).length}
                 </p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-green-400" />
@@ -342,7 +342,7 @@ export default function SchedulerConfigManagement() {
               <div>
                 <p className="text-sm text-muted-foreground">已禁用</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {configs.filter((c) => !c.is_enabled).length}
+                  {(configs || []).filter((c) => !c.is_enabled).length}
                 </p>
               </div>
               <XCircle className="h-8 w-8 text-red-400" />
@@ -354,7 +354,7 @@ export default function SchedulerConfigManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">分类数</p>
-                <p className="text-2xl font-bold">{categories.length}</p>
+                <p className="text-2xl font-bold">{categories?.length}</p>
               </div>
               <Filter className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -381,7 +381,7 @@ export default function SchedulerConfigManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有分类</SelectItem>
-                {categories.map((cat) =>
+                {(categories || []).map((cat) =>
                 <SelectItem key={cat} value={cat}>
                     {cat}
                 </SelectItem>
@@ -432,7 +432,7 @@ export default function SchedulerConfigManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredConfigs.map((config) =>
+                {(filteredConfigs || []).map((config) =>
               <TableRow key={config.id}>
                     <TableCell>
                       <div>

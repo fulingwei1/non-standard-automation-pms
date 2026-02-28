@@ -191,7 +191,7 @@ export const ECNApprovalsTab = ({
 
       {/* 审批节点列表 */}
       <div className="space-y-6">
-        {approvals.map((approval, index) =>
+        {(approvals || []).map((approval, index) =>
         <div
           key={approval.id}
           className="relative flex items-start gap-4">

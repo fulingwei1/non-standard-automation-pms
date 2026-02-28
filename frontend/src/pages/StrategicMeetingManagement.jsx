@@ -80,7 +80,7 @@ export default function StrategicMeetingManagement() {
         setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
         setMeetings(data);
-        setTotal(data.length);
+        setTotal(data?.length);
       }
     } catch (err) {
       console.error("Failed to fetch meetings:", err);
@@ -213,7 +213,7 @@ export default function StrategicMeetingManagement() {
           )}
         </div> :
         meetings.length > 0 ?
-        meetings.map((meeting) => {
+        (meetings || []).map((meeting) => {
           const levelConfig = rhythmLevelConfig[meeting.rhythm_level];
           const status =
           statusConfig[meeting.status] || statusConfig.SCHEDULED;
@@ -303,7 +303,7 @@ export default function StrategicMeetingManagement() {
                     <div className="text-sm text-gray-600 mb-2">
                           <FileText className="w-4 h-4 inline mr-1" />
                           {meeting.agenda.substring(0, 100)}
-                          {meeting.agenda.length > 100 && "..."}
+                          {meeting.agenda?.length > 100 && "..."}
                     </div>
                     }
                     </div>

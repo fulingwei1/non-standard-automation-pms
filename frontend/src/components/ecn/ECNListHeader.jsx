@@ -141,7 +141,7 @@ export function ECNListHeader({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有类型</SelectItem>
-                  {filterOptions.types.map((type) => (
+                  {(filterOptions.types || []).map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -164,7 +164,7 @@ export function ECNListHeader({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有状态</SelectItem>
-                  {filterOptions.statuses.map((status) => (
+                  {(filterOptions.statuses || []).map((status) => (
                     <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
@@ -187,7 +187,7 @@ export function ECNListHeader({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有优先级</SelectItem>
-                  {filterOptions.priorities.map((priority) => (
+                  {(filterOptions.priorities || []).map((priority) => (
                     <SelectItem key={priority.value} value={priority.value}>
                       {priority.label}
                     </SelectItem>

@@ -148,17 +148,17 @@ export default function SubstitutionNew() {
     }
   };
 
-  const filteredMaterials = materials.filter(
+  const filteredMaterials = (materials || []).filter(
     (m) =>
     !searchKeyword ||
     m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
     m.material_name?.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
-  const originalMaterial = materials.find(
+  const originalMaterial = (materials || []).find(
     (m) => m.id === parseInt(formData.original_material_id)
   );
-  const substituteMaterial = materials.find(
+  const substituteMaterial = (materials || []).find(
     (m) => m.id === parseInt(formData.substitute_material_id)
   );
 
@@ -204,7 +204,7 @@ export default function SubstitutionNew() {
                     <SelectValue placeholder="请选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) =>
+                    {(projects || []).map((project) =>
                     <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})
                     </SelectItem>
@@ -266,7 +266,7 @@ export default function SubstitutionNew() {
                       <SelectValue placeholder="请选择原物料" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredMaterials.map((material) =>
+                      {(filteredMaterials || []).map((material) =>
                       <SelectItem
                         key={material.id}
                         value={String(material.id)}>

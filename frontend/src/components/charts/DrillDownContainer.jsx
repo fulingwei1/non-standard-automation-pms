@@ -87,7 +87,7 @@ export default function DrillDownContainer({
   // 渲染面包屑
   const renderBreadcrumb = () =>
   <div className="flex items-center gap-1 text-sm">
-      {breadcrumb.map((item, index) =>
+      {(breadcrumb || []).map((item, index) =>
     <div key={item.key} className="flex items-center">
           {index > 0 &&
       <ChevronRight className="w-4 h-4 text-slate-500 mx-1" />

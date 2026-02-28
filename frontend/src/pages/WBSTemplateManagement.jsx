@@ -224,7 +224,7 @@ export default function WBSTemplateManagement() {
           <div className="text-center py-8 text-slate-400">暂无模板数据</div> :
 
           <div className="space-y-3">
-              {templates.map((template) =>
+              {(templates || []).map((template) =>
             <Card
               key={template.id}
               className="hover:bg-slate-50 transition-colors">
@@ -324,14 +324,14 @@ export default function WBSTemplateManagement() {
                 </div> :
 
                 <div className="space-y-2">
-                      {templateTasks.map((task) =>
+                      {(templateTasks || []).map((task) =>
                   <div
                     key={task.id}
                     className="border rounded-lg p-3 hover:bg-slate-50">
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              {task.children && task.children.length > 0 ?
+                              {task.children && task.children?.length > 0 ?
                         <Button
                           variant="ghost"
                           size="sm"
@@ -367,7 +367,7 @@ export default function WBSTemplateManagement() {
                           </div>
                           {expandedTasks.has(task.id) && task.children &&
                     <div className="ml-8 mt-2 space-y-2">
-                              {task.children.map((child) =>
+                              {(task.children || []).map((child) =>
                       <div
                         key={child.id}
                         className="border-l-2 pl-3 py-2 text-sm">
@@ -493,7 +493,7 @@ export default function WBSTemplateManagement() {
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((proj) =>
+                    {(projects || []).map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                     </SelectItem>

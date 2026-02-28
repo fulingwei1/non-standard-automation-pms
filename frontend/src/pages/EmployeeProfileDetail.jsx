@@ -71,7 +71,7 @@ export default function EmployeeProfileDetail() {
   }, [id]);
 
   // 按标签类型分组评价
-  const groupedEvaluations = evaluations.reduce((acc, eval_) => {
+  const groupedEvaluations = (evaluations || []).reduce((acc, eval_) => {
     const type = eval_.tag_type || "SKILL";
     if (!acc[type]) {acc[type] = [];}
     acc[type].push(eval_);
@@ -209,7 +209,7 @@ export default function EmployeeProfileDetail() {
               <CardTitle className="text-sm">六维能力评估</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {dimensions.map((dim) =>
+              {(dimensions || []).map((dim) =>
               <div key={dim.key}>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-400">
@@ -228,7 +228,7 @@ export default function EmployeeProfileDetail() {
                   <span className="text-slate-400">加权总分</span>
                   <span className="text-2xl font-bold text-primary">
                     {Math.round(
-                      dimensions.reduce(
+                      (dimensions || []).reduce(
                         (sum, d) => sum + d.score * d.weight / 100,
                         0
                       )
@@ -262,7 +262,7 @@ export default function EmployeeProfileDetail() {
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        {evals.map((eval_) =>
+                        {(evals || []).map((eval_) =>
                         <div
                           key={eval_.id}
                           className="p-3 rounded-lg border border-white/10 bg-white/5">
@@ -310,7 +310,7 @@ export default function EmployeeProfileDetail() {
               </div> :
 
               <div className="space-y-3">
-                  {performance.map((perf) =>
+                  {(performance || []).map((perf) =>
                 <motion.div
                   key={perf.id}
                   initial={{ opacity: 0, x: -10 }}

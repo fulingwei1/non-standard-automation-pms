@@ -156,7 +156,7 @@ export default function SpecMatchCheck() {
             <div className="text-center py-8 text-gray-500">暂无匹配记录</div>
           ) : (
             <div className="space-y-4">
-              {matchRecords.map((record) => (
+              {(matchRecords || []).map((record) => (
                 <div
                   key={record.id}
                   className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"

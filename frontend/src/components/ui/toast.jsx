@@ -82,7 +82,7 @@ export function ToastContainer({ toasts, onClose }) {
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
       <AnimatePresence>
-        {toasts.map((toast) => (
+        {(toasts || []).map((toast) => (
           <Toast key={toast.id} {...toast} onClose={onClose} />
         ))}
       </AnimatePresence>
@@ -104,7 +104,7 @@ export const toast = {
 function showToast(type, message, duration = 3000) {
   const id = ++toastId;
   const toast = { id, type, message, duration };
-  toastListeners.forEach((listener) => listener(toast));
+  (toastListeners || []).forEach((listener) => listener(toast));
   return id;
 }
 
@@ -122,7 +122,7 @@ export function useToast() {
   }, []);
 
   const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => (prev || []).filter((t) => t.id !== id));
   }, []);
 
   return { toasts, removeToast };

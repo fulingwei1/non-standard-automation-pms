@@ -62,7 +62,7 @@ export default function DeliveryPerformanceTab({ data }) {
         <CardContent>
           {supplier_performance?.length > 0 ? (
             <div className="space-y-3">
-              {supplier_performance.map((item, index) => (
+              {(supplier_performance || []).map((item, index) => (
                 <div key={item.supplier_id} className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg">
                   <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center font-bold">
                     {index + 1}

@@ -82,30 +82,30 @@ export default function ShortageManagementBoard() {
 
   // Update board data after alerts and arrivals are loaded
   useEffect(() => {
-    if (alerts.length > 0 || arrivals.length > 0) {
+    if (alerts?.length > 0 || arrivals.length > 0) {
       setBoardData((_prev) => ({
-        total_alerts: alerts.length,
-        critical_alerts: alerts.filter(
+        total_alerts: alerts?.length,
+        critical_alerts: (alerts || []).filter(
           (a) => a.alert_level === "LEVEL1" || a.alert_level === "CRITICAL"
         ).length,
-        major_alerts: alerts.filter(
+        major_alerts: (alerts || []).filter(
           (a) => a.alert_level === "LEVEL2" || a.alert_level === "MAJOR"
         ).length,
-        minor_alerts: alerts.filter(
+        minor_alerts: (alerts || []).filter(
           (a) =>
           a.alert_level === "LEVEL3" ||
           a.alert_level === "LEVEL4" ||
           a.alert_level === "MINOR"
         ).length,
         total_arrivals: arrivals.length,
-        delayed_arrivals: arrivals.filter(
+        delayed_arrivals: (arrivals || []).filter(
           (a) =>
           a.is_delayed ||
           a.expected_date &&
           a.actual_date &&
           new Date(a.actual_date) > new Date(a.expected_date)
         ).length,
-        pending_arrivals: arrivals.filter(
+        pending_arrivals: (arrivals || []).filter(
           (a) => !a.actual_date || a.status === "PENDING"
         ).length
       }));
@@ -165,7 +165,7 @@ export default function ShortageManagementBoard() {
               <div>
                 <div className="text-sm text-slate-500 mb-1">缺料预警总数</div>
                 <div className="text-2xl font-bold">
-                  {boardData?.total_alerts || alerts.length}
+                  {boardData?.total_alerts || alerts?.length}
                 </div>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-500" />
@@ -179,7 +179,7 @@ export default function ShortageManagementBoard() {
                 <div className="text-sm text-slate-500 mb-1">严重预警</div>
                 <div className="text-2xl font-bold text-red-600">
                   {boardData?.critical_alerts ||
-                  alerts.filter((a) => a.alert_level === "CRITICAL").length}
+                  (alerts || []).filter((a) => a.alert_level === "CRITICAL").length}
                 </div>
               </div>
               <XCircle className="w-8 h-8 text-red-500" />
@@ -206,7 +206,7 @@ export default function ShortageManagementBoard() {
                 <div className="text-sm text-slate-500 mb-1">延迟到货</div>
                 <div className="text-2xl font-bold text-amber-600">
                   {boardData?.delayed_arrivals ||
-                  arrivals.filter((a) => a.is_delayed).length}
+                  (arrivals || []).filter((a) => a.is_delayed).length}
                 </div>
               </div>
               <Clock className="w-8 h-8 text-amber-500" />
@@ -231,7 +231,7 @@ export default function ShortageManagementBoard() {
             </div>
           </CardHeader>
           <CardContent>
-            {alerts.length === 0 ?
+            {alerts?.length === 0 ?
             <div className="text-center py-8 text-slate-400">
                 暂无缺料预警
             </div> :

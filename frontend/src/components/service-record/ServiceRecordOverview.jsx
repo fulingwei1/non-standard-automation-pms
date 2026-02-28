@@ -33,7 +33,7 @@ const ServiceRecordOverview = ({
 }) => {
   // 计算高级统计数据
   const advancedStats = useMemo(() => {
-    if (!records || records.length === 0) {
+    if (!records || records?.length === 0) {
       return {
         serviceTypeDistribution: {},
         statusDistribution: {},
@@ -45,7 +45,7 @@ const ServiceRecordOverview = ({
     }
 
     // 服务类型分布
-    const serviceTypeDistribution = records.reduce((acc, record) => {
+    const serviceTypeDistribution = (records || []).reduce((acc, record) => {
       const type = record.service_type || 'CONSULTATION';
       const typeConfig = SERVICE_TYPES[type] || SERVICE_TYPES.CONSULTATION;
       acc[typeConfig.label] = (acc[typeConfig.label] || 0) + 1;
@@ -53,7 +53,7 @@ const ServiceRecordOverview = ({
     }, {});
 
     // 状态分布
-    const statusDistribution = records.reduce((acc, record) => {
+    const statusDistribution = (records || []).reduce((acc, record) => {
       const status = record.status || 'SCHEDULED';
       const statusConfig = SERVICE_STATUS[status] || SERVICE_STATUS.SCHEDULED;
       acc[statusConfig.label] = (acc[statusConfig.label] || 0) + 1;
@@ -61,7 +61,7 @@ const ServiceRecordOverview = ({
     }, {});
 
     // 质量评分（基于反馈）
-    const feedbacks = records.filter(r => r.feedback_rating).map(r => ({
+    const feedbacks = (records || []).filter(r => r.feedback_rating).map(r => ({
       rating: r.feedback_rating,
       comment: r.feedback_comment,
       created_time: r.feedback_time
@@ -72,9 +72,9 @@ const ServiceRecordOverview = ({
     const completionRate = calculateServiceCompletionRate(records);
 
     // 平均服务时间
-    const completedRecords = records.filter(r => r.start_time && r.end_time);
+    const completedRecords = (records || []).filter(r => r.start_time && r.end_time);
     const avgServiceTime = completedRecords.length > 0 
-      ? completedRecords.reduce((sum, r) => {
+      ? (completedRecords || []).reduce((sum, r) => {
           const duration = (new Date(r.end_time) - new Date(r.start_time)) / (1000 * 60 * 60);
           return sum + duration;
         }, 0) / completedRecords.length
@@ -116,7 +116,7 @@ const ServiceRecordOverview = ({
     if (!records) {return [];}
     
     const today = new Date().toDateString();
-    return records.filter(record => {
+    return (records || []).filter(record => {
       const serviceDate = new Date(record.scheduled_date || record.created_time);
       return serviceDate.toDateString() === today;
     });
@@ -284,7 +284,7 @@ const ServiceRecordOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {priorityServices.map((service, index) => {
+              {(priorityServices || []).map((service, index) => {
                 const statusConfig = SERVICE_STATUS[service.status] || SERVICE_STATUS.SCHEDULED;
                 
                 return (
@@ -314,7 +314,7 @@ const ServiceRecordOverview = ({
       </div>
 
       {/* 最近反馈 */}
-      {advancedStats.recentFeedback.length > 0 && (
+      {advancedStats.recentFeedback?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -324,7 +324,7 @@ const ServiceRecordOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {advancedStats.recentFeedback.map((feedback, index) => {
+              {(advancedStats.recentFeedback || []).map((feedback, index) => {
                 const ratingConfig = FEEDBACK_RATINGS[`EXCELLENT_${feedback.rating * 5}`] || 
                                    FEEDBACK_RATINGS.SATISFIED;
                 

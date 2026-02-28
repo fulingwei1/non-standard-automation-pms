@@ -548,9 +548,9 @@ export function MaterialAlerts({
     let filtered = [...alerts];
 
     if (filter === "active") {
-      filtered = filtered.filter((alert) => !alert.is_resolved);
+      filtered = (filtered || []).filter((alert) => !alert.is_resolved);
     } else if (filter === "resolved") {
-      filtered = filtered.filter((alert) => alert.is_resolved);
+      filtered = (filtered || []).filter((alert) => alert.is_resolved);
     }
 
     // 排序
@@ -568,13 +568,13 @@ export function MaterialAlerts({
 
   // 统计信息
   const stats = useMemo(() => {
-    const total = alerts.length;
-    const critical = alerts.filter((a) => a.level === "CRITICAL").length;
-    const high = alerts.filter((a) => a.level === "HIGH").length;
-    const medium = alerts.filter((a) => a.level === "MEDIUM").length;
-    const low = alerts.filter((a) => a.level === "LOW").length;
-    const info = alerts.filter((a) => a.level === "INFO").length;
-    const resolved = alerts.filter((a) => a.is_resolved).length;
+    const total = alerts?.length;
+    const critical = (alerts || []).filter((a) => a.level === "CRITICAL").length;
+    const high = (alerts || []).filter((a) => a.level === "HIGH").length;
+    const medium = (alerts || []).filter((a) => a.level === "MEDIUM").length;
+    const low = (alerts || []).filter((a) => a.level === "LOW").length;
+    const info = (alerts || []).filter((a) => a.level === "INFO").length;
+    const resolved = (alerts || []).filter((a) => a.is_resolved).length;
     const active = total - resolved;
 
     return { total, critical, high, medium, low, info, resolved, active };
@@ -590,7 +590,7 @@ export function MaterialAlerts({
       INFO: []
     };
 
-    filteredAlerts.forEach((alert) => {
+    (filteredAlerts || []).forEach((alert) => {
       grouped[alert.level].push(alert);
     });
 
@@ -748,7 +748,7 @@ export function MaterialAlerts({
             </CardContent>
         </Card> :
 
-        filteredAlerts.map((alert) =>
+        (filteredAlerts || []).map((alert) =>
         <MaterialAlertItem
           key={alert.id}
           alert={alert}

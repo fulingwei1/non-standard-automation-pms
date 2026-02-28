@@ -134,11 +134,11 @@ export default function FeasibilityAssessmentForm({
     let totalScore = 0;
     let totalWeight = 0;
 
-    assessmentDimensions.forEach((dimension) => {
+    (assessmentDimensions || []).forEach((dimension) => {
       let dimensionScore = 0;
       let dimensionWeight = 0;
 
-      dimension.factors.forEach((factor) => {
+      (dimension.factors || []).forEach((factor) => {
         const score = newScores[`${dimension.id}_${factor.id}`] || 0;
         dimensionScore += score * factor.weight;
         dimensionWeight += factor.weight;
@@ -265,13 +265,13 @@ export default function FeasibilityAssessmentForm({
 
       {/* 评估维度 */}
       <div className="space-y-4">
-        {assessmentDimensions.map((dimension) => {
+        {(assessmentDimensions || []).map((dimension) => {
           const Icon = dimension.icon;
-          const dimensionScore = dimension.factors.reduce((sum, factor) => {
+          const dimensionScore = (dimension.factors || []).reduce((sum, factor) => {
             const score = scores[`${dimension.id}_${factor.id}`] || 0;
             return sum + score * factor.weight;
           }, 0);
-          const dimensionMaxScore = dimension.factors.reduce(
+          const dimensionMaxScore = (dimension.factors || []).reduce(
             (sum, factor) => sum + 5 * factor.weight,
             0,
           );
@@ -314,7 +314,7 @@ export default function FeasibilityAssessmentForm({
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {dimension.factors.map((factor) => {
+                {(dimension.factors || []).map((factor) => {
                   const factorKey = `${dimension.id}_${factor.id}`;
                   const currentScore = scores[factorKey] || 0;
 
@@ -329,7 +329,7 @@ export default function FeasibilityAssessmentForm({
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        {scoreOptions.map((option) => (
+                        {(scoreOptions || []).map((option) => (
                           <button
                             key={option.value}
                             onClick={() => updateScore(factorKey, option.value)}

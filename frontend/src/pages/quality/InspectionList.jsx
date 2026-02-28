@@ -110,7 +110,7 @@ export default function InspectionList() {
   };
 
   const filteredItems = searchText
-    ? data.items.filter((item) =>
+    ? (data.items || []).filter((item) =>
         JSON.stringify(item).toLowerCase().includes(searchText.toLowerCase())
       )
     : data.items;
@@ -199,7 +199,7 @@ export default function InspectionList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredItems.map((item) => (
+                  {(filteredItems || []).map((item) => (
                     <motion.tr
                       key={item.id}
                       initial={{ opacity: 0 }}

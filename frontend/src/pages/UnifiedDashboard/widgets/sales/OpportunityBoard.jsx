@@ -25,8 +25,8 @@ export default function OpportunityBoard({ _view, data: propData }) {
   );
 
   const grouped = {};
-  stages.forEach(s => { grouped[s] = []; });
-  opps.forEach(o => {
+  (stages || []).forEach(s => { grouped[s] = []; });
+  (opps || []).forEach(o => {
     const stage = o.stage || o.status || '初步接触';
     if (!grouped[stage]) grouped[stage] = [];
     grouped[stage].push(o);
@@ -42,7 +42,7 @@ export default function OpportunityBoard({ _view, data: propData }) {
           <div className="text-sm text-muted-foreground text-center py-4">暂无商机</div>
         ) : (
           <div className="grid grid-cols-5 gap-1 text-xs">
-            {stages.map((stage, si) => (
+            {(stages || []).map((stage, si) => (
               <div key={stage} className={`${stageColors[si]} rounded p-1.5`}>
                 <div className="font-medium mb-1">{stage} ({grouped[stage]?.length || 0})</div>
                 {(grouped[stage] || []).slice(0, 3).map((o, i) => (

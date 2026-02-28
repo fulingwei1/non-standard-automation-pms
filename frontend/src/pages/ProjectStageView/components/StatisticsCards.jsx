@@ -61,7 +61,7 @@ export function StatisticsCards({ statistics }) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {cards.map((card, index) => (
+      {(cards || []).map((card, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, y: 20 }}
@@ -134,7 +134,7 @@ export function ProgressOverviewCard({ data }) {
 
         {/* 详细统计 */}
         <div className="grid grid-cols-3 gap-4">
-          {items.map((item, index) => (
+          {(items || []).map((item, index) => (
             <div key={index} className="text-center">
               <p className="text-xs text-gray-400">{item.label}</p>
               <p className="text-sm font-medium text-white">
@@ -204,14 +204,14 @@ export function CurrentStageDistributionCard({ byCurrentStage }) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const total = sortedStages.reduce((sum, [, count]) => sum + count, 0);
+  const total = (sortedStages || []).reduce((sum, [, count]) => sum + count, 0);
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">
       <CardContent className="p-4">
         <h3 className="text-sm font-medium text-gray-300 mb-4">当前阶段分布</h3>
         <div className="space-y-3">
-          {sortedStages.map(([stageCode, count]) => {
+          {(sortedStages || []).map(([stageCode, count]) => {
             const percentage = total > 0 ? (count / total * 100).toFixed(0) : 0;
             return (
               <div key={stageCode}>

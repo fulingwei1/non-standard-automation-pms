@@ -40,7 +40,7 @@ const AlertCenterOverview = ({
 }) => {
   // 计算高级统计数据
   const advancedStats = useMemo(() => {
-    if (!alerts || alerts.length === 0) {
+    if (!alerts || alerts?.length === 0) {
       return {
         levelDistribution: {},
         statusDistribution: {},
@@ -53,7 +53,7 @@ const AlertCenterOverview = ({
     }
 
     // 预警级别分布
-    const levelDistribution = alerts.reduce((acc, alert) => {
+    const levelDistribution = (alerts || []).reduce((acc, alert) => {
       const level = alert.alert_level || 'INFO';
       const levelConfig = getAlertLevelConfig(level);
       acc[levelConfig.label] = (acc[levelConfig.label] || 0) + 1;
@@ -61,7 +61,7 @@ const AlertCenterOverview = ({
     }, {});
 
     // 状态分布
-    const statusDistribution = alerts.reduce((acc, alert) => {
+    const statusDistribution = (alerts || []).reduce((acc, alert) => {
       const status = alert.status || 'PENDING';
       const statusConfig = getAlertStatusConfig(status);
       acc[statusConfig.label] = (acc[statusConfig.label] || 0) + 1;
@@ -69,7 +69,7 @@ const AlertCenterOverview = ({
     }, {});
 
     // 类型分布
-    const typeDistribution = alerts.reduce((acc, alert) => {
+    const typeDistribution = (alerts || []).reduce((acc, alert) => {
       const type = alert.alert_type || 'SYSTEM';
       const typeConfig = getAlertTypeConfig(type);
       acc[typeConfig.label] = (acc[typeConfig.label] || 0) + 1;
@@ -77,7 +77,7 @@ const AlertCenterOverview = ({
     }, {});
 
     // SLA合规性检查
-    const responseSLA = alerts.reduce((acc, alert) => {
+    const responseSLA = (alerts || []).reduce((acc, alert) => {
       if (alert.first_action_time) {
         const responseTime = (new Date(alert.first_action_time) - new Date(alert.created_time)) / (1000 * 60);
         const levelConfig = getAlertLevelConfig(alert.alert_level);
@@ -92,7 +92,7 @@ const AlertCenterOverview = ({
       return acc;
     }, { compliant: 0, total: 0 });
 
-    const resolutionSLA = alerts.filter((a) => a.resolved_time).reduce((acc, alert) => {
+    const resolutionSLA = (alerts || []).filter((a) => a.resolved_time).reduce((acc, alert) => {
       const resolutionTime = (new Date(alert.resolved_time) - new Date(alert.created_time)) / (1000 * 60 * 60);
       const levelConfig = getAlertLevelConfig(alert.alert_level);
       const targetTime = levelConfig.level === 5 ? 1 : levelConfig.level === 4 ? 4 : 24;
@@ -106,7 +106,7 @@ const AlertCenterOverview = ({
     }, { compliant: 0, total: 0 });
 
     // 工作时间统计
-    const businessHourStats = alerts.reduce((acc, alert) => {
+    const businessHourStats = (alerts || []).reduce((acc, alert) => {
       if (isBusinessHour(alert.created_time)) {
         acc.business += 1;
       } else {
@@ -124,12 +124,12 @@ const AlertCenterOverview = ({
     weekStart.setDate(weekStart.getDate() - 7);
 
     const recentTrends = {
-      today: alerts.filter((a) => new Date(a.created_time) >= today).length,
-      yesterday: alerts.filter((a) => {
+      today: (alerts || []).filter((a) => new Date(a.created_time) >= today).length,
+      yesterday: (alerts || []).filter((a) => {
         const alertDate = new Date(a.created_time);
         return alertDate >= yesterday && alertDate < today;
       }).length,
-      week: alerts.filter((a) => new Date(a.created_time) >= weekStart).length
+      week: (alerts || []).filter((a) => new Date(a.created_time) >= weekStart).length
     };
 
     // 需要紧急处理的预警
@@ -329,7 +329,7 @@ const AlertCenterOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {advancedStats.priorityAlerts.map((alert, index) => {
+              {(advancedStats.priorityAlerts || []).map((alert, index) => {
                 const levelConfig = getAlertLevelConfig(alert.alert_level);
 
                 return (
@@ -355,7 +355,7 @@ const AlertCenterOverview = ({
                   </div>);
 
               })}
-              {advancedStats.priorityAlerts.length === 0 &&
+              {advancedStats.priorityAlerts?.length === 0 &&
               <div className="text-center text-slate-500 py-4">
                   暂无紧急预警
               </div>
@@ -394,7 +394,7 @@ const AlertCenterOverview = ({
                 </div>
                 <div className="text-lg font-semibold">
                   {alerts?.length > 0 ?
-                  Math.round(advancedStats.businessHourStats.business / alerts.length * 100) :
+                  Math.round(advancedStats.businessHourStats.business / alerts?.length * 100) :
                   0}%
                 </div>
               </div>

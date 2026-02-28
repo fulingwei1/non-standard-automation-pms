@@ -19,7 +19,7 @@ export function BarChart({
   height = 200,
   color = "#3b82f6"
 }) {
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
@@ -27,8 +27,8 @@ export function BarChart({
 
   }
 
-  const maxValue = Math.max(...data.map((d) => d.value));
-  const barWidth = width / data.length - 10;
+  const maxValue = Math.max(...(data || []).map((d) => d.value));
+  const barWidth = width / data?.length - 10;
   const scale = (height - 40) / maxValue;
 
   return (
@@ -61,7 +61,7 @@ export function BarChart({
       })}
 
       {/* 柱状图 */}
-      {data.map((item, index) => {
+      {(data || []).map((item, index) => {
         const barHeight = item.value * scale;
         const x = 40 + index * (barWidth + 10);
         const y = height - 30 - barHeight;
@@ -107,7 +107,7 @@ export function LineChart({
   height = 200,
   color = "#10b981"
 }) {
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
@@ -115,11 +115,11 @@ export function LineChart({
 
   }
 
-  const maxValue = Math.max(...data.map((d) => d.value));
-  const minValue = Math.min(...data.map((d) => d.value));
+  const maxValue = Math.max(...(data || []).map((d) => d.value));
+  const minValue = Math.min(...(data || []).map((d) => d.value));
   const range = maxValue - minValue || 1;
   const scale = (height - 60) / range;
-  const stepX = (width - 60) / (data.length - 1 || 1);
+  const stepX = (width - 60) / (data?.length - 1 || 1);
 
   const points = data.
   map((item, index) => {
@@ -168,7 +168,7 @@ export function LineChart({
 
 
       {/* 数据点 */}
-      {data.map((item, index) => {
+      {(data || []).map((item, index) => {
         const x = 40 + index * stepX;
         const y = height - 30 - (item.value - minValue) * scale;
         return (
@@ -197,7 +197,7 @@ export function LineChart({
 
 // 简单的饼图组件
 export function PieChart({ data, width = 200, height = 200 }) {
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
@@ -205,7 +205,7 @@ export function PieChart({ data, width = 200, height = 200 }) {
 
   }
 
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const total = (data || []).reduce((sum, item) => sum + item.value, 0);
   const colors = [
   "#3b82f6",
   "#10b981",
@@ -223,7 +223,7 @@ export function PieChart({ data, width = 200, height = 200 }) {
   return (
     <div className="relative">
       <svg width={width} height={height} className="overflow-visible">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const percentage = item.value / total;
           const angle = percentage * 360;
           const startAngle = currentAngle;
@@ -268,7 +268,7 @@ export function PieChart({ data, width = 200, height = 200 }) {
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const percentage = (item.value / total * 100).toFixed(1);
           return (
             <div key={index} className="flex items-center gap-2 text-sm">
@@ -294,7 +294,7 @@ export function PieChart({ data, width = 200, height = 200 }) {
 export function TimesheetTrendChart({ data, title = "工时趋势" }) {
   const chartData = useMemo(() => {
     if (!data || !Array.isArray(data)) {return [];}
-    return data.map((item) => ({
+    return (data || []).map((item) => ({
       label: item.date || item.label || "",
       value: parseFloat(item.hours || item.value || 0)
     }));
@@ -321,7 +321,7 @@ export function TimesheetTrendChart({ data, title = "工时趋势" }) {
 export function DepartmentComparisonChart({ data, title = "部门工时对比" }) {
   const chartData = useMemo(() => {
     if (!data || !Array.isArray(data)) {return [];}
-    return data.map((item) => ({
+    return (data || []).map((item) => ({
       label: item.department_name || item.label || "",
       value: parseFloat(item.total_hours || item.value || 0)
     }));

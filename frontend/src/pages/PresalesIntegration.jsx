@@ -173,7 +173,7 @@ export default function PresalesIntegration() {
               </CardHeader>
               <CardContent>
                 {dashboardData.monthly_stats &&
-              dashboardData.monthly_stats.length > 0 ?
+              dashboardData.monthly_stats?.length > 0 ?
               <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -186,7 +186,7 @@ export default function PresalesIntegration() {
                         </tr>
                       </thead>
                       <tbody>
-                        {dashboardData.monthly_stats.map((stat, idx) =>
+                        {(dashboardData.monthly_stats || []).map((stat, idx) =>
                     <tr key={idx} className="border-b hover:bg-gray-50">
                             <td className="p-2">{stat.month}</td>
                             <td className="p-2">{stat.total}</td>

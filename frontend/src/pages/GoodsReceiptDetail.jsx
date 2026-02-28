@@ -307,7 +307,7 @@ export default function GoodsReceiptDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items.map((item) => (
+                    {(items || []).map((item) => (
                       <TableRow key={item.id} className="border-slate-700">
                         <TableCell className="font-mono text-sm text-slate-200">
                           {item.material_code}

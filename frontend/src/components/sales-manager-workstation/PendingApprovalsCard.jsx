@@ -59,7 +59,7 @@ export function PendingApprovalsCard({ pendingApprovals }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {pendingApprovals && pendingApprovals.length > 0 ? (
-            pendingApprovals.map((item) => {
+            (pendingApprovals || []).map((item) => {
               const typeInfo = typeConfig[item.type];
               return (
                 <div

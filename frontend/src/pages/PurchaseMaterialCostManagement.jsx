@@ -171,7 +171,7 @@ export default function PurchaseMaterialCostManagement() {
     let filtered = [...costs];
 
     if (searchTerm) {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (c) =>
         c.material_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.material_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -180,17 +180,17 @@ export default function PurchaseMaterialCostManagement() {
     }
 
     if (typeFilter !== "all") {
-      filtered = filtered.filter((c) => c.material_type === typeFilter);
+      filtered = (filtered || []).filter((c) => c.material_type === typeFilter);
     }
 
     if (standardFilter !== "all") {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (c) => c.is_standard_part === (standardFilter === "standard")
       );
     }
 
     if (activeFilter !== "all") {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (c) => c.is_active === (activeFilter === "active")
       );
     }
@@ -310,7 +310,7 @@ export default function PurchaseMaterialCostManagement() {
   // Get unique material types
   const materialTypes = useMemo(() => {
     const types = new Set();
-    costs.forEach((c) => {
+    (costs || []).forEach((c) => {
       if (c.material_type) {types.add(c.material_type);}
     });
     return Array.from(types);
@@ -449,7 +449,7 @@ export default function PurchaseMaterialCostManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {materialTypes.map((type) =>
+                {(materialTypes || []).map((type) =>
                 <SelectItem key={type} value={type}>
                     {type}
                 </SelectItem>
@@ -503,7 +503,7 @@ export default function PurchaseMaterialCostManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost) =>
+              {(filteredCosts || []).map((cost) =>
               <TableRow key={cost.id}>
                   <TableCell>
                     <div>
@@ -745,7 +745,7 @@ export default function PurchaseMaterialCostManagement() {
                 <Select
                   value={formData.supplier_id?.toString()}
                   onValueChange={(value) => {
-                    const supplier = suppliers.find(
+                    const supplier = (suppliers || []).find(
                       (s) => s.id.toString() === value
                     );
                     setFormData({
@@ -760,7 +760,7 @@ export default function PurchaseMaterialCostManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">无</SelectItem>
-                    {suppliers.map((s) =>
+                    {(suppliers || []).map((s) =>
                     <SelectItem key={s.id} value={s.id.toString()}>
                         {s.supplier_name}
                     </SelectItem>

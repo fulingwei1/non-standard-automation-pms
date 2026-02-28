@@ -337,7 +337,7 @@ export default function LeadDetail() {
           <div className="text-center py-8 text-slate-400">暂无跟进记录</div> :
 
           <div className="space-y-4">
-              {followUps.map((followUp) =>
+              {(followUps || []).map((followUp) =>
             <div key={followUp.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -499,7 +499,7 @@ export default function LeadDetail() {
                     <SelectValue placeholder="选择客户" />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((customer) =>
+                    {(customers || []).map((customer) =>
                     <SelectItem
                       key={customer.id}
                       value={customer.id.toString()}>

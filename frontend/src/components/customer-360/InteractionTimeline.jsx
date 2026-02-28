@@ -74,7 +74,7 @@ export function InteractionTimeline({
   sort((a, b) => new Date(b.interaction_date) - new Date(a.interaction_date));
 
   // 按日期分组
-  const groupedInteractions = filteredInteractions.reduce((groups, interaction) => {
+  const groupedInteractions = (filteredInteractions || []).reduce((groups, interaction) => {
     const date = formatDateTime(interaction.interaction_date).split(' ')[0];
     if (!groups[date]) {
       groups[date] = [];
@@ -91,7 +91,7 @@ export function InteractionTimeline({
       byMonth: {}
     };
 
-    interactions.forEach((interaction) => {
+    (interactions || []).forEach((interaction) => {
       // 按类型统计
       stats.byType[interaction.type] = (stats.byType[interaction.type] || 0) + 1;
 
@@ -203,7 +203,7 @@ export function InteractionTimeline({
 
                   {/* 当天的互动记录 */}
                   <div className="ml-16 space-y-4">
-                    {dayInteractions.map((interaction, index) =>
+                    {(dayInteractions || []).map((interaction, index) =>
                 <div key={interaction.id || index} className="relative">
                         {/* 连接线 */}
                         {index < dayInteractions.length - 1 &&
@@ -265,10 +265,10 @@ export function InteractionTimeline({
                           </div>
 
                           {/* 参与人员 */}
-                          {interaction.participants && interaction.participants.length > 0 &&
+                          {interaction.participants && interaction.participants?.length > 0 &&
                     <div className="flex flex-wrap gap-2">
                               <span className="text-xs text-slate-500">参与人员：</span>
-                              {interaction.participants.map((participant, pIndex) =>
+                              {(interaction.participants || []).map((participant, pIndex) =>
                       <Badge
                         key={pIndex}
                         variant="outline"
@@ -281,11 +281,11 @@ export function InteractionTimeline({
                     }
 
                           {/* 附件 */}
-                          {interaction.attachments && interaction.attachments.length > 0 &&
+                          {interaction.attachments && interaction.attachments?.length > 0 &&
                     <div className="mt-3 pt-3 border-t border-slate-700">
                               <div className="text-xs text-slate-500 mb-2">附件：</div>
                               <div className="flex flex-wrap gap-2">
-                                {interaction.attachments.map((attachment, aIndex) =>
+                                {(interaction.attachments || []).map((attachment, aIndex) =>
                         <div
                           key={aIndex}
                           className="flex items-center gap-2 px-2 py-1 bg-slate-700/50 rounded text-xs text-slate-300">
@@ -380,11 +380,11 @@ export function InteractionDetail({ interaction }) {
         </div>
 
         {/* 参与人员 */}
-        {interaction.participants && interaction.participants.length > 0 &&
+        {interaction.participants && interaction.participants?.length > 0 &&
         <div>
             <div className="text-sm text-slate-500 mb-2">参与人员</div>
             <div className="space-y-2">
-              {interaction.participants.map((participant, index) =>
+              {(interaction.participants || []).map((participant, index) =>
             <div key={index} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-b-0">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm">

@@ -57,14 +57,14 @@ const UserManagementOverview = ({
   const [departmentStats, setDepartmentStats] = useState({});
 
   useEffect(() => {
-    if (users.length > 0) {
+    if (users?.length > 0) {
       const statusStats = getUserStatusStats(users);
       const roleStatsData = getRoleDistributionStats(users);
       const departmentStatsData = getDepartmentDistributionStats(users);
       const newUsersCount = getMonthlyNewUsers(users);
 
       // 使用传入的总用户数，如果没有则使用当前加载的用户数
-      const actualTotalUsers = propTotalUsers || users.length;
+      const actualTotalUsers = propTotalUsers || users?.length;
 
       // 模拟上个月的用户数量来计算增长率
       const previousMonthUsers = actualTotalUsers - newUsersCount;
@@ -112,13 +112,13 @@ const UserManagementOverview = ({
   };
 
   const getInactiveUsers = () => {
-    return users.filter((user) =>
+    return (users || []).filter((user) =>
     user.status === USER_STATUS.INACTIVE || user.status === USER_STATUS.SUSPENDED
     );
   };
 
   const getPendingUsers = () => {
-    return users.filter((user) => user.status === USER_STATUS.PENDING);
+    return (users || []).filter((user) => user.status === USER_STATUS.PENDING);
   };
 
   const topRoles = getTopRoles();
@@ -259,7 +259,7 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topRoles.map((roleData, _index) =>
+              {(topRoles || []).map((roleData, _index) =>
               <div key={roleData.role} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div
@@ -284,7 +284,7 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topDepartments.map((deptData, _index) =>
+              {(topDepartments || []).map((deptData, _index) =>
               <div key={deptData.department} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Building2 className="h-3 w-3" />

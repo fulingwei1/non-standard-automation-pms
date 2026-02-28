@@ -85,7 +85,7 @@ const QuickCreateButtons = ({ onCreate }) => {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {quickActions.map((action) =>
+      {(quickActions || []).map((action) =>
       <Button
         key={action.key}
         variant="outline"
@@ -134,7 +134,7 @@ const QuickFilterButtons = ({ onFilter, activeFilters }) => {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {filterOptions.map((filter) =>
+      {(filterOptions || []).map((filter) =>
       <Button
         key={filter.key}
         variant={activeFilters?.[filter.key] ? "default" : "ghost"}
@@ -177,7 +177,7 @@ const BulkActionsMenu = ({ onSelect }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {actions.map((action) =>
+        {(actions || []).map((action) =>
         <DropdownMenuItem
           key={action.key}
           onClick={() => onSelect && onSelect(action.key)}>

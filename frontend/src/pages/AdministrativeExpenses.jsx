@@ -137,7 +137,7 @@ export default function AdministrativeExpenses() {
   }, [periodFilter]);
 
   const totalExpenses = useMemo(() => {
-    return categoryExpenses.reduce((sum, item) => sum + item.amount, 0);
+    return (categoryExpenses || []).reduce((sum, item) => sum + item.amount, 0);
   }, [categoryExpenses]);
 
   return (
@@ -296,7 +296,7 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <SimplePieChart
-                data={categoryExpenses.map((item, index) => ({
+                data={(categoryExpenses || []).map((item, index) => ({
                   label: item.category,
                   value: item.amount,
                   color:
@@ -325,7 +325,7 @@ export default function AdministrativeExpenses() {
             <CardContent>
               <CategoryBreakdownCard
                 title="本月费用分类"
-                data={categoryExpenses.map((item, index) => ({
+                data={(categoryExpenses || []).map((item, index) => ({
                   label: item.category,
                   value: item.amount,
                   color:
@@ -349,7 +349,7 @@ export default function AdministrativeExpenses() {
 
           {/* Category Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {categoryExpenses.map((item, index) => {
+            {(categoryExpenses || []).map((item, index) => {
               const Icon = item.icon;
               return (
                 <Card key={index}>
@@ -429,7 +429,7 @@ export default function AdministrativeExpenses() {
             <CardContent>
               <div className="space-y-4">
                 {categoryExpenses.slice(0, 3).map((item, index) => {
-                  const trendData = monthlyTrend.map((month) => ({
+                  const trendData = (monthlyTrend || []).map((month) => ({
                     label: month.month,
                     value: Math.floor(month.amount * (item.percentage / 100))
                   }));

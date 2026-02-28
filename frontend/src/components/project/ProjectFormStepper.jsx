@@ -141,7 +141,7 @@ export default function ProjectFormStepper({
           // Sprint 3.2: 构建项目经理统计映射
           if (statsRes.data?.by_pm) {
             const statsMap = {};
-            statsRes.data.by_pm.forEach((pm) => {
+            (statsRes.data.by_pm || []).forEach((pm) => {
               statsMap[pm.pm_id] = pm.count;
             });
             setPmStats(statsMap);
@@ -158,7 +158,7 @@ export default function ProjectFormStepper({
   // 客户搜索
   useEffect(() => {
     if (customerSearch) {
-      const filtered = customers.filter(
+      const filtered = (customers || []).filter(
         (c) =>
           c.customer_name
             ?.toLowerCase()
@@ -173,7 +173,7 @@ export default function ProjectFormStepper({
 
   // 选择客户时自动填充信息
   const handleCustomerSelect = (customerId) => {
-    const customer = customers.find((c) => c.id === customerId);
+    const customer = (customers || []).find((c) => c.id === customerId);
     if (customer) {
       setSelectedCustomer(customer);
       setFormData((prev) => ({

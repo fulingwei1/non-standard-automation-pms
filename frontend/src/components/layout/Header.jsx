@@ -61,7 +61,7 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
       currentUser.role ||
       currentUser.role_code ||
       currentUser.role_name ||
-      (Array.isArray(currentUser.roles) && currentUser.roles.length > 0
+      (Array.isArray(currentUser.roles) && currentUser.roles?.length > 0
         ? currentUser.roles[0]
         : "unknown");
     return getRoleInfo(role);

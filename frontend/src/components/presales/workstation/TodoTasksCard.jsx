@@ -23,7 +23,7 @@ export default function TodoTasksCard({ tasks, onTaskClick }) {
           <ListTodo className="w-5 h-5 text-primary" />
           待办任务
           <Badge variant="secondary" className="bg-primary/20 text-primary ml-2">
-            {tasks.length}
+            {tasks?.length}
           </Badge>
         </CardTitle>
         <Link to="/presales-tasks">
@@ -38,7 +38,7 @@ export default function TodoTasksCard({ tasks, onTaskClick }) {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {tasks.map((task, index) => (
+        {(tasks || []).map((task, index) => (
           <motion.div
             key={task.id}
             initial={{ opacity: 0, x: -20 }}

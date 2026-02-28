@@ -43,33 +43,33 @@ const WorkerWorkOverview = ({
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
     // 今日工单统计
-    const todayWorkOrders = workOrders.filter(order => 
+    const todayWorkOrders = (workOrders || []).filter(order => 
       new Date(order.created_time) >= todayStart
     );
     
     // 今日报工统计
-    const todayReports = reports.filter(report => 
+    const todayReports = (reports || []).filter(report => 
       new Date(report.created_time) >= todayStart
     );
     
     // 工单状态统计
-    const statusStats = workOrders.reduce((acc, order) => {
+    const statusStats = (workOrders || []).reduce((acc, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {});
     
     // 计算总体进度
-    const totalPlanned = workOrders.reduce((sum, order) => sum + (order.plan_qty || 0), 0);
-    const totalCompleted = workOrders.reduce((sum, order) => sum + (order.completed_qty || 0), 0);
+    const totalPlanned = (workOrders || []).reduce((sum, order) => sum + (order.plan_qty || 0), 0);
+    const totalCompleted = (workOrders || []).reduce((sum, order) => sum + (order.completed_qty || 0), 0);
     const overallProgress = calculateProgress(totalCompleted, totalPlanned);
     
     // 质量统计
-    const totalQualified = workOrders.reduce((sum, order) => sum + (order.qualified_qty || 0), 0);
+    const totalQualified = (workOrders || []).reduce((sum, order) => sum + (order.qualified_qty || 0), 0);
     const qualityRate = totalCompleted > 0 ? totalQualified / totalCompleted : 0;
     const qualityLevel = getQualityLevel(totalQualified, totalCompleted);
     
     // 工时统计
-    const todayWorkHours = todayReports.reduce((sum, report) => sum + (report.work_hours || 0), 0);
+    const todayWorkHours = (todayReports || []).reduce((sum, report) => sum + (report.work_hours || 0), 0);
     
     return {
       todayOrders: todayWorkOrders.length,
@@ -90,7 +90,7 @@ const WorkerWorkOverview = ({
     if (!workOrders || workOrders.length === 0) {return [];}
     
     // 找到当前可以操作的工单
-    const actionableOrders = workOrders.filter(order => {
+    const actionableOrders = (workOrders || []).filter(order => {
       const actions = getNextAvailableActions(order);
       return actions.length > 0;
     });
@@ -100,7 +100,7 @@ const WorkerWorkOverview = ({
     const firstOrder = actionableOrders[0];
     const actions = getNextAvailableActions(firstOrder);
     
-    return actions.map(action => ({
+    return (actions || []).map(action => ({
       ...action,
       orderId: firstOrder.id,
       orderNumber: firstOrder.order_number
@@ -257,7 +257,7 @@ const WorkerWorkOverview = ({
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {quickActions.map((action, index) => (
+              {(quickActions || []).map((action, index) => (
                 <Button
                   key={index}
                   size="sm"

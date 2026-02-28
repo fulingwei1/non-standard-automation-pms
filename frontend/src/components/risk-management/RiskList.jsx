@@ -84,7 +84,7 @@ export function RiskList({
 
   return (
     <div className="space-y-4">
-      {risks.map((risk) => {
+      {(risks || []).map((risk) => {
         const levelBadge = getRiskLevelBadge(risk.risk_level);
         const statusBadge = getStatusBadge(risk.status);
 

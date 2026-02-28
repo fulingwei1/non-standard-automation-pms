@@ -40,7 +40,7 @@ export function LessonList({ loading, lessons, total, page, pageSize, setPage, o
     return (
         <>
             <motion.div variants={staggerContainer} className="space-y-4">
-                {lessons.map((lesson) => {
+                {(lessons || []).map((lesson) => {
                     const typeBadge = getLessonTypeBadge(lesson.lesson_type);
                     const statusBadge = getStatusBadge(lesson.status);
                     const priorityBadge = getPriorityBadge(lesson.priority);

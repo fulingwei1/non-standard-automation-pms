@@ -37,7 +37,7 @@ const AlertDashboard = () => {
       setAlerts(alertData);
       
       // 计算统计数据
-      const newStats = alertData.reduce((acc, alert) => {
+      const newStats = (alertData || []).reduce((acc, alert) => {
         acc[alert.alert_level] = (acc[alert.alert_level] || 0) + 1;
         return acc;
       }, {});
@@ -67,7 +67,7 @@ const AlertDashboard = () => {
   };
 
   // 搜索过滤
-  const filteredAlerts = alerts.filter((alert) => {
+  const filteredAlerts = (alerts || []).filter((alert) => {
     if (!filters.search) return true;
     const searchLower = filters.search.toLowerCase();
     return (

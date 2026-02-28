@@ -287,7 +287,7 @@ export default function ProjectRoles() {
               </div> :
 
               <div className="space-y-4">
-                  {roleOverview.map((overview) =>
+                  {(roleOverview || []).map((overview) =>
                 <Card key={overview.role_type?.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
@@ -398,7 +398,7 @@ export default function ProjectRoles() {
                       </tr>
                     </thead>
                     <tbody>
-                      {roleConfigs.map((config) =>
+                      {(roleConfigs || []).map((config) =>
                     <tr
                       key={config.id}
                       className="border-b hover:bg-gray-50">
@@ -445,7 +445,7 @@ export default function ProjectRoles() {
               {roleOverview.length > 0 &&
               <Button
                 onClick={() => {
-                  const availableRole = roleOverview.find(
+                  const availableRole = (roleOverview || []).find(
                     (r) => !r.has_lead && r.is_enabled
                   );
                   if (availableRole) {
@@ -463,7 +463,7 @@ export default function ProjectRoles() {
               <div className="text-center py-8 text-gray-500">暂无负责人</div> :
 
               <div className="space-y-4">
-                  {leads.map((lead) =>
+                  {(leads || []).map((lead) =>
                 <Card key={lead.id}>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
@@ -542,7 +542,7 @@ export default function ProjectRoles() {
                   <SelectValue placeholder="选择用户" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) =>
+                  {(users || []).map((user) =>
                   <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username} (
                       {user.department || "未分配部门"})
@@ -614,7 +614,7 @@ export default function ProjectRoles() {
                     <SelectValue placeholder="选择用户" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.map((user) =>
+                    {(users || []).map((user) =>
                   <SelectItem key={user.id} value={user.id.toString()}>
                         {user.real_name || user.username} (
                         {user.department || "未分配部门"})

@@ -93,7 +93,7 @@ export default function AcceptanceDetailDialog({ acceptance, open, onOpenChange 
           {activeTab === "checklist" && (
             <div className="space-y-3">
               {acceptance.checklistCategories?.length > 0 ? (
-                acceptance.checklistCategories.map((category, index) => (
+                (acceptance.checklistCategories || []).map((category, index) => (
                   <div key={index} className="p-3 rounded-lg bg-surface-2">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-white">
@@ -131,7 +131,7 @@ export default function AcceptanceDetailDialog({ acceptance, open, onOpenChange 
           {activeTab === "issues" && (
             <div className="space-y-3">
               {acceptance.issues?.length > 0 ? (
-                acceptance.issues.map((issue) => (
+                (acceptance.issues || []).map((issue) => (
                   <div
                     key={issue.id}
                     className={cn(
@@ -186,7 +186,7 @@ export default function AcceptanceDetailDialog({ acceptance, open, onOpenChange 
                     </p>
                     {issue.photos?.length > 0 && (
                       <div className="flex gap-2 mt-2">
-                        {issue.photos.map((photo, i) => (
+                        {(issue.photos || []).map((photo, i) => (
                           <div
                             key={i}
                             className="w-16 h-16 rounded bg-surface-0 flex items-center justify-center"

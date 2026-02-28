@@ -210,7 +210,7 @@ export default function HRContractsTab() {
                       </tr>
                     </thead>
                     <tbody>
-                      {contracts.map((contract) => {
+                      {(contracts || []).map((contract) => {
                         const statusConfig =
                           contractStatusMap[contract.status] || {};
                         return (
@@ -331,7 +331,7 @@ export default function HRContractsTab() {
                 />
               ) : (
                 <div className="space-y-3">
-                  {reminders.map((reminder) => {
+                  {(reminders || []).map((reminder) => {
                     const typeConfig =
                       reminderTypeMap[reminder.reminder_type] || {};
                     return (

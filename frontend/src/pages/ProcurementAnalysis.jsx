@@ -102,7 +102,7 @@ export default function ProcurementAnalysis() {
       }
 
       const csvContent = exportData.
-      map((row) => row.map((cell) => `"${cell}"`).join(',')).
+      map((row) => (row || []).map((cell) => `"${cell}"`).join(',')).
       join('\n');
 
       const BOM = '\uFEFF';

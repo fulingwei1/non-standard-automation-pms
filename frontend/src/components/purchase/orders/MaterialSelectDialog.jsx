@@ -33,7 +33,7 @@ export default function MaterialSelectDialog({
     if (!searchQuery) {return materials;}
 
     const query = searchQuery.toLowerCase();
-    return materials.filter(
+    return (materials || []).filter(
       (material) =>
         material.name?.toLowerCase().includes(query) ||
         material.code?.toLowerCase().includes(query) ||
@@ -43,7 +43,7 @@ export default function MaterialSelectDialog({
 
   // 已选择的物料ID集合
   const selectedIds = useMemo(
-    () => new Set(selectedItems.map((item) => item.code || item.id)),
+    () => new Set((selectedItems || []).map((item) => item.code || item.id)),
     [selectedItems]
   );
 
@@ -117,7 +117,7 @@ export default function MaterialSelectDialog({
           {selectedItems.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-slate-400">已选：</span>
-              {selectedItems.map((item, index) => (
+              {(selectedItems || []).map((item, index) => (
                 <Badge
                   key={index}
                   variant="secondary"
@@ -141,7 +141,7 @@ export default function MaterialSelectDialog({
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredMaterials.map((material) => {
+                {(filteredMaterials || []).map((material) => {
                   const isSelected = selectedIds.has(material.code || material.id);
                   const quantity = quantities[material.id] || 1;
 

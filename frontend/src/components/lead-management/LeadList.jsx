@@ -28,7 +28,7 @@ import { sourceOptions } from "@/lib/constants/leadManagement";
 
 // 获取来源标签
 const getSourceLabel = (sourceValue) => {
-  const source = sourceOptions.find((s) => s.value === sourceValue);
+  const source = (sourceOptions || []).find((s) => s.value === sourceValue);
   return source ? source.label : sourceValue || "-";
 };
 
@@ -58,7 +58,7 @@ export default function LeadList({
   if (viewMode === "grid") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {leads.map((lead) => (
+        {(leads || []).map((lead) => (
           <motion.div
             key={lead.id}
             variants={fadeIn}
@@ -201,7 +201,7 @@ export default function LeadList({
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {(leads || []).map((lead) => (
                 <tr
                   key={lead.id}
                   className="border-b border-slate-800 hover:bg-slate-800/50"

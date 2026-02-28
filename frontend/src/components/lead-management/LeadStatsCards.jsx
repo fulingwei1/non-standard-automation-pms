@@ -41,18 +41,18 @@ export default function LeadStatsCards({ stats, leads = [] }) {
   // 计算扩展统计数据
   const extendedStats = React.useMemo(() => {
     const total = leads.length || stats.total || 0;
-    const converted = leads.filter((l) => l.status === "CONVERTED").length || stats.converted || 0;
-    const qualified = leads.filter((l) =>
+    const converted = (leads || []).filter((l) => l.status === "CONVERTED").length || stats.converted || 0;
+    const qualified = (leads || []).filter((l) =>
       ["QUALIFIED", "QUALIFYING", "CONVERTED"].includes(l.status)
     ).length;
 
     // 计算平均评分
-    const scores = leads.filter((l) => l.priority_score != null).map((l) => l.priority_score);
-    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const scores = (leads || []).filter((l) => l.priority_score != null).map((l) => l.priority_score);
+    const avgScore = scores.length > 0 ? (scores || []).reduce((a, b) => a + b, 0) / scores.length : 0;
 
     // 资格分级分布
     const qualificationDist = { hot: 0, warm: 0, cold: 0, unqualified: 0 };
-    leads.forEach((lead) => {
+    (leads || []).forEach((lead) => {
       const score = lead.priority_score || 0;
       const qual = getQualification(score);
       qualificationDist[qual]++;

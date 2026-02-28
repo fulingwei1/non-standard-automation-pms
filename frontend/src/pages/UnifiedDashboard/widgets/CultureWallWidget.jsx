@@ -52,11 +52,11 @@ export default function CultureWallWidget() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentHighlight((prev) =>
-        (prev + 1) % cultureData.employeeHighlights.length
+        (prev + 1) % cultureData.employeeHighlights?.length
       );
     }, 5000);
     return () => clearInterval(timer);
-  }, [cultureData.employeeHighlights.length]);
+  }, [cultureData.employeeHighlights?.length]);
 
   return (
     <Card className="border shadow-sm overflow-hidden">
@@ -75,7 +75,7 @@ export default function CultureWallWidget() {
               核心价值观
             </h4>
             <div className="grid grid-cols-2 gap-2">
-              {cultureData.coreValues.map((value, index) => {
+              {(cultureData.coreValues || []).map((value, index) => {
                 const IconComponent = valueIcons[value.icon] || Star;
                 return (
                   <div
@@ -126,7 +126,7 @@ export default function CultureWallWidget() {
                 荣誉展示
               </h4>
               <div className="space-y-1.5">
-                {cultureData.honors.map((honor) => (
+                {(cultureData.honors || []).map((honor) => (
                   <div
                     key={honor.id}
                     className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 rounded px-2 py-1.5 border border-white/5"
@@ -146,7 +146,7 @@ export default function CultureWallWidget() {
               员工风采
             </h4>
             <div className="bg-gradient-to-br from-emerald-900/30 to-green-900/30 rounded-lg p-3 min-h-[120px] relative border border-white/5">
-              {cultureData.employeeHighlights.map((employee, index) => (
+              {(cultureData.employeeHighlights || []).map((employee, index) => (
                 <div
                   key={employee.id}
                   className={cn(
@@ -170,7 +170,7 @@ export default function CultureWallWidget() {
               ))}
               {/* 轮播指示器 */}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                {cultureData.employeeHighlights.map((_, index) => (
+                {(cultureData.employeeHighlights || []).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentHighlight(index)}

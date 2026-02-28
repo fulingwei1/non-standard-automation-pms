@@ -147,7 +147,7 @@ export default function AnalyticsDashboard() {
       >
         {/* KPI Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {kpis.map((kpi, index) => (
+          {(kpis || []).map((kpi, index) => (
             <motion.div key={kpi.id || index} variants={itemVariants}>
               <DashboardStatCard
                 label={kpi.label}
@@ -252,7 +252,7 @@ export default function AnalyticsDashboard() {
                             paddingAngle={5}
                             dataKey="value"
                           >
-                            {statusDistribution.map((entry, index) => (
+                            {(statusDistribution || []).map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(0,0,0,0)" />
                             ))}
                           </Pie>
@@ -270,7 +270,7 @@ export default function AnalyticsDashboard() {
                     </div>
                     {/* Legend */}
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
-                      {statusDistribution.map((item, index) => (
+                      {(statusDistribution || []).map((item, index) => (
                         <div key={index} className="flex items-center gap-1.5">
                           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                           <span className="text-xs text-slate-400">{item.name}</span>
@@ -349,7 +349,7 @@ export default function AnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="relative border-l border-white/10 ml-3 space-y-8 py-2">
-                    {activities.map((activity, index) => (
+                    {(activities || []).map((activity, index) => (
                       <div key={activity.id} className="relative pl-6 group">
                         {/* Timeline Dot */}
                         <div className={`

@@ -28,10 +28,10 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.leads) {return {};}
 
-    const totalLeads = data.leads.length;
-    const qualifiedLeads = data.leads.filter((l) => l.qualification === 'qualified').length;
-    const convertedLeads = data.leads.filter((l) => l.status === 'converted').length;
-    const avgScore = data.leads.reduce((acc, l) => acc + (l.score || 0), 0) / totalLeads || 0;
+    const totalLeads = data.leads?.length;
+    const qualifiedLeads = (data.leads || []).filter((l) => l.qualification === 'qualified').length;
+    const convertedLeads = (data.leads || []).filter((l) => l.status === 'converted').length;
+    const avgScore = (data.leads || []).reduce((acc, l) => acc + (l.score || 0), 0) / totalLeads || 0;
 
     const monthlyGrowth = data.monthlyStats?.growth || 12.5;
     const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads * 100).toFixed(1) : 0;
@@ -56,7 +56,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
       distribution[source.value] = 0;
     });
 
-    data.leads.forEach((lead) => {
+    (data.leads || []).forEach((lead) => {
       if (!lead.source) {return;}
       if (distribution[lead.source] !== undefined) {
         distribution[lead.source] += 1;
@@ -74,7 +74,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.leads.forEach((lead) => {
+    (data.leads || []).forEach((lead) => {
       if (lead.qualification && QUALIFICATION_LEVELS[lead.qualification.toUpperCase()]) {
         distribution[lead.qualification.toUpperCase()]++;
       }
@@ -299,7 +299,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             }>
 
             <Timeline>
-              {upcomingFollowUps.map((followUp) =>
+              {(upcomingFollowUps || []).map((followUp) =>
               <Timeline.Item
                 key={followUp.id}
                 color="#1890ff"
@@ -325,7 +325,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
       {data?.overdueFollowUps?.length > 0 &&
       <Card className="mt-4" loading={loading}>
           <Alert
-          message={`发现 ${data.overdueFollowUps.length} 个逾期跟进任务`}
+          message={`发现 ${data.overdueFollowUps?.length} 个逾期跟进任务`}
           description="建议及时处理逾期跟进，避免流失潜在客户"
           type="warning"
           showIcon

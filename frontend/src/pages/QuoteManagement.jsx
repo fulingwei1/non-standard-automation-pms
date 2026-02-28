@@ -391,7 +391,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       const suppliers = new Map();
       const monthlyTrend = new Map();
 
-      orders.forEach((order) => {
+      (orders || []).forEach((order) => {
         const amount = parseFloat(order.total_amount || 0);
         totalCost += amount;
         const supplier =
@@ -419,8 +419,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
         });
       });
 
-      const avgOrderCost = orders.length
-        ? totalCost / orders.length
+      const avgOrderCost = orders?.length
+        ? totalCost / orders?.length
         : 0;
 
       const trendArray = Array.from(monthlyTrend.entries()).sort(([a], [b]) =>
@@ -451,7 +451,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
         .slice(0, 4)
         .map(([name, amount]) => ({ name, amount }));
 
-      const trendList = trendArray.map(([month, values]) => ({
+      const trendList = (trendArray || []).map(([month, values]) => ({
         month,
         amount: values.amount,
         orders: values.orders
@@ -459,7 +459,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
 
       setCostInsights({
         totalCost,
-        orderCount: orders.length,
+        orderCount: orders?.length,
         averageOrderCost: avgOrderCost,
         costSavings: Math.max(0, savings),
         savingsRate: Math.max(0, savingsRate),
@@ -524,7 +524,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
   const suppliers = costInsights?.suppliers || [];
   const totalCostForRatio =
     costInsights?.totalCost ||
-    categories.reduce((sum, item) => sum + (item.amount || 0), 0);
+    (categories || []).reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
     <motion.div
@@ -652,7 +652,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
                       </div>
                     ) : (
                       <div className="mt-4 space-y-3">
-                        {trendItems.map((item) => (
+                        {(trendItems || []).map((item) => (
                           <div
                             key={item.month}
                             className="flex items-center justify-between rounded-lg border border-slate-800 px-4 py-3"
@@ -698,11 +698,11 @@ export default function QuoteManagement({ embedded = false } = {}) {
                         TOP 分类
                       </Badge>
                     </div>
-                    {categories.length === 0 ? (
+                    {categories?.length === 0 ? (
                       <p className="text-sm text-slate-500">暂无成本分类数据</p>
                     ) : (
                       <div className="space-y-3">
-                        {categories.map((cat) => {
+                        {(categories || []).map((cat) => {
                           const percent = totalCostForRatio
                             ? Math.round((cat.amount / totalCostForRatio) * 100)
                             : 0;
@@ -738,7 +738,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
                       <p className="text-sm text-slate-500">暂无供应商数据</p>
                     ) : (
                       <div className="space-y-3">
-                        {suppliers.map((supplier, index) => (
+                        {(suppliers || []).map((supplier, index) => (
                           <div
                             key={supplier.name}
                             className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2"

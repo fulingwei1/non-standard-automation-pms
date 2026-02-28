@@ -173,11 +173,11 @@ export function ECNBasicInfo({ ecn, loading }) {
           </div>
 
           {/* 受影响部门 */}
-          {ecn.affected_departments && ecn.affected_departments.length > 0 &&
+          {ecn.affected_departments && ecn.affected_departments?.length > 0 &&
           <div>
               <div className="text-sm text-slate-500 mb-2">受影响部门</div>
               <div className="flex flex-wrap gap-1">
-                {ecn.affected_departments.map((dept, index) =>
+                {(ecn.affected_departments || []).map((dept, index) =>
               <Badge key={index} variant="outline" className="text-xs">
                     {dept}
               </Badge>

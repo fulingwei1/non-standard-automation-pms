@@ -35,7 +35,7 @@ export default function LeadsList({ limit = 5, data: propData }) {
           <div className="text-sm text-muted-foreground text-center py-4">暂无线索</div>
         ) : (
           <div className="space-y-2">
-            {leads.map((lead, i) => (
+            {(leads || []).map((lead, i) => (
               <div key={lead.id || i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{lead.name || lead.company_name}</div>

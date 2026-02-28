@@ -220,7 +220,7 @@ export default function BOMManagement() {
     }
   };
   const filteredBoms = useMemo(() => {
-    return boms.filter((bom) => {
+    return (boms || []).filter((bom) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -265,7 +265,7 @@ export default function BOMManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -282,7 +282,7 @@ export default function BOMManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部机台</SelectItem>
-                {machines.map((machine) =>
+                {(machines || []).map((machine) =>
                 <SelectItem key={machine.id} value={machine.id.toString()}>
                     {machine.machine_name}
                 </SelectItem>
@@ -339,7 +339,7 @@ export default function BOMManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBoms.map((bom) =>
+                {(filteredBoms || []).map((bom) =>
               <TableRow key={bom.id}>
                     <TableCell className="font-mono text-sm">
                       {bom.bom_no}
@@ -462,7 +462,7 @@ export default function BOMManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bomItems.map((item, index) =>
+                      {(bomItems || []).map((item, index) =>
                     <TableRow key={item.id}>
                           <TableCell>{item.item_no || index + 1}</TableCell>
                           <TableCell className="font-mono text-sm">
@@ -503,7 +503,7 @@ export default function BOMManagement() {
                     共 {versions.length} 个版本
                   </div>
                   <div className="space-y-2">
-                    {versions.map((version) =>
+                    {(versions || []).map((version) =>
                   <Card key={version.id}>
                         <CardContent className="pt-4">
                           <div className="flex items-center justify-between">
@@ -610,7 +610,7 @@ export default function BOMManagement() {
                   projects.
                   find(
                     (p) =>
-                    machines.find((m) => m.id === newBom.machine_id)?.
+                    (machines || []).find((m) => m.id === newBom.machine_id)?.
                     project_id === p.id
                   )?.
                   id?.toString() || "" :
@@ -625,7 +625,7 @@ export default function BOMManagement() {
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((proj) =>
+                    {(projects || []).map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                     </SelectItem>
@@ -646,7 +646,7 @@ export default function BOMManagement() {
                     <SelectValue placeholder="选择机台" />
                   </SelectTrigger>
                   <SelectContent>
-                    {machines.map((machine) =>
+                    {(machines || []).map((machine) =>
                     <SelectItem
                       key={machine.id}
                       value={machine.id.toString()}>

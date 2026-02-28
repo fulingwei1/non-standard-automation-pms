@@ -86,7 +86,7 @@ export default function AlertRuleConfig() {
             animate="visible"
             className="space-y-4"
           >
-            {rules.map((rule) => (
+            {(rules || []).map((rule) => (
               <RuleCard
                 key={rule.id}
                 rule={rule}

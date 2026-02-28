@@ -197,7 +197,7 @@ export default function WorkOrderManagement() {
     }
   };
   const filteredOrders = useMemo(() => {
-    return workOrders.filter((order) => {
+    return (workOrders || []).filter((order) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -234,7 +234,7 @@ export default function WorkOrderManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -306,7 +306,7 @@ export default function WorkOrderManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) =>
+                {(filteredOrders || []).map((order) =>
               <TableRow key={order.id}>
                     <TableCell className="font-mono text-sm">
                       {order.work_order_no}
@@ -437,7 +437,7 @@ export default function WorkOrderManagement() {
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
-                      {projects.map((proj) =>
+                      {(projects || []).map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
                       </SelectItem>

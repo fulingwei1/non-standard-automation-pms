@@ -73,42 +73,42 @@ const SolutionCard = ({ solution, onClick }) => {
 
         {/* 优点/缺点/风险 */}
         <div className="space-y-3 pt-4 border-t">
-          {solution.advantages && solution.advantages.length > 0 && (
+          {solution.advantages && solution.advantages?.length > 0 && (
             <div>
               <div className="flex items-center gap-1 mb-1">
                 <ThumbsUp className="h-3 w-3 text-green-600" />
                 <p className="text-xs font-semibold text-green-600">优点</p>
               </div>
               <ul className="text-xs text-gray-600 space-y-1">
-                {solution.advantages.map((item, index) => (
+                {(solution.advantages || []).map((item, index) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          {solution.disadvantages && solution.disadvantages.length > 0 && (
+          {solution.disadvantages && solution.disadvantages?.length > 0 && (
             <div>
               <div className="flex items-center gap-1 mb-1">
                 <ThumbsDown className="h-3 w-3 text-orange-600" />
                 <p className="text-xs font-semibold text-orange-600">缺点</p>
               </div>
               <ul className="text-xs text-gray-600 space-y-1">
-                {solution.disadvantages.map((item, index) => (
+                {(solution.disadvantages || []).map((item, index) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          {solution.risks && solution.risks.length > 0 && (
+          {solution.risks && solution.risks?.length > 0 && (
             <div>
               <div className="flex items-center gap-1 mb-1">
                 <AlertTriangle className="h-3 w-3 text-red-600" />
                 <p className="text-xs font-semibold text-red-600">风险</p>
               </div>
               <ul className="text-xs text-gray-600 space-y-1">
-                {solution.risks.map((item, index) => (
+                {(solution.risks || []).map((item, index) => (
                   <li key={index}>• {item}</li>
                 ))}
               </ul>

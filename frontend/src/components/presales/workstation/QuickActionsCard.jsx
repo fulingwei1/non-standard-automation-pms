@@ -14,7 +14,7 @@ export default function QuickActionsCard({ actions }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-3">
-        {actions.map((action) => (
+        {(actions || []).map((action) => (
           <Link key={action.name} to={action.path}>
             <div
               className={cn(

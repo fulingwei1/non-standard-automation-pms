@@ -106,7 +106,7 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeAgeDistribution.map((item, index) =>
+                {(mockEmployeeAgeDistribution || []).map((item, index) =>
                 <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
@@ -152,7 +152,7 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeTenureDistribution.map((item, index) =>
+                {(mockEmployeeTenureDistribution || []).map((item, index) =>
                 <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
@@ -201,7 +201,7 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeEducationDistribution.map((item, index) =>
+                {(mockEmployeeEducationDistribution || []).map((item, index) =>
                 <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
@@ -238,7 +238,7 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockDepartmentPerformanceComparison.map((dept, index) =>
+                {(mockDepartmentPerformanceComparison || []).map((dept, index) =>
                 <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">

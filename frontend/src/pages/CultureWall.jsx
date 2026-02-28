@@ -174,11 +174,11 @@ export default function CultureWall() {
             {item.content && (
               <div className="text-sm text-gray-500 mb-4 line-clamp-3">
                 {item.content.substring(0, 200)}
-                {item.content.length > 200 && "..."}
+                {item.content?.length > 200 && "..."}
               </div>
             )}
 
-            {item.images && item.images.length > 0 && (
+            {item.images && item.images?.length > 0 && (
               <div className="mb-4">
                 <img
                   src={item.images[0].url}
@@ -376,7 +376,7 @@ export default function CultureWall() {
 
       {/* 指示器 */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
-        {allItems.map((_, index) => (
+        {(allItems || []).map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}

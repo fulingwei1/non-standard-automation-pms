@@ -12,7 +12,7 @@ export default function AssignDispatchDialog({
   onAssign,
   loading = false,
 }) {
-  const technicians = users.filter((user) => user.role === "technician");
+  const technicians = (users || []).filter((user) => user.role === "technician");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -33,7 +33,7 @@ export default function AssignDispatchDialog({
                 <SelectValue placeholder="选择派工人员" />
               </SelectTrigger>
               <SelectContent>
-                {technicians.map((user) => (
+                {(technicians || []).map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name}
                   </SelectItem>

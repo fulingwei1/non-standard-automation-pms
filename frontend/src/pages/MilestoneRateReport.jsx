@@ -172,7 +172,7 @@ export default function MilestoneRateReport() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {projects.map((p) => (
+              {(projects || []).map((p) => (
                 <SelectItem key={p.id} value={p.id?.toString()}>
                   {p.project_name || p.project_code || `项目#${p.id}`}
                 </SelectItem>
@@ -283,7 +283,7 @@ export default function MilestoneRateReport() {
       }
 
       {/* Milestone List */}
-      {reportData?.milestones && reportData.milestones.length > 0 &&
+      {reportData?.milestones && reportData.milestones?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export default function MilestoneRateReport() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {reportData.milestones.map((milestone) => {
+              {(reportData.milestones || []).map((milestone) => {
               const isOverdue =
               milestone.planned_date &&
               new Date(milestone.planned_date) < new Date() &&
@@ -344,7 +344,7 @@ export default function MilestoneRateReport() {
       </Card>
       }
 
-      {reportData?.milestones && reportData.milestones.length === 0 &&
+      {reportData?.milestones && reportData.milestones?.length === 0 &&
       <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">

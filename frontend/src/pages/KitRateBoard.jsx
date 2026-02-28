@@ -70,7 +70,7 @@ export default function KitRateBoard() {
         // 计算平均齐套率
         const totalKitRate = data.projects?.reduce((sum, p) => sum + (p.kit_rate || 0), 0) || 0;
         const avgKitRate = data.projects?.length > 0 ?
-        Math.round(totalKitRate / data.projects.length * 100) / 100 :
+        Math.round(totalKitRate / data.projects?.length * 100) / 100 :
         0;
 
         // 转换 summary 字段
@@ -84,7 +84,7 @@ export default function KitRateBoard() {
 
         // 转换 projects 字段名
         if (data.projects) {
-          data.projects = data.projects.map((p) => ({
+          data.projects = (data.projects || []).map((p) => ({
             ...p,
             id: p.project_id,
             shortage_count: p.shortage_items || 0,
@@ -132,7 +132,7 @@ export default function KitRateBoard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {projects.map((proj) =>
+              {(projects || []).map((proj) =>
               <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.project_name}
               </SelectItem>
@@ -213,7 +213,7 @@ export default function KitRateBoard() {
           <CardTitle>齐套率分布</CardTitle>
         </CardHeader>
         <CardContent>
-          {dashboardData?.projects && dashboardData.projects.length > 0 ?
+          {dashboardData?.projects && dashboardData.projects?.length > 0 ?
           <Table>
               <TableHeader>
                 <TableRow>
@@ -226,7 +226,7 @@ export default function KitRateBoard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dashboardData.projects.map((item) => {
+                {(dashboardData.projects || []).map((item) => {
                 const badge = getKitRateBadge(item.kit_rate || 0);
                 return (
                   <TableRow key={item.id}>
@@ -282,7 +282,7 @@ export default function KitRateBoard() {
         </CardContent>
       </Card>
       {/* Shortage Alerts */}
-      {dashboardData?.alerts && dashboardData.alerts.length > 0 &&
+      {dashboardData?.alerts && dashboardData.alerts?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export default function KitRateBoard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {dashboardData.alerts.map((alert) =>
+              {(dashboardData.alerts || []).map((alert) =>
             <div
               key={alert.id}
               className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">

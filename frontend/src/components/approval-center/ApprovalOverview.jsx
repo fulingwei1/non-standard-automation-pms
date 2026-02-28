@@ -33,11 +33,11 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.approvals) {return {};}
 
-    const totalApprovals = data.approvals.length;
-    const pendingApprovals = data.approvals.filter((a) => a.status === 'pending').length;
-    const approvedApprovals = data.approvals.filter((a) => a.status === 'approved').length;
-    const rejectedApprovals = data.approvals.filter((a) => a.status === 'rejected').length;
-    const urgentApprovals = data.approvals.filter((a) => a.priority === 'urgent' && a.status === 'pending').length;
+    const totalApprovals = data.approvals?.length;
+    const pendingApprovals = (data.approvals || []).filter((a) => a.status === 'pending').length;
+    const approvedApprovals = (data.approvals || []).filter((a) => a.status === 'approved').length;
+    const rejectedApprovals = (data.approvals || []).filter((a) => a.status === 'rejected').length;
+    const urgentApprovals = (data.approvals || []).filter((a) => a.priority === 'urgent' && a.status === 'pending').length;
 
     const approvalRate = totalApprovals > 0 ? (approvedApprovals / totalApprovals * 100).toFixed(1) : 0;
     const avgProcessingTime = data.metrics?.avgProcessingTime || 48;
@@ -64,7 +64,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.approvals.forEach((approval) => {
+    (data.approvals || []).forEach((approval) => {
       if (approval.type && APPROVAL_TYPES[approval.type.toUpperCase()]) {
         distribution[approval.type.toUpperCase()]++;
       }
@@ -81,7 +81,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.approvals.forEach((approval) => {
+    (data.approvals || []).forEach((approval) => {
       if (approval.priority && APPROVAL_PRIORITY[approval.priority.toUpperCase()]) {
         distribution[approval.priority.toUpperCase()]++;
       }

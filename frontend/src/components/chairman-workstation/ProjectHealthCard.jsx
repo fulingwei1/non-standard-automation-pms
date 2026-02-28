@@ -30,7 +30,7 @@ export const ProjectHealthCard = ({ projectHealthDistribution }) => {
         <CardContent>
           <div className="space-y-3">
             {projectHealthDistribution && projectHealthDistribution.length > 0 ?
-            projectHealthDistribution.map((item) => {
+            (projectHealthDistribution || []).map((item) => {
               const health =
               item.health || item.health_status || "H1";
               const label =

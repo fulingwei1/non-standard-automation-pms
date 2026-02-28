@@ -187,7 +187,7 @@ const normalizeCustomer = (customer = {}) => {
     projectCount:
       customer.projectCount ??
       customer.project_count ??
-      (Array.isArray(customer.projects) ? customer.projects.length : 0),
+      (Array.isArray(customer.projects) ? customer.projects?.length : 0),
     lastContact:
       customer.lastContact ||
       customer.last_contact ||
@@ -222,12 +222,12 @@ export default function CustomerList() {
 
   const normalizedCustomers = useMemo(() => {
     if (!Array.isArray(rawCustomers)) {return []}
-    return rawCustomers.map(normalizeCustomer)
+    return (rawCustomers || []).map(normalizeCustomer)
   }, [rawCustomers])
 
   // Filter customers
   const filteredCustomers = useMemo(() => {
-    return normalizedCustomers.filter((customer) => {
+    return (normalizedCustomers || []).filter((customer) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
         !searchTerm ||
@@ -256,9 +256,9 @@ export default function CustomerList() {
   const stats = useMemo(() => {
     return {
       total: normalizedCustomers.length,
-      active: normalizedCustomers.filter((c) => c.status === "active").length,
-      gradeA: normalizedCustomers.filter((c) => c.grade === "A").length,
-      warning: normalizedCustomers.filter((c) => c.isWarning).length,
+      active: (normalizedCustomers || []).filter((c) => c.status === "active").length,
+      gradeA: (normalizedCustomers || []).filter((c) => c.grade === "A").length,
+      warning: (normalizedCustomers || []).filter((c) => c.isWarning).length,
     };
   }, [normalizedCustomers]);
 
@@ -369,7 +369,7 @@ export default function CustomerList() {
             onChange={(e) => setSelectedGrade(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {gradeOptions.map((opt) => (
+            {(gradeOptions || []).map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -380,7 +380,7 @@ export default function CustomerList() {
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {statusOptions.map((opt) => (
+            {(statusOptions || []).map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -391,7 +391,7 @@ export default function CustomerList() {
             onChange={(e) => setSelectedIndustry(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {industryOptions.map((opt) => (
+            {(industryOptions || []).map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -428,7 +428,7 @@ export default function CustomerList() {
       <motion.div variants={fadeIn}>
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCustomers.map((customer) => (
+            {(filteredCustomers || []).map((customer) => (
               <CustomerCard
                 key={customer.id}
                 customer={customer}
@@ -469,7 +469,7 @@ export default function CustomerList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers.map((customer) => {
+                  {(filteredCustomers || []).map((customer) => {
                     const statusConf =
                       statusConfig[customer.status] || statusConfig.active;
                     return (
@@ -804,7 +804,7 @@ function CustomerDetailPanel({ customer, onClose }) {
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">标签</h3>
             <div className="flex flex-wrap gap-2">
-              {customer.tags.map((tag, index) => (
+              {(customer.tags || []).map((tag, index) => (
                 <Badge key={index} variant="secondary">
                   {tag}
                 </Badge>

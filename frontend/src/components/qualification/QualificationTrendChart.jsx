@@ -25,13 +25,13 @@ export function QualificationTrendChart({
 
   const maxValue = useMemo(() => {
     if (sortedData.length === 0) {return 100;}
-    const scores = sortedData.map((d) => d.total_score || d.score || 0);
+    const scores = (sortedData || []).map((d) => d.total_score || d.score || 0);
     return Math.max(...scores, 100);
   }, [sortedData]);
 
   const minValue = useMemo(() => {
     if (sortedData.length === 0) {return 0;}
-    const scores = sortedData.map((d) => d.total_score || d.score || 0);
+    const scores = (sortedData || []).map((d) => d.total_score || d.score || 0);
     return Math.min(...scores, 0);
   }, [sortedData]);
 
@@ -42,7 +42,7 @@ export function QualificationTrendChart({
 
   const points = useMemo(() => {
     if (sortedData.length === 0) {return [];}
-    return sortedData.map((item, index) => {
+    return (sortedData || []).map((item, index) => {
       const score = item.total_score || item.score || 0;
       const x =
         padding.left +
@@ -148,7 +148,7 @@ export function QualificationTrendChart({
 
         {/* 数据点 */}
         {showPoints &&
-          points.map((point, index) => {
+          (points || []).map((point, index) => {
             const color = getResultColor(point.result);
             return (
               <g key={index}>

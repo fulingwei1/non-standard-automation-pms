@@ -20,7 +20,7 @@ export function SolutionOverviewTab({ solution }) {
                             {solution.description}
                         </p>
                         <div className="flex flex-wrap gap-2 mt-4">
-                            {solution.tags.map((tag, index) => (
+                            {(solution.tags || []).map((tag, index) => (
                                 <span
                                     key={index}
                                     className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full"
@@ -71,7 +71,7 @@ export function SolutionOverviewTab({ solution }) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {solution.reviews.map((review) => (
+                        {(solution.reviews || []).map((review) => (
                             <div key={review.id} className="flex gap-3">
                                 <Avatar className="w-8 h-8">
                                     <AvatarFallback className="bg-primary/20 text-primary text-sm">
@@ -121,7 +121,7 @@ export function SolutionOverviewTab({ solution }) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {solution.collaborators.map((person, index) => (
+                        {(solution.collaborators || []).map((person, index) => (
                             <div key={index} className="flex items-center gap-3">
                                 <Avatar className="w-8 h-8">
                                     <AvatarFallback className="bg-primary/20 text-primary text-sm">

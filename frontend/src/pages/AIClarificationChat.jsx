@@ -50,8 +50,8 @@ export default function AIClarificationChat() {
       });
       const items = response.data.items || response.data?.items || response.data || [];
       setClarifications(items);
-      if (items.length > 0) {
-        const maxRound = Math.max(...items.map((item) => item.round));
+      if (items?.length > 0) {
+        const maxRound = Math.max(...(items || []).map((item) => item.round));
         setCurrentRound(maxRound + 1);
       }
     } catch (error) {
@@ -95,15 +95,15 @@ export default function AIClarificationChat() {
   };
 
   const handleSubmitAnswers = async (clarificationId) => {
-    const currentClarification = clarifications.find(
+    const currentClarification = (clarifications || []).find(
       (c) => c.id === clarificationId
     );
     if (!currentClarification) {return;}
 
     const questionsArray = JSON.parse(currentClarification.questions);
-    const answersArray = questionsArray.map((_, idx) => answers[idx] || "");
+    const answersArray = (questionsArray || []).map((_, idx) => answers[idx] || "");
 
-    if (answersArray.some((a) => !a.trim())) {
+    if ((answersArray || []).some((a) => !a.trim())) {
       alert("请回答所有问题");
       return;
     }
@@ -144,7 +144,7 @@ export default function AIClarificationChat() {
 
       <div className="mt-6 space-y-6">
         {/* 澄清记录列表 */}
-        {clarifications.map((clarification) => {
+        {(clarifications || []).map((clarification) => {
           const questionsArray = JSON.parse(clarification.questions || "[]");
           const answersArray = clarification.answers ?
           JSON.parse(clarification.answers) :
@@ -177,7 +177,7 @@ export default function AIClarificationChat() {
                     AI问题
                   </div>
                   <div className="space-y-2 pl-6">
-                    {questionsArray.map((question, idx) =>
+                    {(questionsArray || []).map((question, idx) =>
                     <div key={idx} className="p-3 bg-gray-700 rounded-lg">
                         <div className="text-sm mb-2">
                           {idx + 1}. {question}

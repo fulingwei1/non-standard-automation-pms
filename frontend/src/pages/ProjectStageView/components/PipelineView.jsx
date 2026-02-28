@@ -190,7 +190,7 @@ function ProjectRow({ project, stageDefinitions, onSelectProject }) {
 
       {/* 阶段单元格 */}
       <div className="flex-1 flex gap-1 overflow-x-auto">
-        {stageDefinitions.map((stageDef) => {
+        {(stageDefinitions || []).map((stageDef) => {
           const stage = stageMap[stageDef.stage_code];
           if (!stage) {
             return (
@@ -282,7 +282,7 @@ function StageHeader({ stageDefinitions }) {
 
       {/* 阶段列标题 */}
       <div className="flex-1 flex gap-1 overflow-x-auto">
-        {stageDefinitions.map((stageDef) => {
+        {(stageDefinitions || []).map((stageDef) => {
           const categoryConfig = getCategoryConfig(stageDef.category);
           return (
             <TooltipProvider key={stageDef.stage_code}>
@@ -428,7 +428,7 @@ export default function PipelineView({ data, loading, onSelectProject }) {
   // 如果有模板分组，按分组显示
   const hasGroups = template_groups && template_groups.length > 0;
 
-  if (!hasGroups && projects.length === 0) {
+  if (!hasGroups && projects?.length === 0) {
     return (
       <Card className="bg-gray-800/50 border-gray-700">
         <CardContent className="p-8 text-center">
@@ -455,7 +455,7 @@ export default function PipelineView({ data, loading, onSelectProject }) {
       {/* 按模板分组显示 */}
       {hasGroups ? (
         <div className="space-y-4">
-          {template_groups.map((group) => (
+          {(template_groups || []).map((group) => (
             <TemplateGroupSection
               key={group.template_id}
               group={group}
@@ -470,7 +470,7 @@ export default function PipelineView({ data, loading, onSelectProject }) {
             <div className="overflow-x-auto">
               <StageHeader stageDefinitions={stage_definitions} />
               <div className="space-y-0 mt-2">
-                {projects.map((project) => (
+                {(projects || []).map((project) => (
                   <ProjectRow
                     key={project.project_id}
                     project={project}

@@ -93,7 +93,7 @@ export default function ProgressBoard() {
   { key: "CANCELLED", label: "已取消", color: "bg-gray-200" }];
 
   const _getStatusColor = (status) => {
-    const column = statusColumns.find((col) => col.key === status);
+    const column = (statusColumns || []).find((col) => col.key === status);
     return column?.color || "bg-slate-200";
   };
   const delayedTasks = (forecastData?.tasks || []).
@@ -226,7 +226,7 @@ export default function ProgressBoard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {delayedTasks.length > 0 ?
-            delayedTasks.map((task) =>
+            (delayedTasks || []).map((task) =>
             <div
               key={task.task_id}
               className="border rounded-md p-3 bg-slate-50">
@@ -404,7 +404,7 @@ export default function ProgressBoard() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {boardData?.columns?.map((column) => {
           const tasks = column.tasks || [];
-          const columnConfig = statusColumns.find(
+          const columnConfig = (statusColumns || []).find(
             (col) => col.key === column.status
           ) || { label: column.status_name, color: "bg-slate-200" };
           return (
@@ -412,12 +412,12 @@ export default function ProgressBoard() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>{column.status_name}</span>
-                  <Badge className={columnConfig.color}>{tasks.length}</Badge>
+                  <Badge className={columnConfig.color}>{tasks?.length}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {tasks.map((task) =>
+                  {(tasks || []).map((task) =>
                   <div
                     key={task.id}
                     className="border rounded-lg p-3 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -454,7 +454,7 @@ export default function ProgressBoard() {
                     }
                   </div>
                   )}
-                  {tasks.length === 0 &&
+                  {tasks?.length === 0 &&
                   <div className="text-center py-8 text-slate-400 text-sm">
                       暂无任务
                   </div>

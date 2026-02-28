@@ -55,7 +55,7 @@ export default function IssueTemplateList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.map((template) => (
+              {(templates || []).map((template) => (
                 <TableRow
                   key={template.id}
                   className="border-white/10 hover:bg-surface-100/50"

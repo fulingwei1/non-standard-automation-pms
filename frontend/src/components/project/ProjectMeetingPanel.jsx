@@ -103,7 +103,7 @@ export default function ProjectMeetingPanel({ projectId }) {
         <CardContent>
           {meetings && meetings.length > 0 ? (
             <div className="space-y-2">
-              {meetings.map((meeting) => (
+              {(meetings || []).map((meeting) => (
                 <div
                   key={meeting.id}
                   className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"

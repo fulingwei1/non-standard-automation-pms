@@ -21,7 +21,7 @@ const ForecastChart = ({ historicalData = [], forecastData = null }) => {
 
   // 合并历史数据和预测数据
   const chartData = [
-    ...historicalData.map((item) => ({
+    ...(historicalData || []).map((item) => ({
       date: item.date,
       actual: item.demand,
       type: 'historical',

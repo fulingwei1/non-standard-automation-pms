@@ -198,7 +198,7 @@ export default function ReceivableManagement() {
   const handleExport = () => {
     try {
       // 准备导出数据
-      const exportData = receivables.map((r) => ({
+      const exportData = (receivables || []).map((r) => ({
         发票编码: r.invoice_code,
         客户名称: r.customer_name,
         合同编码: r.contract_code,
@@ -215,8 +215,8 @@ export default function ReceivableManagement() {
       const headers = Object.keys(exportData[0] || {});
       const csvContent = [
       headers.join(","),
-      ...exportData.map((row) =>
-      headers.map((header) => `"${row[header] || ""}"`).join(",")
+      ...(exportData || []).map((row) =>
+      (headers || []).map((header) => `"${row[header] || ""}"`).join(",")
       )].
       join("\n");
 
@@ -253,7 +253,7 @@ export default function ReceivableManagement() {
     }
     return {
       total: total,
-      totalUnpaid: receivables.reduce(
+      totalUnpaid: (receivables || []).reduce(
         (sum, r) =>
         sum + (
         parseFloat(r.unpaid_amount || r.invoice_amount - r.paid_amount) ||
@@ -269,7 +269,7 @@ export default function ReceivableManagement() {
         0),
         0
       ),
-      overdueCount: receivables.filter((r) => r.overdue_days > 0).length
+      overdueCount: (receivables || []).filter((r) => r.overdue_days > 0).length
     };
   }, [receivables, total, summary]);
 
@@ -572,7 +572,7 @@ export default function ReceivableManagement() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {receivables.map((receivable) => {
+              {(receivables || []).map((receivable) => {
               const invoiceAmount =
               receivable.invoice_amount || receivable.total_amount || 0;
               const paidAmount = receivable.paid_amount || 0;

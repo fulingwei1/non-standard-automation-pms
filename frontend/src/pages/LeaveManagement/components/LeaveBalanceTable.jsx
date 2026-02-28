@@ -24,7 +24,7 @@ export function LeaveBalanceTable({ balanceRows }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {balanceRows.map((row) => (
+                                {(balanceRows || []).map((row) => (
                                     <tr key={row.employee} className="border-b border-slate-800/60">
                                         <td className="py-2 pr-2 text-white">{row.employee}</td>
                                         <td className="py-2 pr-2 text-slate-300">{row.department}</td>

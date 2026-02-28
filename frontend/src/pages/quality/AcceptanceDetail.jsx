@@ -127,7 +127,7 @@ export default function AcceptanceDetail() {
             </div>
 
             {/* 验收项 */}
-            {items.length > 0 && (
+            {items?.length > 0 && (
               <div className="bg-surface-200 rounded-xl border border-white/5 p-6">
                 <h4 className="text-lg font-semibold text-text-primary mb-4">验收项目</h4>
                 <div className="overflow-x-auto">
@@ -142,7 +142,7 @@ export default function AcceptanceDetail() {
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((item, idx) => (
+                      {(items || []).map((item, idx) => (
                         <tr key={item.id || idx} className="border-b border-white/5">
                           <td className="px-4 py-2 text-text-muted">{idx + 1}</td>
                           <td className="px-4 py-2 text-text-primary">{item.check_item || item.name || "-"}</td>

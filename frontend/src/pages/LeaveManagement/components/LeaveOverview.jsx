@@ -15,17 +15,17 @@ export function LeaveOverview({ leaveApplications, stats, monthlyLeaveTrend }) {
                             data={[
                                 {
                                     label: "年假",
-                                    value: leaveApplications.filter((a) => a.type === "年假").length,
+                                    value: (leaveApplications || []).filter((a) => a.type === "年假").length,
                                     color: "#3b82f6"
                                 },
                                 {
                                     label: "病假",
-                                    value: leaveApplications.filter((a) => a.type === "病假").length,
+                                    value: (leaveApplications || []).filter((a) => a.type === "病假").length,
                                     color: "#10b981"
                                 },
                                 {
                                     label: "事假",
-                                    value: leaveApplications.filter((a) => a.type === "事假").length,
+                                    value: (leaveApplications || []).filter((a) => a.type === "事假").length,
                                     color: "#f59e0b"
                                 }
                             ]}

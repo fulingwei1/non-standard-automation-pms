@@ -103,7 +103,7 @@ export default function StrategyDashboard() {
                   <SelectValue placeholder="选择战略" />
                 </SelectTrigger>
                 <SelectContent>
-                  {strategies.map((s) => (
+                  {(strategies || []).map((s) => (
                     <SelectItem key={s.id} value={s.id.toString()}>
                       {s.name} ({s.year})
                     </SelectItem>

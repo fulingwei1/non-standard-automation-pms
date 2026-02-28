@@ -281,7 +281,7 @@ export default function PipelineBreakAnalysis() {
                           总数: {data.total} · 断链数: {data.break_count}
                         </div>
                       </div>
-                      {data.break_records && data.break_records.length > 0 &&
+                      {data.break_records && data.break_records?.length > 0 &&
                   <Table>
                           <TableHeader>
                             <TableRow>
@@ -293,7 +293,7 @@ export default function PipelineBreakAnalysis() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {data.break_records.map((record, idx) =>
+                            {(data.break_records || []).map((record, idx) =>
                       <TableRow key={idx}>
                                 <TableCell>{record.pipeline_code}</TableCell>
                                 <TableCell>{record.pipeline_name}</TableCell>

@@ -37,7 +37,7 @@ export default function StatsCards({ totalProjects, atRiskProjects, blockedProje
       variants={fadeIn}
       className="grid grid-cols-2 md:grid-cols-4 gap-4"
     >
-      {stats.map((stat, index) => (
+      {(stats || []).map((stat, index) => (
         <Card key={index} className="bg-surface-1/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">

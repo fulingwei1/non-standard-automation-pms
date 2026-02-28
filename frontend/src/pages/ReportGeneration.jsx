@@ -87,7 +87,7 @@ export default function ReportGeneration() {
               className="w-full border border-gray-300 rounded px-3 py-2"
             >
               <option value="">请选择</option>
-              {templates.map((t) => (
+              {(templates || []).map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
@@ -138,7 +138,7 @@ export default function ReportGeneration() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {preview.summary.map((row, idx) => (
+                  {(preview.summary || []).map((row, idx) => (
                     <tr key={idx}>
                       {Object.values(row).map((val, i) => (
                         <td key={i} className="px-4 py-2 text-sm">{val}</td>
@@ -149,7 +149,7 @@ export default function ReportGeneration() {
               </table>
             </div>
             <div className="mt-2 text-sm text-gray-500">
-              显示前 {preview.summary.length} 条 / 总计 {preview.total_summary_rows} 条
+              显示前 {preview.summary?.length} 条 / 总计 {preview.total_summary_rows} 条
             </div>
           </div>
         )}

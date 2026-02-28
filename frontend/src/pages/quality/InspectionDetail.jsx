@@ -61,7 +61,7 @@ export default function InspectionDetail() {
         const res = await qualityApi.inspection.list({ skip: 0, limit: 100 });
         const resData = res.data || res;
         const items = resData.items || resData.inspections || [];
-        const found = items.find((i) => String(i.id) === String(id));
+        const found = (items || []).find((i) => String(i.id) === String(id));
         if (found) {
           setItem(found);
         } else {

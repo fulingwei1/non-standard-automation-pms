@@ -120,9 +120,9 @@ export default function FinancialReports() {
   }, [selectedPeriod, dateRange]);
 
   const currentData = monthlyFinancials[monthlyFinancials.length - 1] || { cashFlow: 0, revenue: 0, cost: 0, profit: 0 };
-  const totalRevenue = monthlyFinancials.reduce((sum, m) => sum + m.revenue, 0);
-  const totalCost = monthlyFinancials.reduce((sum, m) => sum + m.cost, 0);
-  const totalProfit = monthlyFinancials.reduce((sum, m) => sum + m.profit, 0);
+  const totalRevenue = (monthlyFinancials || []).reduce((sum, m) => sum + m.revenue, 0);
+  const totalCost = (monthlyFinancials || []).reduce((sum, m) => sum + m.cost, 0);
+  const totalProfit = (monthlyFinancials || []).reduce((sum, m) => sum + m.profit, 0);
   const avgMargin = totalProfit / totalRevenue * 100;
 
   return (
@@ -290,7 +290,7 @@ export default function FinancialReports() {
           <CardHeader>
             <Tabs value={selectedReport} onValueChange={setSelectedReport}>
               <TabsList className="grid w-full grid-cols-5">
-                {reportTypes.map((type) => {
+                {(reportTypes || []).map((type) => {
                   const Icon = type.icon;
                   return (
                     <TabsTrigger
@@ -355,7 +355,7 @@ export default function FinancialReports() {
                       营收与利润趋势
                     </h3>
                     <DualAxesChart
-                      data={monthlyFinancials.map((item) => ({
+                      data={(monthlyFinancials || []).map((item) => ({
                         month: item.month,
                         revenue: item.revenue,
                         profit: item.profit,
@@ -378,7 +378,7 @@ export default function FinancialReports() {
                     收入成本对比
                   </h4>
                   <BarChartComponent
-                    data={monthlyFinancials.flatMap((item) => [
+                    data={(monthlyFinancials || []).flatMap((item) => [
                     {
                       month: item.month,
                       type: "营业收入",
@@ -403,9 +403,9 @@ export default function FinancialReports() {
                     月度营收明细
                   </h4>
                   <div className="space-y-3">
-                    {monthlyFinancials.map((item, index) => {
+                    {(monthlyFinancials || []).map((item, index) => {
                       const maxRevenue = Math.max(
-                        ...monthlyFinancials.map((m) => m.revenue)
+                        ...(monthlyFinancials || []).map((m) => m.revenue)
                       );
                       const percentage = item.revenue / maxRevenue * 100;
                       return (
@@ -460,7 +460,7 @@ export default function FinancialReports() {
                     现金流量趋势
                   </h3>
                   <AreaChartComponent
-                    data={cashFlowData.flatMap((item) => [
+                    data={(cashFlowData || []).flatMap((item) => [
                     {
                       month: item.month,
                       type: "现金流入",
@@ -488,9 +488,9 @@ export default function FinancialReports() {
                     现金流量明细
                   </h3>
                   <div className="space-y-4">
-                    {cashFlowData.map((item, index) => {
+                    {(cashFlowData || []).map((item, index) => {
                       const maxFlow = Math.max(
-                        ...cashFlowData.map((c) => Math.abs(c.net))
+                        ...(cashFlowData || []).map((c) => Math.abs(c.net))
                       );
                       const percentage = Math.abs(item.net) / maxFlow * 100;
                       return (
@@ -557,7 +557,7 @@ export default function FinancialReports() {
                     预算执行分析
                   </h3>
                   <div className="space-y-3">
-                    {costBreakdown.map((item, index) => {
+                    {(costBreakdown || []).map((item, index) => {
                       const used = item.amount / item.budget * 100;
                       return (
                         <div key={index} className="space-y-2">
@@ -619,7 +619,7 @@ export default function FinancialReports() {
                       成本构成占比
                     </h3>
                     <PieChartComponent
-                      data={costBreakdown.map((item) => ({
+                      data={(costBreakdown || []).map((item) => ({
                         category: item.category,
                         value: item.amount
                       }))}
@@ -641,8 +641,8 @@ export default function FinancialReports() {
                       成本构成明细
                     </h3>
                     <div className="space-y-3">
-                      {costBreakdown.map((item, index) => {
-                        const total = costBreakdown.reduce(
+                      {(costBreakdown || []).map((item, index) => {
+                        const total = (costBreakdown || []).reduce(
                           (sum, c) => sum + c.amount,
                           0
                         );
@@ -695,7 +695,7 @@ export default function FinancialReports() {
                     预算与实际对比
                   </h3>
                   <BarChartComponent
-                    data={costBreakdown.flatMap((item) => [
+                    data={(costBreakdown || []).flatMap((item) => [
                     {
                       category: item.category,
                       type: "预算",
@@ -726,9 +726,9 @@ export default function FinancialReports() {
                     项目利润率对比
                   </h3>
                   <BarChartComponent
-                    data={projectProfitability.map((p) => ({
+                    data={(projectProfitability || []).map((p) => ({
                       project:
-                      p.project.length > 8 ?
+                      p.project?.length > 8 ?
                       p.project.slice(0, 8) + "..." :
                       p.project,
                       margin: p.margin
@@ -736,7 +736,7 @@ export default function FinancialReports() {
                     xField="project"
                     yField="margin"
                     height={250}
-                    colors={projectProfitability.map((p) =>
+                    colors={(projectProfitability || []).map((p) =>
                     p.margin >= 30 ?
                     "#10b981" :
                     p.margin >= 20 ?
@@ -758,10 +758,10 @@ export default function FinancialReports() {
                     项目收入与成本
                   </h3>
                   <BarChartComponent
-                    data={projectProfitability.flatMap((p) => [
+                    data={(projectProfitability || []).flatMap((p) => [
                     {
                       project:
-                      p.project.length > 8 ?
+                      p.project?.length > 8 ?
                       p.project.slice(0, 8) + "..." :
                       p.project,
                       type: "收入",
@@ -769,7 +769,7 @@ export default function FinancialReports() {
                     },
                     {
                       project:
-                      p.project.length > 8 ?
+                      p.project?.length > 8 ?
                       p.project.slice(0, 8) + "..." :
                       p.project,
                       type: "成本",
@@ -792,7 +792,7 @@ export default function FinancialReports() {
                     项目盈利明细
                   </h3>
                   <div className="space-y-3">
-                    {projectProfitability.map((project, index) => {
+                    {(projectProfitability || []).map((project, index) => {
                       const statusColors = {
                         good: "bg-emerald-500",
                         warning: "bg-amber-500",

@@ -71,7 +71,7 @@ export default function DispatchFilters({
             <SelectValue placeholder="项目" />
           </SelectTrigger>
           <SelectContent>
-            {projects.map((project) => (
+            {(projects || []).map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.name}
               </SelectItem>

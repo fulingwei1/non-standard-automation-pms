@@ -79,7 +79,7 @@ export default function ECNManagement() {
         try {
           const membersRes = await memberApi.list({ project_id: project.id });
           const members = membersRes.data?.items || membersRes.data?.items || membersRes.data || [];
-          const isMember = members.some(m => m.user_id === userId);
+          const isMember = (members || []).some(m => m.user_id === userId);
           if (isMember) {
             userProjectIds.push(project.id);
           }
@@ -89,7 +89,7 @@ export default function ECNManagement() {
       }
 
       // 筛选用户参与的项目
-      const filteredProjects = allProjects.filter(p => userProjectIds.includes(p.id));
+      const filteredProjects = (allProjects || []).filter(p => userProjectIds.includes(p.id));
       setUserProjects(filteredProjects);
 
       // 获取这些项目的设备
@@ -189,7 +189,7 @@ export default function ECNManagement() {
         "成本影响",
         "工期影响",
       ],
-      ...ecnList.map((ecn) => [
+      ...(ecnList || []).map((ecn) => [
         ecn.ecn_no || "",
         ecn.ecn_title || "",
         ecn.project_name || "",
@@ -204,7 +204,7 @@ export default function ECNManagement() {
     ];
 
     const escapeCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const csvContent = rows.map((row) => row.map(escapeCell).join(",")).join("\n");
+    const csvContent = (rows || []).map((row) => row.map(escapeCell).join(",")).join("\n");
 
     const BOM = "\uFEFF";
     const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
@@ -246,7 +246,7 @@ export default function ECNManagement() {
   };
 
   const handleBatchExport = async (ecnIds) => {
-    const selected = ecns.filter((ecn) => ecnIds.has(ecn.id));
+    const selected = (ecns || []).filter((ecn) => ecnIds.has(ecn.id));
     exportECNsToCsv(selected, "ECN批量导出");
   };
 
@@ -256,15 +256,15 @@ export default function ECNManagement() {
 
   const stats = useMemo(() => {
     const total = ecns.length;
-    const pending = ecns.filter((ecn) =>
+    const pending = (ecns || []).filter((ecn) =>
       ["SUBMITTED", "EVALUATING", "PENDING_APPROVAL"].includes(ecn.status),
     ).length;
-    const inProgress = ecns.filter((ecn) =>
+    const inProgress = (ecns || []).filter((ecn) =>
       ["EXECUTING", "PENDING_VERIFY"].includes(ecn.status),
     ).length;
-    const completed = ecns.filter((ecn) => ecn.status === "COMPLETED").length;
-    const urgent = ecns.filter((ecn) => ecn.priority === "URGENT").length;
-    const high = ecns.filter((ecn) => ecn.priority === "HIGH").length;
+    const completed = (ecns || []).filter((ecn) => ecn.status === "COMPLETED").length;
+    const urgent = (ecns || []).filter((ecn) => ecn.priority === "URGENT").length;
+    const high = (ecns || []).filter((ecn) => ecn.priority === "HIGH").length;
 
     return { total, pending, inProgress, completed, urgent, high };
   }, [ecns]);

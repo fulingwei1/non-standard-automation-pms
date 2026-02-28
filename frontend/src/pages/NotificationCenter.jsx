@@ -233,7 +233,7 @@ export default function NotificationCenter() {
       const notificationsData = data.items || data || [];
 
       // Format notifications for display
-      const formattedNotifications = notificationsData.map(formatNotification);
+      const formattedNotifications = (notificationsData || []).map(formatNotification);
       setNotifications(formattedNotifications);
       setTotal(data.total || formattedNotifications.length);
     } catch (err) {
@@ -262,7 +262,7 @@ export default function NotificationCenter() {
     loadUnreadCount();
   }, [loadNotifications, loadUnreadCount]);
 
-  const filteredNotifications = notifications.filter((n) => {
+  const filteredNotifications = (notifications || []).filter((n) => {
     if (search && !n.title?.includes(search) && !n.content?.includes(search))
     {return false;}
     return true;
@@ -304,7 +304,7 @@ export default function NotificationCenter() {
     }
     try {
       // Delete all notifications one by one
-      await Promise.all(notifications.map((n) => notificationApi.delete(n.id)));
+      await Promise.all((notifications || []).map((n) => notificationApi.delete(n.id)));
       await loadNotifications();
       await loadUnreadCount();
     } catch (err) {
@@ -313,7 +313,7 @@ export default function NotificationCenter() {
   };
 
   // Show error state
-  if (error && notifications.length === 0) {
+  if (error && notifications?.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="container mx-auto px-4 py-6 space-y-6">
@@ -350,7 +350,7 @@ export default function NotificationCenter() {
             {[
             {
               label: "全部通知",
-              value: notifications.length,
+              value: notifications?.length,
               icon: Bell,
               color: "text-blue-400"
             },
@@ -362,14 +362,14 @@ export default function NotificationCenter() {
             },
             {
               label: "紧急",
-              value: notifications.filter((n) => n.priority === "high").
+              value: (notifications || []).filter((n) => n.priority === "high").
               length,
               icon: AlertTriangle,
               color: "text-red-400"
             },
             {
               label: "待审批",
-              value: notifications.filter(
+              value: (notifications || []).filter(
                 (n) => n.type === "approval" && !n.read
               ).length,
               icon: Users,
@@ -399,7 +399,7 @@ export default function NotificationCenter() {
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                   {/* Type Filter */}
                   <div className="flex flex-wrap gap-2">
-                    {notificationTypes.map((type) =>
+                    {(notificationTypes || []).map((type) =>
                     <Button
                       key={type.value}
                       variant={filter === type.value ? "default" : "ghost"}
@@ -488,7 +488,7 @@ export default function NotificationCenter() {
 
             <AnimatePresence mode="popLayout">
                 {filteredNotifications.length > 0 ?
-              filteredNotifications.map((notification) =>
+              (filteredNotifications || []).map((notification) =>
               <NotificationItem
                 key={notification.id}
                 notification={notification}

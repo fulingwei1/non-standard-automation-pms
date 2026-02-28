@@ -148,7 +148,7 @@ export default function WorkshopTaskBoard() {
               <div>
                 <div className="text-sm text-slate-500 mb-1">进行中</div>
                 <div className="text-2xl font-bold text-amber-600">
-                  {ordersByStatus.in_progress.length}
+                  {ordersByStatus.in_progress?.length}
                 </div>
               </div>
               <TrendingUp className="w-8 h-8 text-amber-500" />
@@ -161,7 +161,7 @@ export default function WorkshopTaskBoard() {
               <div>
                 <div className="text-sm text-slate-500 mb-1">已完成</div>
                 <div className="text-2xl font-bold text-emerald-600">
-                  {ordersByStatus.completed.length}
+                  {ordersByStatus.completed?.length}
                 </div>
               </div>
               <CheckCircle2 className="w-8 h-8 text-emerald-500" />
@@ -170,14 +170,14 @@ export default function WorkshopTaskBoard() {
         </Card>
       </div>
       {/* Workstation Status */}
-      {boardData.workstations && boardData.workstations.length > 0 && (
+      {boardData.workstations && boardData.workstations?.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>工位状态</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {boardData.workstations.map((ws) => (
+              {(boardData.workstations || []).map((ws) => (
                 <div
                   key={ws.id}
                   className={cn(
@@ -219,17 +219,17 @@ export default function WorkshopTaskBoard() {
       )}
       {/* Kanban Board */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {columns.map((column) => (
+        {(columns || []).map((column) => (
           <Card key={column.key}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{column.title}</span>
-                <Badge variant="outline">{column.orders.length}</Badge>
+                <Badge variant="outline">{column.orders?.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 min-h-[400px]">
-                {column.orders.map((order) => (
+                {(column.orders || []).map((order) => (
                   <div
                     key={order.id}
                     className="border rounded-lg p-3 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -286,7 +286,7 @@ export default function WorkshopTaskBoard() {
                     )}
                   </div>
                 ))}
-                {column.orders.length === 0 && (
+                {column.orders?.length === 0 && (
                   <div className="text-center py-8 text-slate-400 text-sm">
                     暂无工单
                   </div>

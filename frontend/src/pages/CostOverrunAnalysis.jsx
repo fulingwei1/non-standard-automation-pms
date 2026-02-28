@@ -188,7 +188,7 @@ export default function CostOverrunAnalysis() {
                   <CardTitle>超支原因统计</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {reasonsData.reasons && reasonsData.reasons.length > 0 &&
+                  {reasonsData.reasons && reasonsData.reasons?.length > 0 &&
                 <Table>
                       <TableHeader>
                         <TableRow>
@@ -199,7 +199,7 @@ export default function CostOverrunAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {reasonsData.reasons.map((reason, idx) =>
+                        {(reasonsData.reasons || []).map((reason, idx) =>
                     <TableRow key={idx}>
                             <TableCell>{reason.reason}</TableCell>
                             <TableCell>{reason.count}</TableCell>
@@ -229,7 +229,7 @@ export default function CostOverrunAnalysis() {
               </CardHeader>
               <CardContent>
                 {accountabilityData.by_person &&
-              accountabilityData.by_person.length > 0 &&
+              accountabilityData.by_person?.length > 0 &&
               <Table>
                       <TableHeader>
                         <TableRow>
@@ -241,7 +241,7 @@ export default function CostOverrunAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {accountabilityData.by_person.map((person, idx) =>
+                        {(accountabilityData.by_person || []).map((person, idx) =>
                   <TableRow key={idx}>
                             <TableCell>{person.person_name}</TableCell>
                             <TableCell>
@@ -305,7 +305,7 @@ export default function CostOverrunAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {impactData.affected_projects &&
-                impactData.affected_projects.length > 0 &&
+                impactData.affected_projects?.length > 0 &&
                 <Table>
                         <TableHeader>
                           <TableRow>
@@ -316,7 +316,7 @@ export default function CostOverrunAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {impactData.affected_projects.map((project, idx) =>
+                          {(impactData.affected_projects || []).map((project, idx) =>
                     <TableRow key={idx}>
                               <TableCell>{project.project_code}</TableCell>
                               <TableCell>

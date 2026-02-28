@@ -20,7 +20,7 @@ export default function KitStatus({ view: _view, data }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {kitData.map(kit => (
+          {(kitData || []).map(kit => (
             <div key={kit.project} className="flex items-center justify-between">
               <span className="text-sm">{kit.project}</span>
               <Badge variant={kit.status === 'ready' ? 'default' : kit.status === 'partial' ? 'secondary' : 'destructive'}>

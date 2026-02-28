@@ -46,11 +46,11 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
 
   // Calculate team workload
   const calculateWorkload = (member) => {
-    if (!member.assigned_projects || member.assigned_projects.length === 0) {
+    if (!member.assigned_projects || member.assigned_projects?.length === 0) {
       return 0;
     }
 
-    const activeProjects = member.assigned_projects.filter((p) =>
+    const activeProjects = (member.assigned_projects || []).filter((p) =>
     p.status === 'ACTIVE' || p.status === 'DELAYED'
     ).length;
 
@@ -156,7 +156,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
               <Progress value={workload} className="h-1.5" />
             </div>
 
-            {member.assigned_projects && member.assigned_projects.length > 0 &&
+            {member.assigned_projects && member.assigned_projects?.length > 0 &&
             <div className="mt-2">
                 <div className="text-xs text-gray-500 mb-1">负责项目</div>
                 <div className="flex flex-wrap gap-1">
@@ -169,9 +169,9 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                       {proj.name}
                 </Badge>
                 )}
-                  {member.assigned_projects.length > 3 &&
+                  {member.assigned_projects?.length > 3 &&
                 <Badge variant="secondary" className="text-xs">
-                      +{member.assigned_projects.length - 3}
+                      +{member.assigned_projects?.length - 3}
                 </Badge>
                 }
                 </div>
@@ -260,12 +260,12 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px] pr-4">
-            {project.team_members && project.team_members.length > 0 ?
+            {project.team_members && project.team_members?.length > 0 ?
             <div className="space-y-3">
-                {project.team_members.map((member, index) =>
+                {(project.team_members || []).map((member, index) =>
               <React.Fragment key={member.id}>
                     {renderMemberCard(member, index)}
-                    {index < project.team_members.length - 1 &&
+                    {index < project.team_members?.length - 1 &&
                 <Separator />
                 }
               </React.Fragment>
@@ -351,9 +351,9 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
 
                 <div>
                   <h4 className="font-medium mb-2">负责项目</h4>
-                  {selectedMember.assigned_projects && selectedMember.assigned_projects.length > 0 ?
+                  {selectedMember.assigned_projects && selectedMember.assigned_projects?.length > 0 ?
                 <div className="space-y-2">
-                      {selectedMember.assigned_projects.map((proj) =>
+                      {(selectedMember.assigned_projects || []).map((proj) =>
                   <div
                     key={proj.id}
                     className="flex items-center justify-between p-2 bg-gray-50 rounded">

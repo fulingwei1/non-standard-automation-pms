@@ -53,7 +53,7 @@ export function MachineTable({ machines, loading, onViewDetail }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {machines.map((machine) => (
+                            {(machines || []).map((machine) => (
                                 <TableRow key={machine.id}>
                                     <TableCell className="font-mono text-sm">
                                         {machine.machine_code}

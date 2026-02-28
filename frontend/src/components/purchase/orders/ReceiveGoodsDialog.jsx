@@ -90,7 +90,7 @@ export default function ReceiveGoodsDialog({
           </div>
 
           {/* 待收货物料列表 */}
-          {order.items && order.items.length > 0 &&
+          {order.items && order.items?.length > 0 &&
           <div>
               <Label className="text-slate-400 mb-2 block">待收货物料</Label>
               <div className="space-y-2 max-h-48 overflow-y-auto">

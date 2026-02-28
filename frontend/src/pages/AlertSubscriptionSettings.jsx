@@ -120,7 +120,7 @@ export default function AlertSubscriptionSettings() {
         setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
         setSubscriptions(data);
-        setTotal(data.length);
+        setTotal(data?.length);
       } else {
         setSubscriptions([]);
         setTotal(0);
@@ -243,7 +243,7 @@ export default function AlertSubscriptionSettings() {
       if (channels.includes(channel)) {
         return {
           ...prev,
-          notify_channels: channels.filter((c) => c !== channel),
+          notify_channels: (channels || []).filter((c) => c !== channel),
         };
       } else {
         return { ...prev, notify_channels: [...channels, channel] };
@@ -252,12 +252,12 @@ export default function AlertSubscriptionSettings() {
   };
 
   const formatLevel = (level) => {
-    const option = alertLevelOptions.find((o) => o.value === level);
+    const option = (alertLevelOptions || []).find((o) => o.value === level);
     return option?.label || level;
   };
 
   const getLevelColor = (level) => {
-    const option = alertLevelOptions.find((o) => o.value === level);
+    const option = (alertLevelOptions || []).find((o) => o.value === level);
     return option?.color || "slate";
   };
 
@@ -318,7 +318,7 @@ export default function AlertSubscriptionSettings() {
             animate="visible"
             className="space-y-4"
           >
-            {subscriptions.map((subscription) => (
+            {(subscriptions || []).map((subscription) => (
               <motion.div key={subscription.id} variants={fadeIn}>
                 <Card className="bg-surface-1/50 hover:bg-surface-1 transition-colors">
                   <CardContent className="p-4">
@@ -327,7 +327,7 @@ export default function AlertSubscriptionSettings() {
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-white">
                             {subscription.alert_type
-                              ? alertTypeOptions.find(
+                              ? (alertTypeOptions || []).find(
                                   (o) => o.value === subscription.alert_type,
                                 )?.label || subscription.alert_type
                               : "全部类型"}
@@ -375,7 +375,7 @@ export default function AlertSubscriptionSettings() {
                               {(subscription.notify_channels || ["SYSTEM"])
                                 .map(
                                   (ch) =>
-                                    channelOptions.find((o) => o.value === ch)
+                                    (channelOptions || []).find((o) => o.value === ch)
                                       ?.label || ch,
                                 )
                                 .join(", ")}
@@ -499,7 +499,7 @@ export default function AlertSubscriptionSettings() {
                       <SelectValue placeholder="选择预警类型（空表示全部）" />
                     </SelectTrigger>
                     <SelectContent>
-                      {alertTypeOptions.map((opt) => (
+                      {(alertTypeOptions || []).map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -526,7 +526,7 @@ export default function AlertSubscriptionSettings() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部项目</SelectItem>
-                      {projects.map((project) => (
+                      {(projects || []).map((project) => (
                         <SelectItem
                           key={project.id}
                           value={project.id.toString()}
@@ -561,7 +561,7 @@ export default function AlertSubscriptionSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {alertLevelOptions.map((opt) => (
+                      {(alertLevelOptions || []).map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -575,7 +575,7 @@ export default function AlertSubscriptionSettings() {
                 <div className="space-y-2">
                   <Label>通知渠道</Label>
                   <div className="flex flex-wrap gap-3 mt-2">
-                    {channelOptions.map((channel) => (
+                    {(channelOptions || []).map((channel) => (
                       <div
                         key={channel.value}
                         className="flex items-center space-x-2"

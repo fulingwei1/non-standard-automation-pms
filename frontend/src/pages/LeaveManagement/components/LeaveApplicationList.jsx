@@ -42,7 +42,7 @@ export function LeaveFilters({ searchText, setSearchText, typeFilter, setTypeFil
 export function LeaveApplicationList({ applications }) {
     return (
         <div className="space-y-4">
-            {applications.map((app) => (
+            {(applications || []).map((app) => (
                 <Card key={app.id}>
                     <CardContent className="p-6">
                         <div className="flex items-start justify-between">

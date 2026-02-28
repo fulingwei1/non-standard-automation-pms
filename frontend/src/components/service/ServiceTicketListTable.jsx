@@ -77,7 +77,7 @@ export function ServiceTicketListTable({
   // 处理全选
   const handleSelectAll = (checked) => {
     if (checked) {
-      onSelectionChange(new Set(sortedTickets.map((ticket) => ticket.id)));
+      onSelectionChange(new Set((sortedTickets || []).map((ticket) => ticket.id)));
     } else {
       onSelectionChange(new Set());
     }
@@ -184,7 +184,7 @@ export function ServiceTicketListTable({
             </TableHeader>
 
             <TableBody>
-              {sortedTickets.map((ticket) =>
+              {(sortedTickets || []).map((ticket) =>
               <TableRow
                 key={ticket.id}
                 className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 ${

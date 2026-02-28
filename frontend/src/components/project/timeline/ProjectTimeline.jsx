@@ -52,7 +52,7 @@ export function ProjectTimeline({
   const [viewMode, setViewMode] = useState("week"); // "day" | "week" | "month"
   const [zoom, setZoom] = useState(1);
   const [expandedProjects, setExpandedProjects] = useState(
-    () => projects.map((p) => p.id)
+    () => (projects || []).map((p) => p.id)
   );
 
   // 时间轴起始日期（默认从当前周开始往前一周）
@@ -131,7 +131,7 @@ export function ProjectTimeline({
   const toggleProject = useCallback((projectId) => {
     setExpandedProjects((prev) =>
       prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
+        ? (prev || []).filter((id) => id !== projectId)
         : [...prev, projectId]
     );
   }, []);
@@ -164,7 +164,7 @@ export function ProjectTimeline({
     let currentMonth = null;
     let monthStart = 0;
 
-    dates.forEach((date, index) => {
+    (dates || []).forEach((date, index) => {
       const monthKey = format(date, "yyyy-MM");
       if (monthKey !== currentMonth) {
         if (currentMonth !== null) {
@@ -198,7 +198,7 @@ export function ProjectTimeline({
             <span className="text-xs font-medium text-slate-500">项目名称</span>
           </div>
           <div className="flex">
-            {months.map((month) => (
+            {(months || []).map((month) => (
               <div
                 key={month.key}
                 className="flex items-center justify-center border-r bg-slate-50 text-xs font-medium text-slate-600"
@@ -217,7 +217,7 @@ export function ProjectTimeline({
             style={{ width: sidebarWidth }}
           />
           <div className="flex">
-            {dates.map((date, index) => {
+            {(dates || []).map((date, index) => {
               const isWeekendDay = isWeekend(date);
               const isTodayDate = isToday(date);
 
@@ -310,7 +310,7 @@ export function ProjectTimeline({
           >
             {/* 网格背景 */}
             <div className="absolute inset-0 flex">
-              {dates.map((date, index) => (
+              {(dates || []).map((date, index) => (
                 <div
                   key={index}
                   className={cn(
@@ -381,7 +381,7 @@ export function ProjectTimeline({
                     >
                       {/* 网格背景 */}
                       <div className="absolute inset-0 flex">
-                        {dates.map((date, index) => (
+                        {(dates || []).map((date, index) => (
                           <div
                             key={index}
                             className={cn(
@@ -559,12 +559,12 @@ export function ProjectTimeline({
 
           {/* 项目列表 */}
           <div>
-            {projects.length === 0 ? (
+            {projects?.length === 0 ? (
               <div className="flex items-center justify-center h-40 text-slate-400">
                 暂无项目数据
               </div>
             ) : (
-              projects.map((project) => renderProjectRow(project))
+              (projects || []).map((project) => renderProjectRow(project))
             )}
           </div>
         </div>

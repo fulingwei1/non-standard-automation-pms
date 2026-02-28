@@ -37,7 +37,7 @@ export default function ConvertLeadDialog({
               }}
             >
               <option value="">请选择客户</option>
-              {customers.map((customer) => (
+              {(customers || []).map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.customer_name} ({customer.customer_code})
                 </option>

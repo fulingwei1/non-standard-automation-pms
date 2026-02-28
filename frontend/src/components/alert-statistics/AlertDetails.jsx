@@ -60,7 +60,7 @@ const AlertDetails = ({ alerts = [], loading = false }) => {
         key: 'tags',
         width: 220,
         render: (tags) =>
-          Array.isArray(tags) && tags.length > 0 ? (
+          Array.isArray(tags) && tags?.length > 0 ? (
             <Space wrap>
               {tags.slice(0, 3).map((t) => (
                 <Tag key={t}>{t}</Tag>

@@ -18,7 +18,7 @@ export default function ViewControls({ viewMode, setViewMode }) {
           <div className="flex items-center justify-between">
             {/* View Mode Toggle */}
             <div className="flex items-center gap-2">
-              {viewModes.map((mode) => (
+              {(viewModes || []).map((mode) => (
                 <Button
                   key={mode.id}
                   variant={viewMode === mode.id ? "default" : "ghost"}

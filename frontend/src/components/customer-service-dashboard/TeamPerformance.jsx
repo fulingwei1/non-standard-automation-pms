@@ -153,12 +153,12 @@ export function TeamPerformance({
   // 计算团队整体统计
   const teamStats = {
     totalMembers: teamMembers.length,
-    totalTicketsAssigned: teamMembers.reduce((sum, member) => sum + member.ticketsAssigned, 0),
-    totalTicketsResolved: teamMembers.reduce((sum, member) => sum + member.ticketsResolved, 0),
-    overallResolutionRate: teamMembers.reduce((sum, member) => sum + member.resolutionRate, 0) / teamMembers.length,
-    avgResponseTime: teamMembers.reduce((sum, member) => sum + member.avgResponseTime, 0) / teamMembers.length,
-    avgSatisfactionScore: teamMembers.reduce((sum, member) => sum + member.satisfactionScore, 0) / teamMembers.length,
-    totalEscalated: teamMembers.reduce((sum, member) => sum + member.escalatedTickets, 0)
+    totalTicketsAssigned: (teamMembers || []).reduce((sum, member) => sum + member.ticketsAssigned, 0),
+    totalTicketsResolved: (teamMembers || []).reduce((sum, member) => sum + member.ticketsResolved, 0),
+    overallResolutionRate: (teamMembers || []).reduce((sum, member) => sum + member.resolutionRate, 0) / teamMembers.length,
+    avgResponseTime: (teamMembers || []).reduce((sum, member) => sum + member.avgResponseTime, 0) / teamMembers.length,
+    avgSatisfactionScore: (teamMembers || []).reduce((sum, member) => sum + member.satisfactionScore, 0) / teamMembers.length,
+    totalEscalated: (teamMembers || []).reduce((sum, member) => sum + member.escalatedTickets, 0)
   };
 
   // 绩效等级映射
@@ -280,7 +280,7 @@ export function TeamPerformance({
 
         <CardContent>
           <div className="space-y-4">
-            {sortedTeam.map((member, index) => {
+            {(sortedTeam || []).map((member, index) => {
               const performanceLevel = getPerformanceLevel(member.resolutionRate);
 
               return (
@@ -315,7 +315,7 @@ export function TeamPerformance({
                           {member.department}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          {member.skills.map((skill, idx) =>
+                          {(member.skills || []).map((skill, idx) =>
                           <span
                             key={idx}
                             className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">

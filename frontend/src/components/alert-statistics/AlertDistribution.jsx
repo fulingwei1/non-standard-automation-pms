@@ -57,7 +57,7 @@ export function AlertDistribution({
       INFO: { ...ALERT_LEVEL_STATS.INFO, count: 0 }
     };
 
-    data.forEach((alert) => {
+    (data || []).forEach((alert) => {
       const level = alert.alert_level || 'INFO';
       if (distribution[level]) {
         distribution[level].count += 1;
@@ -83,7 +83,7 @@ export function AlertDistribution({
       IGNORED: { ...ALERT_STATUS_STATS.IGNORED, count: 0 }
     };
 
-    data.forEach((alert) => {
+    (data || []).forEach((alert) => {
       const status = alert.status || 'PENDING';
       if (distribution[status]) {
         distribution[status].count += 1;
@@ -102,7 +102,7 @@ export function AlertDistribution({
     const distribution = {};
     const subtypes = {};
 
-    data.forEach((alert) => {
+    (data || []).forEach((alert) => {
       const type = alert.alert_type || 'SYSTEM';
       const subtype = alert.alert_subtype || 'OTHER';
 
@@ -142,7 +142,7 @@ export function AlertDistribution({
 
     const distribution = {};
 
-    data.forEach((alert) => {
+    (data || []).forEach((alert) => {
       const project = alert.project_name || alert.project_id || '未分类';
 
       if (!distribution[project]) {
@@ -173,37 +173,37 @@ export function AlertDistribution({
 
   // 计算雷达图数据
   const radarData = useMemo(() => {
-    if (!data || data.length === 0) {return [];}
+    if (!data || data?.length === 0) {return [];}
 
     return [
     {
       subject: '严重告警',
-      A: (levelDistribution.find((d) => d.label === '严重')?.count || 0) / data.length * 100,
+      A: ((levelDistribution || []).find((d) => d.label === '严重')?.count || 0) / data?.length * 100,
       fullMark: 100
     },
     {
       subject: '高优先级',
-      A: (levelDistribution.find((d) => d.label === '高')?.count || 0) / data.length * 100,
+      A: ((levelDistribution || []).find((d) => d.label === '高')?.count || 0) / data?.length * 100,
       fullMark: 100
     },
     {
       subject: '待处理',
-      A: (statusDistribution.find((d) => d.label === '待处理')?.count || 0) / data.length * 100,
+      A: ((statusDistribution || []).find((d) => d.label === '待处理')?.count || 0) / data?.length * 100,
       fullMark: 100
     },
     {
       subject: '已解决',
-      A: (statusDistribution.find((d) => d.label === '已解决')?.count || 0) / data.length * 100,
+      A: ((statusDistribution || []).find((d) => d.label === '已解决')?.count || 0) / data?.length * 100,
       fullMark: 100
     },
     {
       subject: '系统告警',
-      A: (typeDistribution.find((d) => d.label === '系统告警')?.count || 0) / data.length * 100,
+      A: ((typeDistribution || []).find((d) => d.label === '系统告警')?.count || 0) / data?.length * 100,
       fullMark: 100
     },
     {
       subject: '项目告警',
-      A: (typeDistribution.find((d) => d.label === '项目预警')?.count || 0) / data.length * 100,
+      A: ((typeDistribution || []).find((d) => d.label === '项目预警')?.count || 0) / data?.length * 100,
       fullMark: 100
     }];
 
@@ -211,7 +211,7 @@ export function AlertDistribution({
 
   // 渲染饼图
   const renderPieChart = (data, _title) => {
-    const COLORS = data.map((item) => item.color || item.bgColor);
+    const COLORS = (data || []).map((item) => item.color || item.bgColor);
 
     return (
       <ResponsiveContainer width="100%" height={height}>
@@ -226,7 +226,7 @@ export function AlertDistribution({
             fill="#8884d8"
             dataKey="count">
 
-            {data.map((entry, index) =>
+            {(data || []).map((entry, index) =>
             <Cell key={`cell-${index}`} fill={COLORS[index]} />
             )}
           </Pie>
@@ -340,7 +340,7 @@ export function AlertDistribution({
   // 渲染类型分布详细视图
   const renderTypeDetail = () =>
   <div className="space-y-6">
-      {typeDistribution.map((typeData, index) =>
+      {(typeDistribution || []).map((typeData, index) =>
     <Card key={index}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -372,7 +372,7 @@ export function AlertDistribution({
 
 
   // 无数据时的显示
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return (
       <Card className={className}>
         <CardContent className="flex items-center justify-center h-full">

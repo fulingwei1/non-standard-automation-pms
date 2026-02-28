@@ -87,7 +87,7 @@ export default function MobileShortageReport() {
   };
 
   const handleMaterialChange = (materialId) => {
-    const material = materials.find((m) => m.id === parseInt(materialId));
+    const material = (materials || []).find((m) => m.id === parseInt(materialId));
     if (material) {
       setFormData((prev) => ({
         ...prev,
@@ -98,7 +98,7 @@ export default function MobileShortageReport() {
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
+    (files || []).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const photoUrl = event.target.result;
@@ -154,7 +154,7 @@ export default function MobileShortageReport() {
     }
   };
 
-  const selectedMaterial = materials.find(
+  const selectedMaterial = (materials || []).find(
     (m) => m.id === parseInt(formData.material_id)
   );
 
@@ -243,7 +243,7 @@ export default function MobileShortageReport() {
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
                   <SelectContent>
-                    {materials.map((material) =>
+                    {(materials || []).map((material) =>
                     <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
                     </SelectItem>
@@ -323,7 +323,7 @@ export default function MobileShortageReport() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {urgentLevels.map((level) =>
+                    {(urgentLevels || []).map((level) =>
                     <SelectItem key={level.value} value={level.value}>
                         {level.label}
                     </SelectItem>
@@ -390,7 +390,7 @@ export default function MobileShortageReport() {
                   </label>
                   {photos.length > 0 &&
                   <div className="grid grid-cols-3 gap-2">
-                      {photos.map((photo, idx) =>
+                      {(photos || []).map((photo, idx) =>
                     <div
                       key={idx}
                       className="relative aspect-square rounded-lg overflow-hidden">
@@ -404,7 +404,7 @@ export default function MobileShortageReport() {
                         type="button"
                         onClick={() =>
                         setPhotos((prev) =>
-                        prev.filter((_, i) => i !== idx)
+                        (prev || []).filter((_, i) => i !== idx)
                         )
                         }
                         className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full">

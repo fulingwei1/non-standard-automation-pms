@@ -131,7 +131,7 @@ export default function ServiceTicketManagement() {
     // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((ticket) =>
+      filtered = (filtered || []).filter((ticket) =>
       ticket.ticket_no?.toLowerCase().includes(term) ||
       ticket.project_name?.toLowerCase().includes(term) ||
       ticket.project_code?.toLowerCase().includes(term) ||
@@ -144,12 +144,12 @@ export default function ServiceTicketManagement() {
 
     // Status filter
     if (filterStatus) {
-      filtered = filtered.filter((ticket) => ticket.status === filterStatus);
+      filtered = (filtered || []).filter((ticket) => ticket.status === filterStatus);
     }
 
     // Urgency filter
     if (filterUrgency) {
-      filtered = filtered.filter((ticket) => ticket.urgency === filterUrgency);
+      filtered = (filtered || []).filter((ticket) => ticket.urgency === filterUrgency);
     }
 
     // Date range filter
@@ -174,7 +174,7 @@ export default function ServiceTicketManagement() {
           break;
       }
 
-      filtered = filtered.filter((ticket) => {
+      filtered = (filtered || []).filter((ticket) => {
         const ticketDate = new Date(ticket.created_time);
         return ticketDate >= filterDate;
       });
@@ -249,7 +249,7 @@ export default function ServiceTicketManagement() {
   const handleBatchAssign = async (assignData) => {
     try {
       await serviceApi.tickets.batchAssign(assignData);
-      toast.success(`成功分配 ${assignData.ticket_ids.length} 个工单`);
+      toast.success(`成功分配 ${assignData.ticket_ids?.length} 个工单`);
       await loadTickets();
       await loadStatistics();
     } catch (error) {
@@ -286,7 +286,7 @@ export default function ServiceTicketManagement() {
       "负责人",
       "创建时间"].
       join(","),
-      ...ticketsToExport.map((ticket) =>
+      ...(ticketsToExport || []).map((ticket) =>
       [
       ticket.ticket_no,
       ticket.project_code,
@@ -341,7 +341,7 @@ export default function ServiceTicketManagement() {
   const handleSelectTicket = (ticketId) => {
     setSelectedTickets((prev) =>
     prev.includes(ticketId) ?
-    prev.filter((id) => id !== ticketId) :
+    (prev || []).filter((id) => id !== ticketId) :
     [...prev, ticketId]
     );
   };
@@ -350,7 +350,7 @@ export default function ServiceTicketManagement() {
     if (selectedTickets.length === filteredTickets.length) {
       setSelectedTickets([]);
     } else {
-      setSelectedTickets(filteredTickets.map((ticket) => ticket.id));
+      setSelectedTickets((filteredTickets || []).map((ticket) => ticket.id));
     }
   };
 

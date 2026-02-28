@@ -178,7 +178,7 @@ export default function ShortageAlert() {
     }
   };
   const filteredAlerts = useMemo(() => {
-    return alerts.filter((alert) => {
+    return (alerts || []).filter((alert) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -282,7 +282,7 @@ export default function ShortageAlert() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {projects.map((proj) => {
+                  {(projects || []).map((proj) => {
                     const projId = proj.id?.toString();
                     if (!projId || projId === "") {return null;}
                     return (
@@ -358,7 +358,7 @@ export default function ShortageAlert() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAlerts.map((alert) => {
+                  {(filteredAlerts || []).map((alert) => {
                     const urgent = isUrgent(alert);
                     return (
                       <TableRow key={alert.id} className="border-slate-700">

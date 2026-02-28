@@ -86,7 +86,7 @@ const VIEW_TABS = [
  */
 function FilterBar({ filters, updateFilters, availableTemplates = [] }) {
   // 获取当前选中模板的名称
-  const selectedTemplate = availableTemplates.find(t => t.id === filters.templateId);
+  const selectedTemplate = (availableTemplates || []).find(t => t.id === filters.templateId);
 
   return (
     <div className="flex items-center gap-4 flex-wrap">
@@ -117,7 +117,7 @@ function FilterBar({ filters, updateFilters, availableTemplates = [] }) {
           >
             全部模板
           </DropdownMenuItem>
-          {availableTemplates.map((template) => (
+          {(availableTemplates || []).map((template) => (
             <DropdownMenuItem
               key={template.id}
               onClick={() => updateFilters({ templateId: template.id })}

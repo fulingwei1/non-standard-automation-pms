@@ -407,8 +407,8 @@ export default function TaskDetailPanel({
             }
           />
           <div className="space-y-2">
-            {task.deliverables.length > 0 ? (
-              task.deliverables.map((item) => (
+            {task.deliverables?.length > 0 ? (
+              (task.deliverables || []).map((item) => (
                 <DeliverableItem
                   key={item.id}
                   item={item}
@@ -518,13 +518,13 @@ export default function TaskDetailPanel({
         )}
 
         {/* Dependencies */}
-        {task.dependencies.length > 0 && (
+        {task.dependencies?.length > 0 && (
           <div className="space-y-3">
             <SectionHeader icon={ExternalLink} title="前置任务" />
             <Card className="bg-surface-2/30">
               <CardContent className="p-3">
                 <div className="text-sm text-slate-400">
-                  依赖 {task.dependencies.length} 个前置任务
+                  依赖 {task.dependencies?.length} 个前置任务
                 </div>
               </CardContent>
             </Card>

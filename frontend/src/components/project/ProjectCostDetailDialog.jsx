@@ -162,7 +162,7 @@ export default function ProjectCostDetailDialog({ open, onOpenChange, project })
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {chartData.map((entry, index) => (
+                      {(chartData || []).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>

@@ -211,14 +211,14 @@ export default function TaskList({ filter, limit = 5, data }) {
               <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
-        ) : tasks.length === 0 ? (
+        ) : tasks?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 mb-2" />
             <p className="text-sm">暂无待办任务</p>
           </div>
         ) : (
           <div className="space-y-1">
-            {tasks.map((task, index) => (
+            {(tasks || []).map((task, index) => (
               <TaskItem
                 key={task.id}
                 task={task}

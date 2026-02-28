@@ -140,7 +140,7 @@ export default function TransferNew() {
     }
   };
 
-  const filteredMaterials = materials.filter(
+  const filteredMaterials = (materials || []).filter(
     (m) =>
       !searchKeyword ||
       m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -187,7 +187,7 @@ export default function TransferNew() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="total">总库存</SelectItem>
-                    {projects.map((project) => (
+                    {(projects || []).map((project) => (
                       <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})
                       </SelectItem>
@@ -223,7 +223,7 @@ export default function TransferNew() {
                     <SelectValue placeholder="请选择调入项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
+                    {(projects || []).map((project) => (
                       <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})
                       </SelectItem>
@@ -274,7 +274,7 @@ export default function TransferNew() {
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredMaterials.map((material) => (
+                    {(filteredMaterials || []).map((material) => (
                       <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
                       </SelectItem>
@@ -321,7 +321,7 @@ export default function TransferNew() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {urgentLevels.map((level) => (
+                    {(urgentLevels || []).map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {level.label}
                       </SelectItem>

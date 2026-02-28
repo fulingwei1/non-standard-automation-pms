@@ -84,7 +84,7 @@ export function ECNListTable({
   // 处理全选
   const handleSelectAll = (checked) => {
     if (checked) {
-      onSelectionChange(new Set(sortedECNs.map(ecn => ecn.id)));
+      onSelectionChange(new Set((sortedECNs || []).map(ecn => ecn.id)));
     } else {
       onSelectionChange(new Set());
     }
@@ -208,7 +208,7 @@ export function ECNListTable({
         </TableHeader>
 
         <TableBody>
-          {sortedECNs.map((ecn) => (
+          {(sortedECNs || []).map((ecn) => (
             <TableRow 
               key={ecn.id}
               className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 ${

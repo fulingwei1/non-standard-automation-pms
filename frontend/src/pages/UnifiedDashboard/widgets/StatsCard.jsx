@@ -174,7 +174,7 @@ export default function StatsCard({ type = 'sales', metrics, data }) {
 
   // 根据 metrics 参数过滤显示的统计项
   const displayStats = metrics
-    ? stats.filter(s => metrics.includes(s.key))
+    ? (stats || []).filter(s => metrics.includes(s.key))
     : stats;
 
   return (
@@ -191,7 +191,7 @@ export default function StatsCard({ type = 'sales', metrics, data }) {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {displayStats.map((stat, index) => (
+            {(displayStats || []).map((stat, index) => (
               <StatItem key={stat.key} stat={stat} index={index} />
             ))}
           </div>

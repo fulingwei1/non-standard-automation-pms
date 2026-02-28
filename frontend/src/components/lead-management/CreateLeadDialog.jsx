@@ -41,7 +41,7 @@ export default function CreateLeadDialog({
               <select
                 value={selectedCustomerId}
                 onChange={(e) => {
-                  const customer = customers.find(
+                  const customer = (customers || []).find(
                     (item) => String(item.id) === e.target.value
                   );
                   if (customer) {
@@ -53,7 +53,7 @@ export default function CreateLeadDialog({
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
                 <option value="">选择已有客户</option>
-                {customers.map((customer) => (
+                {(customers || []).map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.customer_name}
                   </option>
@@ -70,7 +70,7 @@ export default function CreateLeadDialog({
                 <div className="mt-2 text-xs text-slate-400">
                   相似客户：
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {similarCustomers.map((customer) => (
+                    {(similarCustomers || []).map((customer) => (
                       <button
                         key={customer.id}
                         type="button"
@@ -94,7 +94,7 @@ export default function CreateLeadDialog({
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
                 <option value="">请选择来源</option>
-                {sourceOptions.map((option) => (
+                {(sourceOptions || []).map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

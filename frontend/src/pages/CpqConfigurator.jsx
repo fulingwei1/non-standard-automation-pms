@@ -54,7 +54,7 @@ export default function CpqConfigurator() {
   const [templates, setTemplates] = useState([]);
   const [selectedRuleSet, setSelectedRuleSet] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [configSchema, setConfigSchema] = useState({});
+  const [configSchema, setConfigSchema] = useState([]);
   const [selections, setSelections] = useState({});
   const [pricePreview, setPricePreview] = useState(null);
   const [priceHistory, setPriceHistory] = useState([]);
@@ -97,12 +97,12 @@ export default function CpqConfigurator() {
   // Load config schema when rule set or template is selected
   useEffect(() => {
     if (selectedRuleSet) {
-      const ruleSet = ruleSets.find((r) => r.id === selectedRuleSet);
+      const ruleSet = (ruleSets || []).find((r) => r.id === selectedRuleSet);
       if (ruleSet?.config_schema) {
         setConfigSchema(ruleSet.config_schema);
       }
     } else if (selectedTemplate) {
-      const template = templates.find((t) => t.id === selectedTemplate);
+      const template = (templates || []).find((t) => t.id === selectedTemplate);
       if (template?.current_version?.config_schema) {
         setConfigSchema(template.current_version.config_schema);
       }
@@ -136,7 +136,7 @@ export default function CpqConfigurator() {
       const requestData = {
         rule_set_id: selectedRuleSet || null,
         template_version_id: selectedTemplate ?
-        templates.find((t) => t.id === selectedTemplate)?.current_version_id :
+        (templates || []).find((t) => t.id === selectedTemplate)?.current_version_id :
         null,
         selections: selections,
         manual_discount_pct: manualDiscount ? parseFloat(manualDiscount) : null,
@@ -192,7 +192,7 @@ export default function CpqConfigurator() {
         cpq_config: {
           rule_set_id: selectedRuleSet,
           template_version_id: selectedTemplate ?
-          templates.find((t) => t.id === selectedTemplate)?.
+          (templates || []).find((t) => t.id === selectedTemplate)?.
           current_version_id :
           null,
           selections: selections,
@@ -353,7 +353,7 @@ export default function CpqConfigurator() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">不使用规则集</SelectItem>
-                      {ruleSets.map((ruleSet) =>
+                      {(ruleSets || []).map((ruleSet) =>
                       <SelectItem
                         key={ruleSet.id}
                         value={ruleSet.id.toString()}>
@@ -378,7 +378,7 @@ export default function CpqConfigurator() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">不使用模板</SelectItem>
-                      {templates.map((template) =>
+                      {(templates || []).map((template) =>
                       <SelectItem
                         key={template.id}
                         value={template.id.toString()}>
@@ -496,12 +496,12 @@ export default function CpqConfigurator() {
                       </span>
                     </div>
                     {pricePreview.adjustments &&
-                  pricePreview.adjustments.length > 0 &&
+                  pricePreview.adjustments?.length > 0 &&
                   <div className="space-y-2 pt-2 border-t border-slate-700">
                           <div className="text-sm text-slate-400 mb-2">
                             价格调整明细
                           </div>
-                          {pricePreview.adjustments.map((adj, idx) =>
+                          {(pricePreview.adjustments || []).map((adj, idx) =>
                     <div
                       key={idx}
                       className="flex items-center justify-between text-sm">
@@ -584,7 +584,7 @@ export default function CpqConfigurator() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {priceHistory.map((entry, idx) =>
+                  {(priceHistory || []).map((entry, idx) =>
                 <div
                   key={idx}
                   className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -597,7 +597,7 @@ export default function CpqConfigurator() {
                           {formatCurrency(entry.final_price)}
                         </span>
                       </div>
-                      {entry.adjustments && entry.adjustments.length > 0 &&
+                      {entry.adjustments && entry.adjustments?.length > 0 &&
                   <div className="text-xs text-slate-500 space-y-1">
                           {entry.adjustments.slice(0, 3).map((adj, adjIdx) =>
                     <div

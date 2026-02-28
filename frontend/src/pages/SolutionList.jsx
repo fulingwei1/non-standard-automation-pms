@@ -84,13 +84,13 @@ const deviceTypes = [
 // Mock data - 已移除，使用真实API
 // 获取状态样式
 const getStatusStyle = (status) => {
-  const config = solutionStatuses.find((s) => s.id === status);
+  const config = (solutionStatuses || []).find((s) => s.id === status);
   return config?.color || "bg-slate-500";
 };
 
 // 获取状态名称
 const getStatusName = (status) => {
-  const config = solutionStatuses.find((s) => s.id === status);
+  const config = (solutionStatuses || []).find((s) => s.id === status);
   return config?.name || status;
 };
 
@@ -362,7 +362,7 @@ export default function SolutionList({ embedded = false } = {}) {
       const solutionsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform solutions
-      const transformedSolutions = solutionsData.map((solution) => ({
+      const transformedSolutions = (solutionsData || []).map((solution) => ({
         id: solution.id,
         code: solution.solution_no || `SOL-${solution.id}`,
         name: solution.name || "",
@@ -398,11 +398,11 @@ export default function SolutionList({ embedded = false } = {}) {
       const allSolutions = transformedSolutions;
       setStats({
         total: allSolutions.length,
-        draft: allSolutions.filter((s) => s.status === "draft").length,
-        inProgress: allSolutions.filter((s) => s.status === "in_progress").
+        draft: (allSolutions || []).filter((s) => s.status === "draft").length,
+        inProgress: (allSolutions || []).filter((s) => s.status === "in_progress").
         length,
-        reviewing: allSolutions.filter((s) => s.status === "reviewing").length,
-        published: allSolutions.filter((s) => s.status === "published").length
+        reviewing: (allSolutions || []).filter((s) => s.status === "reviewing").length,
+        published: (allSolutions || []).filter((s) => s.status === "published").length
       });
     } catch (err) {
       console.error("Failed to load solutions:", err);
@@ -418,7 +418,7 @@ export default function SolutionList({ embedded = false } = {}) {
   }, [loadSolutions]);
 
   // 筛选方案
-  const filteredSolutions = solutions.filter((solution) => {
+  const filteredSolutions = (solutions || []).filter((solution) => {
     const searchLower = searchTerm.toLowerCase();
     const name = (solution.name || "").toLowerCase();
     const customer = (solution.customer || "").toLowerCase();
@@ -429,7 +429,7 @@ export default function SolutionList({ embedded = false } = {}) {
     name.includes(searchLower) ||
     customer.includes(searchLower) ||
     code.includes(searchLower) ||
-    tags.some((tag) => (tag || "").toLowerCase().includes(searchLower));
+    (tags || []).some((tag) => (tag || "").toLowerCase().includes(searchLower));
 
     return matchesSearch;
   });
@@ -546,7 +546,7 @@ export default function SolutionList({ embedded = false } = {}) {
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
-              {solutionStatuses.map((status) =>
+              {(solutionStatuses || []).map((status) =>
               <option key={status.id} value={status.id}>
                   {status.name}
               </option>
@@ -557,7 +557,7 @@ export default function SolutionList({ embedded = false } = {}) {
               onChange={(e) => setSelectedDeviceType(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
-              {deviceTypes.map((type) =>
+              {(deviceTypes || []).map((type) =>
               <option key={type.id} value={type.id}>
                   {type.name}
               </option>
@@ -607,7 +607,7 @@ export default function SolutionList({ embedded = false } = {}) {
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
             {filteredSolutions.length > 0 ?
-        filteredSolutions.map((solution) =>
+        (filteredSolutions || []).map((solution) =>
         <SolutionCard
           key={solution.id}
           solution={solution}
@@ -644,7 +644,7 @@ export default function SolutionList({ embedded = false } = {}) {
                 </thead>
                 <tbody>
                   {filteredSolutions.length > 0 ?
-              filteredSolutions.map((solution) =>
+              (filteredSolutions || []).map((solution) =>
               <SolutionTableRow
                 key={solution.id}
                 solution={solution}

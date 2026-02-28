@@ -112,7 +112,7 @@ const AIDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
+        {(statCards || []).map((stat, index) => (
           <Card key={index}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -157,7 +157,7 @@ const AIDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.top_functions.map((func, index) => (
+              {(stats.top_functions || []).map((func, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">

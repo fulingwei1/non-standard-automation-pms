@@ -279,7 +279,7 @@ export const IssueStatsOverview = ({
         animate="show"
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
-        {statsCards.map((card, index) => {
+        {(statsCards || []).map((card, index) => {
           const Icon = card.icon;
           return (
             <motion.div
@@ -324,7 +324,7 @@ export const IssueStatsOverview = ({
         transition={{ delay: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        {performanceCards.map((card, index) => {
+        {(performanceCards || []).map((card, index) => {
           const Icon = card.icon;
           return (
             <motion.div

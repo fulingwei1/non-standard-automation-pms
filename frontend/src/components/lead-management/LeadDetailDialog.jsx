@@ -106,7 +106,7 @@ export default function LeadDetailDialog({
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {followUps.map((followUp) => (
+                  {(followUps || []).map((followUp) => (
                     <Card key={followUp.id}>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">

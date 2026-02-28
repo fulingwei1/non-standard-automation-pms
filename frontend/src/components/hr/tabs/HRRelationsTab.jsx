@@ -92,7 +92,7 @@ export default function HRRelationsTab({ mockHRStats, mockEmployeeIssues }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockEmployeeIssues.map((issue, index) => (
+            {(mockEmployeeIssues || []).map((issue, index) => (
               <motion.div
                 key={issue.id}
                 initial={{ opacity: 0, x: -20 }}

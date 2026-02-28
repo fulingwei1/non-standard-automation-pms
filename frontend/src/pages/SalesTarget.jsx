@@ -233,7 +233,7 @@ export default function SalesTarget() {
   const filteredTargets = useMemo(() => {
     let result = targets;
     if (searchTerm) {
-      result = result.filter(
+      result = (result || []).filter(
         (t) =>
           (t.user_name || "")
             .toLowerCase()
@@ -248,12 +248,12 @@ export default function SalesTarget() {
   }, [targets, searchTerm]);
 
   const getTargetTypeLabel = (type) => {
-    const option = targetTypeOptions.find((opt) => opt.value === type);
+    const option = (targetTypeOptions || []).find((opt) => opt.value === type);
     return option?.label || type;
   };
 
   const getTargetPeriodLabel = (period) => {
-    const option = targetPeriodOptions.find((opt) => opt.value === period);
+    const option = (targetPeriodOptions || []).find((opt) => opt.value === period);
     return option?.label || period;
   };
 
@@ -415,7 +415,7 @@ export default function SalesTarget() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTargets.map((target) => {
+                {(filteredTargets || []).map((target) => {
                   const completionRate = target.completion_rate || 0;
                   const isCompleted = completionRate >= 100;
                   const isWarning = completionRate < 70;
@@ -548,7 +548,7 @@ export default function SalesTarget() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {targetScopeOptions.map((opt) => (
+                    {(targetScopeOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -572,7 +572,7 @@ export default function SalesTarget() {
                       <SelectValue placeholder="选择负责人" />
                     </SelectTrigger>
                     <SelectContent>
-                      {teamMembers.map((member) => (
+                      {(teamMembers || []).map((member) => (
                         <SelectItem
                           key={member.user_id}
                           value={member.user_id.toString()}
@@ -596,7 +596,7 @@ export default function SalesTarget() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {targetTypeOptions.map((opt) => (
+                    {(targetTypeOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -616,7 +616,7 @@ export default function SalesTarget() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {targetPeriodOptions.map((opt) => (
+                    {(targetPeriodOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>

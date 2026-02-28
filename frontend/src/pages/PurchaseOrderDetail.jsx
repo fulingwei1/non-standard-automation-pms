@@ -385,17 +385,17 @@ export default function PurchaseOrderDetail() {
 
   const progress = useMemo(() => {
     if (!po) {return 0;}
-    const completedStages = po.timeline.filter(
+    const completedStages = (po.timeline || []).filter(
       (s) => s.status === "completed"
     ).length;
-    return po.timeline.length > 0 ?
-    completedStages / po.timeline.length * 100 :
+    return po.timeline?.length > 0 ?
+    completedStages / po.timeline?.length * 100 :
     0;
   }, [po]);
 
   const totalItems = useMemo(() => {
     if (!po) {return 0;}
-    return po.items.reduce((sum, item) => sum + item.amount, 0);
+    return (po.items || []).reduce((sum, item) => sum + item.amount, 0);
   }, [po]);
 
   if (loading) {
@@ -560,8 +560,8 @@ export default function PurchaseOrderDetail() {
                 <Progress value={progress} className="h-2" />
               </div>
               <p className="text-xs text-slate-500">
-                {po.timeline.filter((s) => s.status === "completed").length} /{" "}
-                {po.timeline.length} 个阶段已完成
+                {(po.timeline || []).filter((s) => s.status === "completed").length} /{" "}
+                {po.timeline?.length} 个阶段已完成
               </p>
             </div>
           </CardContent>
@@ -577,12 +577,12 @@ export default function PurchaseOrderDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex justify-between overflow-x-auto py-6 px-2">
-              {po.timeline.map((stage, idx) =>
+              {(po.timeline || []).map((stage, idx) =>
               <TimelineStage
                 key={stage.stage}
                 stage={stage}
                 idx={idx}
-                total={po.timeline.length} />
+                total={po.timeline?.length} />
 
               )}
             </div>
@@ -605,7 +605,7 @@ export default function PurchaseOrderDetail() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-slate-200">
                     <Package className="w-5 h-5 text-blue-400" />
-                    订单物料 ({po.items.length} 项)
+                    订单物料 ({po.items?.length} 项)
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -627,7 +627,7 @@ export default function PurchaseOrderDetail() {
                   </div>
 
                   {/* Items */}
-                  {po.items.map((item, idx) =>
+                  {(po.items || []).map((item, idx) =>
                   <POLineItem key={item.id} item={item} idx={idx} />
                   )}
 
@@ -738,7 +738,7 @@ export default function PurchaseOrderDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-200">
                   <FileText className="w-5 h-5 text-purple-400" />
-                  附件文件 ({po.documents.length})
+                  附件文件 ({po.documents?.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -748,7 +748,7 @@ export default function PurchaseOrderDetail() {
                   animate="visible"
                   className="space-y-2">
 
-                  {po.documents.map((doc) =>
+                  {(po.documents || []).map((doc) =>
                   <motion.div
                     key={doc.id}
                     variants={fadeIn}

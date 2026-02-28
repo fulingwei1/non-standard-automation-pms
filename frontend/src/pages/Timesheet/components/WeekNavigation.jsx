@@ -72,7 +72,7 @@ export function WeekNavigation({
                             </Button>
                             <Button
                                 onClick={onSubmit}
-                                disabled={loading || saving || entries.filter((e) => e.status === "DRAFT").length === 0}
+                                disabled={loading || saving || (entries || []).filter((e) => e.status === "DRAFT").length === 0}
                                 className="bg-blue-600 hover:bg-blue-700"
                             >
                                 <Send className="w-4 h-4 mr-1" />

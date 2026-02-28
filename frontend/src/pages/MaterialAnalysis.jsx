@@ -76,7 +76,7 @@ export default function MaterialAnalysis() {
       const kitRateResponse = await purchaseApi.kitRate.dashboard();
       const kitRateData = kitRateResponse?.data?.data || kitRateResponse?.data || {};
       const kitRateProjects = kitRateData.projects || [];
-      kitRateProjects.forEach((project) => {
+      (kitRateProjects || []).forEach((project) => {
         const totalItems = project.total_items || 0;
         const fulfilledItems = project.fulfilled_items || 0;
         const shortageItems = project.shortage_items || 0;
@@ -197,7 +197,7 @@ export default function MaterialAnalysis() {
 
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (p) =>
         (p.name || "").toLowerCase().includes(searchLower) ||
         (p.id || "").toLowerCase().includes(searchLower)
@@ -205,11 +205,11 @@ export default function MaterialAnalysis() {
     }
 
     if (filterStatus === "at_risk") {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (p) => p.readyRate < 80 || p.materialStats.delayed > 5
       );
     } else if (filterStatus === "upcoming") {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (p) => p.daysUntilAssembly <= 14 && p.daysUntilAssembly > 0
       );
     }
@@ -219,7 +219,7 @@ export default function MaterialAnalysis() {
 
   // 总体统计
   const overallStats = useMemo(() => {
-    return filteredProjects.reduce(
+    return (filteredProjects || []).reduce(
       (acc, project) => {
         acc.total += project.materialStats.total;
         acc.arrived += project.materialStats.arrived;
@@ -373,7 +373,7 @@ export default function MaterialAnalysis() {
                     <div className="text-sm text-slate-400">暂无缺料明细</div>
                   ) : (
                     <div className="space-y-2">
-                      {shortageMaterials.map((material) => {
+                      {(shortageMaterials || []).map((material) => {
                         const status = getDetailStatus(material.status);
                         return (
                           <div
@@ -429,7 +429,7 @@ export default function MaterialAnalysis() {
                       <div className="text-sm text-slate-400">暂无阶段明细</div>
                     ) : (
                       <div className="grid gap-2 md:grid-cols-2">
-                        {stageRates.map((stage) => (
+                        {(stageRates || []).map((stage) => (
                           <div
                             key={stage.stage_code}
                             className="flex items-center justify-between p-2 bg-slate-900/50 rounded"
@@ -456,7 +456,7 @@ export default function MaterialAnalysis() {
 
   // 导出数据
   const exportData = () => {
-    const csvData = filteredProjects.map((project) => ({
+    const csvData = (filteredProjects || []).map((project) => ({
       项目编码: project.id,
       项目名称: project.name,
       计划装配日期: project.planAssemblyDate,
@@ -470,7 +470,7 @@ export default function MaterialAnalysis() {
 
     const csv = [
     Object.keys(csvData[0]).join(","),
-    ...csvData.map((row) => Object.values(row).join(","))].
+    ...(csvData || []).map((row) => Object.values(row).join(","))].
     join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -608,7 +608,7 @@ export default function MaterialAnalysis() {
 
           {/* 项目列表 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredProjects.map((project) =>
+            {(filteredProjects || []).map((project) =>
             <ProjectMaterialCard key={project.id} project={project} />
             )}
           </div>

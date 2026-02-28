@@ -87,7 +87,7 @@ export default function PaymentApproval() {
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return pendingPayments.filter((payment) => {
+    return (pendingPayments || []).filter((payment) => {
       const searchLower = searchTerm?.toLowerCase() || "";
     const matchesSearch =
       !searchTerm ||
@@ -109,8 +109,8 @@ export default function PaymentApproval() {
   const stats = useMemo(() => {
     return {
       total: filteredPayments.length,
-      totalAmount: filteredPayments.reduce((sum, p) => sum + p.amount, 0),
-      urgent: filteredPayments.filter(
+      totalAmount: (filteredPayments || []).reduce((sum, p) => sum + p.amount, 0),
+      urgent: (filteredPayments || []).filter(
         (p) => p.priority === "high" || p.priority === "urgent"
       ).length,
       urgentAmount: filteredPayments.
@@ -148,7 +148,7 @@ export default function PaymentApproval() {
       invoiceResponse.data?.items || invoiceResponse.data?.items || invoiceResponse.data || [];
 
       // Transform invoices to payment format
-      const invoicePayments = invoices.map((inv) => ({
+      const invoicePayments = (invoices || []).map((inv) => ({
         id: inv.id,
         type: "invoice",
         typeLabel: "发票审批",
@@ -180,7 +180,7 @@ export default function PaymentApproval() {
       catch(() => ({ data: { items: [] } }));
 
       const purchaseOrders = poResponse.data?.items || poResponse.data?.items || poResponse.data || [];
-      const poPayments = purchaseOrders.map((po) => ({
+      const poPayments = (purchaseOrders || []).map((po) => ({
         id: po.id,
         type: "purchase",
         typeLabel: "采购付款",
@@ -437,7 +437,7 @@ export default function PaymentApproval() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredPayments.map((payment) => {
+              {(filteredPayments || []).map((payment) => {
                 const typeConf = typeConfig[payment.type];
                 const TypeIcon = typeConf?.icon || FileText;
                 return (
@@ -493,11 +493,11 @@ export default function PaymentApproval() {
                           }
                         </div>
                         {payment.attachments &&
-                        payment.attachments.length > 0 &&
+                        payment.attachments?.length > 0 &&
                         <div className="flex items-center gap-2 mt-2">
                               <FileText className="w-3 h-3 text-slate-500" />
                               <span className="text-xs text-slate-500">
-                                {payment.attachments.length}个附件
+                                {payment.attachments?.length}个附件
                               </span>
                         </div>
                         }
@@ -680,11 +680,11 @@ export default function PaymentApproval() {
             </div>
             }
               {selectedPayment.attachments &&
-            selectedPayment.attachments.length > 0 &&
+            selectedPayment.attachments?.length > 0 &&
             <div>
                     <label className="text-sm text-slate-400">附件</label>
                     <div className="space-y-2 mt-2">
-                      {selectedPayment.attachments.map((file, index) =>
+                      {(selectedPayment.attachments || []).map((file, index) =>
                 <div
                   key={index}
                   className="flex items-center gap-2 p-2 bg-slate-800/40 rounded">

@@ -245,7 +245,7 @@ export default function StageTemplateEditor() {
     } catch (error) {
       console.error("删除阶段失败:", error);
       // Optimistic update for demo
-      setStages((prev) => prev.filter((s) => s.id !== stage.id));
+      setStages((prev) => (prev || []).filter((s) => s.id !== stage.id));
     }
   };
 
@@ -319,11 +319,11 @@ export default function StageTemplateEditor() {
       console.error("删除节点失败:", error);
       // Optimistic update for demo
       setStages((prev) =>
-        prev.map((s) => {
+        (prev || []).map((s) => {
           if (s.id === stage.id) {
             return {
               ...s,
-              node_definitions: s.node_definitions.filter((n) => n.id !== node.id),
+              node_definitions: (s.node_definitions || []).filter((n) => n.id !== node.id),
             };
           }
           return s;
@@ -405,7 +405,7 @@ export default function StageTemplateEditor() {
       <div className="p-6 space-y-4">
         {/* 阶段列表 */}
         <AnimatePresence>
-          {stages.map((stage, stageIndex) => (
+          {(stages || []).map((stage, stageIndex) => (
             <motion.div
               key={stage.id}
               variants={fadeIn}

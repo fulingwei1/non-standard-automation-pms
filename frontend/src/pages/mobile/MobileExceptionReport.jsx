@@ -74,7 +74,7 @@ export default function MobileExceptionReport() {
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
+    (files || []).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const photoUrl = event.target.result;
@@ -105,7 +105,7 @@ export default function MobileExceptionReport() {
       };
 
       const exceptionLabel =
-        exceptionTypes.find((t) => t.value === formData.exception_type)?.label ||
+        (exceptionTypes || []).find((t) => t.value === formData.exception_type)?.label ||
         formData.exception_type;
 
       const title = `${workOrder?.work_order_no ? `${workOrder.work_order_no} - ` : ""}${exceptionLabel}`;
@@ -218,7 +218,7 @@ export default function MobileExceptionReport() {
                     <SelectValue placeholder="请选择异常类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {exceptionTypes.map((type) =>
+                    {(exceptionTypes || []).map((type) =>
                     <SelectItem key={type.value} value={type.value}>
                         {type.label}
                     </SelectItem>
@@ -242,7 +242,7 @@ export default function MobileExceptionReport() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {urgentLevels.map((level) =>
+                    {(urgentLevels || []).map((level) =>
                     <SelectItem key={level.value} value={level.value}>
                         {level.label}
                     </SelectItem>
@@ -306,7 +306,7 @@ export default function MobileExceptionReport() {
                   </label>
                   {photos.length > 0 &&
                   <div className="grid grid-cols-3 gap-2">
-                      {photos.map((photo, idx) =>
+                      {(photos || []).map((photo, idx) =>
                     <div
                       key={idx}
                       className="relative aspect-square rounded-lg overflow-hidden">
@@ -320,7 +320,7 @@ export default function MobileExceptionReport() {
                         type="button"
                         onClick={() =>
                         setPhotos((prev) =>
-                        prev.filter((_, i) => i !== idx)
+                        (prev || []).filter((_, i) => i !== idx)
                         )
                         }
                         className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full">

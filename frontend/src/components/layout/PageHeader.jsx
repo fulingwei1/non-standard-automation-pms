@@ -65,11 +65,11 @@ export function PageHeader({
   };
 
   if (Array.isArray(actions)) {
-    actions.forEach((act, idx) => appendAction(act, idx));
+    (actions || []).forEach((act, idx) => appendAction(act, idx));
   } else if (actions) {
     appendAction(actions, 0);
   } else if (Array.isArray(action)) {
-    action.forEach((act, idx) => appendAction(act, idx));
+    (action || []).forEach((act, idx) => appendAction(act, idx));
   } else if (action) {
     appendAction(action, 0);
   }
@@ -79,7 +79,7 @@ export function PageHeader({
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center gap-1 text-sm mb-4">
-          {breadcrumbs.map((crumb, index) => (
+          {(breadcrumbs || []).map((crumb, index) => (
             <div key={index} className="flex items-center gap-1">
               {index > 0 && <ChevronRight className="h-4 w-4 text-slate-600" />}
               {crumb.href ? (

@@ -132,7 +132,7 @@ export const HRPerformanceTab = ({
         <CardContent>
           <div className="space-y-4">
             {distribution.length > 0 ? (
-              distribution.map((item, index) => (
+              (distribution || []).map((item, index) => (
                 <PerformanceDistributionItem
                   key={index}
                   level={item.level}

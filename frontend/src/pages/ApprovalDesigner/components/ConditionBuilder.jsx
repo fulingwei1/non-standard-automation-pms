@@ -311,7 +311,7 @@ function RoutingRule({ rule, index, flows, onUpdate, onDelete, onDuplicate }) {
               value={rule.flowId}
               onChange={(v) => onUpdate(index, { ...rule, flowId: v })}
               placeholder="选择目标流程"
-              options={flows.map(f => ({
+              options={(flows || []).map(f => ({
                 value: f.id,
                 label: f.name,
               }))}
@@ -343,7 +343,7 @@ export function ConditionBuilder({ rules = [], flows = [], onChange }) {
   };
 
   const handleDeleteRule = (index) => {
-    onChange(rules.filter((_, i) => i !== index));
+    onChange((rules || []).filter((_, i) => i !== index));
   };
 
   const handleDuplicateRule = (index) => {

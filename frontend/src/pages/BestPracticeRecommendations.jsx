@@ -281,7 +281,7 @@ export default function BestPracticeRecommendations() {
             </Card>
           ) : (
             <motion.div variants={staggerContainer} className="space-y-4">
-              {recommendations.map((rec, index) => {
+              {(recommendations || []).map((rec, index) => {
                 const practice = rec.practice || rec;
                 const matchScore = rec.match_score || 0;
                 const matchReasons = rec.match_reasons || [];
@@ -327,7 +327,7 @@ export default function BestPracticeRecommendations() {
                             </p>
                             {matchReasons.length > 0 && (
                               <div className="flex flex-wrap gap-2">
-                                {matchReasons.map((reason, idx) => (
+                                {(matchReasons || []).map((reason, idx) => (
                                   <Badge
                                     key={idx}
                                     variant="secondary"
@@ -422,7 +422,7 @@ export default function BestPracticeRecommendations() {
             </Card>
           ) : (
             <motion.div variants={staggerContainer} className="space-y-4">
-              {popularPractices.map((practice) => {
+              {(popularPractices || []).map((practice) => {
                 const validationBadge = getValidationBadge(
                   practice.validation_status,
                 );

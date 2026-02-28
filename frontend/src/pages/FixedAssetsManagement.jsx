@@ -76,7 +76,7 @@ export default function FixedAssetsManagement() {
   }, []);
 
   const filteredAssets = useMemo(() => {
-    return assets.filter((asset) => {
+    return (assets || []).filter((asset) => {
       const matchSearch =
       asset.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       asset.assetNo?.includes(searchText);
@@ -90,12 +90,12 @@ export default function FixedAssetsManagement() {
 
   const stats = useMemo(() => {
     const total = assets.length;
-    const totalValue = assets.reduce((sum, a) => sum + (a.currentValue || 0), 0);
-    const totalDepreciation = assets.reduce(
+    const totalValue = (assets || []).reduce((sum, a) => sum + (a.currentValue || 0), 0);
+    const totalDepreciation = (assets || []).reduce(
       (sum, a) => sum + (a.depreciation || 0),
       0
     );
-    const maintenance = assets.filter(
+    const maintenance = (assets || []).filter(
       (a) => a.status === "maintenance"
     ).length;
     return { total, totalValue, totalDepreciation, maintenance };
@@ -297,7 +297,7 @@ export default function FixedAssetsManagement() {
 
           {/* Assets List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredAssets.map((asset) =>
+            {(filteredAssets || []).map((asset) =>
             <Card key={asset.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -394,7 +394,7 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {assets.map((asset) => {
+                {(assets || []).map((asset) => {
                   const yearsInUse = Math.floor(
                     (new Date() - new Date(asset.purchaseDate)) / (
                     365 * 24 * 60 * 60 * 1000)
@@ -505,7 +505,7 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {assets.map((asset) =>
+                {(assets || []).map((asset) =>
                 <div
                   key={asset.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">

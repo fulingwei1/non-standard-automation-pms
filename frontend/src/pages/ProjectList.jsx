@@ -200,7 +200,7 @@ export default function ProjectList() {
   };
 
   // Filter projects based on search
-  const filteredProjects = projects.filter(
+  const filteredProjects = (projects || []).filter(
     (p) =>
       p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.project_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -212,7 +212,7 @@ export default function ProjectList() {
       <motion.div variants={staggerChild}>
         <PageHeader
           title="项目列表"
-          description={`共 ${projects.length} 个项目`}
+          description={`共 ${projects?.length} 个项目`}
           breadcrumbs={[{ label: "首页", href: "/" }, { label: "项目列表" }]}
           actions={
             <Button onClick={() => setFormOpen(true)}>
@@ -298,7 +298,7 @@ export default function ProjectList() {
               : "space-y-4",
           )}
         >
-          {filteredProjects.map((project) => (
+          {(filteredProjects || []).map((project) => (
             <ProjectCard
               key={project.id}
               project={project}

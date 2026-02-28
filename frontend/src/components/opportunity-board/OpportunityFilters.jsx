@@ -115,7 +115,7 @@ export const OpportunityFilters = ({
   const toggleFilter = (key, value) => {
     const currentValues = filters[key] || [];
     const newValues = currentValues.includes(value) ?
-    currentValues.filter((v) => v !== value) :
+    (currentValues || []).filter((v) => v !== value) :
     [...currentValues, value];
 
     const newFilters = {
@@ -176,7 +176,7 @@ export const OpportunityFilters = ({
   // 渲染快速过滤器
   const renderQuickFilters = () =>
   <div className="flex flex-wrap gap-2">
-      {quickFilterOptions.map(({ value, label, icon: Icon }) =>
+      {(quickFilterOptions || []).map(({ value, label, icon: Icon }) =>
     <Button
       key={value}
       variant={filters.quick_filter === value ? "default" : "outline"}
@@ -201,7 +201,7 @@ export const OpportunityFilters = ({
           <div className="space-y-2">
             <div className="text-sm font-medium">{title}</div>
             <div className="flex flex-wrap gap-2">
-              {options.map(({ value, label }) =>
+              {(options || []).map(({ value, label }) =>
               <Badge
                 key={value}
                 variant={selectedValues.includes(value) ? "default" : "outline"}
@@ -256,7 +256,7 @@ export const OpportunityFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__all__">全部</SelectItem>
-          {options.map(({ value, label }) =>
+          {(options || []).map(({ value, label }) =>
         <SelectItem key={value} value={value}>
               {label}
         </SelectItem>
@@ -275,7 +275,7 @@ export const OpportunityFilters = ({
           <SelectValue placeholder="选择排序方式" />
         </SelectTrigger>
         <SelectContent>
-          {sortOptionsConfig.map(({ value, label }) =>
+          {(sortOptionsConfig || []).map(({ value, label }) =>
         <SelectItem key={value} value={value}>
               {label}
         </SelectItem>

@@ -64,24 +64,24 @@ export const ScoringMatrix = ({
     let result = leads;
 
     if (filters.status && filters.status !== "all") {
-      result = result.filter((lead) => lead.status === filters.status);
+      result = (result || []).filter((lead) => lead.status === filters.status);
     }
 
     if (filters.industry && filters.industry !== "all") {
-      result = result.filter((lead) => lead.industry === filters.industry);
+      result = (result || []).filter((lead) => lead.industry === filters.industry);
     }
 
     if (filters.source && filters.source !== "all") {
-      result = result.filter((lead) => lead.source === filters.source);
+      result = (result || []).filter((lead) => lead.source === filters.source);
     }
 
     if (filters.priority && filters.priority !== "all") {
-      result = result.filter((lead) => lead.priority === filters.priority);
+      result = (result || []).filter((lead) => lead.priority === filters.priority);
     }
 
     if (filters.scoreRange) {
       const [min, max] = filters.scoreRange;
-      result = result.filter((lead) => {
+      result = (result || []).filter((lead) => {
         const score = lead.assessmentScore || 0;
         return score >= min && score <= max;
       });
@@ -89,7 +89,7 @@ export const ScoringMatrix = ({
 
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      result = result.filter((lead) =>
+      result = (result || []).filter((lead) =>
       lead.contactName?.toLowerCase().includes(searchLower) ||
       lead.companyName?.toLowerCase().includes(searchLower) ||
       lead.projectName?.toLowerCase().includes(searchLower)
@@ -123,30 +123,30 @@ export const ScoringMatrix = ({
   // 统计数据
   const stats = useMemo(() => {
     const total = filteredLeads.length;
-    const assessed = filteredLeads.filter((lead) => lead.assessmentScore).length;
-    const highScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) >= 80).length;
-    const mediumScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) >= 60 && (lead.assessmentScore || 0) < 80).length;
-    const lowScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) < 60).length;
+    const assessed = (filteredLeads || []).filter((lead) => lead.assessmentScore).length;
+    const highScore = (filteredLeads || []).filter((lead) => (lead.assessmentScore || 0) >= 80).length;
+    const mediumScore = (filteredLeads || []).filter((lead) => (lead.assessmentScore || 0) >= 60 && (lead.assessmentScore || 0) < 80).length;
+    const lowScore = (filteredLeads || []).filter((lead) => (lead.assessmentScore || 0) < 60).length;
 
     // 计算平均分
-    const totalScore = filteredLeads.reduce((sum, lead) => sum + (lead.assessmentScore || 0), 0);
+    const totalScore = (filteredLeads || []).reduce((sum, lead) => sum + (lead.assessmentScore || 0), 0);
     const averageScore = assessed > 0 ? totalScore / assessed : 0;
 
     // 计算各来源分布
     const sourceDistribution = {};
-    filteredLeads.forEach((lead) => {
+    (filteredLeads || []).forEach((lead) => {
       sourceDistribution[lead.source] = (sourceDistribution[lead.source] || 0) + 1;
     });
 
     // 计算各行业分布
     const industryDistribution = {};
-    filteredLeads.forEach((lead) => {
+    (filteredLeads || []).forEach((lead) => {
       industryDistribution[lead.industry] = (industryDistribution[lead.industry] || 0) + 1;
     });
 
     // 计算预算分布
     const budgetDistribution = {};
-    filteredLeads.forEach((lead) => {
+    (filteredLeads || []).forEach((lead) => {
       budgetDistribution[lead.budgetRange] = (budgetDistribution[lead.budgetRange] || 0) + 1;
     });
 
@@ -187,7 +187,7 @@ export const ScoringMatrix = ({
   const toggleLeadSelection = (lead) => {
     const index = selectedLeads.findIndex((l) => l.id === lead.id);
     if (index >= 0) {
-      setSelectedLeads(selectedLeads.filter((_, i) => i !== index));
+      setSelectedLeads((selectedLeads || []).filter((_, i) => i !== index));
     } else {
       setSelectedLeads([...selectedLeads, lead]);
     }
@@ -209,10 +209,10 @@ export const ScoringMatrix = ({
 
     // 平均分数据
     const avgScores = SCORING_CATEGORIES.map((category) => {
-      const categoryLeads = filteredLeads.filter((lead) => lead.scores?.[category.id]);
+      const categoryLeads = (filteredLeads || []).filter((lead) => lead.scores?.[category.id]);
       if (categoryLeads.length === 0) {return 0;}
 
-      const avgScore = categoryLeads.reduce((sum, lead) =>
+      const avgScore = (categoryLeads || []).reduce((sum, lead) =>
       sum + (lead.scores[category.id] || 0), 0) / categoryLeads.length;
       return Number(avgScore.toFixed(1));
     });
@@ -235,7 +235,7 @@ export const ScoringMatrix = ({
       poor: { count: 0, color: "#ff4d4f" }
     };
 
-    filteredLeads.forEach((lead) => {
+    (filteredLeads || []).forEach((lead) => {
       const score = lead.assessmentScore || 0;
       if (score >= 60) {
         data.good.count++;
@@ -269,7 +269,7 @@ export const ScoringMatrix = ({
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredLeads.map((lead, index) => {
+        {(filteredLeads || []).map((lead, index) => {
           const scoreLevel = getScoreLevel(lead.assessmentScore || 0);
           const healthColor = scoreLevel.color;
 
@@ -290,7 +290,7 @@ export const ScoringMatrix = ({
               <div className="space-y-3">
                 {/* 选择框 */}
                 <Checkbox
-                  checked={selectedLeads.some((l) => l.id === lead.id)}
+                  checked={(selectedLeads || []).some((l) => l.id === lead.id)}
                   onCheckedChange={() => toggleLeadSelection(lead)}
                   className="absolute top-2 right-2" />
 
@@ -636,7 +636,7 @@ export const ScoringMatrix = ({
               <CardContent>
                 <div className="space-y-3">
                   {FOLLOW_UP_STRATEGIES.slice(0, 3).map((strategy) => {
-                    const count = filteredLeads.filter((lead) => {
+                    const count = (filteredLeads || []).filter((lead) => {
                       const score = lead.assessmentScore || 0;
                       return score >= strategy.scoreRange[0] && score <= strategy.scoreRange[1];
                     }).length;

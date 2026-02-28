@@ -62,7 +62,7 @@ export function CostBreakdown({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categoryItems.map((item) => {
+                {(categoryItems || []).map((item) => {
                   const subtotal =
                     parseFloat(item.unit_price || 0) *
                     parseFloat(item.qty || 0);
@@ -121,7 +121,7 @@ export function CostBreakdown({
           </div>
         ))}
 
-        {items.length === 0 && (
+        {items?.length === 0 && (
           <div className="text-center py-8 text-slate-400">
             暂无成本明细，请应用成本模板或手动添加
           </div>

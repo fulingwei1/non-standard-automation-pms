@@ -20,7 +20,7 @@ export default function QualityRateTab({ data }) {
       {/* 统计卡片 */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {STATS_CARD_CONFIGS.qualityRate.map(config => (
+          {(STATS_CARD_CONFIGS.qualityRate || []).map(config => (
             <ProcurementStatsCard
               key={config.key}
               label={config.label}
@@ -43,7 +43,7 @@ export default function QualityRateTab({ data }) {
         <CardContent>
           {supplier_quality?.length > 0 ? (
             <div className="space-y-4">
-              {supplier_quality.map((item, index) => (
+              {(supplier_quality || []).map((item, index) => (
                 <div key={item.supplier_id} className="p-4 bg-slate-700/30 rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">

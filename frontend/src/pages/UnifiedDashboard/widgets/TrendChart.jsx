@@ -65,7 +65,7 @@ const defaultTrendData = {
  * 简易折线图
  */
 function SimpleLine({ data, className }) {
-  if (!data || data.length === 0) return null;
+  if (!data || data?.length === 0) return null;
 
   const max = Math.max(...data);
   const min = Math.min(...data);
@@ -74,8 +74,8 @@ function SimpleLine({ data, className }) {
   const height = 60;
   const width = 100;
 
-  const points = data.map((value, index) => {
-    const x = (index / (data.length - 1)) * width;
+  const points = (data || []).map((value, index) => {
+    const x = (index / (data?.length - 1)) * width;
     const y = height - ((value - min) / range) * height;
     return `${x},${y}`;
   }).join(' ');
@@ -186,8 +186,8 @@ export default function TrendChart({ type = 'revenue', data }) {
             {trendData?.labels && (
               <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                 <span>{trendData.labels[0]}</span>
-                <span>{trendData.labels[Math.floor(trendData.labels.length / 2)]}</span>
-                <span>{trendData.labels[trendData.labels.length - 1]}</span>
+                <span>{trendData.labels[Math.floor(trendData.labels?.length / 2)]}</span>
+                <span>{trendData.labels[trendData.labels?.length - 1]}</span>
               </div>
             )}
           </div>

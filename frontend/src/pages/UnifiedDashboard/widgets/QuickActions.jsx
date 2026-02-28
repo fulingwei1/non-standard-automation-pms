@@ -117,7 +117,7 @@ export default function QuickActions({ type, actions, data }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-2">
-          {actionList.map((action, index) => (
+          {(actionList || []).map((action, index) => (
             <ActionButton
               key={action.id}
               action={action}

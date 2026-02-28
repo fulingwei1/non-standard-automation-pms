@@ -168,7 +168,7 @@ export default function ECNStatistics() {
   filter((item) => item.value > 0);
 
   // 趋势数据（用于折线图）
-  const trendData = trends.map((t) => ({
+  const trendData = (trends || []).map((t) => ({
     label: t.period || t.date || "",
     value: t.count || 0
   }));
@@ -232,7 +232,7 @@ export default function ECNStatistics() {
 
       // 转换为CSV格式
       const csvContent = exportData.
-      map((row) => row.map((cell) => `"${cell}"`).join(",")).
+      map((row) => (row || []).map((cell) => `"${cell}"`).join(",")).
       join("\n");
 
       // 添加BOM以支持中文
@@ -457,7 +457,7 @@ export default function ECNStatistics() {
           <CardContent>
             {costTrendData.length > 0 ?
             <MonthlyTrendChart
-              data={costTrendData.map((d) => ({
+              data={(costTrendData || []).map((d) => ({
                 month: d.label,
                 amount: d.value
               }))}
@@ -480,7 +480,7 @@ export default function ECNStatistics() {
           <CardContent>
             {scheduleTrendData.length > 0 ?
             <MonthlyTrendChart
-              data={scheduleTrendData.map((d) => ({
+              data={(scheduleTrendData || []).map((d) => ({
                 month: d.label,
                 amount: d.value
               }))}

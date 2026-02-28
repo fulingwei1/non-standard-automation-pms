@@ -13,11 +13,11 @@ const SatisfactionAnalytics = ({ surveys = [], responses = [], loading = false }
   const stats = useMemo(() => {
     const surveyCount = surveys.length;
     const responseCount = responses.length;
-    const avgScore = responseCount > 0 ? responses.reduce((acc, r) => acc + Number(r.satisfactionLevel || 0), 0) / responseCount : 0;
+    const avgScore = responseCount > 0 ? (responses || []).reduce((acc, r) => acc + Number(r.satisfactionLevel || 0), 0) / responseCount : 0;
 
     const dist = {};
     Object.keys(SATISFACTION_LEVELS).forEach((k) => (dist[k] = 0));
-    responses.forEach((r) => {
+    (responses || []).forEach((r) => {
       const hit = Object.entries(SATISFACTION_LEVELS).find(([_, cfg]) => cfg.value === r.satisfactionLevel);
       if (hit) {dist[hit[0]] += 1;}
     });

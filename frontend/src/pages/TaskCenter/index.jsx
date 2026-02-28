@@ -59,7 +59,7 @@ export default function TaskCenter() {
             >
                 <PageHeader
                     title="我的装配任务"
-                    description={`今日待完成 ${taskData.tasks.filter(t => t.status === 'in_progress').length} 项，共 ${taskData.tasks.length} 项任务`}
+                    description={`今日待完成 ${(taskData.tasks || []).filter(t => t.status === 'in_progress').length} 项，共 ${taskData.tasks?.length} 项任务`}
                 />
 
                 {/* 统计卡片 */}
@@ -90,7 +90,7 @@ export default function TaskCenter() {
                             {taskData.error ? '加载失败' : '暂无任务'}
                         </div>
                     ) : (
-                        filteredTasks.map(task => (
+                        (filteredTasks || []).map(task => (
                             <AssemblyTaskCard
                                 key={task.id}
                                 task={task}
@@ -147,7 +147,7 @@ export default function TaskCenter() {
                         {taskData.error ? '加载失败' : '暂无任务'}
                     </div>
                 ) : (
-                    filteredTasks.map(task => (
+                    (filteredTasks || []).map(task => (
                         <TaskCard
                             key={task.id}
                             task={task}

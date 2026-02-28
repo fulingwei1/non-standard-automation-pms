@@ -149,7 +149,7 @@ export default function IssueDetail() {
               <div className="bg-surface-200 rounded-xl border border-white/5 p-6">
                 <h4 className="text-lg font-semibold text-text-primary mb-4">跟进记录</h4>
                 <div className="space-y-3">
-                  {followUps.map((fu, idx) => (
+                  {(followUps || []).map((fu, idx) => (
                     <div key={idx} className="p-3 rounded-lg bg-surface-300">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-text-primary">{fu.creator_name || "系统"}</span>

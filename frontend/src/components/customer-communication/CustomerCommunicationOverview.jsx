@@ -75,16 +75,16 @@ const CustomerCommunicationOverview = ({
     }
   }, [communications]);
 
-  const todayCommunications = communications.filter((comm) =>
+  const todayCommunications = (communications || []).filter((comm) =>
   new Date(comm.communication_date).toDateString() === new Date().toDateString()
   ).length;
 
-  const highPriorityCommunications = communications.filter((comm) =>
+  const highPriorityCommunications = (communications || []).filter((comm) =>
   comm.priority === COMMUNICATION_PRIORITY.HIGH &&
   comm.status !== COMMUNICATION_STATUS.COMPLETED
   ).length;
 
-  const overdueCommunications = communications.filter((comm) => {
+  const overdueCommunications = (communications || []).filter((comm) => {
     if (comm.status === COMMUNICATION_STATUS.COMPLETED) {return false;}
     const communicationDate = new Date(comm.communication_date);
     const now = new Date();
@@ -264,7 +264,7 @@ const CustomerCommunicationOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topTypes.map((typeData, _index) =>
+              {(topTypes || []).map((typeData, _index) =>
               <div key={typeData.type} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{typeData.icon}</span>
@@ -286,7 +286,7 @@ const CustomerCommunicationOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topTopics.map((topicData, _index) =>
+              {(topTopics || []).map((topicData, _index) =>
               <div key={topicData.topic} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div

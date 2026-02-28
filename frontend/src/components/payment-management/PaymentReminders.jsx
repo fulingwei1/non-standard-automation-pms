@@ -41,7 +41,7 @@ export default function PaymentReminders({ reminders, showReminders, onToggle })
         {showReminders && (
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {reminders.map((reminder) => (
+              {(reminders || []).map((reminder) => (
                 <div
                   key={reminder.id}
                   className={cn(

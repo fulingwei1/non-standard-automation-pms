@@ -207,7 +207,7 @@ const EngineerPerformanceRanking = () => {
 
   // 过滤后的数据（用于搜索）
   const filteredRankings = searchText
-    ? rankings.filter(r => r.user_name?.includes(searchText) || r.department_name?.includes(searchText))
+    ? (rankings || []).filter(r => r.user_name?.includes(searchText) || r.department_name?.includes(searchText))
     : rankings;
 
   return (

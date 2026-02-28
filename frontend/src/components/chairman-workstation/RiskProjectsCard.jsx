@@ -26,7 +26,7 @@ export const RiskProjectsCard = ({ riskProjects }) => {
         <CardContent>
           <div className="space-y-3">
             {riskProjects && riskProjects.length > 0 ?
-            riskProjects.map((project) => {
+            (riskProjects || []).map((project) => {
               const projectCode =
               project.project_code ||
               project.projectCode ||

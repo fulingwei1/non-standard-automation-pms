@@ -74,7 +74,7 @@ export default function CostSuggestionsDialog({
 
             {/* Warnings */}
             {costSuggestions.warnings &&
-              costSuggestions.warnings.length > 0 && (
+              costSuggestions.warnings?.length > 0 && (
                 <div className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-3">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5" />
@@ -83,7 +83,7 @@ export default function CostSuggestionsDialog({
                         整体异常警告
                       </div>
                       <ul className="text-sm text-slate-300 space-y-1">
-                        {costSuggestions.warnings.map((warning, idx) => (
+                        {(costSuggestions.warnings || []).map((warning, idx) => (
                           <li key={idx}>• {warning}</li>
                         ))}
                       </ul>
@@ -96,7 +96,7 @@ export default function CostSuggestionsDialog({
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {costSuggestions.suggestions?.map((suggestion) => {
                 const edited = editedSuggestions[suggestion.item_id] || {};
-                const item = items.find((i) => i.id === suggestion.item_id);
+                const item = (items || []).find((i) => i.id === suggestion.item_id);
 
                 return (
                   <div
@@ -125,9 +125,9 @@ export default function CostSuggestionsDialog({
 
                     {/* Warnings */}
                     {suggestion.warnings &&
-                      suggestion.warnings.length > 0 && (
+                      suggestion.warnings?.length > 0 && (
                         <div className="bg-amber-900/20 border border-amber-500/50 rounded p-2 text-sm">
-                          {suggestion.warnings.map((warning, idx) => (
+                          {(suggestion.warnings || []).map((warning, idx) => (
                             <div key={idx} className="text-amber-400">
                               ⚠ {warning}
                             </div>

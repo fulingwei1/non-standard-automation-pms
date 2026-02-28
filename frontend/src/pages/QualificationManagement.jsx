@@ -263,7 +263,7 @@ export default function QualificationManagement() {
 
   const handleExportModels = () => {
     try {
-      const exportData = models.map((model) => ({
+      const exportData = (models || []).map((model) => ({
         岗位类型: model.position_type,
         岗位子类型: model.position_subtype || "-",
         等级: model.level?.level_name || model.level_id,
@@ -274,8 +274,8 @@ export default function QualificationManagement() {
       const headers = Object.keys(exportData[0] || {});
       const csvContent = [
       headers.join(","),
-      ...exportData.map((row) =>
-      headers.map((header) => `"${row[header] || ""}"`).join(",")
+      ...(exportData || []).map((row) =>
+      (headers || []).map((header) => `"${row[header] || ""}"`).join(",")
       )].
       join("\n");
 
@@ -472,7 +472,7 @@ export default function QualificationManagement() {
                         }
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setSelectedLevels(levels.map((l) => l.id));
+                            setSelectedLevels((levels || []).map((l) => l.id));
                           } else {
                             setSelectedLevels([]);
                           }
@@ -488,7 +488,7 @@ export default function QualificationManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {levels.map((level) =>
+                  {(levels || []).map((level) =>
                   <TableRow key={level.id}>
                       <TableCell>
                         <Checkbox
@@ -498,7 +498,7 @@ export default function QualificationManagement() {
                             setSelectedLevels([...selectedLevels, level.id]);
                           } else {
                             setSelectedLevels(
-                              selectedLevels.filter((id) => id !== level.id)
+                              (selectedLevels || []).filter((id) => id !== level.id)
                             );
                           }
                         }} />
@@ -629,7 +629,7 @@ export default function QualificationManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {models.map((model) =>
+                  {(models || []).map((model) =>
                   <TableRow key={model.id}>
                       <TableCell>{model.position_type}</TableCell>
                       <TableCell>{model.position_subtype || "-"}</TableCell>
@@ -740,7 +740,7 @@ export default function QualificationManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {qualifications.map((qual) =>
+                  {(qualifications || []).map((qual) =>
                   <TableRow key={qual.id}>
                       <TableCell className="font-medium">
                         员工 #{qual.employee_id}
@@ -810,7 +810,7 @@ export default function QualificationManagement() {
               // 计算所有员工的能力维度平均值
               const dimensionScores = {};
               let _count = 0;
-              qualifications.forEach((qual) => {
+              (qualifications || []).forEach((qual) => {
                 if (qual.assessment_details) {
                   Object.keys(qual.assessment_details).forEach((key) => {
                     if (!dimensionScores[key]) {
@@ -858,7 +858,7 @@ export default function QualificationManagement() {
               <div className="space-y-4">
                 {["ASSISTANT", "JUNIOR", "MIDDLE", "SENIOR", "EXPERT"].map(
                 (levelCode) => {
-                  const count = qualifications.filter(
+                  const count = (qualifications || []).filter(
                     (q) => q.level?.level_code === levelCode
                   ).length;
                   const percentage =
@@ -907,7 +907,7 @@ export default function QualificationManagement() {
               <div className="space-y-4">
                 {["ENGINEER", "SALES", "CUSTOMER_SERVICE", "WORKER"].map(
                 (positionType) => {
-                  const count = qualifications.filter(
+                  const count = (qualifications || []).filter(
                     (q) => q.position_type === positionType
                   ).length;
                   const percentage =

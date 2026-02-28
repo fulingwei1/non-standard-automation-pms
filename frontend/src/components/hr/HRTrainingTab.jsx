@@ -181,7 +181,7 @@ const HRTrainingTab = ({
                   <p className="text-xs text-slate-500 mt-1">点击"创建培训"添加新的培训计划</p>
                 </div>
               ) : (
-                courses.map((course, index) => {
+                (courses || []).map((course, index) => {
                   const typeConfig = trainingTypes[course.type] || trainingTypes.skill;
                   const statusCfg = statusConfig[course.status] || statusConfig.planned;
                   const completionRate = course.completion_rate || 0;

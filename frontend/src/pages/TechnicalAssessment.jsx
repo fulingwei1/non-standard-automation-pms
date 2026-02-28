@@ -361,7 +361,7 @@ export default function TechnicalAssessment() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {assessments.map((item, _idx) => {
+                {(assessments || []).map((item, _idx) => {
                 const itemScores = item.dimension_scores ?
                 JSON.parse(item.dimension_scores) :
                 null;
@@ -512,7 +512,7 @@ export default function TechnicalAssessment() {
                                   立项条件:
                                 </div>
                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                  {conditions.map((condition, idx) =>
+                                  {(conditions || []).map((condition, idx) =>
                           <li key={idx}>{condition}</li>
                           )}
                                 </ul>
@@ -670,7 +670,7 @@ export default function TechnicalAssessment() {
                   <TabsContent value="risks" className="mt-4">
                     {risks.length > 0 ?
                   <div className="space-y-3">
-                        {risks.map((risk, idx) =>
+                        {(risks || []).map((risk, idx) =>
                     <div key={idx} className="p-4 bg-gray-700 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <AlertTriangle
@@ -705,7 +705,7 @@ export default function TechnicalAssessment() {
                   <TabsContent value="cases" className="mt-4">
                     {similarCases.length > 0 ?
                   <div className="space-y-3">
-                        {similarCases.map((case_, idx) =>
+                        {(similarCases || []).map((case_, idx) =>
                     <div key={idx} className="p-4 bg-gray-700 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
                               <div className="font-semibold">

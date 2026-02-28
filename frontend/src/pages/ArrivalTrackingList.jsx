@@ -119,7 +119,7 @@ export default function ArrivalTrackingList() {
     }
   };
   const filteredArrivals = useMemo(() => {
-    return arrivals.filter((arrival) => {
+    return (arrivals || []).filter((arrival) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -157,7 +157,7 @@ export default function ArrivalTrackingList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部供应商</SelectItem>
-                  {suppliers.map((supplier) => {
+                  {(suppliers || []).map((supplier) => {
                     const supplierId =
                       supplier.id?.toString() ||
                       supplier.supplier_id?.toString();
@@ -216,9 +216,9 @@ export default function ArrivalTrackingList() {
             <CardTitle className="text-slate-200">到货跟踪列表</CardTitle>
             <CardDescription className="text-slate-400">
               共 {filteredArrivals.length} 个到货跟踪
-              {filteredArrivals.filter((a) => a.is_delayed).length > 0 && (
+              {(filteredArrivals || []).filter((a) => a.is_delayed).length > 0 && (
                 <span className="ml-2 text-red-400">
-                  （延迟: {filteredArrivals.filter((a) => a.is_delayed).length}
+                  （延迟: {(filteredArrivals || []).filter((a) => a.is_delayed).length}
                   ）
                 </span>
               )}
@@ -250,7 +250,7 @@ export default function ArrivalTrackingList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredArrivals.map((arrival) => (
+                  {(filteredArrivals || []).map((arrival) => (
                     <TableRow
                       key={arrival.id}
                       className={cn(

@@ -460,7 +460,7 @@ export default function ProjectReviewDetail() {
           </Card> :
 
           <div className="grid gap-4">
-              {lessons.map((lesson) => {
+              {(lessons || []).map((lesson) => {
               const lessonType = getLessonType(lesson.type);
               const Icon = lessonType.icon;
 
@@ -582,7 +582,7 @@ export default function ProjectReviewDetail() {
           </Card> :
 
           <div className="grid gap-4">
-              {bestPractices.map((practice) =>
+              {(bestPractices || []).map((practice) =>
             <motion.div
               key={practice.id}
               variants={staggerChild}

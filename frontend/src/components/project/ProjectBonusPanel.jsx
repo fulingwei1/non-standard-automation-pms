@@ -106,7 +106,7 @@ export default function ProjectBonusPanel({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {rules.map((rule) => (
+              {(rules || []).map((rule) => (
                 <div
                   key={rule.id}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -133,7 +133,7 @@ export default function ProjectBonusPanel({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {member_summary.map((member) => (
+              {(member_summary || []).map((member) => (
                 <div
                   key={member.user_id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"

@@ -293,12 +293,12 @@ export default function ProductionStatsOverview({
     <div className="space-y-6">
       {/* 统计卡片网格 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {statsCards.map(renderStatsCard)}
+        {(statsCards || []).map(renderStatsCard)}
       </div>
 
       {/* 性能指标 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {performanceMetrics.map(renderPerformanceMetric)}
+        {(performanceMetrics || []).map(renderPerformanceMetric)}
       </div>
 
       {/* 快速统计面板 */}

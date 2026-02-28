@@ -44,7 +44,7 @@ export function CompetitorAnalysis({ competitors, className }) {
 
   return (
     <motion.div variants={fadeIn} className={cn("space-y-3", className)}>
-      {competitors.map((competitor, index) => {
+      {(competitors || []).map((competitor, index) => {
         const statusConfig = getStatusConfig(competitor.status);
         const StatusIcon = statusConfig.icon;
 

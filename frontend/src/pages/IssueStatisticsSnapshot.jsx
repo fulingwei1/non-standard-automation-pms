@@ -84,7 +84,7 @@ export default function IssueStatisticsSnapshot() {
         setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
         setSnapshots(data);
-        setTotal(data.length);
+        setTotal(data?.length);
       } else {
         setSnapshots([]);
         setTotal(0);
@@ -119,7 +119,7 @@ export default function IssueStatisticsSnapshot() {
       "阻塞问题",
       "逾期问题",
     ];
-    const rows = snapshots.map((s) => [
+    const rows = (snapshots || []).map((s) => [
       s.snapshot_date,
       s.total_issues,
       s.open_issues,
@@ -130,7 +130,7 @@ export default function IssueStatisticsSnapshot() {
       s.overdue_issues,
     ]);
 
-    const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
+    const csv = [headers.join(","), ...(rows || []).map((row) => row.join(","))].join(
       "\n",
     );
 
@@ -152,19 +152,19 @@ export default function IssueStatisticsSnapshot() {
     );
 
     return {
-      total: sorted.map((s) => ({
+      total: (sorted || []).map((s) => ({
         date: s.snapshot_date,
         value: s.total_issues,
       })),
-      open: sorted.map((s) => ({
+      open: (sorted || []).map((s) => ({
         date: s.snapshot_date,
         value: s.open_issues,
       })),
-      resolved: sorted.map((s) => ({
+      resolved: (sorted || []).map((s) => ({
         date: s.snapshot_date,
         value: s.resolved_issues,
       })),
-      blocking: sorted.map((s) => ({
+      blocking: (sorted || []).map((s) => ({
         date: s.snapshot_date,
         value: s.blocking_issues,
       })),
@@ -406,7 +406,7 @@ export default function IssueStatisticsSnapshot() {
               </CardHeader>
               <CardContent>
                 <SimpleLineChart
-                  data={trendData.total.map((item) => ({
+                  data={(trendData.total || []).map((item) => ({
                     label: item.date,
                     value: item.value,
                   }))}
@@ -424,7 +424,7 @@ export default function IssueStatisticsSnapshot() {
                   <div>
                     <div className="text-xs text-blue-400 mb-1">待处理</div>
                     <SimpleLineChart
-                      data={trendData.open.map((item) => ({
+                      data={(trendData.open || []).map((item) => ({
                         label: item.date,
                         value: item.value,
                       }))}
@@ -435,7 +435,7 @@ export default function IssueStatisticsSnapshot() {
                   <div>
                     <div className="text-xs text-green-400 mb-1">已解决</div>
                     <SimpleLineChart
-                      data={trendData.resolved.map((item) => ({
+                      data={(trendData.resolved || []).map((item) => ({
                         label: item.date,
                         value: item.value,
                       }))}
@@ -485,7 +485,7 @@ export default function IssueStatisticsSnapshot() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {snapshots.map((snapshot) => (
+                    {(snapshots || []).map((snapshot) => (
                       <TableRow
                         key={snapshot.id}
                         className="border-white/10 hover:bg-surface-100/50"

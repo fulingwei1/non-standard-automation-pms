@@ -78,7 +78,7 @@ export const QuoteListManager = ({
 
   // 过滤后的 quotes
   const filteredQuotes = useMemo(() => {
-    return safeQuotes.filter((quote) => {
+    return (safeQuotes || []).filter((quote) => {
       // 搜索过滤
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -189,7 +189,7 @@ export const QuoteListManager = ({
     if (selected) {
       newSelection = [...selectedQuotes, quoteId];
     } else {
-      newSelection = selectedQuotes.filter((id) => id !== quoteId);
+      newSelection = (selectedQuotes || []).filter((id) => id !== quoteId);
     }
     onSelectionChange(newSelection);
   }, [selectedQuotes, onSelectionChange]);
@@ -197,7 +197,7 @@ export const QuoteListManager = ({
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
     if (!onSelectionChange) {return;}
-    onSelectionChange(selected ? sortedQuotes.map((quote) => quote.id) : []);
+    onSelectionChange(selected ? (sortedQuotes || []).map((quote) => quote.id) : []);
   }, [sortedQuotes, onSelectionChange]);
 
   // 渲染状态徽章
@@ -277,7 +277,7 @@ export const QuoteListManager = ({
               className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
 
             <div className="flex items-center gap-1">
-              {warnings.map((warning, idx) => {
+              {(warnings || []).map((warning, idx) => {
                 const Icon = warning.icon;
                 return (
                   <Icon
@@ -411,7 +411,7 @@ export const QuoteListManager = ({
               {formatQuoteNumber(quote.id)}
             </span>
             <div className="flex items-center gap-1">
-              {warnings.map((warning, idx) => {
+              {(warnings || []).map((warning, idx) => {
                 const Icon = warning.icon;
                 return (
                   <Icon
@@ -654,7 +654,7 @@ export const QuoteListManager = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedQuotes.map((quote, index) => renderTableRow(quote, index))}
+                    {(sortedQuotes || []).map((quote, index) => renderTableRow(quote, index))}
                   </tbody>
                 </table>
           </div>
@@ -671,7 +671,7 @@ export const QuoteListManager = ({
         sortedQuotes.length === 0 ?
         <div className="col-span-full text-center py-8 text-slate-400">暂无报价数据</div> :
 
-        sortedQuotes.map((quote, index) => renderQuoteCard(quote, index))
+        (sortedQuotes || []).map((quote, index) => renderQuoteCard(quote, index))
         }
       </div>
       }

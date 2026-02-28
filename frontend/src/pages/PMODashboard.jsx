@@ -223,7 +223,7 @@ export default function PMODashboard() {
         variants={staggerChild}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       >
-        {statCards.map((stat, i) => (
+        {(statCards || []).map((stat, i) => (
           <DashboardStatCard key={i} {...stat} />
         ))}
       </motion.div>

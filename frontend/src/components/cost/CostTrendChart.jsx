@@ -25,15 +25,15 @@ export function CostTrendChart({
 
   // Calculate value ranges for each metric
   const priceValues = useMemo(
-    () => sortedData.map((d) => d.total_price || 0),
+    () => (sortedData || []).map((d) => d.total_price || 0),
     [sortedData],
   );
   const costValues = useMemo(
-    () => sortedData.map((d) => d.total_cost || 0),
+    () => (sortedData || []).map((d) => d.total_cost || 0),
     [sortedData],
   );
   const marginValues = useMemo(
-    () => sortedData.map((d) => d.gross_margin || 0),
+    () => (sortedData || []).map((d) => d.gross_margin || 0),
     [sortedData],
   );
 
@@ -55,7 +55,7 @@ export function CostTrendChart({
   // Calculate points for each line
   const pricePoints = useMemo(() => {
     if (sortedData.length === 0) {return [];}
-    return sortedData.map((item, index) => {
+    return (sortedData || []).map((item, index) => {
       const x =
         padding.left +
         (index / (sortedData.length - 1 || 1)) *
@@ -76,7 +76,7 @@ export function CostTrendChart({
 
   const costPoints = useMemo(() => {
     if (sortedData.length === 0) {return [];}
-    return sortedData.map((item, index) => {
+    return (sortedData || []).map((item, index) => {
       const x =
         padding.left +
         (index / (sortedData.length - 1 || 1)) *
@@ -98,7 +98,7 @@ export function CostTrendChart({
   const marginPoints = useMemo(() => {
     if (sortedData.length === 0) {return [];}
     const marginRange = maxMargin - minMargin || 100;
-    return sortedData.map((item, index) => {
+    return (sortedData || []).map((item, index) => {
       const x =
         padding.left +
         (index / (sortedData.length - 1 || 1)) *
@@ -235,7 +235,7 @@ export function CostTrendChart({
               className="transition-all"
             />
             {showPoints &&
-              pricePoints.map((point, index) => (
+              (pricePoints || []).map((point, index) => (
                 <g key={`price-${index}`}>
                   <circle
                     cx={point.x}
@@ -261,7 +261,7 @@ export function CostTrendChart({
               className="transition-all"
             />
             {showPoints &&
-              costPoints.map((point, index) => (
+              (costPoints || []).map((point, index) => (
                 <g key={`cost-${index}`}>
                   <circle
                     cx={point.x}
@@ -288,7 +288,7 @@ export function CostTrendChart({
               className="transition-all"
             />
             {showPoints &&
-              marginPoints.map((point, index) => (
+              (marginPoints || []).map((point, index) => (
                 <g key={`margin-${index}`}>
                   <circle
                     cx={point.x}
@@ -305,7 +305,7 @@ export function CostTrendChart({
 
         {/* X-axis labels */}
         <g className="text-xs fill-slate-400">
-          {sortedData.map((item, index) => {
+          {(sortedData || []).map((item, index) => {
             const x =
               padding.left +
               (index / (sortedData.length - 1 || 1)) *

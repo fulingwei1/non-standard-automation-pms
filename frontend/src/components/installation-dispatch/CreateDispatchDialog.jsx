@@ -37,7 +37,7 @@ export default function CreateDispatchDialog({
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
-                {projects.map((project) => (
+                {(projects || []).map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
                   </SelectItem>
@@ -57,7 +57,7 @@ export default function CreateDispatchDialog({
                 <SelectValue placeholder="选择设备" />
               </SelectTrigger>
               <SelectContent>
-                {machines.map((machine) => (
+                {(machines || []).map((machine) => (
                   <SelectItem key={machine.id} value={machine.id}>
                     {machine.name}
                   </SelectItem>

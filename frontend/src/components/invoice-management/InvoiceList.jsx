@@ -43,7 +43,7 @@ const InvoiceList = ({
  >
  <AnimatePresence>
  {invoices.length > 0 ? (
-  invoices.map((invoice) => (
+  (invoices || []).map((invoice) => (
   <InvoiceRow
  key={invoice.id}
  invoice={invoice}

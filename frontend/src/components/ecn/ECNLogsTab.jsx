@@ -103,13 +103,13 @@ export const ECNLogsTab = ({
 
     // 按类型筛选
     if (filterType && filterType !== 'all') {
-      result = result.filter(log => log.log_type === filterType);
+      result = (result || []).filter(log => log.log_type === filterType);
     }
 
     // 按关键词搜索
     if (searchKeyword) {
       const keyword = searchKeyword.toLowerCase();
-      result = result.filter(log => 
+      result = (result || []).filter(log => 
         log.log_action?.toLowerCase().includes(keyword) ||
         log.log_content?.toLowerCase().includes(keyword) ||
         log.created_by_name?.toLowerCase().includes(keyword)
@@ -177,7 +177,7 @@ export const ECNLogsTab = ({
 
           {/* 日志列表 */}
           <div className="space-y-4">
-            {filteredLogs.map((log) => (
+            {(filteredLogs || []).map((log) => (
               <LogItem key={log.id} log={log} formatDate={formatDate} />
             ))}
           </div>

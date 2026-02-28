@@ -109,7 +109,7 @@ export default function GoodsReceiptNew() {
       return;
     }
 
-    const exists = selectedItems.find((si) => si.order_item_id === item.id);
+    const exists = (selectedItems || []).find((si) => si.order_item_id === item.id);
     if (exists) {
       toast.error("该物料已添加");
       return;
@@ -135,7 +135,7 @@ export default function GoodsReceiptNew() {
   };
 
   const handleRemoveItem = (index) => {
-    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+    setSelectedItems((selectedItems || []).filter((_, i) => i !== index));
   };
 
   const handleUpdateItem = (index, field, value) => {
@@ -187,7 +187,7 @@ export default function GoodsReceiptNew() {
         logistics_company: formData.logistics_company || null,
         tracking_no: formData.tracking_no || null,
         remark: formData.remark || null,
-        items: selectedItems.map((item) => ({
+        items: (selectedItems || []).map((item) => ({
           order_item_id: item.order_item_id,
           delivery_qty: item.delivery_qty,
           received_qty: item.received_qty_input,
@@ -207,11 +207,11 @@ export default function GoodsReceiptNew() {
     }
   };
 
-  const availableItems = orderItems.filter((item) => {
+  const availableItems = (orderItems || []).filter((item) => {
     const remainingQty = item.quantity - (item.received_qty || 0);
     return (
       remainingQty > 0 &&
-      !selectedItems.find((si) => si.order_item_id === item.id));
+      !(selectedItems || []).find((si) => si.order_item_id === item.id));
 
   });
 
@@ -401,7 +401,7 @@ export default function GoodsReceiptNew() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {availableItems.map((item) => {
+                    {(availableItems || []).map((item) => {
                   const remainingQty =
                   item.quantity - (item.received_qty || 0);
                   return (
@@ -468,7 +468,7 @@ export default function GoodsReceiptNew() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedItems.map((item, index) =>
+                      {(selectedItems || []).map((item, index) =>
                   <TableRow key={index} className="border-slate-700">
                           <TableCell className="font-mono text-sm text-slate-200">
                             {item.material_code}
@@ -591,7 +591,7 @@ function OrderSelectionForm({ onSelect }) {
     loadOrders();
   }, []);
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = (orders || []).filter((order) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -629,7 +629,7 @@ function OrderSelectionForm({ onSelect }) {
 
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {filteredOrders.map((order) =>
+        {(filteredOrders || []).map((order) =>
         <div
           key={order.id}
           className="p-4 border border-slate-700 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 cursor-pointer transition-colors"

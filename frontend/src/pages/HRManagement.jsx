@@ -319,7 +319,7 @@ export default function HRManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {transactions.map((t) =>
+                      {(transactions || []).map((t) =>
                     <tr key={t.id} className="border-b hover:bg-gray-50">
                           <td className="p-2">
                             {t.employee_name || t.employee_code}
@@ -399,7 +399,7 @@ export default function HRManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {contracts.map((c) =>
+                      {(contracts || []).map((c) =>
                     <tr key={c.id} className="border-b hover:bg-gray-50">
                           <td className="p-2">
                             {c.employee_name || c.employee_code}

@@ -21,7 +21,7 @@ export default function CostTrendTab({ data }) {
       {/* 统计卡片 */}
       {summary &&
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {STATS_CARD_CONFIGS.costTrend.map((config) =>
+          {(STATS_CARD_CONFIGS.costTrend || []).map((config) =>
         <ProcurementStatsCard
           key={config.key}
           label={config.label}
@@ -44,8 +44,8 @@ export default function CostTrendTab({ data }) {
           <div className="space-y-4">
               {/* 简单趋势图 */}
               <div className="h-64 flex items-end gap-2">
-                {trend_data.map((item, index) => {
-                const maxValue = Math.max(...trend_data.map((d) => d.amount));
+                {(trend_data || []).map((item, index) => {
+                const maxValue = Math.max(...(trend_data || []).map((d) => d.amount));
                 const height = item.amount / maxValue * 100;
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center">
@@ -88,7 +88,7 @@ export default function CostTrendTab({ data }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {trend_data.map((item, index) =>
+                  {(trend_data || []).map((item, index) =>
                 <tr key={index} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                       <td className="py-3 px-4">{item.period}</td>
                       <td className="text-right py-3 px-4 font-medium">¥{item.amount?.toLocaleString()}</td>

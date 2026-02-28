@@ -136,7 +136,7 @@ const getPriorityStyle = (priority) => {
 // 任务卡片组件
 function TaskCard({ task, onClick }) {
   const priorityStyle = getPriorityStyle(task.priority);
-  const statusConfig = taskStatuses.find((s) => s.id === task.status);
+  const statusConfig = (taskStatuses || []).find((s) => s.id === task.status);
 
   return (
     <motion.div
@@ -247,7 +247,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
   if (!task) {return null;}
 
   const priorityStyle = getPriorityStyle(task.priority);
-  const statusConfig = taskStatuses.find((s) => s.id === task.status);
+  const statusConfig = (taskStatuses || []).find((s) => s.id === task.status);
 
   // 接单
   const handleAccept = async () => {
@@ -441,7 +441,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-slate-400">交付物</h4>
             <div className="space-y-2">
-              {task.deliverables.map((item, index) =>
+              {(task.deliverables || []).map((item, index) =>
               <div
                 key={index}
                 className="flex items-center gap-2 bg-surface-50 p-3 rounded-lg">
@@ -600,7 +600,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
 
   // Get type name and color
   const getTypeInfo = (type) => {
-    const typeInfo = taskTypes.find((t) => t.id === type) || taskTypes[0];
+    const typeInfo = (taskTypes || []).find((t) => t.id === type) || taskTypes[0];
     return {
       name: typeInfo.name,
       color: typeInfo.color.replace("text-", "bg-")
@@ -636,7 +636,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
       const ticketsData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tickets to tasks
-      const transformedTasks = ticketsData.map((ticket) => {
+      const transformedTasks = (ticketsData || []).map((ticket) => {
         const type = mapTicketType(ticket.ticket_type);
         const typeInfo = getTypeInfo(type);
         return {
@@ -692,7 +692,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
   }, [loadTasks]);
 
   // 筛选任务
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = (tasks || []).filter((task) => {
     const matchesType = selectedType === "all" || task.type === selectedType;
     const matchesStatus =
     selectedStatus === "all" || task.status === selectedStatus;
@@ -705,9 +705,9 @@ export default function PresalesTasks({ embedded = false } = {}) {
   });
 
   // 按状态分组任务（看板视图用）
-  const tasksByStatus = taskStatuses.map((status) => ({
+  const tasksByStatus = (taskStatuses || []).map((status) => ({
     ...status,
-    tasks: filteredTasks.filter((task) => task.status === status.id)
+    tasks: (filteredTasks || []).filter((task) => task.status === status.id)
   }));
 
   return (
@@ -741,7 +741,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           {/* 类型筛选 */}
           <div className="flex flex-wrap gap-2">
-            {taskTypes.map((type) =>
+            {(taskTypes || []).map((type) =>
             <Button
               key={type.id}
               variant={selectedType === type.id ? "default" : "outline"}
@@ -778,7 +778,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
               <option value="all">全部状态</option>
-              {taskStatuses.map((status) =>
+              {(taskStatuses || []).map((status) =>
               <option key={status.id} value={status.id}>
                   {status.name}
               </option>
@@ -811,7 +811,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
           {filteredTasks.length > 0 ?
-        filteredTasks.map((task) =>
+        (filteredTasks || []).map((task) =>
         <TaskCard key={task.id} task={task} onClick={setSelectedTask} />
         ) :
 
@@ -827,7 +827,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
         variants={fadeIn}
         className="flex overflow-x-auto custom-scrollbar pb-4 -mx-6 px-6 gap-4">
 
-          {tasksByStatus.map((column) =>
+          {(tasksByStatus || []).map((column) =>
         <div key={column.id} className="flex-shrink-0 w-80">
               <Card className="bg-surface-50/70 backdrop-blur-sm border border-white/5 shadow-md">
                 <CardHeader className="py-3 px-4 border-b border-white/5">
@@ -839,13 +839,13 @@ export default function PresalesTasks({ embedded = false } = {}) {
                       {column.name}
                     </span>
                     <Badge variant="secondary" className="bg-white/10">
-                      {column.tasks.length}
+                      {column.tasks?.length}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-                  {column.tasks.length > 0 ?
-              column.tasks.map((task) =>
+                  {column.tasks?.length > 0 ?
+              (column.tasks || []).map((task) =>
               <TaskCard
                 key={task.id}
                 task={task}

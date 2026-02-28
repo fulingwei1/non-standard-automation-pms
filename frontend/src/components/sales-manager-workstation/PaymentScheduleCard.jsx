@@ -26,7 +26,7 @@ export function PaymentScheduleCard({ payments }) {
           </div>
         </CardHeader>
         <CardContent>
-          {payments && payments.length > 0 ? (
+          {payments && payments?.length > 0 ? (
             <PaymentTimeline payments={payments} compact />
           ) : (
             <div className="text-center py-8 text-slate-500">

@@ -65,7 +65,7 @@ export default function ChairmanWorkstation() {
           setKeyProjects(projectsRes.data.items.slice(0, 5));
 
           // 筛选风险项目（健康度为 H2 或 H3）
-          const riskProjectsData = projectsRes.data.items.filter(
+          const riskProjectsData = (projectsRes.data.items || []).filter(
             (p) => p.health === "H2" || p.health === "H3"
           );
           setRiskProjects(riskProjectsData);

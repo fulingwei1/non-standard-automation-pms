@@ -139,7 +139,7 @@ export default function ResourceOverview() {
         variants={staggerChild}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       >
-        {statCards.map((stat, i) => (
+        {(statCards || []).map((stat, i) => (
           <DashboardStatCard key={i} {...stat} />
         ))}
       </motion.div>
@@ -173,7 +173,7 @@ export default function ResourceOverview() {
 
             {by_department && by_department.length > 0 ? (
               <div className="divide-y divide-white/5">
-                {by_department.map((dept, index) => {
+                {(by_department || []).map((dept, index) => {
                   const deptAllocationRate =
                     dept.total_resources > 0
                       ? (

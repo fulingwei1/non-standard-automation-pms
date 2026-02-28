@@ -35,8 +35,8 @@ export default function SalesFunnel({ view: _view, data }) {
       try {
         const res = await salesStatisticsApi.funnel();
         const items = res.data?.items || res.data || res;
-        if (Array.isArray(items) && items.length > 0) {
-          setFunnelData(items.map(item => ({
+        if (Array.isArray(items) && items?.length > 0) {
+          setFunnelData((items || []).map(item => ({
             ...item,
             color: STAGE_COLORS[item.stage] || 'bg-blue-500',
           })));
@@ -52,7 +52,7 @@ export default function SalesFunnel({ view: _view, data }) {
     loadFunnel();
   }, [data]);
 
-  const maxCount = Math.max(...funnelData.map(d => d.count));
+  const maxCount = Math.max(...(funnelData || []).map(d => d.count));
 
   return (
     <Card>
@@ -64,7 +64,7 @@ export default function SalesFunnel({ view: _view, data }) {
           <div className="h-48 bg-muted/50 rounded-lg animate-pulse" />
         ) : (
           <div className="space-y-3">
-            {funnelData.map((item) => (
+            {(funnelData || []).map((item) => (
               <div key={item.stage} className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>{item.stage}</span>

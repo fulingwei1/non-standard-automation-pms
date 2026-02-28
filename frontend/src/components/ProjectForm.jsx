@@ -133,7 +133,7 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
                 required
               >
                 <option value="">选择客户</option>
-                {customers.map((c) => (
+                {(customers || []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.customer_name}
                   </option>
@@ -149,7 +149,7 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
                 className="form-input"
               >
                 <option value="">选择 PM</option>
-                {employees.map((e) => (
+                {(employees || []).map((e) => (
                   <option key={e.id} value={e.id}>
                     {e.name} ({e.employee_code})
                   </option>

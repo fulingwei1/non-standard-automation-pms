@@ -40,7 +40,7 @@ export default function CreateArticleDialog({ onClose, onSubmit }) {
   };
 
   const handleRemoveTag = (tag) => {
-    setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
+    setFormData({ ...formData, tags: (formData.tags || []).filter((t) => t !== tag) });
   };
 
   return (
@@ -111,7 +111,7 @@ export default function CreateArticleDialog({ onClose, onSubmit }) {
                   className="bg-slate-800/50 border-slate-700 font-mono text-sm"
                 />
                 <div className="absolute bottom-2 right-2 text-xs text-slate-500">
-                  {formData.content.length} 字符
+                  {formData.content?.length} 字符
                 </div>
               </div>
               {/* Markdown Preview Toggle */}
@@ -155,9 +155,9 @@ export default function CreateArticleDialog({ onClose, onSubmit }) {
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              {formData.tags.length > 0 && (
+              {formData.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags.map((tag, index) => (
+                  {(formData.tags || []).map((tag, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                       <XCircle

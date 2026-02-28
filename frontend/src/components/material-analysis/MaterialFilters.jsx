@@ -67,14 +67,14 @@ export default function MaterialFilters({
         </Select>
 
         {/* 分类筛选 */}
-        {categories.length > 0 && (
+        {categories?.length > 0 && (
           <Select value={categoryFilter || 'all'} onValueChange={onCategoryChange}>
             <SelectTrigger className="w-[160px] bg-slate-900 border-slate-700 text-white">
               <SelectValue placeholder="物料分类" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部分类</SelectItem>
-              {categories.map((category) => (
+              {(categories || []).map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>

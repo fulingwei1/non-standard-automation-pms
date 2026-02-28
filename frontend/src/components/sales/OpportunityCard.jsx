@@ -126,16 +126,16 @@ export default function OpportunityCard({
       </div>
 
       {/* Tags */}
-      {tags.length > 0 && (
+      {tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {tags.slice(0, 2).map((tag, index) => (
             <Badge key={index} variant="secondary" className="text-xs">
               {tag}
             </Badge>
           ))}
-          {tags.length > 2 && (
+          {tags?.length > 2 && (
             <Badge variant="secondary" className="text-xs">
-              +{tags.length - 2}
+              +{tags?.length - 2}
             </Badge>
           )}
         </div>

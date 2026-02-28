@@ -38,7 +38,7 @@ export function TimesheetTable({
                                     <th className="text-left p-4 text-sm font-medium text-slate-400 min-w-[200px]">
                                         项目 / 任务
                                     </th>
-                                    {weekDates.map((date, index) => {
+                                    {(weekDates || []).map((date, index) => {
                                         const isToday = formatFullDate(date) === formatFullDate(new Date());
                                         const isWeekend = index >= 5;
                                         return (
@@ -67,14 +67,14 @@ export function TimesheetTable({
                                 </tr>
                             </thead>
                             <tbody>
-                                {entries.length === 0 && !loading ? (
+                                {entries?.length === 0 && !loading ? (
                                     <tr>
                                         <td colSpan={10} className="p-8 text-center text-slate-400">
                                             暂无工时记录，点击"添加记录"开始填报
                                         </td>
                                     </tr>
                                 ) : (
-                                    entries.map((entry) => {
+                                    (entries || []).map((entry) => {
                                         const entryTotal = Object.values(entry.hours || {}).reduce((a, b) => {
                                             const val = typeof b === "number" ? b : parseFloat(b) || 0;
                                             return a + val;
@@ -97,7 +97,7 @@ export function TimesheetTable({
                                                         </div>
                                                     </div>
                                                 </td>
-                                                {weekDates.map((date, index) => {
+                                                {(weekDates || []).map((date, index) => {
                                                     const dateStr = formatFullDate(date);
                                                     const hoursValue = entry.hours?.[dateStr];
                                                     const hours =
@@ -164,7 +164,7 @@ export function TimesheetTable({
                                 {/* Daily Totals Row */}
                                 <tr className="bg-surface-2/50 border-t-2 border-border">
                                     <td className="p-4 font-medium text-white">每日合计</td>
-                                    {weekDates.map((date, index) => {
+                                    {(weekDates || []).map((date, index) => {
                                         const dateStr = formatFullDate(date);
                                         const total = dailyTotals[dateStr] || 0;
                                         const isToday = dateStr === formatFullDate(new Date());

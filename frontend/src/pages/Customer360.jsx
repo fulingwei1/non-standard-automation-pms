@@ -306,7 +306,7 @@ const Customer360 = () => {
           onChange={setActiveTab}
           type="card"
           size="large"
-          items={tabItems.map((item) => ({
+          items={(tabItems || []).map((item) => ({
             key: item.key,
             label: item.tab,
             children: item.content,

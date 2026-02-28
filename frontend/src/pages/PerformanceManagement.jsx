@@ -110,7 +110,7 @@ export default function PerformanceManagement() {
           status: "PENDING"
         });
         if (tasksRes.data?.items?.length > 0) {
-          const tasks = tasksRes.data.items.map((task) => ({
+          const tasks = (tasksRes.data.items || []).map((task) => ({
             id: task.id,
             type: task.type || "evaluation",
             title: task.title || "评价下属绩效",
@@ -314,7 +314,7 @@ export default function PerformanceManagement() {
                       暂无待办事项
                   </div> :
 
-                  pendingTasks.map((task) =>
+                  (pendingTasks || []).map((task) =>
                   <div
                     key={task.id}
                     className="flex items-center justify-between p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
@@ -386,7 +386,7 @@ export default function PerformanceManagement() {
                       暂无绩效数据
                   </div> :
 
-                  recentResults.map((result) =>
+                  (recentResults || []).map((result) =>
                   <div
                     key={result.id}
                     className="flex items-center justify-between p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -453,7 +453,7 @@ export default function PerformanceManagement() {
                       暂无部门数据
                   </div> :
 
-                  departmentPerformance.map((dept, index) =>
+                  (departmentPerformance || []).map((dept, index) =>
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">

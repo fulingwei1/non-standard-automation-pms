@@ -128,28 +128,28 @@ export function TeamAssignment({
 
   // Filter tasks for assignment
   const availableTasks = useMemo(() => {
-    return tasks.filter((task) =>
+    return (tasks || []).filter((task) =>
     task.status === "SCHEDULED" && !task.assigned_engineer_id
     );
   }, [tasks]);
 
   // Get engineer's current tasks
   const getEngineerTasks = (engineerId) => {
-    return tasks.filter((task) => task.assigned_engineer_id === engineerId);
+    return (tasks || []).filter((task) => task.assigned_engineer_id === engineerId);
   };
 
   // Calculate engineer workload
   const calculateWorkload = (engineer) => {
     const tasks = getEngineerTasks(engineer.id);
-    const totalHours = tasks.reduce((sum, task) => sum + (task.estimated_duration || 0), 0);
-    const urgentTasks = tasks.filter((task) => task.priority === "URGENT").length;
-    const overdueTasks = tasks.filter((task) => isTaskOverdue(task.status, task.planned_end_date)).length;
+    const totalHours = (tasks || []).reduce((sum, task) => sum + (task.estimated_duration || 0), 0);
+    const urgentTasks = (tasks || []).filter((task) => task.priority === "URGENT").length;
+    const overdueTasks = (tasks || []).filter((task) => isTaskOverdue(task.status, task.planned_end_date)).length;
 
     return {
       totalHours,
       urgentTasks,
       overdueTasks,
-      taskCount: tasks.length
+      taskCount: tasks?.length
     };
   };
 
@@ -235,7 +235,7 @@ export function TeamAssignment({
   // Get unique skills for filter
   const uniqueSkills = useMemo(() => {
     const skillsSet = new Set();
-    engineers.forEach((engineer) => {
+    (engineers || []).forEach((engineer) => {
       engineer.skills?.forEach((skill) => skillsSet.add(skill));
     });
     return Array.from(skillsSet).sort();
@@ -244,7 +244,7 @@ export function TeamAssignment({
   // Get unique locations for filter
   const uniqueLocations = useMemo(() => {
     const locationsSet = new Set();
-    engineers.forEach((engineer) => {
+    (engineers || []).forEach((engineer) => {
       if (engineer.location) {locationsSet.add(engineer.location);}
     });
     return Array.from(locationsSet).sort();
@@ -350,7 +350,7 @@ export function TeamAssignment({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有技能</SelectItem>
-                {uniqueSkills.map((skill) =>
+                {(uniqueSkills || []).map((skill) =>
               <SelectItem key={skill} value={skill}>
                     {skill}
               </SelectItem>
@@ -364,7 +364,7 @@ export function TeamAssignment({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有地点</SelectItem>
-                {uniqueLocations.map((location) =>
+                {(uniqueLocations || []).map((location) =>
               <SelectItem key={location} value={location}>
                     {location}
               </SelectItem>
@@ -378,7 +378,7 @@ export function TeamAssignment({
       {/* Engineers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
-          {filteredEngineers.map((engineer) => {
+          {(filteredEngineers || []).map((engineer) => {
             const status = getEngineerStatus(engineer);
             const workload = calculateWorkload(engineer);
             const tasks = getEngineerTasks(engineer.id);
@@ -477,7 +477,7 @@ export function TeamAssignment({
                   </div>
 
                   {/* Skills */}
-                  {engineer.skills && engineer.skills.length > 0 &&
+                  {engineer.skills && engineer.skills?.length > 0 &&
                   <div>
                       <div className="text-xs text-slate-400 mb-1">技能专长</div>
                       <div className="flex flex-wrap gap-1">
@@ -490,9 +490,9 @@ export function TeamAssignment({
                             {skill}
                       </Badge>
                       )}
-                        {engineer.skills.length > 3 &&
+                        {engineer.skills?.length > 3 &&
                       <Badge variant="outline" className="text-xs">
-                            +{engineer.skills.length - 3}
+                            +{engineer.skills?.length - 3}
                       </Badge>
                       }
                       </div>
@@ -500,11 +500,11 @@ export function TeamAssignment({
                   }
 
                   {/* Current Tasks Preview */}
-                  {tasks.length > 0 &&
+                  {tasks?.length > 0 &&
                   <div>
                       <div className="text-xs text-slate-400 mb-2 flex items-center justify-between">
                         <span>当前任务</span>
-                        <span className="text-slate-500">{tasks.length} 个</span>
+                        <span className="text-slate-500">{tasks?.length} 个</span>
                       </div>
                       <div className="space-y-1 max-h-20 overflow-y-auto">
                         {tasks.slice(0, 2).map((task) =>
@@ -515,9 +515,9 @@ export function TeamAssignment({
                             </div>
                       </div>
                       )}
-                        {tasks.length > 2 &&
+                        {tasks?.length > 2 &&
                       <div className="text-xs text-slate-500 text-center">
-                            还有 {tasks.length - 2} 个任务...
+                            还有 {tasks?.length - 2} 个任务...
                       </div>
                       }
                       </div>
@@ -577,14 +577,14 @@ export function TeamAssignment({
               <div>
                 <label className="text-sm font-medium mb-2 block">选择任务</label>
                 <Select value={selectedTask?.id || ""} onValueChange={(value) => {
-                  const task = availableTasks.find((t) => t.id === value);
+                  const task = (availableTasks || []).find((t) => t.id === value);
                   setSelectedTask(task);
                 }}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择要分配的任务" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableTasks.map((task) =>
+                    {(availableTasks || []).map((task) =>
                     <SelectItem key={task.id} value={task.id}>
                         {task.title} · {task.scheduled_date} · {task.location}
                     </SelectItem>
@@ -596,14 +596,14 @@ export function TeamAssignment({
               <div>
                 <label className="text-sm font-medium mb-2 block">选择工程师</label>
                 <Select value={selectedEngineer?.id || ""} onValueChange={(value) => {
-                  const engineer = filteredEngineers.find((e) => e.id === value);
+                  const engineer = (filteredEngineers || []).find((e) => e.id === value);
                   setSelectedEngineer(engineer);
                 }}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择工程师" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredEngineers.map((engineer) =>
+                    {(filteredEngineers || []).map((engineer) =>
                     <SelectItem key={engineer.id} value={engineer.id}>
                         {engineer.first_name} {engineer.last_name} · {engineer.location} · 可用
                     </SelectItem>
@@ -712,11 +712,11 @@ export function TeamAssignment({
             }
 
               {/* Skills */}
-              {showEngineerDetail.skills && showEngineerDetail.skills.length > 0 &&
+              {showEngineerDetail.skills && showEngineerDetail.skills?.length > 0 &&
             <div>
                   <label className="text-sm font-medium text-slate-400">技能专长</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {showEngineerDetail.skills.map((skill, index) =>
+                    {(showEngineerDetail.skills || []).map((skill, index) =>
                 <Badge key={index} className="text-xs">
                         {skill}
                 </Badge>

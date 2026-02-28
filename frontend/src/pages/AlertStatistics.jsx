@@ -163,7 +163,7 @@ const AlertStatistics = () => {
 
   // 过滤数据
   const filteredAlerts = useMemo(() => {
-    return alerts.filter((alert) => {
+    return (alerts || []).filter((alert) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchesSearch = !searchText ||
       (alert.title || "").toLowerCase().includes(searchLower) ||
@@ -463,7 +463,7 @@ const AlertStatistics = () => {
           onChange={setActiveTab}
           type="card"
           size="large"
-          items={tabItems.map((item) => ({
+          items={(tabItems || []).map((item) => ({
             key: item.key,
             label: item.tab,
             children: item.content,

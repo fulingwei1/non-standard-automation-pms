@@ -36,7 +36,7 @@ const SolutionCompare = ({ solutions = [] }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {solutions.map((solution) => {
+              {(solutions || []).map((solution) => {
                 const solutionType = SOLUTION_TYPES[solution.solution_type] || {};
                 
                 return (

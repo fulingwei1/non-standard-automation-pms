@@ -398,7 +398,7 @@ export default function BiddingDetail() {
                   主要方案点
                 </h4>
                 <ul className="space-y-2">
-                  {bidding.technicalApproach.mainPoints.map((point, idx) =>
+                  {(bidding.technicalApproach.mainPoints || []).map((point, idx) =>
                   <motion.li
                     key={idx}
                     variants={fadeIn}
@@ -440,7 +440,7 @@ export default function BiddingDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {bidding.evaluation.map((evalItem, idx) =>
+                {(bidding.evaluation || []).map((evalItem, idx) =>
                 <motion.div
                   key={idx}
                   variants={fadeIn}
@@ -480,12 +480,12 @@ export default function BiddingDetail() {
               <CardTitle className="flex items-center justify-between">
                 <span>投标文件</span>
                 <span className="text-sm font-normal text-slate-400">
-                  {bidding.documents.length} 份
+                  {bidding.documents?.length} 份
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {bidding.documents.map((doc, idx) =>
+              {(bidding.documents || []).map((doc, idx) =>
               <motion.div
                 key={idx}
                 variants={fadeIn}
@@ -559,7 +559,7 @@ export default function BiddingDetail() {
               <CardTitle className="text-base">项目团队</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {bidding.team.map((member, idx) =>
+              {(bidding.team || []).map((member, idx) =>
               <motion.div
                 key={idx}
                 variants={fadeIn}
@@ -588,7 +588,7 @@ export default function BiddingDetail() {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="space-y-1">
-                {bidding.competitors.map((comp, idx) =>
+                {(bidding.competitors || []).map((comp, idx) =>
                 <motion.div
                   key={idx}
                   variants={fadeIn}

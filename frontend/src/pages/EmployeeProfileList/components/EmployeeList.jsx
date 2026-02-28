@@ -42,7 +42,7 @@ export function EmployeeList({
                         className="h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
                     >
                         <option value="all">全部部门</option>
-                        {departments.map((d) => (
+                        {(departments || []).map((d) => (
                             <option key={d} value={d}>
                                 {d}
                             </option>
@@ -60,7 +60,7 @@ export function EmployeeList({
                     <div className="text-center py-12 text-slate-400">暂无数据</div>
                 ) : (
                     <div className="space-y-3">
-                        {filteredProfiles.map((profile) => (
+                        {(filteredProfiles || []).map((profile) => (
                             <motion.div
                                 key={profile.id}
                                 initial={{ opacity: 0, y: 10 }}

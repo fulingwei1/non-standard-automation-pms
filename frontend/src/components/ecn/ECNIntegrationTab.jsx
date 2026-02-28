@@ -89,7 +89,7 @@ export default function ECNIntegrationTab({
       }
 
       // 同步到采购
-      const purchaseOrders = affectedOrders.filter(
+      const purchaseOrders = (affectedOrders || []).filter(
         (o) => o.order_type === "PURCHASE",
       );
       if (purchaseOrders.length > 0) {
@@ -211,12 +211,12 @@ export default function ECNIntegrationTab({
                   执行同步
                 </Button>
               </div>
-              {affectedOrders.filter((o) => o.order_type === "PURCHASE")
+              {(affectedOrders || []).filter((o) => o.order_type === "PURCHASE")
                 .length > 0 && (
                 <div className="text-sm text-slate-500">
                   将处理{" "}
                   {
-                    affectedOrders.filter((o) => o.order_type === "PURCHASE")
+                    (affectedOrders || []).filter((o) => o.order_type === "PURCHASE")
                       .length
                   }{" "}
                   个采购订单

@@ -142,7 +142,7 @@ export const AssessmentForm = ({
               break;
             case 'select':
               {
-                const option = question.options.find((opt) => opt.value === answer);
+                const option = (question.options || []).find((opt) => opt.value === answer);
                 questionScore = option ? option.score : 0;
               }
               break;
@@ -308,7 +308,7 @@ export const AssessmentForm = ({
     const questions = ASSESSMENT_QUESTIONS[categoryId];
     if (!questions) {return null;}
 
-    return questions.map((question, index) => {
+    return (questions || []).map((question, index) => {
       const questionId = `${categoryId}_${index}`;
       const currentValue = formData.assessmentQuestions?.[categoryId]?.[question.id];
 
@@ -371,7 +371,7 @@ export const AssessmentForm = ({
                 <SelectValue placeholder="请选择..." />
               </SelectTrigger>
               <SelectContent>
-                {question.options.map((option) =>
+                {(question.options || []).map((option) =>
               <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center justify-between w-full">
                       <span>{option.label}</span>
@@ -481,7 +481,7 @@ export const AssessmentForm = ({
           {/* 表单标签页 */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
-              {tabs.map((tab) =>
+              {(tabs || []).map((tab) =>
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}

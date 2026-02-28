@@ -56,7 +56,7 @@ export default function CategoryTree({
   // Handle expand/collapse
   const handleExpand = (categoryValue) => {
     const newExpanded = localExpanded.includes(categoryValue) ?
-    localExpanded.filter((c) => c !== categoryValue) :
+    (localExpanded || []).filter((c) => c !== categoryValue) :
     [...localExpanded, categoryValue];
 
     setLocalExpanded(newExpanded);
@@ -69,7 +69,7 @@ export default function CategoryTree({
   };
 
   // Filter categories based on search
-  const filteredCategories = categoryTree.filter((category) => {
+  const filteredCategories = (categoryTree || []).filter((category) => {
     if (!searchTerm) {return true;}
 
     const searchLower = searchTerm.toLowerCase();
@@ -86,7 +86,7 @@ export default function CategoryTree({
   const CategoryNode = ({ category, level = 0 }) => {
     const isExpanded = localExpanded.includes(category.value);
     const isSelected = selectedCategory === category.value;
-    const hasSubcategories = category.children && category.children.length > 0;
+    const hasSubcategories = category.children && category.children?.length > 0;
 
     return (
       <div className="w-full">
@@ -195,7 +195,7 @@ export default function CategoryTree({
             transition={{ duration: 0.2 }}
             className="ml-4 mt-1">
 
-              {category.children.map((subcategory) =>
+              {(category.children || []).map((subcategory) =>
             <CategoryNode
               key={subcategory.value}
               category={subcategory}
@@ -233,7 +233,7 @@ export default function CategoryTree({
 
       {/* Categories List */}
       <div className="space-y-1">
-        {filteredCategories.map((category) =>
+        {(filteredCategories || []).map((category) =>
         <CategoryNode key={category.value} category={category} />
         )}
       </div>
@@ -246,7 +246,7 @@ export default function CategoryTree({
             <span className="text-xs font-medium text-slate-400">热门分类</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {popularCategories.map(({ category, count }) =>
+            {(popularCategories || []).map(({ category, count }) =>
           <Badge
             key={category}
             variant="secondary"
@@ -304,7 +304,7 @@ export function CategorySelector({
   getCategoryConfig(selectedCategory) :
   null;
 
-  const filteredCategories = categoryTree.filter((category) => {
+  const filteredCategories = (categoryTree || []).filter((category) => {
     if (!searchTerm) {return true;}
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -369,7 +369,7 @@ export function CategorySelector({
 
             {/* Categories */}
             <div className="max-h-48 overflow-y-auto">
-              {filteredCategories.map((category) =>
+              {(filteredCategories || []).map((category) =>
             <div key={category.value}>
                   {/* Category */}
                   <div
@@ -398,7 +398,7 @@ export function CategorySelector({
                   {/* Subcategories */}
                   {showSubcategories && selectedCategory === category.value && category.children?.length > 0 &&
               <div className="ml-4 border-l border-white/10">
-                      {category.children.map((subcategory) =>
+                      {(category.children || []).map((subcategory) =>
                 <div
                   key={subcategory.value}
                   className="flex items-center gap-2 p-2 pl-4 hover:bg-surface-50/50 cursor-pointer"

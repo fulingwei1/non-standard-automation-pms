@@ -12,7 +12,7 @@ import PaymentCard from './PaymentCard';
  * @param {function} props.onViewDetail - 查看详情回调
  */
 export default function PaymentGrid({ payments, onInvoice, onViewDetail }) {
-  if (payments.length === 0) {
+  if (payments?.length === 0) {
     return (
       <div className="text-center py-12 text-slate-400">
         暂无付款记录
@@ -22,7 +22,7 @@ export default function PaymentGrid({ payments, onInvoice, onViewDetail }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {payments.map((payment) => (
+      {(payments || []).map((payment) => (
         <PaymentCard
           key={payment.id}
           payment={payment}

@@ -33,7 +33,7 @@ export function ServiceCharts({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.serviceTypeDistribution.map((item, index) => (
+              {(analytics.serviceTypeDistribution || []).map((item, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white">{item.type}</span>
@@ -65,7 +65,7 @@ export function ServiceCharts({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.problemTypeDistribution.map((item, index) => (
+              {(analytics.problemTypeDistribution || []).map((item, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white">{item.type}</span>
@@ -97,7 +97,7 @@ export function ServiceCharts({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.responseTimeDistribution.map((item, index) => (
+              {(analytics.responseTimeDistribution || []).map((item, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-white">{item.range}</span>
@@ -129,7 +129,7 @@ export function ServiceCharts({ analytics }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.satisfactionTrends.map((item, index) => (
+              {(analytics.satisfactionTrends || []).map((item, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between"

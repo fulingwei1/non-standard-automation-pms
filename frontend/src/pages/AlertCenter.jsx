@@ -120,7 +120,7 @@ export default function AlertCenter() {
       const projectList = data.items || data || [];
 
       // 转换为组件所需格式
-      const transformedProjects = projectList.map((project) => ({
+      const transformedProjects = (projectList || []).map((project) => ({
         id: project.id || project.project_code,
         name: project.project_name || ""
       }));
@@ -172,7 +172,7 @@ export default function AlertCenter() {
       const data = response.data?.data || response.data || response;
 
       setAlerts(data.items || data || []);
-      setTotal(data.total || data.length || 0);
+      setTotal(data.total || data?.length || 0);
     } catch (error) {
       console.error("Failed to load alerts:", error);
       setError(error.response?.data?.detail || error.message || "加载预警失败");
@@ -397,7 +397,7 @@ export default function AlertCenter() {
     if (selectedAlerts.size === filteredAlerts.length) {
       setSelectedAlerts(new Set());
     } else {
-      setSelectedAlerts(new Set(filteredAlerts.map((alert) => alert.id)));
+      setSelectedAlerts(new Set((filteredAlerts || []).map((alert) => alert.id)));
     }
   }, [filteredAlerts, selectedAlerts.size]);
 
@@ -457,7 +457,7 @@ export default function AlertCenter() {
     }
   }, [navigate, handleExportExcel]);
 
-  if (loading && alerts.length === 0) {
+  if (loading && alerts?.length === 0) {
     return (
       <LoadingCard message="加载预警数据中..." />);
 
@@ -546,7 +546,7 @@ export default function AlertCenter() {
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
                     <option value="ALL">全部项目</option>
-                    {projects.map((project) =>
+                    {(projects || []).map((project) =>
                     <option key={project.id} value={project.id}>
                         {project.name}
                     </option>
@@ -633,7 +633,7 @@ export default function AlertCenter() {
                       size="sm"
                       onClick={() =>
                       setSelectedAlerts(
-                        new Set(filteredAlerts.map((alert) => alert.id))
+                        new Set((filteredAlerts || []).map((alert) => alert.id))
                       )
                       }
                       variant="outline">
@@ -667,7 +667,7 @@ export default function AlertCenter() {
 
               {/* 预警列表内容 */}
               <div className="space-y-4">
-              {filteredAlerts.map((alert, index) => {
+              {(filteredAlerts || []).map((alert, index) => {
                 const levelConfig = getAlertLevelConfig(alert.alert_level);
                 const statusConfig = getAlertStatusConfig(alert.status);
                 const typeConfig = getAlertTypeConfig(alert.alert_type);

@@ -104,14 +104,14 @@ export default function ProjectContributionReport() {
       <ContributionChart contributions={report.contributions || []} />
 
       {/* TOP贡献者 */}
-      {report.top_contributors && report.top_contributors.length > 0 &&
+      {report.top_contributors && report.top_contributors?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle>TOP 贡献者</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {report.top_contributors.map((contributor, index) =>
+              {(report.top_contributors || []).map((contributor, index) =>
             <div
               key={contributor.user_id}
               className="flex items-center justify-between p-3 border rounded-lg">

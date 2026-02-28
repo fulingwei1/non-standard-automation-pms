@@ -31,7 +31,7 @@ export const RevenueTrendCard = ({ monthlyRevenue }) => {
         <CardContent>
           <div className="space-y-3">
             {monthlyRevenue && monthlyRevenue.length > 0 ?
-            monthlyRevenue.map((item, index) => {
+            (monthlyRevenue || []).map((item, index) => {
               const revenue = item.revenue || item.amount || 0;
               const target = item.target || item.target_amount || 0;
               const month =

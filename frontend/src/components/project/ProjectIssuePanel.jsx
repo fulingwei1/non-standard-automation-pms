@@ -59,10 +59,10 @@ export default function ProjectIssuePanel({ projectId }) {
     );
   }
 
-  const openIssues = issues.filter(
+  const openIssues = (issues || []).filter(
     (i) => i.status === "OPEN" || i.status === "IN_PROGRESS",
   );
-  const resolvedIssues = issues.filter(
+  const resolvedIssues = (issues || []).filter(
     (i) =>
       i.status === "RESOLVED" ||
       i.status === "CLOSED" ||
@@ -76,7 +76,7 @@ export default function ProjectIssuePanel({ projectId }) {
         ? openIssues
         : activeTab === "resolved"
           ? resolvedIssues
-          : issues.filter((i) => i.has_solution);
+          : (issues || []).filter((i) => i.has_solution);
 
   return (
     <div className="space-y-6">
@@ -85,7 +85,7 @@ export default function ProjectIssuePanel({ projectId }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">问题总数</p>
-            <p className="text-2xl font-bold">{issues.length}</p>
+            <p className="text-2xl font-bold">{issues?.length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -108,8 +108,8 @@ export default function ProjectIssuePanel({ projectId }) {
           <CardContent className="p-4">
             <p className="text-sm text-gray-500">解决率</p>
             <p className="text-2xl font-bold">
-              {issues.length > 0
-                ? ((resolvedIssues.length / issues.length) * 100).toFixed(1)
+              {issues?.length > 0
+                ? ((resolvedIssues.length / issues?.length) * 100).toFixed(1)
                 : 0}
               %
             </p>
@@ -137,7 +137,7 @@ export default function ProjectIssuePanel({ projectId }) {
             <TabsContent value={activeTab} className="mt-4">
               {filteredIssues.length > 0 ? (
                 <div className="space-y-2">
-                  {filteredIssues.map((issue) => (
+                  {(filteredIssues || []).map((issue) => (
                     <div
                       key={issue.id}
                       className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
@@ -201,7 +201,7 @@ export default function ProjectIssuePanel({ projectId }) {
       </Card>
 
       {/* 解决方案库 */}
-      {solutions && solutions.solutions && solutions.solutions.length > 0 && (
+      {solutions && solutions.solutions && solutions.solutions?.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -257,7 +257,7 @@ export default function ProjectIssuePanel({ projectId }) {
                   {solution.solution && (
                     <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                       {solution.solution.substring(0, 200)}
-                      {solution.solution.length > 200 && "..."}
+                      {solution.solution?.length > 200 && "..."}
                     </div>
                   )}
                 </div>

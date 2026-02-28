@@ -388,7 +388,7 @@ const DeliveryManagement = () => {
 
   // 过滤数据
   const filteredDeliveries = useMemo(() => {
-    return deliveries.filter((delivery) => {
+    return (deliveries || []).filter((delivery) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchesSearch = !searchText ||
       (delivery.orderNumber || "").toLowerCase().includes(searchLower) ||
@@ -414,7 +414,7 @@ const DeliveryManagement = () => {
     tab:
     <span>
           <Calendar size={16} />
-          交付计划 ({filteredDeliveries.filter((d) => d.status === 'pending' || d.status === 'preparing').length})
+          交付计划 ({(filteredDeliveries || []).filter((d) => d.status === 'pending' || d.status === 'preparing').length})
     </span>,
 
     content: <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
@@ -424,7 +424,7 @@ const DeliveryManagement = () => {
     tab:
     <span>
           <Truck size={16} />
-          物流跟踪 ({filteredDeliveries.filter((d) => d.status === 'shipped' || d.status === 'in_transit').length})
+          物流跟踪 ({(filteredDeliveries || []).filter((d) => d.status === 'shipped' || d.status === 'in_transit').length})
     </span>,
 
     content: <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
@@ -523,7 +523,7 @@ const DeliveryManagement = () => {
           onChange={setActiveTab}
           type="card"
           size="large"
-          items={tabItems.map((item) => ({
+          items={(tabItems || []).map((item) => ({
             key: item.key,
             label: item.tab,
             children: item.content,

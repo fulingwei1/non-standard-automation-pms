@@ -79,7 +79,7 @@ export function PaymentStatsOverview({
 
   // 计算总体统计数据
   const overallStats = useMemo(() => {
-    if (payments.length === 0) {
+    if (payments?.length === 0) {
       return {
         totalReceivables: 0,
         overdueAmount: 0,
@@ -92,7 +92,7 @@ export function PaymentStatsOverview({
       };
     }
 
-    const totalReceivables = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalReceivables = (payments || []).reduce((sum, p) => sum + p.amount, 0);
     const overdueAmount = payments.
     filter((p) => p.status === 'overdue').
     reduce((sum, p) => sum + p.amount, 0);
@@ -125,7 +125,7 @@ export function PaymentStatsOverview({
   const statusDistribution = useMemo(() => {
     const statusCount = {};
 
-    payments.forEach((payment) => {
+    (payments || []).forEach((payment) => {
       const status = getPaymentStatus(payment.status);
       statusCount[status.key] = (statusCount[status.key] || 0) + 1;
     });
@@ -144,7 +144,7 @@ export function PaymentStatsOverview({
   const _typeDistribution = useMemo(() => {
     const typeCount = {};
 
-    payments.forEach((payment) => {
+    (payments || []).forEach((payment) => {
       const type = getPaymentType(payment.type);
       typeCount[type.label] = (typeCount[type.label] || 0) + 1;
     });
@@ -160,7 +160,7 @@ export function PaymentStatsOverview({
   const agingAnalysis = useMemo(() => {
     const agingData = {};
 
-    payments.forEach((payment) => {
+    (payments || []).forEach((payment) => {
       if (payment.status === 'paid') {return;}
 
       const daysOverdue = Math.max(0, calculateAging(payment.due_date));
@@ -185,7 +185,7 @@ export function PaymentStatsOverview({
   const collectionAnalysis = useMemo(() => {
     const collectionData = {};
 
-    payments.forEach((payment) => {
+    (payments || []).forEach((payment) => {
       if (payment.status === 'paid') {return;}
 
       const daysOverdue = Math.max(0, calculateAging(payment.due_date));
@@ -217,14 +217,14 @@ export function PaymentStatsOverview({
       return date.toISOString().split('T')[0];
     });
 
-    return last30Days.map((date) => {
-      const dayPayments = payments.filter((p) =>
+    return (last30Days || []).map((date) => {
+      const dayPayments = (payments || []).filter((p) =>
       p.status === 'paid' && p.paid_date === date
       );
 
       return {
         date,
-        amount: dayPayments.reduce((sum, p) => sum + p.amount, 0),
+        amount: (dayPayments || []).reduce((sum, p) => sum + p.amount, 0),
         count: dayPayments.length
       };
     });
@@ -334,11 +334,11 @@ export function PaymentStatsOverview({
                 data={statusDistribution}
                 valueKey="value"
                 nameKey="name"
-                colors={statusDistribution.map((d) => d.color)} />
+                colors={(statusDistribution || []).map((d) => d.color)} />
 
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {statusDistribution.map((item, index) =>
+              {(statusDistribution || []).map((item, index) =>
               <div key={index} className="flex items-center gap-2">
                   <div
                   className="w-3 h-3 rounded-full"
@@ -371,7 +371,7 @@ export function PaymentStatsOverview({
 
             </div>
             <div className="space-y-2 mt-4">
-              {agingAnalysis.map((item, index) =>
+              {(agingAnalysis || []).map((item, index) =>
               <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-slate-300">{item.name}</span>
                   <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export function PaymentStatsOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {collectionAnalysis.map((item, index) =>
+              {(collectionAnalysis || []).map((item, index) =>
               <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div
@@ -454,7 +454,7 @@ export function PaymentStatsOverview({
             <span>自动刷新间隔: {refreshInterval / 1000}秒</span>
             <span>
               总回款: {formatCurrency(
-                recentCollections.reduce((sum, r) => sum + r.amount, 0)
+                (recentCollections || []).reduce((sum, r) => sum + r.amount, 0)
               )}
             </span>
           </div>

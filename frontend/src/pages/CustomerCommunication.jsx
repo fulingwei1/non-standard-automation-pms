@@ -207,10 +207,10 @@ export default function CustomerCommunication() {
       const customerData = customerRes.data?.items || customerRes.data?.items || customerRes.data || [];
       const userData = userRes.data?.items || userRes.data?.items || userRes.data || [];
 
-      const transformedCommunications = commData.map((comm) => ({
+      const transformedCommunications = (commData || []).map((comm) => ({
         ...comm,
-        customer: customerData.find((c) => c.id === comm.customer_id),
-        assigned_user: userData.find((u) => u.id === comm.assigned_to)
+        customer: (customerData || []).find((c) => c.id === comm.customer_id),
+        assigned_user: (userData || []).find((u) => u.id === comm.assigned_to)
       }));
 
       setCommunications(transformedCommunications);
@@ -501,7 +501,7 @@ export default function CustomerCommunication() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部客户</SelectItem>
-                {customers.map((customer) =>
+                {(customers || []).map((customer) =>
                 <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}
                 </SelectItem>
@@ -555,7 +555,7 @@ export default function CustomerCommunication() {
                     </TableCell>
                 </TableRow> :
 
-                communications.map((comm) =>
+                (communications || []).map((comm) =>
                 <TableRow key={comm.id}>
                       <TableCell className="font-medium">
                         {comm.customer?.name || "未知客户"}
@@ -625,7 +625,7 @@ export default function CustomerCommunication() {
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {customers.map((customer) =>
+                  {(customers || []).map((customer) =>
                   <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
                   </SelectItem>
@@ -759,7 +759,7 @@ export default function CustomerCommunication() {
                   <SelectValue placeholder="选择负责人" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {users.map((user) =>
+                  {(users || []).map((user) =>
                   <SelectItem key={user.id} value={user.id} className="text-white">
                       {user.name}
                   </SelectItem>
@@ -972,7 +972,7 @@ export default function CustomerCommunication() {
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {customers.map((customer) =>
+                  {(customers || []).map((customer) =>
                   <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
                   </SelectItem>

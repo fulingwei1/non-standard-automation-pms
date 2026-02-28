@@ -76,7 +76,7 @@ export default function DateRangePicker({
     if (value?.start && value?.end) {
       return `${format(value.start, "yyyy-MM-dd")} ~ ${format(value.end, "yyyy-MM-dd")}`;
     }
-    const preset = presetRanges.find((p) => p.key === selectedPreset);
+    const preset = (presetRanges || []).find((p) => p.key === selectedPreset);
     return preset?.label || "选择日期";
   }, [value, selectedPreset]);
 

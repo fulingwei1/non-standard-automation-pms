@@ -120,7 +120,7 @@ export const OverviewTab = ({ currentPeriod: _cp, latestScore, quarterlyTrend })
               <p className="text-white font-medium">项目经理评价 (50%)</p>
             </div>
             <div className="space-y-3">
-              {currentPeriod.projectEvaluations.map((proj, idx) =>
+              {(currentPeriod.projectEvaluations || []).map((proj, idx) =>
               <div
                 key={idx}
                 className="flex items-center justify-between pl-8">
@@ -270,7 +270,7 @@ export const OverviewTab = ({ currentPeriod: _cp, latestScore, quarterlyTrend })
                 <span className="text-sm text-slate-500">(权重 50%)</span>
               </div>
               <div className="space-y-2">
-                {latestScore.projectScores.map((ps, idx) =>
+                {(latestScore.projectScores || []).map((ps, idx) =>
               <div key={idx} className="flex items-center justify-between">
                     <span className="text-sm text-slate-400">
                       {ps.projectName}
@@ -295,7 +295,7 @@ export const OverviewTab = ({ currentPeriod: _cp, latestScore, quarterlyTrend })
       <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
         <h3 className="text-xl font-bold text-white mb-6">季度绩效趋势</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quarterlyTrend.map((item, idx) =>
+          {(quarterlyTrend || []).map((item, idx) =>
           <div
             key={idx}
             className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">

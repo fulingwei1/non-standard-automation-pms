@@ -440,10 +440,10 @@ function TaskListItem({ task, onClick, isSelected }) {
               <Timer className="w-3 h-3" />
               {task.actualHours}/{task.estimatedHours}h
             </span>
-            {task.deliverables.length > 0 &&
+            {task.deliverables?.length > 0 &&
             <span className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
-                {task.deliverables.length} 文件
+                {task.deliverables?.length} 文件
             </span>
             }
           </div>
@@ -531,7 +531,7 @@ export default function EngineerWorkstation() {
       const tasksData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform backend tasks to frontend format
-      const transformedTasks = tasksData.map((task) => ({
+      const transformedTasks = (tasksData || []).map((task) => ({
         id: task.id?.toString(),
         title: task.title || "",
         titleCn: task.title || task.description || "",
@@ -576,16 +576,16 @@ export default function EngineerWorkstation() {
 
   // Get unique projects for filter
   const projects = useMemo(() => {
-    const projectSet = new Set(tasks.map((t) => t.projectId));
+    const projectSet = new Set((tasks || []).map((t) => t.projectId));
     return Array.from(projectSet).map((id) => {
-      const task = tasks.find((t) => t.projectId === id);
+      const task = (tasks || []).find((t) => t.projectId === id);
       return { id, name: task.projectName };
     });
   }, [tasks]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
+    return (tasks || []).filter((task) => {
       if (statusFilter !== "all" && task.status !== statusFilter) {return false;}
       if (projectFilter !== "all" && task.projectId !== projectFilter)
       {return false;}
@@ -607,16 +607,16 @@ export default function EngineerWorkstation() {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     return {
-      inProgress: tasks.filter((t) => t.status === "in_progress").length,
-      pending: tasks.filter((t) => t.status === "pending").length,
-      completed: tasks.filter((t) => t.status === "completed").length,
-      dueThisWeek: tasks.filter((t) => {
+      inProgress: (tasks || []).filter((t) => t.status === "in_progress").length,
+      pending: (tasks || []).filter((t) => t.status === "pending").length,
+      completed: (tasks || []).filter((t) => t.status === "completed").length,
+      dueThisWeek: (tasks || []).filter((t) => {
         const dueDate = new Date(t.plannedEnd);
         return (
           t.status !== "completed" && dueDate >= today && dueDate <= weekEnd);
 
       }).length,
-      overdue: tasks.filter((t) => {
+      overdue: (tasks || []).filter((t) => {
         return t.status !== "completed" && new Date(t.plannedEnd) < today;
       }).length
     };
@@ -631,7 +631,7 @@ export default function EngineerWorkstation() {
   // Handle task update
   const handleTaskUpdate = (taskId, updates) => {
     setTasks((prev) =>
-    prev.map((t) => t.id === taskId ? { ...t, ...updates } : t)
+    (prev || []).map((t) => t.id === taskId ? { ...t, ...updates } : t)
     );
     if (selectedTask?.id === taskId) {
       setSelectedTask((prev) => ({ ...prev, ...updates }));
@@ -645,7 +645,7 @@ export default function EngineerWorkstation() {
   };
 
   // Show error state
-  if (error && tasks.length === 0) {
+  if (error && tasks?.length === 0) {
     return (
       <div className="space-y-6">
         <PageHeader
@@ -781,7 +781,7 @@ export default function EngineerWorkstation() {
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
 
                   <option value="all">全部项目</option>
-                  {projects.map((p) =>
+                  {(projects || []).map((p) =>
                   <option key={p.id} value={p.id}>
                       {p.name}
                   </option>
@@ -846,7 +846,7 @@ export default function EngineerWorkstation() {
           {/* List View */}
           {viewMode === "list" &&
           <div className="space-y-3">
-              {filteredTasks.map((task) =>
+              {(filteredTasks || []).map((task) =>
             <TaskListItem
               key={task.id}
               task={task}
@@ -879,7 +879,7 @@ export default function EngineerWorkstation() {
               {(() => {
               // 按项目分组
               const tasksByProject = {};
-              filteredTasks.forEach((task) => {
+              (filteredTasks || []).forEach((task) => {
                 const projectId = task.projectId || "other";
                 const projectName = task.projectName || "未分配项目";
                 if (!tasksByProject[projectId]) {
@@ -925,7 +925,7 @@ export default function EngineerWorkstation() {
 
               }
 
-              return projectGroups.map((group) =>
+              return (projectGroups || []).map((group) =>
               <Card key={group.projectId} className="bg-surface-1/50">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
@@ -971,7 +971,7 @@ export default function EngineerWorkstation() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {group.tasks.map((task) =>
+                        {(group.tasks || []).map((task) =>
                     <TaskListItem
                       key={task.id}
                       task={task}

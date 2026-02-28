@@ -30,11 +30,11 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.alerts) {return {};}
 
-    const totalAlerts = data.alerts.length;
-    const activeAlerts = data.alerts.filter((a) => a.status === 'active').length;
-    const resolvedAlerts = data.alerts.filter((a) => a.status === 'resolved').length;
-    const criticalAlerts = data.alerts.filter((a) => a.level === 'critical').length;
-    const escalatedAlerts = data.alerts.filter((a) => a.status === 'escalated').length;
+    const totalAlerts = data.alerts?.length;
+    const activeAlerts = (data.alerts || []).filter((a) => a.status === 'active').length;
+    const resolvedAlerts = (data.alerts || []).filter((a) => a.status === 'resolved').length;
+    const criticalAlerts = (data.alerts || []).filter((a) => a.level === 'critical').length;
+    const escalatedAlerts = (data.alerts || []).filter((a) => a.status === 'escalated').length;
 
     const resolvedRate = totalAlerts > 0 ? (resolvedAlerts / totalAlerts * 100).toFixed(1) : 0;
     const escalationRate = totalAlerts > 0 ? (escalatedAlerts / totalAlerts * 100).toFixed(1) : 0;
@@ -63,7 +63,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.alerts.forEach((alert) => {
+    (data.alerts || []).forEach((alert) => {
       if (alert.type && ALERT_TYPES[alert.type.toUpperCase()]) {
         distribution[alert.type.toUpperCase()]++;
       }
@@ -80,7 +80,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.alerts.forEach((alert) => {
+    (data.alerts || []).forEach((alert) => {
       if (alert.level && ALERT_LEVELS[alert.level.toUpperCase()]) {
         distribution[alert.level.toUpperCase()]++;
       }
@@ -259,7 +259,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         }>
 
           <Space orientation="vertical" style={{ width: '100%' }}>
-            {recentCriticalAlerts.map((alert) =>
+            {(recentCriticalAlerts || []).map((alert) =>
           <AntAlert
             key={alert.id}
             message={alert.title}

@@ -123,7 +123,7 @@ const PaymentStageBar = ({ payment, index, contractAmount }) => {
 const MilestoneTimeline = ({ milestones }) => {
   return (
     <div className="relative space-y-4">
-      {milestones.map((milestone, idx) =>
+      {(milestones || []).map((milestone, idx) =>
       <motion.div key={idx} variants={fadeIn} className="relative flex gap-4">
           {/* Timeline dot */}
           <div className="flex flex-col items-center">
@@ -238,10 +238,10 @@ export default function ContractDetail() {
     cancelled: { label: "已取消", color: "bg-red-500/20 text-red-400" }
   };
 
-  const completedDeliverables = contract.deliverables.filter(
+  const completedDeliverables = (contract.deliverables || []).filter(
     (d) => d.status === "completed"
   ).length;
-  const completedMilestones = contract.milestones.filter(
+  const completedMilestones = (contract.milestones || []).filter(
     (m) => m.status === "completed"
   ).length;
 
@@ -343,7 +343,7 @@ export default function ContractDetail() {
                 animate="visible"
                 className="space-y-4">
 
-                {contract.paymentPlan.map((payment, idx) =>
+                {(contract.paymentPlan || []).map((payment, idx) =>
                 <PaymentStageBar
                   key={idx}
                   payment={payment}
@@ -361,7 +361,7 @@ export default function ContractDetail() {
               <CardTitle className="flex items-center justify-between">
                 <span>里程碑</span>
                 <span className="text-sm font-normal text-slate-400">
-                  {completedMilestones}/{contract.milestones.length} 完成
+                  {completedMilestones}/{contract.milestones?.length} 完成
                 </span>
               </CardTitle>
             </CardHeader>
@@ -376,7 +376,7 @@ export default function ContractDetail() {
               <CardTitle className="flex items-center justify-between">
                 <span>交付物清单</span>
                 <span className="text-sm font-normal text-slate-400">
-                  {completedDeliverables}/{contract.deliverables.length}
+                  {completedDeliverables}/{contract.deliverables?.length}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -387,7 +387,7 @@ export default function ContractDetail() {
                 animate="visible"
                 className="space-y-2">
 
-                {contract.deliverables.map((deliverable, idx) =>
+                {(contract.deliverables || []).map((deliverable, idx) =>
                 <motion.div
                   key={idx}
                   variants={fadeIn}
@@ -506,7 +506,7 @@ export default function ContractDetail() {
               <CardTitle className="text-base">附件</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {contract.documents.map((doc, idx) =>
+              {(contract.documents || []).map((doc, idx) =>
               <motion.div
                 key={idx}
                 variants={fadeIn}

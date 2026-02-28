@@ -130,7 +130,7 @@ export default function ShortageReportList() {
     }
   };
   const filteredReports = useMemo(() => {
-    return reports.filter((report) => {
+    return (reports || []).filter((report) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -167,7 +167,7 @@ export default function ShortageReportList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -242,7 +242,7 @@ export default function ShortageReportList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredReports.map((report) =>
+                {(filteredReports || []).map((report) =>
               <TableRow key={report.id}>
                     <TableCell className="font-mono text-sm">
                       {report.report_no}

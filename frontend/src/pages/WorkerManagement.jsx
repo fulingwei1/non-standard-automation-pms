@@ -167,7 +167,7 @@ export default function WorkerManagement() {
   };
 
   const filteredWorkers = useMemo(() => {
-    return workers.filter((worker) => {
+    return (workers || []).filter((worker) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -233,7 +233,7 @@ export default function WorkerManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredWorkers.map((worker) => (
+                {(filteredWorkers || []).map((worker) => (
                   <TableRow key={worker.id}>
                     <TableCell className="font-mono text-sm">
                       {worker.worker_code}

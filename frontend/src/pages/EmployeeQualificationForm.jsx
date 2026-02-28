@@ -314,7 +314,7 @@ export default function EmployeeQualificationForm() {
             </CardHeader>
             <CardContent>
               <QualificationTrendChart
-              data={assessments.map((a) => ({
+              data={(assessments || []).map((a) => ({
                 date: a.assessed_at || a.assessment_period,
                 total_score: a.total_score,
                 result: a.result,
@@ -382,7 +382,7 @@ export default function EmployeeQualificationForm() {
                     <SelectValue placeholder="选择员工" />
                   </SelectTrigger>
                   <SelectContent>
-                    {employees.map((emp) =>
+                    {(employees || []).map((emp) =>
                   <SelectItem key={emp.id} value={emp.id.toString()}>
                         {emp.employee_code || `E${emp.id}`} -{" "}
                         {emp.name || `员工${emp.id}`}
@@ -429,7 +429,7 @@ export default function EmployeeQualificationForm() {
                     <SelectValue placeholder="选择等级" />
                   </SelectTrigger>
                   <SelectContent>
-                    {levels.map((level) =>
+                    {(levels || []).map((level) =>
                     <SelectItem key={level.id} value={level.id.toString()}>
                         {level.level_code} - {level.level_name}
                     </SelectItem>
@@ -498,10 +498,10 @@ export default function EmployeeQualificationForm() {
                           权重: {dimension.weight}%
                         </p>
                       </CardHeader>
-                      {dimension.items && dimension.items.length > 0 &&
+                      {dimension.items && dimension.items?.length > 0 &&
                   <CardContent>
                           <div className="space-y-2">
-                            {dimension.items.map((item, itemIndex) =>
+                            {(dimension.items || []).map((item, itemIndex) =>
                       <div
                         key={itemIndex}
                         className="flex items-center justify-between p-2 bg-gray-50 rounded">

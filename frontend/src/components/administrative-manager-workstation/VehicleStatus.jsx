@@ -30,7 +30,7 @@ const VehicleStatus = ({ vehicles }) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {vehicles.map((vehicle) =>
+          {(vehicles || []).map((vehicle) =>
           <div
             key={vehicle.id}
             className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors">

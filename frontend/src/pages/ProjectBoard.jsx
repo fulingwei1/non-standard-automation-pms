@@ -143,18 +143,18 @@ export default function ProjectBoard() {
 
     // 状态筛选
     if (statusFilter !== "all") {
-      result = result.filter((p) => p.status === statusFilter);
+      result = (result || []).filter((p) => p.status === statusFilter);
     }
 
     // 健康度筛选
     if (healthFilter !== "all") {
-      result = result.filter((p) => p.health === healthFilter);
+      result = (result || []).filter((p) => p.health === healthFilter);
     }
 
     // 搜索
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(
+      result = (result || []).filter(
         (p) =>
         p.project_code?.toLowerCase().includes(query) ||
         p.name?.toLowerCase().includes(query) ||
@@ -180,13 +180,13 @@ export default function ProjectBoard() {
   // 统计信息
   const stats = useMemo(() => {
     const healthCounts = { H1: 0, H2: 0, H3: 0, H4: 0 };
-    filteredProjects.forEach((p) => {
+    (filteredProjects || []).forEach((p) => {
       const h = p.health || "H1";
       healthCounts[h]++;
     });
 
     return {
-      total: projects.length,
+      total: projects?.length,
       filtered: filteredProjects.length,
       myCount: filterProjects(projects, "my").length,
       ...healthCounts
@@ -496,11 +496,11 @@ function MatrixView({ projects, stages, onProjectClick }) {
   // 按阶段和健康度分组
   const matrix = useMemo(() => {
     const result = {};
-    stages.forEach((stage) => {
+    (stages || []).forEach((stage) => {
       result[stage.key] = { H1: [], H2: [], H3: [], H4: [] };
     });
 
-    projects.forEach((project) => {
+    (projects || []).forEach((project) => {
       // API返回的是 stage 字段，不是 current_stage
       const stageKey = project.stage || project.current_stage || "S1";
       const healthKey = project.health || "H1";
@@ -522,7 +522,7 @@ function MatrixView({ projects, stages, onProjectClick }) {
             <th className="p-2 text-left text-xs text-slate-500 font-normal">
               健康度 / 阶段
             </th>
-            {stages.map((stage) =>
+            {(stages || []).map((stage) =>
             <th key={stage.key} className="p-2 text-center">
                 <div className="text-xs text-slate-400">{stage.key}</div>
                 <div className="text-sm text-white">{stage.shortName}</div>
@@ -531,7 +531,7 @@ function MatrixView({ projects, stages, onProjectClick }) {
           </tr>
         </thead>
         <tbody>
-          {healthKeys.map((healthKey) =>
+          {(healthKeys || []).map((healthKey) =>
           <tr key={healthKey} className="border-t border-white/5">
               <td className="p-2">
                 <div
@@ -556,7 +556,7 @@ function MatrixView({ projects, stages, onProjectClick }) {
                   </span>
                 </div>
               </td>
-              {stages.map((stage) => {
+              {(stages || []).map((stage) => {
               const cellProjects = matrix[stage.key]?.[healthKey] || [];
               return (
                 <td key={stage.key} className="p-2 text-center align-top">
@@ -601,7 +601,7 @@ function MatrixView({ projects, stages, onProjectClick }) {
 function ListView({ projects, onProjectClick, isProjectRelevant }) {
   return (
     <div className="space-y-2">
-      {projects.map((project, index) =>
+      {(projects || []).map((project, index) =>
       <motion.div
         key={project.id}
         initial={{ opacity: 0, y: 10 }}

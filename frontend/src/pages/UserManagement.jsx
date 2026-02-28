@@ -306,7 +306,7 @@ export default function UserManagement() {
       // 使用统一响应格式处理
       const userData = userResponse.formatted || userResponse.data;
       const userRoles = userData?.roles || [];
-      setSelectedRoles(userRoles.map((r) => r.id));
+      setSelectedRoles((userRoles || []).map((r) => r.id));
     } catch (error) {
       console.error("Failed to load roles:", error);
       toast.error("加载角色列表失败");
@@ -317,7 +317,7 @@ export default function UserManagement() {
   const handleRoleToggle = (roleId) => {
     setSelectedRoles((prev) =>
       prev.includes(roleId)
-        ? prev.filter((id) => id !== roleId)
+        ? (prev || []).filter((id) => id !== roleId)
         : [...prev, roleId],
     );
   };
@@ -382,12 +382,12 @@ export default function UserManagement() {
 
   const resolveTemplateRoleIds = (templateType) => {
     const roleMap = {};
-    availableRoles.forEach((role) => {
+    (availableRoles || []).forEach((role) => {
       roleMap[role.role_code] = role.id;
     });
 
     if (templateType === "admin") {
-      return availableRoles.map((r) => r.id);
+      return (availableRoles || []).map((r) => r.id);
     }
 
     const template = ROLE_TEMPLATES[templateType];
@@ -411,7 +411,7 @@ export default function UserManagement() {
   // 批量操作
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedUserIds(users.map((u) => u.id));
+      setSelectedUserIds((users || []).map((u) => u.id));
     } else {
       setSelectedUserIds([]);
     }
@@ -420,7 +420,7 @@ export default function UserManagement() {
   const handleSelectUser = (userId) => {
     setSelectedUserIds((prev) =>
       prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
+        ? (prev || []).filter((id) => id !== userId)
         : [...prev, userId],
     );
   };
@@ -445,7 +445,7 @@ export default function UserManagement() {
   const handleBulkRoleToggle = (roleId) => {
     setBulkSelectedRoles((prev) =>
       prev.includes(roleId)
-        ? prev.filter((id) => id !== roleId)
+        ? (prev || []).filter((id) => id !== roleId)
         : [...prev, roleId],
     );
   };
@@ -453,7 +453,7 @@ export default function UserManagement() {
   const handleBulkSavePermissions = async () => {
     try {
       await Promise.all(
-        selectedUserIds.map((userId) =>
+        (selectedUserIds || []).map((userId) =>
           userApi.assignRoles(userId, { role_ids: bulkSelectedRoles }),
         ),
       );
@@ -680,7 +680,7 @@ export default function UserManagement() {
           <CardContent>
             {loading ? (
               <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : users.length === 0 ? (
+            ) : users?.length === 0 ? (
               <div className="text-center py-8 text-slate-400">
                 暂无用户数据
               </div>
@@ -692,8 +692,8 @@ export default function UserManagement() {
                       <input
                         type="checkbox"
                         checked={
-                          selectedUserIds.length === users.length &&
-                          users.length > 0
+                          selectedUserIds.length === users?.length &&
+                          users?.length > 0
                         }
                         onChange={handleSelectAll}
                         className="w-4 h-4 rounded border-slate-600 bg-slate-800"
@@ -709,7 +709,7 @@ export default function UserManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {(users || []).map((user) => (
                     <TableRow
                       key={user.id}
                       className={
@@ -1152,7 +1152,7 @@ export default function UserManagement() {
                         加载角色中...
                       </div>
                     ) : (
-                      availableRoles.map((role) => (
+                      (availableRoles || []).map((role) => (
                         <div
                           key={role.id}
                           className={cn(
@@ -1280,7 +1280,7 @@ export default function UserManagement() {
                   </div>
 
                   <div className="max-h-[400px] overflow-y-auto space-y-2">
-                    {availableRoles.map((role) => (
+                    {(availableRoles || []).map((role) => (
                       <div
                         key={role.id}
                         className={cn(

@@ -164,8 +164,8 @@ function FlowNode({
 
 // 连线组件
 function FlowEdge({ edge, nodes, isSelected, onSelect, onDelete }) {
-  const sourceNode = nodes.find(n => n.id === edge.source);
-  const targetNode = nodes.find(n => n.id === edge.target);
+  const sourceNode = (nodes || []).find(n => n.id === edge.source);
+  const targetNode = (nodes || []).find(n => n.id === edge.target);
 
   if (!sourceNode || !targetNode) return null;
 
@@ -333,7 +333,7 @@ export function FlowCanvas({
   }, []);
 
   const connectingFromNode = connectingFrom
-    ? flow.nodes.find(n => n.id === connectingFrom)
+    ? (flow.nodes || []).find(n => n.id === connectingFrom)
     : null;
 
   return (
@@ -375,7 +375,7 @@ export function FlowCanvas({
         >
           <g className="pointer-events-auto">
             {/* 已有连线 */}
-            {flow.edges.map(edge => (
+            {(flow.edges || []).map(edge => (
               <FlowEdge
                 key={edge.id}
                 edge={edge}
@@ -396,7 +396,7 @@ export function FlowCanvas({
         </svg>
 
         {/* 节点层 */}
-        {flow.nodes.map(node => (
+        {(flow.nodes || []).map(node => (
           <FlowNode
             key={node.id}
             node={node}

@@ -211,7 +211,7 @@ export default function ExceptionManagement() {
     }
   };
   const filteredExceptions = useMemo(() => {
-    return exceptions.filter((exception) => {
+    return (exceptions || []).filter((exception) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -248,7 +248,7 @@ export default function ExceptionManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -333,7 +333,7 @@ export default function ExceptionManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredExceptions.map((exception) =>
+                {(filteredExceptions || []).map((exception) =>
               <TableRow key={exception.id}>
                     <TableCell className="font-mono text-sm">
                       {exception.event_no}
@@ -462,7 +462,7 @@ export default function ExceptionManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {projects.map((proj) =>
+                      {(projects || []).map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
                       </SelectItem>

@@ -121,7 +121,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
       </div>
 
       {/* Parts checklist */}
-      {task.parts && task.parts.length > 0 && (
+      {task.parts && task.parts?.length > 0 && (
         <div className="px-5 py-4 border-t border-border/50">
           <button
             onClick={() => setExpanded(!expanded)}
@@ -145,7 +145,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
                 className="overflow-hidden"
               >
                 <div className="grid grid-cols-2 gap-2 mt-3">
-                  {task.parts.map((part, idx) => (
+                  {(task.parts || []).map((part, idx) => (
                     <div
                       key={idx}
                       className={cn(
@@ -178,14 +178,14 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
       )}
 
       {/* Work instructions */}
-      {task.instructions && task.instructions.length > 0 && (
+      {task.instructions && task.instructions?.length > 0 && (
         <div className="px-5 py-4 border-t border-border/50">
           <h4 className="flex items-center gap-2 text-sm font-medium text-white mb-3">
             <Wrench className="w-4 h-4 text-violet-400" />
             作业步骤
           </h4>
           <div className="space-y-2">
-            {task.instructions.map((step) => (
+            {(task.instructions || []).map((step) => (
               <button
                 key={step.step}
                 onClick={() => onStepToggle(task.id, step.step)}
@@ -231,7 +231,7 @@ export default function AssemblyTaskCard({ task, onStatusChange, onStepToggle })
       )}
 
       {/* Tools needed */}
-      {task.tools && task.tools.length > 0 && (
+      {task.tools && task.tools?.length > 0 && (
         <div className="px-5 py-3 bg-surface-2/30 border-t border-border/30">
           <p className="text-xs text-slate-400">
             <span className="font-medium">所需工具：</span>

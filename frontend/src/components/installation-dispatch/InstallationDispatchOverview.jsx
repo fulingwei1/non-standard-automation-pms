@@ -60,17 +60,17 @@ const InstallationDispatchOverview = ({
     }
   }, [dispatches, technicians]);
 
-  const pendingToday = dispatches.filter(dispatch => 
+  const pendingToday = (dispatches || []).filter(dispatch => 
     dispatch.status === DISPATCH_STATUS.PENDING &&
     new Date(dispatch.scheduledDate).toDateString() === new Date().toDateString()
   ).length;
 
-  const urgentTasks = dispatches.filter(dispatch => 
+  const urgentTasks = (dispatches || []).filter(dispatch => 
     dispatch.priority === 'high' && 
     dispatch.status !== DISPATCH_STATUS.COMPLETED
   ).length;
 
-  const overdueTasks = dispatches.filter(dispatch => {
+  const overdueTasks = (dispatches || []).filter(dispatch => {
     const scheduledDate = new Date(dispatch.scheduledDate);
     const now = new Date();
     return scheduledDate < now && dispatch.status !== DISPATCH_STATUS.COMPLETED;

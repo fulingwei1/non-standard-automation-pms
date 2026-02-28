@@ -104,7 +104,7 @@ export default function PerformanceRanking() {
               </div> :
 
               <div className="space-y-3">
-                  {employeeRanking.map((employee) =>
+                  {(employeeRanking || []).map((employee) =>
                 <motion.div
                   key={employee.rank}
                   variants={fadeIn}
@@ -178,7 +178,7 @@ export default function PerformanceRanking() {
               </div> :
 
               <div className="space-y-3">
-                  {departmentRanking.map((dept) =>
+                  {(departmentRanking || []).map((dept) =>
                 <motion.div
                   key={dept.rank}
                   variants={fadeIn}

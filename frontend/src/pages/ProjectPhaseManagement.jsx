@@ -242,7 +242,7 @@ export default function ProjectPhaseManagement() {
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {projectList.map((proj) =>
+              {(projectList || []).map((proj) =>
               <div
                 key={proj.id}
                 onClick={() => {
@@ -331,7 +331,7 @@ export default function ProjectPhaseManagement() {
       </div> :
       error ? null : phases.length > 0 ?
       <div className="space-y-4">
-          {phases.map((phase, _index) => {
+          {(phases || []).map((phase, _index) => {
           const statusBadge = getStatusBadge(phase.status);
           const reviewBadge = phase.review_result ?
           getReviewResultBadge(phase.review_result) :

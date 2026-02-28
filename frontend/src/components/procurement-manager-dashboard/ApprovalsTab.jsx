@@ -75,7 +75,7 @@ export default function ApprovalsTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {approvals.map((approval, index) => (
+                {(approvals || []).map((approval, index) => (
                   <motion.tr
                     key={approval.id}
                     initial={{ opacity: 0, y: 10 }}

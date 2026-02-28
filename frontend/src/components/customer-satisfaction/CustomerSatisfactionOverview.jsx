@@ -26,9 +26,9 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
   const overviewStats = useMemo(() => {
     if (!data?.surveys) {return {};}
 
-    const totalSurveys = data.surveys.length;
-    const completedSurveys = data.surveys.filter((s) => s.status === 'completed').length;
-    const avgScore = data.surveys.reduce((acc, s) => acc + (s.avgScore || 0), 0) / totalSurveys || 0;
+    const totalSurveys = data.surveys?.length;
+    const completedSurveys = (data.surveys || []).filter((s) => s.status === 'completed').length;
+    const avgScore = (data.surveys || []).reduce((acc, s) => acc + (s.avgScore || 0), 0) / totalSurveys || 0;
     const responseRate = (completedSurveys / totalSurveys * 100).toFixed(1);
 
     return {
@@ -48,7 +48,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
       distribution[key] = 0;
     });
 
-    data.responses.forEach((response) => {
+    (data.responses || []).forEach((response) => {
       const level = Object.entries(SATISFACTION_LEVELS).find(([_, config]) =>
       config.value === response.satisfactionLevel
       );

@@ -192,7 +192,7 @@ export default function AcceptanceTemplateManagement() {
   };
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
+    return (templates || []).filter((template) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -273,7 +273,7 @@ export default function AcceptanceTemplateManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTemplates.map((template) =>
+                {(filteredTemplates || []).map((template) =>
               <TableRow key={template.id}>
                     <TableCell className="font-medium">
                       {template.template_name}
@@ -471,7 +471,7 @@ export default function AcceptanceTemplateManagement() {
                         暂无检查项
                   </div> :
 
-                  templateItems.map((item) =>
+                  (templateItems || []).map((item) =>
                   <div key={item.id} className="border rounded-lg p-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -660,7 +660,7 @@ export default function AcceptanceTemplateManagement() {
                       暂无检查项
                   </div> :
 
-                  templateItems.map((item) =>
+                  (templateItems || []).map((item) =>
                   <div key={item.id} className="border rounded-lg p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">

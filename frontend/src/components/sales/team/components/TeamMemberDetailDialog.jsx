@@ -172,7 +172,7 @@ export default function TeamMemberDetailDialog({
                 <p className="text-slate-400 text-xs mb-2">客户分布</p>
                 {distribution.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {distribution.map((item) => (
+                    {(distribution || []).map((item) => (
                       <Badge
                         key={`${member.id}-${item.label}`}
                         variant="outline"

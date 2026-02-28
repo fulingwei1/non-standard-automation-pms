@@ -336,7 +336,7 @@ export default function MobileCompleteReport() {
                   </label>
                   {photos.length > 0 &&
                   <div className="grid grid-cols-3 gap-2">
-                      {photos.map((photo, idx) =>
+                      {(photos || []).map((photo, idx) =>
                     <div
                       key={idx}
                       className="relative aspect-square rounded-lg overflow-hidden">
@@ -350,7 +350,7 @@ export default function MobileCompleteReport() {
                         type="button"
                         onClick={() =>
                         setPhotos((prev) =>
-                        prev.filter((_, i) => i !== idx)
+                        (prev || []).filter((_, i) => i !== idx)
                         )
                         }
                         className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full">

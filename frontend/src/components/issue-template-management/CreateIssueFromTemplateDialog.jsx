@@ -62,7 +62,7 @@ export default function CreateIssueFromTemplateDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">不关联</SelectItem>
-                    {projects.map((project) => (
+                    {(projects || []).map((project) => (
                       <SelectItem
                         key={project.id}
                         value={project.id.toString()}
@@ -92,7 +92,7 @@ export default function CreateIssueFromTemplateDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">不关联</SelectItem>
-                    {machines.map((machine) => (
+                    {(machines || []).map((machine) => (
                       <SelectItem
                         key={machine.id}
                         value={machine.id.toString()}

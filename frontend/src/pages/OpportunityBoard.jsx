@@ -123,7 +123,7 @@ export default function OpportunityBoard() {
       const data = response.data?.items || response.data?.items || response.data || [];
 
       // 转换数据格式
-      const transformedOpps = data.map((opp) => {
+      const transformedOpps = (data || []).map((opp) => {
         // 计算在当前阶段的停留天数
         const stageChangedAt =
         opp.gate_passed_at || opp.updated_at || opp.created_at;
@@ -190,9 +190,9 @@ export default function OpportunityBoard() {
 
       // 提取所有负责人
       const uniqueOwners = [
-      ...new Set(transformedOpps.map((opp) => opp.ownerId).filter(Boolean))].
+      ...new Set((transformedOpps || []).map((opp) => opp.ownerId).filter(Boolean))].
       map((ownerId) => {
-        const opp = transformedOpps.find((o) => o.ownerId === ownerId);
+        const opp = (transformedOpps || []).find((o) => o.ownerId === ownerId);
         return { id: ownerId, name: opp?.owner || "未知" };
       });
 
@@ -454,7 +454,7 @@ export default function OpportunityBoard() {
                   </SelectTrigger>
                   <SelectContent className="bg-surface-2 border-border">
                     <SelectItem value="all">全部负责人</SelectItem>
-                    {owners.map((owner) =>
+                    {(owners || []).map((owner) =>
                     <SelectItem key={owner.id} value={owner.id}>
                         {owner.name}
                     </SelectItem>
@@ -505,7 +505,7 @@ export default function OpportunityBoard() {
             filter((s) => !hideLost || s.frontendKey !== "lost").
             map((stage) => {
               const stageOpps = groupedOpportunities[stage.frontendKey] || [];
-              const stageTotal = stageOpps.reduce(
+              const stageTotal = (stageOpps || []).reduce(
                 (sum, o) => sum + (o.expectedAmount || 0),
                 0
               );
@@ -532,7 +532,7 @@ export default function OpportunityBoard() {
 
                       {/* Column Content */}
                       <div className="space-y-3 min-h-[200px]">
-                        {stageOpps.map((opportunity) =>
+                        {(stageOpps || []).map((opportunity) =>
                     <OpportunityCard
                       key={opportunity.id}
                       opportunity={opportunity}
@@ -608,7 +608,7 @@ export default function OpportunityBoard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {sortedOpportunities.map((opportunity) =>
+                    {(sortedOpportunities || []).map((opportunity) =>
                   <tr key={opportunity.id} className="hover:bg-surface-2/50">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -778,7 +778,7 @@ export default function OpportunityBoard() {
                       <SelectValue placeholder="选择负责人" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
-                      {owners.map((owner) =>
+                      {(owners || []).map((owner) =>
                       <SelectItem key={owner.id} value={owner.id}>
                           {owner.name}
                       </SelectItem>

@@ -24,7 +24,7 @@ export default function AgingAnalysis({ agingData }) {
 
   return (
     <div className="space-y-4">
-      {agingItems.map((item) => (
+      {(agingItems || []).map((item) => (
         <Card
           key={item.key}
           className={cn(

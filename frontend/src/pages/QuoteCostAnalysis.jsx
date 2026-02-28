@@ -134,7 +134,7 @@ export default function QuoteCostAnalysis() {
   // Calculate cost structure by category
   const structureByCategory = useMemo(() => {
     if (!costStructure?.by_category) {return [];}
-    return costStructure.by_category.map((cat) => ({
+    return (costStructure.by_category || []).map((cat) => ({
       ...cat,
       percentage:
       costStructure.total_cost > 0 ?
@@ -199,7 +199,7 @@ export default function QuoteCostAnalysis() {
                   <Select
                     value={selectedVersions[0]?.id?.toString()}
                     onValueChange={(value) => {
-                      const version = versions.find(
+                      const version = (versions || []).find(
                         (v) => v.id.toString() === value
                       );
                       setSelectedVersions([version, selectedVersions[1]]);
@@ -209,7 +209,7 @@ export default function QuoteCostAnalysis() {
                       <SelectValue placeholder="选择版本" />
                     </SelectTrigger>
                     <SelectContent>
-                      {versions.map((v) =>
+                      {(versions || []).map((v) =>
                       <SelectItem key={v.id} value={v.id.toString()}>
                           {v.version_no} - {formatDate(v.created_at)}
                       </SelectItem>
@@ -224,7 +224,7 @@ export default function QuoteCostAnalysis() {
                   <Select
                     value={selectedVersions[1]?.id?.toString()}
                     onValueChange={(value) => {
-                      const version = versions.find(
+                      const version = (versions || []).find(
                         (v) => v.id.toString() === value
                       );
                       setSelectedVersions([selectedVersions[0], version]);
@@ -234,7 +234,7 @@ export default function QuoteCostAnalysis() {
                       <SelectValue placeholder="选择版本" />
                     </SelectTrigger>
                     <SelectContent>
-                      {versions.map((v) =>
+                      {(versions || []).map((v) =>
                       <SelectItem key={v.id} value={v.id.toString()}>
                           {v.version_no} - {formatDate(v.created_at)}
                       </SelectItem>
@@ -396,7 +396,7 @@ export default function QuoteCostAnalysis() {
                   {/* Trend Chart */}
                   <div className="border border-slate-700 rounded-lg p-4 bg-slate-800/30">
                     <CostTrendChart
-                    data={versions.map((v) => ({
+                    data={(versions || []).map((v) => ({
                       version_no: v.version_no,
                       created_at: v.created_at,
                       total_price: v.total_price || 0,
@@ -422,7 +422,7 @@ export default function QuoteCostAnalysis() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {versions.map((version, index) => {
+                      {(versions || []).map((version, index) => {
                       const prevVersion =
                       index > 0 ? versions[index - 1] : null;
                       const priceChange = prevVersion ?
@@ -539,7 +539,7 @@ export default function QuoteCostAnalysis() {
                       <CardContent>
                         <div className="text-2xl font-bold">
                           {costStructure.by_category?.length > 0 ?
-                        (100 / costStructure.by_category.length).toFixed(
+                        (100 / costStructure.by_category?.length).toFixed(
                           1
                         ) :
                         0}
@@ -552,7 +552,7 @@ export default function QuoteCostAnalysis() {
                   {/* Structure Chart */}
                   <div className="border border-slate-700 rounded-lg p-6 bg-slate-800/30">
                     <CostStructureChart
-                    data={structureByCategory.map((cat) => ({
+                    data={(structureByCategory || []).map((cat) => ({
                       category: cat.category,
                       amount: cat.amount,
                       percentage: parseFloat(cat.percentage)
@@ -573,7 +573,7 @@ export default function QuoteCostAnalysis() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {structureByCategory.map((category, index) =>
+                      {(structureByCategory || []).map((category, index) =>
                     <TableRow key={index}>
                           <TableCell>
                             <div className="flex items-center gap-2">

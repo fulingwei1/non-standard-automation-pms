@@ -200,12 +200,12 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
 
         {/* 校验条件列表 */}
         {gateCheckResult.conditions &&
-          gateCheckResult.conditions.length > 0 && (
+          gateCheckResult.conditions?.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium text-slate-300 mb-2">
                 校验条件详情
               </div>
-              {gateCheckResult.conditions.map((condition, index) => (
+              {(gateCheckResult.conditions || []).map((condition, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
@@ -266,7 +266,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
 
         {/* 缺失项提示 */}
         {gateCheckResult.missing_items &&
-          gateCheckResult.missing_items.length > 0 && (
+          gateCheckResult.missing_items?.length > 0 && (
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -275,7 +275,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
                     缺失项
                   </div>
                   <ul className="text-xs text-amber-200/80 space-y-1">
-                    {gateCheckResult.missing_items.map((item, index) => (
+                    {(gateCheckResult.missing_items || []).map((item, index) => (
                       <li key={index}>• {item}</li>
                     ))}
                   </ul>
@@ -286,7 +286,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
 
         {/* 建议 */}
         {gateCheckResult.suggestions &&
-          gateCheckResult.suggestions.length > 0 && (
+          gateCheckResult.suggestions?.length > 0 && (
             <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
@@ -295,7 +295,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
                     建议
                   </div>
                   <ul className="text-xs text-blue-200/80 space-y-1">
-                    {gateCheckResult.suggestions.map((suggestion, index) => (
+                    {(gateCheckResult.suggestions || []).map((suggestion, index) => (
                       <li key={index}>• {suggestion}</li>
                     ))}
                   </ul>

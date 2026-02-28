@@ -201,7 +201,7 @@ export default function DelayAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {rootCauseData.root_causes &&
-                rootCauseData.root_causes.length > 0 &&
+                rootCauseData.root_causes?.length > 0 &&
                 <Table>
                         <TableHeader>
                           <TableRow>
@@ -212,7 +212,7 @@ export default function DelayAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {rootCauseData.root_causes.map((cause, idx) =>
+                          {(rootCauseData.root_causes || []).map((cause, idx) =>
                     <TableRow key={idx}>
                               <TableCell>{cause.reason}</TableCell>
                               <TableCell>{cause.count}</TableCell>
@@ -266,7 +266,7 @@ export default function DelayAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {impactData.affected_projects &&
-                impactData.affected_projects.length > 0 &&
+                impactData.affected_projects?.length > 0 &&
                 <Table>
                         <TableHeader>
                           <TableRow>
@@ -277,7 +277,7 @@ export default function DelayAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {impactData.affected_projects.map((project, idx) =>
+                          {(impactData.affected_projects || []).map((project, idx) =>
                     <TableRow key={idx}>
                               <TableCell>{project.project_code}</TableCell>
                               <TableCell>{project.project_name}</TableCell>
@@ -322,7 +322,7 @@ export default function DelayAnalysis() {
                     "稳定"}
                     </div>
                   </div>
-                  {trendsData.trends && trendsData.trends.length > 0 &&
+                  {trendsData.trends && trendsData.trends?.length > 0 &&
                 <Table>
                       <TableHeader>
                         <TableRow>
@@ -334,7 +334,7 @@ export default function DelayAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {trendsData.trends.map((trend, idx) =>
+                        {(trendsData.trends || []).map((trend, idx) =>
                     <TableRow key={idx}>
                             <TableCell>{trend.month}</TableCell>
                             <TableCell>{trend.total_tasks}</TableCell>

@@ -214,7 +214,7 @@ const TrendAnalysis = () => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {levelPieData.map((entry, index) => (
+                  {(levelPieData || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -243,7 +243,7 @@ const TrendAnalysis = () => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {statusPieData.map((entry, index) => (
+                  {(statusPieData || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>

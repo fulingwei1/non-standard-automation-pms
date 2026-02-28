@@ -267,7 +267,7 @@ export default function RdProjectDetail() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat, i) => (
+        {(statCards || []).map((stat, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div
@@ -302,7 +302,7 @@ export default function RdProjectDetail() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-6">
-          {tabs.map((tab) => (
+          {(tabs || []).map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
@@ -589,7 +589,7 @@ export default function RdProjectDetail() {
               </h3>
               {costs.length > 0 ? (
                 <div className="space-y-3">
-                  {costs.map((cost) => (
+                  {(costs || []).map((cost) => (
                     <div
                       key={cost.id}
                       className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
@@ -653,13 +653,13 @@ export default function RdProjectDetail() {
                 </div>
 
                 {timesheetSummary.by_user &&
-                  timesheetSummary.by_user.length > 0 && (
+                  timesheetSummary.by_user?.length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium text-slate-400 mb-3">
                         按人员统计
                       </h4>
                       <div className="space-y-2">
-                        {timesheetSummary.by_user.map((user, idx) => (
+                        {(timesheetSummary.by_user || []).map((user, idx) => (
                           <div
                             key={idx}
                             className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02]"

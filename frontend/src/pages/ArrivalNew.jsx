@@ -57,7 +57,7 @@ export default function ArrivalNew() {
     loadSuppliers();
     // 如果有传入的物料ID，设置默认值
     if (location.state?.material_id) {
-      const material = materials.find(
+      const material = (materials || []).find(
         (m) => m.id === location.state.material_id
       );
       if (material) {
@@ -147,7 +147,7 @@ export default function ArrivalNew() {
 
     // 如果选择了供应商，自动填充供应商名称
     if (field === "supplier_id" && value) {
-      const supplier = suppliers.find((s) => s.id === parseInt(value));
+      const supplier = (suppliers || []).find((s) => s.id === parseInt(value));
       if (supplier) {
         setFormData((prev) => ({
           ...prev,
@@ -157,7 +157,7 @@ export default function ArrivalNew() {
     }
   };
 
-  const filteredMaterials = materials.filter(
+  const filteredMaterials = (materials || []).filter(
     (m) =>
     !searchKeyword ||
     m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -257,7 +257,7 @@ export default function ArrivalNew() {
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredMaterials.map((material) =>
+                    {(filteredMaterials || []).map((material) =>
                     <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
                     </SelectItem>
@@ -326,7 +326,7 @@ export default function ArrivalNew() {
                     <SelectValue placeholder="请选择供应商" />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map((supplier) =>
+                    {(suppliers || []).map((supplier) =>
                     <SelectItem key={supplier.id} value={String(supplier.id)}>
                         {supplier.supplier_name} ({supplier.supplier_code})
                     </SelectItem>

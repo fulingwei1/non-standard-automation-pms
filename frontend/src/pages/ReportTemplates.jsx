@@ -76,7 +76,7 @@ export default function ReportTemplates() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {templates.map((template) => (
+              {(templates || []).map((template) => (
                 <tr key={template.id}>
                   <td className="px-6 py-4">{template.name}</td>
                   <td className="px-6 py-4">{template.report_type}</td>

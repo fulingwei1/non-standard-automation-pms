@@ -207,7 +207,7 @@ export default function WorkloadBoard() {
                   <div className="text-sm text-slate-500 mb-1">超负荷人数</div>
                   <div className="text-2xl font-bold text-red-600">
                     {dashboardData.summary?.overload_count ||
-                      teamWorkload.filter((u) => u.allocation_rate >= 120)
+                      (teamWorkload || []).filter((u) => u.allocation_rate >= 120)
                         .length}
                   </div>
                 </div>
@@ -222,7 +222,7 @@ export default function WorkloadBoard() {
                   <div className="text-sm text-slate-500 mb-1">空闲人数</div>
                   <div className="text-2xl font-bold text-emerald-600">
                     {dashboardData.summary?.idle_count ||
-                      teamWorkload.filter((u) => u.allocation_rate < 80).length}
+                      (teamWorkload || []).filter((u) => u.allocation_rate < 80).length}
                   </div>
                 </div>
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
@@ -255,7 +255,7 @@ export default function WorkloadBoard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {teamWorkload.map((user) => {
+                {(teamWorkload || []).map((user) => {
                   const status = getLoadStatus(user.allocation_rate);
                   return (
                     <TableRow key={user.user_id}>

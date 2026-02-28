@@ -37,11 +37,11 @@ export function ECNBatchActions({
   const [processing, setProcessing] = useState(false);
 
   // 获取选中的ECN详细信息
-  const selectedECNs = ecns.filter(ecn => selectedECNIds.has(ecn.id));
+  const selectedECNs = (ecns || []).filter(ecn => selectedECNIds.has(ecn.id));
 
   // 获取批量操作信息
   const getOperationInfo = (operation) => {
-    return batchOperations.find(op => op.value === operation);
+    return (batchOperations || []).find(op => op.value === operation);
   };
 
   // 获取操作图标
@@ -139,7 +139,7 @@ export function ECNBatchActions({
 
         {/* 批量操作按钮 */}
         <div className="flex items-center gap-2 flex-wrap">
-          {batchOperations.map((operation) => (
+          {(batchOperations || []).map((operation) => (
             <Button
               key={operation.value}
               variant="outline"
@@ -208,7 +208,7 @@ export function ECNBatchActions({
                 </label>
                 <div className="max-h-32 overflow-y-auto border rounded-md p-2 bg-slate-50 dark:bg-slate-900">
                   <div className="space-y-1">
-                    {selectedECNs.map((ecn) => (
+                    {(selectedECNs || []).map((ecn) => (
                       <div key={ecn.id} className="text-xs flex items-center gap-2">
                         <span className="font-mono">
                           {ecn.ecn_no || `ECN-${String(ecn.id).padStart(6, '0')}`}

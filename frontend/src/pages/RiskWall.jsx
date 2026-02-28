@@ -188,7 +188,7 @@ export default function RiskWall() {
 
               {critical_risks && critical_risks.length > 0 ? (
                 <div className="divide-y divide-white/5">
-                  {critical_risks.map((risk) => {
+                  {(critical_risks || []).map((risk) => {
                     const levelBadge = getRiskLevelBadge(risk.risk_level);
                     return (
                       <Link
@@ -263,7 +263,7 @@ export default function RiskWall() {
 
               {high_risks && high_risks.length > 0 ? (
                 <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto">
-                  {high_risks.map((risk) => {
+                  {(high_risks || []).map((risk) => {
                     const levelBadge = getRiskLevelBadge(risk.risk_level);
                     return (
                       <Link
@@ -372,7 +372,7 @@ export default function RiskWall() {
 
               {by_project && by_project.length > 0 ? (
                 <div className="p-5 space-y-3">
-                  {by_project.map((item) => (
+                  {(by_project || []).map((item) => (
                     <Link
                       key={item.project_id}
                       to={`/pmo/risks/${item.project_id}`}

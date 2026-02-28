@@ -23,7 +23,7 @@ export const ScoringForm = ({
   const getScoreLevel = (score) => {
     if (!score) {return null;}
     const numScore = Number(score);
-    return scoringGuidelines.find((g) => {
+    return (scoringGuidelines || []).find((g) => {
       const [min, max] = g.range.split("-").map(Number);
       return numScore >= min && numScore <= max;
     });
@@ -83,7 +83,7 @@ export const ScoringForm = ({
           <div className="mt-4 p-4 bg-slate-900/30 rounded-lg border border-slate-700/50">
             <p className="text-sm text-slate-400 mb-3">评分参考标准：</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {scoringGuidelines.map((guide, idx) => (
+              {(scoringGuidelines || []).map((guide, idx) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between text-sm"
@@ -122,13 +122,13 @@ export const ScoringForm = ({
           <div className="mt-4">
             <p className="text-sm text-slate-400 mb-3">快速插入模板：</p>
             <div className="space-y-3">
-              {commentTemplates.map((category, idx) => (
+              {(commentTemplates || []).map((category, idx) => (
                 <div key={idx}>
                   <p className="text-xs text-slate-500 mb-2">
                     {category.category}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {category.templates.map((template, tidx) => (
+                    {(category.templates || []).map((template, tidx) => (
                       <button
                         key={tidx}
                         onClick={() => onInsertTemplate(template)}

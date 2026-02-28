@@ -52,7 +52,7 @@ const AIWorkbench = () => {
       const response = await presaleApi.tickets.list({ page_size: 50 });
       const items = response.data?.items || response.data?.items || response.data || [];
       // Map backend ticket fields to component's expected shape
-      const mapped = items.map((t) => ({
+      const mapped = (items || []).map((t) => ({
         id: t.id,
         title: t.title || t.name || '',
         customer: t.customer_name || t.customer || '',
@@ -95,7 +95,7 @@ const AIWorkbench = () => {
     return <Badge variant={variant}>{label}</Badge>;
   };
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = (tickets || []).filter((ticket) => {
     const matchesSearch =
       ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.customer.toLowerCase().includes(searchTerm.toLowerCase());
@@ -142,7 +142,7 @@ const AIWorkbench = () => {
               <div>
                 <p className="text-sm text-muted-foreground">进行中</p>
                 <p className="text-2xl font-bold">
-                  {tickets.filter((t) => t.status === 'in_progress').length}
+                  {(tickets || []).filter((t) => t.status === 'in_progress').length}
                 </p>
               </div>
               <Workflow className="h-8 w-8 text-orange-500" />
@@ -155,7 +155,7 @@ const AIWorkbench = () => {
               <div>
                 <p className="text-sm text-muted-foreground">已完成</p>
                 <p className="text-2xl font-bold">
-                  {tickets.filter((t) => t.status === 'completed').length}
+                  {(tickets || []).filter((t) => t.status === 'completed').length}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
@@ -170,7 +170,7 @@ const AIWorkbench = () => {
                 <p className="text-2xl font-bold">
                   {tickets.length > 0
                     ? Math.round(
-                        tickets.reduce((sum, t) => sum + t.aiProgress, 0) /
+                        (tickets || []).reduce((sum, t) => sum + t.aiProgress, 0) /
                           tickets.length
                       )
                     : 0}
@@ -230,7 +230,7 @@ const AIWorkbench = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTickets.map((ticket) => (
+                {(filteredTickets || []).map((ticket) => (
                   <TableRow
                     key={ticket.id}
                     className="cursor-pointer hover:bg-muted/50"

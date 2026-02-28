@@ -54,7 +54,7 @@ export default function QualityFeedbackDialog({ open, onClose, task: _task, mate
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">问题类型</label>
             <div className="grid grid-cols-3 gap-2">
-              {issueTypes.map((type) => (
+              {(issueTypes || []).map((type) => (
                 <button
                   key={type.value}
                   onClick={() => setIssueType(type.value)}
@@ -140,7 +140,7 @@ export default function QualityFeedbackDialog({ open, onClose, task: _task, mate
                 <Camera className="w-6 h-6" />
                 <span className="text-[10px]">拍照</span>
               </button>
-              {photos.map((photo, i) => (
+              {(photos || []).map((photo, i) => (
                 <div
                   key={i}
                   className="relative w-20 h-20 rounded-lg overflow-hidden"

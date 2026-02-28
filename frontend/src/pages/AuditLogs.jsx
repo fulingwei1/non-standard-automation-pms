@@ -82,7 +82,7 @@ export default function AuditLogs() {
         setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
         setAudits(data);
-        setTotal(data.length);
+        setTotal(data?.length);
       } else {
         setAudits([]);
         setTotal(0);
@@ -282,7 +282,7 @@ export default function AuditLogs() {
                     </tr>
                   </thead>
                   <tbody>
-                    {audits.map((audit) => (
+                    {(audits || []).map((audit) => (
                       <tr key={audit.id} className="border-b hover:bg-gray-50">
                         <td className="p-2">{audit.id}</td>
                         <td className="p-2">

@@ -70,14 +70,14 @@ export default function AlertSubscription() {
 
   const handleToggle = (alertType) => {
     setSubscriptions((prev) => {
-      const found = prev.find((s) => s.alert_type === alertType);
+      const found = (prev || []).find((s) => s.alert_type === alertType);
       if (!found) {
         return [
           ...prev,
           { id: null, alert_type: alertType, min_level: "WARNING", is_active: true },
         ];
       }
-      return prev.map((sub) =>
+      return (prev || []).map((sub) =>
         sub.alert_type === alertType ? { ...sub, is_active: !sub.is_active } : sub,
       );
     });
@@ -91,7 +91,7 @@ export default function AlertSubscription() {
       );
 
       await Promise.all(
-        subscriptions.map((sub) => {
+        (subscriptions || []).map((sub) => {
           const payload = {
             alert_type: sub.alert_type,
             min_level: sub.min_level,
@@ -183,8 +183,8 @@ export default function AlertSubscription() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alertTypes.map((type) => {
-                  const subscription = subscriptions.find(
+                {(alertTypes || []).map((type) => {
+                  const subscription = (subscriptions || []).find(
                     (s) => s.alert_type === type.value,
                   );
                   return (
@@ -203,7 +203,7 @@ export default function AlertSubscription() {
                           {subscription && (
                             <p className="text-xs text-slate-500">
                               最低接收级别:{" "}
-                              {alertLevels.find(
+                              {(alertLevels || []).find(
                                 (l) => l.value === subscription.min_level,
                               )?.label || subscription.min_level}
                             </p>

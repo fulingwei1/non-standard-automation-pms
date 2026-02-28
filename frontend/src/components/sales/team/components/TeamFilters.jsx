@@ -50,7 +50,7 @@ export default function TeamFilters({
                   <SelectValue placeholder="全部部门" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departmentOptions.map((dept) => (
+                  {(departmentOptions || []).map((dept) => (
                     <SelectItem key={dept.value} value={dept.value}>
                       {dept.label}
                     </SelectItem>
@@ -70,7 +70,7 @@ export default function TeamFilters({
               />
               {regionOptions.length > 0 && (
                 <datalist id="region-suggestions">
-                  {regionOptions.map((option) => (
+                  {(regionOptions || []).map((option) => (
                     <option key={option} value={option} />
                   ))}
                 </datalist>

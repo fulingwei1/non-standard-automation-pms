@@ -35,7 +35,7 @@ const TodaysMeetings = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {meetings.map((meeting) =>
+            {(meetings || []).map((meeting) =>
             <div
               key={meeting.id}
               className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"

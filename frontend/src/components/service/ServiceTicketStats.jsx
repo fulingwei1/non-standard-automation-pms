@@ -129,7 +129,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
     <div className="space-y-6">
       {/* 主要统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cardConfigs.map((config, index) => {
+        {(cardConfigs || []).map((config, index) => {
           const Icon = config.icon;
           return (
             <Card 
@@ -161,7 +161,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
 
       {/* 次要统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {urgentCards.map((config, index) => {
+        {(urgentCards || []).map((config, index) => {
           const Icon = config.icon;
           return (
             <Card 
@@ -193,7 +193,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
 
       {/* 满意度和关闭率 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {satisfactionCards.map((config, index) => {
+        {(satisfactionCards || []).map((config, index) => {
           const Icon = config.icon;
           return (
             <Card 
@@ -250,7 +250,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {Object.entries(statusConfigs).map(([key, config]) => {
-              const count = tickets.filter(ticket => ticket.status === key).length;
+              const count = (tickets || []).filter(ticket => ticket.status === key).length;
               if (count === 0) {return null;}
               
               return (
@@ -281,7 +281,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             {Object.entries(urgencyConfigs).map(([key, config]) => {
-              const count = tickets.filter(ticket => ticket.urgency === key).length;
+              const count = (tickets || []).filter(ticket => ticket.urgency === key).length;
               if (count === 0) {return null;}
               
               return (

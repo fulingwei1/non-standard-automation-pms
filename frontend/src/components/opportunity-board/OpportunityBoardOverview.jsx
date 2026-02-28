@@ -25,11 +25,11 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
   // 计算统计数据
   const stats = {
     total: opportunities.length,
-    hot: opportunities.filter((opp) => OpportunityUtils.isHotOpportunity(opp)).length,
-    overdue: opportunities.filter((opp) => OpportunityUtils.isOverdue(opp)).length,
-    totalValue: opportunities.reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0),
-    expectedRevenue: opportunities.reduce((sum, opp) => sum + OpportunityUtils.calculateExpectedRevenue(opp), 0),
-    wonThisMonth: opportunities.filter((opp) => {
+    hot: (opportunities || []).filter((opp) => OpportunityUtils.isHotOpportunity(opp)).length,
+    overdue: (opportunities || []).filter((opp) => OpportunityUtils.isOverdue(opp)).length,
+    totalValue: (opportunities || []).reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0),
+    expectedRevenue: (opportunities || []).reduce((sum, opp) => sum + OpportunityUtils.calculateExpectedRevenue(opp), 0),
+    wonThisMonth: (opportunities || []).filter((opp) => {
       return opp.stage === OPPORTUNITY_STAGES.WON &&
       new Date(opp.createdDate || opp.createdAt).getMonth() === new Date().getMonth();
     }).length
@@ -38,9 +38,9 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
   // 计算阶段分布
   const stageDistribution = Object.values(OPPORTUNITY_STAGES).map((stage) => {
     const config = OPPORTUNITY_STAGE_CONFIGS[stage];
-    const stageOpportunities = opportunities.filter((opp) => opp.stage === stage);
+    const stageOpportunities = (opportunities || []).filter((opp) => opp.stage === stage);
     const count = stageOpportunities.length;
-    const value = stageOpportunities.reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0);
+    const value = (stageOpportunities || []).reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0);
     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
 
     return {
@@ -101,7 +101,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
 
   // 计算转化率
   const _conversionRates = OpportunityUtils.calculateConversionRates(opportunities);
-  const overallConversionRate = opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length / (
+  const overallConversionRate = (opportunities || []).filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length / (
   opportunities.length || 1) * 100;
 
   return (
@@ -193,7 +193,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {stageDistribution.map((stage) =>
+            {(stageDistribution || []).map((stage) =>
             <motion.div
               key={stage.stage}
               whileHover={{ scale: 1.05 }}
@@ -225,7 +225,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
           <CardContent>
             {hotOpportunities.length > 0 ?
             <div className="space-y-3">
-                {hotOpportunities.map((opp) =>
+                {(hotOpportunities || []).map((opp) =>
               <div
                 key={opp.id}
                 className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
@@ -265,7 +265,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
           <CardContent>
             {overdueOpportunities.length > 0 ?
             <div className="space-y-3">
-                {overdueOpportunities.map((opp) =>
+                {(overdueOpportunities || []).map((opp) =>
               <div
                 key={opp.id}
                 className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
@@ -305,7 +305,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
           <CardContent>
             {upcomingOpportunities.length > 0 ?
             <div className="space-y-3">
-                {upcomingOpportunities.map((opp) =>
+                {(upcomingOpportunities || []).map((opp) =>
               <div
                 key={opp.id}
                 className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
@@ -346,7 +346,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均赢单周期</p>
                 <p className="text-lg font-semibold text-white">
-                  {Math.round(opportunities.reduce((sum, opp) =>
+                  {Math.round((opportunities || []).reduce((sum, opp) =>
                   sum + OpportunityUtils.calculateSalesCycle(opp), 0) / (opportunities.length || 1))}天
                 </p>
               </div>
@@ -363,9 +363,9 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均赢单金额</p>
                 <p className="text-lg font-semibold text-white">
-                  ¥{(opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).
+                  ¥{((opportunities || []).filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).
                   reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0) / (
-                  opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length || 1) / 10000).toFixed(1)}万
+                  (opportunities || []).filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length || 1) / 10000).toFixed(1)}万
                 </p>
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">高优先级机会</p>
                 <p className="text-lg font-semibold text-white">
-                  {opportunities.filter((opp) => opp.priority === OPPORTUNITY_PRIORITY.HIGH).length}
+                  {(opportunities || []).filter((opp) => opp.priority === OPPORTUNITY_PRIORITY.HIGH).length}
                 </p>
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均机会评分</p>
                 <p className="text-lg font-semibold text-white">
-                  {Math.round(opportunities.reduce((sum, opp) =>
+                  {Math.round((opportunities || []).reduce((sum, opp) =>
                   sum + OpportunityUtils.calculateOpportunityScore(opp), 0) / (opportunities.length || 1))}分
                 </p>
               </div>

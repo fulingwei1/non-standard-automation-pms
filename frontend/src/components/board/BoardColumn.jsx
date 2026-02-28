@@ -22,10 +22,10 @@ const BoardColumn = memo(function BoardColumn({
 
   // 按健康度统计
   const healthStats = {
-    H1: projects.filter((p) => p.health === "H1").length,
-    H2: projects.filter((p) => p.health === "H2").length,
-    H3: projects.filter((p) => p.health === "H3").length,
-    H4: projects.filter((p) => p.health === "H4").length,
+    H1: (projects || []).filter((p) => p.health === "H1").length,
+    H2: (projects || []).filter((p) => p.health === "H2").length,
+    H3: (projects || []).filter((p) => p.health === "H3").length,
+    H4: (projects || []).filter((p) => p.health === "H4").length,
   };
 
   const toggleCollapse = () => {
@@ -66,7 +66,7 @@ const BoardColumn = memo(function BoardColumn({
           {/* 阶段名称 */}
           <div>
             <h3 className="font-medium text-white text-sm">{stage.name}</h3>
-            <p className="text-xs text-slate-500">{projects.length} 个项目</p>
+            <p className="text-xs text-slate-500">{projects?.length} 个项目</p>
           </div>
         </div>
 
@@ -115,13 +115,13 @@ const BoardColumn = memo(function BoardColumn({
             className="flex-1 overflow-hidden"
           >
             <div className="p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-280px)] custom-scrollbar">
-              {projects.length === 0 ? (
+              {projects?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-slate-500">
                   <MoreHorizontal className="w-8 h-8 mb-2 opacity-30" />
                   <p className="text-sm">暂无项目</p>
                 </div>
               ) : (
-                projects.map((project) => (
+                (projects || []).map((project) => (
                   <ProjectCard
                     key={project.id}
                     project={project}
@@ -136,10 +136,10 @@ const BoardColumn = memo(function BoardColumn({
       </AnimatePresence>
 
       {/* 收起时的简略信息 */}
-      {isCollapsed && projects.length > 0 && (
+      {isCollapsed && projects?.length > 0 && (
         <div className="p-2">
           <div className="flex items-center justify-center gap-2 py-2 text-slate-500 text-sm">
-            <span>{projects.length} 个项目</span>
+            <span>{projects?.length} 个项目</span>
             <div className="flex gap-1">
               {Object.entries(healthStats).map(
                 ([key, count]) =>

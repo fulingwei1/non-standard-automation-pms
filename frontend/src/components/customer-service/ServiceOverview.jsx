@@ -35,9 +35,9 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.tickets) {return {};}
 
-    const totalTickets = data.tickets.length;
-    const openTickets = data.tickets.filter((t) => ['open', 'in_progress'].includes(t.status)).length;
-    const resolvedToday = data.tickets.filter((t) =>
+    const totalTickets = data.tickets?.length;
+    const openTickets = (data.tickets || []).filter((t) => ['open', 'in_progress'].includes(t.status)).length;
+    const resolvedToday = (data.tickets || []).filter((t) =>
     t.status === 'resolved' && t.resolvedDate === new Date().toISOString().split('T')[0]
     ).length;
 
@@ -63,7 +63,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.tickets.forEach((ticket) => {
+    (data.tickets || []).forEach((ticket) => {
       if (ticket.status && TICKET_STATUS[ticket.status.toUpperCase()]) {
         distribution[ticket.status.toUpperCase()]++;
       }
@@ -80,7 +80,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.tickets.forEach((ticket) => {
+    (data.tickets || []).forEach((ticket) => {
       if (ticket.priority && PRIORITY_LEVELS[ticket.priority.toUpperCase()]) {
         distribution[ticket.priority.toUpperCase()]++;
       }
@@ -322,7 +322,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
             }>
 
             <Timeline>
-              {recentActivities.map(renderActivity)}
+              {(recentActivities || []).map(renderActivity)}
             </Timeline>
           </Card>
         </Col>

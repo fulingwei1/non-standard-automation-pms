@@ -101,7 +101,7 @@ export default function SearchPanel({
 
     // Add to search history
     if (searchTerm.trim()) {
-      setSearchHistory((prev) => [searchTerm, ...prev.filter((h) => h !== searchTerm)].slice(0, 10));
+      setSearchHistory((prev) => [searchTerm, ...(prev || []).filter((h) => h !== searchTerm)].slice(0, 10));
     }
 
     onSearch?.(searchParams);
@@ -214,7 +214,7 @@ export default function SearchPanel({
         <div className="absolute top-full left-0 right-0 mt-1 bg-surface-100 border border-white/10 rounded-lg shadow-lg z-50">
             <div className="p-2">
               <div className="text-xs text-slate-400 mb-2">搜索历史</div>
-              {searchHistory.map((term, index) =>
+              {(searchHistory || []).map((term, index) =>
             <div
               key={index}
               className="px-3 py-1.5 hover:bg-surface-50/50 cursor-pointer rounded text-sm text-slate-300"
@@ -251,7 +251,7 @@ export default function SearchPanel({
                 onChange={(e) => handleFilterChange('category', e.target.value)}
                 className="w-full bg-surface-50 border border-white/10 rounded px-3 py-2 text-sm text-white">
 
-                  {searchConfigs.FILTER_OPTIONS.category.map((option) =>
+                  {(searchConfigs.FILTER_OPTIONS.category || []).map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
                 </option>
@@ -267,7 +267,7 @@ export default function SearchPanel({
                 onChange={(e) => handleFilterChange('status', e.target.value)}
                 className="w-full bg-surface-50 border border-white/10 rounded px-3 py-2 text-sm text-white">
 
-                  {searchConfigs.FILTER_OPTIONS.status.map((option) =>
+                  {(searchConfigs.FILTER_OPTIONS.status || []).map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
                 </option>
@@ -283,7 +283,7 @@ export default function SearchPanel({
                 onChange={(e) => handleFilterChange('priority', e.target.value)}
                 className="w-full bg-surface-50 border border-white/10 rounded px-3 py-2 text-sm text-white">
 
-                  {searchConfigs.FILTER_OPTIONS.priority.map((option) =>
+                  {(searchConfigs.FILTER_OPTIONS.priority || []).map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
                 </option>
@@ -299,7 +299,7 @@ export default function SearchPanel({
                 onChange={(e) => handleFilterChange('type', e.target.value)}
                 className="w-full bg-surface-50 border border-white/10 rounded px-3 py-2 text-sm text-white">
 
-                  {searchConfigs.FILTER_OPTIONS.type.map((option) =>
+                  {(searchConfigs.FILTER_OPTIONS.type || []).map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
                 </option>
@@ -351,14 +351,14 @@ export default function SearchPanel({
             <div>
               <label className="text-xs text-slate-400 mb-2 block">标签</label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {popularTags.map((tag, index) =>
+                {(popularTags || []).map((tag, index) =>
               <Badge
                 key={index}
                 variant={localFilters.tags.includes(tag) ? "default" : "secondary"}
                 className="cursor-pointer"
                 onClick={() => {
                   const newTags = localFilters.tags.includes(tag) ?
-                  localFilters.tags.filter((t) => t !== tag) :
+                  (localFilters.tags || []).filter((t) => t !== tag) :
                   [...localFilters.tags, tag];
                   handleFilterChange('tags', newTags);
                 }}>
@@ -399,25 +399,25 @@ export default function SearchPanel({
 
           {localFilters.category !== "all" &&
         <Badge variant="secondary" className="text-xs">
-              分类: {searchConfigs.FILTER_OPTIONS.category.find((c) => c.value === localFilters.category)?.label}
+              分类: {(searchConfigs.FILTER_OPTIONS.category || []).find((c) => c.value === localFilters.category)?.label}
         </Badge>
         }
 
           {localFilters.status !== "all" &&
         <Badge variant="secondary" className="text-xs">
-              状态: {searchConfigs.FILTER_OPTIONS.status.find((s) => s.value === localFilters.status)?.label}
+              状态: {(searchConfigs.FILTER_OPTIONS.status || []).find((s) => s.value === localFilters.status)?.label}
         </Badge>
         }
 
           {localFilters.priority !== "all" &&
         <Badge variant="secondary" className="text-xs">
-              优先级: {searchConfigs.FILTER_OPTIONS.priority.find((p) => p.value === localFilters.priority)?.label}
+              优先级: {(searchConfigs.FILTER_OPTIONS.priority || []).find((p) => p.value === localFilters.priority)?.label}
         </Badge>
         }
 
           {localFilters.type !== "all" &&
         <Badge variant="secondary" className="text-xs">
-              类型: {searchConfigs.FILTER_OPTIONS.type.find((t) => t.value === localFilters.type)?.label}
+              类型: {(searchConfigs.FILTER_OPTIONS.type || []).find((t) => t.value === localFilters.type)?.label}
         </Badge>
         }
 
@@ -433,7 +433,7 @@ export default function SearchPanel({
         </Badge>
         }
 
-          {localFilters.tags.length > 0 &&
+          {localFilters.tags?.length > 0 &&
         <Badge variant="secondary" className="text-xs">
               标签: {localFilters.tags.join(', ')}
         </Badge>
@@ -458,7 +458,7 @@ export default function SearchPanel({
         <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400">排序:</span>
             <div className="flex items-center gap-1 bg-surface-50/50 rounded-lg p-1">
-              {searchConfigs.SORT_OPTIONS.map((option) =>
+              {(searchConfigs.SORT_OPTIONS || []).map((option) =>
             <Button
               key={option.value}
               variant={sortBy === option.value ? "default" : "ghost"}
@@ -526,7 +526,7 @@ export function SearchSuggestions({
 
   return (
     <div className="absolute top-full left-0 right-0 mt-1 bg-surface-100 border border-white/10 rounded-lg shadow-lg z-50">
-      {filteredSuggestions.map((suggestion, index) =>
+      {(filteredSuggestions || []).map((suggestion, index) =>
       <div
         key={index}
         className="px-4 py-3 hover:bg-surface-50/50 cursor-pointer border-b border-white/10 last:border-b-0"
@@ -560,7 +560,7 @@ export function SearchResultsSummary({
       </div>
 
       <div className="text-xs text-slate-400">
-        已按 {searchConfigs.SORT_OPTIONS.find((s) => s.value === sortBy)?.label}
+        已按 {(searchConfigs.SORT_OPTIONS || []).find((s) => s.value === sortBy)?.label}
         {sortOrder === 'asc' ? '升序' : '降序'} 排序
       </div>
     </div>);
@@ -574,7 +574,7 @@ function highlightText(text, searchTerm) {
   const regex = new RegExp(`(${searchTerm})`, 'gi');
   const parts = text.split(regex);
 
-  return parts.map((part, index) =>
+  return (parts || []).map((part, index) =>
   regex.test(part) ?
   <span key={index} className="bg-amber-500/20 text-amber-400">{part}</span> :
   part

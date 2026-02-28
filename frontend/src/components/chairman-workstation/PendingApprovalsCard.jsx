@@ -25,7 +25,7 @@ export const PendingApprovalsCard = ({ pendingApprovals }) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {pendingApprovals && pendingApprovals.map((item) =>
+          {pendingApprovals && (pendingApprovals || []).map((item) =>
           <Link
             key={item.id}
             to="/approvals"

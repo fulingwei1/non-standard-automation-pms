@@ -86,7 +86,7 @@ export const HistoryTab = ({ history }) => {
 
                   <div>
                     <p className="text-xs text-slate-400 mb-2">项目经理评分</p>
-                    {record.projectScores.map((ps, idx) => (
+                    {(record.projectScores || []).map((ps, idx) => (
                       <div
                         key={idx}
                         className="flex items-center justify-between text-sm mb-1"

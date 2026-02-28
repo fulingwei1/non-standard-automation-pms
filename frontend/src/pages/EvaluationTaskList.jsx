@@ -113,7 +113,7 @@ const EvaluationTaskList = () => {
                 <p className="text-slate-400">暂无评价任务</p>
             </div> :
 
-            filteredTasks.map((task, index) =>
+            (filteredTasks || []).map((task, index) =>
             <TaskItem
               key={task.id}
               task={task}

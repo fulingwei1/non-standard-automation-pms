@@ -66,7 +66,7 @@ export function RuleFormDialog({
                   <SelectValue placeholder="选择模板..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates.map((template) => (
+                  {(templates || []).map((template) => (
                     <SelectItem
                       key={template.id}
                       value={template.id.toString()}
@@ -134,7 +134,7 @@ export function RuleFormDialog({
                     <SelectValue placeholder="选择规则类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ruleTypeOptions.map((opt) => (
+                    {(ruleTypeOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -156,7 +156,7 @@ export function RuleFormDialog({
                     <SelectValue placeholder="选择监控对象" />
                   </SelectTrigger>
                   <SelectContent>
-                    {targetTypeOptions.map((opt) => (
+                    {(targetTypeOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -198,7 +198,7 @@ export function RuleFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {conditionTypeOptions.map((opt) => (
+                    {(conditionTypeOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -223,7 +223,7 @@ export function RuleFormDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {operatorOptions.map((opt) => (
+                        {(operatorOptions || []).map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
                           </SelectItem>
@@ -324,7 +324,7 @@ export function RuleFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {alertLevelOptions.map((opt) => (
+                    {(alertLevelOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -344,7 +344,7 @@ export function RuleFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {frequencyOptions.map((opt) => (
+                    {(frequencyOptions || []).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -378,7 +378,7 @@ export function RuleFormDialog({
               <div>
                 <Label>通知渠道</Label>
                 <div className="flex flex-wrap gap-3 mt-2">
-                  {channelOptions.map((channel) => (
+                  {(channelOptions || []).map((channel) => (
                     <div
                       key={channel.value}
                       className="flex items-center space-x-2"

@@ -44,7 +44,7 @@ export default function ReportHistory({ reports, loading }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {reports.map((report) => {
+          {(reports || []).map((report) => {
             const typeInfo = REPORT_TYPE[report.report_type] || REPORT_TYPE.START;
             const typeColor = getReportTypeColor(report.report_type);
 

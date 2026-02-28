@@ -21,7 +21,7 @@ export default function DepartmentStatusCard({ departmentStatus }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {departmentStatus.length > 0 ? (
-            departmentStatus.map((dept) => (
+            (departmentStatus || []).map((dept) => (
               <div
                 key={dept.id}
                 className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"

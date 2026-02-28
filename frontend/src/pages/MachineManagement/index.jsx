@@ -43,11 +43,11 @@ export default function MachineManagement() {
         if (
             machineId &&
             !showDetailDialog &&
-            machineData.machines.length > 0 &&
+            machineData.machines?.length > 0 &&
             !selectedMachine
         ) {
             const machineIdNum = parseInt(machineId);
-            const machine = machineData.machines.find((m) => m.id === machineIdNum);
+            const machine = (machineData.machines || []).find((m) => m.id === machineIdNum);
             if (machine) {
                 handleViewDetail(machineIdNum);
             }
@@ -56,7 +56,7 @@ export default function MachineManagement() {
 
     // 过滤后的机台列表
     const filteredMachines = useMemo(() => {
-        return machineData.machines.filter((machine) => {
+        return (machineData.machines || []).filter((machine) => {
             if (machineData.filters.searchKeyword) {
                 const keyword = machineData.filters.searchKeyword.toLowerCase();
                 return (

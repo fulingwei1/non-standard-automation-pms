@@ -63,8 +63,8 @@ const NavGroup = memo(function NavGroup({
             transition={{ duration: 0.2 }}
             className="space-y-1 overflow-hidden"
           >
-            {group.items.map((item) => {
-              const isFavorite = favorites.some((fav) => fav.path === item.path);
+            {(group.items || []).map((item) => {
+              const isFavorite = (favorites || []).some((fav) => fav.path === item.path);
 
               // 检查权限：如果配置了 permission 字段，则检查用户是否有该权限
               const hasPermission = !item.permission ||

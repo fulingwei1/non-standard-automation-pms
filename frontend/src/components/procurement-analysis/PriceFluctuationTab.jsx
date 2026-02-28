@@ -20,7 +20,7 @@ export default function PriceFluctuationTab({ data }) {
       {/* 统计卡片 */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {STATS_CARD_CONFIGS.priceFluctuation.map(config => (
+          {(STATS_CARD_CONFIGS.priceFluctuation || []).map(config => (
             <ProcurementStatsCard
               key={config.key}
               label={config.label}
@@ -57,7 +57,7 @@ export default function PriceFluctuationTab({ data }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {materials.map((item, index) => (
+                  {(materials || []).map((item, index) => (
                     <tr key={index} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                       <td className="py-3 px-4 font-medium">{item.material_code}</td>
                       <td className="py-3 px-4">{item.material_name}</td>

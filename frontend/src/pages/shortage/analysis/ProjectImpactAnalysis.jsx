@@ -71,7 +71,7 @@ const ProjectImpactAnalysis = () => {
               <div>
                 <p className="text-sm text-gray-500">受影响项目</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {projects.length}
+                  {projects?.length}
                 </p>
               </div>
             </div>
@@ -87,7 +87,7 @@ const ProjectImpactAnalysis = () => {
               <div>
                 <p className="text-sm text-gray-500">高风险项目</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {projects.filter((p) => p.risk_score >= 75).length}
+                  {(projects || []).filter((p) => p.risk_score >= 75).length}
                 </p>
               </div>
             </div>
@@ -103,7 +103,7 @@ const ProjectImpactAnalysis = () => {
               <div>
                 <p className="text-sm text-gray-500">预计总延期</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {projects.reduce((sum, p) => sum + (p.estimated_delay_days || 0), 0)} 天
+                  {(projects || []).reduce((sum, p) => sum + (p.estimated_delay_days || 0), 0)} 天
                 </p>
               </div>
             </div>
@@ -143,7 +143,7 @@ const ProjectImpactAnalysis = () => {
                 <p className="text-gray-500">暂无受影响的项目</p>
               </div>
             ) : (
-              sortedProjects.map((project, index) => (
+              (sortedProjects || []).map((project, index) => (
                 <ProjectCard key={project.project_id || index} project={project} />
               ))
             )}
@@ -231,13 +231,13 @@ const ProjectCard = ({ project }) => {
         </div>
 
         {/* 缺料物料列表 */}
-        {project.shortage_materials && project.shortage_materials.length > 0 && (
+        {project.shortage_materials && project.shortage_materials?.length > 0 && (
           <div className="mt-4 pt-4 border-t">
             <p className="text-sm font-medium text-gray-700 mb-2">
-              缺料物料 ({project.shortage_materials.length})
+              缺料物料 ({project.shortage_materials?.length})
             </p>
             <div className="flex flex-wrap gap-2">
-              {project.shortage_materials.map((material, idx) => (
+              {(project.shortage_materials || []).map((material, idx) => (
                 <Badge key={idx} variant="outline">
                   {material.material_name || material.material_code}
                 </Badge>

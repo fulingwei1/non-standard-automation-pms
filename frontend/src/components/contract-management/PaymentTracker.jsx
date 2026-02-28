@@ -10,9 +10,9 @@ import { CONTRACT_STATUS, CHART_COLORS } from '@/lib/constants/contractManagemen
 
 const PaymentTracker = ({ contracts = [], loading = false }) => {
   const stats = useMemo(() => {
-    const total = contracts.reduce((acc, c) => acc + Number(c.value || 0), 0);
-    const signed = contracts.filter((c) => c.status === 'signed').length;
-    const executing = contracts.filter((c) => c.status === 'executing').length;
+    const total = (contracts || []).reduce((acc, c) => acc + Number(c.value || 0), 0);
+    const signed = (contracts || []).filter((c) => c.status === 'signed').length;
+    const executing = (contracts || []).filter((c) => c.status === 'executing').length;
     return { total, signed, executing };
   }, [contracts]);
 

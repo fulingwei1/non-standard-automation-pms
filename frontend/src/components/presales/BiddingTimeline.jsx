@@ -50,7 +50,7 @@ export function BiddingTimeline({ timeline, className }) {
 
   return (
     <motion.div variants={fadeIn} className={cn("space-y-4", className)}>
-      {timeline.map((item, index) => {
+      {(timeline || []).map((item, index) => {
         const statusConfig = getStatusIcon(item.status);
         const StatusIcon = statusConfig.icon;
 

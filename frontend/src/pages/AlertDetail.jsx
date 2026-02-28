@@ -341,7 +341,7 @@ export default function AlertDetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {actions.map((action, index) => (
+                  {(actions || []).map((action, index) => (
                     <div
                       key={index}
                       className="flex gap-4 pb-4 border-b border-slate-700 last:border-0"

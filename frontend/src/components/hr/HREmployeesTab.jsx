@@ -159,7 +159,7 @@ export const HREmployeesTab = ({
               className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
             >
               <option value="all">全部部门</option>
-              {departments.map((dept) => (
+              {(departments || []).map((dept) => (
                 <option key={dept.id} value={dept.dept_name}>
                   {dept.dept_name}
                 </option>
@@ -212,7 +212,7 @@ export const HREmployeesTab = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {employees.map((employee) => (
+                  {(employees || []).map((employee) => (
                     <EmployeeRow
                       key={employee.id}
                       employee={employee}
@@ -233,7 +233,7 @@ export const HREmployeesTab = ({
               </p>
               <p className="text-sm text-slate-400">
                 在职 <span className="font-semibold text-emerald-400">
-                  {employees.filter(e => e.is_active).length}
+                  {(employees || []).filter(e => e.is_active).length}
                    </span> 人
               </p>
             </div>

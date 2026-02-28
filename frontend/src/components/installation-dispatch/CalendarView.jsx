@@ -192,20 +192,20 @@ function DayCell({
   viewMode,
   onDateClick
 }) {
-  const dayTasks = tasks.filter((task) => {
+  const dayTasks = (tasks || []).filter((task) => {
     const start = parseDate(task.start_date || task.scheduled_date);
     const end = parseDate(task.end_date || task.scheduled_date);
     return isDateInRange(date, start, end);
   });
 
   // Tasks that start on this day
-  const startingTasks = dayTasks.filter((task) => {
+  const startingTasks = (dayTasks || []).filter((task) => {
     const start = parseDate(task.start_date || task.scheduled_date);
     return isSameDay(start, date);
   });
 
   // Tasks that are due on this day
-  const dueTasks = dayTasks.filter(
+  const dueTasks = (dayTasks || []).filter(
     (task) => {
       const end = parseDate(task.end_date || task.scheduled_date);
       return isSameDay(end, date) && task.status !== "COMPLETED";
@@ -213,7 +213,7 @@ function DayCell({
   );
 
   // Tasks with installation engineers available
-  const assignedTasks = dayTasks.filter((task) => task.assigned_engineer_name);
+  const assignedTasks = (dayTasks || []).filter((task) => task.assigned_engineer_name);
 
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
@@ -339,7 +339,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
   });
 
   const getTasksForDate = (date) => {
-    return tasks.filter((task) => {
+    return (tasks || []).filter((task) => {
       const start = parseDate(task.start_date || task.scheduled_date);
       const end = parseDate(task.end_date || task.scheduled_date);
       return isDateInRange(date, start, end);
@@ -350,7 +350,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
     <div className="space-y-3">
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-2">
-        {weekDays.map((date) =>
+        {(weekDays || []).map((date) =>
         <div
           key={formatDateKey(date)}
           className="text-center p-2 bg-slate-800/50 rounded-lg">
@@ -371,7 +371,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
           const timeSlot = hour + 9; // 9 AM to 5 PM
           return (
             <div key={hour} className="grid grid-cols-7 gap-2">
-              {weekDays.map((date) => {
+              {(weekDays || []).map((date) => {
                 const hourTasks = getTasksForDate(date).filter((task) => {
                   if (!task.scheduled_date) {return false;}
                   const taskDate = parseDate(task.scheduled_date);
@@ -625,7 +625,7 @@ export default function CalendarView({
         )}>
 
           <AnimatePresence mode="wait">
-            {calendarDays.map((day) =>
+            {(calendarDays || []).map((day) =>
           <motion.div
             key={formatDateKey(day.date)}
             initial={{ opacity: 0 }}

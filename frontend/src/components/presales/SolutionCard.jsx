@@ -118,7 +118,7 @@ export function SolutionCard({
         </p>
       )}
 
-      {solution.tags && solution.tags.length > 0 && (
+      {solution.tags && solution.tags?.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap mb-3">
           {solution.tags.slice(0, 3).map((tag, index) => (
             <span

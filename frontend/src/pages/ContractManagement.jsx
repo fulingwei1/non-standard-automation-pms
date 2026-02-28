@@ -133,7 +133,7 @@ const ContractManagement = () => {
 
   // 过滤数据
   const filteredContracts = useMemo(() => {
-    return contracts.filter((contract) => {
+    return (contracts || []).filter((contract) => {
       const matchesSearch = !searchText ||
       contract.title.toLowerCase().includes(searchText.toLowerCase()) ||
       contract.clientName?.toLowerCase().includes(searchText.toLowerCase());
@@ -161,7 +161,7 @@ const ContractManagement = () => {
     try {
       setLoading(true);
       await deleteContract(contractId);
-      setContracts(contracts.filter((c) => c.id !== contractId));
+      setContracts((contracts || []).filter((c) => c.id !== contractId));
       message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');

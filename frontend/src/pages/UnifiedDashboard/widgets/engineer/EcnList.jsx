@@ -36,7 +36,7 @@ export default function EcnList({ filter, limit = 5, data: propData }) {
           <div className="text-sm text-muted-foreground text-center py-4">暂无ECN</div>
         ) : (
           <div className="space-y-2">
-            {ecns.map((ecn, i) => (
+            {(ecns || []).map((ecn, i) => (
               <div key={ecn.id || i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{ecn.ecn_no || ecn.ecn_number || `ECN-${ecn.id}`}</div>

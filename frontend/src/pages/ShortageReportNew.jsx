@@ -95,7 +95,7 @@ export default function ShortageReportNew() {
       let filteredMaterials = materialList;
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
-        filteredMaterials = materialList.filter(
+        filteredMaterials = (materialList || []).filter(
           (m) =>
             ((m.material_code || "").toLowerCase().includes(keyword)) ||
             ((m.material_name || "").toLowerCase().includes(keyword)),
@@ -202,7 +202,7 @@ export default function ShortageReportNew() {
                     <SelectValue placeholder="请选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
+                    {(projects || []).map((project) => (
                       <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})
                       </SelectItem>
@@ -286,12 +286,12 @@ export default function ShortageReportNew() {
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                    {materials.length === 0 ? (
+                    {materials?.length === 0 ? (
                       <SelectItem value="__disabled__" disabled>
                         {searchKeyword ? "未找到匹配的物料" : "暂无物料数据"}
                       </SelectItem>
                     ) : (
-                      materials.map((material) => (
+                      (materials || []).map((material) => (
                         <SelectItem
                           key={material.id}
                           value={material.id.toString()}
@@ -368,7 +368,7 @@ export default function ShortageReportNew() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {urgentLevels.map((level) => (
+                  {(urgentLevels || []).map((level) => (
                     <SelectItem key={level.value} value={level.value}>
                       {level.label}
                     </SelectItem>

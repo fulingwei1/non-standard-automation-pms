@@ -97,16 +97,16 @@ const TaskColumn = ({ status, tasks, onUpdateProgress, onComplete, formatDate })
           <CardTitle className="text-sm font-semibold">
             {statusConfig.label}
           </CardTitle>
-          <Badge className={statusConfig.color}>{tasks.length}</Badge>
+          <Badge className={statusConfig.color}>{tasks?.length}</Badge>
         </div>
       </CardHeader>
       <CardContent className="flex-1 space-y-3 overflow-y-auto max-h-[600px]">
-        {tasks.length === 0 ? (
+        {tasks?.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-sm">
             暂无任务
           </div>
         ) : (
-          tasks.map((task) => (
+          (tasks || []).map((task) => (
             <TaskCard
               key={task.id}
               task={task}
@@ -137,9 +137,9 @@ export const ECNTasksTab = ({
 
   // 按状态分组任务
   const tasksByStatus = {
-    PENDING: tasks.filter((t) => t.status === 'PENDING'),
-    IN_PROGRESS: tasks.filter((t) => t.status === 'IN_PROGRESS'),
-    COMPLETED: tasks.filter((t) => t.status === 'COMPLETED'),
+    PENDING: (tasks || []).filter((t) => t.status === 'PENDING'),
+    IN_PROGRESS: (tasks || []).filter((t) => t.status === 'IN_PROGRESS'),
+    COMPLETED: (tasks || []).filter((t) => t.status === 'COMPLETED'),
   };
 
   return (
@@ -155,7 +155,7 @@ export const ECNTasksTab = ({
       </div>
 
       {/* 任务看板 */}
-      {tasks.length === 0 ? (
+      {tasks?.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-slate-400">
             暂无执行任务

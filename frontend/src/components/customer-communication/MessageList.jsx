@@ -236,7 +236,7 @@ export const MessageList = ({
             </TableHeader>
 
             <TableBody>
-              {sortedMessages.map((message) =>
+              {(sortedMessages || []).map((message) =>
               <TableRow
                 key={message.id}
                 className={cn(

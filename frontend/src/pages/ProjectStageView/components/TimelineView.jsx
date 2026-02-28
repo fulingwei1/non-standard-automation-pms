@@ -195,8 +195,8 @@ function StageItem({ stage, index, onNodeAction, onStageAction }) {
     const nodes = stage.nodes || [];
     return {
       total: nodes.length,
-      completed: nodes.filter((n) => n.status === "COMPLETED").length,
-      inProgress: nodes.filter((n) => n.status === "IN_PROGRESS").length,
+      completed: (nodes || []).filter((n) => n.status === "COMPLETED").length,
+      inProgress: (nodes || []).filter((n) => n.status === "IN_PROGRESS").length,
     };
   }, [stage.nodes]);
 
@@ -354,14 +354,14 @@ function StageItem({ stage, index, onNodeAction, onStageAction }) {
           </div>
 
         <AnimatePresence>
-          {isOpen && stage.nodes && stage.nodes.length > 0 && (
+          {isOpen && stage.nodes && stage.nodes?.length > 0 && (
             <motion.div
               className="ml-8 pl-4 border-l border-gray-700 space-y-1 pb-2"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
             >
-              {stage.nodes.map((node) => (
+              {(stage.nodes || []).map((node) => (
                 <NodeItem
                   key={node.id}
                   node={node}
@@ -469,7 +469,7 @@ export default function TimelineView({ data, loading, stageActions, onRefresh })
       <Card className="bg-gray-800/50 border-gray-700">
         <CardContent className="p-4">
           <div className="space-y-1">
-            {stages.map((stage, index) => (
+            {(stages || []).map((stage, index) => (
               <StageItem
                 key={stage.id}
                 stage={stage}

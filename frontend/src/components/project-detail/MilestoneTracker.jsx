@@ -76,12 +76,12 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
 
   // Calculate stage progress
   const calculateStageProgress = (stage) => {
-    if (!stage.milestones || stage.milestones.length === 0) {
+    if (!stage.milestones || stage.milestones?.length === 0) {
       return stage.status === 'COMPLETED' ? 100 : 0;
     }
 
-    const completedMilestones = stage.milestones.filter((m) => m.completed_at).length;
-    return Math.round(completedMilestones / stage.milestones.length * 100);
+    const completedMilestones = (stage.milestones || []).filter((m) => m.completed_at).length;
+    return Math.round(completedMilestones / stage.milestones?.length * 100);
   };
 
   // Toggle stage expansion
@@ -257,9 +257,9 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
         </div>
 
         {/* Milestones */}
-        {isExpanded && stage.milestones && stage.milestones.length > 0 &&
+        {isExpanded && stage.milestones && stage.milestones?.length > 0 &&
         <div className="ml-14 space-y-1">
-            {stage.milestones.map((milestone) => renderMilestone(milestone, stage.code))}
+            {(stage.milestones || []).map((milestone) => renderMilestone(milestone, stage.code))}
         </div>
         }
 
@@ -291,7 +291,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-2">
             {project.stages ?
-            project.stages.map((stage, index) => renderStage(stage, index)) :
+            (project.stages || []).map((stage, index) => renderStage(stage, index)) :
 
             <div className="text-center py-8 text-gray-500">
                 暂无阶段数据

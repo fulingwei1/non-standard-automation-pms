@@ -72,7 +72,7 @@ export default function TimesheetBatchOperations() {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedIds(new Set(timesheets.map((t) => t.id)));
+      setSelectedIds(new Set((timesheets || []).map((t) => t.id)));
     } else {
       setSelectedIds(new Set());
     }
@@ -122,13 +122,13 @@ export default function TimesheetBatchOperations() {
     setLoading(true);
     try {
       // 获取选中的记录数据
-      const selectedTimesheets = timesheets.filter((t) =>
+      const selectedTimesheets = (timesheets || []).filter((t) =>
       selectedIds.has(t.id)
       );
 
       // 按项目分组导出
       const projectGroups = {};
-      selectedTimesheets.forEach((ts) => {
+      (selectedTimesheets || []).forEach((ts) => {
         const projectId = ts.project_id || "other";
         if (!projectGroups[projectId]) {
           projectGroups[projectId] = [];
@@ -192,13 +192,13 @@ export default function TimesheetBatchOperations() {
     setLoading(true);
     try {
       // 获取选中记录的项目和日期信息
-      const selectedTimesheets = timesheets.filter((t) =>
+      const selectedTimesheets = (timesheets || []).filter((t) =>
       selectedIds.has(t.id)
       );
 
       // 按项目分组同步
       const projectGroups = {};
-      selectedTimesheets.forEach((ts) => {
+      (selectedTimesheets || []).forEach((ts) => {
         const projectId = ts.project_id;
         if (projectId) {
           if (!projectGroups[projectId]) {
@@ -429,7 +429,7 @@ export default function TimesheetBatchOperations() {
             </div> :
 
             <div className="space-y-2">
-                {timesheets.map((timesheet) =>
+                {(timesheets || []).map((timesheet) =>
               <div
                 key={timesheet.id}
                 className={cn(

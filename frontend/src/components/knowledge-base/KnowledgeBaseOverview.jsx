@@ -29,10 +29,10 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   const overviewStats = useMemo(() => {
     if (!data?.documents) {return {};}
 
-    const totalDocs = data.documents.length;
-    const publishedDocs = data.documents.filter((d) => d.status === 'published').length;
-    const totalViews = data.documents.reduce((acc, d) => acc + (d.viewCount || 0), 0);
-    const totalDownloads = data.documents.reduce((acc, d) => acc + (d.downloadCount || 0), 0);
+    const totalDocs = data.documents?.length;
+    const publishedDocs = (data.documents || []).filter((d) => d.status === 'published').length;
+    const totalViews = (data.documents || []).reduce((acc, d) => acc + (d.viewCount || 0), 0);
+    const totalDownloads = (data.documents || []).reduce((acc, d) => acc + (d.downloadCount || 0), 0);
 
     return {
       totalDocs,
@@ -51,7 +51,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
       distribution[key] = 0;
     });
 
-    data.documents.forEach((doc) => {
+    (data.documents || []).forEach((doc) => {
       if (doc.type && KNOWLEDGE_TYPES[doc.type.toUpperCase()]) {
         distribution[doc.type.toUpperCase()]++;
       }
@@ -219,7 +219,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
 
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
               {recentDocuments.length > 0 ? (
-                recentDocuments.map(renderRecentDocument)
+                (recentDocuments || []).map(renderRecentDocument)
               ) : (
                 <div style={{ textAlign: 'center', color: '#999', padding: '20px 0' }}>暂无文档</div>
               )}
@@ -241,7 +241,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
 
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
               {popularDocuments.length > 0 ? (
-                popularDocuments.map(renderRecentDocument)
+                (popularDocuments || []).map(renderRecentDocument)
               ) : (
                 <div style={{ textAlign: 'center', color: '#999', padding: '20px 0' }}>暂无文档</div>
               )}

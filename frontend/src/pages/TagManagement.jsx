@@ -77,7 +77,7 @@ export default function TagManagement() {
       if (response.data?.items) {
         const grouped = {};
         TAG_TYPES.forEach((t) => (grouped[t.key] = []));
-        response.data.items.forEach((tag) => {
+        (response.data.items || []).forEach((tag) => {
           if (grouped[tag.tag_type]) {
             grouped[tag.tag_type].push(tag);
           }
@@ -273,7 +273,7 @@ export default function TagManagement() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {filteredTags.map((tag) => (
+                  {(filteredTags || []).map((tag) => (
                     <motion.div
                       key={tag.id}
                       initial={{ opacity: 0, y: 10 }}

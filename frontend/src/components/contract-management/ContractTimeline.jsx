@@ -180,7 +180,7 @@ export function ContractTimeline({
     }
   };
 
-  const groupedEvents = timelineEvents.reduce((acc, event) => {
+  const groupedEvents = (timelineEvents || []).reduce((acc, event) => {
     const month = new Date(event.event_date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' });
     if (!acc[month]) {
       acc[month] = [];
@@ -264,7 +264,7 @@ export function ContractTimeline({
           {/* 垂直时间线 */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200" />
 
-          {months.map((month, _monthIndex) =>
+          {(months || []).map((month, _monthIndex) =>
           <div key={month} className="relative">
               <div className="sticky top-0 z-10 bg-white p-2 border-b">
                 <h3 className="text-sm font-medium text-slate-600">{month}</h3>

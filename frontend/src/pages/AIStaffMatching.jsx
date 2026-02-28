@@ -96,7 +96,7 @@ export default function AIStaffMatching() {
     }
   }, [searchParams]);
 
-  const selectedNeed = staffingNeeds.find((n) => n.id === selectedNeedId);
+  const selectedNeed = (staffingNeeds || []).find((n) => n.id === selectedNeedId);
 
   // 加载人员需求
   const loadStaffingNeeds = useCallback(async () => {
@@ -197,7 +197,7 @@ export default function AIStaffMatching() {
       loadMatchingHistory();
       setMatchingResult((prev) => ({
         ...prev,
-        candidates: prev.candidates.filter(
+        candidates: (prev.candidates || []).filter(
           (c) => c.employee_id !== candidate.employee_id
         )
       }));
@@ -206,7 +206,7 @@ export default function AIStaffMatching() {
       // 演示模式下也移除候选人
       setMatchingResult((prev) => ({
         ...prev,
-        candidates: prev.candidates.filter(
+        candidates: (prev.candidates || []).filter(
           (c) => c.employee_id !== candidate.employee_id
         )
       }));
@@ -267,9 +267,9 @@ export default function AIStaffMatching() {
 
   // 统计数据
   const stats = {
-    openNeeds: staffingNeeds.filter((n) => n.status === "OPEN").length,
-    matchingNeeds: staffingNeeds.filter((n) => n.status === "MATCHING").length,
-    acceptedCount: matchingHistory.filter((h) => h.is_accepted === true).length,
+    openNeeds: (staffingNeeds || []).filter((n) => n.status === "OPEN").length,
+    matchingNeeds: (staffingNeeds || []).filter((n) => n.status === "MATCHING").length,
+    acceptedCount: (matchingHistory || []).filter((h) => h.is_accepted === true).length,
     totalMatches: matchingHistory.length
   };
 
@@ -414,7 +414,7 @@ export default function AIStaffMatching() {
                     className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm">
 
                       <option value="">选择需求...</option>
-                      {staffingNeeds.map((need) =>
+                      {(staffingNeeds || []).map((need) =>
                     <option key={need.id} value={need.id}>
                           {need.project_name} - {need.role_name} (
                           {need.priority})
@@ -497,7 +497,7 @@ export default function AIStaffMatching() {
                       <div>
                               <span className="text-slate-400">技能要求</span>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {selectedNeed.required_skills.map(
+                                {(selectedNeed.required_skills || []).map(
                             (skill, idx) =>
                             <Badge
                               key={idx}
@@ -571,7 +571,7 @@ export default function AIStaffMatching() {
 
                         {/* 候选人卡片列表 */}
                         {matchingResult.candidates?.length > 0 ?
-                    matchingResult.candidates.map((candidate, index) => {
+                    (matchingResult.candidates || []).map((candidate, index) => {
                       const config =
                       RECOMMENDATION_CONFIG[
                       candidate.recommendation_type] ||
@@ -654,7 +654,7 @@ export default function AIStaffMatching() {
                                       维度得分
                                     </div>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                      {dimensions.map((dim) =>
+                                      {(dimensions || []).map((dim) =>
                                 <div key={dim.key}>
                                           <div className="flex justify-between text-xs mb-1">
                                             <span className="text-slate-500">
@@ -741,7 +741,7 @@ export default function AIStaffMatching() {
                                           缺失技能
                                         </div>
                                         <div className="flex flex-wrap gap-1">
-                                          {candidate.missing_skills.map(
+                                          {(candidate.missing_skills || []).map(
                                     (skill) =>
                                     <Badge
                                       key={skill}
@@ -830,7 +830,7 @@ export default function AIStaffMatching() {
               </div> :
 
               <div className="space-y-3">
-                    {matchingHistory.map((history) =>
+                    {(matchingHistory || []).map((history) =>
                 <motion.div
                   key={history.id}
                   initial={{ opacity: 0, y: 10 }}

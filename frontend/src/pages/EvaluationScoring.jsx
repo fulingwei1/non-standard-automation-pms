@@ -298,14 +298,14 @@ const EvaluationScoring = () => {
         </motion.div>
 
         {/* 历史绩效记录 */}
-        {task.historicalScores && task.historicalScores.length > 0 &&
+        {task.historicalScores && task.historicalScores?.length > 0 &&
         <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
               <h3 className="text-lg font-bold text-white mb-4">
                 历史绩效参考
               </h3>
               <div className="grid grid-cols-3 gap-4">
-                {task.historicalScores.map((hs, idx) =>
+                {(task.historicalScores || []).map((hs, idx) =>
               <div
                 key={idx}
                 className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">

@@ -599,7 +599,7 @@ export function UserFilters({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {userSortConfigs.map((config) =>
+            {(userSortConfigs || []).map((config) =>
             <SelectItem key={config.value} value={config.value}>
                 {config.label}
             </SelectItem>

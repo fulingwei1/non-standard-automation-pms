@@ -10,7 +10,7 @@ import { fadeIn, staggerContainer } from "../../../lib/animations";
 import { CHART_COLORS } from "../../../lib/constants/strategy";
 
 export function MultiYearTrendChart({ trendData }) {
-  if (!trendData || !trendData.years || trendData.years.length === 0) {
+  if (!trendData || !trendData.years || trendData.years?.length === 0) {
     return (
       <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
         <CardHeader>
@@ -32,9 +32,9 @@ export function MultiYearTrendChart({ trendData }) {
 
   // 计算趋势
   const getTrend = (values) => {
-    if (!values || values.length < 2) return 0;
-    const latest = values[values.length - 1] || 0;
-    const previous = values[values.length - 2] || 0;
+    if (!values || values?.length < 2) return 0;
+    const latest = values[values?.length - 1] || 0;
+    const previous = values[values?.length - 2] || 0;
     if (previous === 0) return 0;
     return ((latest - previous) / previous) * 100;
   };
@@ -97,7 +97,7 @@ export function MultiYearTrendChart({ trendData }) {
                     </div>
                   </div>
                   <div className="flex items-end gap-4 h-32 px-4">
-                    {years.map((year, idx) => (
+                    {(years || []).map((year, idx) => (
                       <div key={year} className="flex-1 flex flex-col items-center">
                         <div className="w-full h-24 flex items-end justify-center">
                           {renderBar(
@@ -136,7 +136,7 @@ export function MultiYearTrendChart({ trendData }) {
                     </div>
                   </div>
                   <div className="flex items-end gap-4 h-32 px-4">
-                    {years.map((year, idx) => (
+                    {(years || []).map((year, idx) => (
                       <div key={year} className="flex-1 flex flex-col items-center">
                         <div className="w-full h-24 flex items-end justify-center">
                           {renderBar(
@@ -175,7 +175,7 @@ export function MultiYearTrendChart({ trendData }) {
                     </div>
                   </div>
                   <div className="flex items-end gap-4 h-32 px-4">
-                    {years.map((year, idx) => (
+                    {(years || []).map((year, idx) => (
                       <div key={year} className="flex-1 flex flex-col items-center">
                         <div className="w-full h-24 flex items-end justify-center">
                           {renderBar(
@@ -201,7 +201,7 @@ export function MultiYearTrendChart({ trendData }) {
       {/* 年度详情卡片 */}
       <motion.div variants={fadeIn}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {years.map((year, idx) => (
+          {(years || []).map((year, idx) => (
             <Card
               key={year}
               className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50"

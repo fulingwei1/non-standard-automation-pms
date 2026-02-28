@@ -34,7 +34,7 @@ export default function CustomerList({ limit = 5, data: propData }) {
           <div className="text-sm text-muted-foreground text-center py-4">暂无客户</div>
         ) : (
           <div className="space-y-2">
-            {customers.map((c, i) => (
+            {(customers || []).map((c, i) => (
               <div key={c.id || i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{c.name || c.company_name}</div>

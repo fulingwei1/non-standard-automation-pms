@@ -127,10 +127,10 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
 const RevenueTypeDistribution = ({ revenueByType, loading }) => {
   const chartData = useMemo(() => {
     if (!revenueByType || revenueByType.length === 0) {return [];}
-    return revenueByType.map((item) => ({
+    return (revenueByType || []).map((item) => ({
       type: item.type,
       value: item.value,
-      percentage: item.value / revenueByType.reduce((sum, d) => sum + d.value, 0) * 100
+      percentage: item.value / (revenueByType || []).reduce((sum, d) => sum + d.value, 0) * 100
     }));
   }, [revenueByType]);
 
@@ -191,7 +191,7 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
 
           {/* 图例和明细 */}
           <div className="space-y-4">
-            {chartData.map((item, index) => {
+            {(chartData || []).map((item, index) => {
               const revenueType = revenueTypes[item.type];
               return (
                 <div key={index} className="flex items-center justify-between">
@@ -230,7 +230,7 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
 const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
   const chartData = useMemo(() => {
     if (!revenueByMonth || revenueByMonth.length === 0) {return [];}
-    return revenueByMonth.map((item) => ({
+    return (revenueByMonth || []).map((item) => ({
       month: item.month,
       actual: item.actual,
       target: item.target,
@@ -361,7 +361,7 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
         <h3 className="text-lg font-semibold text-white mb-4">客户收入TOP10</h3>
 
         <div className="space-y-3">
-          {chartData.map((item, index) =>
+          {(chartData || []).map((item, index) =>
           <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={cn(
@@ -394,7 +394,7 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
           <div className="flex justify-between text-sm">
             <span className="text-slate-400">累计客户收入</span>
             <span className="text-white font-medium">
-              {formatCurrency(chartData.reduce((sum, item) => sum + item.revenue, 0))}
+              {formatCurrency((chartData || []).reduce((sum, item) => sum + item.revenue, 0))}
             </span>
           </div>
         </div>

@@ -255,7 +255,7 @@ export default function PerformanceResults() {
               </div> :
 
               <div className="space-y-4">
-                  {currentResult.indicators.map((indicator, index) =>
+                  {(currentResult.indicators || []).map((indicator, index) =>
                 <motion.div
                   key={index}
                   variants={fadeIn}
@@ -355,7 +355,7 @@ export default function PerformanceResults() {
               </div> :
 
               <div className="space-y-3">
-                  {historyResults.map((result, index) =>
+                  {(historyResults || []).map((result, index) =>
                 <motion.div
                   key={index}
                   variants={fadeIn}
@@ -435,7 +435,7 @@ export default function PerformanceResults() {
               </div> :
 
               <div className="space-y-4">
-                  {currentResult.comments.map((comment, index) =>
+                  {(currentResult.comments || []).map((comment, index) =>
                 <motion.div
                   key={index}
                   variants={fadeIn}

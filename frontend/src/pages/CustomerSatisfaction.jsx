@@ -122,7 +122,7 @@ const CustomerSatisfaction = () => {
       ]);
       const satisfactionList = satisfactionRes.data?.items || satisfactionRes.data?.items || satisfactionRes.data || [];
       // 将满意度记录映射为 surveys 和 responses 格式
-      const surveyItems = satisfactionList.map((item) => ({
+      const surveyItems = (satisfactionList || []).map((item) => ({
         id: item.id,
         title: item.title || item.survey_title || `满意度调查 #${item.id}`,
         type: item.type || item.survey_type || 'service',
@@ -160,7 +160,7 @@ const CustomerSatisfaction = () => {
 
   // 过滤数据
   const filteredSurveys = useMemo(() => {
-    return surveys.filter((survey) => {
+    return (surveys || []).filter((survey) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchesSearch = (survey.title || "").toLowerCase().includes(searchLower);
       const matchesType = !filters.surveyType || survey.type === filters.surveyType;
@@ -171,7 +171,7 @@ const CustomerSatisfaction = () => {
   }, [surveys, searchText, filters]);
 
   const filteredResponses = useMemo(() => {
-    return responses.filter((response) => {
+    return (responses || []).filter((response) => {
       const matchesLevel = !filters.satisfactionLevel || response.satisfactionLevel === filters.satisfactionLevel;
       const matchesCategory = !filters.category || response.category === filters.category;
 
@@ -193,7 +193,7 @@ const CustomerSatisfaction = () => {
     try {
       setLoading(true);
       // Note: satisfaction API may not have delete; remove locally for now
-      setSurveys(surveys.filter((s) => s.id !== surveyId));
+      setSurveys((surveys || []).filter((s) => s.id !== surveyId));
       message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');

@@ -155,8 +155,8 @@ export default function CultureWallCarousel({
     // 添加个人目标（如果管理员允许显示）
     // 注意：如果后端返回的personal_goals为空数组，表示管理员禁用了个人目标显示
     // 如果返回了数据，则表示允许显示
-    if (data.personal_goals && data.personal_goals.length > 0) {
-      data.personal_goals.forEach((item) =>
+    if (data.personal_goals && data.personal_goals?.length > 0) {
+      (data.personal_goals || []).forEach((item) =>
         items.push({ ...item, category: "GOAL" }),
       );
     }
@@ -221,11 +221,11 @@ export default function CultureWallCarousel({
             {item.content && !item.summary && (
               <p className="text-sm text-slate-300 mb-4 flex-1 line-clamp-3">
                 {item.content.substring(0, 150)}
-                {item.content.length > 150 && "..."}
+                {item.content?.length > 150 && "..."}
               </p>
             )}
 
-            {item.images && item.images.length > 0 && (
+            {item.images && item.images?.length > 0 && (
               <div className="mb-3">
                 <img
                   src={item.images[0].url}
@@ -487,7 +487,7 @@ export default function CultureWallCarousel({
         {/* 指示器 */}
         {showIndicators && allItems.length > 1 && (
           <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-10 flex gap-1.5">
-            {allItems.map((_, index) => (
+            {(allItems || []).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}

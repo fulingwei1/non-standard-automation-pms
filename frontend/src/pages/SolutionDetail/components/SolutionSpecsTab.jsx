@@ -69,7 +69,7 @@ export function SolutionSpecsTab({ solution }) {
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">
-                        {solution.techSpecs.testItems.map((item, index) => (
+                        {(solution.techSpecs.testItems || []).map((item, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                                 {item}
                             </Badge>
@@ -84,7 +84,7 @@ export function SolutionSpecsTab({ solution }) {
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">
-                        {solution.techSpecs.testStandards.map((standard, index) => (
+                        {(solution.techSpecs.testStandards || []).map((standard, index) => (
                             <Badge key={index} className="text-xs bg-blue-500">
                                 {standard}
                             </Badge>

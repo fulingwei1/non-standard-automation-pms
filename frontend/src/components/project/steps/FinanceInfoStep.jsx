@@ -70,7 +70,7 @@ export const FinanceInfoStep = ({
         value={formData.pm_id}
         onChange={(e) => {
           const pmId = e.target.value;
-          const pm = employees.find((e) => e.id === parseInt(pmId));
+          const pm = (employees || []).find((e) => e.id === parseInt(pmId));
           setFormData({
             ...formData,
             pm_id: pmId,
@@ -79,7 +79,7 @@ export const FinanceInfoStep = ({
         }}
       >
         <option value="">选择项目经理（可选）</option>
-        {employees.map((emp) => {
+        {(employees || []).map((emp) => {
           const projectCount = pmStats[emp.id] || 0;
           return (
             <option key={emp.id} value={emp.id}>

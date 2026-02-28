@@ -48,7 +48,7 @@ export default function TaskCompleteDialog({ open, onClose, task, onComplete }) 
                 ⚠️ 以下步骤尚未完成：
               </p>
               <ul className="text-xs text-amber-300/80 space-y-1">
-                {remainingSteps.map((step) => (
+                {(remainingSteps || []).map((step) => (
                   <li key={step.id}>• {step.title}</li>
                 ))}
               </ul>
@@ -115,7 +115,7 @@ export default function TaskCompleteDialog({ open, onClose, task, onComplete }) 
                     key={issue}
                     onClick={() => {
                       if (issues.includes(issue)) {
-                        setIssues(issues.filter((i) => i !== issue));
+                        setIssues((issues || []).filter((i) => i !== issue));
                       } else {
                         setIssues([...issues, issue]);
                       }

@@ -120,7 +120,7 @@ export default function FinancialCostUpload() {
     let filtered = [...costs];
 
     if (searchTerm) {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (c) =>
         c.project_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,7 +206,7 @@ export default function FinancialCostUpload() {
   const costTypes = ["LABOR", "TRAVEL", "ENTERTAINMENT", "OTHER"];
   const costCategories = useMemo(() => {
     const categories = new Set();
-    costs.forEach((c) => {
+    (costs || []).forEach((c) => {
       if (c.cost_category) {categories.add(c.cost_category);}
     });
     return Array.from(categories);
@@ -298,7 +298,7 @@ export default function FinancialCostUpload() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {costTypes.map((type) =>
+                {(costTypes || []).map((type) =>
                 <SelectItem key={type} value={type}>
                     {costTypeLabels[type]}
                 </SelectItem>
@@ -311,7 +311,7 @@ export default function FinancialCostUpload() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部分类</SelectItem>
-                {costCategories.map((cat) =>
+                {(costCategories || []).map((cat) =>
                 <SelectItem key={cat} value={cat}>
                     {cat}
                 </SelectItem>
@@ -362,7 +362,7 @@ export default function FinancialCostUpload() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost) =>
+              {(filteredCosts || []).map((cost) =>
               <TableRow key={cost.id}>
                   <TableCell>
                     <div className="font-medium">{cost.project_code}</div>
@@ -441,13 +441,13 @@ export default function FinancialCostUpload() {
               }
               </div>
 
-              {uploadResult.errors && uploadResult.errors.length > 0 &&
+              {uploadResult.errors && uploadResult.errors?.length > 0 &&
             <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 max-h-60 overflow-y-auto">
                   <div className="font-medium text-red-400 mb-2">
                     错误详情：
                   </div>
                   <ul className="text-sm text-slate-300 space-y-1">
-                    {uploadResult.errors.map((error, idx) =>
+                    {(uploadResult.errors || []).map((error, idx) =>
                 <li key={idx}>• {error}</li>
                 )}
                   </ul>

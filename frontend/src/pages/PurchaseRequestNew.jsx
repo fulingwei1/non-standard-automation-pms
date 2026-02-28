@@ -113,7 +113,7 @@ export default function PurchaseRequestNew() {
         });
         const machineList = response.data?.items || response.data?.items || response.data || [];
         setMachines(
-          machineList.map((m) => ({
+          (machineList || []).map((m) => ({
             id: m.id,
             machine_code: m.machine_code || m.machine_no,
             machine_name: m.machine_name || m.machine_code || `机台${m.id}`
@@ -183,14 +183,14 @@ export default function PurchaseRequestNew() {
   }, [isEdit, id]);
 
   // Calculate total amount
-  const totalAmount = formData.items.reduce((sum, item) => {
+  const totalAmount = (formData.items || []).reduce((sum, item) => {
     return (
       sum + parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0));
 
   }, 0);
 
   // Filter materials for search
-  const filteredMaterials = materials.filter((m) => {
+  const filteredMaterials = (materials || []).filter((m) => {
     if (!materialSearchQuery) {return true;}
     const query = materialSearchQuery.toLowerCase();
     return (
@@ -222,7 +222,7 @@ export default function PurchaseRequestNew() {
 
   // Remove item
   const handleRemoveItem = (index) => {
-    const newItems = formData.items.filter((_, i) => i !== index);
+    const newItems = (formData.items || []).filter((_, i) => i !== index);
     setFormData({ ...formData, items: newItems });
   };
 
@@ -262,12 +262,12 @@ export default function PurchaseRequestNew() {
   // Save request
   const handleSave = async () => {
     // Validation
-    if (!formData.items || formData.items.length === 0) {
+    if (!formData.items || formData.items?.length === 0) {
       toast.error("请至少添加一个物料");
       return;
     }
 
-    for (let i = 0; i < formData.items.length; i++) {
+    for (let i = 0; i < formData.items?.length; i++) {
       const item = formData.items[i];
       if (!item.material_name || !item.quantity || item.quantity <= 0) {
         toast.error(`物料明细第 ${i + 1} 行填写不完整`);
@@ -290,7 +290,7 @@ export default function PurchaseRequestNew() {
         request_reason: formData.request_reason || null,
         required_date: formData.required_date || null,
         remark: formData.remark || null,
-        items: formData.items.map((item) => ({
+        items: (formData.items || []).map((item) => ({
           material_id: item.material_id || null,
           material_code: item.material_code,
           material_name: item.material_name,
@@ -322,7 +322,7 @@ export default function PurchaseRequestNew() {
 
   // Submit request
   const handleSubmit = async () => {
-    if (!formData.items || formData.items.length === 0) {
+    if (!formData.items || formData.items?.length === 0) {
       toast.error("请至少添加一个物料");
       return;
     }
@@ -402,7 +402,7 @@ export default function PurchaseRequestNew() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">无</SelectItem>
-                        {projects.map((project) =>
+                        {(projects || []).map((project) =>
                         <SelectItem
                           key={project.id}
                           value={project.id.toString()}>
@@ -433,7 +433,7 @@ export default function PurchaseRequestNew() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">无</SelectItem>
-                        {machines.map((machine) =>
+                        {(machines || []).map((machine) =>
                         <SelectItem
                           key={machine.id}
                           value={machine.id.toString()}>
@@ -464,7 +464,7 @@ export default function PurchaseRequestNew() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">未指定</SelectItem>
-                        {suppliers.map((supplier) =>
+                        {(suppliers || []).map((supplier) =>
                         <SelectItem
                           key={supplier.id}
                           value={supplier.id.toString()}>
@@ -549,14 +549,14 @@ export default function PurchaseRequestNew() {
                 </div>
               </CardHeader>
               <CardContent>
-                {formData.items.length === 0 ?
+                {formData.items?.length === 0 ?
                 <div className="text-center py-8 text-slate-400">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>暂无物料，点击上方按钮添加</p>
                 </div> :
 
                 <div className="space-y-3">
-                    {formData.items.map((item, index) =>
+                    {(formData.items || []).map((item, index) =>
                   <div
                     key={index}
                     className="p-4 border border-slate-700 rounded-lg bg-slate-900/30">
@@ -713,7 +713,7 @@ export default function PurchaseRequestNew() {
                 <div>
                   <Label className="text-slate-400">物料数量</Label>
                   <p className="text-2xl font-bold text-slate-200">
-                    {formData.items.length}
+                    {formData.items?.length}
                   </p>
                 </div>
                 <div>
@@ -767,7 +767,7 @@ export default function PurchaseRequestNew() {
                       <p>未找到物料</p>
                   </div> :
 
-                  filteredMaterials.map((material) =>
+                  (filteredMaterials || []).map((material) =>
                   <div
                     key={material.id}
                     onClick={() => handleSelectMaterial(material)}

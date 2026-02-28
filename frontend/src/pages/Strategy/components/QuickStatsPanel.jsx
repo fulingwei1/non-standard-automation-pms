@@ -87,7 +87,7 @@ export function QuickStatsPanel({ stats }) {
       animate="visible"
       className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3"
     >
-      {statItems.map((item) => {
+      {(statItems || []).map((item) => {
         const Icon = item.icon;
         const value = stats[item.key] ?? 0;
         const displayValue = item.suffix ? `${value}${item.suffix}` : value;

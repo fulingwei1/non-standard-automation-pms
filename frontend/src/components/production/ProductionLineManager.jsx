@@ -52,7 +52,7 @@ export default function ProductionLineManager({
 
   // 过滤生产线数据
   const filteredWorkshops = useMemo(() => {
-    return workshops.filter((workshop) => {
+    return (workshops || []).filter((workshop) => {
       const matchesSearch = !searchQuery ||
       workshop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       workshop.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,16 +68,16 @@ export default function ProductionLineManager({
   // 计算统计数据
   const statistics = useMemo(() => {
     const total = workshops.length;
-    const active = workshops.filter((w) => w.status === 'active').length;
-    const idle = workshops.filter((w) => w.status === 'idle').length;
-    const maintenance = workshops.filter((w) => w.status === 'maintenance').length;
-    const stopped = workshops.filter((w) => w.status === 'stopped').length;
+    const active = (workshops || []).filter((w) => w.status === 'active').length;
+    const idle = (workshops || []).filter((w) => w.status === 'idle').length;
+    const maintenance = (workshops || []).filter((w) => w.status === 'maintenance').length;
+    const stopped = (workshops || []).filter((w) => w.status === 'stopped').length;
 
-    const totalEfficiency = workshops.reduce((sum, w) => sum + (w.efficiency || 0), 0);
+    const totalEfficiency = (workshops || []).reduce((sum, w) => sum + (w.efficiency || 0), 0);
     const avgEfficiency = total > 0 ? Math.round(totalEfficiency / total) : 0;
 
-    const totalOutput = workshops.reduce((sum, w) => sum + (w.currentOutput || 0), 0);
-    const totalTarget = workshops.reduce((sum, w) => sum + (w.targetOutput || 0), 0);
+    const totalOutput = (workshops || []).reduce((sum, w) => sum + (w.currentOutput || 0), 0);
+    const totalTarget = (workshops || []).reduce((sum, w) => sum + (w.targetOutput || 0), 0);
     const overallProgress = totalTarget > 0 ? Math.round(totalOutput / totalTarget * 100) : 0;
 
     return {
@@ -249,7 +249,7 @@ export default function ProductionLineManager({
             )}
               {workshop.equipments?.length > 3 &&
             <Badge variant="outline" className="text-xs">
-                  +{workshop.equipments.length - 3} 更多
+                  +{workshop.equipments?.length - 3} 更多
             </Badge>
             }
             </div>
@@ -414,7 +414,7 @@ export default function ProductionLineManager({
       {/* 生产线列表 */}
       <AnimatePresence>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredWorkshops.map(renderWorkshopCard)}
+          {(filteredWorkshops || []).map(renderWorkshopCard)}
         </div>
       </AnimatePresence>
       

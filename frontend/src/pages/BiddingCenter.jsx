@@ -80,13 +80,13 @@ const biddingStages = [
 // Mock data - 已移除，使用真实API
 // 获取阶段样式
 const getStageStyle = (stage) => {
-  const config = biddingStages.find((s) => s.id === stage);
+  const config = (biddingStages || []).find((s) => s.id === stage);
   return config?.color || "bg-slate-500";
 };
 
 // 获取阶段名称
 const getStageName = (stage) => {
-  const config = biddingStages.find((s) => s.id === stage);
+  const config = (biddingStages || []).find((s) => s.id === stage);
   return config?.name || stage;
 };
 
@@ -172,11 +172,11 @@ function BiddingCard({ bidding, onClick }) {
       </div>
       }
 
-      {bidding.competitors.length > 0 &&
+      {bidding.competitors?.length > 0 &&
       <div className="flex items-center gap-2 mb-3">
           <Swords className="w-3 h-3 text-red-400" />
           <span className="text-xs text-slate-500">
-            {bidding.competitors.length} 个竞争对手
+            {bidding.competitors?.length} 个竞争对手
           </span>
       </div>
       }
@@ -505,7 +505,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-slate-400">投标文件</h4>
             <div className="space-y-2">
-              {bidding.documents.map((doc, index) =>
+              {(bidding.documents || []).map((doc, index) =>
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
@@ -540,14 +540,14 @@ function BiddingDetailPanel({ bidding, onClose }) {
           </div>
 
           {/* 竞争分析 */}
-          {bidding.competitors.length > 0 &&
+          {bidding.competitors?.length > 0 &&
           <div className="space-y-2">
               <h4 className="text-sm font-medium text-slate-400 flex items-center gap-2">
                 <Swords className="w-4 h-4 text-red-400" />
                 竞争分析
               </h4>
               <div className="space-y-2">
-                {bidding.competitors.map((competitor, index) =>
+                {(bidding.competitors || []).map((competitor, index) =>
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
@@ -583,7 +583,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
               投标进程
             </h4>
             <div className="space-y-4">
-              {bidding.timeline.map((item, index) =>
+              {(bidding.timeline || []).map((item, index) =>
               <div key={index} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div
@@ -604,7 +604,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                     <Flag className="w-3 h-3 text-white" />
                     }
                     </div>
-                    {index < bidding.timeline.length - 1 &&
+                    {index < bidding.timeline?.length - 1 &&
                   <div
                     className={cn(
                       "w-px h-8 my-1",
@@ -692,7 +692,7 @@ export default function BiddingCenter() {
       const tendersData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tenders
-      const transformedTenders = tendersData.map((tender) => {
+      const transformedTenders = (tendersData || []).map((tender) => {
         const deadline = tender.submission_deadline ?
         new Date(tender.submission_deadline) :
         null;
@@ -748,7 +748,7 @@ export default function BiddingCenter() {
   }, [loadTenders]);
 
   // 筛选投标
-  const filteredBiddings = biddings.filter((bidding) => {
+  const filteredBiddings = (biddings || []).filter((bidding) => {
     const searchLower = searchTerm.toLowerCase();
     const name = (bidding.name || "").toLowerCase();
     const customer = (bidding.customer || "").toLowerCase();
@@ -762,16 +762,16 @@ export default function BiddingCenter() {
   });
 
   // 按阶段分组（看板视图）
-  const biddingsByStage = biddingStages.map((stage) => ({
+  const biddingsByStage = (biddingStages || []).map((stage) => ({
     ...stage,
-    biddings: filteredBiddings.filter((b) => b.stage === stage.id)
+    biddings: (filteredBiddings || []).filter((b) => b.stage === stage.id)
   }));
 
   // 统计数据
   const stats = {
     total: biddings.length,
-    active: biddings.filter((b) => !["won", "lost"].includes(b.stage)).length,
-    won: biddings.filter((b) => b.stage === "won").length,
+    active: (biddings || []).filter((b) => !["won", "lost"].includes(b.stage)).length,
+    won: (biddings || []).filter((b) => b.stage === "won").length,
     totalAmount: biddings.
     filter((b) => b.stage === "won").
     reduce((acc, b) => acc + b.amount, 0)
@@ -904,7 +904,7 @@ export default function BiddingCenter() {
         variants={fadeIn}
         className="flex overflow-x-auto custom-scrollbar pb-4 -mx-6 px-6 gap-4">
 
-          {biddingsByStage.map((column) =>
+          {(biddingsByStage || []).map((column) =>
         <div key={column.id} className="flex-shrink-0 w-80">
               <Card className="bg-surface-50/70 backdrop-blur-sm border border-white/5 shadow-md">
                 <CardHeader className="py-3 px-4 border-b border-white/5">
@@ -916,13 +916,13 @@ export default function BiddingCenter() {
                       {column.name}
                     </span>
                     <Badge variant="secondary" className="bg-white/10">
-                      {column.biddings.length}
+                      {column.biddings?.length}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3 min-h-[300px] max-h-[calc(100vh-400px)] overflow-y-auto custom-scrollbar">
-                  {column.biddings.length > 0 ?
-              column.biddings.map((bidding) =>
+                  {column.biddings?.length > 0 ?
+              (column.biddings || []).map((bidding) =>
               <BiddingCard
                 key={bidding.id}
                 bidding={bidding}

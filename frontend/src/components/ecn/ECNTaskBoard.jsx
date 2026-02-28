@@ -68,7 +68,7 @@ export function ECNTaskBoard({
   };
 
   const getTasksByStatus = (status) => {
-    return tasks.filter((task) => task.status === status);
+    return (tasks || []).filter((task) => task.status === status);
   };
 
   const handleCreateTask = () => {

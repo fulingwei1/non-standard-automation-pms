@@ -148,13 +148,13 @@ export default function ProjectStaffingNeed() {
 
   // 统计
   const stats = {
-    open: needs.filter((n) => n.status === "OPEN").length,
-    matching: needs.filter((n) => n.status === "MATCHING").length,
-    filled: needs.filter((n) => n.status === "FILLED").length,
+    open: (needs || []).filter((n) => n.status === "OPEN").length,
+    matching: (needs || []).filter((n) => n.status === "MATCHING").length,
+    filled: (needs || []).filter((n) => n.status === "FILLED").length,
   };
 
   // 过滤
-  const filteredNeeds = needs.filter((need) => {
+  const filteredNeeds = (needs || []).filter((need) => {
     const matchKeyword =
       !searchKeyword ||
       need.project_name?.includes(searchKeyword) ||
@@ -206,7 +206,7 @@ export default function ProjectStaffingNeed() {
         role_name: ROLE_OPTIONS.find((r) => r.value === formData.role_code)
           ?.label,
         headcount: formData.headcount,
-        required_skills: formData.required_skill_ids.map((id) => ({
+        required_skills: (formData.required_skill_ids || []).map((id) => ({
           tag_id: id,
           min_score: 3,
         })),
@@ -239,20 +239,20 @@ export default function ProjectStaffingNeed() {
             ...formData,
             role_name: ROLE_OPTIONS.find((r) => r.value === formData.role_code)
               ?.label,
-            project_name: projects.find((p) => p.id === formData.project_id)
+            project_name: (projects || []).find((p) => p.id === formData.project_id)
               ?.name,
             status: "OPEN",
             filled_count: 0,
-            required_skills: formData.required_skill_ids.map((id) => ({
+            required_skills: (formData.required_skill_ids || []).map((id) => ({
               tag_id: id,
-              tag_name: tags.find((t) => t.id === id)?.tag_name,
+              tag_name: (tags || []).find((t) => t.id === id)?.tag_name,
             })),
             created_at: new Date().toISOString(),
           };
 
       setNeeds((prev) =>
         editingNeed
-          ? prev.map((n) => (n.id === editingNeed.id ? newNeed : n))
+          ? (prev || []).map((n) => (n.id === editingNeed.id ? newNeed : n))
           : [...prev, newNeed],
       );
       setShowDialog(false);
@@ -274,7 +274,7 @@ export default function ProjectStaffingNeed() {
     } catch (error) {
       console.error("取消失败:", error);
       setNeeds((prev) =>
-        prev.map((n) => (n.id === need.id ? { ...n, status: "CANCELLED" } : n)),
+        (prev || []).map((n) => (n.id === need.id ? { ...n, status: "CANCELLED" } : n)),
       );
     }
   };
@@ -410,7 +410,7 @@ export default function ProjectStaffingNeed() {
             <div className="text-center py-12 text-slate-400">暂无数据</div>
           ) : (
             <div className="space-y-3">
-              {filteredNeeds.map((need) => (
+              {(filteredNeeds || []).map((need) => (
                 <motion.div
                   key={need.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -473,9 +473,9 @@ export default function ProjectStaffingNeed() {
                                 {skill.tag_name}
                               </Badge>
                             ))}
-                          {need.required_skills.length > 3 && (
+                          {need.required_skills?.length > 3 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{need.required_skills.length - 3}
+                              +{need.required_skills?.length - 3}
                             </Badge>
                           )}
                         </div>
@@ -553,7 +553,7 @@ export default function ProjectStaffingNeed() {
                 className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
               >
                 <option value="">选择项目</option>
-                {projects.map((p) => (
+                {(projects || []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
@@ -599,7 +599,7 @@ export default function ProjectStaffingNeed() {
             <div className="space-y-2">
               <Label>所需技能（多选）</Label>
               <div className="flex flex-wrap gap-2 p-3 rounded-md border border-white/10 bg-white/5 min-h-[60px]">
-                {tags.map((tag) => {
+                {(tags || []).map((tag) => {
                   const isSelected = formData.required_skill_ids.includes(
                     tag.id,
                   );
@@ -616,7 +616,7 @@ export default function ProjectStaffingNeed() {
                         setFormData((prev) => ({
                           ...prev,
                           required_skill_ids: isSelected
-                            ? prev.required_skill_ids.filter(
+                            ? (prev.required_skill_ids || []).filter(
                                 (id) => id !== tag.id,
                               )
                             : [...prev.required_skill_ids, tag.id],

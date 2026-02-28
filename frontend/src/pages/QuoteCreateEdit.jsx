@@ -104,7 +104,7 @@ export default function QuoteCreateEdit() {
         risk_terms: quote.risk_terms || "",
         note: quote.note || "",
       });
-      if (quote.versions && quote.versions.length > 0) {
+      if (quote.versions && quote.versions?.length > 0) {
         const latestVersion = quote.versions[0];
         setVersionData({
           version_no: latestVersion.version_no || "V1.0",
@@ -143,7 +143,7 @@ export default function QuoteCreateEdit() {
     ]);
   };
   const handleRemoveItem = (index) => {
-    setItems(items.filter((_, i) => i !== index));
+    setItems((items || []).filter((_, i) => i !== index));
     calculateTotals();
   };
   const handleItemChange = (index, field, value) => {
@@ -162,8 +162,8 @@ export default function QuoteCreateEdit() {
     calculateTotals();
   };
   const calculateTotals = () => {
-    const totalPrice = items.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const totalCost = items.reduce(
+    const totalPrice = (items || []).reduce((sum, item) => sum + (item.amount || 0), 0);
+    const totalCost = (items || []).reduce(
       (sum, item) => sum + (item.cost_amount || 0),
       0,
     );
@@ -185,7 +185,7 @@ export default function QuoteCreateEdit() {
       alert("请选择商机");
       return;
     }
-    if (items.length === 0) {
+    if (items?.length === 0) {
       alert("请至少添加一条报价明细");
       return;
     }
@@ -195,7 +195,7 @@ export default function QuoteCreateEdit() {
         ...formData,
         version: {
           ...versionData,
-          items: items.map((item) => ({
+          items: (items || []).map((item) => ({
             item_name: item.item_name,
             item_code: item.item_code,
             specification: item.specification,
@@ -274,7 +274,7 @@ export default function QuoteCreateEdit() {
                   <SelectValue placeholder="选择商机" />
                 </SelectTrigger>
                 <SelectContent>
-                  {opportunities.map((opp) => (
+                  {(opportunities || []).map((opp) => (
                     <SelectItem key={opp.id} value={opp.id.toString()}>
                       {opp.opp_code} - {opp.opp_name}
                     </SelectItem>
@@ -333,7 +333,7 @@ export default function QuoteCreateEdit() {
           </div>
         </CardHeader>
         <CardContent>
-          {items.length === 0 ? (
+          {items?.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
               <Button variant="outline" onClick={handleAddItem}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -359,7 +359,7 @@ export default function QuoteCreateEdit() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item, index) => (
+                {(items || []).map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>

@@ -154,7 +154,7 @@ export default function AssemblyKitBoard() {
       const res = await assemblyKitApi.generateSuggestions({ scope: "WEEKLY" });
       console.log("排产建议生成成功:", res.data);
       if (res.data?.suggestions) {
-        alert(`已生成 ${res.data.suggestions.length} 条排产建议`);
+        alert(`已生成 ${res.data.suggestions?.length} 条排产建议`);
         fetchDashboardData();
       }
     } catch (error) {
@@ -259,7 +259,7 @@ export default function AssemblyKitBoard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {projects.map((proj) =>
+              {(projects || []).map((proj) =>
               <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.name || proj.project_name}
               </SelectItem>
@@ -366,7 +366,7 @@ export default function AssemblyKitBoard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-6 gap-4">
-            {stageStats.map((stage, index) => {
+            {(stageStats || []).map((stage, index) => {
               const Icon = stageIcons[stage.stage_code] || Package;
               const isBlocked = stage.blocked_count > 0;
               return (
@@ -473,7 +473,7 @@ export default function AssemblyKitBoard() {
           <CardContent>
             {recentAnalyses.length > 0 ?
             <div className="space-y-3">
-                {recentAnalyses.map((analysis) =>
+                {(recentAnalyses || []).map((analysis) =>
               <div
                 key={analysis.id}
                 className={cn(
@@ -562,7 +562,7 @@ export default function AssemblyKitBoard() {
           <CardContent>
             {pendingSuggestions.length > 0 ?
             <div className="space-y-3">
-                {pendingSuggestions.map((suggestion) =>
+                {(pendingSuggestions || []).map((suggestion) =>
               <div
                 key={suggestion.id}
                 className="p-4 rounded-lg border bg-blue-50/50 border-blue-200">
@@ -640,7 +640,7 @@ export default function AssemblyKitBoard() {
                             人
                           </div>
                           {suggestion.resource_allocation.conflicts &&
-                    suggestion.resource_allocation.conflicts.length >
+                    suggestion.resource_allocation.conflicts?.length >
                     0 &&
                     <div className="text-red-500">
                                 资源冲突:{" "}
@@ -694,7 +694,7 @@ export default function AssemblyKitBoard() {
       </div>
 
       {/* Shortage Alerts List */}
-      {alerts && alerts.items && alerts.items.length > 0 &&
+      {alerts && alerts.items && alerts.items?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -719,7 +719,7 @@ export default function AssemblyKitBoard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {alerts.items.map((alert) => {
+                {(alerts.items || []).map((alert) => {
                 const config =
                 alertLevelConfig[alert.alert_level] || alertLevelConfig.L4;
                 return (
@@ -867,7 +867,7 @@ export default function AssemblyKitBoard() {
               {analysisDetail.shortage_details?.length > 0 &&
             <div>
                   <h4 className="font-medium mb-3">
-                    缺料明细 ({analysisDetail.shortage_details.length} 项)
+                    缺料明细 ({analysisDetail.shortage_details?.length} 项)
                   </h4>
                   <Table>
                     <TableHeader>
@@ -883,7 +883,7 @@ export default function AssemblyKitBoard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analysisDetail.shortage_details.map((detail) =>
+                      {(analysisDetail.shortage_details || []).map((detail) =>
                   <TableRow key={detail.id}>
                           <TableCell className="font-mono text-sm">
                             {detail.material_code}

@@ -16,7 +16,7 @@ import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constant
  * @param {function} props.onViewDetail - 查看详情回调
  */
 export default function PaymentTable({ payments, onInvoice, onViewDetail }) {
-  if (payments.length === 0) {
+  if (payments?.length === 0) {
     return (
       <Card className="bg-slate-800/50 border-slate-700/50">
         <CardContent className="p-12 text-center">
@@ -43,7 +43,7 @@ export default function PaymentTable({ payments, onInvoice, onViewDetail }) {
           </thead>
           <tbody>
             <AnimatePresence>
-              {payments.map((payment, index) => {
+              {(payments || []).map((payment, index) => {
                 const paymentType = getPaymentType(payment.type);
                 const paymentStatus = getPaymentStatus(payment.status);
                 const StatusIcon = paymentStatus.icon;

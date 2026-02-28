@@ -194,13 +194,13 @@ export function ReadinessDashboard({
 }) {
   // 计算统计数据
   const stats = useMemo(() => {
-    const total = materials.length;
-    const ready = materials.filter((m) => isMaterialReady(m.readiness_status)).length;
-    const inProgress = materials.filter((m) => isMaterialInProgress(m.readiness_status)).length;
-    const delayed = materials.filter((m) => isMaterialDelayed(m.readiness_status)).length;
+    const total = materials?.length;
+    const ready = (materials || []).filter((m) => isMaterialReady(m.readiness_status)).length;
+    const inProgress = (materials || []).filter((m) => isMaterialInProgress(m.readiness_status)).length;
+    const delayed = (materials || []).filter((m) => isMaterialDelayed(m.readiness_status)).length;
 
     // 计算平均进度
-    const totalProgress = materials.reduce((sum, m) => {
+    const totalProgress = (materials || []).reduce((sum, m) => {
       return sum + calculateReadinessProgress(m.readiness_status);
     }, 0);
     const avgProgress = total > 0 ? Math.round(totalProgress / total) : 0;
@@ -286,7 +286,7 @@ export function ReadinessDashboard({
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) =>
+        {(statCards || []).map((stat, index) =>
         <Card key={index}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">

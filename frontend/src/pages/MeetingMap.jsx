@@ -33,8 +33,8 @@ export default function MeetingMap() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [meetings, setMeetings] = useState([]);
-  const [byLevel, setByLevel] = useState({});
-  const [byCycle, setByCycle] = useState({});
+  const [byLevel, setByLevel] = useState([]);
+  const [byCycle, setByCycle] = useState([]);
   const [filters, setFilters] = useState({
     rhythm_level: searchParams.get("rhythm_level") || "",
     cycle_type: searchParams.get("cycle_type") || "",
@@ -158,10 +158,10 @@ export default function MeetingMap() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-lg font-semibold">{config.label}</h3>
-                    <Badge>{items.length} 场会议</Badge>
+                    <Badge>{items?.length} 场会议</Badge>
                   </div>
                   <div className="space-y-2">
-                    {items.map((meeting) => {
+                    {(items || []).map((meeting) => {
                       const status =
                         statusConfig[meeting.status] || statusConfig.SCHEDULED;
                       return (
@@ -227,10 +227,10 @@ export default function MeetingMap() {
                     <h3 className="text-lg font-semibold">
                       {cycleLabels[cycle] || cycle}
                     </h3>
-                    <Badge>{items.length} 场会议</Badge>
+                    <Badge>{items?.length} 场会议</Badge>
                   </div>
                   <div className="space-y-2">
-                    {items.map((meeting) => {
+                    {(items || []).map((meeting) => {
                       const status =
                         statusConfig[meeting.status] || statusConfig.SCHEDULED;
                       const config = rhythmLevelConfig[meeting.rhythm_level];

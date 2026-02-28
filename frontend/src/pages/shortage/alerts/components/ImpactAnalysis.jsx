@@ -88,16 +88,16 @@ const ImpactAnalysis = ({ alert }) => {
         </div>
 
         {/* 受影响项目 */}
-        {alert.impact_projects && alert.impact_projects.length > 0 && (
+        {alert.impact_projects && alert.impact_projects?.length > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center gap-2 mb-3">
               <Folder className="h-4 w-4 text-gray-500" />
               <h4 className="font-semibold text-gray-900">
-                受影响项目 ({alert.impact_projects.length})
+                受影响项目 ({alert.impact_projects?.length})
               </h4>
             </div>
             <div className="space-y-2">
-              {alert.impact_projects.map((project, index) => (
+              {(alert.impact_projects || []).map((project, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

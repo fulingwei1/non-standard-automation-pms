@@ -85,7 +85,7 @@ export function PurchaseHistory({
       byType: {}
     };
 
-    purchases.forEach((purchase) => {
+    (purchases || []).forEach((purchase) => {
       const amount = Number(purchase.contract_amount || purchase.total_amount || 0);
       stats.totalAmount += amount;
 
@@ -111,15 +111,15 @@ export function PurchaseHistory({
 
   // 获取年度统计
   const getYearStats = () => {
-    const years = [...new Set(purchases.map((p) =>
+    const years = [...new Set((purchases || []).map((p) =>
     new Date(p.contract_date || p.created_at).getFullYear()
     ))].sort((a, b) => b - a);
 
-    return years.map((year) => {
-      const yearPurchases = purchases.filter((p) =>
+    return (years || []).map((year) => {
+      const yearPurchases = (purchases || []).filter((p) =>
       new Date(p.contract_date || p.created_at).getFullYear() === year
       );
-      const yearTotal = yearPurchases.reduce((sum, p) =>
+      const yearTotal = (yearPurchases || []).reduce((sum, p) =>
       sum + (Number(p.contract_amount || p.total_amount) || 0), 0
       );
 
@@ -209,7 +209,7 @@ export function PurchaseHistory({
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部年份</SelectItem>
-                {[...new Set(yearStats.map((s) => s.year))].sort((a, b) => b - a).map((year) =>
+                {[...new Set((yearStats || []).map((s) => s.year))].sort((a, b) => b - a).map((year) =>
                 <SelectItem key={year} value={year} className="text-white">
                     {year}年
                 </SelectItem>
@@ -274,7 +274,7 @@ export function PurchaseHistory({
           </div> :
 
           <div className="space-y-3">
-              {filteredPurchases.map((purchase) => {
+              {(filteredPurchases || []).map((purchase) => {
               const statusConfig = getContractStatusConfig(purchase.status || 'DRAFT');
               const contractDate = purchase.contract_date || purchase.created_at;
 
@@ -478,7 +478,7 @@ export function PurchaseDetail({ purchase }) {
             </div>
             <div>
               <span className="text-slate-500">付款方式:</span>
-              <span className="text-white ml-2">{payment_terms[payment_terms.find((t) => t.value === purchase.payment_terms)?.value] || '未指定'}</span>
+              <span className="text-white ml-2">{payment_terms[(payment_terms || []).find((t) => t.value === purchase.payment_terms)?.value] || '未指定'}</span>
             </div>
             <div>
               <span className="text-slate-500">质保期:</span>
@@ -498,11 +498,11 @@ export function PurchaseDetail({ purchase }) {
         }
 
         {/* 附件列表 */}
-        {purchase.attachments && purchase.attachments.length > 0 &&
+        {purchase.attachments && purchase.attachments?.length > 0 &&
         <div>
             <h3 className="text-sm font-medium text-white mb-2">相关附件</h3>
             <div className="space-y-2">
-              {purchase.attachments.map((attachment, index) =>
+              {(purchase.attachments || []).map((attachment, index) =>
             <div
               key={index}
               className="flex items-center justify-between p-2 bg-slate-700/50 rounded text-sm">

@@ -103,7 +103,7 @@ export default function WorkOrderCard({ order, onAction }) {
 
         {/* 操作按钮 */}
         <div className="flex items-center gap-2">
-          {availableActions.map((action) =>
+          {(availableActions || []).map((action) =>
           <Button
             key={action.key}
             variant={action.key === 'detail' ? 'outline' : 'default'}

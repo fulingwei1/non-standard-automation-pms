@@ -42,7 +42,7 @@ export function TaskFilters({
                     <Filter className="w-4 h-4" />
                     <span>状态筛选:</span>
                 </div>
-                {filterOptions.map(option => {
+                {(filterOptions || []).map(option => {
                     const Icon = option.icon;
                     const isActive = statusFilter === option.value;
 

@@ -198,7 +198,7 @@ export function CrossDepartmentProgress({ projectId }) {
 
           <div className="space-y-4">
             {department_progress && department_progress.length > 0 ? (
-              department_progress.map((dept, index) => (
+              (department_progress || []).map((dept, index) => (
                 <motion.div
                   key={dept.department}
                   initial={{ opacity: 0, y: 20 }}
@@ -277,7 +277,7 @@ export function CrossDepartmentProgress({ projectId }) {
             </div>
 
             <div className="space-y-3">
-              {active_delays.map((task) => (
+              {(active_delays || []).map((task) => (
                 <motion.div
                   key={task.task_id}
                   initial={{ opacity: 0, x: -20 }}

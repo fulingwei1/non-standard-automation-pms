@@ -179,14 +179,14 @@ export default function ProjectDetail() {
 
   const calculateProgress = () => {
     if (!stages || stages.length === 0) {return 0;}
-    const completedStages = stages.filter((stage) => stage.status === 'completed').length;
+    const completedStages = (stages || []).filter((stage) => stage.status === 'completed').length;
     return Math.round(completedStages / stages.length * 100);
   };
 
   const calculateBudgetUtilization = () => {
     const budget = project?.budget_amount || project?.budget || 0;
     if (!project || !budget) {return 0;}
-    const totalCosts = costs.reduce((sum, cost) => sum + (cost.amount || 0), 0);
+    const totalCosts = (costs || []).reduce((sum, cost) => sum + (cost.amount || 0), 0);
     return Math.round(totalCosts / budget * 100);
   };
 
@@ -386,7 +386,7 @@ export default function ProjectDetail() {
                 </Button>
               </div>
               <div className="space-y-3">
-                {members.map((member) =>
+                {(members || []).map((member) =>
                 <div key={member.id} className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <UserAvatar user={member.user} size="sm" />
@@ -410,7 +410,7 @@ export default function ProjectDetail() {
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4">项目阶段</h3>
               <div className="space-y-3">
-                {stages.map((stage, index) =>
+                {(stages || []).map((stage, index) =>
                 <div key={stage.id} className="flex items-center space-x-4">
                     <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium",
@@ -470,7 +470,7 @@ export default function ProjectDetail() {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold mb-4">项目里程碑</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {milestones.map((milestone) =>
+              {(milestones || []).map((milestone) =>
               <div key={milestone.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">{milestone.name}</h4>
@@ -504,7 +504,7 @@ export default function ProjectDetail() {
               </Button>
             </div>
             <div className="space-y-3">
-              {documents.map((doc) =>
+              {(documents || []).map((doc) =>
               <div key={doc.id} className="flex items-center justify-between p-3 border rounded">
                   <div className="flex items-center space-x-3">
                     <FileText className="h-5 w-5 text-blue-500" />
@@ -523,7 +523,7 @@ export default function ProjectDetail() {
                   </div>
               </div>
               )}
-              {documents.length === 0 &&
+              {documents?.length === 0 &&
               <p className="text-center text-gray-500 py-4">暂无文档</p>
               }
             </div>

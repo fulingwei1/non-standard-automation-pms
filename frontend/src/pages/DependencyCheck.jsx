@@ -403,13 +403,13 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {cycleIssues.map((cycle, idx) =>
+              {(cycleIssues || []).map((cycle, idx) =>
             <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-4">
                   <div className="font-medium text-red-900 mb-2">
                     循环 {idx + 1}:
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {cycle.map((taskName, taskIdx) =>
+                    {(cycle || []).map((taskName, taskIdx) =>
                 <React.Fragment key={taskIdx}>
                         <span className="text-sm text-red-800">
                           {taskName}
@@ -442,7 +442,7 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {timingIssues.map((issue, idx) =>
+              {(timingIssues || []).map((issue, idx) =>
             <div key={idx} className="border border-amber-200 rounded-lg p-4">
                   <div className="font-medium text-slate-900 mb-2">
                     {issue.task_name}
@@ -480,7 +480,7 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {missingIssues.map((issue, idx) =>
+              {(missingIssues || []).map((issue, idx) =>
             <div key={idx} className="border border-blue-200 rounded-lg p-4">
                   <div className="font-medium text-slate-900 mb-2">
                     {issue.task_name}
@@ -518,7 +518,7 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {otherIssues.map((issue, idx) =>
+              {(otherIssues || []).map((issue, idx) =>
             <div
               key={idx}
               className={`border rounded-lg p-4 ${severityColors[issue.severity] || "border-slate-200"}`}>
@@ -574,7 +574,7 @@ export default function DependencyCheck({ projectId }) {
               <div>
                     <h4 className="text-sm font-semibold text-slate-900 mb-3">循环依赖（需手动处理）</h4>
                     <div className="space-y-2">
-                      {previewData.cycle_paths.map((cycle, idx) =>
+                      {(previewData.cycle_paths || []).map((cycle, idx) =>
                   <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-3">
                           <div className="text-sm text-red-800">
                             循环 {idx + 1}: {cycle.join(" → ")}

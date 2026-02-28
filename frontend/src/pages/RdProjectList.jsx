@@ -299,7 +299,7 @@ function RdProjectFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">请选择分类</SelectItem>
-                    {categories.map((cat) => (
+                    {(categories || []).map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         {cat.category_name}
                       </SelectItem>
@@ -651,7 +651,7 @@ export default function RdProjectList() {
             <SkeletonCard key={i} />
           ))}
         </div>
-      ) : projects.length === 0 ? (
+      ) : projects?.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <FileText className="h-12 w-12 text-slate-500 mx-auto mb-4" />
@@ -676,7 +676,7 @@ export default function RdProjectList() {
                 : "grid-cols-1",
             )}
           >
-            {projects.map((project) => (
+            {(projects || []).map((project) => (
               <RdProjectCard
                 key={project.id}
                 project={project}

@@ -171,12 +171,12 @@ export default function CostAccounting() {
 
   const normalizedCosts = useMemo(() => {
     if (!Array.isArray(rawCosts)) {return [];}
-    return rawCosts.map(normalizeCost);
+    return (rawCosts || []).map(normalizeCost);
   }, [rawCosts]);
 
   // Filter costs
   const filteredCosts = useMemo(() => {
-    return normalizedCosts.filter((cost) => {
+    return (normalizedCosts || []).filter((cost) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
       !searchTerm ||
@@ -196,8 +196,8 @@ export default function CostAccounting() {
 
   // Statistics
   const stats = useMemo(() => {
-    const total = filteredCosts.reduce((sum, c) => sum + c.amount, 0);
-    const byType = filteredCosts.reduce((acc, c) => {
+    const total = (filteredCosts || []).reduce((sum, c) => sum + c.amount, 0);
+    const byType = (filteredCosts || []).reduce((acc, c) => {
       acc[c.costType] = (acc[c.costType] || 0) + c.amount;
       return acc;
     }, {});
@@ -213,7 +213,7 @@ export default function CostAccounting() {
   // Projects list
   const projects = useMemo(() => {
     const projectSet = new Set();
-    normalizedCosts.forEach((cost) => {
+    (normalizedCosts || []).forEach((cost) => {
       if (!cost.projectId || !cost.projectName) {return;}
       projectSet.add(
         JSON.stringify({ id: cost.projectId, name: cost.projectName })
@@ -364,7 +364,7 @@ export default function CostAccounting() {
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
                 <option value="all">全部项目</option>
-                {projects.map((p) =>
+                {(projects || []).map((p) =>
                 <option key={p.id} value={p.id}>
                     {p.name}
                 </option>
@@ -416,7 +416,7 @@ export default function CostAccounting() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {filteredCosts.map((cost) => {
+                  {(filteredCosts || []).map((cost) => {
                     const typeConf = costTypeConfig[cost.costType];
                     const TypeIcon = typeConf?.icon || FileText;
                     return (
@@ -531,10 +531,10 @@ export default function CostAccounting() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {projects.slice(0, 5).map((project) => {
-                  const projectCosts = filteredCosts.filter(
+                  const projectCosts = (filteredCosts || []).filter(
                     (c) => c.projectId === project.id
                   );
-                  const projectTotal = projectCosts.reduce(
+                  const projectTotal = (projectCosts || []).reduce(
                     (sum, c) => sum + c.amount,
                     0
                   );
@@ -581,7 +581,7 @@ export default function CostAccounting() {
                 <label className="text-sm text-slate-400">项目 *</label>
                 <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
                   <option value="">请选择项目</option>
-                  {projects.map((p) =>
+                  {(projects || []).map((p) =>
                   <option key={p.id} value={p.id}>
                       {p.name}
                   </option>

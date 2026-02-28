@@ -78,18 +78,18 @@ export default function AssemblerTaskCenter() {
     fetchTasks();
   }, [fetchTasks]);
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = (tasks || []).filter((task) => {
     if (statusFilter === "all") {return true;}
     return task.status === statusFilter;
   });
 
   const stats = {
-    total: tasks.length,
-    in_progress: tasks.filter((t) => t.status === "in_progress").length,
-    pending: tasks.filter((t) => t.status === "pending").length,
-    blocked: tasks.filter((t) => t.status === "blocked").length,
-    completed: tasks.filter((t) => t.status === "completed").length,
-    shortage: tasks.filter((t) =>
+    total: tasks?.length,
+    in_progress: (tasks || []).filter((t) => t.status === "in_progress").length,
+    pending: (tasks || []).filter((t) => t.status === "pending").length,
+    blocked: (tasks || []).filter((t) => t.status === "blocked").length,
+    completed: (tasks || []).filter((t) => t.status === "completed").length,
+    shortage: (tasks || []).filter((t) =>
     t.materials?.some((m) => m.status === "shortage")
     ).length
   };
@@ -114,7 +114,7 @@ export default function AssemblerTaskCenter() {
         }).catch(() => {
           // fallback to local state
           setTasks((prev) =>
-            prev.map((t) =>
+            (prev || []).map((t) =>
               t.id === task.id ? { ...t, status: "in_progress" } : t
             )
           );
@@ -133,7 +133,7 @@ export default function AssemblerTaskCenter() {
     } catch (_err) {
       // fallback to local state
       setTasks((prev) =>
-        prev.map((t) =>
+        (prev || []).map((t) =>
           t.id === taskId
             ? {
                 ...t,
@@ -262,7 +262,7 @@ export default function AssemblerTaskCenter() {
         variants={fadeIn}
         className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        {filteredTasks.map((task) =>
+        {(filteredTasks || []).map((task) =>
         <AssemblyTaskCard key={task.id} task={task} onAction={handleAction} />
         )}
       </motion.div>

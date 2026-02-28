@@ -36,7 +36,7 @@ export function VirtualizedList({
 
   // 计算总高度
   const totalHeight = useMemo(() => {
-    return items.reduce((sum, _, index) => sum + getItemHeight(index), 0);
+    return (items || []).reduce((sum, _, index) => sum + getItemHeight(index), 0);
   }, [items, itemHeight]);
 
   // 计算可见范围
@@ -46,7 +46,7 @@ export function VirtualizedList({
     let end = 0;
 
     // 找到起始索引
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < items?.length; i++) {
       const height = getItemHeight(i);
       if (currentTop + height > scrollTop) {
         start = Math.max(0, i - overscan);
@@ -57,10 +57,10 @@ export function VirtualizedList({
 
     // 找到结束索引
     let visibleTop = currentTop;
-    for (let i = start; i < items.length; i++) {
+    for (let i = start; i < items?.length; i++) {
       const height = getItemHeight(i);
       if (visibleTop > scrollTop + containerHeight) {
-        end = Math.min(items.length, i + overscan);
+        end = Math.min(items?.length, i + overscan);
         break;
       }
       visibleTop += height;
@@ -75,7 +75,7 @@ export function VirtualizedList({
 
     return {
       startIndex: start,
-      endIndex: Math.min(items.length, end + overscan),
+      endIndex: Math.min(items?.length, end + overscan),
       offsetY: offset,
     };
   }, [scrollTop, containerHeight, items, overscan, itemHeight]);
@@ -97,7 +97,7 @@ export function VirtualizedList({
     }));
   }, [items, startIndex, endIndex]);
 
-  if (items.length === 0) {
+  if (items?.length === 0) {
     return (
       <div
         className={cn("flex items-center justify-center", className)}
@@ -117,7 +117,7 @@ export function VirtualizedList({
     >
       <div style={{ height: totalHeight, position: "relative" }}>
         <div style={{ transform: `translateY(${offsetY}px)` }}>
-          {visibleItems.map(({ item, index }) => (
+          {(visibleItems || []).map(({ item, index }) => (
             <div key={index} style={{ height: getItemHeight(index) }}>
               {renderItem(item, index)}
             </div>

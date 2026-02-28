@@ -18,24 +18,24 @@ export function ECNStatsCards({ stats = {}, ecns = [] }) {
   // 如果没有传入统计数据，从ecns计算
   const computedStats = stats.total ? stats : {
     total: ecns.length,
-    pending: ecns.filter(ecn => 
+    pending: (ecns || []).filter(ecn => 
       ['SUBMITTED', 'EVALUATING', 'PENDING_APPROVAL'].includes(ecn.status)
     ).length,
-    inProgress: ecns.filter(ecn => 
+    inProgress: (ecns || []).filter(ecn => 
       ['EXECUTING', 'PENDING_VERIFY'].includes(ecn.status)
     ).length,
-    completed: ecns.filter(ecn => ecn.status === 'COMPLETED').length,
-    urgent: ecns.filter(ecn => ecn.priority === 'URGENT').length,
-    high: ecns.filter(ecn => ecn.priority === 'HIGH').length,
+    completed: (ecns || []).filter(ecn => ecn.status === 'COMPLETED').length,
+    urgent: (ecns || []).filter(ecn => ecn.priority === 'URGENT').length,
+    high: (ecns || []).filter(ecn => ecn.priority === 'HIGH').length,
     // 计算本月新增
-    thisMonth: ecns.filter(ecn => {
+    thisMonth: (ecns || []).filter(ecn => {
       const createdDate = new Date(ecn.created_at || ecn.createdAt);
       const now = new Date();
       return createdDate.getMonth() === now.getMonth() && 
              createdDate.getFullYear() === now.getFullYear();
     }).length,
     // 计算本月完成
-    thisMonthCompleted: ecns.filter(ecn => {
+    thisMonthCompleted: (ecns || []).filter(ecn => {
       const completedDate = new Date(ecn.completed_at || ecn.updatedAt);
       const now = new Date();
       return ecn.status === 'COMPLETED' &&
@@ -125,7 +125,7 @@ export function ECNStatsCards({ stats = {}, ecns = [] }) {
     <div className="space-y-6">
       {/* 主要统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cardConfigs.map((config, index) => {
+        {(cardConfigs || []).map((config, index) => {
           const Icon = config.icon;
           return (
             <Card 
@@ -157,7 +157,7 @@ export function ECNStatsCards({ stats = {}, ecns = [] }) {
 
       {/* 次要统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {urgentCards.map((config, index) => {
+        {(urgentCards || []).map((config, index) => {
           const Icon = config.icon;
           return (
             <Card 
@@ -198,7 +198,7 @@ export function ECNStatsCards({ stats = {}, ecns = [] }) {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {Object.entries(statusConfigs).map(([key, config]) => {
-              const count = ecns.filter(ecn => ecn.status === key).length;
+              const count = (ecns || []).filter(ecn => ecn.status === key).length;
               if (count === 0) {return null;}
               
               return (

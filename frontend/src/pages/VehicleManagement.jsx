@@ -72,7 +72,7 @@ export default function VehicleManagement() {
   }, []);
 
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter((vehicle) => {
+    return (vehicles || []).filter((vehicle) => {
       const matchSearch =
       vehicle.plateNumber.includes(searchText) ||
       vehicle.brand.includes(searchText) ||
@@ -85,9 +85,9 @@ export default function VehicleManagement() {
 
   const stats = useMemo(() => {
     const total = vehicles.length;
-    const inUse = vehicles.filter((v) => v.status === "in_use").length;
-    const available = vehicles.filter((v) => v.status === "available").length;
-    const maintenance = vehicles.filter(
+    const inUse = (vehicles || []).filter((v) => v.status === "in_use").length;
+    const available = (vehicles || []).filter((v) => v.status === "available").length;
+    const maintenance = (vehicles || []).filter(
       (v) => v.status === "maintenance"
     ).length;
     return { total, inUse, available, maintenance };
@@ -267,7 +267,7 @@ export default function VehicleManagement() {
 
           {/* Vehicles List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredVehicles.map((vehicle) =>
+            {(filteredVehicles || []).map((vehicle) =>
             <Card key={vehicle.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">

@@ -20,7 +20,7 @@ export default function ProjectProgress({ view: _view, filter: _filter, data }) 
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {projects.map(project => (
+          {(projects || []).map(project => (
             <div key={project.id} className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium">{project.name}</span>

@@ -115,7 +115,7 @@ export default function CostTemplateManagement() {
     let filtered = [...templates];
 
     if (searchTerm) {
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (t) =>
         t.template_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.template_code?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -123,11 +123,11 @@ export default function CostTemplateManagement() {
     }
 
     if (typeFilter !== "all") {
-      filtered = filtered.filter((t) => t.template_type === typeFilter);
+      filtered = (filtered || []).filter((t) => t.template_type === typeFilter);
     }
 
     if (equipmentFilter !== "all") {
-      filtered = filtered.filter((t) => t.equipment_type === equipmentFilter);
+      filtered = (filtered || []).filter((t) => t.equipment_type === equipmentFilter);
     }
 
     setFilteredTemplates(filtered);
@@ -296,7 +296,7 @@ export default function CostTemplateManagement() {
   // Get unique equipment types
   const equipmentTypes = useMemo(() => {
     const types = new Set();
-    templates.forEach((t) => {
+    (templates || []).forEach((t) => {
       if (t.equipment_type) {types.add(t.equipment_type);}
     });
     return Array.from(types);
@@ -352,7 +352,7 @@ export default function CostTemplateManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部设备</SelectItem>
-                {equipmentTypes.map((type) =>
+                {(equipmentTypes || []).map((type) =>
                 <SelectItem key={type} value={type}>
                     {type}
                 </SelectItem>
@@ -365,7 +365,7 @@ export default function CostTemplateManagement() {
 
       {/* Template List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTemplates.map((template) =>
+        {(filteredTemplates || []).map((template) =>
         <Card
           key={template.id}
           className="hover:border-slate-600 transition-colors">
@@ -698,7 +698,7 @@ export default function CostTemplateManagement() {
                 )}
 
                 {(!formData.cost_structure?.categories ||
-                formData.cost_structure.categories.length === 0) &&
+                formData.cost_structure.categories?.length === 0) &&
                 <div className="text-center py-8 text-slate-400">
                     点击"添加分类"开始构建成本结构
                 </div>

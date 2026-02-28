@@ -17,7 +17,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
 };
 
 const DeliveryTracking = ({ deliveries = [], loading }) => {
-  const trackingDeliveries = deliveries.filter(
+  const trackingDeliveries = (deliveries || []).filter(
     (d) => d.status === DELIVERY_STATUS.SHIPPED.value || d.status === DELIVERY_STATUS.IN_TRANSIT.value
   );
 

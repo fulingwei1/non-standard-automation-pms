@@ -94,7 +94,7 @@ export default function IssueManagement() {
         setEmptyHint("数据库暂无问题数据");
       }
       // 映射 API 字段名到前端期望的字段名
-      const issuesData = dataItems.map((issue) => ({
+      const issuesData = (dataItems || []).map((issue) => ({
         ...issue,
         // 兼容字段映射
         id: issue.issue_no || issue.id,

@@ -137,7 +137,7 @@ function DefectAnalysisTab() {
 
       {analyses.length > 0 ? (
         <div className="space-y-3">
-          {analyses.map((a) => (
+          {(analyses || []).map((a) => (
             <div key={a.id} className="p-4 rounded-lg bg-surface-300 border border-white/5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-text-primary">分析 #{a.id}</span>
@@ -221,7 +221,7 @@ function ReworkTab() {
           <RefreshCw className="h-6 w-6 text-violet-400 animate-spin" />
           <span className="ml-2 text-text-muted">加载中...</span>
         </div>
-      ) : data.items.length === 0 ? (
+      ) : data.items?.length === 0 ? (
         <div className="text-center py-12 text-text-muted">暂无返工单</div>
       ) : (
         <>
@@ -238,7 +238,7 @@ function ReworkTab() {
                 </tr>
               </thead>
               <tbody>
-                {data.items.map((item) => (
+                {(data.items || []).map((item) => (
                   <tr key={item.id} className="border-b border-white/5 hover:bg-surface-300 transition-colors">
                     <td className="px-4 py-2 text-text-primary font-medium">#{item.id}</td>
                     <td className="px-4 py-2 text-text-muted">{item.work_order_id || item.original_order_id || "-"}</td>

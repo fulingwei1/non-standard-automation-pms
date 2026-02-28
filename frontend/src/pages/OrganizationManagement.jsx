@@ -91,7 +91,7 @@ function OrgTreeNode({ unit, level = 0, onEdit, onView, onDelete, onAddChild, al
         )}
         style={{ paddingLeft: `${level * 20 + 8}px` }}
       >
-        {unit.children && unit.children.length > 0 ? (
+        {unit.children && unit.children?.length > 0 ? (
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1 hover:bg-muted rounded"
@@ -134,7 +134,7 @@ function OrgTreeNode({ unit, level = 0, onEdit, onView, onDelete, onAddChild, al
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {availableChildTypes.map((childType) => (
+                {(availableChildTypes || []).map((childType) => (
                   <DropdownMenuItem
                     key={childType.value}
                     onClick={() => onAddChild(unit, childType.value)}
@@ -158,9 +158,9 @@ function OrgTreeNode({ unit, level = 0, onEdit, onView, onDelete, onAddChild, al
           )}
         </div>
       </div>
-      {expanded && unit.children && unit.children.length > 0 && (
+      {expanded && unit.children && unit.children?.length > 0 && (
         <div>
-          {unit.children.map((child) => (
+          {(unit.children || []).map((child) => (
             <OrgTreeNode
               key={child.id}
               unit={child}
@@ -225,7 +225,7 @@ export default function OrganizationManagement() {
         const fallbackData = fallbackResponse.formatted || fallbackResponse.data;
         const fallbackItems = fallbackData?.items || fallbackData || [];
         // 转换旧数据格式
-        const convertedData = fallbackItems.map(dept => ({
+        const convertedData = (fallbackItems || []).map(dept => ({
           id: dept.id,
           unit_code: dept.dept_code,
           unit_name: dept.dept_name,
@@ -380,12 +380,12 @@ export default function OrganizationManagement() {
 
   // 统计信息
   const stats = {
-    total: orgList.length || orgTree.reduce((acc, node) => {
+    total: orgList.length || (orgTree || []).reduce((acc, node) => {
       const countNodes = (n) => 1 + (n.children?.reduce((a, c) => a + countNodes(c), 0) || 0);
       return acc + countNodes(node);
     }, 0),
     byType: UNIT_TYPES.reduce((acc, type) => {
-      acc[type.value] = orgList.filter(u => u.unit_type === type.value).length;
+      acc[type.value] = (orgList || []).filter(u => u.unit_type === type.value).length;
       return acc;
     }, {}),
   };
@@ -486,7 +486,7 @@ export default function OrganizationManagement() {
             ) : viewMode === "tree" ? (
               <div className="space-y-1">
                 {orgTree.length > 0 ? (
-                  orgTree.map((unit) => (
+                  (orgTree || []).map((unit) => (
                     <OrgTreeNode
                       key={unit.id}
                       unit={unit}
@@ -520,7 +520,7 @@ export default function OrganizationManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {orgList.map((unit) => {
+                    {(orgList || []).map((unit) => {
                       const typeConfig = getUnitTypeConfig(unit.unit_type);
                       const Icon = typeConfig.icon;
                       return (

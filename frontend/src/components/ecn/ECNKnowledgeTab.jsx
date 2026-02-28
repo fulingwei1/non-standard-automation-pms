@@ -148,11 +148,11 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
                 </div>
               </div>
               {extractedSolution.solution_steps &&
-                extractedSolution.solution_steps.length > 0 && (
+                extractedSolution.solution_steps?.length > 0 && (
                   <div>
                     <div className="text-sm text-slate-500 mb-1">解决步骤</div>
                     <ol className="list-decimal list-inside space-y-1 p-3 bg-white rounded">
-                      {extractedSolution.solution_steps.map((step, idx) => (
+                      {(extractedSolution.solution_steps || []).map((step, idx) => (
                         <li key={idx} className="text-sm">
                           {step}
                         </li>
@@ -161,11 +161,11 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
                   </div>
                 )}
               {extractedSolution.keywords &&
-                extractedSolution.keywords.length > 0 && (
+                extractedSolution.keywords?.length > 0 && (
                   <div>
                     <div className="text-sm text-slate-500 mb-1">关键词</div>
                     <div className="flex flex-wrap gap-2">
-                      {extractedSolution.keywords.map((kw, idx) => (
+                      {(extractedSolution.keywords || []).map((kw, idx) => (
                         <Badge key={idx} variant="outline">
                           {kw}
                         </Badge>
@@ -190,7 +190,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {similarEcns.map((similar, idx) => (
+              {(similarEcns || []).map((similar, idx) => (
                 <Card key={idx} className="p-3">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
@@ -241,7 +241,7 @@ export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {solutionRecommendations.map((rec, idx) => (
+              {(solutionRecommendations || []).map((rec, idx) => (
                 <Card key={idx} className="p-3">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">

@@ -114,7 +114,7 @@ export default function ProjectGantt() {
           <div className="text-center py-8 text-slate-400">暂无任务数据</div> :
 
           <div className="space-y-4">
-              {ganttData.map((task) => {
+              {(ganttData || []).map((task) => {
               const progress = calculateProgress(task);
               const _startDate = new Date(
                 task.start_date || task.planned_start_date
@@ -163,10 +163,10 @@ export default function ProjectGantt() {
                         </div>
                         }
                           {task.dependencies &&
-                        task.dependencies.length > 0 &&
+                        task.dependencies?.length > 0 &&
                         <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                依赖 {task.dependencies.length} 个任务
+                                依赖 {task.dependencies?.length} 个任务
                         </div>
                         }
                         </div>

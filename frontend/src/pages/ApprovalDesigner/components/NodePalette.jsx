@@ -83,13 +83,13 @@ export function NodePalette() {
       styles={{ body: { padding: 12 } }}
     >
       <Space orientation="vertical" size={16} className="w-full">
-        {nodeGroups.map(group => (
+        {(nodeGroups || []).map(group => (
           <div key={group.title}>
             <Text type="secondary" className="text-xs mb-2 block">
               {group.title}
             </Text>
             <Space orientation="vertical" size={8} className="w-full">
-              {group.types.map(type => {
+              {(group.types || []).map(type => {
                 const config = NODE_TYPES[type];
                 if (!config) return null;
                 return (

@@ -185,7 +185,7 @@ export default function ProductionPlanList() {
     }
   };
   const filteredPlans = useMemo(() => {
-    return plans.filter((plan) => {
+    return (plans || []).filter((plan) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -234,7 +234,7 @@ export default function ProductionPlanList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -247,7 +247,7 @@ export default function ProductionPlanList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部车间</SelectItem>
-                {workshops.map((ws) =>
+                {(workshops || []).map((ws) =>
                 <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
                 </SelectItem>
@@ -306,7 +306,7 @@ export default function ProductionPlanList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPlans.map((plan) =>
+                {(filteredPlans || []).map((plan) =>
               <TableRow key={plan.id}>
                     <TableCell className="font-mono text-sm">
                       {plan.plan_no}
@@ -442,7 +442,7 @@ export default function ProductionPlanList() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {projects.map((proj) =>
+                      {(projects || []).map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
                       </SelectItem>
@@ -468,7 +468,7 @@ export default function ProductionPlanList() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {workshops.map((ws) =>
+                      {(workshops || []).map((ws) =>
                     <SelectItem key={ws.id} value={ws.id.toString()}>
                           {ws.workshop_name}
                     </SelectItem>

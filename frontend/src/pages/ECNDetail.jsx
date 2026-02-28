@@ -237,7 +237,7 @@ export default function ECNDetail() {
 
   const handleUpdateTask = (taskId, updateData) => {
     // Implement task update logic
-    setTasks((prev) => prev.map((task) =>
+    setTasks((prev) => (prev || []).map((task) =>
     task.id === taskId ? { ...task, ...updateData } : task
     ));
     toast.success("任务更新成功");
@@ -330,7 +330,7 @@ export default function ECNDetail() {
       <div className="max-w-[1600px] mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-8 w-full bg-slate-800/50 border border-slate-700">
-            {tabConfigs.map((tab) =>
+            {(tabConfigs || []).map((tab) =>
             <TabsTrigger
               key={tab.value}
               value={tab.value}

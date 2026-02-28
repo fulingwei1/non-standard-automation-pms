@@ -87,7 +87,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
     if (submitting) {return;}
 
     // 验证必填字段
-    if (!formData.project_id || !formData.project_ids || formData.project_ids.length === 0) {
+    if (!formData.project_id || !formData.project_ids || formData.project_ids?.length === 0) {
       toast.warning("请至少选择一个关联项目");
       return;
     }
@@ -111,7 +111,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
     try {
       const createData = {
         project_id: parseInt(formData.project_id),
-        project_ids: formData.project_ids.map((id) => parseInt(id)),
+        project_ids: (formData.project_ids || []).map((id) => parseInt(id)),
         customer_id: parseInt(formData.customer_id),
         problem_type: formData.problem_type,
         problem_desc: formData.problem_desc,
@@ -120,7 +120,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
         reported_phone: formData.reported_phone,
         remark: formData.remark,
         assignee_id: formData.assignee_id ? parseInt(formData.assignee_id) : null,
-        cc_user_ids: formData.cc_user_ids.map((id) => parseInt(id)),
+        cc_user_ids: (formData.cc_user_ids || []).map((id) => parseInt(id)),
         reported_time: new Date().toISOString()
       };
 
@@ -142,7 +142,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
   const removeProject = (projectId) => {
     setFormData((prev) => ({
       ...prev,
-      project_ids: prev.project_ids.filter((id) => id !== projectId)
+      project_ids: (prev.project_ids || []).filter((id) => id !== projectId)
     }));
   };
 
@@ -173,7 +173,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) =>
+                  {(customers || []).map((customer) =>
                   <SelectItem key={customer.id} value={customer.id.toString()}>
                       {customer.customer_name} ({customer.customer_code})
                   </SelectItem>
@@ -199,7 +199,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                     <SelectValue placeholder="选择主要项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) =>
+                    {(projects || []).map((project) =>
                     <SelectItem key={project.id} value={project.id.toString()}>
                         {project.project_code} - {project.project_name}
                     </SelectItem>
@@ -208,17 +208,17 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 </Select>
 
                 {/* Selected Projects */}
-                {formData.project_ids.length > 0 &&
+                {formData.project_ids?.length > 0 &&
                 <div className="flex flex-wrap gap-2">
-                    {formData.project_ids.map((projectId) => {
-                    const project = projects.find((p) => p.id.toString() === projectId);
+                    {(formData.project_ids || []).map((projectId) => {
+                    const project = (projects || []).find((p) => p.id.toString() === projectId);
                     return project ?
                     <div
                       key={projectId}
                       className="flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
 
                           <span>{project.project_code}</span>
-                          {formData.project_ids.length > 1 &&
+                          {formData.project_ids?.length > 1 &&
                       <button
                         onClick={() => removeProject(projectId)}
                         className="hover:text-blue-100">
@@ -324,7 +324,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   <SelectValue placeholder="选择处理人（可选）" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) =>
+                  {(users || []).map((user) =>
                   <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username} ({user.position || '工程师'})
                   </SelectItem>

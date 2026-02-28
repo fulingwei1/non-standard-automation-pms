@@ -154,7 +154,7 @@ export default function PresalesWorkstation() {
       const tickets = ticketsResponse.data?.items || ticketsResponse.data?.items || ticketsResponse.data || [];
 
       const transformedTasks = await Promise.all(
-        tickets.map(async (ticket) => {
+        (tickets || []).map(async (ticket) => {
           let solutionId = null;
           try {
             const solutionsResponse = await presaleApi.solutions.list({
@@ -201,7 +201,7 @@ export default function PresalesWorkstation() {
       const solutions =
       solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
 
-      const transformedSolutions = solutions.map((solution) => ({
+      const transformedSolutions = (solutions || []).map((solution) => ({
         id: solution.id,
         name: solution.name,
         customer: solution.customer_id ? "客户" : "",
@@ -232,7 +232,7 @@ export default function PresalesWorkstation() {
       });
       const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
 
-      const transformedTenders = tenders.map((tender) => ({
+      const transformedTenders = (tenders || []).map((tender) => ({
         id: tender.id,
         name: tender.tender_name || tender.project_name || "",
         customer: tender.customer_name || "",
@@ -254,7 +254,7 @@ export default function PresalesWorkstation() {
       const opportunities =
       opportunitiesResponse.data?.items || opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
 
-      const transformedOpportunities = opportunities.map((opp) => ({
+      const transformedOpportunities = (opportunities || []).map((opp) => ({
         id: opp.id,
         name: opp.name,
         customer: opp.customer_name || "",
@@ -266,13 +266,13 @@ export default function PresalesWorkstation() {
 
       setRelatedOpportunities(transformedOpportunities);
 
-      const pendingTickets = tickets.filter(
+      const pendingTickets = (tickets || []).filter(
         (t) => t.status === "PENDING"
       ).length;
-      const reviewingSolutions = solutions.filter(
+      const reviewingSolutions = (solutions || []).filter(
         (s) => s.status === "REVIEWING"
       ).length;
-      const totalEstimatedValue = transformedSolutions.reduce(
+      const totalEstimatedValue = (transformedSolutions || []).reduce(
         (sum, s) => sum + (s.amount || 0),
         0
       );
@@ -303,7 +303,7 @@ export default function PresalesWorkstation() {
         title: "投标项目",
         value: tenders.length.toString(),
         subtitle: `本月截止 ${
-        tenders.filter((t) => {
+        (tenders || []).filter((t) => {
           const deadline = new Date(t.submission_deadline);
           const now = new Date();
           return (
@@ -336,7 +336,7 @@ export default function PresalesWorkstation() {
       setRecentTenders([]);
       setRelatedOpportunities([]);
       setStats(
-        statsData.map((s) => ({ ...s, value: "0", subtitle: "暂无数据" }))
+        (statsData || []).map((s) => ({ ...s, value: "0", subtitle: "暂无数据" }))
       );
     } finally {
       setLoading(false);

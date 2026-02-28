@@ -84,7 +84,7 @@ export default function HREmployeesTab({
             className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
           >
             <option value="all">全部部门</option>
-            {departments.map((dept) => (
+            {(departments || []).map((dept) => (
               <option key={dept.id} value={dept.dept_name}>
                 {dept.dept_name}
               </option>
@@ -163,7 +163,7 @@ export default function HREmployeesTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
-                {employees.map((employee, index) => (
+                {(employees || []).map((employee, index) => (
                   <motion.tr
                     key={employee.id}
                     initial={{ opacity: 0, y: 10 }}

@@ -29,7 +29,7 @@ export default function TimesheetSummary({ data: _data }) {
         if (cancelled) return;
         const data = response.data?.data || response.data;
         const timesheets = data?.timesheets || [];
-        const total = timesheets.reduce(
+        const total = (timesheets || []).reduce(
           (sum, ts) => sum + (parseFloat(ts.work_hours) || 0),
           0
         );

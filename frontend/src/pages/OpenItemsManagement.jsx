@@ -170,11 +170,11 @@ export default function OpenItemsManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            {items.length === 0 ?
+            {items?.length === 0 ?
             <div className="text-center py-8 text-gray-400">暂无未决事项</div> :
 
             <div className="space-y-3">
-                {items.map((item) =>
+                {(items || []).map((item) =>
               <div key={item.id} className="p-4 bg-gray-700 rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

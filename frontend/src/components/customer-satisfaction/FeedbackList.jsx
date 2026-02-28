@@ -88,7 +88,7 @@ export const FeedbackList = ({
 
     // 搜索过滤
     if (searchQuery) {
-      filtered = filtered.filter((feedback) =>
+      filtered = (filtered || []).filter((feedback) =>
       feedback.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       feedback.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       feedback.id?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -97,17 +97,17 @@ export const FeedbackList = ({
 
     // 类型过滤
     if (selectedType !== "all") {
-      filtered = filtered.filter((feedback) => feedback.feedbackType === selectedType);
+      filtered = (filtered || []).filter((feedback) => feedback.feedbackType === selectedType);
     }
 
     // 状态过滤
     if (selectedStatus !== "all") {
-      filtered = filtered.filter((feedback) => feedback.status === selectedStatus);
+      filtered = (filtered || []).filter((feedback) => feedback.status === selectedStatus);
     }
 
     // 优先级过滤
     if (selectedPriority !== "all") {
-      filtered = filtered.filter((feedback) => feedback.priority === selectedPriority);
+      filtered = (filtered || []).filter((feedback) => feedback.priority === selectedPriority);
     }
 
     // 排序
@@ -360,7 +360,7 @@ export const FeedbackList = ({
                 )}
               </motion.div> :
               paginatedFeedbacks.length > 0 ?
-              paginatedFeedbacks.map((feedback, index) =>
+              (paginatedFeedbacks || []).map((feedback, index) =>
               <motion.div
                 key={feedback.id || index}
                 initial={{ opacity: 0, y: 10 }}

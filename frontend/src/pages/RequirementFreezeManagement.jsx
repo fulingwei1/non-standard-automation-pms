@@ -138,7 +138,7 @@ export default function RequirementFreezeManagement() {
             <div className="text-center py-8 text-gray-400">暂无冻结记录</div> :
 
             <div className="space-y-3">
-                {freezes.map((freeze) =>
+                {(freezes || []).map((freeze) =>
               <div key={freeze.id} className="p-4 bg-gray-700 rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

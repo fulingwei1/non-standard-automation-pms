@@ -194,22 +194,22 @@ export default function RoleManagement() {
     const handleTogglePermission = (permissionId) => {
         setSelectedPermissionIds(prev =>
             prev.includes(permissionId)
-                ? prev.filter(id => id !== permissionId)
+                ? (prev || []).filter(id => id !== permissionId)
                 : [...prev, permissionId]
         );
     };
 
     const handleToggleAllPermissions = () => {
         const filteredPermissions = getFilteredPermissions();
-        const allSelected = filteredPermissions.every(p => selectedPermissionIds.includes(p.id));
+        const allSelected = (filteredPermissions || []).every(p => selectedPermissionIds.includes(p.id));
         if (allSelected) {
             // 取消选择所有筛选的权限
             setSelectedPermissionIds(prev =>
-                prev.filter(id => !filteredPermissions.some(p => p.id === id))
+                (prev || []).filter(id => !(filteredPermissions || []).some(p => p.id === id))
             );
         } else {
             // 选择所有筛选的权限
-            const newIds = [...new Set([...selectedPermissionIds, ...filteredPermissions.map(p => p.id)])];
+            const newIds = [...new Set([...selectedPermissionIds, ...(filteredPermissions || []).map(p => p.id)])];
             setSelectedPermissionIds(newIds);
         }
     };
@@ -220,14 +220,14 @@ export default function RoleManagement() {
         let filtered = allPermissions;
 
         if (permissionSearch) {
-            filtered = filtered.filter(p =>
+            filtered = (filtered || []).filter(p =>
                 (p.perm_code || p.permission_code || '')?.toLowerCase().includes(permissionSearch.toLowerCase()) ||
                 (p.perm_name || p.permission_name || '')?.toLowerCase().includes(permissionSearch.toLowerCase())
             );
         }
 
         if (permissionModuleFilter !== 'all') {
-            filtered = filtered.filter(p => p.module === permissionModuleFilter);
+            filtered = (filtered || []).filter(p => p.module === permissionModuleFilter);
         }
 
         // 排序：已授予权限在前，未授予权限在后
@@ -251,7 +251,7 @@ export default function RoleManagement() {
     // 获取所有模块
     const getAllModules = () => {
         if (!Array.isArray(allPermissions)) return [];
-        const modules = new Set(allPermissions.map(p => p.module).filter(Boolean));
+        const modules = new Set((allPermissions || []).map(p => p.module).filter(Boolean));
         return Array.from(modules).sort();
     };
 
@@ -301,7 +301,7 @@ export default function RoleManagement() {
     const toggleCompareSelection = (roleId) => {
         setSelectedForCompare(prev => {
             if (prev.includes(roleId)) {
-                return prev.filter(id => id !== roleId);
+                return (prev || []).filter(id => id !== roleId);
             }
             if (prev.length >= 5) {
                 alert('最多选择5个角色进行对比');
@@ -447,7 +447,7 @@ export default function RoleManagement() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {roles.map((role) => (
+                                    {(roles || []).map((role) => (
                                         <TableRow
                                             key={role.id}
                                             className={selectedForCompare.includes(role.id) ? 'bg-blue-50' : ''}
@@ -567,7 +567,7 @@ export default function RoleManagement() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__none__">无（顶级角色）</SelectItem>
-                                        {roles.filter(r => r.is_active).map((role) => (
+                                        {(roles || []).filter(r => r.is_active).map((role) => (
                                             <SelectItem key={role.id} value={role.id.toString()}>
                                                 {role.role_name}
                                             </SelectItem>
@@ -926,7 +926,7 @@ export default function RoleManagement() {
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {selectedRole.direct_permissions.map((perm) => (
+                                                        {(selectedRole.direct_permissions || []).map((perm) => (
                                                             <TableRow key={perm.id}>
                                                                 <TableCell className="font-mono text-xs">
                                                                     {perm.permission_code}
@@ -956,7 +956,7 @@ export default function RoleManagement() {
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {selectedRole.inherited_permissions.map((perm) => (
+                                                        {(selectedRole.inherited_permissions || []).map((perm) => (
                                                             <TableRow key={perm.id}>
                                                                 <TableCell className="font-mono text-xs">
                                                                     {perm.permission_code}
@@ -1025,7 +1025,7 @@ export default function RoleManagement() {
                                                 {perm}
                                             </Badge>
                                         ))}
-                                        {(!compareResult.common_permissions || compareResult.common_permissions.length === 0) && (
+                                        {(!compareResult.common_permissions || compareResult.common_permissions?.length === 0) && (
                                             <span className="text-slate-400 text-sm">无共同权限</span>
                                         )}
                                     </div>
@@ -1043,7 +1043,7 @@ export default function RoleManagement() {
                                                         {role?.role_name} 独有权限 ({perms.length})
                                                     </div>
                                                     <div className="flex flex-wrap gap-1">
-                                                        {perms.map((perm) => (
+                                                        {(perms || []).map((perm) => (
                                                             <Badge key={perm} variant="outline" className="text-xs">
                                                                 {perm}
                                                             </Badge>
@@ -1090,7 +1090,7 @@ export default function RoleManagement() {
                                         <SelectValue placeholder="选择角色模板" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {templates.map((tpl) => (
+                                        {(templates || []).map((tpl) => (
                                             <SelectItem key={tpl.id} value={tpl.id.toString()}>
                                                 {tpl.template_name}
                                                 <span className="text-slate-400 ml-2">

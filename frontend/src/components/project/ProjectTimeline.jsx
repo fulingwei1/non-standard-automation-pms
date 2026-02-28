@@ -57,7 +57,7 @@ export default function ProjectTimeline({
     const events = [];
 
     // 状态变更日志
-    statusLogs.forEach((log) => {
+    (statusLogs || []).forEach((log) => {
       if (log.change_type === "STAGE_CHANGE" && log.new_stage) {
         events.push({
           id: `log-${log.id}`,
@@ -92,7 +92,7 @@ export default function ProjectTimeline({
     });
 
     // 里程碑
-    milestones.forEach((milestone) => {
+    (milestones || []).forEach((milestone) => {
       events.push({
         id: `milestone-${milestone.id}`,
         type: "MILESTONE",
@@ -133,13 +133,13 @@ export default function ProjectTimeline({
 
     // 类型筛选
     if (filterType !== "all") {
-      filtered = filtered.filter((event) => event.type === filterType);
+      filtered = (filtered || []).filter((event) => event.type === filterType);
     }
 
     // 搜索
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
+      filtered = (filtered || []).filter(
         (event) =>
         event.title.toLowerCase().includes(query) ||
         event.description.toLowerCase().includes(query) ||
@@ -198,7 +198,7 @@ export default function ProjectTimeline({
             <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-white/10" />
 
             <div className="space-y-4">
-              {filteredEvents.map((event, index) => {
+              {(filteredEvents || []).map((event, index) => {
               const eventConfig =
               EVENT_TYPES[event.type] || EVENT_TYPES.OTHER;
               const Icon = eventConfig.icon;

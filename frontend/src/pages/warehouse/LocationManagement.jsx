@@ -71,7 +71,7 @@ export default function LocationManagement() {
           <Select value={whFilter} onValueChange={(v) => { setWhFilter(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue placeholder="全部仓库" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部仓库</SelectItem>
-              {warehouses.map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
+              {(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={fetchData}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button>
         </div>
@@ -82,8 +82,8 @@ export default function LocationManagement() {
             <TableHead className="text-right">操作</TableHead>
           </TableRow></TableHeader><TableBody>
             {loading ? <TableRow><TableCell colSpan={9} className="text-center py-8 text-text-muted">加载中...</TableCell></TableRow>
-            : data.items.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
-            : data.items.map((loc) => (
+            : data.items?.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
+            : (data.items || []).map((loc) => (
               <TableRow key={loc.id}>
                 <TableCell className="font-mono text-sm">{loc.location_code}</TableCell>
                 <TableCell>{loc.location_name || "-"}</TableCell>
@@ -109,7 +109,7 @@ export default function LocationManagement() {
           {!editingId && <div className="space-y-2"><Label>仓库</Label>
             <Select value={form.warehouse_id?.toString() || ""} onValueChange={(v) => setForm({ ...form, warehouse_id: v })}>
               <SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger>
-              <SelectContent>{warehouses.map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
+              <SelectContent>{(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
             </Select></div>}
           {!editingId && <div className="space-y-2"><Label>库位编码*</Label><Input value={form.location_code} onChange={(e) => setForm({ ...form, location_code: e.target.value })} placeholder="A-01-01" /></div>}
           <div className="space-y-2"><Label>名称</Label><Input value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} /></div>

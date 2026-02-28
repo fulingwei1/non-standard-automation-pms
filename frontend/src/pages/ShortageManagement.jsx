@@ -315,7 +315,7 @@ export default function ShortageManagement() {
 
           {/* 最近缺料上报 */}
           {dashboardData?.recent_reports &&
-          dashboardData.recent_reports.length > 0 &&
+          dashboardData.recent_reports?.length > 0 &&
           <Card>
                 <CardHeader>
                   <CardTitle>最近缺料上报</CardTitle>
@@ -323,7 +323,7 @@ export default function ShortageManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {dashboardData.recent_reports.map((report) => {
+                    {(dashboardData.recent_reports || []).map((report) => {
                   const urgent =
                   urgentLevelConfigs[report.urgent_level] ||
                   urgentLevelConfigs.NORMAL;
@@ -428,7 +428,7 @@ export default function ShortageManagement() {
               </div> :
 
               <div className="space-y-3">
-                  {reports.map((report) => {
+                  {(reports || []).map((report) => {
                   const urgent =
                   urgentLevelConfigs[report.urgent_level] ||
                   urgentLevelConfigs.NORMAL;
@@ -556,7 +556,7 @@ export default function ShortageManagement() {
               </div> :
 
               <div className="space-y-3">
-                  {arrivals.map((arrival) =>
+                  {(arrivals || []).map((arrival) =>
                 <div
                   key={arrival.id}
                   className={cn(
@@ -632,7 +632,7 @@ export default function ShortageManagement() {
               </div> :
 
               <div className="space-y-3">
-                  {substitutions.map((sub) =>
+                  {(substitutions || []).map((sub) =>
                 <div
                   key={sub.id}
                   className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors">
@@ -696,7 +696,7 @@ export default function ShortageManagement() {
               </div> :
 
               <div className="space-y-3">
-                  {transfers.map((transfer) =>
+                  {(transfers || []).map((transfer) =>
                 <div
                   key={transfer.id}
                   className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors">

@@ -104,11 +104,11 @@ export default function ITREfficiencyAnalysis() {
 
     const trend = satisfactionData.trend || [];
     return {
-      labels: trend.map((item) => item.period) || [],
+      labels: (trend || []).map((item) => item.period) || [],
       datasets: [
         {
           label: "满意度",
-          data: trend.map((item) => item.avg_satisfaction) || [],
+          data: (trend || []).map((item) => item.avg_satisfaction) || [],
         },
       ],
     };
@@ -119,11 +119,11 @@ export default function ITREfficiencyAnalysis() {
 
     const bottlenecks = bottlenecksData.bottlenecks || [];
     return {
-      labels: bottlenecks.map((item) => item.stage) || [],
+      labels: (bottlenecks || []).map((item) => item.stage) || [],
       datasets: [
         {
           label: "平均耗时(小时)",
-          data: bottlenecks.map((item) => item.avg_duration) || [],
+          data: (bottlenecks || []).map((item) => item.avg_duration) || [],
         },
       ],
     };
@@ -366,7 +366,7 @@ export default function ITREfficiencyAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {bottlenecksData.bottlenecks.length > 0 ? (
+                  {bottlenecksData.bottlenecks?.length > 0 ? (
                     <>
                       {prepareBottlenecksChart() && (
                         <SimpleBarChart
@@ -375,7 +375,7 @@ export default function ITREfficiencyAnalysis() {
                         />
                       )}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {bottlenecksData.bottlenecks.map((bottleneck, idx) => (
+                        {(bottlenecksData.bottlenecks || []).map((bottleneck, idx) => (
                           <div
                             key={idx}
                             className="p-4 bg-surface-100 rounded-lg border border-white/10"

@@ -199,13 +199,13 @@ export default function InformationGapAnalysis() {
                     {getQualityBadge(missingData.completeness_score || 0)}
                   </div>
                   {missingData.missing_fields &&
-                missingData.missing_fields.length > 0 &&
+                missingData.missing_fields?.length > 0 &&
                 <div>
                         <div className="text-sm text-slate-500 mb-2">
                           缺失字段
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {missingData.missing_fields.map((field, idx) =>
+                          {(missingData.missing_fields || []).map((field, idx) =>
                     <Badge key={idx} variant="destructive">
                               {field}
                     </Badge>
@@ -290,13 +290,13 @@ export default function InformationGapAnalysis() {
                   </div>
                 </div>
                 {qualityScore.missing_fields &&
-              qualityScore.missing_fields.length > 0 &&
+              qualityScore.missing_fields?.length > 0 &&
               <div className="mb-4">
                       <div className="text-sm text-slate-500 mb-2">
                         缺失字段
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {qualityScore.missing_fields.map((field, idx) =>
+                        {(qualityScore.missing_fields || []).map((field, idx) =>
                   <Badge key={idx} variant="destructive">
                             {field}
                   </Badge>
@@ -305,13 +305,13 @@ export default function InformationGapAnalysis() {
               </div>
               }
                 {qualityScore.recommendations &&
-              qualityScore.recommendations.length > 0 &&
+              qualityScore.recommendations?.length > 0 &&
               <div>
                       <div className="text-sm text-slate-500 mb-2">
                         改进建议
                       </div>
                       <ul className="list-disc list-inside space-y-1">
-                        {qualityScore.recommendations.map((rec, idx) =>
+                        {(qualityScore.recommendations || []).map((rec, idx) =>
                   <li key={idx} className="text-sm">
                             {rec}
                   </li>

@@ -268,8 +268,8 @@ export default function RdCostSummary() {
                   费用构成
                 </h3>
                 <div className="space-y-4">
-                  {costSummary.by_type && costSummary.by_type.length > 0 ?
-                costSummary.by_type.map((item, idx) =>
+                  {costSummary.by_type && costSummary.by_type?.length > 0 ?
+                (costSummary.by_type || []).map((item, idx) =>
                 <div key={idx} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-400">
@@ -304,9 +304,9 @@ export default function RdCostSummary() {
 
         {/* By Type Tab */}
         <TabsContent value="byType" className="space-y-6">
-          {costSummary?.by_type && costSummary.by_type.length > 0 ?
+          {costSummary?.by_type && costSummary.by_type?.length > 0 ?
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {costSummary.by_type.map((item, idx) =>
+              {(costSummary.by_type || []).map((item, idx) =>
             <Card key={idx}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -391,14 +391,14 @@ export default function RdCostSummary() {
               </Card>
 
               {timesheetSummary.by_user &&
-            timesheetSummary.by_user.length > 0 &&
+            timesheetSummary.by_user?.length > 0 &&
             <Card>
                     <CardContent className="p-6">
                       <h3 className="text-lg font-semibold text-white mb-4">
                         按人员统计
                       </h3>
                       <div className="space-y-3">
-                        {timesheetSummary.by_user.map((user, idx) =>
+                        {(timesheetSummary.by_user || []).map((user, idx) =>
                   <div
                     key={idx}
                     className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02]">

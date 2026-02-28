@@ -46,7 +46,7 @@ export const BasicInfoStep = ({
               选择项目生命周期模板，决定项目将经历哪些阶段
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {stageTemplates.map((template) => (
+              {(stageTemplates || []).map((template) => (
                 <div
                   key={template.id}
                   className={`flex items-start p-3 rounded-lg cursor-pointer transition-all ${

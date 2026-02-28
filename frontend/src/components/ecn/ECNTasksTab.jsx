@@ -59,9 +59,9 @@ export default function ECNTasksTab({ ecnId, ecn, tasks, refetch }) {
 
   // 按状态分组任务
   const tasksByStatus = {
-    PENDING: tasks.filter((t) => t.status === "PENDING"),
-    IN_PROGRESS: tasks.filter((t) => t.status === "IN_PROGRESS"),
-    COMPLETED: tasks.filter((t) => t.status === "COMPLETED"),
+    PENDING: (tasks || []).filter((t) => t.status === "PENDING"),
+    IN_PROGRESS: (tasks || []).filter((t) => t.status === "IN_PROGRESS"),
+    COMPLETED: (tasks || []).filter((t) => t.status === "COMPLETED"),
   };
 
   return (
@@ -77,7 +77,7 @@ export default function ECNTasksTab({ ecnId, ecn, tasks, refetch }) {
       </div>
 
       {/* 任务看板 */}
-      {tasks.length === 0 ? (
+      {tasks?.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-slate-400">
             暂无执行任务
@@ -107,7 +107,7 @@ export default function ECNTasksTab({ ecnId, ecn, tasks, refetch }) {
                       暂无任务
                     </div>
                   ) : (
-                    statusTasks.map((task) => (
+                    (statusTasks || []).map((task) => (
                       <Card
                         key={task.id}
                         className="p-3 hover:shadow-md transition-shadow"

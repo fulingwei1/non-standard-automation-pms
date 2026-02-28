@@ -82,7 +82,7 @@ export default function PerformanceIndicators() {
     fetchIndicators();
   }, []);
 
-  const filteredIndicators = indicators.filter((indicator) => {
+  const filteredIndicators = (indicators || []).filter((indicator) => {
     const matchesCategory =
     selectedCategory === "ALL" || indicator.category === selectedCategory;
     const searchLower = searchQuery.toLowerCase();
@@ -97,12 +97,12 @@ export default function PerformanceIndicators() {
   reduce((sum, ind) => sum + ind.weight, 0);
 
   const getCategoryColor = (category) => {
-    const cat = categories.find((c) => c.value === category);
+    const cat = (categories || []).find((c) => c.value === category);
     return cat?.color || "slate";
   };
 
   const getStatusColor = (status) => {
-    const stat = statusOptions.find((s) => s.value === status);
+    const stat = (statusOptions || []).find((s) => s.value === status);
     return stat?.color || "slate";
   };
 
@@ -169,7 +169,7 @@ export default function PerformanceIndicators() {
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" /> :
 
                 <p className="text-3xl font-bold text-emerald-400">
-                    {indicators.filter((i) => i.status === "ACTIVE").length}
+                    {(indicators || []).filter((i) => i.status === "ACTIVE").length}
                 </p>
                 }
               </div>
@@ -204,7 +204,7 @@ export default function PerformanceIndicators() {
               <div>
                 <p className="text-sm text-slate-400 mb-1">指标分类</p>
                 <p className="text-3xl font-bold text-purple-400">
-                  {categories.length - 1}
+                  {categories?.length - 1}
                 </p>
               </div>
               <Settings className="h-8 w-8 text-purple-400" />
@@ -233,7 +233,7 @@ export default function PerformanceIndicators() {
 
               {/* Category Filter */}
               <div className="flex gap-2 flex-wrap">
-                {categories.map((cat) =>
+                {(categories || []).map((cat) =>
                 <Button
                   key={cat.value}
                   variant={
@@ -270,7 +270,7 @@ export default function PerformanceIndicators() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredIndicators.map((indicator) =>
+              {(filteredIndicators || []).map((indicator) =>
               <motion.div
                 key={indicator.id}
                 variants={fadeIn}
@@ -297,7 +297,7 @@ export default function PerformanceIndicators() {
                         )}>
 
                           {
-                        statusOptions.find(
+                        (statusOptions || []).find(
                           (s) => s.value === indicator.status
                         )?.label
                         }

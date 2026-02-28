@@ -100,11 +100,11 @@ export default function MaterialDemandSummary() {
       const demandList = res.data?.items || res.data?.items || res.data || [];
       setDemands(demandList);
       // Calculate summary
-      const totalDemand = demandList.reduce(
+      const totalDemand = (demandList || []).reduce(
         (sum, item) => sum + (item.total_demand || 0),
         0
       );
-      const totalProjects = new Set(demandList.map((item) => item.project_id)).
+      const totalProjects = new Set((demandList || []).map((item) => item.project_id)).
       size;
       setSummary({
         total_materials: demandList.length,
@@ -120,7 +120,7 @@ export default function MaterialDemandSummary() {
   const handleViewVsStock = async (materialId) => {
     try {
       const res = await materialDemandApi.getVsStock(materialId);
-      setSelectedMaterial(demands.find((d) => d.material_id === materialId));
+      setSelectedMaterial((demands || []).find((d) => d.material_id === materialId));
       setVsStockData(res.data || res);
       setShowVsStockDialog(true);
     } catch (error) {
@@ -130,10 +130,10 @@ export default function MaterialDemandSummary() {
   const handleGeneratePR = async () => {
     try {
       const params = {};
-      if (generateParams.project_ids.length > 0) {
+      if (generateParams.project_ids?.length > 0) {
         params.project_ids = generateParams.project_ids.join(",");
       }
-      if (generateParams.material_ids.length > 0) {
+      if (generateParams.material_ids?.length > 0) {
         params.material_ids = generateParams.material_ids.join(",");
       }
       if (generateParams.supplier_id) {
@@ -150,7 +150,7 @@ export default function MaterialDemandSummary() {
     }
   };
   const filteredDemands = useMemo(() => {
-    return demands.filter((demand) => {
+    return (demands || []).filter((demand) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -230,7 +230,7 @@ export default function MaterialDemandSummary() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -283,7 +283,7 @@ export default function MaterialDemandSummary() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDemands.map((demand) =>
+                {(filteredDemands || []).map((demand) =>
               <TableRow key={demand.material_id}>
                     <TableCell className="font-mono text-sm">
                       {demand.material_code}
@@ -354,7 +354,7 @@ export default function MaterialDemandSummary() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部项目</SelectItem>
-                    {projects.map((proj) =>
+                    {(projects || []).map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                     </SelectItem>
@@ -442,7 +442,7 @@ export default function MaterialDemandSummary() {
                     </CardContent>
                   </Card>
                 </div>
-                {vsStockData.details && vsStockData.details.length > 0 &&
+                {vsStockData.details && vsStockData.details?.length > 0 &&
               <div>
                     <div className="text-sm font-medium mb-3">需求明细</div>
                     <Table>
@@ -455,7 +455,7 @@ export default function MaterialDemandSummary() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {vsStockData.details.map((detail, index) =>
+                        {(vsStockData.details || []).map((detail, index) =>
                     <TableRow key={index}>
                             <TableCell>{detail.project_name}</TableCell>
                             <TableCell>{detail.machine_name || "-"}</TableCell>

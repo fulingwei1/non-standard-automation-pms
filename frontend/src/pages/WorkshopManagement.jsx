@@ -186,7 +186,7 @@ export default function WorkshopManagement() {
   };
 
   const filteredWorkshops = useMemo(() => {
-    return workshops.filter((ws) => {
+    return (workshops || []).filter((ws) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -278,7 +278,7 @@ export default function WorkshopManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredWorkshops.map((workshop) =>
+                {(filteredWorkshops || []).map((workshop) =>
               <TableRow key={workshop.id}>
                     <TableCell className="font-mono text-sm">
                       {workshop.workshop_code}
@@ -428,7 +428,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {managers.map((mgr) =>
+                      {(managers || []).map((mgr) =>
                       <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
                       </SelectItem>
@@ -576,7 +576,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {managers.map((mgr) =>
+                      {(managers || []).map((mgr) =>
                       <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
                       </SelectItem>

@@ -128,7 +128,7 @@ export default function ApprovalPending({ limit = 5, data }) {
       try {
         if (data?.approvals) {
           setApprovals(data.approvals.slice(0, limit));
-          setTotalCount(data.total || data.approvals.length);
+          setTotalCount(data.total || data.approvals?.length);
           return;
         }
 
@@ -136,7 +136,7 @@ export default function ApprovalPending({ limit = 5, data }) {
            const response = await api.get('/approvals/pending/mine');
           if (response.data?.items) {
             setApprovals(response.data.items.slice(0, limit));
-            setTotalCount(response.data.total || response.data.items.length);
+            setTotalCount(response.data.total || response.data.items?.length);
             return;
           }
         } catch {
@@ -194,7 +194,7 @@ export default function ApprovalPending({ limit = 5, data }) {
           </div>
         ) : (
           <div className="space-y-1">
-            {approvals.map((approval, index) => (
+            {(approvals || []).map((approval, index) => (
               <ApprovalItem
                 key={approval.id}
                 approval={approval}

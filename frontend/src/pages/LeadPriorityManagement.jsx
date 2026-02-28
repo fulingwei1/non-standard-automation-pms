@@ -251,7 +251,7 @@ export default function LeadPriorityManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leadRankings.map((lead, index) =>
+                    {(leadRankings || []).map((lead, index) =>
                   <TableRow key={lead.id}>
                         <TableCell>
                           <Badge variant="outline">#{index + 1}</Badge>
@@ -334,7 +334,7 @@ export default function LeadPriorityManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {opportunityRankings.map((opp, index) =>
+                    {(opportunityRankings || []).map((opp, index) =>
                   <TableRow key={opp.id}>
                         <TableCell>
                           <Badge variant="outline">#{index + 1}</Badge>

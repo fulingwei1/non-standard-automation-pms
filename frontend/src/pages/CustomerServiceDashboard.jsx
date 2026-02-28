@@ -168,7 +168,7 @@ const CustomerServiceDashboard = () => {
 
       const db = dashRes.data || {};
       const warrantyList = db.warranty_projects || db.warrantyProjects || [];
-      setWarrantyProjects(warrantyList.map((w) => ({
+      setWarrantyProjects((warrantyList || []).map((w) => ({
         id: w.id,
         projectName: w.project_name || w.projectName || '',
         customerName: w.customer_name || w.customerName || '',
@@ -202,7 +202,7 @@ const CustomerServiceDashboard = () => {
 
   // 过滤数据
   const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket) => {
+    return (tickets || []).filter((ticket) => {
       const searchLower = (searchText || "").toLowerCase();
     const matchesSearch = !searchText ||
       (ticket.title || "").toLowerCase().includes(searchLower) ||
@@ -230,7 +230,7 @@ const CustomerServiceDashboard = () => {
     try {
       setLoading(true);
       await serviceApi.tickets.close(ticketId, { resolution: 'resolved' });
-      setTickets(tickets.map((t) =>
+      setTickets((tickets || []).map((t) =>
         t.id === ticketId ?
         { ...t, status: 'resolved', resolvedDate: new Date().toISOString().split('T')[0] } :
         t
@@ -251,7 +251,7 @@ const CustomerServiceDashboard = () => {
     try {
       setLoading(true);
       await serviceApi.tickets.assign(ticket.id, { engineer });
-      setTickets(tickets.map((t) =>
+      setTickets((tickets || []).map((t) =>
         t.id === ticket.id ? { ...t, engineer, status: 'in_progress' } : t
       ));
       message.success('工单分配成功');

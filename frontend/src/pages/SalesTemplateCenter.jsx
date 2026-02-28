@@ -211,7 +211,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
     </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {quoteTemplates.map((template) =>
+        {(quoteTemplates || []).map((template) =>
       <Card key={template.id}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-base">
@@ -295,7 +295,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
     </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {contractTemplates.map((template) =>
+        {(contractTemplates || []).map((template) =>
       <Card key={template.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
@@ -363,7 +363,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
     </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {ruleSets.map((rule) =>
+        {(ruleSets || []).map((rule) =>
       <Card key={rule.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
@@ -399,7 +399,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
       )}
 
       <div className="flex gap-2">
-        {tabs.map((tab) => {
+        {(tabs || []).map((tab) => {
           const Icon = tab.icon;
           return (
             <Button

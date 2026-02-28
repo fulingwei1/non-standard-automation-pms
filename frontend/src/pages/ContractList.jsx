@@ -115,7 +115,7 @@ export default function ContractList() {
 
   // Filter contracts
   const filteredContracts = useMemo(() => {
-    return contracts.filter((contract) => {
+    return (contracts || []).filter((contract) => {
       const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
       !searchTerm ||
@@ -132,14 +132,14 @@ export default function ContractList() {
 
   // Stats
   const stats = useMemo(() => {
-    const active = contracts.filter((c) => c.status === "active");
+    const active = (contracts || []).filter((c) => c.status === "active");
     return {
       total: contracts.length,
       active: active.length,
-      completed: contracts.filter((c) => c.status === "completed").length,
-      totalValue: active.reduce((sum, c) => sum + (c.totalAmount || 0), 0),
-      paidValue: active.reduce((sum, c) => sum + (c.paidAmount || 0), 0),
-      pendingValue: active.reduce(
+      completed: (contracts || []).filter((c) => c.status === "completed").length,
+      totalValue: (active || []).reduce((sum, c) => sum + (c.totalAmount || 0), 0),
+      paidValue: (active || []).reduce((sum, c) => sum + (c.paidAmount || 0), 0),
+      pendingValue: (active || []).reduce(
         (sum, c) => sum + ((c.totalAmount || 0) - (c.paidAmount || 0)),
         0
       )
@@ -328,7 +328,7 @@ export default function ContractList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredContracts.map((contract) => {
+                {(filteredContracts || []).map((contract) => {
                   const statusConf = statusConfig[contract.status];
                   const paymentProgress =
                   contract.totalAmount > 0 ?
@@ -613,11 +613,11 @@ function ContractDetailPanel({ contract, onClose }) {
         </div>
 
         {/* Payment Terms */}
-        {contract.paymentTerms.length > 0 &&
+        {contract.paymentTerms?.length > 0 &&
         <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">付款条款</h3>
             <div className="space-y-2">
-              {contract.paymentTerms.map((term, index) => {
+              {(contract.paymentTerms || []).map((term, index) => {
               const isPaid = term.status === "paid";
               const isOverdue =
               term.status === "overdue" ||
@@ -683,11 +683,11 @@ function ContractDetailPanel({ contract, onClose }) {
         }
 
         {/* Attachments */}
-        {contract.attachments.length > 0 &&
+        {contract.attachments?.length > 0 &&
         <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">合同附件</h3>
             <div className="space-y-2">
-              {contract.attachments.map((file, index) =>
+              {(contract.attachments || []).map((file, index) =>
             <div
               key={index}
               className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">

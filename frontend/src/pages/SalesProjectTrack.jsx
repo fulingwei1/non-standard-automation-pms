@@ -182,7 +182,7 @@ export default function SalesProjectTrack() {
 
   // Filter projects
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
+    return (projects || []).filter((project) => {
       // 兼容API字段名 (project_name vs name, project_code vs id)
       const projectName = project.name || project.project_name || '';
       const projectId = String(project.id || project.project_code || '');
@@ -206,10 +206,10 @@ export default function SalesProjectTrack() {
   // Stats
   const stats = useMemo(() => {
     return {
-      total: projects.length,
-      inProgress: projects.filter((p) => !["warranty", "S9"].includes(p.stage)).
+      total: projects?.length,
+      inProgress: (projects || []).filter((p) => !["warranty", "S9"].includes(p.stage)).
       length,
-      nearDelivery: projects.filter((p) => {
+      nearDelivery: (projects || []).filter((p) => {
         const deliveryDate = p.expectedDelivery || p.expected_delivery || p.plan_delivery_date;
         if (!deliveryDate) {return false;}
         const delivery = new Date(deliveryDate);
@@ -217,7 +217,7 @@ export default function SalesProjectTrack() {
         const diff = (delivery - now) / (1000 * 60 * 60 * 24);
         return diff <= 14 && diff > 0;
       }).length,
-      hasIssue: projects.filter((p) =>
+      hasIssue: (projects || []).filter((p) =>
       p.health && !["good", "H1"].includes(p.health)
       ).length
     };
@@ -343,7 +343,7 @@ export default function SalesProjectTrack() {
 
       {/* Project List */}
       <motion.div variants={fadeIn} className="space-y-4">
-        {filteredProjects.map((project) => {
+        {(filteredProjects || []).map((project) => {
           const stageConf = stageConfig[project.stage] || defaultStageConf;
           const healthConf = healthConfig[project.health] || defaultHealthConf;
           // 兼容API字段名
@@ -383,7 +383,7 @@ export default function SalesProjectTrack() {
 
                         {stageConf.label}
                       </Badge>
-                      {issues.length > 0 &&
+                      {issues?.length > 0 &&
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                       }
                     </div>
@@ -449,7 +449,7 @@ export default function SalesProjectTrack() {
                 {milestones.length > 0 &&
                 <div className="mt-4 pt-4 border-t border-white/5">
                   <div className="flex items-center gap-1">
-                    {milestones.map((milestone, index) => {
+                    {(milestones || []).map((milestone, index) => {
                       const isCompleted = milestone.status === "completed";
                       const isCurrent = milestone.status === "in_progress";
 
@@ -644,7 +644,7 @@ function ProjectDetailPanel({ project, onClose }) {
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-slate-400">里程碑</h3>
           <div className="space-y-2">
-            {milestones.map((milestone, index) => {
+            {(milestones || []).map((milestone, index) => {
               const isCompleted = milestone.status === "completed";
               const isCurrent = milestone.status === "in_progress";
               const isDelayed =
@@ -692,10 +692,10 @@ function ProjectDetailPanel({ project, onClose }) {
         }
 
         {/* Issues */}
-        {issues.length > 0 &&
+        {issues?.length > 0 &&
         <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">问题与风险</h3>
-            {issues.map((issue, index) =>
+            {(issues || []).map((issue, index) =>
           <div
             key={index}
             className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">

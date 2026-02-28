@@ -117,7 +117,7 @@ export default function DispatchManagement() {
     if (selectedOrders.size === workOrders.length) {
       setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(workOrders.map((wo) => wo.id)));
+      setSelectedOrders(new Set((workOrders || []).map((wo) => wo.id)));
     }
   };
   const handleBatchAssign = async () => {
@@ -153,7 +153,7 @@ export default function DispatchManagement() {
     }
   };
   const pendingOrders = useMemo(() => {
-    return workOrders.filter((wo) => wo.status === "PENDING");
+    return (workOrders || []).filter((wo) => wo.status === "PENDING");
   }, [workOrders]);
   return (
     <div className="space-y-6 p-6">
@@ -168,7 +168,7 @@ export default function DispatchManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部车间</SelectItem>
-                {workshops.map((ws) =>
+                {(workshops || []).map((ws) =>
                 <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
                 </SelectItem>
@@ -251,7 +251,7 @@ export default function DispatchManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingOrders.map((order) =>
+                {(pendingOrders || []).map((order) =>
               <TableRow
                 key={order.id}
                 className={cn(selectedOrders.has(order.id) && "bg-blue-50")}>
@@ -328,7 +328,7 @@ export default function DispatchManagement() {
                     <SelectValue placeholder="选择工人" />
                   </SelectTrigger>
                   <SelectContent>
-                    {workers.map((worker) =>
+                    {(workers || []).map((worker) =>
                     <SelectItem key={worker.id} value={worker.id.toString()}>
                         {worker.worker_name}
                     </SelectItem>

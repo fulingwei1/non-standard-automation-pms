@@ -98,7 +98,7 @@ export default function HourlyRateManagement() {
         setTotal(data.total || 0);
       } else if (Array.isArray(data)) {
         setConfigs(data);
-        setTotal(data.length);
+        setTotal(data?.length);
       } else {
         setConfigs([]);
         setTotal(0);
@@ -319,7 +319,7 @@ export default function HourlyRateManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {configs.map((config) => (
+                    {(configs || []).map((config) => (
                       <tr key={config.id} className="border-b hover:bg-gray-50">
                         <td className="p-2">{config.id}</td>
                         <td className="p-2">

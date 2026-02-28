@@ -250,7 +250,7 @@ export default function RdProjectDocuments() {
   }
 
   const filteredDocuments = filterType ?
-  documents.filter((doc) => doc.doc_type === filterType) :
+  (documents || []).filter((doc) => doc.doc_type === filterType) :
   documents;
 
   return (
@@ -305,7 +305,7 @@ export default function RdProjectDocuments() {
           <h3 className="text-lg font-semibold text-white mb-4">文档列表</h3>
           {filteredDocuments.length > 0 ?
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredDocuments.map((doc) => {
+              {(filteredDocuments || []).map((doc) => {
               const docType = docTypeMap[doc.doc_type] || docTypeMap.OTHER;
               const status = statusMap[doc.status] || statusMap.DRAFT;
               const FileIcon = getFileIcon(doc.file_name);

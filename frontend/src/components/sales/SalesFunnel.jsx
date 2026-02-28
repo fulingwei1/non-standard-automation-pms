@@ -34,7 +34,7 @@ export default function SalesFunnel({ data = {}, trends = {}, onStageClick }) {
 
   return (
     <motion.div variants={fadeIn} className="space-y-3">
-      {funnelStages.map((stage, index) => {
+      {(funnelStages || []).map((stage, index) => {
         const count = funnelData[stage.key];
         const widthPercent = Math.max((count / maxValue) * 100, 20);
         const trend = getTrend(stage.key);

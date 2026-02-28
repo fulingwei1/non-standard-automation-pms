@@ -94,7 +94,7 @@ export default function InvoiceManagement() {
  };
   const response = await invoiceApi.list(params);
  if (response.data && response.data.items) {
-  const transformed = response.data.items.map((inv) => ({
+  const transformed = (response.data.items || []).map((inv) => ({
    id: inv.invoice_code || inv.id,
   contractId: inv.contract_code,
    projectName: inv.project_name || "",
@@ -245,7 +245,7 @@ export default function InvoiceManagement() {
  };
 
  const filteredInvoices = useMemo(() => {
- return invoices.filter((invoice) => {
+ return (invoices || []).filter((invoice) => {
    const searchLower = (searchText || "").toLowerCase();
  const matchSearch =
   (invoice.id || "").toLowerCase().includes(searchLower) ||
@@ -264,13 +264,13 @@ export default function InvoiceManagement() {
  const stats = useMemo(
  () => ({
  totalInvoices: invoices.length,
-  totalAmount: invoices.reduce((sum, inv) => sum + inv.totalAmount, 0),
-  paidAmount: invoices.reduce(
+  totalAmount: (invoices || []).reduce((sum, inv) => sum + inv.totalAmount, 0),
+  paidAmount: (invoices || []).reduce(
   (sum, inv) =>
    sum + (inv.paymentStatus === "paid" ? inv.totalAmount : 0),
   0
   ),
-  pendingAmount: invoices.reduce(
+  pendingAmount: (invoices || []).reduce(
  (sum, inv) =>
   sum +
   (inv.paymentStatus === "pending" || inv.paymentStatus === "overdue"
@@ -322,7 +322,7 @@ export default function InvoiceManagement() {
   >
   <AnimatePresence>
    {filteredInvoices.length > 0 ? (
-    filteredInvoices.map((invoice) => (
+    (filteredInvoices || []).map((invoice) => (
     <InvoiceRow
      key={invoice.id}
    invoice={invoice}

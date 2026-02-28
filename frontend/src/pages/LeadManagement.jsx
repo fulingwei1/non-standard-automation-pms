@@ -111,7 +111,7 @@ export default function LeadManagement() {
     
     // 筛选关键线索
     if (showKeyLeadsOnly) {
-      processed = processed.filter(lead => lead.is_key_lead === true);
+      processed = (processed || []).filter(lead => lead.is_key_lead === true);
     }
     
     // 排序
@@ -133,7 +133,7 @@ export default function LeadManagement() {
   }, [leads, showKeyLeadsOnly, sortBy]);
 
   const filteredLeads = useMemo(() => {
-    return processedLeads.filter((lead) => {
+    return (processedLeads || []).filter((lead) => {
       const matchesSearch =
         lead.lead_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,9 +148,9 @@ export default function LeadManagement() {
   const stats = useMemo(() => {
     return {
       total: total,
-      new: leads.filter((l) => l.status === "NEW").length,
-      qualifying: leads.filter((l) => l.status === "QUALIFIED" || l.status === "QUALIFYING").length,
-      converted: leads.filter((l) => l.status === "CONVERTED").length,
+      new: (leads || []).filter((l) => l.status === "NEW").length,
+      qualifying: (leads || []).filter((l) => l.status === "QUALIFIED" || l.status === "QUALIFYING").length,
+      converted: (leads || []).filter((l) => l.status === "CONVERTED").length,
     };
   }, [leads, total]);
 
@@ -164,7 +164,7 @@ export default function LeadManagement() {
     if (!normalized) {
       return null;
     }
-    return customers.find(
+    return (customers || []).find(
       (customer) =>
         normalizeCustomerName(customer.customer_name) === normalized
     );

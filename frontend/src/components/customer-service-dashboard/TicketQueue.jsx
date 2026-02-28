@@ -80,7 +80,7 @@ export function TicketQueue({
 
     // 搜索筛选
     if (searchTerm) {
-      filtered = filteredTickets.filter((ticket) =>
+      filtered = (filteredTickets || []).filter((ticket) =>
       ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -262,7 +262,7 @@ export function TicketQueue({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTickets.map((ticket) => {
+              {(paginatedTickets || []).map((ticket) => {
                 const statusConfig = getStatusConfig(ticket.status);
                 const priorityConfig = getPriorityConfig(ticket.priority);
                 const typeConfig = getTypeConfig(ticket.type);

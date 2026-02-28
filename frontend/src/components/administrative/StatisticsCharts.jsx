@@ -11,12 +11,12 @@ import { cn, formatCurrency } from "../../lib/utils";
  */
 export function SimpleBarChart({ data, height = 200, color = "bg-blue-500" }) {
   const maxValue = useMemo(() => {
-    return Math.max(...data.map((d) => d.value), 1);
+    return Math.max(...(data || []).map((d) => d.value), 1);
   }, [data]);
 
   return (
     <div className="flex items-end gap-2" style={{ height: `${height}px` }}>
-      {data.map((item, index) => (
+      {(data || []).map((item, index) => (
         <div key={index} className="flex-1 flex flex-col items-center gap-1">
           <div className="w-full flex flex-col items-center gap-1">
             <span className="text-xs text-slate-400">{item.value}</span>
@@ -46,11 +46,11 @@ export function SimpleLineChart({
   color = "text-blue-400",
 }) {
   const maxValue = useMemo(() => {
-    return Math.max(...data.map((d) => d.value), 1);
+    return Math.max(...(data || []).map((d) => d.value), 1);
   }, [data]);
 
-  const points = data.map((item, index) => ({
-    x: (index / (data.length - 1 || 1)) * 100,
+  const points = (data || []).map((item, index) => ({
+    x: (index / (data?.length - 1 || 1)) * 100,
     y: 100 - (item.value / maxValue) * 80,
     value: item.value,
     label: item.label,
@@ -64,13 +64,13 @@ export function SimpleLineChart({
         preserveAspectRatio="none"
       >
         <polyline
-          points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+          points={(points || []).map((p) => `${p.x},${p.y}`).join(" ")}
           fill="none"
           stroke="currentColor"
           strokeWidth="0.5"
           className={color}
         />
-        {points.map((point, index) => (
+        {(points || []).map((point, index) => (
           <circle
             key={index}
             cx={point.x}
@@ -82,11 +82,11 @@ export function SimpleLineChart({
         ))}
       </svg>
       <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-slate-500">
-        {data.map((item, index) => (
+        {(data || []).map((item, index) => (
           <span
             key={index}
             className="truncate"
-            style={{ width: `${100 / data.length}%` }}
+            style={{ width: `${100 / data?.length}%` }}
           >
             {item.label}
           </span>
@@ -101,7 +101,7 @@ export function SimpleLineChart({
  */
 export function SimplePieChart({ data, size = 200 }) {
   const total = useMemo(() => {
-    return data.reduce((sum, item) => sum + item.value, 0);
+    return (data || []).reduce((sum, item) => sum + item.value, 0);
   }, [data]);
 
   const radius = size / 2 - 10;
@@ -110,7 +110,7 @@ export function SimplePieChart({ data, size = 200 }) {
 
   const segments = useMemo(() => {
     // Calculate cumulative angles using reduce to avoid mutation
-    const angles = data.reduce((acc, item, index) => {
+    const angles = (data || []).reduce((acc, item, index) => {
       const prevAngle = index === 0 ? -90 : acc[index - 1].endAngle;
       const angle = (item.value / total) * 360;
       acc.push({
@@ -123,7 +123,7 @@ export function SimplePieChart({ data, size = 200 }) {
       return acc;
     }, []);
 
-    return angles.map(({ startAngle, endAngle, angle, item, index }) => {
+    return (angles || []).map(({ startAngle, endAngle, angle, item, index }) => {
       const percentage = (item.value / total) * 100;
       const startAngleRad = (startAngle * Math.PI) / 180;
       const endAngleRad = (endAngle * Math.PI) / 180;
@@ -159,7 +159,7 @@ export function SimplePieChart({ data, size = 200 }) {
         style={{ width: `${size}px`, height: `${size}px` }}
       >
         <svg width={size} height={size} className="transform -rotate-90">
-          {segments.map((segment, index) => (
+          {(segments || []).map((segment, index) => (
             <path
               key={index}
               d={segment.pathData}
@@ -178,7 +178,7 @@ export function SimplePieChart({ data, size = 200 }) {
         </div>
       </div>
       <div className="flex-1 space-y-2">
-        {segments.map((segment, index) => (
+        {(segments || []).map((segment, index) => (
           <div key={index} className="flex items-center gap-3">
             <div
               className="w-4 h-4 rounded"
@@ -258,7 +258,7 @@ export function CategoryBreakdownCard({ title, data, total, formatValue }) {
         <span className="text-sm text-slate-400">总计: {format(total)}</span>
       </div>
       <div className="space-y-2">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const percentage = total > 0 ? (item.value / total) * 100 : 0;
           return (
             <div key={index} className="space-y-1">
@@ -310,13 +310,13 @@ export function MonthlyTrendChart({
   height = 200,
 }) {
   const maxValue = useMemo(() => {
-    return Math.max(...data.map((d) => d[valueKey]), 1);
+    return Math.max(...(data || []).map((d) => d[valueKey]), 1);
   }, [data, valueKey]);
 
   return (
     <div className="space-y-4">
       <div className="flex items-end gap-2" style={{ height: `${height}px` }}>
-        {data.map((item, index) => (
+        {(data || []).map((item, index) => (
           <div key={index} className="flex-1 flex flex-col items-center gap-1">
             <div className="w-full flex flex-col items-center gap-1">
               <span className="text-xs text-slate-400">

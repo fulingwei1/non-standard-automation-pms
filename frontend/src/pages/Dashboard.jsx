@@ -70,17 +70,17 @@ export default function Dashboard() {
     return [];
   })();
 
-  const totalMachines = projects.reduce(
+  const totalMachines = (projects || []).reduce(
     (sum, project) =>
       sum + (project.machine_count || project.machineCount || 0),
     0
   );
 
   const stats = {
-    totalProjects: projects.length,
-    activeProjects: projects.filter((p) => p.health !== "H4").length,
+    totalProjects: projects?.length,
+    activeProjects: (projects || []).filter((p) => p.health !== "H4").length,
     totalMachines,
-    atRiskProjects: projects.filter((p) => ["H2", "H3"].includes(p.health)).
+    atRiskProjects: (projects || []).filter((p) => ["H2", "H3"].includes(p.health)).
     length
   };
 
@@ -124,7 +124,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat, i) =>
+        {(statCards || []).map((stat, i) =>
         <DashboardStatCard
           key={i}
           {...stat}
@@ -167,7 +167,7 @@ export default function Dashboard() {
 
 
               <div className="divide-y divide-white/5">
-                    {recentProjects.map((project) =>
+                    {(recentProjects || []).map((project) =>
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}

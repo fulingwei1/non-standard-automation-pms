@@ -240,12 +240,12 @@ export default function TechnicalReviewDetail() {
               参与人 ({participants.length})
             </TabsTrigger>
             <TabsTrigger value="materials">
-              材料 ({materials.length})
+              材料 ({materials?.length})
             </TabsTrigger>
             <TabsTrigger value="checklist">
               检查项 ({checklistRecords.length})
             </TabsTrigger>
-            <TabsTrigger value="issues">问题 ({issues.length})</TabsTrigger>
+            <TabsTrigger value="issues">问题 ({issues?.length})</TabsTrigger>
           </TabsList>
 
           {/* 基本信息 */}
@@ -302,7 +302,7 @@ export default function TechnicalReviewDetail() {
                       className="bg-slate-800/50 border-slate-700">
 
                       <option value="">请选择项目</option>
-                      {projects.map((p) =>
+                      {(projects || []).map((p) =>
                       <option key={p.id} value={p.id}>
                           {p.project_code} - {p.project_name}
                       </option>
@@ -366,7 +366,7 @@ export default function TechnicalReviewDetail() {
                       className="bg-slate-800/50 border-slate-700">
 
                       <option value="">请选择主持人</option>
-                      {users.map((u) =>
+                      {(users || []).map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
                       </option>
@@ -385,7 +385,7 @@ export default function TechnicalReviewDetail() {
                       className="bg-slate-800/50 border-slate-700">
 
                       <option value="">请选择汇报人</option>
-                      {users.map((u) =>
+                      {(users || []).map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
                       </option>
@@ -404,7 +404,7 @@ export default function TechnicalReviewDetail() {
                       className="bg-slate-800/50 border-slate-700">
 
                       <option value="">请选择记录人</option>
-                      {users.map((u) =>
+                      {(users || []).map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
                       </option>
@@ -473,7 +473,7 @@ export default function TechnicalReviewDetail() {
                 <p className="text-center text-slate-400 py-8">暂无参与人</p> :
 
                 <div className="space-y-2">
-                    {participants.map((p) =>
+                    {(participants || []).map((p) =>
                   <div
                     key={p.id}
                     className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
@@ -482,9 +482,9 @@ export default function TechnicalReviewDetail() {
                           <User className="w-5 h-5 text-slate-400" />
                           <div>
                             <p className="text-slate-200">
-                              {users.find((u) => u.id === p.user_id)?.
+                              {(users || []).find((u) => u.id === p.user_id)?.
                           real_name ||
-                          users.find((u) => u.id === p.user_id)?.
+                          (users || []).find((u) => u.id === p.user_id)?.
                           username ||
                           `用户${p.user_id}`}
                             </p>
@@ -528,11 +528,11 @@ export default function TechnicalReviewDetail() {
                 }
               </CardHeader>
               <CardContent>
-                {materials.length === 0 ?
+                {materials?.length === 0 ?
                 <p className="text-center text-slate-400 py-8">暂无材料</p> :
 
                 <div className="space-y-2">
-                    {materials.map((m) =>
+                    {(materials || []).map((m) =>
                   <div
                     key={m.id}
                     className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
@@ -598,7 +598,7 @@ export default function TechnicalReviewDetail() {
                 </p> :
 
                 <div className="space-y-2">
-                    {checklistRecords.map((c) =>
+                    {(checklistRecords || []).map((c) =>
                   <div
                     key={c.id}
                     className="p-3 bg-slate-800/50 rounded-lg space-y-2">
@@ -654,11 +654,11 @@ export default function TechnicalReviewDetail() {
                 }
               </CardHeader>
               <CardContent>
-                {issues.length === 0 ?
+                {issues?.length === 0 ?
                 <p className="text-center text-slate-400 py-8">暂无问题</p> :
 
                 <div className="space-y-3">
-                    {issues.map((i) =>
+                    {(issues || []).map((i) =>
                   <div
                     key={i.id}
                     className="p-4 bg-slate-800/50 rounded-lg space-y-2">
@@ -695,9 +695,9 @@ export default function TechnicalReviewDetail() {
                           <span>类别: {i.category}</span>
                           <span>
                             责任人:{" "}
-                            {users.find((u) => u.id === i.assignee_id)?.
+                            {(users || []).find((u) => u.id === i.assignee_id)?.
                         real_name ||
-                        users.find((u) => u.id === i.assignee_id)?.
+                        (users || []).find((u) => u.id === i.assignee_id)?.
                         username ||
                         `用户${i.assignee_id}`}
                           </span>

@@ -70,29 +70,29 @@ export function AlertList({
   const [searchTerm, setSearchTerm] = useState('');
 
   // 合同风险评估
-  const riskAssessmentAlerts = alerts.filter((alert) =>
+  const riskAssessmentAlerts = (alerts || []).filter((alert) =>
   alert.type === 'RISK_ASSESSMENT' || alert.severity === 'HIGH' || alert.severity === 'CRITICAL'
   );
 
   // 合同到期提醒
-  const dueDateAlerts = alerts.filter((alert) =>
+  const dueDateAlerts = (alerts || []).filter((alert) =>
   alert.type === 'DUE_DATE_REMINDER' || alert.type === 'PAYMENT_REMINDER'
   );
 
   // 合同状态变更
-  const statusChangeAlerts = alerts.filter((alert) =>
+  const statusChangeAlerts = (alerts || []).filter((alert) =>
   alert.type === 'STATUS_CHANGE'
   );
 
   // 其他类型
-  const otherAlerts = alerts.filter((alert) =>
+  const otherAlerts = (alerts || []).filter((alert) =>
   !riskAssessmentAlerts.includes(alert) &&
   !dueDateAlerts.includes(alert) &&
   !statusChangeAlerts.includes(alert)
   );
 
   // 根据筛选条件过滤
-  const filteredAlerts = alerts.filter((alert) => {
+  const filteredAlerts = (alerts || []).filter((alert) => {
     const matchesStatus = filterStatus === 'all' || alert.status === filterStatus;
     const matchesType = filterType === 'all' || alert.type === filterType;
     const matchesSearch = alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,7 +201,7 @@ export function AlertList({
               variant="outline"
               size="sm"
               onClick={onMarkAllAsRead}
-              disabled={alerts.filter((a) => !a.read_at).length === 0}>
+              disabled={(alerts || []).filter((a) => !a.read_at).length === 0}>
 
               <CheckCircle2 className="h-4 w-4 mr-2" />
               全部已读
@@ -299,7 +299,7 @@ export function AlertList({
               <p>暂无符合条件的预警</p>
           </div> :
 
-          filteredAlerts.map((alert) => {
+          (filteredAlerts || []).map((alert) => {
             const config = reminderTypeConfigs[alert.type] || {};
             const isUnread = !alert.read_at;
             const isOverdue = alert.due_date && new Date(alert.due_date) < new Date();

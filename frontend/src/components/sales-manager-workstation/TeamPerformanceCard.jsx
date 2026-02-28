@@ -30,7 +30,7 @@ export function TeamPerformanceCard({ teamMembers }) {
         <CardContent>
           {teamMembers && teamMembers.length > 0 ? (
             <div className="space-y-4">
-              {teamMembers.map((member, index) => (
+              {(teamMembers || []).map((member, index) => (
                 <div
                   key={member.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors"

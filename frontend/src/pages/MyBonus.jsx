@@ -400,7 +400,7 @@ export default function MyBonus() {
                 <CardTitle className="text-white">最近计算记录</CardTitle>
               </CardHeader>
               <CardContent>
-                {data.calculations && data.calculations.length > 0 ?
+                {data.calculations && data.calculations?.length > 0 ?
               <div className="space-y-3">
                     {data.calculations.slice(0, 5).map((calc) => {
                   const typeConfig = bonusTypeConfig[calc.bonus_type] || {
@@ -465,9 +465,9 @@ export default function MyBonus() {
                 <CardTitle className="text-white">计算记录</CardTitle>
               </CardHeader>
               <CardContent>
-                {data.calculations && data.calculations.length > 0 ?
+                {data.calculations && data.calculations?.length > 0 ?
               <div className="space-y-3">
-                    {data.calculations.map((calc) => {
+                    {(data.calculations || []).map((calc) => {
                   const typeConfig = bonusTypeConfig[calc.bonus_type] || {
                     label: calc.bonus_type,
                     color: "bg-slate-500/20 text-slate-400"
@@ -536,9 +536,9 @@ export default function MyBonus() {
                 <CardTitle className="text-white">发放记录</CardTitle>
               </CardHeader>
               <CardContent>
-                {data.distributions && data.distributions.length > 0 ?
+                {data.distributions && data.distributions?.length > 0 ?
               <div className="space-y-3">
-                    {data.distributions.map((dist) => {
+                    {(data.distributions || []).map((dist) => {
                   const status =
                   distributionStatusConfig[dist.status] ||
                   distributionStatusConfig.PENDING;

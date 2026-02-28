@@ -320,7 +320,7 @@ export default function IssueTemplateManagement() {
   };
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
+    return (templates || []).filter((template) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (

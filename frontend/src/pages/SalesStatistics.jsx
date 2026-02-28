@@ -112,7 +112,7 @@ export default function SalesStatistics() {
       if (forecastResponse.data && forecastResponse.data.data) {
         const forecast = forecastResponse.data.data;
         const totalForecast = forecast.forecast ?
-        forecast.forecast.reduce(
+        (forecast.forecast || []).reduce(
           (sum, f) => sum + (parseFloat(f.estimated_revenue) || 0),
           0
         ) :
@@ -390,11 +390,11 @@ export default function SalesStatistics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {funnelData.stages && funnelData.stages.length > 0 ?
+              {funnelData.stages && funnelData.stages?.length > 0 ?
             <>
                   {/* 漏斗可视化 */}
                   <div className="relative">
-                    {funnelData.stages.map((stage, index) => {
+                    {(funnelData.stages || []).map((stage, index) => {
                   const prevCount =
                   index > 0 ?
                   funnelData.stages[index - 1].count :
@@ -406,7 +406,7 @@ export default function SalesStatistics() {
                   const isIncreasing =
                   index === 0 || stage.count >= prevCount;
                   const maxCount = Math.max(
-                    ...funnelData.stages.map((s) => s.count || 0),
+                    ...(funnelData.stages || []).map((s) => s.count || 0),
                     1
                   );
                   const widthPercent =
@@ -456,7 +456,7 @@ export default function SalesStatistics() {
                             clipPath:
                             index === 0 ?
                             "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)" :
-                            index === funnelData.stages.length - 1 ?
+                            index === funnelData.stages?.length - 1 ?
                             "polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%)" :
                             "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)"
                           }} />
@@ -484,8 +484,8 @@ export default function SalesStatistics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {opportunitiesByStage.map((item) => {
-                const total = opportunitiesByStage.reduce(
+                {(opportunitiesByStage || []).map((item) => {
+                const total = (opportunitiesByStage || []).reduce(
                   (sum, i) => sum + (parseFloat(i.count) || 0),
                   0
                 );
@@ -549,14 +549,14 @@ export default function SalesStatistics() {
                     </div>
                   </div>
                   {revenueForecast.breakdown &&
-              revenueForecast.breakdown.length > 0 &&
+              revenueForecast.breakdown?.length > 0 &&
               <div className="border-t border-slate-700 pt-4">
                         <p className="text-sm text-slate-400 mb-2">
                           按阶段分解:
                         </p>
                         <div className="space-y-2">
-                          {revenueForecast.breakdown.map((item) => {
-                    const total = revenueForecast.breakdown.reduce(
+                          {(revenueForecast.breakdown || []).map((item) => {
+                    const total = (revenueForecast.breakdown || []).reduce(
                       (sum, i) => sum + (parseFloat(i.amount) || 0),
                       0
                     );

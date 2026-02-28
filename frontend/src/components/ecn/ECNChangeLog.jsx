@@ -37,7 +37,7 @@ export function ECNChangeLog({
   const [filterType, setFilterType] = useState("__all__");
   const [filterDateRange, setFilterDateRange] = useState("all");
 
-  const filteredLogs = logs.filter((log) => {
+  const filteredLogs = (logs || []).filter((log) => {
     // 搜索过滤
     if (searchTerm && !log.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
@@ -93,7 +93,7 @@ export function ECNChangeLog({
     "描述",
     "详细信息"].
     join(","),
-    ...filteredLogs.map((log) => [
+    ...(filteredLogs || []).map((log) => [
     formatDate(log.created_time),
     getLogConfig(log.log_type).label,
     log.operator_name || log.operator,
@@ -180,7 +180,7 @@ export function ECNChangeLog({
         </Card> :
 
         <div className="space-y-4">
-            {filteredLogs.map((log, index) => {
+            {(filteredLogs || []).map((log, index) => {
             const logConfig = getLogConfig(log.log_type);
 
             return (
@@ -248,11 +248,11 @@ export function ECNChangeLog({
                         </div>
                         }
 
-                          {log.attachments && log.attachments.length > 0 &&
+                          {log.attachments && log.attachments?.length > 0 &&
                         <div className="text-sm text-slate-400">
                               <div className="font-medium mb-1">附件:</div>
                               <div className="flex flex-wrap gap-2">
-                                {log.attachments.map((attachment, idx) =>
+                                {(log.attachments || []).map((attachment, idx) =>
                             <Badge key={idx} variant="outline" className="text-xs">
                                     {attachment.name}
                             </Badge>

@@ -321,7 +321,7 @@ export default function PresaleExpenseManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {statistics.statistics.map((stat, index) =>
+                {(statistics.statistics || []).map((stat, index) =>
               <TableRow key={index}>
                     {groupBy === "person" &&
                 <>
@@ -375,7 +375,7 @@ export default function PresaleExpenseManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.map((expense) =>
+                {(expenses || []).map((expense) =>
               <TableRow key={expense.project_id}>
                     <TableCell>{expense.project_code}</TableCell>
                     <TableCell>{expense.project_name}</TableCell>

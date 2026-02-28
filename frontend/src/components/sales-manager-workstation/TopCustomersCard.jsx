@@ -27,7 +27,7 @@ export function TopCustomersCard({ topCustomers }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {topCustomers && topCustomers.length > 0 ? (
-            topCustomers.map((customer) => (
+            (topCustomers || []).map((customer) => (
               <CustomerCard
                 key={customer.id}
                 customer={customer}

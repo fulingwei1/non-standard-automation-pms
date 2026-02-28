@@ -32,7 +32,7 @@ export function ProjectSelectionView({
                     </div>
 
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {projectList.map((proj) => (
+                        {(projectList || []).map((proj) => (
                             <div
                                 key={proj.id}
                                 onClick={() => onSelectProject(proj.id)}

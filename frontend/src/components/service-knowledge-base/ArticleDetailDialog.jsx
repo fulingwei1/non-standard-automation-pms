@@ -86,7 +86,7 @@ export default function ArticleDetailDialog({ article, onClose, onUpdate, onDele
                 />
                 {formData.content && (
                   <div className="mt-2 text-xs text-slate-500">
-                    {formData.content.length} 字符
+                    {formData.content?.length} 字符
                   </div>
                 )}
               </div>
@@ -105,11 +105,11 @@ export default function ArticleDetailDialog({ article, onClose, onUpdate, onDele
                 </div>
               </div>
 
-              {article.tags && article.tags.length > 0 && (
+              {article.tags && article.tags?.length > 0 && (
                 <div>
                   <p className="text-sm text-slate-400 mb-2">标签</p>
                   <div className="flex flex-wrap gap-2">
-                    {article.tags.map((tag, index) => (
+                    {(article.tags || []).map((tag, index) => (
                       <Badge
                         key={index}
                         variant="secondary"

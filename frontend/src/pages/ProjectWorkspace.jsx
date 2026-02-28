@@ -198,7 +198,7 @@ export default function ProjectWorkspace() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {team.map((member) =>
+                {(team || []).map((member) =>
                 <div
                   key={member.user_id}
                   className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -307,7 +307,7 @@ export default function ProjectWorkspace() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {documents.map((doc) =>
+                {(documents || []).map((doc) =>
                 <div
                   key={doc.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">

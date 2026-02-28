@@ -64,7 +64,7 @@ export function PermissionMatrix({
     useEffect(() => {
         if (matrix?.matrix) {
             const expanded = {};
-            matrix.matrix.forEach(mod => {
+            (matrix.matrix || []).forEach(mod => {
                 expanded[mod.module_code] = true;
             });
             setExpandedModules(expanded);
@@ -105,13 +105,13 @@ export function PermissionMatrix({
                 .filter(([_, d]) => d.depends_on_id === permId)
                 .map(([id]) => parseInt(id));
 
-            const selectedDependents = dependentPerms.filter(id => selectedPermissions.includes(id));
+            const selectedDependents = (dependentPerms || []).filter(id => selectedPermissions.includes(id));
             if (selectedDependents.length > 0) {
                 alert('存在依赖此权限的其他权限，请先取消它们的选择');
                 return;
             }
 
-            onSelectionChange?.(selectedPermissions.filter(id => id !== permId));
+            onSelectionChange?.((selectedPermissions || []).filter(id => id !== permId));
         } else {
             // 选择权限 - 自动选择依赖的权限
             let newSelection = [...selectedPermissions, permId];
@@ -145,14 +145,14 @@ export function PermissionMatrix({
     const toggleModuleAll = (module) => {
         if (readonly) return;
 
-        const allPermIds = module.pages.flatMap(page =>
-            page.permissions.map(p => p.id)
+        const allPermIds = (module.pages || []).flatMap(page =>
+            (page.permissions || []).map(p => p.id)
         ).filter(id => !isInherited(id));
 
-        const allSelected = allPermIds.every(id => selectedPermissions.includes(id));
+        const allSelected = (allPermIds || []).every(id => selectedPermissions.includes(id));
 
         if (allSelected) {
-            onSelectionChange?.(selectedPermissions.filter(id => !allPermIds.includes(id)));
+            onSelectionChange?.((selectedPermissions || []).filter(id => !allPermIds.includes(id)));
         } else {
             const newSelection = [...new Set([...selectedPermissions, ...allPermIds])];
             onSelectionChange?.(newSelection);
@@ -163,11 +163,11 @@ export function PermissionMatrix({
     const togglePageAll = (page) => {
         if (readonly) return;
 
-        const allPermIds = page.permissions.map(p => p.id).filter(id => !isInherited(id));
-        const allSelected = allPermIds.every(id => selectedPermissions.includes(id));
+        const allPermIds = (page.permissions || []).map(p => p.id).filter(id => !isInherited(id));
+        const allSelected = (allPermIds || []).every(id => selectedPermissions.includes(id));
 
         if (allSelected) {
-            onSelectionChange?.(selectedPermissions.filter(id => !allPermIds.includes(id)));
+            onSelectionChange?.((selectedPermissions || []).filter(id => !allPermIds.includes(id)));
         } else {
             const newSelection = [...new Set([...selectedPermissions, ...allPermIds])];
             onSelectionChange?.(newSelection);
@@ -176,10 +176,10 @@ export function PermissionMatrix({
 
     // 计算模块选中状态
     const getModuleCheckState = (module) => {
-        const allPermIds = module.pages.flatMap(page =>
-            page.permissions.map(p => p.id)
+        const allPermIds = (module.pages || []).flatMap(page =>
+            (page.permissions || []).map(p => p.id)
         );
-        const selectedCount = allPermIds.filter(id => isSelected(id)).length;
+        const selectedCount = (allPermIds || []).filter(id => isSelected(id)).length;
 
         if (selectedCount === 0) return 'none';
         if (selectedCount === allPermIds.length) return 'all';
@@ -188,8 +188,8 @@ export function PermissionMatrix({
 
     // 计算页面选中状态
     const getPageCheckState = (page) => {
-        const allPermIds = page.permissions.map(p => p.id);
-        const selectedCount = allPermIds.filter(id => isSelected(id)).length;
+        const allPermIds = (page.permissions || []).map(p => p.id);
+        const selectedCount = (allPermIds || []).filter(id => isSelected(id)).length;
 
         if (selectedCount === 0) return 'none';
         if (selectedCount === allPermIds.length) return 'all';
@@ -224,7 +224,7 @@ export function PermissionMatrix({
                 </div>
 
                 {/* 矩阵内容 */}
-                {matrix.matrix.map((module) => {
+                {(matrix.matrix || []).map((module) => {
                     const isExpanded = expandedModules[module.module_code];
                     const checkState = getModuleCheckState(module);
 
@@ -261,14 +261,14 @@ export function PermissionMatrix({
 
                                 <span className="font-medium">{module.module_name}</span>
                                 <Badge variant="outline" className="ml-2">
-                                    {module.pages.reduce((sum, p) => sum + p.permissions.length, 0)} 权限
+                                    {(module.pages || []).reduce((sum, p) => sum + p.permissions?.length, 0)} 权限
                                 </Badge>
                             </div>
 
                             {/* 页面列表 */}
                             {isExpanded && (
                                 <div className="divide-y">
-                                    {module.pages.map((page) => {
+                                    {(module.pages || []).map((page) => {
                                         const pageKey = `${module.module_code}:${page.page_code}`;
                                         const isPageExpanded = expandedPages[pageKey] !== false; // 默认展开
                                         const pageCheckState = getPageCheckState(page);
@@ -305,7 +305,7 @@ export function PermissionMatrix({
                                                     )}
 
                                                     <span className="text-sm text-slate-700">{page.page_name}</span>
-                                                    <span className="text-xs text-slate-400">({page.permissions.length})</span>
+                                                    <span className="text-xs text-slate-400">({page.permissions?.length})</span>
                                                 </div>
 
                                                 {/* 权限列表 */}

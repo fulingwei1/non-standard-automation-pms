@@ -61,7 +61,7 @@ const DimensionScores = ({ scores }) => {
 
   return (
     <div className="space-y-2">
-      {dimensions.map((dim) => {
+      {(dimensions || []).map((dim) => {
         const score = scores?.[dim.key] || 0;
         const color =
           score >= 70
@@ -275,7 +275,7 @@ const WinRateTrend = ({ data }) => {
 
   return (
     <div className="space-y-2">
-      {data.map((item, index) => (
+      {(data || []).map((item, index) => (
         <div key={index} className="flex items-center gap-3">
           <span className="text-xs text-slate-500 w-16">{item.month}</span>
           <div className="flex-1">

@@ -349,7 +349,7 @@ export default function WorkOrderDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {workReports.map((report) =>
+                    {(workReports || []).map((report) =>
                   <TableRow key={report.id}>
                         <TableCell className="font-mono text-sm">
                           {report.report_no}

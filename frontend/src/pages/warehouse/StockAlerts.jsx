@@ -69,8 +69,8 @@ export default function StockAlerts() {
             <TableHead className="text-right">安全库存</TableHead><TableHead className="text-right">缺口/超储</TableHead>
           </TableRow></TableHeader><TableBody>
             {loading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">加载中...</TableCell></TableRow>
-            : data.items.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">暂无预警 🎉</TableCell></TableRow>
-            : data.items.map((row, idx) => (
+            : data.items?.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">暂无预警 🎉</TableCell></TableRow>
+            : (data.items || []).map((row, idx) => (
               <TableRow key={idx}>
                 <TableCell><Badge variant="outline" className={row.alert_type === "LOW" ? "text-red-400 bg-red-400/10" : "text-yellow-400 bg-yellow-400/10"}>{row.alert_type === "LOW" ? "低库存" : "超储"}</Badge></TableCell>
                 <TableCell className="font-mono text-sm">{row.material_code}</TableCell>

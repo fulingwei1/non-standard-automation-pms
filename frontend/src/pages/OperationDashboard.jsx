@@ -85,8 +85,8 @@ const buildMonthlyTrend = (projects, months = 6) => {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     buckets.push({ key, label: `${date.getMonth() + 1}月`, amount: 0 });
   }
-  const bucketMap = new Map(buckets.map((bucket) => [bucket.key, bucket]));
-  projects.forEach((project) => {
+  const bucketMap = new Map((buckets || []).map((bucket) => [bucket.key, bucket]));
+  (projects || []).forEach((project) => {
     const dateValue = project.planned_end_date || project.contract_date;
     if (!dateValue) {return;}
     const date = new Date(dateValue);
@@ -97,7 +97,7 @@ const buildMonthlyTrend = (projects, months = 6) => {
       bucket.amount += Number(project.contract_amount || 0);
     }
   });
-  return buckets.map((bucket) => ({
+  return (buckets || []).map((bucket) => ({
     month: bucket.label,
     revenue: Math.round(bucket.amount / 10000),
   }));
@@ -220,10 +220,10 @@ function HealthDonut({ data }) {
 }
 
 function MiniBarChart({ data }) {
-  if (!data || data.length === 0) {
+  if (!data || data?.length === 0) {
     return <div className="text-sm text-slate-400">暂无产值数据</div>;
   }
-  const maxValue = Math.max(...data.map((d) => d.revenue), 0);
+  const maxValue = Math.max(...(data || []).map((d) => d.revenue), 0);
   if (maxValue === 0) {
     return <div className="text-sm text-slate-400">暂无产值数据</div>;
   }
@@ -231,7 +231,7 @@ function MiniBarChart({ data }) {
 
   return (
     <div className="flex items-end gap-2 h-32">
-      {data.map((item, index) => (
+      {(data || []).map((item, index) => (
         <div key={index} className="flex-1 flex flex-col items-center gap-1">
           <div className="w-full flex flex-col items-center gap-1">
             <span className="text-xs text-slate-400">
@@ -332,7 +332,7 @@ export default function OperationDashboard() {
         : [];
 
       const healthSource = boardProjects.length
-        ? boardProjects.reduce((acc, project) => {
+        ? (boardProjects || []).reduce((acc, project) => {
           const health = project?.health || "H1";
           acc[health] = (acc[health] || 0) + 1;
           return acc;
@@ -417,7 +417,7 @@ export default function OperationDashboard() {
 
       const utilizationList = utilizationData?.utilization_list || [];
       const deptUtilization = {};
-      utilizationList.forEach((entry) => {
+      (utilizationList || []).forEach((entry) => {
         const dept = entry.department || "未分配";
         if (!deptUtilization[dept]) {
           deptUtilization[dept] = { total: 0, count: 0 };
@@ -427,10 +427,10 @@ export default function OperationDashboard() {
       });
 
       const userDeptMap = new Map(
-        utilizationList.map((entry) => [entry.user_id, entry.department || "未分配"])
+        (utilizationList || []).map((entry) => [entry.user_id, entry.department || "未分配"])
       );
       const deptProjectCounts = {};
-      boardProjects.forEach((project) => {
+      (boardProjects || []).forEach((project) => {
         const dept = userDeptMap.get(project.pm_id) || "未分配";
         deptProjectCounts[dept] = (deptProjectCounts[dept] || 0) + 1;
       });
@@ -522,7 +522,7 @@ export default function OperationDashboard() {
         variants={fadeIn}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        {dashboardData.kpis.map((kpi, index) => (
+        {(dashboardData.kpis || []).map((kpi, index) => (
           <KpiCard key={index} kpi={kpi} />
         ))}
       </motion.div>
@@ -574,10 +574,10 @@ export default function OperationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {dashboardData.departmentPerformance.length === 0 ? (
+            {dashboardData.departmentPerformance?.length === 0 ? (
               <div className="text-sm text-slate-400">暂无部门绩效数据</div>
             ) : (
-              dashboardData.departmentPerformance.map((dept, index) => {
+              (dashboardData.departmentPerformance || []).map((dept, index) => {
                 const onTimeValue = Number.isFinite(dept.onTime) ? dept.onTime : null;
                 return (
                   <div key={index} className="space-y-2">
@@ -629,10 +629,10 @@ export default function OperationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {dashboardData.alerts.length === 0 ? (
+            {dashboardData.alerts?.length === 0 ? (
               <div className="text-sm text-slate-400">暂无预警数据</div>
             ) : (
-              dashboardData.alerts.map((alert, index) => (
+              (dashboardData.alerts || []).map((alert, index) => (
                 <div
                   key={index}
                   className={cn(
@@ -685,7 +685,7 @@ export default function OperationDashboard() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              {dashboardData.topProjects.length === 0 ? (
+              {dashboardData.topProjects?.length === 0 ? (
                 <div className="text-sm text-slate-400 py-6 text-center">暂无重点项目</div>
               ) : (
                 <table className="w-full text-sm">
@@ -712,7 +712,7 @@ export default function OperationDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.topProjects.map((project) => (
+                    {(dashboardData.topProjects || []).map((project) => (
                       <tr
                         key={project.id}
                         className="border-b border-border/50 hover:bg-surface-2/30"

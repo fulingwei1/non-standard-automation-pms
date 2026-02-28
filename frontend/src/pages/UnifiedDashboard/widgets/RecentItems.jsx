@@ -87,7 +87,7 @@ export default function RecentItems({ type, limit = 5, data }) {
         const stored = localStorage.getItem('recent_items');
         if (stored) {
           const parsed = JSON.parse(stored);
-          const filtered = type ? parsed.filter(i => i.type === type) : parsed;
+          const filtered = type ? (parsed || []).filter(i => i.type === type) : parsed;
           setItems(filtered.slice(0, limit));
           return;
         }
@@ -122,14 +122,14 @@ export default function RecentItems({ type, limit = 5, data }) {
               <div key={i} className="h-12 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
-        ) : items.length === 0 ? (
+        ) : items?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <History className="h-8 w-8 mb-2" />
             <p className="text-sm">暂无访问记录</p>
           </div>
         ) : (
           <div className="space-y-1">
-            {items.map((item, index) => (
+            {(items || []).map((item, index) => (
               <RecentItem
                 key={item.id}
                 item={item}

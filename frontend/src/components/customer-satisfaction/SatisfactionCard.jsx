@@ -206,7 +206,7 @@ export const SatisfactionCard = ({
         <CardContent className="pt-0">
           {/* 主指标显示 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {statsCards.map((stat, index) =>
+            {(statsCards || []).map((stat, index) =>
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}

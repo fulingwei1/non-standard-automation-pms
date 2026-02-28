@@ -69,7 +69,7 @@ export const SalesTeamManager = ({
 
   // 过滤后的团队成员
   const filteredMembers = useMemo(() => {
-    return teamMembers.filter(member => {
+    return (teamMembers || []).filter(member => {
       if (localSearchTerm && !member.name.toLowerCase().includes(localSearchTerm.toLowerCase())) {
         return false;
       }
@@ -172,7 +172,7 @@ export const SalesTeamManager = ({
                   <SelectValue placeholder="选择部门" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departmentOptions.map(option => (
+                  {(departmentOptions || []).map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -188,7 +188,7 @@ export const SalesTeamManager = ({
                   <SelectValue placeholder="选择区域" />
                 </SelectTrigger>
                 <SelectContent>
-                  {regionOptions.map(option => (
+                  {(regionOptions || []).map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -288,7 +288,7 @@ export const SalesTeamManager = ({
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">排名</th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">成员</th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">综合得分</th>
-                        {metricConfigList.map((metric) => (
+                        {(metricConfigList || []).map((metric) => (
                           <th
                             key={`header-${metric.key}`}
                             className="px-3 py-2 text-left text-xs font-semibold text-slate-400 whitespace-nowrap"
@@ -302,7 +302,7 @@ export const SalesTeamManager = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700/40">
-                      {rankingData.map((member, index) => (
+                      {(rankingData || []).map((member, index) => (
                         <motion.tr
                           key={member.id}
                           initial={{ opacity: 0, x: -10 }}
@@ -343,7 +343,7 @@ export const SalesTeamManager = ({
                               {member.comprehensiveScore || '-'}
                             </div>
                           </td>
-                          {metricConfigList.map((metric) => {
+                          {(metricConfigList || []).map((metric) => {
                             const value = member.metrics?.[metric.key];
                             const formattedValue = formatPerformanceMetric(
                               value,
@@ -387,7 +387,7 @@ export const SalesTeamManager = ({
               <div className="text-center py-8 text-slate-400">暂无团队成员</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMembers.map((member, index) => {
+                {(filteredMembers || []).map((member, index) => {
                   const completionRate = calculateSalesCompletionRate(member.monthlyAchieved, member.monthlyTarget);
                   const performanceLevel = completionRate >= 120 ? 'excellent' : completionRate >= 100 ? 'good' : completionRate >= 80 ? 'average' : 'poor';
                   const performanceConfig = getSalesPerformanceLevelConfig(performanceLevel);

@@ -164,7 +164,7 @@ export default function SalesFunnel() {
 
 
       // Calculate conversion rates from previous stage
-      transformedData.forEach((item, index) => {
+      (transformedData || []).forEach((item, index) => {
         if (index > 0) {
           const prevCount = transformedData[index - 1].count;
           item.conversion =
@@ -215,7 +215,7 @@ export default function SalesFunnel() {
     loadFunnelData();
   }, [timeRange, ownerId, customerId, industry]);
 
-  const maxCount = Math.max(...funnelData.map((d) => d.count), 1);
+  const maxCount = Math.max(...(funnelData || []).map((d) => d.count), 1);
 
   const handleStageClick = (stage) => {
     setSelectedStage(stage);
@@ -280,7 +280,7 @@ export default function SalesFunnel() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部</SelectItem>
-                      {owners.map((u) => (
+                      {(owners || []).map((u) => (
                         <SelectItem key={u.id} value={u.id?.toString()}>
                           {u.real_name || u.username || `用户#${u.id}`}
                         </SelectItem>
@@ -303,7 +303,7 @@ export default function SalesFunnel() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部</SelectItem>
-                      {customers.map((c) => (
+                      {(customers || []).map((c) => (
                         <SelectItem key={c.id} value={c.id?.toString()}>
                           {c.customer_name || c.name || `客户#${c.id}`}
                         </SelectItem>
@@ -334,9 +334,9 @@ export default function SalesFunnel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {funnelData.map((data, index) => {
+                {(funnelData || []).map((data, index) => {
                   const stageConfig =
-                  stages.find((s) => s.key === data.stage) || stages[0];
+                  (stages || []).find((s) => s.key === data.stage) || stages[0];
                   const width = data.count / maxCount * 100;
                   const prevData = index > 0 ? funnelData[index - 1] : null;
                   const dropRate =
@@ -467,7 +467,7 @@ export default function SalesFunnel() {
                     <p className="text-2xl font-bold text-purple-400">
                       ¥
                       {(
-                      funnelData.reduce((sum, d) => sum + (d.value || 0), 0) /
+                      (funnelData || []).reduce((sum, d) => sum + (d.value || 0), 0) /
                       10000).
                       toFixed(0)}
                       万

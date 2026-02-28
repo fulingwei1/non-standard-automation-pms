@@ -19,9 +19,9 @@ const SearchAndFilter = ({ filters, onFiltersChange, documents = [], loading = f
 
   const summary = useMemo(() => {
     return {
-      total: documents.length
+      total: documents?.length
     };
-  }, [documents.length]);
+  }, [documents?.length]);
 
   const apply = (values) => {
     onFiltersChange?.({ ...filters, ...values });

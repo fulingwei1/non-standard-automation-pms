@@ -57,7 +57,7 @@ const ScoringEngine = ({ leads = [], criteria, onReScore }) => {
   ];
 
   const handleRescore = () => {
-    const updated = leads.map((lead) => ({ ...lead, score: scoreLead(lead, criteria) }));
+    const updated = (leads || []).map((lead) => ({ ...lead, score: scoreLead(lead, criteria) }));
     onReScore?.(updated);
   };
 

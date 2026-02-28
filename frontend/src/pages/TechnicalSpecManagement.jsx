@@ -209,7 +209,7 @@ export default function TechnicalSpecManagement() {
           </div> :
 
           <div className="space-y-4">
-              {requirements.map((req) =>
+              {(requirements || []).map((req) =>
             <div
               key={req.id}
               className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">

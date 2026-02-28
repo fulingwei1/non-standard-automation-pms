@@ -235,7 +235,7 @@ function NotificationsSection() {
                 <th className="text-left p-3 text-sm font-medium text-slate-400">
                   通知类型
                 </th>
-                {channels.map((channel) => (
+                {(channels || []).map((channel) => (
                   <th
                     key={channel.key}
                     className="text-center p-3 text-sm font-medium text-slate-400"
@@ -249,7 +249,7 @@ function NotificationsSection() {
               </tr>
             </thead>
             <tbody>
-              {notificationTypes.map((type) => (
+              {(notificationTypes || []).map((type) => (
                 <tr key={type.key} className="border-b border-border/50">
                   <td className="p-3">
                     <div>
@@ -259,7 +259,7 @@ function NotificationsSection() {
                       <div className="text-xs text-slate-500">{type.desc}</div>
                     </div>
                   </td>
-                  {channels.map((channel) => (
+                  {(channels || []).map((channel) => (
                     <td key={channel.key} className="p-3 text-center">
                       <button
                         onClick={() => toggleSetting(channel.key, type.key)}
@@ -319,7 +319,7 @@ function SecuritySection() {
       return;
     }
 
-    if (passwords.new.length < 6) {
+    if (passwords.new?.length < 6) {
       setError("新密码长度至少6位");
       return;
     }
@@ -538,7 +538,7 @@ function AppearanceSection() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
-            {themes.map((t) => (
+            {(themes || []).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
@@ -582,7 +582,7 @@ function AppearanceSection() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            {accentColors.map((color) => (
+            {(accentColors || []).map((color) => (
               <button
                 key={color}
                 onClick={() => setAccentColor(color)}
@@ -628,7 +628,7 @@ function LanguageSection() {
         <div className="space-y-3">
           <label className="text-sm font-medium text-slate-300">界面语言</label>
           <div className="grid grid-cols-3 gap-3">
-            {languages.map((lang) => (
+            {(languages || []).map((lang) => (
               <button
                 key={lang.id}
                 onClick={() => setLanguage(lang.id)}
@@ -765,7 +765,7 @@ export default function Settings() {
             <Card className="bg-surface-1/50 lg:w-64 shrink-0">
               <CardContent className="p-2">
                 <nav className="space-y-1">
-                  {settingsSections.map((section) => (
+                  {(settingsSections || []).map((section) => (
                     <button
                       key={section.id}
                       onClick={() => setActiveSection(section.id)}

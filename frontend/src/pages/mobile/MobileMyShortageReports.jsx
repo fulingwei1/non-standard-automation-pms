@@ -72,9 +72,9 @@ export default function MobileMyShortageReports() {
 
   const stats = {
     total: reports.length,
-    reported: reports.filter((r) => r.status === "REPORTED").length,
-    handling: reports.filter((r) => r.status === "HANDLING").length,
-    resolved: reports.filter((r) => r.status === "RESOLVED").length,
+    reported: (reports || []).filter((r) => r.status === "REPORTED").length,
+    handling: (reports || []).filter((r) => r.status === "HANDLING").length,
+    resolved: (reports || []).filter((r) => r.status === "RESOLVED").length,
   };
 
   return (
@@ -160,7 +160,7 @@ export default function MobileMyShortageReports() {
         ) : reports.length === 0 ? (
           <div className="text-center py-12 text-slate-400">暂无上报记录</div>
         ) : (
-          reports.map((report) => (
+          (reports || []).map((report) => (
             <Card
               key={report.id}
               className="active:scale-[0.98] transition-transform"

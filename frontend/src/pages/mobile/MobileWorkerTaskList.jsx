@@ -55,7 +55,7 @@ export default function MobileWorkerTaskList() {
       const allOrders = res.data?.items || res.data?.items || res.data || [];
 
       // 筛选已派工的任务
-      const myTasks = allOrders.filter(
+      const myTasks = (allOrders || []).filter(
         (order) =>
         order.status === "ASSIGNED" ||
         order.status === "STARTED" ||
@@ -64,7 +64,7 @@ export default function MobileWorkerTaskList() {
       );
 
       if (filterStatus) {
-        const filtered = myTasks.filter(
+        const filtered = (myTasks || []).filter(
           (order) => order.status === filterStatus
         );
         setTasks(filtered);
@@ -79,12 +79,12 @@ export default function MobileWorkerTaskList() {
   };
 
   const stats = {
-    total: tasks.length,
-    assigned: tasks.filter((t) => t.status === "ASSIGNED").length,
-    inProgress: tasks.filter(
+    total: tasks?.length,
+    assigned: (tasks || []).filter((t) => t.status === "ASSIGNED").length,
+    inProgress: (tasks || []).filter(
       (t) => t.status === "STARTED" || t.status === "IN_PROGRESS"
     ).length,
-    completed: tasks.filter((t) => t.status === "COMPLETED").length
+    completed: (tasks || []).filter((t) => t.status === "COMPLETED").length
   };
 
   return (
@@ -168,10 +168,10 @@ export default function MobileWorkerTaskList() {
       <div className="px-4 space-y-3">
         {loading ?
         <div className="text-center py-12 text-slate-400">加载中...</div> :
-        tasks.length === 0 ?
+        tasks?.length === 0 ?
         <div className="text-center py-12 text-slate-400">暂无任务</div> :
 
-        tasks.map((task) =>
+        (tasks || []).map((task) =>
         <div
           key={task.id}
           className="bg-white rounded-lg p-4 shadow-sm active:scale-[0.98] transition-transform"

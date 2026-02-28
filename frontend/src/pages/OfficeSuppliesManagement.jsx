@@ -87,7 +87,7 @@ export default function OfficeSuppliesManagement() {
   }, []);
 
   const filteredSupplies = useMemo(() => {
-    return supplies.filter((item) => {
+    return (supplies || []).filter((item) => {
       const matchSearch = item.name.
       toLowerCase().
       includes(searchText.toLowerCase());
@@ -101,8 +101,8 @@ export default function OfficeSuppliesManagement() {
 
   const stats = useMemo(() => {
     const totalItems = supplies.length;
-    const lowStockItems = supplies.filter((s) => s.status === "low").length;
-    const totalValue = supplies.reduce((sum, s) => sum + s.totalValue, 0);
+    const lowStockItems = (supplies || []).filter((s) => s.status === "low").length;
+    const totalValue = (supplies || []).reduce((sum, s) => sum + s.totalValue, 0);
     return { totalItems, lowStockItems, totalValue };
   }, [supplies]);
 
@@ -283,7 +283,7 @@ export default function OfficeSuppliesManagement() {
 
           {/* Items List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredSupplies.map((item) =>
+            {(filteredSupplies || []).map((item) =>
             <Card key={item.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -388,7 +388,7 @@ export default function OfficeSuppliesManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockPurchaseOrders.map((order) =>
+                {(mockPurchaseOrders || []).map((order) =>
                 <div
                   key={order.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
@@ -470,7 +470,7 @@ export default function OfficeSuppliesManagement() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {supplies.map((item) =>
+                {(supplies || []).map((item) =>
                 <div
                   key={item.id}
                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">

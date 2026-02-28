@@ -24,7 +24,7 @@ export function OrderCreationResultStep({ createdOrders, onReset }) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        {createdOrders.map((order, index) => (
+                        {(createdOrders || []).map((order, index) => (
                             <div
                                 key={index}
                                 className="p-3 border border-slate-700 rounded-lg bg-slate-900/30 flex items-center justify-between"

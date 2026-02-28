@@ -34,7 +34,7 @@ export default function ProjectHealthCard({ projectHealth }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {projectHealth.map((project) => (
+            {(projectHealth || []).map((project) => (
               <div
                 key={project.id}
                 className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"

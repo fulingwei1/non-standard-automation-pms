@@ -68,7 +68,7 @@ export function TechnicalReviewCards({
                 animate="visible"
                 className="grid grid-cols-1 gap-4"
             >
-                {reviews.map((review) => {
+                {(reviews || []).map((review) => {
                     const statusBadge = getStatusBadge(review.status);
                     const conclusionBadge = getConclusionBadge(review.conclusion);
                     const totalIssues =

@@ -46,7 +46,7 @@ export function DataImportPanel({
                                 <SelectValue placeholder="选择模板类型" />
                             </SelectTrigger>
                             <SelectContent>
-                                {templateTypes.map((type) => (
+                                {(templateTypes || []).map((type) => (
                                     <SelectItem key={type.type} value={type.type}>
                                         {type.name} - {type.description}
                                     </SelectItem>

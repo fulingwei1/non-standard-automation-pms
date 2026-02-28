@@ -34,7 +34,7 @@ const PendingApprovals = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {pendingApprovals.map((item) =>
+          {(pendingApprovals || []).map((item) =>
           <div
             key={item.id}
             className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"

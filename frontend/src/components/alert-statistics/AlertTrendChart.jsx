@@ -57,7 +57,7 @@ export function AlertTrendChart({
     // 根据时间维度聚合数据
     const groupedData = {};
 
-    data.forEach((alert) => {
+    (data || []).forEach((alert) => {
       if (!alert.created_at) {return;}
 
       const date = new Date(alert.created_at);
@@ -366,7 +366,7 @@ export function AlertTrendChart({
 
   // 渲染解决率趋势
   const renderResolutionTrend = () => {
-    const resolutionData = processedData.map((item) => ({
+    const resolutionData = (processedData || []).map((item) => ({
       ...item,
       resolutionRate: item.total > 0 ? (item.resolved / item.total * 100).toFixed(1) : 0
     }));

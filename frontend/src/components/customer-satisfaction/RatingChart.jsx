@@ -87,8 +87,8 @@ export const RatingChart = ({
 
   // 计算评分分布百分比
   const ratingsWithPercentage = useMemo(() => {
-    const total = chartData.ratings.reduce((sum, item) => sum + item.count, 0);
-    return chartData.ratings.map((item) => ({
+    const total = (chartData.ratings || []).reduce((sum, item) => sum + item.count, 0);
+    return (chartData.ratings || []).map((item) => ({
       ...item,
       percentage: (item.count / total * 100).toFixed(1)
     }));
@@ -113,12 +113,12 @@ export const RatingChart = ({
   // 渲染趋势图
   const renderTrendChart = () => {
     const data = getCurrentChartData();
-    const maxScore = Math.max(...data.map((item) => item.score));
-    const minScore = Math.min(...data.map((item) => item.score));
+    const maxScore = Math.max(...(data || []).map((item) => item.score));
+    const minScore = Math.min(...(data || []).map((item) => item.score));
 
     return (
       <div className="space-y-4">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const trend = index > 0 ? item.score - data[index - 1].score : 0;
           const config = getSatisfactionScoreConfig(item.score);
 
@@ -192,11 +192,11 @@ export const RatingChart = ({
   // 渲染分布图
   const renderDistributionChart = () => {
     const data = getCurrentChartData();
-    const maxCount = Math.max(...data.map((item) => item.count));
+    const maxCount = Math.max(...(data || []).map((item) => item.count));
 
     return (
       <div className="space-y-4">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const config = getSatisfactionScoreConfig(item.rating);
 
           return (
@@ -261,11 +261,11 @@ export const RatingChart = ({
   // 渲染类型/部门分析图
   const renderAnalysisChart = () => {
     const data = getCurrentChartData();
-    const _maxScore = Math.max(...data.map((item) => parseFloat(item.averageScore || item.score)));
+    const _maxScore = Math.max(...(data || []).map((item) => parseFloat(item.averageScore || item.score)));
 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {data.map((item, index) => {
+        {(data || []).map((item, index) => {
           const config = getSatisfactionScoreConfig(parseFloat(item.averageScore || item.score));
           const percentage = ((parseFloat(item.averageScore || item.score) - 1) / 4 * 100).toFixed(0);
 

@@ -20,7 +20,7 @@ export default function RequestEfficiencyTab({ data }) {
       {/* 统计卡片 */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {STATS_CARD_CONFIGS.requestEfficiency.map(config => (
+          {(STATS_CARD_CONFIGS.requestEfficiency || []).map(config => (
             <ProcurementStatsCard
               key={config.key}
               label={config.label}
@@ -53,7 +53,7 @@ export default function RequestEfficiencyTab({ data }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {efficiency_data.map((item, index) => (
+                  {(efficiency_data || []).map((item, index) => (
                     <tr key={index} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                       <td className="py-3 px-4 font-medium">{item.request_no}</td>
                       <td className="py-3 px-4">

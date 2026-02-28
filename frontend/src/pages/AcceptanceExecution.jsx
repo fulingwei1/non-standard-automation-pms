@@ -184,7 +184,7 @@ export default function AcceptanceExecution() {
     }
   };
   // Group items by category
-  const itemsByCategory = items.reduce((acc, item) => {
+  const itemsByCategory = (items || []).reduce((acc, item) => {
     const category = item.category_name || "其他";
     if (!acc[category]) {
       acc[category] = [];
@@ -192,12 +192,12 @@ export default function AcceptanceExecution() {
     acc[category].push(item);
     return acc;
   }, {});
-  const passedCount = items.filter((i) => i.result_status === "PASSED").length;
-  const failedCount = items.filter((i) => i.result_status === "FAILED").length;
-  const pendingCount = items.filter(
+  const passedCount = (items || []).filter((i) => i.result_status === "PASSED").length;
+  const failedCount = (items || []).filter((i) => i.result_status === "FAILED").length;
+  const pendingCount = (items || []).filter(
     (i) => i.result_status === "PENDING",
   ).length;
-  const totalChecked = items.length - pendingCount;
+  const totalChecked = items?.length - pendingCount;
   if (loading) {
     return (
       <div className="space-y-6 p-6">
@@ -256,7 +256,7 @@ export default function AcceptanceExecution() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-slate-500 mb-1">总项数</div>
-                <div className="text-2xl font-bold">{items.length}</div>
+                <div className="text-2xl font-bold">{items?.length}</div>
               </div>
               <ClipboardCheck className="w-8 h-8 text-blue-500" />
             </div>
@@ -335,7 +335,7 @@ export default function AcceptanceExecution() {
                       <span>{category}</span>
                       <Badge variant="outline">
                         {
-                          categoryItems.filter(
+                          (categoryItems || []).filter(
                             (i) => i.result_status === "PASSED",
                           ).length
                         }{" "}
@@ -343,7 +343,7 @@ export default function AcceptanceExecution() {
                       </Badge>
                     </div>
                     <div className="space-y-2">
-                      {categoryItems.map((item) => (
+                      {(categoryItems || []).map((item) => (
                         <div
                           key={item.id}
                           className={cn(
@@ -427,11 +427,11 @@ export default function AcceptanceExecution() {
             <CardTitle>问题列表</CardTitle>
           </CardHeader>
           <CardContent>
-            {issues.length === 0 ? (
+            {issues?.length === 0 ? (
               <div className="text-center py-8 text-slate-400">暂无问题</div>
             ) : (
               <div className="space-y-3">
-                {issues.map((issue) => (
+                {(issues || []).map((issue) => (
                   <div key={issue.id} className="border rounded-lg p-3">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
@@ -600,7 +600,7 @@ export default function AcceptanceExecution() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">无</SelectItem>
-                    {items.map((item) => (
+                    {(items || []).map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {item.item_name}
                       </SelectItem>

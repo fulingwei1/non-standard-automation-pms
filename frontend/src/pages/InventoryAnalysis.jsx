@@ -207,7 +207,7 @@ export default function InventoryAnalysis() {
       }
 
       const csvContent = exportData
-        .map((row) => row.map((cell) => `"${cell}"`).join(","))
+        .map((row) => (row || []).map((cell) => `"${cell}"`).join(","))
         .join("\n");
 
       const BOM = "\uFEFF";
@@ -322,7 +322,7 @@ export default function InventoryAnalysis() {
               <CardContent>
                 {turnoverData?.category_breakdown?.length > 0 ? (
                   <div className="space-y-4">
-                    {turnoverData.category_breakdown.map((item, index) => (
+                    {(turnoverData.category_breakdown || []).map((item, index) => (
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-32 text-sm text-slate-400 truncate">{item.category_name}</div>
                         <div className="flex-1 bg-slate-700 rounded-full h-6 overflow-hidden">
@@ -421,7 +421,7 @@ export default function InventoryAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-4 gap-4">
-                    {staleMaterialsData.age_distribution.map((item, index) => {
+                    {(staleMaterialsData.age_distribution || []).map((item, index) => {
                       const colors = ['text-emerald-400', 'text-blue-400', 'text-amber-400', 'text-red-400'];
                       return (
                         <div key={index} className="text-center">
@@ -459,7 +459,7 @@ export default function InventoryAnalysis() {
                         </tr>
                       </thead>
                       <tbody>
-                        {staleMaterialsData.stale_materials.map((item, index) => (
+                        {(staleMaterialsData.stale_materials || []).map((item, index) => (
                           <tr key={index} className="border-b border-slate-700/50 hover:bg-slate-700/30">
                             <td className="py-3 px-4 font-medium">{item.material_code}</td>
                             <td className="py-3 px-4">{item.material_name}</td>
@@ -757,7 +757,7 @@ export default function InventoryAnalysis() {
               <CardContent>
                 {costOccupancyData?.category_occupancy?.length > 0 ? (
                   <div className="space-y-4">
-                    {costOccupancyData.category_occupancy.map((item, index) => (
+                    {(costOccupancyData.category_occupancy || []).map((item, index) => (
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-40 text-sm truncate">{item.category_name}</div>
                         <div className="flex-1 bg-slate-700 rounded-full h-8 overflow-hidden">
@@ -793,7 +793,7 @@ export default function InventoryAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {costOccupancyData.top_materials.map((item, index) => (
+                    {(costOccupancyData.top_materials || []).map((item, index) => (
                       <div key={index} className="p-4 bg-slate-700/30 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <div className="font-medium truncate">{item.material_name}</div>

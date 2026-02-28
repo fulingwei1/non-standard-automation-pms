@@ -52,7 +52,7 @@ const DeliveryProgress = ({ stage }) => {
       </div>
       <Progress value={progress} className="h-2" />
       <div className="flex justify-between text-xs text-slate-500">
-        {stages.map((s, idx) =>
+        {(stages || []).map((s, idx) =>
         <div key={s} className="text-center">
             <div className={cn(
             "w-3 h-3 rounded-full mx-auto mb-1",

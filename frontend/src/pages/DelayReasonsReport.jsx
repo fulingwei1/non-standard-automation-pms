@@ -154,7 +154,7 @@ export default function DelayReasonsReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {projects.map((p) => (
+                  {(projects || []).map((p) => (
                     <SelectItem key={p.id} value={p.id?.toString()}>
                       {p.project_name || p.project_code || `项目#${p.id}`}
                     </SelectItem>
@@ -200,7 +200,7 @@ export default function DelayReasonsReport() {
       }
 
       {/* Delay Reasons List */}
-      {reportData?.reasons && reportData.reasons.length > 0 &&
+      {reportData?.reasons && reportData.reasons?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function DelayReasonsReport() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reportData.reasons.map((item, index) =>
+              {(reportData.reasons || []).map((item, index) =>
             <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -242,7 +242,7 @@ export default function DelayReasonsReport() {
       </Card>
       }
 
-      {reportData?.reasons && reportData.reasons.length === 0 &&
+      {reportData?.reasons && reportData.reasons?.length === 0 &&
       <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
@@ -255,7 +255,7 @@ export default function DelayReasonsReport() {
       }
 
       {/* Insights */}
-      {reportData?.reasons && reportData.reasons.length > 0 &&
+      {reportData?.reasons && reportData.reasons?.length > 0 &&
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export default function DelayReasonsReport() {
                   </div>
             </div>
             }
-              {reportData.reasons.length > 1 &&
+              {reportData.reasons?.length > 1 &&
             <div className="p-3 bg-slate-50 rounded-lg">
                   <div className="font-medium text-slate-900 mb-1">
                     前3大原因占比

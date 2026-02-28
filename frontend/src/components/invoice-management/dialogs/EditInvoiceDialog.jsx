@@ -39,7 +39,7 @@ const EditInvoiceDialog = ({
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
                 <option value="">请选择合同</option>
-                {contracts.map((contract) => (
+                {(contracts || []).map((contract) => (
                   <option key={contract.id} value={contract.id}>
                     {contract.contract_code} - {contract.customer_name}
                   </option>

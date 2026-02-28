@@ -16,12 +16,12 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
   return { label: fallbackLabel, color: "#8c8c8c" };
 };
 
-const countBy = (items, predicate) => items.reduce((acc, item) => acc + (predicate(item) ? 1 : 0), 0);
+const countBy = (items, predicate) => (items || []).reduce((acc, item) => acc + (predicate(item) ? 1 : 0), 0);
 
 const DeliveryOverview = ({ data, loading }) => {
   const deliveries = Array.isArray(data) ? data : data?.deliveries || [];
 
-  const total = deliveries.length;
+  const total = deliveries?.length;
   const preparingCount = countBy(deliveries, (d) => d.status === DELIVERY_STATUS.PREPARING.value);
   const pendingCount = countBy(deliveries, (d) => d.status === DELIVERY_STATUS.PENDING.value);
   const inTransitCount = countBy(deliveries, (d) => d.status === DELIVERY_STATUS.IN_TRANSIT.value);
@@ -31,7 +31,7 @@ const DeliveryOverview = ({ data, loading }) => {
   const urgentCount = countBy(deliveries, (d) => d.priority === DELIVERY_PRIORITY.URGENT.value);
   const highPriorityCount = countBy(deliveries, (d) => d.priority === DELIVERY_PRIORITY.HIGH.value);
 
-  const shippedOrInTransit = deliveries.filter(
+  const shippedOrInTransit = (deliveries || []).filter(
     (d) => d.status === DELIVERY_STATUS.SHIPPED.value || d.status === DELIVERY_STATUS.IN_TRANSIT.value
   );
 

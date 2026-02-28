@@ -287,7 +287,7 @@ export default function OpportunityManagement() {
       const response = await opportunityApi.update(opp.id, { stage: newStage });
       const updated = response.data || { ...opp, stage: newStage };
       setOpportunities((prev) =>
-        prev.map((item) => (item.id === opp.id ? { ...item, ...updated } : item))
+        (prev || []).map((item) => (item.id === opp.id ? { ...item, ...updated } : item))
       );
       if (selectedOpp?.id === opp.id) {
         setSelectedOpp((prev) => (prev ? { ...prev, ...updated } : prev));
@@ -299,7 +299,7 @@ export default function OpportunityManagement() {
         "更新商机阶段失败: " + (error.response?.data?.detail || error.message)
       );
       setOpportunities((prev) =>
-        prev.map((item) =>
+        (prev || []).map((item) =>
           item.id === opp.id ? { ...item, stage: prevStage } : item
         )
       );
@@ -478,7 +478,7 @@ export default function OpportunityManagement() {
       const updated = response.data || { ...selectedOpp, ...payload };
       setSelectedOpp(updated);
       setOpportunities((prev) =>
-        prev.map((item) => (item.id === selectedOpp.id ? { ...item, ...updated } : item))
+        (prev || []).map((item) => (item.id === selectedOpp.id ? { ...item, ...updated } : item))
       );
       setDetailEditing(false);
       await loadOpportunities({ silent: true });
@@ -495,10 +495,10 @@ export default function OpportunityManagement() {
   const stats = useMemo(() => {
     return {
       total: total,
-      discovery: opportunities.filter((o) => o.stage === "DISCOVERY").length,
-      proposal: opportunities.filter((o) => o.stage === "PROPOSAL").length,
-      won: opportunities.filter((o) => o.stage === "WON").length,
-      totalAmount: opportunities.reduce(
+      discovery: (opportunities || []).filter((o) => o.stage === "DISCOVERY").length,
+      proposal: (opportunities || []).filter((o) => o.stage === "PROPOSAL").length,
+      won: (opportunities || []).filter((o) => o.stage === "WON").length,
+      totalAmount: (opportunities || []).reduce(
         (sum, o) => sum + (parseFloat(o.est_amount) || 0),
         0
       )
@@ -619,7 +619,7 @@ export default function OpportunityManagement() {
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >
               <option value="all">客户: 全部</option>
-              {customers.map((customer) => (
+              {(customers || []).map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.customer_name}
                 </option>
@@ -631,7 +631,7 @@ export default function OpportunityManagement() {
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >
               <option value="all">负责人: 全部</option>
-              {owners.map((owner) => (
+              {(owners || []).map((owner) => (
                 <option key={owner.id} value={owner.id}>
                   {owner.real_name || owner.username}
                 </option>
@@ -668,7 +668,7 @@ export default function OpportunityManagement() {
 
       (viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {opportunities.map((opp) =>
+            {(opportunities || []).map((opp) =>
           <motion.div key={opp.id} whileHover={{ y: -4 }}>
                 <Card className="h-full hover:border-blue-500 transition-colors">
                   <CardHeader>
@@ -790,7 +790,7 @@ export default function OpportunityManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {opportunities.map((opp) => (
+                  {(opportunities || []).map((opp) => (
                     <tr
                       key={opp.id}
                       className="border-b border-slate-800 hover:bg-slate-800/50"
@@ -925,7 +925,7 @@ export default function OpportunityManagement() {
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
 
                   <option value="">请选择客户</option>
-                  {customers.map((customer) =>
+                  {(customers || []).map((customer) =>
                   <option key={customer.id} value={customer.id}>
                       {customer.customer_name}
                   </option>

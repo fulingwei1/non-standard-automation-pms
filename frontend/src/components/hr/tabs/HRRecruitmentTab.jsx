@@ -98,11 +98,11 @@ export default function HRRecruitmentTab({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockRecruitmentTrends.map((item, index) => {
+            {(mockRecruitmentTrends || []).map((item, index) => {
               const successRate =
                 item.positions > 0 ? (item.hired / item.positions) * 100 : 0;
               const maxPositions = Math.max(
-                ...mockRecruitmentTrends.map((t) => t.positions),
+                ...(mockRecruitmentTrends || []).map((t) => t.positions),
               );
               const positionPercentage = (item.positions / maxPositions) * 100;
 
@@ -175,7 +175,7 @@ export default function HRRecruitmentTab({
               <span>
                 最近6个月平均成功率:{" "}
                 {(
-                  mockRecruitmentTrends.reduce(
+                  (mockRecruitmentTrends || []).reduce(
                     (sum, item) =>
                       sum +
                       (item.positions > 0
@@ -188,12 +188,12 @@ export default function HRRecruitmentTab({
               </span>
               <span>
                 总发布:{" "}
-                {mockRecruitmentTrends.reduce(
+                {(mockRecruitmentTrends || []).reduce(
                   (sum, item) => sum + item.positions,
                   0,
                 )}{" "}
                 | 总录用:{" "}
-                {mockRecruitmentTrends.reduce(
+                {(mockRecruitmentTrends || []).reduce(
                   (sum, item) => sum + item.hired,
                   0,
                 )}

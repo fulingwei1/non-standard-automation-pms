@@ -134,9 +134,9 @@ export default function ECNTypeManagement() {
       const data = {
         ...typeForm,
         required_depts:
-        typeForm.required_depts.length > 0 ? typeForm.required_depts : null,
+        typeForm.required_depts?.length > 0 ? typeForm.required_depts : null,
         optional_depts:
-        typeForm.optional_depts.length > 0 ? typeForm.optional_depts : null
+        typeForm.optional_depts?.length > 0 ? typeForm.optional_depts : null
       };
       if (editingType) {
         await ecnApi.updateEcnType(editingType.id, data);
@@ -167,18 +167,18 @@ export default function ECNTypeManagement() {
   const toggleDept = (dept, isRequired) => {
     if (isRequired) {
       const newDepts = typeForm.required_depts.includes(dept) ?
-      typeForm.required_depts.filter((d) => d !== dept) :
+      (typeForm.required_depts || []).filter((d) => d !== dept) :
       [...typeForm.required_depts, dept];
       setTypeForm({ ...typeForm, required_depts: newDepts });
     } else {
       const newDepts = typeForm.optional_depts.includes(dept) ?
-      typeForm.optional_depts.filter((d) => d !== dept) :
+      (typeForm.optional_depts || []).filter((d) => d !== dept) :
       [...typeForm.optional_depts, dept];
       setTypeForm({ ...typeForm, optional_depts: newDepts });
     }
   };
 
-  const filteredTypes = ecnTypes.filter((type) => {
+  const filteredTypes = (ecnTypes || []).filter((type) => {
     if (searchKeyword) {
       const keyword = searchKeyword.toLowerCase();
       return (
@@ -243,7 +243,7 @@ export default function ECNTypeManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTypes.map((type) =>
+                {(filteredTypes || []).map((type) =>
               <TableRow key={type.id}>
                     <TableCell className="font-mono text-sm">
                       {type.type_code}
@@ -252,9 +252,9 @@ export default function ECNTypeManagement() {
                       {type.type_name}
                     </TableCell>
                     <TableCell>
-                      {type.required_depts && type.required_depts.length > 0 ?
+                      {type.required_depts && type.required_depts?.length > 0 ?
                   <div className="flex flex-wrap gap-1">
-                          {type.required_depts.map((dept) =>
+                          {(type.required_depts || []).map((dept) =>
                     <Badge key={dept} className="bg-blue-500">
                               {dept}
                     </Badge>
@@ -265,9 +265,9 @@ export default function ECNTypeManagement() {
                   }
                     </TableCell>
                     <TableCell>
-                      {type.optional_depts && type.optional_depts.length > 0 ?
+                      {type.optional_depts && type.optional_depts?.length > 0 ?
                   <div className="flex flex-wrap gap-1">
-                          {type.optional_depts.map((dept) =>
+                          {(type.optional_depts || []).map((dept) =>
                     <Badge key={dept} className="bg-slate-500">
                               {dept}
                     </Badge>
@@ -376,7 +376,7 @@ export default function ECNTypeManagement() {
                   必需评估部门
                 </label>
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg">
-                  {deptOptions.map((dept) =>
+                  {(deptOptions || []).map((dept) =>
                   <Button
                     key={dept}
                     type="button"
@@ -395,7 +395,7 @@ export default function ECNTypeManagement() {
                   </Button>
                   )}
                 </div>
-                {typeForm.required_depts.length > 0 &&
+                {typeForm.required_depts?.length > 0 &&
                 <div className="text-xs text-slate-500 mt-1">
                     已选择: {typeForm.required_depts.join(", ")}
                 </div>
@@ -406,7 +406,7 @@ export default function ECNTypeManagement() {
                   可选评估部门
                 </label>
                 <div className="flex flex-wrap gap-2 p-3 border rounded-lg">
-                  {deptOptions.map((dept) =>
+                  {(deptOptions || []).map((dept) =>
                   <Button
                     key={dept}
                     type="button"
@@ -425,7 +425,7 @@ export default function ECNTypeManagement() {
                   </Button>
                   )}
                 </div>
-                {typeForm.optional_depts.length > 0 &&
+                {typeForm.optional_depts?.length > 0 &&
                 <div className="text-xs text-slate-500 mt-1">
                     已选择: {typeForm.optional_depts.join(", ")}
                 </div>

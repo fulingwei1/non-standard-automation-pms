@@ -31,7 +31,7 @@ export function CostApproval({ approvalHistory, onSubmitApproval }) {
       <CardContent>
         {approvalHistory.length > 0 ? (
           <div className="space-y-4">
-            {approvalHistory.map((approval) => (
+            {(approvalHistory || []).map((approval) => (
               <div
                 key={approval.id}
                 className="border border-slate-700 rounded-lg p-4"

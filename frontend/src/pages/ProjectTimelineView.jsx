@@ -49,7 +49,7 @@ export default function ProjectTimelineView() {
 
         // 为每个项目获取阶段数据
         const projectsWithDetails = await Promise.all(
-          projectList.map(async (project) => {
+          (projectList || []).map(async (project) => {
             try {
               const stagesRes = await stageApi.list(project.id);
               project.stages = stagesRes.data?.items || stagesRes.items || [];
@@ -86,7 +86,7 @@ export default function ProjectTimelineView() {
 
       // 更新本地状态
       setProjects((prev) =>
-        prev.map((p) =>
+        (prev || []).map((p) =>
           p.id === projectId
             ? {
                 ...p,
@@ -114,11 +114,11 @@ export default function ProjectTimelineView() {
 
       // 更新本地状态
       setProjects((prev) =>
-        prev.map((p) =>
+        (prev || []).map((p) =>
           p.id === projectId
             ? {
                 ...p,
-                stages: p.stages.map((s) =>
+                stages: (p.stages || []).map((s) =>
                   s.id === stageId
                     ? {
                         ...s,

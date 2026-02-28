@@ -75,7 +75,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
   const handleRemoveTestReq = (index) => {
     setFormData((prev) => ({
       ...prev,
-      testRequirements: prev.testRequirements.filter((_, i) => i !== index),
+      testRequirements: (prev.testRequirements || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -92,7 +92,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
   const handleRemoveCompetitor = (index) => {
     setFormData((prev) => ({
       ...prev,
-      competitors: prev.competitors.filter((_, i) => i !== index),
+      competitors: (prev.competitors || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -154,7 +154,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
           <div className="space-y-2">
             <label className="text-sm text-slate-400">调研方式 *</label>
             <div className="flex gap-2">
-              {surveyMethods.map((method) => {
+              {(surveyMethods || []).map((method) => {
                 const MethodIcon = method.icon;
                 return (
                   <Button
@@ -253,7 +253,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {formData.testRequirements.map((req, index) => (
+            {(formData.testRequirements || []).map((req, index) => (
               <Badge
                 key={index}
                 variant="secondary"
@@ -361,7 +361,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {formData.competitors.map((comp, index) => (
+            {(formData.competitors || []).map((comp, index) => (
               <Badge
                 key={index}
                 variant="destructive"

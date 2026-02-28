@@ -69,7 +69,7 @@ function AvatarGroup({ users, max = 3, size = "default", className }) {
 
   return (
     <div className={cn("flex -space-x-2", className)}>
-      {displayed.map((user, i) => (
+      {(displayed || []).map((user, i) => (
         <UserAvatar
           key={user.id || i}
           user={user}

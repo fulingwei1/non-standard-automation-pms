@@ -46,7 +46,7 @@ export function BOMSelectionStep({
                                         <SelectValue placeholder="选择BOM" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {boms.map((bom) => (
+                                        {(boms || []).map((bom) => (
                                             <SelectItem key={bom.id} value={bom.id.toString()}>
                                                 {bom.bom_no} - {bom.project_name || bom.machine_name || ""}
                                             </SelectItem>
@@ -67,7 +67,7 @@ export function BOMSelectionStep({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="none">无</SelectItem>
-                                        {suppliers.map((supplier) => (
+                                        {(suppliers || []).map((supplier) => (
                                             <SelectItem key={supplier.id} value={supplier.id.toString()}>
                                                 {supplier.supplier_name}
                                             </SelectItem>

@@ -276,7 +276,7 @@ export default function StageTemplateManagement() {
       console.error("切换状态失败:", error);
       // Update locally for demo
       setTemplates((prev) =>
-        prev.map((t) =>
+        (prev || []).map((t) =>
           t.id === template.id ? { ...t, is_active: !t.is_active } : t
         )
       );
@@ -293,7 +293,7 @@ export default function StageTemplateManagement() {
     }
   };
 
-  const filteredTemplates = templates.filter((t) => {
+  const filteredTemplates = (templates || []).filter((t) => {
     if (searchKeyword && !t.template_name.includes(searchKeyword) && !t.template_code.includes(searchKeyword.toUpperCase())) {
       return false;
     }
@@ -310,10 +310,10 @@ export default function StageTemplateManagement() {
   // 统计数据
   const stats = {
     total: templates.length,
-    active: templates.filter((t) => t.is_active).length,
-    default: templates.filter((t) => t.is_default).length,
-    totalStages: templates.reduce((sum, t) => sum + (t.stage_count || 0), 0),
-    totalNodes: templates.reduce((sum, t) => sum + (t.node_count || 0), 0),
+    active: (templates || []).filter((t) => t.is_active).length,
+    default: (templates || []).filter((t) => t.is_default).length,
+    totalStages: (templates || []).reduce((sum, t) => sum + (t.stage_count || 0), 0),
+    totalNodes: (templates || []).reduce((sum, t) => sum + (t.node_count || 0), 0),
   };
 
   return (
@@ -454,7 +454,7 @@ export default function StageTemplateManagement() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredTemplates.map((template, index) => (
+                      (filteredTemplates || []).map((template, index) => (
                         <motion.tr
                           key={template.id}
                           initial={{ opacity: 0, y: 10 }}

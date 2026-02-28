@@ -53,7 +53,7 @@ function DepartmentTreeNode({ dept, level = 0, onEdit, onView, onSelect }) {
         )}
         style={{ paddingLeft: `${level * 20 + 8}px` }}
       >
-        {dept.children && dept.children.length > 0 ? (
+        {dept.children && dept.children?.length > 0 ? (
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1 hover:bg-muted rounded"
@@ -86,9 +86,9 @@ function DepartmentTreeNode({ dept, level = 0, onEdit, onView, onSelect }) {
           </Button>
         </div>
       </div>
-      {expanded && dept.children && dept.children.length > 0 && (
+      {expanded && dept.children && dept.children?.length > 0 && (
         <div>
-          {dept.children.map((child) => (
+          {(dept.children || []).map((child) => (
             <DepartmentTreeNode
               key={child.id}
               dept={child}
@@ -255,9 +255,9 @@ export default function DepartmentManagement() {
 
   // 扁平化部门列表用于选择父部门
   const flattenDepartments = (depts, result = []) => {
-    depts.forEach((dept) => {
+    (depts || []).forEach((dept) => {
       result.push(dept);
-      if (dept.children && dept.children.length > 0) {
+      if (dept.children && dept.children?.length > 0) {
         flattenDepartments(dept.children, result);
       }
     });
@@ -315,7 +315,7 @@ export default function DepartmentManagement() {
                     暂无部门数据
                   </p>
                 ) : (
-                  departmentTree.map((dept) => (
+                  (departmentTree || []).map((dept) => (
                     <DepartmentTreeNode
                       key={dept.id}
                       dept={dept}
@@ -353,7 +353,7 @@ export default function DepartmentManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {departments.map((dept) => (
+                    {(departments || []).map((dept) => (
                       <tr key={dept.id}>
                         <td className="px-4 py-2 text-sm text-foreground font-mono">
                           {dept.dept_code}

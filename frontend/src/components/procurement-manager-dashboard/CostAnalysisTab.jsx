@@ -93,7 +93,7 @@ export default function CostAnalysisTab() {
   }
 
   // 计算最大值用于进度条
-  const maxMonthlyAmount = Math.max(...costData.monthlyTrend.map(t => t.amount), 1);
+  const maxMonthlyAmount = Math.max(...(costData.monthlyTrend || []).map(t => t.amount), 1);
 
   return (
     <div className="space-y-6">
@@ -107,9 +107,9 @@ export default function CostAnalysisTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {costData.monthlyTrend.length > 0 ? (
+            {costData.monthlyTrend?.length > 0 ? (
               <div className="space-y-4">
-                {costData.monthlyTrend.map((item, index) => (
+                {(costData.monthlyTrend || []).map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-400">
@@ -143,9 +143,9 @@ export default function CostAnalysisTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {costData.categoryDistribution.length > 0 ? (
+            {costData.categoryDistribution?.length > 0 ? (
               <div className="space-y-4">
-                {costData.categoryDistribution.map((item, index) => (
+                {(costData.categoryDistribution || []).map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-400">
@@ -182,9 +182,9 @@ export default function CostAnalysisTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {costData.topProjects.length > 0 ? (
+          {costData.topProjects?.length > 0 ? (
             <div className="space-y-4">
-              {costData.topProjects.map((project, index) => (
+              {(costData.topProjects || []).map((project, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 rounded-lg bg-surface-100 border border-white/5"

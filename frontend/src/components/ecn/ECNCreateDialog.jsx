@@ -43,7 +43,7 @@ export function ECNCreateDialog({
 
   // 根据选择的项目过滤设备
   const filteredMachines = formData.project_id
-    ? machines.filter(m => m.project_id === formData.project_id)
+    ? (machines || []).filter(m => m.project_id === formData.project_id)
     : machines;
 
   // 重置表单
@@ -62,7 +62,7 @@ export function ECNCreateDialog({
   // 项目变化时，清空设备选择（如果设备不属于新项目）
   useEffect(() => {
     if (formData.project_id && formData.machine_id) {
-      const machineInProject = machines.find(
+      const machineInProject = (machines || []).find(
         m => m.id === formData.machine_id && m.project_id === formData.project_id
       );
       if (!machineInProject) {
@@ -180,7 +180,7 @@ export function ECNCreateDialog({
                           <div className="px-2 py-1 text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 sticky top-0">
                             {category}
                           </div>
-                          {types.map((type) => (
+                          {(types || []).map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                               <div className="flex items-center gap-2">
                                 <div className={`w-3 h-3 rounded ${type.color}`} />
@@ -216,7 +216,7 @@ export function ECNCreateDialog({
                         <SelectValue placeholder="选择项目（必选）" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects.map((project) => (
+                        {(projects || []).map((project) => (
                           <SelectItem key={project.id} value={project.id.toString()}>
                             {project.project_name}
                           </SelectItem>
@@ -246,7 +246,7 @@ export function ECNCreateDialog({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__none__">无关联设备</SelectItem>
-                        {filteredMachines.map((machine) => (
+                        {(filteredMachines || []).map((machine) => (
                           <SelectItem key={machine.id} value={machine.id.toString()}>
                             {machine.machine_name}
                           </SelectItem>

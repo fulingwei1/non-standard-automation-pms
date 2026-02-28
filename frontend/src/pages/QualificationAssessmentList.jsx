@@ -91,13 +91,13 @@ export default function QualificationAssessmentList() {
         // 获取每个员工的评估记录
         const employeeIds =
         response.data.data?.items?.map((q) => q.employee_id) || [];
-        const assessmentPromises = employeeIds.map((id) =>
+        const assessmentPromises = (employeeIds || []).map((id) =>
         qualificationApi.
         getAssessments(id).
         catch(() => ({ data: { data: { items: [] } } }))
         );
         const assessmentResults = await Promise.all(assessmentPromises);
-        const allAssessments = assessmentResults.flatMap(
+        const allAssessments = (assessmentResults || []).flatMap(
           (res) => res.data?.data?.items || []
         );
         setAssessments(allAssessments);
@@ -116,7 +116,7 @@ export default function QualificationAssessmentList() {
 
   const handleExport = () => {
     try {
-      const exportData = assessments.map((assessment) => ({
+      const exportData = (assessments || []).map((assessment) => ({
         员工ID: assessment.employee_id,
         评估类型: assessment.assessment_type,
         评估周期: assessment.assessment_period,
@@ -132,8 +132,8 @@ export default function QualificationAssessmentList() {
       const headers = Object.keys(exportData[0] || {});
       const csvContent = [
       headers.join(","),
-      ...exportData.map((row) =>
-      headers.map((header) => `"${row[header] || ""}"`).join(",")
+      ...(exportData || []).map((row) =>
+      (headers || []).map((header) => `"${row[header] || ""}"`).join(",")
       )].
       join("\n");
 
@@ -173,7 +173,7 @@ export default function QualificationAssessmentList() {
   };
 
   // 按员工分组评估记录，用于趋势图
-  const assessmentsByEmployee = assessments.reduce((acc, assessment) => {
+  const assessmentsByEmployee = (assessments || []).reduce((acc, assessment) => {
     const employeeId = assessment.employee_id;
     if (!acc[employeeId]) {
       acc[employeeId] = [];
@@ -305,7 +305,7 @@ export default function QualificationAssessmentList() {
                   </TableCell>
               </TableRow> :
 
-              assessments.map((assessment) =>
+              (assessments || []).map((assessment) =>
               <TableRow key={assessment.id}>
                     <TableCell className="font-medium">
                       员工 #{assessment.employee_id}
@@ -357,7 +357,7 @@ export default function QualificationAssessmentList() {
                 </CardHeader>
                 <CardContent>
                   <QualificationTrendChart
-              data={employeeAssessments.map((a) => ({
+              data={(employeeAssessments || []).map((a) => ({
                 date: a.assessed_at || a.assessment_period,
                 total_score: a.total_score || 0,
                 result: a.result,

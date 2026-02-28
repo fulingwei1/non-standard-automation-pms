@@ -65,7 +65,7 @@ export function ServiceTicketListHeader({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {sortOptions.map((option) =>
+                {(sortOptions || []).map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
                 </SelectItem>
@@ -163,7 +163,7 @@ export function ServiceTicketListHeader({
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.statuses.map((status) =>
+                  {(filterOptions.statuses || []).map((status) =>
                 <SelectItem key={status.value} value={status.value}>
                       {status.label}
                 </SelectItem>
@@ -183,7 +183,7 @@ export function ServiceTicketListHeader({
                   <SelectValue placeholder="选择紧急程度" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.urgencies.map((urgency) =>
+                  {(filterOptions.urgencies || []).map((urgency) =>
                 <SelectItem key={urgency.value} value={urgency.value}>
                       {urgency.label}
                 </SelectItem>
@@ -203,7 +203,7 @@ export function ServiceTicketListHeader({
                   <SelectValue placeholder="选择问题类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.problemTypes.map((type) =>
+                  {(filterOptions.problemTypes || []).map((type) =>
                 <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         {type.icon && <span>{type.icon}</span>}

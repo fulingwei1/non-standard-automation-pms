@@ -29,8 +29,8 @@ export const RecentProjectsCard = ({ projects }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {projects && projects.length > 0 ?
-            projects.map((project) =>
+            {projects && projects?.length > 0 ?
+            (projects || []).map((project) =>
             <Link
               key={project.id}
               to={`/projects/${project.id}`}

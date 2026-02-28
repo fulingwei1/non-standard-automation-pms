@@ -163,7 +163,7 @@ export const HRRecruitmentTab = ({
         <CardContent>
           <div className="space-y-4">
             {trends.length > 0 ? (
-              trends.map((trend, index) => (
+              (trends || []).map((trend, index) => (
                 <RecruitmentTrendItem key={index} {...trend} />
               ))
             ) : (

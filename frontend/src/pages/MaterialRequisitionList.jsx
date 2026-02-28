@@ -113,7 +113,7 @@ export default function MaterialRequisitionList() {
     }
   };
   const handleCreateRequisition = async () => {
-    if (!newRequisition.apply_reason || newRequisition.items.length === 0) {
+    if (!newRequisition.apply_reason || newRequisition.items?.length === 0) {
       alert("请填写申请原因和物料明细");
       return;
     }
@@ -165,7 +165,7 @@ export default function MaterialRequisitionList() {
     }
   };
   const filteredRequisitions = useMemo(() => {
-    return requisitions.filter((req) => {
+    return (requisitions || []).filter((req) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -201,7 +201,7 @@ export default function MaterialRequisitionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) =>
+                {(projects || []).map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                 </SelectItem>
@@ -259,7 +259,7 @@ export default function MaterialRequisitionList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequisitions.map((req) =>
+                {(filteredRequisitions || []).map((req) =>
               <TableRow key={req.id}>
                     <TableCell className="font-mono text-sm">
                       {req.requisition_no}
@@ -342,7 +342,7 @@ export default function MaterialRequisitionList() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">无</SelectItem>
-                    {projects.map((proj) =>
+                    {(projects || []).map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                     </SelectItem>
@@ -433,7 +433,7 @@ export default function MaterialRequisitionList() {
                   </div>
                 </div>
                 {selectedRequisition.items &&
-              selectedRequisition.items.length > 0 &&
+              selectedRequisition.items?.length > 0 &&
               <div>
                       <div className="text-sm font-medium mb-3">物料明细</div>
                       <Table>
@@ -448,7 +448,7 @@ export default function MaterialRequisitionList() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {selectedRequisition.items.map((item) =>
+                          {(selectedRequisition.items || []).map((item) =>
                     <TableRow key={item.id}>
                               <TableCell className="font-mono text-sm">
                                 {item.material_code}
@@ -509,11 +509,11 @@ export default function MaterialRequisitionList() {
                   </div>
                 </div>
                 {selectedRequisition.items &&
-              selectedRequisition.items.length > 0 &&
+              selectedRequisition.items?.length > 0 &&
               <div>
                       <div className="text-sm font-medium mb-2">批准数量</div>
                       <div className="space-y-2">
-                        {selectedRequisition.items.map((item) =>
+                        {(selectedRequisition.items || []).map((item) =>
                   <div
                     key={item.id}
                     className="flex items-center gap-2">

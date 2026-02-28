@@ -27,7 +27,7 @@ export default function LinkedOpportunitiesCard({ opportunities }) {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {opportunities.map((opp, index) => (
+        {(opportunities || []).map((opp, index) => (
           <motion.div
             key={opp.id}
             initial={{ opacity: 0, x: 20 }}

@@ -31,7 +31,7 @@ export default function ResponsibilityDialog({
   setForm,
   onSubmit,
 }) {
-  const totalRatio = form.reduce(
+  const totalRatio = (form || []).reduce(
     (sum, r) => sum + parseFloat(r.responsibility_ratio || 0),
     0,
   );
@@ -47,7 +47,7 @@ export default function ResponsibilityDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
-          {form.map((resp, index) => (
+          {(form || []).map((resp, index) => (
             <Card key={index} className="p-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -57,7 +57,7 @@ export default function ResponsibilityDialog({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        const newForm = form.filter((_, i) => i !== index);
+                        const newForm = (form || []).filter((_, i) => i !== index);
                         setForm(newForm);
                       }}
                     >

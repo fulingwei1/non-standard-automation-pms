@@ -189,7 +189,7 @@ export function ECNApprovalFlow({
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-600" />
           
           <div className="space-y-6">
-            {approvals.map((approval, _index) =>
+            {(approvals || []).map((approval, _index) =>
           <div key={approval.id} className="relative flex items-start gap-4">
                 {/* 状态图标 */}
                 <div className="relative z-10">
@@ -249,11 +249,11 @@ export function ECNApprovalFlow({
                     </div>
                     }
 
-                        {approval.conditions && approval.conditions.length > 0 &&
+                        {approval.conditions && approval.conditions?.length > 0 &&
                     <div>
                             <div className="text-sm text-slate-500 mb-1">审批条件</div>
                             <ul className="text-white text-sm space-y-1">
-                              {approval.conditions.map((condition, idx) =>
+                              {(approval.conditions || []).map((condition, idx) =>
                         <li key={idx} className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
                                   {condition}
@@ -263,11 +263,11 @@ export function ECNApprovalFlow({
                     </div>
                     }
 
-                        {approval.attachments && approval.attachments.length > 0 &&
+                        {approval.attachments && approval.attachments?.length > 0 &&
                     <div>
                             <div className="text-sm text-slate-500 mb-1">附件</div>
                             <div className="flex flex-wrap gap-2">
-                              {approval.attachments.map((attachment, idx) =>
+                              {(approval.attachments || []).map((attachment, idx) =>
                         <Badge key={idx} variant="outline" className="text-xs">
                                   {attachment.name}
                         </Badge>

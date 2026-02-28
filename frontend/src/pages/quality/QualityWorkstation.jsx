@@ -67,7 +67,7 @@ function StatsCards({ stats }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((card, index) => {
+      {(cards || []).map((card, index) => {
         const Icon = card.icon;
         return (
           <a key={index} href={card.path}>
@@ -117,7 +117,7 @@ function InspectionTasksCard({ tasks, viewAllPath }) {
         </div>
       </div>
       <div className="p-5">
-        {tasks.length === 0 ? (
+        {tasks?.length === 0 ? (
           <div className="text-center py-8 text-text-muted">暂无检验任务</div>
         ) : (
           <div className="space-y-3">
@@ -182,7 +182,7 @@ function QualityIssuesCard({ issues, viewAllPath }) {
         </div>
       </div>
       <div className="p-5">
-        {issues.length === 0 ? (
+        {issues?.length === 0 ? (
           <div className="text-center py-8 text-text-muted">暂无质量问题</div>
         ) : (
           <div className="space-y-3">
@@ -240,7 +240,7 @@ function QuickActions() {
     >
       <h3 className="text-lg font-semibold text-text-primary mb-4">快捷操作</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {actions.map((action, index) => {
+        {(actions || []).map((action, index) => {
           const Icon = action.icon;
           return (
             <a
@@ -280,7 +280,7 @@ function AcceptanceTasksCard({ tasks, viewAllPath }) {
         </div>
       </div>
       <div className="p-5">
-        {tasks.length === 0 ? (
+        {tasks?.length === 0 ? (
           <div className="text-center py-8 text-text-muted">暂无验收任务</div>
         ) : (
           <div className="space-y-3">

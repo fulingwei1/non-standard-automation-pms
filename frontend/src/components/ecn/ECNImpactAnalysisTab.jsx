@@ -50,10 +50,10 @@ const BomImpactCard = ({ summary }) => {
           </div>
         </div>
         
-        {summary.bom_impacts && summary.bom_impacts.length > 0 &&
+        {summary.bom_impacts && summary.bom_impacts?.length > 0 &&
         <div className="space-y-2">
             <div className="text-sm font-medium">BOM影响明细：</div>
-            {summary.bom_impacts.map((impact, idx) =>
+            {(summary.bom_impacts || []).map((impact, idx) =>
           <div key={idx} className="p-2 bg-white rounded text-sm">
                 BOM #{impact.bom_id}: {impact.affected_item_count}项受影响, 
                 成本影响¥{impact.cost_impact?.toLocaleString()}, 
@@ -238,7 +238,7 @@ export const ECNImpactAnalysisTab = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {obsoleteAlerts.map((alert, idx) =>
+              {(obsoleteAlerts || []).map((alert, idx) =>
             <ObsoleteAlertCard key={idx} alert={alert} />
             )}
             </div>

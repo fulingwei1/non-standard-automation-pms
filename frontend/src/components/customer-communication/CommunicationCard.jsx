@@ -152,18 +152,18 @@ const CommunicationDetailCard = ({ communication }) => {
       </Card>
 
       {/* 沟通记录时间线 */}
-      {communication.communication_records && communication.communication_records.length > 0 &&
+      {communication.communication_records && communication.communication_records?.length > 0 &&
       <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">沟通记录</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {communication.communication_records.map((record, index) =>
+              {(communication.communication_records || []).map((record, index) =>
             <div key={index} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                    {index < communication.communication_records.length - 1 &&
+                    {index < communication.communication_records?.length - 1 &&
                 <div className="w-0.5 h-16 bg-slate-200 dark:bg-slate-700 mt-2" />
                 }
                   </div>
@@ -193,14 +193,14 @@ const CommunicationDetailCard = ({ communication }) => {
       }
 
       {/* 附件信息 */}
-      {communication.attachments && communication.attachments.length > 0 &&
+      {communication.attachments && communication.attachments?.length > 0 &&
       <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">附件 ({communication.attachments.length})</CardTitle>
+            <CardTitle className="text-base">附件 ({communication.attachments?.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {communication.attachments.map((attachment, index) =>
+              {(communication.attachments || []).map((attachment, index) =>
             <div key={index} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-slate-500" />

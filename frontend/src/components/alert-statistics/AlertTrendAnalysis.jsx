@@ -9,10 +9,10 @@ import { ALERT_LEVELS, ALERT_STATUS, CHART_COLORS } from '@/lib/constants/alert'
 
 const AlertTrendAnalysis = ({ alerts = [], loading = false }) => {
   const stats = useMemo(() => {
-    const total = alerts.length;
-    const active = alerts.filter((a) => a.status === 'active').length;
-    const resolved = alerts.filter((a) => a.status === 'resolved').length;
-    const critical = alerts.filter((a) => a.level === 'critical').length;
+    const total = alerts?.length;
+    const active = (alerts || []).filter((a) => a.status === 'active').length;
+    const resolved = (alerts || []).filter((a) => a.status === 'resolved').length;
+    const critical = (alerts || []).filter((a) => a.level === 'critical').length;
     const resolvedRate = total > 0 ? (resolved / total) * 100 : 0;
     return { total, active, resolved, critical, resolvedRate };
   }, [alerts]);

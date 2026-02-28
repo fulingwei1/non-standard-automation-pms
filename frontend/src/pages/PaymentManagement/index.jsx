@@ -32,7 +32,7 @@ export default function PaymentManagement() {
         refresh
     } = usePaymentManagement();
 
-    if (loading && payments.length === 0) {
+    if (loading && payments?.length === 0) {
         return (
             <div className="flex items-center justify-center h-96">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
@@ -70,7 +70,7 @@ export default function PaymentManagement() {
                 <TabsContent value="overview" className="space-y-6">
                     <PaymentStatsOverview
                         payments={payments}
-                        invoices={payments.filter((p) => p.invoiceNo)}
+                        invoices={(payments || []).filter((p) => p.invoiceNo)}
                         reminders={reminders}
                         loading={loading}
                         onRefresh={refresh}
@@ -96,7 +96,7 @@ export default function PaymentManagement() {
                                 {showReminders && (
                                     <CardContent>
                                         <div className="space-y-2 max-h-64 overflow-y-auto">
-                                            {reminders.map((reminder) => (
+                                            {(reminders || []).map((reminder) => (
                                                 <div
                                                     key={reminder.id}
                                                     className={cn(
@@ -192,7 +192,7 @@ export default function PaymentManagement() {
                                                 </thead>
                                                 <tbody>
                                                     <AnimatePresence>
-                                                        {filteredPayments.map((payment) => (
+                                                        {(filteredPayments || []).map((payment) => (
                                                             <motion.tr key={payment.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="border-b border-slate-700/50">
                                                                 <td className="p-4">
                                                                     <div className="text-white font-medium">{payment.customerName}</div>
@@ -224,7 +224,7 @@ export default function PaymentManagement() {
                                     </Card>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {filteredPayments.map((payment) => (
+                                        {(filteredPayments || []).map((payment) => (
                                             <PaymentCard
                                                 key={payment.id}
                                                 payment={payment}

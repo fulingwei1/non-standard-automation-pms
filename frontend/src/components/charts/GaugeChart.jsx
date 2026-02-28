@@ -44,8 +44,8 @@ export default function GaugeChart({
       percent,
       height,
       range: {
-        ticks: rangeColors.map((t) => t.value),
-        color: rangeColors.map((t) => t.color),
+        ticks: (rangeColors || []).map((t) => t.value),
+        color: (rangeColors || []).map((t) => t.color),
       },
       indicator: {
         pointer: {

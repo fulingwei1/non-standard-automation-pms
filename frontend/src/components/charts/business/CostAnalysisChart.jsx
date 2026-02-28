@@ -24,13 +24,13 @@ export default function CostAnalysisChart({
 }) {
   // 成本构成饼图
   if (chartType === "structure") {
-    const total = data.reduce(
+    const total = (data || []).reduce(
       (sum, item) => sum + (item.amount || item.value || 0),
       0,
     );
 
     const pieConfig = {
-      data: data.map((item) => ({
+      data: (data || []).map((item) => ({
         ...item,
         type: item.category || item.type || item.name,
         value: item.amount || item.value || 0,
@@ -104,7 +104,7 @@ export default function CostAnalysisChart({
   // 预算执行柱状图
   if (chartType === "budget") {
     const barConfig = {
-      data: data.flatMap((item) => [
+      data: (data || []).flatMap((item) => [
         {
           category: item.category || item.name,
           type: "预算",

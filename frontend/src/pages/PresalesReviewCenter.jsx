@@ -33,7 +33,7 @@ export default function PresalesReviewCenter() {
   );
 
   const handleTabChange = (value) => {
-    const target = tabs.find((tab) => tab.value === value);
+    const target = (tabs || []).find((tab) => tab.value === value);
     if (target) {
       navigate(target.path);
       setActiveTab(value);
@@ -49,7 +49,7 @@ export default function PresalesReviewCenter() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2">
-          {tabs.map((tab) => (
+          {(tabs || []).map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>

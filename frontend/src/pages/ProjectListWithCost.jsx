@@ -300,13 +300,13 @@ export default function ProjectListWithCost() {
 
   const handleExport = () => {
     try {
-      if (projects.length === 0) {
+      if (projects?.length === 0) {
         toast.warning("没有可导出的项目数据");
         return;
       }
 
       // 准备导出数据
-      const exportData = projects.map(project => {
+      const exportData = (projects || []).map(project => {
         const row = {
           '项目编号': project.project_code,
           '项目名称': project.project_name,
@@ -351,7 +351,7 @@ export default function ProjectListWithCost() {
   };
 
   // Filter projects based on search
-  const filteredProjects = projects.filter(
+  const filteredProjects = (projects || []).filter(
     (p) =>
       p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.project_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -361,9 +361,9 @@ export default function ProjectListWithCost() {
   // Calculate statistics
   const stats = {
     total: filteredProjects.length,
-    overrun: filteredProjects.filter(p => p.cost_summary?.overrun).length,
-    warning: filteredProjects.filter(p => !p.cost_summary?.overrun && p.cost_summary?.budget_used_pct >= 90).length,
-    safe: filteredProjects.filter(p => p.cost_summary && !p.cost_summary.overrun && p.cost_summary.budget_used_pct < 90).length,
+    overrun: (filteredProjects || []).filter(p => p.cost_summary?.overrun).length,
+    warning: (filteredProjects || []).filter(p => !p.cost_summary?.overrun && p.cost_summary?.budget_used_pct >= 90).length,
+    safe: (filteredProjects || []).filter(p => p.cost_summary && !p.cost_summary.overrun && p.cost_summary.budget_used_pct < 90).length,
   };
 
   return (
@@ -464,7 +464,7 @@ export default function ProjectListWithCost() {
               : "space-y-4",
           )}
         >
-          {filteredProjects.map((project) => (
+          {(filteredProjects || []).map((project) => (
             <ProjectCardWithCost
               key={project.id}
               project={project}

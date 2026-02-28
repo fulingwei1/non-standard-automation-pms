@@ -289,7 +289,7 @@ export default function MaterialRequisitionDetail() {
           <CardTitle>物料清单</CardTitle>
         </CardHeader>
         <CardContent>
-          {items.length === 0 ? (
+          {items?.length === 0 ? (
             <div className="text-center py-8 text-slate-400">暂无物料</div>
           ) : (
             <Table>
@@ -305,7 +305,7 @@ export default function MaterialRequisitionDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item) => (
+                {(items || []).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-sm">
                       {item.material_code || "-"}
@@ -339,7 +339,7 @@ export default function MaterialRequisitionDetail() {
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
-              {items.map((item) => (
+              {(items || []).map((item) => (
                 <div key={item.id} className="border rounded-lg p-3">
                   <div className="font-medium mb-2">{item.material_name}</div>
                   <div className="grid grid-cols-2 gap-4">
@@ -413,7 +413,7 @@ export default function MaterialRequisitionDetail() {
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
-              {items.map((item) => (
+              {(items || []).map((item) => (
                 <div key={item.id} className="border rounded-lg p-3">
                   <div className="font-medium mb-2">{item.material_name}</div>
                   <div className="grid grid-cols-2 gap-4">

@@ -9,7 +9,7 @@ import { ALERT_COLORS } from '../../constants';
 import { TrendingUp } from 'lucide-react';
 
 const TrendLineChart = ({ data = [] }) => {
-  if (data.length === 0) {
+  if (data?.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">

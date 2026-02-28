@@ -77,7 +77,7 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cashFlowTypes.map((item, index) =>
+      {(cashFlowTypes || []).map((item, index) =>
       <Card key={index} className="bg-surface-50 border-white/10">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -102,7 +102,7 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
 const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
   const chartData = useMemo(() => {
     if (!cashFlowByMonth || cashFlowByMonth.length === 0) {return [];}
-    return cashFlowByMonth.map((item) => ({
+    return (cashFlowByMonth || []).map((item) => ({
       month: item.month,
       operating: item.operating,
       investing: item.investing,
@@ -288,7 +288,7 @@ const CashFlowDetailTable = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((item, index) => {
+              {(filteredData || []).map((item, index) => {
                 const typeConfig = getTypeConfig(item.type);
                 const isPositive = item.amount >= 0;
                 const cumulative = filteredData.
@@ -349,7 +349,7 @@ const CashFlowDetailTable = ({
               <div className="text-right">
                 <div className="text-sm text-slate-400">现金流量净额</div>
                 <div className="text-xl font-bold text-white">
-                  {formatCurrency(filteredData.reduce((sum, item) => sum + item.amount, 0))}
+                  {formatCurrency((filteredData || []).reduce((sum, item) => sum + item.amount, 0))}
                 </div>
               </div>
             </div>
@@ -412,7 +412,7 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
         <h3 className="text-lg font-semibold text-white mb-4">现金流分析</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {metrics.map((metric, index) =>
+          {(metrics || []).map((metric, index) =>
           <div key={index} className="bg-slate-800/50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-slate-400">{metric.label}</div>

@@ -377,7 +377,7 @@ export default function ProgressForecast({ projectId }) {
             </div>
             <div className="text-sm text-slate-500 mt-1">
               占比: {forecastData?.tasks?.length ?
-              (criticalTasks.length / forecastData.tasks.length * 100).toFixed(1) : 0}%
+              (criticalTasks.length / forecastData.tasks?.length * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
@@ -508,10 +508,10 @@ export default function ProgressForecast({ projectId }) {
                     {previewData.preview_actions?.will_block?.length > 0 &&
                   <div className="rounded-md bg-red-50 border border-red-200 p-3">
                         <div className="font-medium text-red-900 mb-2">
-                          将阻塞 {previewData.preview_actions.will_block.length} 个任务
+                          将阻塞 {previewData.preview_actions.will_block?.length} 个任务
                         </div>
                         <ul className="text-sm space-y-1">
-                          {previewData.preview_actions.will_block.map((action, idx) =>
+                          {(previewData.preview_actions.will_block || []).map((action, idx) =>
                       <li key={idx} className="text-red-800">
                               {action.task_name}: {action.reason}
                       </li>

@@ -171,11 +171,11 @@ export default function PermissionManagement() {
 
   // 获取所有模块列表
   const modules = Array.from(
-    new Set(permissions.map((p) => p.module).filter(Boolean))
+    new Set((permissions || []).map((p) => p.module).filter(Boolean))
   ).sort();
 
   // 按模块分组权限
-  const groupedPermissions = permissions.reduce((acc, permission) => {
+  const groupedPermissions = (permissions || []).reduce((acc, permission) => {
     const module = permission.module || "其他";
     if (!acc[module]) {
       acc[module] = [];
@@ -187,7 +187,7 @@ export default function PermissionManagement() {
   // 过滤权限
   const filteredPermissions = Object.entries(groupedPermissions).reduce(
     (acc, [module, perms]) => {
-      const filtered = perms.filter((p) => {
+      const filtered = (perms || []).filter((p) => {
         if (!searchKeyword) {return true;}
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -219,7 +219,7 @@ export default function PermissionManagement() {
 
  // 直接从已加载的角色数据中查找拥有该权限的角色
  // 这样保证与列表显示的统计数据一致
-  const rolesWithPermission = roles.filter(role => {
+  const rolesWithPermission = (roles || []).filter(role => {
  const rolePermissions = role.permissions || [];
   return rolePermissions.includes(permission.permission_name) ||
    rolePermissions.includes(permission.permission_code);
@@ -268,7 +268,7 @@ export default function PermissionManagement() {
  .map(item => ({
  ...item.permission,
  roleCount: item.roleCount,
- roleNames: item.roles.map(r => r.role_name).join(', ')
+ roleNames: (item.roles || []).map(r => r.role_name).join(', ')
  }));
 
  // 找出未使用的权限
@@ -283,8 +283,8 @@ export default function PermissionManagement() {
   const stats = {
     total: permissions.length,
     modules: modules.length,
-    active: permissions.filter((p) => p.is_active !== false).length,
-    unused: permissionUsageStats.unused.length
+    active: (permissions || []).filter((p) => p.is_active !== false).length,
+    unused: permissionUsageStats.unused?.length
   };
 
   return (
@@ -369,9 +369,9 @@ export default function PermissionManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {permissionUsageStats.mostUsed.length > 0 ? (
+            {permissionUsageStats.mostUsed?.length > 0 ? (
               <div className="space-y-2">
-                {permissionUsageStats.mostUsed.map((perm, index) => (
+                {(permissionUsageStats.mostUsed || []).map((perm, index) => (
                   <div
                     key={perm.permission_code}
                     className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
@@ -416,7 +416,7 @@ export default function PermissionManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {permissionUsageStats.unused.length > 0 ? (
+            {permissionUsageStats.unused?.length > 0 ? (
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {permissionUsageStats.unused.slice(0, 20).map((perm) => (
                   <div
@@ -448,9 +448,9 @@ export default function PermissionManagement() {
                     </div>
                   </div>
                 ))}
-                {permissionUsageStats.unused.length > 20 && (
+                {permissionUsageStats.unused?.length > 20 && (
                   <div className="text-center text-xs text-slate-500 pt-2">
-                    还有 {permissionUsageStats.unused.length - 20} 个未分配权限...
+                    还有 {permissionUsageStats.unused?.length - 20} 个未分配权限...
                   </div>
                 )}
               </div>
@@ -483,7 +483,7 @@ export default function PermissionManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有模块</SelectItem>
-                {modules.map((module) =>
+                {(modules || []).map((module) =>
                 <SelectItem key={module} value={module}>
                     {getModuleLabel(module)}
                 </SelectItem>
@@ -590,13 +590,13 @@ export default function PermissionManagement() {
                 {expandedModules[module] === true &&
             <CardContent>
                     <div className="space-y-2">
-                      {perms.map((permission) => {
+                      {(perms || []).map((permission) => {
                         // 从缓存的统计中获取使用次数
-                        const usageInfo = permissionUsageStats.mostUsed.find(
+                        const usageInfo = (permissionUsageStats.mostUsed || []).find(
                           p => p.permission_code === permission.permission_code
                         );
                         const roleCount = usageInfo?.roleCount || 0;
-                        const isUnused = permissionUsageStats.unused.some(
+                        const isUnused = (permissionUsageStats.unused || []).some(
                           p => p.permission_code === permission.permission_code
                         );
 
@@ -806,7 +806,7 @@ export default function PermissionManagement() {
                 </label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {permissionRoles.length > 0 ?
-                permissionRoles.map((role) =>
+                (permissionRoles || []).map((role) =>
                 <div
                   key={role.id}
                   className="flex items-center gap-2 p-2 rounded bg-slate-800/50">

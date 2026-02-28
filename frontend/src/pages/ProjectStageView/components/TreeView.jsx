@@ -124,7 +124,7 @@ function TaskItem({ task }) {
 function NodeItem({ node, defaultOpen = false }) {
   const [isOpen, setIsOpen] = useState(defaultOpen || node.status === "IN_PROGRESS");
   const statusConfig = getStatusConfig(node.status);
-  const hasTasks = node.tasks && node.tasks.length > 0;
+  const hasTasks = node.tasks && node.tasks?.length > 0;
 
   return (
     <div className="pl-4 border-l border-gray-700/50">
@@ -195,7 +195,7 @@ function NodeItem({ node, defaultOpen = false }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            {node.tasks.map((task) => (
+            {(node.tasks || []).map((task) => (
               <TaskItem key={task.id} task={task} />
             ))}
           </motion.div>
@@ -212,7 +212,7 @@ function StageItem({ stage, defaultOpen = false }) {
   const [isOpen, setIsOpen] = useState(defaultOpen || stage.status === "IN_PROGRESS");
   const statusConfig = getStatusConfig(stage.status);
   const categoryConfig = getCategoryConfig(stage.category);
-  const hasNodes = stage.nodes && stage.nodes.length > 0;
+  const hasNodes = stage.nodes && stage.nodes?.length > 0;
 
   return (
     <motion.div
@@ -287,7 +287,7 @@ function StageItem({ stage, defaultOpen = false }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            {stage.nodes.map((node) => (
+            {(stage.nodes || []).map((node) => (
               <NodeItem key={node.id} node={node} />
             ))}
           </motion.div>
@@ -318,7 +318,7 @@ function StatsSummary({ data }) {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      {items.map((item) => (
+      {(items || []).map((item) => (
         <div
           key={item.label}
           className="bg-gray-800/50 rounded-lg p-3 border border-gray-700"
@@ -388,7 +388,7 @@ export default function TreeView({ data, loading, stageActions: _stageActions, o
       <Card className="bg-gray-800/50 border-gray-700">
         <CardContent className="p-4">
           <div className="space-y-2">
-            {stages.map((stage) => (
+            {(stages || []).map((stage) => (
               <StageItem key={stage.id} stage={stage} />
             ))}
           </div>

@@ -99,7 +99,7 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
   // Get events for a date
   const getEventsForDate = (date) => {
     const dateKey = formatDateKey(date);
-    const dayData = calendarData.find((d) => d.date === dateKey);
+    const dayData = (calendarData || []).find((d) => d.date === dateKey);
     if (!dayData) {return [];}
 
     return [
@@ -167,7 +167,7 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
 
             {/* Calendar Grid */}
             <div className="grid grid-cols-7">
-              {calendarDays.map((day) => {
+              {(calendarDays || []).map((day) => {
                 const events = getEventsForDate(day.date);
                 const isToday = isSameDay(day.date, today);
                 const isWeekend =
@@ -194,9 +194,9 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                       >
                         {day.date.getDate()}
                       </span>
-                      {events.length > 0 && (
+                      {events?.length > 0 && (
                         <Badge variant="outline" className="text-[10px]">
-                          {events.length}
+                          {events?.length}
                         </Badge>
                       )}
                     </div>
@@ -221,9 +221,9 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                           {event.plan_name || event.task_name || event.order_no}
                         </div>
                       ))}
-                      {events.length > 3 && (
+                      {events?.length > 3 && (
                         <div className="text-[10px] text-slate-500 text-center">
-                          +{events.length - 3} 更多
+                          +{events?.length - 3} 更多
                         </div>
                       )}
                     </div>

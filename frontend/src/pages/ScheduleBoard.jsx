@@ -54,7 +54,7 @@ export default function ScheduleBoard() {
 
         // Transform backend project format to frontend format and load milestones/resources
         const transformedProjects = await Promise.all(
-          projectList.map(async (p) => {
+          (projectList || []).map(async (p) => {
             const projectId = p.id || p.project_code;
 
             // Load milestones for this project
@@ -62,7 +62,7 @@ export default function ScheduleBoard() {
             try {
               const milestonesRes = await milestoneApi.list(projectId);
               const milestonesData = milestonesRes.data || milestonesRes || [];
-              milestones = milestonesData.map((m) => ({
+              milestones = (milestonesData || []).map((m) => ({
                 name: m.milestone_name || m.name || "",
                 date: m.plan_date || m.planned_date || "",
                 status:
@@ -131,9 +131,9 @@ export default function ScheduleBoard() {
     fetchProjects();
   }, []);
 
-  const totalProjects = projects.length;
-  const atRiskProjects = projects.filter((p) => p.health === "H2").length;
-  const blockedProjects = projects.filter((p) => p.health === "H3").length;
+  const totalProjects = projects?.length;
+  const atRiskProjects = (projects || []).filter((p) => p.health === "H2").length;
+  const blockedProjects = (projects || []).filter((p) => p.health === "H3").length;
 
   return (
     <motion.div
@@ -161,7 +161,7 @@ export default function ScheduleBoard() {
       {viewMode === "kanban" && (
         <motion.div variants={fadeIn} className="overflow-x-auto pb-4">
           <div className="flex gap-6 min-w-max">
-            {stages.map(({ stage, name }) => (
+            {(stages || []).map(({ stage, name }) => (
               <StageColumn
                 key={stage}
                 stage={stage}

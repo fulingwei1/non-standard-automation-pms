@@ -70,8 +70,8 @@ export default function InboundList() {
             </TableRow></TableHeader>
             <TableBody>
               {loading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">加载中...</TableCell></TableRow>
-              : data.items.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
-              : data.items.map((row) => (
+              : data.items?.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
+              : (data.items || []).map((row) => (
                 <TableRow key={row.id} className="cursor-pointer hover:bg-surface-300/50" onClick={() => navigate(`/warehouse/inbound/${row.id}`)}>
                   <TableCell className="font-mono text-sm">{row.order_no}</TableCell>
                   <TableCell>{TYPE_MAP[row.order_type] || row.order_type}</TableCell>

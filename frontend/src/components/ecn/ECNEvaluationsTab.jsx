@@ -231,7 +231,7 @@ export const ECNEvaluationsTab = ({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {evaluations.map((evaluation) => (
+          {(evaluations || []).map((evaluation) => (
             <EvaluationCard
               key={evaluation.id}
               evaluation={evaluation}

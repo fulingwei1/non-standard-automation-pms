@@ -127,8 +127,8 @@ export default function AssemblyTaskCard({ task, onAction }) {
                 />
                 <span className="text-slate-300">
                   物料准备 (
-                  {task.materials.filter((m) => m.status === "ok").length}/
-                  {task.materials.length})
+                  {(task.materials || []).filter((m) => m.status === "ok").length}/
+                  {task.materials?.length})
                 </span>
                 {hasShortage && (
                   <Badge className="text-[10px] bg-amber-500/20 text-amber-400">
@@ -153,7 +153,7 @@ export default function AssemblyTaskCard({ task, onAction }) {
                   className="overflow-hidden"
                 >
                   <div className="space-y-2 pt-2">
-                    {task.materials.map((material) => (
+                    {(task.materials || []).map((material) => (
                       <div
                         key={material.id}
                         className={cn(
@@ -237,7 +237,7 @@ export default function AssemblyTaskCard({ task, onAction }) {
                   className="overflow-hidden"
                 >
                   <div className="space-y-2 pt-2">
-                    {task.steps.map((step, index) => (
+                    {(task.steps || []).map((step, index) => (
                       <button
                         key={step.id}
                         className={cn(

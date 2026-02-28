@@ -35,7 +35,7 @@ export default function OngoingSolutionsCard({ solutions }) {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
-        {solutions.map((solution, index) => (
+        {(solutions || []).map((solution, index) => (
           <motion.div
             key={solution.id}
             initial={{ opacity: 0, y: 10 }}

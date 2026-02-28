@@ -66,7 +66,7 @@ export default function MobileMaterialRequisition() {
   };
 
   const handleMaterialChange = (index, materialId) => {
-    const material = materials.find((m) => m.id === parseInt(materialId));
+    const material = (materials || []).find((m) => m.id === parseInt(materialId));
     if (material) {
       const newItems = [...items];
       newItems[index] = {
@@ -100,14 +100,14 @@ export default function MobileMaterialRequisition() {
   };
 
   const handleRemoveItem = (index) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+    if (items?.length > 1) {
+      setItems((items || []).filter((_, i) => i !== index));
     }
   };
 
   const handleSubmit = async () => {
     // 验证
-    const invalidItems = items.filter(
+    const invalidItems = (items || []).filter(
       (item) => !item.material_id || !item.qty || item.qty <= 0
     );
     if (invalidItems.length > 0) {
@@ -121,7 +121,7 @@ export default function MobileMaterialRequisition() {
 
       await productionApi.materialRequisitions.create({
         work_order_id: workOrderId ? parseInt(workOrderId) : null,
-        items: items.map((item) => ({
+        items: (items || []).map((item) => ({
           material_id: item.material_id,
           required_qty: item.qty
         })),
@@ -218,13 +218,13 @@ export default function MobileMaterialRequisition() {
                 </Button>
               </div>
 
-              {items.map((item, index) =>
+              {(items || []).map((item, index) =>
               <div key={index} className="p-4 border rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
                       物料 {index + 1}
                     </span>
-                    {items.length > 1 &&
+                    {items?.length > 1 &&
                   <Button
                     variant="ghost"
                     size="sm"
@@ -250,7 +250,7 @@ export default function MobileMaterialRequisition() {
                         <SelectValue placeholder="请选择物料" />
                       </SelectTrigger>
                       <SelectContent>
-                        {materials.map((material) =>
+                        {(materials || []).map((material) =>
                       <SelectItem
                         key={material.id}
                         value={String(material.id)}>

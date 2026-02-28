@@ -36,7 +36,7 @@ export const TaskFilters = ({
           onChange={(e) => setPeriodFilter(e.target.value)}
           className="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >
-          {availablePeriods.map((period) => (
+          {(availablePeriods || []).map((period) => (
             <option key={period} value={period}>
               {period.split("-")[0]}年{period.split("-")[1]}月
             </option>

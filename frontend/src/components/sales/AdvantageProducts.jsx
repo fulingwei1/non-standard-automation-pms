@@ -122,7 +122,7 @@ function CategorySection({
           className="overflow-hidden">
 
             <div className="mt-2 pl-4 space-y-1">
-              {products.map((product, index) =>
+              {(products || []).map((product, index) =>
             <motion.div
               key={product.id}
               initial={{ opacity: 0, x: -10 }}
@@ -170,7 +170,7 @@ function HighlightedProduct({ product, searchTerm, onSelect }) {
   const highlightText = (text, term) => {
     if (!term) {return text;}
     const parts = text.split(new RegExp(`(${term})`, "gi"));
-    return parts.map((part, i) =>
+    return (parts || []).map((part, i) =>
     part.toLowerCase() === term.toLowerCase() ?
     <span key={i} className="bg-yellow-500/30 text-yellow-300">
           {part}
@@ -258,8 +258,8 @@ export default function AdvantageProducts({
 
     const term = searchTerm.toLowerCase();
     const results = [];
-    groupedData.forEach((group) => {
-      group.products.forEach((product) => {
+    (groupedData || []).forEach((group) => {
+      (group.products || []).forEach((product) => {
         if (
         product.product_name.toLowerCase().includes(term) ||
         product.product_code.toLowerCase().includes(term))
@@ -289,13 +289,13 @@ export default function AdvantageProducts({
     if (expandedCategories.size === groupedData.length) {
       setExpandedCategories(new Set());
     } else {
-      setExpandedCategories(new Set(groupedData.map((g) => g.category.code)));
+      setExpandedCategories(new Set((groupedData || []).map((g) => g.category.code)));
     }
   };
 
   // 统计信息
-  const totalProducts = groupedData.reduce(
-    (sum, g) => sum + g.products.length,
+  const totalProducts = (groupedData || []).reduce(
+    (sum, g) => sum + g.products?.length,
     0
   );
   const totalCategories = groupedData.length;
@@ -359,7 +359,7 @@ export default function AdvantageProducts({
           <div className="text-xs text-slate-500">
             找到 {searchResults.length} 个匹配产品
           </div>
-          {searchResults.map((product) =>
+          {(searchResults || []).map((product) =>
         <HighlightedProduct
           key={product.id}
           product={product}
@@ -381,7 +381,7 @@ export default function AdvantageProducts({
       {/* 分类列表 */}
       {!searchTerm &&
       <div className="space-y-1 overflow-y-auto pr-1" style={{ maxHeight }}>
-          {groupedData.map((group) =>
+          {(groupedData || []).map((group) =>
         <CategorySection
           key={group.category.code}
           category={group.category}
@@ -439,7 +439,7 @@ export function AdvantageProductSelect({
     }
   };
 
-  const selectedProduct = products.find((p) => p.id === value);
+  const selectedProduct = (products || []).find((p) => p.id === value);
 
   return (
     <div className="relative">
@@ -486,7 +486,7 @@ export function AdvantageProductSelect({
                 <Loader2 className="w-4 h-4 animate-spin text-primary-400" />
           </div> :
 
-          products.map((product) =>
+          (products || []).map((product) =>
           <button
             key={product.id}
             type="button"

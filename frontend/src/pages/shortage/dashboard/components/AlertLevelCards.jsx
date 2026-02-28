@@ -11,7 +11,7 @@ const AlertLevelCards = ({ stats = {}, onLevelClick }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {levels.map((level) => {
+      {(levels || []).map((level) => {
         const config = ALERT_LEVELS[level];
         const count = stats[level] || 0;
 

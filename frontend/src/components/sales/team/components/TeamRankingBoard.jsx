@@ -66,7 +66,7 @@ export default function TeamRankingBoard({
                   onChange={(e) => onRankingTypeChange(e.target.value)}
                   className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {rankingOptions.map((option) => (
+                  {(rankingOptions || []).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -104,7 +104,7 @@ export default function TeamRankingBoard({
             {/* 指标权重配置 */}
             {metricConfigList.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {metricConfigList.map((metric) => (
+                {(metricConfigList || []).map((metric) => (
                   <div
                     key={`${metric.key}-${metric.data_source}`}
                     className="p-3 rounded-lg border border-slate-700/60 bg-slate-800/50"
@@ -162,7 +162,7 @@ export default function TeamRankingBoard({
                     <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400">
                       综合得分
                     </th>
-                    {metricConfigList.map((metric) => (
+                    {(metricConfigList || []).map((metric) => (
                       <th
                         key={`header-${metric.key}`}
                         className="px-3 py-2 text-left text-xs font-semibold text-slate-400 whitespace-nowrap"
@@ -178,7 +178,7 @@ export default function TeamRankingBoard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {rankingData.map((item, index) => {
+                  {(rankingData || []).map((item, index) => {
                     const metricMap = buildMetricDetailMap(
                       item.metrics || [],
                     );
@@ -206,7 +206,7 @@ export default function TeamRankingBoard({
                         <td className="px-3 py-3 text-emerald-400 font-semibold whitespace-nowrap">
                           {Number(item.score || 0).toFixed(1)} 分
                         </td>
-                        {metricConfigList.map((metric) => {
+                        {(metricConfigList || []).map((metric) => {
                           const detail =
                             metricMap[metric.key] ||
                             metricMap[metric.data_source];

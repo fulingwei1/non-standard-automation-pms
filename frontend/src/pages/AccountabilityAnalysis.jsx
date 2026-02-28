@@ -184,7 +184,7 @@ export default function AccountabilityAnalysis() {
                       <div className="mb-4 text-sm text-slate-500">
                         总断链数: {data.total_breaks}
                       </div>
-                      {data.by_person && data.by_person.length > 0 &&
+                      {data.by_person && data.by_person?.length > 0 &&
                   <Table>
                           <TableHeader>
                             <TableRow>
@@ -195,7 +195,7 @@ export default function AccountabilityAnalysis() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {data.by_person.map((person, idx) =>
+                            {(data.by_person || []).map((person, idx) =>
                       <TableRow key={idx}>
                                 <TableCell>{person.person_name}</TableCell>
                                 <TableCell>
@@ -231,7 +231,7 @@ export default function AccountabilityAnalysis() {
                   {byPersonData.summary?.total_breaks} · 总成本影响:{" "}
                   {formatAmount(byPersonData.summary?.total_cost_impact || 0)}
                 </div>
-                {byPersonData.by_person && byPersonData.by_person.length > 0 &&
+                {byPersonData.by_person && byPersonData.by_person?.length > 0 &&
               <Table>
                     <TableHeader>
                       <TableRow>
@@ -244,7 +244,7 @@ export default function AccountabilityAnalysis() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {byPersonData.by_person.map((person, idx) =>
+                      {(byPersonData.by_person || []).map((person, idx) =>
                   <TableRow key={idx}>
                           <TableCell>{person.person_name}</TableCell>
                           <TableCell>{person.department || "未设置"}</TableCell>
@@ -284,7 +284,7 @@ export default function AccountabilityAnalysis() {
                 )}
                 </div>
                 {byDepartmentData.by_department &&
-              byDepartmentData.by_department.length > 0 &&
+              byDepartmentData.by_department?.length > 0 &&
               <Table>
                       <TableHeader>
                         <TableRow>
@@ -295,7 +295,7 @@ export default function AccountabilityAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {byDepartmentData.by_department.map((dept, idx) =>
+                        {(byDepartmentData.by_department || []).map((dept, idx) =>
                   <TableRow key={idx}>
                             <TableCell>{dept.department}</TableCell>
                             <TableCell>{dept.total_breaks}</TableCell>

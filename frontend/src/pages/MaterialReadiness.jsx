@@ -172,7 +172,7 @@ export default function MaterialReadiness() {
       distribution[type] = 0;
     });
 
-    materials.forEach((material) => {
+    (materials || []).forEach((material) => {
       if (material.type) {
         distribution[material.type] = (distribution[material.type] || 0) + 1;
       }
@@ -183,7 +183,7 @@ export default function MaterialReadiness() {
 
   // 获取紧急物料
   const urgentMaterials = useMemo(() => {
-    return materials.filter((material) =>
+    return (materials || []).filter((material) =>
     material.priority === PRIORITY_LEVEL.URGENT &&
     material.status !== MATERIAL_STATUS.AVAILABLE
     );
@@ -194,7 +194,7 @@ export default function MaterialReadiness() {
     const today = new Date();
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    return materials.filter((material) =>
+    return (materials || []).filter((material) =>
     material.status === MATERIAL_STATUS.ON_ORDER &&
     material.expected_date &&
     new Date(material.expected_date) <= nextWeek
@@ -516,14 +516,14 @@ export default function MaterialReadiness() {
                     加载中...
                   </TableCell>
             </TableRow> :
-            materials.length === 0 ?
+            materials?.length === 0 ?
             <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     暂无物料数据
                   </TableCell>
             </TableRow> :
 
-            materials.map((material) =>
+            (materials || []).map((material) =>
             <TableRow key={material.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
@@ -662,7 +662,7 @@ export default function MaterialReadiness() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {projects.map((project) =>
+                  {(projects || []).map((project) =>
                   <SelectItem key={project.id} value={project.id}>
                       {project.name}
                   </SelectItem>

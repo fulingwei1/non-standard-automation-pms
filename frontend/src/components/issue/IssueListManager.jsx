@@ -90,7 +90,7 @@ export const IssueListManager = ({
 
   // 过滤后的 issues
   const filteredIssues = useMemo(() => {
-    return issues.filter((issue) => {
+    return (issues || []).filter((issue) => {
       // 搜索过滤
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -169,7 +169,7 @@ export const IssueListManager = ({
   const issuesByStatus = useMemo(() => {
     const grouped = {};
     Object.keys(issueStatusConfig).forEach((status) => {
-      grouped[status] = sortedIssues.filter((issue) => issue.status === status);
+      grouped[status] = (sortedIssues || []).filter((issue) => issue.status === status);
     });
     return grouped;
   }, [sortedIssues]);
@@ -193,7 +193,7 @@ export const IssueListManager = ({
     if (selected) {
       newSelection = [...selectedIssues, issueId];
     } else {
-      newSelection = selectedIssues.filter((id) => id !== issueId);
+      newSelection = (selectedIssues || []).filter((id) => id !== issueId);
     }
     onSelectionChange(newSelection);
   }, [selectedIssues, onSelectionChange]);
@@ -201,7 +201,7 @@ export const IssueListManager = ({
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
     if (!onSelectionChange) {return;}
-    onSelectionChange(selected ? sortedIssues.map((issue) => issue.id) : []);
+    onSelectionChange(selected ? (sortedIssues || []).map((issue) => issue.id) : []);
   }, [sortedIssues, onSelectionChange]);
 
   // 渲染状态徽章
@@ -428,7 +428,7 @@ export const IssueListManager = ({
           <CardContent className="pt-0">
             <div className="space-y-3 min-h-[400px]">
               <AnimatePresence>
-                {columnIssues.map((issue) => renderIssueCard(issue))}
+                {(columnIssues || []).map((issue) => renderIssueCard(issue))}
               </AnimatePresence>
               {columnIssues.length === 0 &&
               <div className="text-center py-8 text-slate-500 text-sm">
@@ -581,7 +581,7 @@ export const IssueListManager = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedIssues.map((issue, index) => renderTableRow(issue, index))}
+                    {(sortedIssues || []).map((issue, index) => renderTableRow(issue, index))}
                   </tbody>
                 </table>
           </div>

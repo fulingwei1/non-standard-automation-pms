@@ -6,19 +6,19 @@ import { formatCurrency } from "../../lib/utils";
 export default function ContributionChart({ contributions = [] }) {
   const stats = useMemo(() => {
     const total = contributions.length;
-    const totalScore = contributions.reduce(
+    const totalScore = (contributions || []).reduce(
       (sum, c) => sum + (c.contribution_score || 0),
       0,
     );
-    const totalHours = contributions.reduce(
+    const totalHours = (contributions || []).reduce(
       (sum, c) => sum + (c.actual_hours || 0),
       0,
     );
-    const totalBonus = contributions.reduce(
+    const totalBonus = (contributions || []).reduce(
       (sum, c) => sum + (c.bonus_amount || 0),
       0,
     );
-    const totalTasks = contributions.reduce(
+    const totalTasks = (contributions || []).reduce(
       (sum, c) => sum + (c.task_count || 0),
       0,
     );

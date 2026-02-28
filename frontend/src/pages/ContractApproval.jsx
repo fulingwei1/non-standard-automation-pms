@@ -124,7 +124,7 @@ export default function ContractApproval() {
     activeTab === "pending" ? pendingApprovals : approvalHistory;
     if (!searchTerm) {return approvals;}
     const searchLower = (searchTerm || "").toLowerCase();
-    return approvals.filter(
+    return (approvals || []).filter(
       (item) =>
       (item.title || "").toLowerCase().includes(searchLower) ||
       (item.customerName || "").toLowerCase().includes(searchLower) ||
@@ -166,7 +166,7 @@ export default function ContractApproval() {
         "合同审批",
     };
 
-    setPendingApprovals((prev) => prev.filter((a) => a.id !== selectedApproval.id));
+    setPendingApprovals((prev) => (prev || []).filter((a) => a.id !== selectedApproval.id));
     setApprovalHistory((prev) => [historyItem, ...prev]);
   };
 
@@ -268,7 +268,7 @@ export default function ContractApproval() {
                 <p className="text-sm text-slate-400">待审批金额</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(
-                    pendingApprovals.reduce(
+                    (pendingApprovals || []).reduce(
                       (sum, a) => sum + a.totalAmount,
                       0
                     )
@@ -290,7 +290,7 @@ export default function ContractApproval() {
                 <p className="text-sm text-slate-400">已批准</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {
-                  approvalHistory.filter((h) => h.status === "approved").
+                  (approvalHistory || []).filter((h) => h.status === "approved").
                   length
                   }
                 </p>
@@ -310,7 +310,7 @@ export default function ContractApproval() {
                 <p className="text-sm text-slate-400">已拒绝</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {
-                  approvalHistory.filter((h) => h.status === "rejected").
+                  (approvalHistory || []).filter((h) => h.status === "rejected").
                   length
                   }
                 </p>
@@ -359,7 +359,7 @@ export default function ContractApproval() {
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsContent value="pending" className="space-y-4">
-                {filteredApprovals.map((approval) => {
+                {(filteredApprovals || []).map((approval) => {
                   const typeInfo = typeConfig[approval.type];
                   const priorityInfo = priorityConfig[approval.priority];
                   const TypeIcon = typeInfo.icon;
@@ -452,7 +452,7 @@ export default function ContractApproval() {
                 })}
               </TabsContent>
               <TabsContent value="history" className="space-y-4">
-                {filteredApprovals.map((approval) => {
+                {(filteredApprovals || []).map((approval) => {
                   const typeInfo = typeConfig[approval.type];
                   const TypeIcon = typeInfo.icon;
                   return (
@@ -600,7 +600,7 @@ export default function ContractApproval() {
             <div>
                   <p className="text-sm text-slate-400 mb-2">付款条款</p>
                   <div className="space-y-2">
-                    {selectedApproval.paymentTerms.map((term, index) =>
+                    {(selectedApproval.paymentTerms || []).map((term, index) =>
                 <div
                   key={index}
                   className="p-2 bg-slate-800/40 rounded border border-slate-700/50">
@@ -630,11 +630,11 @@ export default function ContractApproval() {
             }
 
               {selectedApproval.attachments &&
-            selectedApproval.attachments.length > 0 &&
+            selectedApproval.attachments?.length > 0 &&
             <div>
                     <p className="text-sm text-slate-400 mb-2">附件</p>
                     <div className="flex flex-wrap gap-2">
-                      {selectedApproval.attachments.map((file, index) =>
+                      {(selectedApproval.attachments || []).map((file, index) =>
                 <Button
                   key={index}
                   variant="outline"

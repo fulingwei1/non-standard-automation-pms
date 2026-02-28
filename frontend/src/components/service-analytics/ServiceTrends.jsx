@@ -23,7 +23,7 @@ export function ServiceTrends({ analytics }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {analytics.ticketTrends.map((item, index) => {
+            {(analytics.ticketTrends || []).map((item, index) => {
               const resolutionRate =
                 item.count > 0
                   ? (item.resolved / item.count * 100).toFixed(1)

@@ -17,7 +17,7 @@ export default function KeyMetricsCard({ keyMetrics }) {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             {keyMetrics.length > 0 ? (
-              keyMetrics.map((metric, index) => (
+              (keyMetrics || []).map((metric, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">{metric.label}</span>

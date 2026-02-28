@@ -71,7 +71,7 @@ export function ComparisonChart({ data, height = 300 }) {
           </g>
 
           {/* 维度分组 */}
-          {dimensions.map((dimension, dimIndex) => {
+          {(dimensions || []).map((dimension, dimIndex) => {
             const x = padding + dimIndex * (barWidth + barGap) + barGap / 2;
 
             return (
@@ -87,10 +87,10 @@ export function ComparisonChart({ data, height = 300 }) {
                 </text>
 
                 {/* 每个评估的柱状图 */}
-                {data.map((assessment, assessIndex) => {
+                {(data || []).map((assessment, assessIndex) => {
                   const score = assessment.scores[dimension] || 0;
                   const barHeight = (score / maxScore) * (height - padding * 2);
-                  const barX = x + (assessIndex * barWidth) / data.length;
+                  const barX = x + (assessIndex * barWidth) / data?.length;
                   const barY = height - padding - barHeight;
                   const color = colors[assessIndex % colors.length];
 
@@ -99,7 +99,7 @@ export function ComparisonChart({ data, height = 300 }) {
                       <rect
                         x={barX}
                         y={barY}
-                        width={barWidth / data.length - 2}
+                        width={barWidth / data?.length - 2}
                         height={barHeight}
                         fill={color}
                         className="transition-all hover:opacity-80"
@@ -107,7 +107,7 @@ export function ComparisonChart({ data, height = 300 }) {
                       {/* 数值标签 */}
                       {barHeight > 15 && (
                         <text
-                          x={barX + barWidth / data.length / 2}
+                          x={barX + barWidth / data?.length / 2}
                           y={barY - 5}
                           textAnchor="middle"
                           className="text-xs font-semibold fill-gray-300"
@@ -125,7 +125,7 @@ export function ComparisonChart({ data, height = 300 }) {
 
         {/* 图例 */}
         <div className="flex items-center justify-center gap-4 mt-4">
-          {data.map((assessment, index) => (
+          {(data || []).map((assessment, index) => (
             <div key={index} className="flex items-center gap-2">
               <div
                 className="w-4 h-4 rounded"

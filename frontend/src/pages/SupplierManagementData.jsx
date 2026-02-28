@@ -355,7 +355,7 @@ export default function SupplierManagementData() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                          {suppliers.map((supplier) =>
+                          {(suppliers || []).map((supplier) =>
                         <tr
                           key={supplier.id}
                           className="hover:bg-slate-800/30">

@@ -60,7 +60,7 @@ export default function ScheduleGanttView({ projects: _projects, onProjectClick 
     let minDate = null;
     let maxDate = null;
 
-    ganttData.forEach((resource) => {
+    (ganttData || []).forEach((resource) => {
       resource.tasks?.forEach((task) => {
         const start = new Date(task.start_date);
         const end = new Date(task.end_date);
@@ -179,7 +179,7 @@ export default function ScheduleGanttView({ projects: _projects, onProjectClick 
               className="flex border-b border-border bg-surface-2/30"
               style={{ marginLeft: "200px" }}
             >
-              {dateHeaders.map((header, index) => (
+              {(dateHeaders || []).map((header, index) => (
                 <div
                   key={index}
                   className={cn(
@@ -207,7 +207,7 @@ export default function ScheduleGanttView({ projects: _projects, onProjectClick 
             <div className="flex">
               {/* Resource Names Column */}
               <div className="w-[200px] flex-shrink-0 border-r border-border bg-surface-2/20">
-                {ganttData.map((resource) => (
+                {(ganttData || []).map((resource) => (
                   <div
                     key={resource.user_id}
                     className="h-12 px-3 flex items-center border-b border-border/50"
@@ -236,7 +236,7 @@ export default function ScheduleGanttView({ projects: _projects, onProjectClick 
               >
                 {/* Grid Background */}
                 <div className="absolute inset-0 flex pointer-events-none">
-                  {dateHeaders.map((header, index) => (
+                  {(dateHeaders || []).map((header, index) => (
                     <div
                       key={index}
                       className={cn(
@@ -261,7 +261,7 @@ export default function ScheduleGanttView({ projects: _projects, onProjectClick 
                 )}
 
                 {/* Task Bars */}
-                {ganttData.map((resource, _resourceIndex) => (
+                {(ganttData || []).map((resource, _resourceIndex) => (
                   <div
                     key={resource.user_id}
                     className="relative h-12 border-b border-border/50"

@@ -140,7 +140,7 @@ const LeadAssessment = () => {
       });
       const leadsData = leadsRes.data?.items || leadsRes.data?.items || leadsRes.data || [];
       // 将后端字段映射到前端字段
-      const mappedLeads = leadsData.map((lead) => ({
+      const mappedLeads = (leadsData || []).map((lead) => ({
         id: lead.id,
         companyName: lead.company_name || lead.companyName || '',
         contactPerson: lead.contact_person || lead.contactPerson || '',
@@ -170,7 +170,7 @@ const LeadAssessment = () => {
         try {
           const fuRes = await leadApi.getFollowUps(lead.id);
           const fuData = fuRes.data?.items || fuRes.data?.items || fuRes.data || [];
-          fuData.forEach((fu) => {
+          (fuData || []).forEach((fu) => {
             allFollowUps.push({
               id: fu.id,
               leadId: lead.id,
@@ -184,8 +184,8 @@ const LeadAssessment = () => {
         } catch (_e) { /* skip individual failures */ }
       }
       const now = new Date();
-      setFollowUps(allFollowUps.filter((fu) => fu.status !== 'overdue'));
-      setOverdueFollowUps(allFollowUps.filter((fu) => {
+      setFollowUps((allFollowUps || []).filter((fu) => fu.status !== 'overdue'));
+      setOverdueFollowUps((allFollowUps || []).filter((fu) => {
         if (fu.status === 'overdue') return true;
         return fu.dueDate && new Date(fu.dueDate) < now && fu.status === 'pending';
       }));
@@ -196,9 +196,9 @@ const LeadAssessment = () => {
       lastMonth.setMonth(lastMonth.getMonth() - 1);
       const thisMonthStr = `${thisMonth.getFullYear()}-${String(thisMonth.getMonth() + 1).padStart(2, '0')}`;
       const lastMonthStr = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
-      const thisMonthLeads = mappedLeads.filter((l) => (l.createdAt || '').startsWith(thisMonthStr));
-      const lastMonthLeads = mappedLeads.filter((l) => (l.createdAt || '').startsWith(lastMonthStr));
-      const convertedLeads = mappedLeads.filter((l) => l.status === 'converted' || l.qualification === 'converted');
+      const thisMonthLeads = (mappedLeads || []).filter((l) => (l.createdAt || '').startsWith(thisMonthStr));
+      const lastMonthLeads = (mappedLeads || []).filter((l) => (l.createdAt || '').startsWith(lastMonthStr));
+      const convertedLeads = (mappedLeads || []).filter((l) => l.status === 'converted' || l.qualification === 'converted');
       const growth = lastMonthLeads.length > 0
         ? ((thisMonthLeads.length - lastMonthLeads.length) / lastMonthLeads.length * 100)
         : 0;
@@ -216,7 +216,7 @@ const LeadAssessment = () => {
 
   // 过滤数据
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    return (leads || []).filter((lead) => {
       const searchLower = searchText.toLowerCase();
       const matchesSearch = !searchText ||
       (lead.companyName || "").toLowerCase().includes(searchLower) ||
@@ -247,7 +247,7 @@ const LeadAssessment = () => {
     try {
       setLoading(true);
       await leadApi.update(leadId, { status: 'INVALID' });
-      setLeads(leads.filter((l) => l.id !== leadId));
+      setLeads((leads || []).filter((l) => l.id !== leadId));
       message.success('删除成功');
     } catch (_error) {
       message.error('删除失败');
@@ -645,7 +645,7 @@ const LeadAssessment = () => {
                 lead={editingLead}
                 onSave={(lead) => {
                   if (lead.id) {
-                    setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
+                    setLeads((leads || []).map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
                   } else {
                     const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
                     setLeads([...leads, newLead]);
@@ -715,7 +715,7 @@ const LeadAssessment = () => {
           lead={editingLead}
           onSave={(lead) => {
             if (lead.id) {
-              setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
+              setLeads((leads || []).map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
             } else {
               const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
               setLeads([...leads, newLead]);

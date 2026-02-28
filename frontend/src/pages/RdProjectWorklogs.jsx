@@ -195,7 +195,7 @@ export default function RdProjectWorklogs() {
             <div className="p-4 rounded-lg bg-white/[0.03]">
               <p className="text-sm text-slate-400 mb-1">参与人数</p>
               <p className="text-2xl font-semibold text-white">
-                {new Set(worklogs.map((log) => log.user_id)).size} 人
+                {new Set((worklogs || []).map((log) => log.user_id)).size} 人
               </p>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function RdProjectWorklogs() {
           </h3>
           {worklogs.length > 0 ?
           <div className="space-y-3">
-              {worklogs.map((log) => {
+              {(worklogs || []).map((log) => {
               const status = statusMap[log.status] || statusMap.DRAFT;
               return (
                 <div

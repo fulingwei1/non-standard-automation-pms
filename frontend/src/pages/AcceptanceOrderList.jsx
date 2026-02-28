@@ -170,7 +170,7 @@ export default function AcceptanceOrderList() {
     }
   };
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    return (orders || []).filter((order) => {
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         return (
@@ -206,7 +206,7 @@ export default function AcceptanceOrderList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
+                {(projects || []).map((proj) => (
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
@@ -276,7 +276,7 @@ export default function AcceptanceOrderList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {(filteredOrders || []).map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-mono text-sm">
                       {order.order_no}
@@ -391,7 +391,7 @@ export default function AcceptanceOrderList() {
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((proj) => (
+                    {(projects || []).map((proj) => (
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>

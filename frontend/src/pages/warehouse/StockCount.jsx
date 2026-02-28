@@ -78,8 +78,8 @@ export default function StockCount() {
             <TableHead>项数</TableHead><TableHead>一致/差异</TableHead><TableHead>状态</TableHead><TableHead className="text-right">操作</TableHead>
           </TableRow></TableHeader><TableBody>
             {loading ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-text-muted">加载中...</TableCell></TableRow>
-            : data.items.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
-            : data.items.map((row) => (
+            : data.items?.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-text-muted">暂无数据</TableCell></TableRow>
+            : (data.items || []).map((row) => (
               <TableRow key={row.id}>
                 <TableCell className="font-mono text-sm">{row.count_no}</TableCell>
                 <TableCell>{COUNT_TYPES.find((t) => t.value === row.count_type)?.label || row.count_type}</TableCell>
@@ -103,7 +103,7 @@ export default function StockCount() {
           <div className="space-y-2"><Label>仓库</Label>
             <Select value={createForm.warehouse_id?.toString() || ""} onValueChange={(v) => setCreateForm({ ...createForm, warehouse_id: v })}>
               <SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger>
-              <SelectContent>{warehouses.map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
+              <SelectContent>{(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>
             </Select></div>
           <div className="space-y-2"><Label>盘点类型</Label>
             <Select value={createForm.count_type} onValueChange={(v) => setCreateForm({ ...createForm, count_type: v })}>
@@ -128,7 +128,7 @@ export default function StockCount() {
             <TableHead>物料编码</TableHead><TableHead>名称</TableHead><TableHead className="text-right">系统</TableHead>
             <TableHead className="text-right">实盘</TableHead><TableHead className="text-right">差异</TableHead><TableHead>原因</TableHead>
           </TableRow></TableHeader><TableBody>
-            {selectedOrder.items.map((item) => (
+            {(selectedOrder.items || []).map((item) => (
               <TableRow key={item.id}><TableCell className="font-mono text-sm">{item.material_code}</TableCell>
                 <TableCell>{item.material_name || "-"}</TableCell>
                 <TableCell className="text-right">{item.system_quantity}</TableCell>
