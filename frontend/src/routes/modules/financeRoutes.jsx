@@ -7,6 +7,7 @@ import ProjectSettlement from "../../pages/ProjectSettlement";
 import FinancialReports from "../../pages/FinancialReports";
 import ExecutiveDashboard from "../../pages/executive-dashboard";
 import MarginPrediction from "../../pages/MarginPrediction";
+import CostCollection from "../../pages/CostCollection";
 
 export function FinanceRoutes() {
   return (
@@ -16,6 +17,7 @@ export function FinanceRoutes() {
       <Route path="/settlement" element={<ProjectSettlement />} />
       <Route path="/financial-reports" element={<FinancialReports />} />
       <Route path="/margin-prediction" element={<MarginPrediction />} />
+      <Route path="/cost-collection" element={<CostCollection />} />
       <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
     </>
   );

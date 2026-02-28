@@ -687,6 +687,9 @@ def create_api_router() -> APIRouter:
 
         from app.api.v1.endpoints.margin_prediction import router as margin_prediction_router
         api_router.include_router(margin_prediction_router, prefix="/margin-prediction", tags=["margin-prediction"])
+
+        from app.api.v1.endpoints.cost_collection import router as cost_collection_router
+        api_router.include_router(cost_collection_router, prefix="/cost-collection", tags=["cost-collection"])
         print("✓ 资源调度模块加载成功")
     except Exception as e:
         print(f"✗ 资源调度模块加载失败：{e}")
