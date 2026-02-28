@@ -143,7 +143,8 @@ export const defaultNavGroups = [
       { name: "成本核算", path: "/costs", icon: "Calculator", permission: "cost:accounting:read", permissionLabel: "成本核算" },
       { name: "付款审批", path: "/payment-approval", icon: "ClipboardCheck", permission: "payment:approve", permissionLabel: "付款审批" },
       { name: "项目结算", path: "/settlement", icon: "FileText", permission: "settlement:read", permissionLabel: "项目结算" },
-      { name: "财务报表", path: "/financial-reports", icon: "BarChart3", permission: "finance:report:read", permissionLabel: "财务报表" }
+      { name: "财务报表", path: "/financial-reports", icon: "BarChart3", permission: "finance:report:read", permissionLabel: "财务报表" },
+      { name: "毛利率预测", path: "/margin-prediction", icon: "TrendingUp", permission: "cost:accounting:read", permissionLabel: "毛利率预测" }
     ],
     roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"]
   },

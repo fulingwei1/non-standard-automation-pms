@@ -6,6 +6,7 @@ import PaymentApproval from "../../pages/PaymentApproval";
 import ProjectSettlement from "../../pages/ProjectSettlement";
 import FinancialReports from "../../pages/FinancialReports";
 import ExecutiveDashboard from "../../pages/executive-dashboard";
+import MarginPrediction from "../../pages/MarginPrediction";
 
 export function FinanceRoutes() {
   return (
@@ -14,6 +15,7 @@ export function FinanceRoutes() {
       <Route path="/payment-approval" element={<PaymentApproval />} />
       <Route path="/settlement" element={<ProjectSettlement />} />
       <Route path="/financial-reports" element={<FinancialReports />} />
+      <Route path="/margin-prediction" element={<MarginPrediction />} />
       <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
     </>
   );
