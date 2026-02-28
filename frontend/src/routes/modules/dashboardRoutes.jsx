@@ -132,7 +132,6 @@ export function DashboardRoutes() {
       <Route path="/manufacturing-director-dashboard" element={<Navigate to="/workstation/production" replace />} />
       <Route path="/production-manager-dashboard" element={<Navigate to="/workstation/production" replace />} />
       <Route path="/worker-workstation" element={<Navigate to="/workstation/production" replace />} />
-      <Route path="/assembly-tasks" element={<Navigate to="/workstation/production" replace />} />
 
       {/* 采购相关旧路由重定向 */}
       <Route path="/procurement-dashboard" element={<Navigate to="/workstation/procurement" replace />} />
