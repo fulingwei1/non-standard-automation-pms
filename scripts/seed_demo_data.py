@@ -22,7 +22,7 @@ def main():
     # 1. 部门
     print("创建部门...")
     for did,code,name in [(1,'SALES','销售部'),(2,'PM','项目管理部'),(3,'RD','研发部'),(4,'PROD','生产部'),(5,'SERVICE','客服部'),(6,'PURCHASE','采购部'),(7,'FINANCE','财务部'),(8,'EXEC','总经办')]:
-        c.execute("INSERT OR REPLACE INTO departments (id,dept_code,dept_name,is_active,created_at,updated_at) VALUES (?,?,?,1,?,?)", (did,code,name,now,now))
+        c.execute("INSERT OR REPLACE INTO departments (id,dept_code,dept_name,level,sort_order,is_active,created_at,updated_at) VALUES (?,?,?,1,?,1,?,?)", (did,code,name,did,now,now))
 
     # 2. 员工+用户
     print("创建员工和用户...")
