@@ -46,13 +46,13 @@ const DeliveryTracking = ({ deliveries = [], loading }) => {
               <List.Item
                 key={item.id ?? item.orderNumber}
                 extra={
-                  <Space direction="vertical" align="end">
+                  <Space orientation="vertical" align="end">
                     <Tag color={status.color}>{status.label}</Tag>
                     <Tag>{method.label}</Tag>
                   </Space>
                 }
               >
-                <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
                   <Text strong>{item.orderNumber}</Text>
                   <Text type="secondary">{item.customerName}</Text>
 

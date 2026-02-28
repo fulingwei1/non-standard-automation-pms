@@ -280,7 +280,7 @@ function RoutingRule({ rule, index, flows, onUpdate, onDelete, onDuplicate }) {
       }
     >
       {isExpanded && (
-        <Space direction="vertical" className="w-full" size={12}>
+        <Space orientation="vertical" className="w-full" size={12}>
           <Form.Item label="规则名称" className="mb-0">
             <Input
               value={rule.name}

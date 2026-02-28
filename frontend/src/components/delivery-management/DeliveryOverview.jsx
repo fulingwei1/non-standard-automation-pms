@@ -38,7 +38,7 @@ const DeliveryOverview = ({ data, loading }) => {
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card loading={loading}>
@@ -93,7 +93,7 @@ const DeliveryOverview = ({ data, loading }) => {
         {shippedOrInTransit.length === 0 ? (
           <Empty description="暂无在途/已发货数据" />
         ) : (
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             {shippedOrInTransit.slice(0, 8).map((d) => {
               const status = getConfigByValue(DELIVERY_STATUS, d.status, d.status);
               const method = getConfigByValue(SHIPPING_METHODS, d.shippingMethod, d.shippingMethod);

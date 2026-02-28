@@ -27,7 +27,7 @@ const ApprovalRules = ({ loading }) => {
         dataSource={rules}
         renderItem={(rule) => (
           <List.Item>
-            <Space direction="vertical" size={2} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={2} style={{ width: "100%" }}>
               <Space wrap>
                 <Text strong>{rule.label}</Text>
                 <Tag>{rule.value}</Tag>

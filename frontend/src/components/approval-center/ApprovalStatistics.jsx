@@ -15,7 +15,7 @@ const ApprovalStatistics = ({ data, loading }) => {
   const satisfactionRate = metrics.satisfactionRate ?? 0;
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card loading={loading}>
@@ -35,7 +35,7 @@ const ApprovalStatistics = ({ data, loading }) => {
       </Row>
 
       <Card loading={loading} title="指标进度">
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={12} style={{ width: "100%" }}>
           <div>
             <Text>满意度</Text>
             <Progress percent={Number(satisfactionRate) || 0} status="success" />

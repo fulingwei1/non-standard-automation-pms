@@ -41,7 +41,7 @@ const FollowUpManager = ({ followUps = [], leads = [], loading, onRefresh }) => 
 
             return (
               <List.Item key={item.id}>
-                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                   <Space wrap>
                     <Text strong>{item.leadCompany || lead?.companyName || "未知客户"}</Text>
                     <Tag color={status.color}>{status.label}</Tag>

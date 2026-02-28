@@ -15,7 +15,7 @@ const ApprovalWorkflow = ({ loading }) => {
   const rules = Object.values(APPROVAL_RULES);
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <Card
         loading={loading}
         title={
@@ -43,7 +43,7 @@ const ApprovalWorkflow = ({ loading }) => {
           dataSource={rules}
           renderItem={(rule) => (
             <List.Item>
-              <Space direction="vertical" size={0}>
+              <Space orientation="vertical" size={0}>
                 <Text strong>{rule.label}</Text>
                 <Text type="secondary">{rule.description}</Text>
               </Space>

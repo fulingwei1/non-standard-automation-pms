@@ -258,7 +258,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         </Space>
         }>
 
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space orientation="vertical" style={{ width: '100%' }}>
             {recentCriticalAlerts.map((alert) =>
           <AntAlert
             key={alert.id}
@@ -301,7 +301,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         
         <Col xs={24} lg={12}>
           <Card title="快速操作" loading={loading}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Button
                 type="primary"
                 block

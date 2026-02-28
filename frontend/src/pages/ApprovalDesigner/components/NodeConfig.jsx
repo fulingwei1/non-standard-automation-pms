@@ -50,7 +50,7 @@ function ApprovalNodeConfig({ node, onChange }) {
   }, [node, onChange]);
 
   return (
-    <Space direction="vertical" size={16} className="w-full">
+    <Space orientation="vertical" size={16} className="w-full">
       {/* 基本信息 */}
       <div>
         <Text type="secondary" className="text-xs mb-2 block">基本信息</Text>
@@ -190,7 +190,7 @@ function ApprovalNodeConfig({ node, onChange }) {
           <Settings size={12} className="inline mr-1" />
           行为配置
         </Text>
-        <Space direction="vertical" className="w-full">
+        <Space orientation="vertical" className="w-full">
           <div className="flex justify-between items-center">
             <Text>允许加签</Text>
             <Switch
@@ -253,7 +253,7 @@ function CcNodeConfig({ node, onChange }) {
   }, [node, onChange]);
 
   return (
-    <Space direction="vertical" size={16} className="w-full">
+    <Space orientation="vertical" size={16} className="w-full">
       <Form.Item label="节点名称" className="mb-3">
         <Input
           value={node.data.label}
@@ -291,7 +291,7 @@ function ConditionNodeConfig({ node, onChange }) {
   }, [node, onChange]);
 
   return (
-    <Space direction="vertical" size={16} className="w-full">
+    <Space orientation="vertical" size={16} className="w-full">
       <Form.Item label="节点名称" className="mb-3">
         <Input
           value={node.data.label}
@@ -322,7 +322,7 @@ function BasicNodeConfig({ node, onChange }) {
   }, [node, onChange]);
 
   return (
-    <Space direction="vertical" size={16} className="w-full">
+    <Space orientation="vertical" size={16} className="w-full">
       <Form.Item label="节点名称" className="mb-3">
         <Input
           value={node.data.label}

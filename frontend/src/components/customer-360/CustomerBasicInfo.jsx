@@ -77,7 +77,7 @@ const CustomerBasicInfo = ({ customer, loading }) => {
         <Col xs={24} lg={12}>
           <div style={{ marginBottom: 16 }}>
             <Text strong style={{ marginBottom: 8, display: 'block' }}>联系信息</Text>
-            <Space direction="vertical" size={8}>
+            <Space orientation="vertical" size={8}>
               <div>
                 <User size={14} style={{ marginRight: 8, color: '#666' }} />
                 <Text>联系人: {customer.contactPerson}</Text>
@@ -101,7 +101,7 @@ const CustomerBasicInfo = ({ customer, loading }) => {
 
           <div>
             <Text strong style={{ marginBottom: 8, display: 'block' }}>业务信息</Text>
-            <Space direction="vertical" size={8}>
+            <Space orientation="vertical" size={8}>
               <div>
                 <Building2 size={14} style={{ marginRight: 8, color: '#666' }} />
                 <Text>行业: {customer.industry}</Text>
