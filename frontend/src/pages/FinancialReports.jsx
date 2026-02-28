@@ -72,7 +72,7 @@ export default function FinancialReports() {
 
   // State initialized with empty data
   const [monthlyFinancials, setMonthlyFinancials] = useState([]);
-  const [costBreakdown, setCostBreakdown] = useState({});
+  const [costBreakdown, setCostBreakdown] = useState([]);
   const [projectProfitability, setProjectProfitability] = useState([]);
   const [cashFlowData, setCashFlowData] = useState([]);
 
