@@ -5,7 +5,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 5000, // 5秒超时，更快响应
+  timeout: 30000, // 30秒超时
 });
 
 // 公开的 API 端点（不需要认证）

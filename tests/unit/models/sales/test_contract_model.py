@@ -82,15 +82,12 @@ class TestContractModel:
             contract_name="金额测试",
             customer_id=sample_customer.id,
             sales_owner_id=sample_user.id,
-            contract_amount=Decimal("500000.00"),
-            tax_amount=Decimal("80000.00"),
+            contract_type="sales",
             total_amount=Decimal("580000.00")
         )
         db_session.add(contract)
         db_session.commit()
         
-        assert contract.contract_amount == Decimal("500000.00")
-        assert contract.tax_amount == Decimal("80000.00")
         assert contract.total_amount == Decimal("580000.00")
 
     def test_contract_status(self, db_session, sample_contract):
