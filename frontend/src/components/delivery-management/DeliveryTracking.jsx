@@ -1,14 +1,14 @@
 /**
  * Delivery Tracking
  * 物流跟踪组件：展示已发货/在途订单的跟踪信息（简化版）
+ * Refactored to shadcn/Tailwind Dark Theme
  */
 
-import { Card, Empty, List, Space, Tag, Typography } from "antd";
+import { Card, CardContent, CardHeader, CardTitle, Badge, EmptyState } from "../ui";
 import { MapPin, Truck, PackageSearch } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 import { DELIVERY_STATUS, SHIPPING_METHODS } from "@/lib/constants/service";
-
-const { Text } = Typography;
 
 const getConfigByValue = (configs, value, fallbackLabel = "-") => {
   const match = Object.values(configs).find((item) => item.value === value);
@@ -21,70 +21,110 @@ const DeliveryTracking = ({ deliveries = [], loading }) => {
     (d) => d.status === DELIVERY_STATUS.SHIPPED.value || d.status === DELIVERY_STATUS.IN_TRANSIT.value
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <Card
-      loading={loading}
-      title={
-        <Space>
-          <Truck size={16} />
+    <Card className="bg-surface-100/50">
+      <CardHeader className="border-b border-white/10 pb-4">
+        <CardTitle className="text-white flex items-center gap-2">
+          <Truck size={18} />
           物流跟踪
-        </Space>
-      }
-    >
-      {trackingDeliveries.length === 0 ? (
-        <Empty description="暂无可跟踪的发货单（已发货/在途）" />
-      ) : (
-        <List
-          itemLayout="vertical"
-          dataSource={trackingDeliveries}
-          renderItem={(item) => {
-            const status = getConfigByValue(DELIVERY_STATUS, item.status, item.status);
-            const method = getConfigByValue(SHIPPING_METHODS, item.shippingMethod, item.shippingMethod);
-            const hasTracking = Boolean(item.trackingNumber);
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {trackingDeliveries.length === 0 ? (
+          <EmptyState 
+            icon={Truck}
+            title="暂无可跟踪的发货单"
+            message="当前没有已发货或在途的订单"
+          />
+        ) : (
+          <div className="space-y-3">
+            {trackingDeliveries.map((item) => {
+              const status = getConfigByValue(DELIVERY_STATUS, item.status, item.status);
+              const method = getConfigByValue(SHIPPING_METHODS, item.shippingMethod, item.shippingMethod);
+              const hasTracking = Boolean(item.trackingNumber);
 
-            return (
-              <List.Item
-                key={item.id ?? item.orderNumber}
-                extra={
-                  <Space orientation="vertical" align="end">
-                    <Tag color={status.color}>{status.label}</Tag>
-                    <Tag>{method.label}</Tag>
-                  </Space>
-                }
-              >
-                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
-                  <Text strong>{item.orderNumber}</Text>
-                  <Text type="secondary">{item.customerName}</Text>
+              return (
+                <div
+                  key={item.id ?? item.orderNumber}
+                  className="p-4 bg-surface-100 rounded-lg border border-white/5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <p className="font-medium text-white">{item.orderNumber}</p>
+                        <p className="text-sm text-slate-400">{item.customerName}</p>
+                      </div>
 
-                  <Space wrap>
-                    <Tag icon={<MapPin size={14} />}>{item.deliveryAddress || "地址未知"}</Tag>
-                    {item.scheduledDate && <Tag>计划 {item.scheduledDate}</Tag>}
-                    {item.actualDate && <Tag>发货 {item.actualDate}</Tag>}
-                  </Space>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className="flex items-center gap-1 border-slate-500/30 text-slate-400"
+                        >
+                          <MapPin size={14} />
+                          {item.deliveryAddress || "地址未知"}
+                        </Badge>
+                        {item.scheduledDate && (
+                          <Badge variant="outline" className="border-slate-500/30 text-slate-400">
+                            计划 {item.scheduledDate}
+                          </Badge>
+                        )}
+                        {item.actualDate && (
+                          <Badge variant="outline" className="border-slate-500/30 text-slate-400">
+                            发货 {item.actualDate}
+                          </Badge>
+                        )}
+                      </div>
 
-                  <Space wrap>
-                    {hasTracking ? (
-                      <Tag icon={<PackageSearch size={14} />} color="blue">
-                        运单号：{item.trackingNumber}
-                      </Tag>
-                    ) : (
-                      <Tag color="default">暂无运单号</Tag>
-                    )}
-                    {item.notes && (
-                      <Text type="secondary" style={{ display: "block" }}>
-                        备注：{item.notes}
-                      </Text>
-                    )}
-                  </Space>
-                </Space>
-              </List.Item>
-            );
-          }}
-        />
-      )}
+                      <div className="flex flex-wrap gap-2">
+                        {hasTracking ? (
+                          <Badge 
+                            variant="outline" 
+                            className="flex items-center gap-1 bg-blue-500/20 text-blue-400 border-blue-500/30"
+                          >
+                            <PackageSearch size={14} />
+                            运单号：{item.trackingNumber}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-slate-500/30 text-slate-400">
+                            暂无运单号
+                          </Badge>
+                        )}
+                        {item.notes && (
+                          <p className="text-xs text-slate-500 w-full">
+                            备注：{item.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge 
+                        variant="outline"
+                        style={{ borderColor: status.color, color: status.color }}
+                      >
+                        {status.label}
+                      </Badge>
+                      <Badge variant="outline" className="border-slate-500/30 text-slate-400">
+                        {method.label}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };
 
 export default DeliveryTracking;
-

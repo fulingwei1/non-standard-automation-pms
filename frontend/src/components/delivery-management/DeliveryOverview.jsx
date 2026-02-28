@@ -1,14 +1,14 @@
 /**
  * Delivery Overview
  * 交付概览组件：用于展示交付总体统计与关键提醒
+ * Refactored to shadcn/Tailwind Dark Theme
  */
 
-import { Card, Col, Row, Space, Statistic, Tag, Typography, Progress, Empty } from "antd";
+import { Card, CardContent, Badge, Progress, EmptyState } from "../ui";
 import { PackageCheck, Truck, Clock, AlertCircle } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS } from "@/lib/constants/service";
-
-const { Title, Text } = Typography;
 
 const getConfigByValue = (configs, value, fallbackLabel = "-") => {
   const match = Object.values(configs).find((item) => item.value === value);
@@ -37,94 +37,164 @@ const DeliveryOverview = ({ data, loading }) => {
 
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
 
+  const StatCard = ({ icon: Icon, title, value, iconBgClass, textClass }) => (
+    <Card className="bg-surface-100/50">
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className={cn("p-2 rounded-lg", iconBgClass)}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-xs text-slate-400">{title}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <Space orientation="vertical" size={16} style={{ width: "100%" }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic title="总发货单" value={total} prefix={<PackageCheck size={18} />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic title="待处理（待发货/准备中）" value={pendingCount + preparingCount} prefix={<Clock size={18} />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic title="在途/已发货" value={shippedOrInTransit.length} prefix={<Truck size={18} />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={loading}>
-            <Statistic title="已送达" value={deliveredCount} />
-          </Card>
-        </Col>
-      </Row>
+    <div className="space-y-4">
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={PackageCheck}
+          title="总发货单"
+          value={total || 0}
+          iconBgClass="bg-blue-500/20"
+          textClass="text-blue-400"
+        />
+        <StatCard
+          icon={Clock}
+          title="待处理（待发货/准备中）"
+          value={pendingCount + preparingCount}
+          iconBgClass="bg-amber-500/20"
+          textClass="text-amber-400"
+        />
+        <StatCard
+          icon={Truck}
+          title="在途/已发货"
+          value={shippedOrInTransit.length}
+          iconBgClass="bg-emerald-500/20"
+          textClass="text-emerald-400"
+        />
+        <StatCard
+          icon={PackageCheck}
+          title="已送达"
+          value={deliveredCount}
+          iconBgClass="bg-slate-500/20"
+          textClass="text-slate-400"
+        />
+      </div>
 
-      <Card loading={loading}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={12}>
-            <Title level={5} style={{ marginTop: 0 }}>
-              完成率
-            </Title>
-            <Progress percent={completionRate} status={completionRate >= 80 ? "success" : "active"} />
-            <Text type="secondary">
+      {/* Progress & Risk */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="bg-surface-100/50">
+          <CardContent className="p-4 space-y-3">
+            <h3 className="text-sm font-medium text-slate-400">完成率</h3>
+            <Progress value={completionRate} className="h-2" />
+            <p className="text-xs text-slate-500">
               已送达 {deliveredCount} / {total}（取消 {cancelledCount}）
-            </Text>
-          </Col>
-          <Col xs={24} md={12}>
-            <Title level={5} style={{ marginTop: 0 }}>
-              风险提醒
-            </Title>
-            <Space wrap>
-              <Tag color={urgentCount > 0 ? "red" : "default"}>
-                <AlertCircle size={14} style={{ marginRight: 6 }} />
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-surface-100/50">
+          <CardContent className="p-4 space-y-3">
+            <h3 className="text-sm font-medium text-slate-400">风险提醒</h3>
+            <div className="flex flex-wrap gap-2">
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "flex items-center gap-1",
+                  urgentCount > 0 
+                    ? "bg-red-500/20 text-red-400 border-red-500/30" 
+                    : "bg-slate-500/20 text-slate-400 border-slate-500/30"
+                )}
+              >
+                <AlertCircle size={14} />
                 紧急 {urgentCount}
-              </Tag>
-              <Tag color={highPriorityCount > 0 ? "orange" : "default"}>高优先级 {highPriorityCount}</Tag>
-              <Tag>在途 {inTransitCount}</Tag>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+              </Badge>
+              <Badge 
+                variant="outline"
+                className={cn(
+                  highPriorityCount > 0 
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30" 
+                    : "bg-slate-500/20 text-slate-400 border-slate-500/30"
+                )}
+              >
+                高优先级 {highPriorityCount}
+              </Badge>
+              <Badge variant="outline" className="bg-slate-500/20 text-slate-400 border-slate-500/30">
+                在途 {inTransitCount}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <Card loading={loading} title="在途/已发货清单（最近）">
-        {shippedOrInTransit.length === 0 ? (
-          <Empty description="暂无在途/已发货数据" />
-        ) : (
-          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
-            {shippedOrInTransit.slice(0, 8).map((d) => {
-              const status = getConfigByValue(DELIVERY_STATUS, d.status, d.status);
-              const method = getConfigByValue(SHIPPING_METHODS, d.shippingMethod, d.shippingMethod);
-              const priority = getConfigByValue(DELIVERY_PRIORITY, d.priority, d.priority);
+      {/* Recent Shipments List */}
+      <Card className="bg-surface-100/50">
+        <CardContent className="p-4">
+          <h3 className="text-sm font-medium text-slate-400 mb-4">在途/已发货清单（最近）</h3>
+          {shippedOrInTransit.length === 0 ? (
+            <EmptyState 
+              icon={PackageCheck}
+              title="暂无在途/已发货数据"
+              message="当前没有在途或已发货的订单"
+            />
+          ) : (
+            <div className="space-y-2">
+              {shippedOrInTransit.slice(0, 8).map((d) => {
+                const status = getConfigByValue(DELIVERY_STATUS, d.status, d.status);
+                const method = getConfigByValue(SHIPPING_METHODS, d.shippingMethod, d.shippingMethod);
+                const priority = getConfigByValue(DELIVERY_PRIORITY, d.priority, d.priority);
 
-              return (
-                <Card key={d.id} size="small" style={{ background: "#fafafa" }}>
-                  <Row gutter={[12, 12]} align="middle">
-                    <Col xs={24} md={10}>
-                      <Text strong>{d.orderNumber}</Text>
-                      <div>
-                        <Text type="secondary">{d.customerName}</Text>
+                return (
+                  <div 
+                    key={d.id} 
+                    className="p-3 bg-surface-100 rounded-lg border border-white/5"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white truncate">{d.orderNumber}</p>
+                        <p className="text-xs text-slate-400">{d.customerName}</p>
                       </div>
-                    </Col>
-                    <Col xs={24} md={14}>
-                      <Space wrap>
-                        <Tag color={status.color}>{status.label}</Tag>
-                        <Tag color={priority.color}>{priority.label}</Tag>
-                        <Tag>{method.label}</Tag>
-                        {d.scheduledDate && <Tag>计划 {d.scheduledDate}</Tag>}
-                        {d.trackingNumber && <Tag>单号 {d.trackingNumber}</Tag>}
-                      </Space>
-                    </Col>
-                  </Row>
-                </Card>
-              );
-            })}
-          </Space>
-        )}
+                      <div className="flex flex-wrap gap-1 justify-end">
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs"
+                          style={{ borderColor: status.color, color: status.color }}
+                        >
+                          {status.label}
+                        </Badge>
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs"
+                          style={{ borderColor: priority.color, color: priority.color }}
+                        >
+                          {priority.label}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs border-slate-500/30 text-slate-400">
+                          {method.label}
+                        </Badge>
+                        {d.scheduledDate && (
+                          <Badge variant="outline" className="text-xs border-slate-500/30 text-slate-400">
+                            计划 {d.scheduledDate}
+                          </Badge>
+                        )}
+                        {d.trackingNumber && (
+                          <Badge variant="outline" className="text-xs border-slate-500/30 text-slate-400">
+                            单号 {d.trackingNumber}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
       </Card>
-    </Space>
+    </div>
   );
 };
 

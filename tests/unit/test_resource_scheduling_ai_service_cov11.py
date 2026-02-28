@@ -23,7 +23,7 @@ def db():
 @pytest.fixture
 def svc(db):
     with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-        return ResourceSchedulingAIService(db_session)
+        return ResourceSchedulingAIService(db)
 
 
 class TestDetectResourceConflicts:
@@ -73,12 +73,12 @@ class TestDetectResourceConflicts:
 class TestResourceSchedulingInit:
     def test_init_sets_db(self, db):
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
-            svc = ResourceSchedulingAIService(db_session)
+            svc = ResourceSchedulingAIService(db)
             assert svc.db is db
 
     def test_init_creates_ai_client(self, db):
         with patch("app.services.resource_scheduling_ai_service.AIClientService") as MockAI:
-            ResourceSchedulingAIService(db_session)
+            ResourceSchedulingAIService(db)
             MockAI.assert_called_once()
 
 

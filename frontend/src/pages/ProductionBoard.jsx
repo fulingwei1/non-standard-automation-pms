@@ -38,21 +38,27 @@ export default function ProductionBoard() {
   const fetchData = async () => {
     try {
       const results = await Promise.allSettled([
-        productionApi.workOrders.getList({ page_size: 1000 }),
-        productionApi.plans.getList({ page_size: 100 }),
-        productionApi.workshops.getList({ page_size: 100 }),
+        productionApi.workOrders.list({ page_size: 1000 }),
+        productionApi.productionPlans.list({ page_size: 100 }),
+        productionApi.workshops.list({ page_size: 100 }),
       ]);
+      const extract = (r) => {
+        const raw = r?.data;
+        // Could be {items:[...]} or {code:200, data:{items:[...]}} or just [...]
+        if (Array.isArray(raw)) return raw;
+        if (raw?.items) return raw.items;
+        if (raw?.data?.items) return raw.data.items;
+        if (Array.isArray(raw?.data)) return raw.data;
+        return [];
+      };
       if (results[0].status === "fulfilled") {
-        const d = results[0].value?.data;
-        setWorkOrders(d?.items || d || []);
+        setWorkOrders(extract(results[0].value));
       }
       if (results[1].status === "fulfilled") {
-        const d = results[1].value?.data;
-        setPlans(d?.items || d || []);
+        setPlans(extract(results[1].value));
       }
       if (results[2].status === "fulfilled") {
-        const d = results[2].value?.data;
-        setWorkshops(d?.items || d || []);
+        setWorkshops(extract(results[2].value));
       }
     } catch (e) {
       console.error("Failed to fetch production data:", e);
@@ -128,7 +134,7 @@ export default function ProductionBoard() {
       className="min-h-screen bg-background p-6 space-y-6"
       variants={staggerContainer}
       initial="hidden"
-      animate="show"
+      animate="visible"
     >
       <PageHeader
         title="生产看板"
@@ -191,9 +197,9 @@ export default function ProductionBoard() {
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {plan.start_date && <span>{plan.start_date.slice(0,10)}</span>}
-                      {plan.start_date && plan.end_date && <span> → </span>}
-                      {plan.end_date && <span>{plan.end_date.slice(0,10)}</span>}
+                      {(plan.plan_start_date || plan.start_date) && <span>{(plan.plan_start_date || plan.start_date).slice(0,10)}</span>}
+                      {(plan.plan_start_date || plan.start_date) && (plan.plan_end_date || plan.end_date) && <span> → </span>}
+                      {(plan.plan_end_date || plan.end_date) && <span>{(plan.plan_end_date || plan.end_date).slice(0,10)}</span>}
                     </div>
                     <div>
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
@@ -278,7 +284,7 @@ export default function ProductionBoard() {
                       <Factory className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-foreground">{ws.name}</h3>
+                      <h3 className="font-medium text-foreground">{ws.workshop_name || ws.name}</h3>
                       <p className="text-xs text-muted-foreground">{ws.workshop_type || "车间"}</p>
                     </div>
                   </div>

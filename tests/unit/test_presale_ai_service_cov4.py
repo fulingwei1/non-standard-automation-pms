@@ -19,7 +19,7 @@ def make_service():
     db.query.return_value.filter.return_value.first.return_value = None
     db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
     with patch('app.services.presale_ai_service.AIClientService'):
-        return PresaleAIService(db_session), db
+        return PresaleAIService(db), db
 
 
 class TestPresaleAIService:

@@ -15,6 +15,7 @@ import CultureWall from "../../pages/CultureWall";
 import Shipments from "../../pages/Shipments";
 import DeliveryManagement from "../../pages/DeliveryManagement";
 import Documents from "../../pages/Documents";
+import ProductionBoard from "../../pages/ProductionBoard";
 
 export function DashboardRoutes() {
   return (
@@ -79,7 +80,7 @@ export function DashboardRoutes() {
         path="/workstation/production"
         element={
           <AppProtectedRoute>
-            <UnifiedDashboard />
+            <ProductionBoard />
           </AppProtectedRoute>
         }
       />

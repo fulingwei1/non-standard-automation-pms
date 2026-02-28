@@ -1,6 +1,6 @@
 /**
  * Delivery Management (Refactored)
- * PMC发货管理页面 (重构版本)
+ * PMC 发货管理页面 (重构版本) - shadcn/Tailwind Dark Theme
  */
 
 import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
@@ -24,29 +24,45 @@ import {
   PackageCheck,
   PackageX,
   RefreshCw,
-  Download } from
-"lucide-react";
+  Download,
+  ChevronRight,
+  X
+} from "lucide-react";
 
 import {
   Card,
-  Table,
+  CardContent,
+  CardHeader,
+  CardTitle,
   Button,
+  Badge,
   Input,
   Select,
-  DatePicker,
-  Space,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Typography,
-  Alert,
-  Spin,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
   Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
   Progress,
-  Badge,
-  message } from
-"antd";
+  toast
+} from "../components/ui";
+import { cn } from "../lib/utils";
+import { fadeIn, staggerContainer } from "../lib/animations";
 
 import { businessSupportApi } from "../services/api";
 import { getItemsCompat } from "../utils/apiResponse";
@@ -55,19 +71,17 @@ import { getItemsCompat } from "../utils/apiResponse";
 import {
   DeliveryOverview,
   DeliveryPlan,
-  DeliveryTracking } from
-'../components/delivery-management';
+  DeliveryTracking
+} from '../components/delivery-management';
 
 import {
   DELIVERY_STATUS,
   DELIVERY_PRIORITY,
   SHIPPING_METHODS,
-  PACKAGE_TYPES } from
-'@/lib/constants/service';
+  PACKAGE_TYPES
+} from "@/lib/constants/service";
 
-const { Title, Text } = Typography;
 // TabPane removed - using items prop instead
-const { RangePicker } = DatePicker;
 
 const normalizeEnumValue = (value, fallbackMap = {}) => {
   if (!value) {return value;}
@@ -175,44 +189,121 @@ const DeliveryDetail = ({ id, onBack }) => {
         const data = res?.data?.data || res?.data || {};
         setDetail(data);
       })
-      .catch(() => message.error('加载发货单详情失败'))
+      .catch(() => toast({
+        title: "错误",
+        description: "加载发货单详情失败",
+        variant: "destructive"
+      }))
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <Spin size="large" style={{ display: 'block', margin: '80px auto' }} />;
-  if (!detail) return <Alert message="发货单不存在" type="warning" />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!detail) {
+    return (
+      <Card className="bg-surface-100/50">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 text-amber-400">
+            <AlertCircle className="w-5 h-5" />
+            <span>发货单不存在</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    if (status === 'approved') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+    if (status === 'rejected') return 'bg-red-500/20 text-red-400 border-red-500/30';
+    return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+  };
+
+  const getDeliveryStatusColor = (status) => {
+    if (status === 'shipped') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    if (status === 'received') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+    return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+  };
 
   return (
-    <Card
-      title={`发货单详情 - ${detail.delivery_no || ''}`}
-      extra={<Button onClick={onBack}>返回列表</Button>}
-    >
-      <Row gutter={[24, 16]}>
-        <Col span={8}><Text type="secondary">发货单号</Text><br /><Text strong>{detail.delivery_no}</Text></Col>
-        <Col span={8}><Text type="secondary">订单号</Text><br /><Text strong>{detail.order_no}</Text></Col>
-        <Col span={8}><Text type="secondary">客户名称</Text><br /><Text strong>{detail.customer_name}</Text></Col>
-        <Col span={8}><Text type="secondary">发货日期</Text><br /><Text>{detail.delivery_date || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">发货类型</Text><br /><Text>{detail.delivery_type || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">物流公司</Text><br /><Text>{detail.logistics_company || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">物流单号</Text><br /><Text>{detail.tracking_no || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">收货人</Text><br /><Text>{detail.receiver_name || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">联系电话</Text><br /><Text>{detail.receiver_phone || '-'}</Text></Col>
-        <Col span={24}><Text type="secondary">收货地址</Text><br /><Text>{detail.receiver_address || '-'}</Text></Col>
-        <Col span={8}><Text type="secondary">发货金额</Text><br /><Text>{detail.delivery_amount ?? '-'}</Text></Col>
-        <Col span={8}>
-          <Text type="secondary">审批状态</Text><br />
-          <Tag color={detail.approval_status === 'approved' ? 'green' : detail.approval_status === 'rejected' ? 'red' : 'orange'}>
-            {detail.approval_status || '-'}
-          </Tag>
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">发货状态</Text><br />
-          <Tag color={detail.delivery_status === 'shipped' ? 'blue' : detail.delivery_status === 'received' ? 'green' : 'default'}>
-            {detail.delivery_status || '-'}
-          </Tag>
-        </Col>
-        <Col span={24}><Text type="secondary">备注</Text><br /><Text>{detail.remark || '-'}</Text></Col>
-      </Row>
+    <Card className="bg-surface-100/50">
+      <CardHeader className="border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white">
+            发货单详情 - {detail.delivery_no || ''}
+          </CardTitle>
+          <Button variant="outline" onClick={onBack}>返回列表</Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">发货单号</p>
+            <p className="text-white font-medium">{detail.delivery_no}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">订单号</p>
+            <p className="text-white font-medium">{detail.order_no}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">客户名称</p>
+            <p className="text-white font-medium">{detail.customer_name}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">发货日期</p>
+            <p className="text-white">{detail.delivery_date || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">发货类型</p>
+            <p className="text-white">{detail.delivery_type || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">物流公司</p>
+            <p className="text-white">{detail.logistics_company || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">物流单号</p>
+            <p className="text-white">{detail.tracking_no || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">收货人</p>
+            <p className="text-white">{detail.receiver_name || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">联系电话</p>
+            <p className="text-white">{detail.receiver_phone || '-'}</p>
+          </div>
+          <div className="md:col-span-3 space-y-1">
+            <p className="text-sm text-slate-400">收货地址</p>
+            <p className="text-white">{detail.receiver_address || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">发货金额</p>
+            <p className="text-white">{detail.delivery_amount ?? '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">审批状态</p>
+            <Badge variant="outline" className={getStatusColor(detail.approval_status)}>
+              {detail.approval_status || '-'}
+            </Badge>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-400">发货状态</p>
+            <Badge variant="outline" className={getDeliveryStatusColor(detail.delivery_status)}>
+              {detail.delivery_status || '-'}
+            </Badge>
+          </div>
+          <div className="md:col-span-3 space-y-1">
+            <p className="text-sm text-slate-400">备注</p>
+            <p className="text-white">{detail.remark || '-'}</p>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };
@@ -255,27 +346,45 @@ const DeliveryForm = ({ id, onBack }) => {
           remark: data.remark || '',
         });
       })
-      .catch(() => message.error('加载发货单数据失败'))
+      .catch(() => toast({
+        title: "错误",
+        description: "加载发货单数据失败",
+        variant: "destructive"
+      }))
       .finally(() => setLoading(false));
   }, [id]);
 
   const handleSubmit = async () => {
     if (!formData.order_id) {
-      message.warning('请填写销售订单ID');
+      toast({
+        title: "警告",
+        description: "请填写销售订单 ID",
+        variant: "destructive"
+      });
       return;
     }
     setSubmitting(true);
     try {
       if (isEdit) {
         await businessSupportApi.deliveryOrders.update(id, formData);
-        message.success('更新成功');
+        toast({
+          title: "成功",
+          description: "更新成功"
+        });
       } else {
         await businessSupportApi.deliveryOrders.create(formData);
-        message.success('创建成功');
+        toast({
+          title: "成功",
+          description: "创建成功"
+        });
       }
       onBack();
     } catch (_err) {
-      message.error(isEdit ? '更新失败' : '创建失败');
+      toast({
+        title: "错误",
+        description: isEdit ? '更新失败' : '创建失败',
+        variant: "destructive"
+      });
     } finally {
       setSubmitting(false);
     }
@@ -283,60 +392,128 @@ const DeliveryForm = ({ id, onBack }) => {
 
   const updateField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  if (loading) return <Spin size="large" style={{ display: 'block', margin: '80px auto' }} />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <Card
-      title={isEdit ? '编辑发货单' : '新建发货单'}
-      extra={<Space><Button onClick={onBack}>取消</Button><Button type="primary" loading={submitting} onClick={handleSubmit}>保存</Button></Space>}
-    >
-      <Row gutter={[24, 16]}>
-        <Col span={8}>
-          <Text type="secondary">销售订单ID *</Text>
-          <Input value={formData.order_id} onChange={e => updateField('order_id', e.target.value)} placeholder="输入销售订单ID" />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">发货日期</Text>
-          <Input type="date" value={formData.delivery_date} onChange={e => updateField('delivery_date', e.target.value)} />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">发货类型</Text>
-          <Select value={formData.delivery_type || undefined} onChange={v => updateField('delivery_type', v)} placeholder="选择类型" style={{ width: '100%' }}>
-            <Select.Option value="standard">标准发货</Select.Option>
-            <Select.Option value="express">加急发货</Select.Option>
-            <Select.Option value="freight">物流发货</Select.Option>
-            <Select.Option value="self_pickup">自提</Select.Option>
-          </Select>
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">物流公司</Text>
-          <Input value={formData.logistics_company} onChange={e => updateField('logistics_company', e.target.value)} placeholder="物流公司名称" />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">物流单号</Text>
-          <Input value={formData.tracking_no} onChange={e => updateField('tracking_no', e.target.value)} placeholder="物流单号" />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">发货金额</Text>
-          <Input type="number" value={formData.delivery_amount} onChange={e => updateField('delivery_amount', e.target.value)} placeholder="金额" />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">收货人</Text>
-          <Input value={formData.receiver_name} onChange={e => updateField('receiver_name', e.target.value)} placeholder="收货人姓名" />
-        </Col>
-        <Col span={8}>
-          <Text type="secondary">联系电话</Text>
-          <Input value={formData.receiver_phone} onChange={e => updateField('receiver_phone', e.target.value)} placeholder="联系电话" />
-        </Col>
-        <Col span={24}>
-          <Text type="secondary">收货地址</Text>
-          <Input value={formData.receiver_address} onChange={e => updateField('receiver_address', e.target.value)} placeholder="收货地址" />
-        </Col>
-        <Col span={24}>
-          <Text type="secondary">备注</Text>
-          <Input.TextArea rows={3} value={formData.remark} onChange={e => updateField('remark', e.target.value)} placeholder="备注信息" />
-        </Col>
-      </Row>
+    <Card className="bg-surface-100/50">
+      <CardHeader className="border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white">
+            {isEdit ? '编辑发货单' : '新建发货单'}
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onBack}>取消</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>保存</Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">销售订单 ID *</label>
+            <Input 
+              value={formData.order_id} 
+              onChange={e => updateField('order_id', e.target.value)} 
+              placeholder="输入销售订单 ID" 
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">发货日期</label>
+            <Input 
+              type="date" 
+              value={formData.delivery_date} 
+              onChange={e => updateField('delivery_date', e.target.value)}
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">发货类型</label>
+            <Select value={formData.delivery_type} onValueChange={v => updateField('delivery_type', v)}>
+              <SelectTrigger className="bg-surface-100 border-white/10">
+                <SelectValue placeholder="选择类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">标准发货</SelectItem>
+                <SelectItem value="express">加急发货</SelectItem>
+                <SelectItem value="freight">物流发货</SelectItem>
+                <SelectItem value="self_pickup">自提</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">物流公司</label>
+            <Input 
+              value={formData.logistics_company} 
+              onChange={e => updateField('logistics_company', e.target.value)} 
+              placeholder="物流公司名称"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">物流单号</label>
+            <Input 
+              value={formData.tracking_no} 
+              onChange={e => updateField('tracking_no', e.target.value)} 
+              placeholder="物流单号"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">发货金额</label>
+            <Input 
+              type="number" 
+              value={formData.delivery_amount} 
+              onChange={e => updateField('delivery_amount', e.target.value)} 
+              placeholder="金额"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">收货人</label>
+            <Input 
+              value={formData.receiver_name} 
+              onChange={e => updateField('receiver_name', e.target.value)} 
+              placeholder="收货人姓名"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">联系电话</label>
+            <Input 
+              value={formData.receiver_phone} 
+              onChange={e => updateField('receiver_phone', e.target.value)} 
+              placeholder="联系电话"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="md:col-span-3 space-y-2">
+            <label className="text-sm text-slate-400">收货地址</label>
+            <Input 
+              value={formData.receiver_address} 
+              onChange={e => updateField('receiver_address', e.target.value)} 
+              placeholder="收货地址"
+              className="bg-surface-100 border-white/10"
+            />
+          </div>
+          <div className="md:col-span-3 space-y-2">
+            <label className="text-sm text-slate-400">备注</label>
+            <textarea
+              rows={3}
+              value={formData.remark}
+              onChange={e => updateField('remark', e.target.value)}
+              placeholder="备注信息"
+              className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            />
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };
@@ -379,7 +556,11 @@ const DeliveryManagement = () => {
       const items = getItemsCompat(response);
       setDeliveries(Array.isArray(items) ? items.map(normalizeDelivery) : []);
     } catch (_error) {
-      message.error('加载交付数据失败');
+      toast({
+        title: "错误",
+        description: "加载交付数据失败",
+        variant: "destructive"
+      });
       setDeliveries([]);
     } finally {
       setLoading(false);
@@ -390,45 +571,46 @@ const DeliveryManagement = () => {
   const filteredDeliveries = useMemo(() => {
     return (deliveries || []).filter((delivery) => {
       const searchLower = (searchText || "").toLowerCase();
-    const matchesSearch = !searchText ||
-      (delivery.orderNumber || "").toLowerCase().includes(searchLower) ||
-      (delivery.customerName || "").toLowerCase().includes(searchLower);
+      const matchesSearch = !searchText ||
+        (delivery.orderNumber || "").toLowerCase().includes(searchLower) ||
+        (delivery.customerName || "").toLowerCase().includes(searchLower);
 
       return matchesSearch;
     });
   }, [deliveries, searchText]);
 
   const tabItems = [
-  {
-    key: 'overview',
-    tab:
-    <span>
+    {
+      key: 'overview',
+      label: (
+        <span className="flex items-center gap-2">
           <PackageCheck size={16} />
           交付概览
-    </span>,
-
-     content: <DeliveryOverview data={deliveries} loading={loading} />
-  },
-  {
-    key: 'plan',
-    tab:
-    <span>
+        </span>
+      ),
+      content: <DeliveryOverview data={deliveries} loading={loading} />
+    },
+    {
+      key: 'plan',
+      label: (
+        <span className="flex items-center gap-2">
           <Calendar size={16} />
           交付计划 ({(filteredDeliveries || []).filter((d) => d.status === 'pending' || d.status === 'preparing').length})
-    </span>,
-
-    content: <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
-  },
-  {
-    key: 'tracking',
-    tab:
-    <span>
+        </span>
+      ),
+      content: <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
+    },
+    {
+      key: 'tracking',
+      label: (
+        <span className="flex items-center gap-2">
           <Truck size={16} />
           物流跟踪 ({(filteredDeliveries || []).filter((d) => d.status === 'shipped' || d.status === 'in_transit').length})
-    </span>,
-
-    content: <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
-  }];
+        </span>
+      ),
+      content: <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
+    }
+  ];
 
 
   // 子视图渲染
@@ -436,7 +618,11 @@ const DeliveryManagement = () => {
 
   if (viewMode === 'detail') {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="p-6 bg-slate-900 min-h-screen"
+      >
         <DeliveryDetail id={params.id} onBack={handleBack} />
       </motion.div>
     );
@@ -444,7 +630,11 @@ const DeliveryManagement = () => {
 
   if (viewMode === 'edit') {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="p-6 bg-slate-900 min-h-screen"
+      >
         <DeliveryForm id={params.id} onBack={handleBack} />
       </motion.div>
     );
@@ -452,7 +642,11 @@ const DeliveryManagement = () => {
 
   if (viewMode === 'create') {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="p-6 bg-slate-900 min-h-screen"
+      >
         <DeliveryForm onBack={handleBack} />
       </motion.div>
     );
@@ -463,75 +657,92 @@ const DeliveryManagement = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="delivery-management-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
-
+      className="delivery-management-container p-6 bg-slate-900 min-h-screen"
+    >
       {/* 页面头部 */}
-      <div className="page-header" style={{ marginBottom: '24px' }}>
-        <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <Truck className="inline-block mr-2" />
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2 mb-1">
+              <Truck className="w-6 h-6" />
               交付管理
-            </Title>
-            <Text type="secondary">
-              PMC发货管理 - 发货计划、订单列表、在途跟踪
-            </Text>
+            </h1>
+            <p className="text-slate-400">
+              PMC 发货管理 - 发货计划、订单列表、在途跟踪
+            </p>
           </div>
-          <Space>
+          <div className="flex gap-2">
             <Button
-              type="primary"
-              icon={<Plus size={16} />}
-              onClick={() => navigate('/pmc/delivery-orders/new')}>
-
+              className="flex items-center gap-2"
+              onClick={() => navigate('/pmc/delivery-orders/new')}
+            >
+              <Plus size={16} />
               创建发货单
             </Button>
             <Button
-              icon={<RefreshCw size={16} />}
-              onClick={loadData}>
-
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={loadData}
+            >
+              <RefreshCw size={16} />
               刷新
             </Button>
             <Button
-              icon={<Download size={16} />}>
-
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download size={16} />
               导出报表
             </Button>
-          </Space>
+          </div>
         </div>
       </div>
 
       {/* 搜索栏 */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={12}>
+      <Card className="mb-4 bg-surface-100/50">
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索订单号、客户名称..."
-              prefix={<Search size={16} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear />
-
-          </Col>
-        </Row>
+              className="pl-10 bg-surface-100 border-white/10 max-w-md"
+            />
+          </div>
+        </CardContent>
       </Card>
 
       {/* 主要内容区域 */}
-      <Card>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          type="card"
-          size="large"
-          items={(tabItems || []).map((item) => ({
-            key: item.key,
-            label: item.tab,
-            children: item.content,
-          }))}
-        />
+      <Card className="bg-surface-100/50">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-surface-100">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <PackageCheck size={16} className="mr-2" />
+              交付概览
+            </TabsTrigger>
+            <TabsTrigger value="plan" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Calendar size={16} className="mr-2" />
+              交付计划
+            </TabsTrigger>
+            <TabsTrigger value="tracking" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Truck size={16} className="mr-2" />
+              物流跟踪
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="mt-4">
+            <DeliveryOverview data={deliveries} loading={loading} />
+          </TabsContent>
+          <TabsContent value="plan" className="mt-4">
+            <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
+          </TabsContent>
+          <TabsContent value="tracking" className="mt-4">
+            <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
+          </TabsContent>
+        </Tabs>
       </Card>
-    </motion.div>);
-
+    </motion.div>
+  );
 };
 
 export default DeliveryManagement;
