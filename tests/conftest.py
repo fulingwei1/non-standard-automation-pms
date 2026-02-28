@@ -541,9 +541,9 @@ def db_session() -> Generator[Session, None, None]:
     finally:
         # 回滚所有未提交的更改
         session.rollback()
-        # 恢复外键约束
+        # 确保外键约束保持禁用状态，避免 teardown 时的约束冲突
         try:
-            session.execute(text("PRAGMA foreign_keys=ON"))
+            session.execute(text("PRAGMA foreign_keys=OFF"))
             session.commit()
         except Exception:
             pass
