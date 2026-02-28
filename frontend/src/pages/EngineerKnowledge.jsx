@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Form, Input, Select, Tag, Space, message, Tabs, Statistic, Row, Col, Rate } from 'antd';
 import { BulbOutlined, FileTextOutlined, CodeOutlined, PlusOutlined, CheckOutlined, CloseOutlined, StarOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../services/api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -29,7 +29,7 @@ const EngineerKnowledge = () => {
   const fetchContributions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/v1/engineer-performance/knowledge/contributions', {
+      const response = await api.get('/api/v1/engineer-performance/knowledge/contributions', {
         params: filters
       });
       if (response.data.code === 200) {
@@ -46,7 +46,7 @@ const EngineerKnowledge = () => {
   // 获取排行榜
   const fetchRankings = async () => {
     try {
-      const response = await axios.get('/api/v1/engineer-performance/knowledge/rankings', {
+      const response = await api.get('/api/v1/engineer-performance/knowledge/rankings', {
         params: { limit: 10 }
       });
       if (response.data.code === 200) {
@@ -60,7 +60,7 @@ const EngineerKnowledge = () => {
   // 获取我的统计
   const fetchMyStats = async () => {
     try {
-      const response = await axios.get(`/api/v1/engineer-performance/knowledge/contributor/${currentUser.id}/stats`);
+      const response = await api.get(`/api/v1/engineer-performance/knowledge/contributor/${currentUser.id}/stats`);
       if (response.data.code === 200) {
         setMyStats(response.data.data);
       }
@@ -78,7 +78,7 @@ const EngineerKnowledge = () => {
   // 提交新贡献
   const handleSubmit = async (values) => {
     try {
-      const response = await axios.post('/api/v1/engineer-performance/knowledge/contributions', values);
+      const response = await api.post('/api/v1/engineer-performance/knowledge/contributions', values);
       if (response.data.code === 200) {
         message.success('知识贡献提交成功，等待审核');
         setModalVisible(false);
@@ -94,7 +94,7 @@ const EngineerKnowledge = () => {
   // 审核贡献
   const handleApprove = async (id, approve) => {
     try {
-      const response = await axios.put(`/api/v1/engineer-performance/knowledge/contributions/${id}/approve`, {
+      const response = await api.put(`/api/v1/engineer-performance/knowledge/contributions/${id}/approve`, {
         approve,
         reviewer_comment: approve ? '通过审核' : '不符合要求'
       });
@@ -115,7 +115,7 @@ const EngineerKnowledge = () => {
 
   const handleReuseSubmit = async (values) => {
     try {
-      const response = await axios.post('/api/v1/engineer-performance/knowledge/reuse', {
+      const response = await api.post('/api/v1/engineer-performance/knowledge/reuse', {
         contribution_id: selectedContribution.id,
         ...values
       });

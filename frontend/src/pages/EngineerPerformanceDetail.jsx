@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Tag, Progress, Tabs, Table, Empty, Spin, Space } from 'antd';
 import { TrophyOutlined, RiseOutlined, FallOutlined, LineChartOutlined } from '@ant-design/icons';
 import { Radar, Line } from '@ant-design/plots';
-import axios from 'axios';
+import api from '../services/api';
 import { useParams } from 'react-router-dom';
 
 const EngineerPerformanceDetail = () => {
@@ -16,7 +16,7 @@ const EngineerPerformanceDetail = () => {
   const fetchPerformance = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/v1/engineer-performance/engineer/${userId}`);
+      const response = await api.get(`/api/v1/engineer-performance/engineer/${userId}`);
       if (response.data.code === 200) {
         setPerformance(response.data.data);
       }
@@ -30,7 +30,7 @@ const EngineerPerformanceDetail = () => {
   // 获取历史趋势
   const fetchTrend = async () => {
     try {
-      const response = await axios.get(`/api/v1/engineer-performance/engineer/${userId}/trend`);
+      const response = await api.get(`/api/v1/engineer-performance/engineer/${userId}/trend`);
       if (response.data.code === 200) {
         setTrend(response.data.data.trends);
       }
@@ -42,7 +42,7 @@ const EngineerPerformanceDetail = () => {
   // 获取对比数据
   const fetchComparison = async () => {
     try {
-      const response = await axios.get(`/api/v1/engineer-performance/engineer/${userId}/comparison`);
+      const response = await api.get(`/api/v1/engineer-performance/engineer/${userId}/comparison`);
       if (response.data.code === 200) {
         setComparison(response.data.data);
       }

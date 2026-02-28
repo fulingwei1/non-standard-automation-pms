@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Form, Rate, Input, Select, Tag, Space, message, Tabs } from 'antd';
 import { TeamOutlined, StarOutlined, CommentOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../services/api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -17,7 +17,7 @@ const EngineerCollaboration = () => {
   // 获取待评价列表
   const fetchPendingList = async () => {
     try {
-      const response = await axios.get('/api/v1/engineer-performance/collaboration/pending');
+      const response = await api.get('/api/v1/engineer-performance/collaboration/pending');
       if (response.data.code === 200) {
         setPendingList(response.data.data);
       }
@@ -31,7 +31,7 @@ const EngineerCollaboration = () => {
     setLoading(true);
     try {
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await axios.get(`/api/v1/engineer-performance/collaboration/received/${currentUser.id}`);
+      const response = await api.get(`/api/v1/engineer-performance/collaboration/received/${currentUser.id}`);
       if (response.data.code === 200) {
         setReceivedRatings(response.data.data.items);
       }
@@ -47,7 +47,7 @@ const EngineerCollaboration = () => {
     setLoading(true);
     try {
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await axios.get(`/api/v1/engineer-performance/collaboration/given/${currentUser.id}`);
+      const response = await api.get(`/api/v1/engineer-performance/collaboration/given/${currentUser.id}`);
       if (response.data.code === 200) {
         setGivenRatings(response.data.data.items);
       }
@@ -61,7 +61,7 @@ const EngineerCollaboration = () => {
   // 获取协作矩阵
   const fetchCollaborationMatrix = async () => {
     try {
-      const response = await axios.get('/api/v1/engineer-performance/collaboration/matrix');
+      const response = await api.get('/api/v1/engineer-performance/collaboration/matrix');
       if (response.data.code === 200) {
         setCollaborationMatrix(response.data.data);
       }
@@ -89,7 +89,7 @@ const EngineerCollaboration = () => {
   // 提交评价
   const handleSubmit = async (values) => {
     try {
-      const response = await axios.post('/api/v1/engineer-performance/collaboration', values);
+      const response = await api.post('/api/v1/engineer-performance/collaboration', values);
       if (response.data.code === 200) {
         message.success('评价提交成功');
         setModalVisible(false);

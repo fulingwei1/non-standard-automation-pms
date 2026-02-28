@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag, Tabs, Select, DatePicker, Space, Button } from 'antd';
 import { TrophyOutlined, RiseOutlined, TeamOutlined, BulbOutlined, FireOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../services/api';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -17,7 +17,7 @@ const EngineerPerformanceDashboard = () => {
     setLoading(true);
     try {
       const params = periodId ? { period_id: periodId } : {};
-      const response = await axios.get('/api/v1/engineer-performance/summary/company', { params });
+      const response = await api.get('/api/v1/engineer-performance/summary/company', { params });
       if (response.data.code === 200) {
         setCompanySummary(response.data.data);
         setCurrentPeriod(response.data.data.period_name);
@@ -34,7 +34,7 @@ const EngineerPerformanceDashboard = () => {
     try {
       const params = { n: 10 };
       if (jobType) {params.job_type = jobType;}
-      const response = await axios.get('/api/v1/engineer-performance/ranking/top', { params });
+      const response = await api.get('/api/v1/engineer-performance/ranking/top', { params });
       if (response.data.code === 200) {
         setTopEngineers(response.data.data);
       }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Select, Input, Tag, Space, Button, Tabs } from 'antd';
 import { SearchOutlined, FilterOutlined, TrophyOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
@@ -30,7 +30,7 @@ const EngineerPerformanceRanking = () => {
         params.job_type = currentTab;
       }
 
-      const response = await axios.get('/api/v1/engineer-performance/ranking', { params });
+      const response = await api.get('/api/v1/engineer-performance/ranking', { params });
       if (response.data.code === 200) {
         setRankings(response.data.data.items);
         setTotal(response.data.data.total);
