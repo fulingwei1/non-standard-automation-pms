@@ -52,7 +52,8 @@ import {
   Key,
   Activity,
   Workflow,
-  Gauge
+  Gauge,
+  GitBranch
 } from "lucide-react";
 
 // Icon mapping
@@ -106,5 +107,6 @@ export const iconMap = {
   Key,
   Activity,
   Workflow,
-  Gauge
+  Gauge,
+  GitBranch
 };

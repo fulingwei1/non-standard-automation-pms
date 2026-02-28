@@ -33,3 +33,5 @@ export * from "./api/workload.js";
 export * from "./api/strategy.js";
 export * from "./api/shortage.js";
 export * from "./api/warehouse.js";
+export * from "./api/supplierPriceTrend.js";
+export * from "./api/ganttDependency.js";

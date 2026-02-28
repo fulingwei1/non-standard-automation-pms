@@ -26,6 +26,7 @@ import ProjectTimelineView from "../../pages/ProjectTimelineView";
 import ResourceOverview from "../../pages/ResourceOverview";
 import LessonsLearned from "../../pages/LessonsLearned";
 import AcceptanceManagement from "../../pages/AcceptanceManagement";
+import GanttDependency from "../../pages/GanttDependency";
 
 export function ProjectRoutes() {
   return (
@@ -95,6 +96,7 @@ export function ProjectRoutes() {
       <Route path="/wbs-templates" element={<WBSTemplateManagement />} />
       <Route path="/schedule" element={<ScheduleBoard />} />
       <Route path="/resource-overview" element={<ResourceOverview />} />
+      <Route path="/gantt" element={<GanttDependency />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />

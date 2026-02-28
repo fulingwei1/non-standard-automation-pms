@@ -37,6 +37,7 @@ import TransferDetail from "../../pages/TransferDetail";
 import SubstitutionNew from "../../pages/SubstitutionNew";
 import TransferNew from "../../pages/TransferNew";
 import ArrivalNew from "../../pages/ArrivalNew";
+import SupplierPriceTrend from "../../pages/SupplierPriceTrend";
 
 export function ProcurementRoutes() {
   return (
@@ -242,6 +243,14 @@ export function ProcurementRoutes() {
         }
       />
       <Route path="/suppliers" element={<SupplierManagement />} />
+      <Route
+        path="/supplier-price"
+        element={
+          <ProcurementProtectedRoute>
+            <SupplierPriceTrend />
+          </ProcurementProtectedRoute>
+        }
+      />
       <Route
         path="/shortage"
         element={

@@ -63,6 +63,7 @@ export const defaultNavGroups = [
       { name: "项目列表", path: "/projects", icon: "List", permission: "project:project:read", permissionLabel: "项目列表" },
       { name: "预算管理", path: "/budgets", icon: "CreditCard", permission: "budget:read", permissionLabel: "预算管理" },
       { name: "项目看板", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目看板" },
+      { name: "甘特图", path: "/gantt", icon: "GitBranch", permission: "project:read", permissionLabel: "甘特图" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目结项" },
       { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" },
       { name: "经验教训", path: "/lessons-learned", icon: "BookOpen", permission: "project:read", permissionLabel: "经验教训" },
@@ -99,6 +100,7 @@ export const defaultNavGroups = [
       { name: "物料需求", path: "/material-demands", icon: "List", permission: "material:demand:read", permissionLabel: "物料需求" },
       { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
       { name: "齐套缺料", path: "/material-analysis", icon: "Boxes", permission: "material:analysis:read", permissionLabel: "齐套缺料" },
+      { name: "价格趋势", path: "/supplier-price", icon: "TrendingUp", permission: "purchase:read", permissionLabel: "价格趋势" },
       { name: "采购分析", path: "/procurement-analysis", icon: "BarChart3", permission: "purchase:analysis:read", permissionLabel: "采购分析" }
     ]
   },

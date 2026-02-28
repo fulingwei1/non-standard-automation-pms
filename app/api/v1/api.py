@@ -389,6 +389,15 @@ def create_api_router() -> APIRouter:
         print("✓ 采购分析模块加载成功")
     except Exception as e:
         print(f"✗ 采购分析模块加载失败：{e}")
+
+    # ==================== 供应商价格趋势 ====================
+    try:
+        from app.api.v1.endpoints.supplier_price_trend import router as supplier_price_trend_router
+        api_router.include_router(supplier_price_trend_router, prefix="/supplier-price", tags=["supplier-price"])
+        print("✓ 供应商价格趋势模块加载成功")
+    except Exception as e:
+        print(f"✗ 供应商价格趋势模块加载失败：{e}")
+
     # ==================== ECN 工程变更 ====================
     try:
         from app.api.v1.endpoints.ecn import router as ecn_router
@@ -696,6 +705,9 @@ def create_api_router() -> APIRouter:
 
         from app.api.v1.endpoints.cost_variance_analysis import router as cost_variance_router
         api_router.include_router(cost_variance_router, prefix="/cost-variance", tags=["cost-variance"])
+
+        from app.api.v1.endpoints.gantt_dependency import router as gantt_dependency_router
+        api_router.include_router(gantt_dependency_router, prefix="/gantt", tags=["gantt-dependency"])
 
         from app.api.v1.endpoints.labor_cost_detail import router as labor_cost_router
         api_router.include_router(labor_cost_router, prefix="/labor-cost", tags=["labor-cost"])
