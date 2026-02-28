@@ -33,7 +33,6 @@ class TestQuoteModel:
         """测试报价单编码唯一性"""
         q1 = Quote(
             quote_code="Q001",
-            quote_code="报价1",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -42,7 +41,6 @@ class TestQuoteModel:
         
         q2 = Quote(
             quote_code="Q001",
-            quote_code="报价2",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -58,7 +56,6 @@ class TestQuoteModel:
         
         quote = Quote(
             quote_code="Q002",
-            quote_code="有效期测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             valid_from=valid_from,
@@ -74,7 +71,6 @@ class TestQuoteModel:
         """测试报价金额分解"""
         quote = Quote(
             quote_code="Q003",
-            quote_code="金额测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             quote_amount=Decimal("100000.00"),
@@ -119,7 +115,6 @@ class TestQuoteModel:
         """测试删除报价"""
         quote = Quote(
             quote_code="Q_DEL",
-            quote_code="待删除",
             customer_id=sample_customer.id,
             created_by=sample_user.id
         )
@@ -137,7 +132,6 @@ class TestQuoteModel:
         """测试报价版本"""
         quote = Quote(
             quote_code="Q004",
-            quote_code="版本测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             version="1.0"
@@ -152,7 +146,6 @@ class TestQuoteModel:
         desc = "包含软硬件集成方案的系统报价"
         quote = Quote(
             quote_code="Q005",
-            quote_code="描述测试",
             customer_id=sample_customer.id,
             created_by=sample_user.id,
             description=desc
@@ -167,7 +160,6 @@ class TestQuoteModel:
         quotes = [
             Quote(
                 quote_code=f"Q{i:03d}",
-                quote_code=f"报价{i}",
                 customer_id=sample_customer.id,
                 created_by=sample_user.id,
                 quote_amount=Decimal(f"{i*10000}.00")
