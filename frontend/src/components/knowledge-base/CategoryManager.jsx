@@ -3,7 +3,7 @@
  * 分类管理组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Tree, Empty, Button, Space } from 'antd';
 
 const { DirectoryTree } = Tree;

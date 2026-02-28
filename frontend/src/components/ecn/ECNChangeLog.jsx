@@ -13,17 +13,10 @@ import {
   Calendar,
   User,
   FileText,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  Plus,
-  Edit,
   Download } from
 "lucide-react";
 import {
-  logTypeConfigs,
-  formatStatus as _formatStatus } from
+  logTypeConfigs } from
 "@/lib/constants/ecn";
 import { cn, formatDate } from "../../lib/utils";import { toast } from "sonner";
 import { Button } from "../ui";

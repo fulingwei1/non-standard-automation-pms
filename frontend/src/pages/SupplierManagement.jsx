@@ -14,18 +14,12 @@ import {
   TrendingUp,
   TrendingDown,
   Search,
-  Filter,
   Plus,
   Eye,
   Edit,
   Award,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
-  BarChart3,
-  Users,
-  FileText,
-  Zap } from
+  Users } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -37,10 +31,6 @@ import {
   Badge,
   Input,
   Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -50,7 +40,7 @@ import {
   Label,
   Textarea } from
 "../components/ui";
-import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { supplierApi } from "../services/api";
 import { toast } from "../components/ui/toast";

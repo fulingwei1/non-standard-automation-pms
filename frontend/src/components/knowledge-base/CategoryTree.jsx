@@ -7,24 +7,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import {
-  FolderOpen,
-  Folder,
   ChevronDown,
   ChevronRight,
   Plus,
   Search,
-  Filter,
   BookOpen,
-  FileText,
-  Tag,
-  Layers,
   ChevronUp } from
 "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { TrendingUp } from "lucide-react";
 import {
-  articleCategoryConfigs as _articleCategoryConfigs,
   generateCategoryTree,
   getPopularCategories,
   getCategoryConfig,

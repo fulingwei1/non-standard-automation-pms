@@ -7,7 +7,6 @@
  * The pages/invoice/InvoiceStats.jsx re-exports this component.
  */
 
-import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "../ui";
 import { formatCurrency } from "../../lib/utils";

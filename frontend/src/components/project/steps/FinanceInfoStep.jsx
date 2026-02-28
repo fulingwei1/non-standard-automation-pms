@@ -1,4 +1,3 @@
-import React from "react";
 import { Input, FormSelect } from "../../ui";
 import { Info } from "lucide-react";
 

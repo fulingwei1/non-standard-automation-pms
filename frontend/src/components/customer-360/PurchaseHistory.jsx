@@ -14,7 +14,6 @@ import { Separator } from "../../components/ui/separator";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 import {
   contractStatusConfigs,
-  customer360TabConfigs as _customer360TabConfigs,
   getContractStatusConfig,
   formatContractStatus } from
 "@/lib/constants/customer360";

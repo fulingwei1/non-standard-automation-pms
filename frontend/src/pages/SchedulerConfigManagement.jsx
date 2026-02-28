@@ -5,21 +5,15 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   Settings,
   RefreshCw,
   Save,
-  Play,
-  Pause,
   Clock,
-  AlertTriangle,
   CheckCircle2,
   XCircle,
   Search,
   Filter,
-  Download,
-  Upload,
   Info } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -52,12 +46,10 @@ import {
   SelectValue,
   Switch,
   LoadingCard,
-  ErrorMessage,
   EmptyState,
   ApiIntegrationError } from
 "../components/ui";
-import { cn, formatDate as _formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
+import { cn } from "../lib/utils";
 import { schedulerApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 

@@ -4,17 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Activity,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
-  Calendar,
-  Filter,
-  Eye } from
+  XCircle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -25,20 +18,12 @@ import {
   Button,
   Badge,
   Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { healthApi } from "../services/api";
-import { formatDate as _formatDate } from "../lib/utils";
 
 export default function PipelineHealthMonitoring() {
   const [_loading, setLoading] = useState(false);

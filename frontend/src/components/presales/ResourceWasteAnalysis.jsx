@@ -1,13 +1,9 @@
-import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import {
   AlertTriangle,
-  TrendingDown,
   Users,
-  Clock,
-  DollarSign,
   BarChart2,
   PieChart,
   Info } from

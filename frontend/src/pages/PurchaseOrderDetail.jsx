@@ -7,26 +7,19 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ShoppingCart,
   Package,
   Truck,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
-  DollarSign,
   FileText,
   Download,
   Eye,
   Edit,
   Send,
-  ChevronRight,
   Calendar,
   Building2,
-  BarChart3,
   MapPin,
   Phone,
   Mail,
-  Tag,
   Info,
   Zap } from
 "lucide-react";

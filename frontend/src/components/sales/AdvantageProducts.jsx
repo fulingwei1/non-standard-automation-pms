@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
   ChevronDown,
-  ChevronRight,
   Search,
   Star,
   Zap,
@@ -22,8 +21,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-  Copy,
-  ExternalLink } from
+  Copy } from
 "lucide-react";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";

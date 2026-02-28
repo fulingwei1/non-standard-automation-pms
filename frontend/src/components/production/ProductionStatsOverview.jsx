@@ -21,12 +21,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { Progress } from '../../components/ui';
 import { cn } from '../../lib/utils';
-import {
-  PRODUCTION_METRICS,
-  calculateCompletionRate as _calculateCompletionRate,
-  calculateQualityRate as _calculateQualityRate,
-  formatProductionData as _formatProductionData } from
-'@/lib/constants/production';
+
+
 
 export default function ProductionStatsOverview({
   productionStats,

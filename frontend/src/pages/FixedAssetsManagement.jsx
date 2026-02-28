@@ -6,16 +6,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Search,
-  Filter,
   Plus,
   Building2,
   TrendingDown,
   Wrench,
-  MapPin,
-  User,
   DollarSign,
-  Calendar,
   Edit,
   Eye,
   Download } from
@@ -37,9 +32,7 @@ import {
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
-  SimpleBarChart,
   MonthlyTrendChart,
-  SimplePieChart,
   CategoryBreakdownCard,
   TrendComparisonCard } from
 "../components/administrative/StatisticsCharts";

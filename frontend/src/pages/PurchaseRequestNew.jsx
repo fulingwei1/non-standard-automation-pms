@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback as _useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileText,
   Plus,
   Trash2,
   Search,
@@ -10,9 +9,6 @@ import {
   Send,
   ArrowLeft,
   Package,
-  Building2,
-  Calendar,
-  DollarSign,
   AlertCircle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -41,7 +37,6 @@ import {
   DialogTitle,
   DialogBody } from
 "../components/ui/dialog";
-import { cn as _cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import {
   purchaseApi,

@@ -2,7 +2,7 @@
  * 物料详情卡片组件
  * 显示单个物料的详细分析信息
  */
-import { Package, Truck, Clock, AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Package, Truck, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';

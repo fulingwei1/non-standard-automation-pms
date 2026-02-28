@@ -2,14 +2,13 @@
  * 售前技术工程师工作台
  * 核心入口页面，展示技术支持任务、方案进度、投标项目等
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   ListTodo,
   FileText,
   Target,
   BookOpen,
-  TrendingUp,
   Plus,
   Upload,
   Search,

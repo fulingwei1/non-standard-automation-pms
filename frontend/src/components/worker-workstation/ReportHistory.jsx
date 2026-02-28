@@ -2,10 +2,10 @@
  * 报工记录历史组件
  * 显示工人的报工记录列表
  */
-import { Clock, CheckCircle2, TrendingUp } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { cn as _cn, formatDate } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { REPORT_TYPE, getReportTypeColor } from '@/lib/constants/workerWorkstation';
 
 /**

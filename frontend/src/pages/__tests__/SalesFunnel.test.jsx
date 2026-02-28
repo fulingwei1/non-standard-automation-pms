@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SalesFunnel from '../SalesFunnel';
-import api, { _salesStatisticsApi, _customerApi, userApi } from '../../services/api';
+import api, { userApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({

@@ -1,17 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { PROJECT_STAGES, HEALTH_CONFIG } from "../lib/constants";
 import { useRoleFilter } from "../hooks/useRoleFilter";
 import { projectApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { BoardColumn, BoardFilters, ProjectCard } from "../components/board";
+import { BoardColumn, BoardFilters } from "../components/board";
 import { ApiIntegrationError, Badge, Card, CardContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
 import {
   Layers,
-  AlertCircle,
-  TrendingUp,
-  Clock,
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
@@ -25,17 +22,11 @@ import {
   PipelineView,
   TimelineView,
   TreeView,
-  StatisticsCards,
-  ProgressOverviewCard,
-  CategoryStatsCard,
-  CurrentStageDistributionCard,
 } from "../pages/ProjectStageView/components";
 
 // 导入阶段视图常量和hooks
 import {
   VIEW_TYPES,
-  STAGE_CATEGORIES,
-  HEALTH_STATUS,
 } from "../pages/ProjectStageView/constants";
 import { useStageViews, useStageActions } from "../pages/ProjectStageView/hooks";
 

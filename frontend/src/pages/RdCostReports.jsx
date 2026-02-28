@@ -3,16 +3,12 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { rdProjectApi, rdReportApi } from "../services/api";
-import { formatDate as _formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
+import { formatCurrency } from "../lib/utils";
 import {
   Card,
   CardContent,
   Button,
-  Badge,
-  Input,
-  Select,
-  Table } from
+  Input } from
 "../components/ui";
 import {
   ArrowLeft,
@@ -22,7 +18,6 @@ import {
   TrendingUp,
   BarChart3,
   Users,
-  Calendar,
   Search } from
 "lucide-react";
 

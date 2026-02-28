@@ -5,7 +5,7 @@
  * 在应用启动时从后端获取权限数据，提供给整个应用使用
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authApi } from '../services/api';
 
 // 创建上下文

@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw, XCircle, Inbox } from "lucide-react";
+import { AlertCircle, RefreshCw, Inbox } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "../../lib/utils";

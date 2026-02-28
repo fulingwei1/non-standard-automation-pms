@@ -3,7 +3,7 @@
  * 反馈管理组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Rate, Typography } from 'antd';
 import { FEEDBACK_CATEGORIES, TABLE_CONFIG } from '@/lib/constants/customer';
 

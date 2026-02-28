@@ -24,15 +24,9 @@ import {
 "../ui/table";
 import {
   Search,
-  Filter,
   Clock,
   User,
-  Phone,
-  Mail,
   MessageSquare,
-  Building2,
-  CheckCircle2,
-  AlertTriangle,
   ChevronUp,
   ChevronDown,
   ArrowUpDown,
@@ -45,11 +39,9 @@ import {
   servicePriorityConfigs,
   serviceStatusConfigs,
   serviceTypeConfigs,
-  serviceChannelConfigs as _serviceChannelConfigs,
   filterTicketsByStatus,
   filterTicketsByPriority,
   filterTicketsByType,
-  filterTicketsByCustomer as _filterTicketsByCustomer,
   sortByPriority,
   sortByCreateTime } from
 "../../lib/constants/service";

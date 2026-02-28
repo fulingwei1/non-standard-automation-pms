@@ -3,7 +3,7 @@
  * 问卷模板组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, List, Button, Tag, Typography } from 'antd';
 import { SURVEY_TYPES } from '@/lib/constants/customer';
 

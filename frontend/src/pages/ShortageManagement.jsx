@@ -11,17 +11,11 @@ import {
   AlertTriangle,
   Truck,
   RefreshCw,
-  ArrowRightLeft,
-  BarChart3,
   Plus,
   Search,
-  Filter,
   Eye,
   CheckCircle2,
-  Clock,
-  XCircle,
-  TrendingUp,
-  TrendingDown } from
+  Clock } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -48,7 +42,7 @@ import {
   SelectValue } from
 "../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { shortageApi } from "../services/api";
 
 const statusConfigs = {

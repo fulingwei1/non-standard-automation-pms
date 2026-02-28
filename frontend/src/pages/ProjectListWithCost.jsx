@@ -5,7 +5,6 @@ import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { 
-  _formatCurrency, 
   formatCurrencyWan, 
   formatPercent, 
   getCostStatus,
@@ -31,9 +30,6 @@ import {
   Briefcase,
   Calendar,
   Users,
-  DollarSign,
-  TrendingUp,
-  AlertCircle,
   Eye,
 } from "lucide-react";
 import ProjectFormStepper from "../components/project/ProjectFormStepper";

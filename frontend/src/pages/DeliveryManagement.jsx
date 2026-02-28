@@ -3,33 +3,21 @@
  * PMC发货管理页面 (重构版本)
  */
 
-import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Truck,
   Calendar,
-  Package,
-  MapPin,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   Search,
-  Filter,
   Plus,
-  Edit,
-  Eye,
-  FileText,
-  TrendingUp,
   PackageCheck,
-  PackageX,
   RefreshCw,
   Download } from
 "lucide-react";
 
 import {
   Card,
-  Table,
   Button,
   Input,
   Select,
@@ -38,13 +26,10 @@ import {
   Tag,
   Row,
   Col,
-  Statistic,
   Typography,
   Alert,
   Spin,
   Tabs,
-  Progress,
-  Badge,
   message } from
 "antd";
 
@@ -58,12 +43,8 @@ import {
   DeliveryTracking } from
 '../components/delivery-management';
 
-import {
-  DELIVERY_STATUS,
-  DELIVERY_PRIORITY,
-  SHIPPING_METHODS,
-  PACKAGE_TYPES } from
-'@/lib/constants/service';
+
+
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

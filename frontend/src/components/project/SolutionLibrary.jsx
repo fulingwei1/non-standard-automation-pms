@@ -8,8 +8,7 @@ import {
   Button,
   Input } from
 "../ui";
-import { BookOpen, Search, Plus, Star, Copy } from "lucide-react";
-import { formatDate as _formatDate } from "../../lib/utils";
+import { BookOpen, Search, Plus, Copy } from "lucide-react";
 import { issueTemplateApi } from "../../services/api";
 
 export default function SolutionLibrary({ projectId, onApplyTemplate }) {

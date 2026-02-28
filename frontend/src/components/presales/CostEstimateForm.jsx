@@ -2,18 +2,13 @@
  * 成本估算表单组件
  * 售前技术工程师填写成本估算
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Calculator,
-  DollarSign,
-  FileText,
   X,
   Save,
   Send,
   AlertCircle,
-  CheckCircle,
-  TrendingUp,
   Package,
   Wrench,
   Zap,
@@ -22,7 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";

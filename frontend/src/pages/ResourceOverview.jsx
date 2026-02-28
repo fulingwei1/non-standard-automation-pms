@@ -16,8 +16,6 @@ import {
   UserX,
   AlertTriangle,
   Building2,
-  TrendingUp,
-  Activity,
 } from "lucide-react";
 
 const staggerContainer = {

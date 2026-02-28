@@ -4,18 +4,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   DollarSign,
-  Clock,
-  Users,
-  Building2,
-  Download,
-  Filter,
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
-  TrendingDown } from
+  Clock } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -40,7 +31,6 @@ import {
   DialogFooter,
   Label } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { presaleExpenseApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 

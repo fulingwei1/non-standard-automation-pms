@@ -10,7 +10,7 @@
  * - 角色模板快速创建
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     Plus,
@@ -18,17 +18,11 @@ import {
     Edit3,
     Trash2,
     Eye,
-    Shield,
     GitBranch,
-    Copy,
-    ChevronDown,
-    ChevronRight,
     Check,
     FileText,
-    ArrowRight,
     CheckSquare,
     Square,
-    Filter,
 } from 'lucide-react';
 import { PageHeader } from '../../components/layout';
 import {

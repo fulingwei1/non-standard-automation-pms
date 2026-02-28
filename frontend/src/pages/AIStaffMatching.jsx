@@ -4,7 +4,7 @@
  * 执行AI匹配算法，展示候选人推荐结果，支持采纳/拒绝操作
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,8 +15,6 @@ import {
   X,
   RefreshCw,
   Clock,
-  User,
-  Award,
   TrendingUp,
   AlertCircle,
   ChevronRight,
@@ -28,8 +26,7 @@ import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle } from
+  CardHeader } from
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -41,7 +38,6 @@ import {
   DialogTitle,
   DialogFooter } from
 "../components/ui/dialog";
-import { Label } from "../components/ui/label";
 import { cn } from "../lib/utils";
 import { staffMatchingApi } from "../services/api";
 

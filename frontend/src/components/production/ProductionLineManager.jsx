@@ -9,19 +9,12 @@ import {
   Factory,
   Activity,
   Users,
-  Settings,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Zap,
   TrendingUp,
-  TrendingDown,
   Search,
-  Filter,
-  Plus,
-  Eye,
   Edit,
-  Power,
   Pause,
   Play } from
 'lucide-react';
@@ -33,10 +26,7 @@ import { Progress } from '../../components/ui';
 import { cn } from '../../lib/utils';
 import {
   PRODUCTION_LINE_STATUS,
-  EQUIPMENT_STATUS,
-  WORK_SHIFT,
-  getStatusColor as _getStatusColor,
-  getStatusLabel as _getStatusLabel } from
+  WORK_SHIFT } from
 '@/lib/constants/production';
 
 export default function ProductionLineManager({

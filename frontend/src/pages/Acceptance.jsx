@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ClipboardList,
-  CheckSquare,
-  Square,
   Camera,
   FileText,
   Calendar,
-  User,
   Building2,
   AlertCircle,
   CheckCircle2,
@@ -15,25 +12,19 @@ import {
   Clock,
   Plus,
   Search,
-  Filter,
   Download,
   Eye,
   Edit3,
-  MessageSquare,
   Image,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
 import {
   Dialog,
   DialogContent,

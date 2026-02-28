@@ -4,10 +4,9 @@
  */
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Badge,
-  Card,
   CardContent,
   CardHeader,
   CardTitle,
@@ -27,11 +26,8 @@ import {
   SelectValue } from
 "../../components/ui";
 import {
-  Plus,
   Clock,
   CheckCircle2,
-  AlertTriangle,
-  Flag,
   User,
   Calendar,
   MapPin,
@@ -41,15 +37,13 @@ import {
   Play,
   Pause,
   Square,
-  Trash2,
-  MoreVertical } from
+  Trash2 } from
 "lucide-react";
 import { cn } from "../../lib/utils";
 import {
   taskStatusConfigs,
   priorityConfigs,
   installationTypeConfigs,
-  roleConfigs as _roleConfigs,
   formatDate,
   formatDuration,
   isTaskOverdue } from

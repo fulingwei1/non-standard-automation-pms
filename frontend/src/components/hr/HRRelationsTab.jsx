@@ -9,7 +9,6 @@
  * 5. 快速操作
  */
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Heart,

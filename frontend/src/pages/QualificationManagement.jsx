@@ -14,20 +14,10 @@ import {
   Edit,
   Trash2,
   Eye,
-  CheckCircle2,
-  XCircle,
   Clock,
-  Filter,
   Search,
-  ArrowRight,
-  Settings,
   UserCheck,
-  BarChart3,
-  Download,
-  Upload,
-  MoreVertical,
-  CheckSquare,
-  XSquare } from
+  Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -61,8 +51,8 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui/tabs";
-import { cn as _cn, formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { formatDate } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
 import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";

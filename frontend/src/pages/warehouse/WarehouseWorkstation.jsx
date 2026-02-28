@@ -2,25 +2,18 @@
  * 仓储管理员工作台
  * 核心入口页面，展示出入库任务、库存预警、盘点任务等
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { warehouseApi } from "../../services/api/warehouse";
 import { motion } from "framer-motion";
 import {
-  Package,
   ArrowDownToLine,
   ArrowUpFromLine,
   AlertTriangle,
   ClipboardCheck,
   Search,
-  Bell,
-  TrendingUp,
   Warehouse,
-  MapPin,
-  Clock,
-  CheckCircle2,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片

@@ -7,16 +7,9 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
-  PieChart,
-  TrendingUp,
-  Calendar,
-  Users,
   Star,
-  StarHalf,
-  StarOff,
   ArrowUpRight,
   ArrowDownRight,
-  Minus,
   RefreshCw } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -29,17 +22,12 @@ import {
   SelectTrigger,
   SelectValue } from
 "../../components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger } from
-"../../components/ui/tooltip";
+
+
 import { cn } from "../../lib/utils";
 import { Progress } from "../ui";
 import {
   getSatisfactionScoreConfig,
-  getSatisfactionColor as _getSatisfactionColor,
   satisfactionConstants
 } from "@/lib/constants/customer";
 

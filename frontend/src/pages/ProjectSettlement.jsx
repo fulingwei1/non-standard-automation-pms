@@ -4,30 +4,19 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Receipt,
   Search,
-  Filter,
   Plus,
   Download,
   CheckCircle2,
   Clock,
-  XCircle,
-  AlertTriangle,
   DollarSign,
-  Briefcase,
-  Calendar,
   FileText,
-  Eye,
-  Edit,
-  Check,
-  X,
-  Building2,
   CreditCard,
   TrendingUp,
-  TrendingDown,
-  BarChart3 } from
+  TrendingDown } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -44,13 +33,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
+  DialogFooter } from
 "../components/ui";
-import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { settlementApi } from "../services/api";
 

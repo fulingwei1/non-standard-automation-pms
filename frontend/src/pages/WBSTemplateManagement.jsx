@@ -5,18 +5,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText,
   Plus,
   Search,
-  Edit,
-  Trash2,
   Eye,
   Copy,
   ChevronRight,
-  ChevronDown,
-  CheckCircle2,
-  Circle,
-  Settings } from
+  ChevronDown } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -29,14 +23,8 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
 import {
   Dialog,
   DialogContent,
@@ -52,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue } from
 "../components/ui/select";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function WBSTemplateManagement() {
   const navigate = useNavigate();

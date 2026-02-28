@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
   Clock,
   AlertTriangle,
   CheckCircle2,
-  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -16,7 +14,6 @@ import { itrApi } from "../../services/api";
 import {
   SimpleBarChart,
   SimpleLineChart,
-  SimplePieChart,
 } from "../administrative/StatisticsCharts";
 
 export default function ITREfficiencyAnalysis() {

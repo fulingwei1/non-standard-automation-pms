@@ -7,11 +7,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Target,
-  FileText,
-  Calendar,
-  Users,
-  DollarSign,
   Download,
   Upload,
   Send,
@@ -21,12 +16,8 @@ import {
   Clock,
   Paperclip,
   User,
-  Building2,
-  ChevronRight,
-  TrendingUp,
   MessageSquare,
   Share2,
-  Trash2,
   ArrowLeft,
   Loader2 } from
 "lucide-react";
@@ -38,12 +29,7 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle } from
+  Progress } from
 "../components/ui";
 import { formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";

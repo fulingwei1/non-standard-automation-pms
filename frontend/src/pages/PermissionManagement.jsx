@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Key,
   FileText,
-  Settings,
   AlertCircle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -38,7 +37,6 @@ import {
   SelectValue } from
 "../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn as _fadeIn } from "../lib/animations";
 import { roleApi } from "../services/api";
 import {
  getModuleLabel,

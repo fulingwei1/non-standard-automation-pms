@@ -6,9 +6,6 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Clock,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -17,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
   Progress,
-  Badge,
 } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calculator } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 import { Progress } from "../../../components/ui/progress";

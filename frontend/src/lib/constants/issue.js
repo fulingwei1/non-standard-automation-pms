@@ -4,7 +4,6 @@
  * 包含问题状态、严重程度、优先级、分类等配置
  */
 
-import { cn as _cn, formatDate as _formatDate, formatDateTime as _formatDateTime } from "../../lib/utils";
 import { List, Kanban, BarChart3 } from "lucide-react";
 
 // ==================== 问题状态配置 ====================

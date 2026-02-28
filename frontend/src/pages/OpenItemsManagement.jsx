@@ -7,13 +7,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Calendar,
-  User,
-  Edit,
-  Trash2 } from
+  CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

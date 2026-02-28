@@ -9,23 +9,18 @@ import {
   milestoneApi,
   memberApi,
   costApi,
-  documentApi,
-  financialCostApi as _financialCostApi,
-  presaleExpenseApi as _presaleExpenseApi } from
+  documentApi } from
 "../services/api";
-import { formatDate, formatCurrency, getStageName as _getStageName } from "../lib/utils";
+import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
   Button,
   Badge,
-  HealthBadge,
   Progress,
-  CircularProgress,
   Skeleton,
   UserAvatar,
-  AvatarGroup,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,23 +28,15 @@ import {
   DialogDescription,
   DialogFooter } from
 "../components/ui";
-import GateCheckPanel from "../components/project/GateCheckPanel";
 import QuickActionPanel from "../components/project/QuickActionPanel";
 import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
 import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
 import SolutionLibrary from "../components/project/SolutionLibrary";
 import StageGantt from "../components/project/StageGantt";
-import ProgressForecast from "./ProgressForecast";
-import DependencyCheck from "./DependencyCheck";
-import { projectWorkspaceApi as _projectWorkspaceApi } from "../services/api";
 import {
   ArrowLeft,
   Edit2,
-  MoreHorizontal,
-  Briefcase,
-  Users,
-  Calendar,
   DollarSign,
   FileText,
   AlertCircle,
@@ -58,7 +45,6 @@ import {
   TrendingUp,
   Target,
   Activity,
-  Settings,
   Download,
   Share,
   Plus } from

@@ -2,7 +2,7 @@
  * 检验详情页
  * 展示单条检验记录的完整信息
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {

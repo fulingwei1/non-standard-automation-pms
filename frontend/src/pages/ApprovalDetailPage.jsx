@@ -18,7 +18,6 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Send,
   Undo2,
   Bell,
   ExternalLink,

@@ -16,15 +16,13 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger } from
+  DialogTitle } from
 '@/components/ui';
 import {
   PROJECT_ROLES } from
 '@/lib/constants/projectDetail';
 import { format } from 'date-fns';
-import { zhCN as _zhCN } from 'date-fns/locale';
-import { Mail, Phone, Calendar, UserCheck, UserX } from 'lucide-react';
+import { Mail, Phone, Calendar, UserX } from 'lucide-react';
 
 const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole }) => {
   const [selectedMember, setSelectedMember] = useState(null);

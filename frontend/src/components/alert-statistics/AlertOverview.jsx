@@ -3,12 +3,10 @@
  * 告警概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Alert as AntAlert, Space } from 'antd';
 import {
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   CheckCircle,
   Clock,
   BarChart3,
@@ -19,7 +17,6 @@ import { Button } from "../ui";
 import {
   ALERT_TYPES,
   ALERT_LEVELS,
-  ALERT_STATUS,
   STATISTICS_METRICS,
   CHART_COLORS
 } from '@/lib/constants/alert';

@@ -3,25 +3,18 @@
  * Features: Sales trends, Performance analysis, Customer analysis, Revenue forecasting
  */
 
-import { useState, useMemo as _useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
-  Users,
   Target,
-  Calendar,
   Download,
   Filter,
   PieChart,
   LineChart,
   Activity,
-  Award,
   Building2,
-  FileText,
-  ChevronRight,
   ArrowUpRight,
   ArrowDownRight } from
 "lucide-react";
@@ -32,7 +25,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
   Progress,
   ApiIntegrationError } from
 "../components/ui";

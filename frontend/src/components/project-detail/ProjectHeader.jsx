@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Card,
   CardContent,
@@ -7,15 +6,13 @@ import {
   CardDescription,
   Badge,
   Progress,
-  Button,
-  Separator } from
+  Button } from
 '@/components/ui';
 import {
   PROJECT_STATUS,
   PROJECT_HEALTH,
   PROJECT_PRIORITY,
-  PROJECT_STAGES,
-  METRICS } from
+  PROJECT_STAGES } from
 '@/lib/constants/projectDetail';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';

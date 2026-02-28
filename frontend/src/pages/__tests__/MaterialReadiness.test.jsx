@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MaterialReadiness from '../MaterialReadiness';
-import _api, { materialApi, _projectApi, _supplierApi } from '../../services/api';
+import { materialApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   default: {

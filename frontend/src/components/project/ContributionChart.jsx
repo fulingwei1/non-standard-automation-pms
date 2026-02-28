@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui";
+import { Card, CardContent } from "../ui";
 import { TrendingUp, Award, Clock, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
 

@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -23,10 +21,7 @@ import {
   Plus,
   Clock,
   Calendar,
-  User,
   FileText,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
   Edit2,
   Trash2 } from

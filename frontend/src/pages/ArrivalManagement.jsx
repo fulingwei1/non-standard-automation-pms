@@ -5,16 +5,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Truck,
   Plus,
   Search,
-  Filter,
   Eye,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  Package,
-  AlertTriangle,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

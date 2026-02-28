@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 
@@ -13,7 +12,6 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 };
-import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -38,10 +36,7 @@ import {
   Upload,
   FileText,
   Download,
-  Trash2,
-  Eye,
   Calendar,
-  User,
   AlertCircle,
   File,
   FileImage,

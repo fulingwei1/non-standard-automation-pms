@@ -8,7 +8,6 @@ import {
   Search,
   FileEdit,
   X,
-  Settings,
   CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";

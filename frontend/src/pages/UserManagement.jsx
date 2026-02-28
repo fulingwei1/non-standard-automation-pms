@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
   Edit3,
   Trash2,
-  Eye,
-  UserPlus,
-  Users,
   Shield,
-  Mail,
-  Phone,
-  Building2,
-  Briefcase,
   RefreshCw,
   Key,
   ToggleLeft,
   ToggleRight,
-  CheckSquare,
-  Square,
-  UserCog,
   Info,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -73,12 +63,7 @@ import {
   ROLE_FILTER_OPTIONS,
   DEPARTMENT_FILTER_OPTIONS,
   validateUserData,
-  getUserStatusLabel as _getUserStatusLabel,
-  getUserRoleLabel as _getUserRoleLabel,
-  getUserDepartmentLabel as _getUserDepartmentLabel,
-  getUserStatusColor as _getUserStatusColor,
   getRoleColor,
-  getDepartmentColor as _getDepartmentColor,
 } from "../components/user-management";
 
 // 配置常量 - 使用新的配置系统

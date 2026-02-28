@@ -6,16 +6,9 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Package,
   Search,
-  Filter,
-  Download,
   Plus,
   TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle2,
-  BarChart3,
-  Calendar,
-  RefreshCw } from
+  BarChart3 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -51,7 +44,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn, formatCurrency as _formatCurrency, formatDate } from "../lib/utils";
+import { cn, formatDate } from "../lib/utils";
 import { materialDemandApi, projectApi } from "../services/api";
 export default function MaterialDemandSummary() {
   const [loading, setLoading] = useState(true);

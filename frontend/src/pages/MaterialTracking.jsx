@@ -7,20 +7,12 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Search,
-  Filter,
   Plus,
-  MapPin,
-  Calendar,
   Truck,
-  Boxes,
-  BarChart3,
   Eye,
-  Download,
   AlertCircle,
   Zap } from
 "lucide-react";
@@ -34,10 +26,6 @@ import {
   Badge,
   Input,
   Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,

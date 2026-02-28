@@ -2,19 +2,16 @@
  * 需求调研表单组件
  * 用于填写客户需求调研信息
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Building2,
-  User,
   Phone,
   MapPin,
-  Calendar,
   Package,
   Settings,
   Target,
   DollarSign,
-  Clock,
   Shield,
   Plus,
   X,

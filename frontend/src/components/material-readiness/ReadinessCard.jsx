@@ -23,7 +23,6 @@ import {
   TooltipTrigger,
 } from "../../components/ui/tooltip";
 import {
-  AlertCircle,
   CheckCircle2,
   Clock,
   XCircle,
@@ -33,7 +32,6 @@ import {
   Edit,
   Download,
   MoreVertical,
-  Package,
   Truck,
   Package2,
   AlertTriangle,

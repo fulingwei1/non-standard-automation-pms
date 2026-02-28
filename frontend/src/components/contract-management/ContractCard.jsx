@@ -33,7 +33,6 @@ import {
   getAmountRangeConfig,
   riskLevelConfigs,
   fulfillmentStatusConfigs,
-  formatStatus as _formatStatus,
   formatType } from
 "@/lib/constants/contractManagement";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";

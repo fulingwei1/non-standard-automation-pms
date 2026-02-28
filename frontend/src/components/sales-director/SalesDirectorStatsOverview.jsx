@@ -17,7 +17,6 @@ import {
   AlertTriangle } from
 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
-import { Badge } from '../../components/ui';
 import { Progress } from '../../components/ui';
 import StatCard from "../common/StatCard";
 import { cn } from '../../lib/utils';
@@ -26,8 +25,7 @@ import {
   TIME_PERIODS,
   calculateTrend,
   formatCurrency,
-  formatPercentage,
-  getPerformanceGrade as _getPerformanceGrade } from
+  formatPercentage } from
 '@/lib/constants/sales';
 
 export default function SalesDirectorStatsOverview({

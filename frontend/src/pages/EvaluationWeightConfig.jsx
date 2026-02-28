@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Settings, AlertCircle } from "lucide-react";
 import { useWeightConfig } from "../hooks/useWeightConfig";

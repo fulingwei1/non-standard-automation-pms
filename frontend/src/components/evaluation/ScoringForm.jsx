@@ -1,4 +1,3 @@
-import React from "react";
 import { Star, MessageSquare, Save, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 

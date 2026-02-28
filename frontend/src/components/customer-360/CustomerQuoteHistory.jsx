@@ -3,7 +3,7 @@
  * 客户报价历史组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag } from 'antd';
 import { TABLE_CONFIG, CHART_COLORS } from '@/lib/constants/customer360';
 

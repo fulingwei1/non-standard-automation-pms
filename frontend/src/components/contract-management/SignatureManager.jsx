@@ -3,7 +3,7 @@
  * 合同签署管理组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, Table, Tag, Space, Button, message } from 'antd';
 import { CONTRACT_STATUS, SIGNATURE_STATUS } from '@/lib/constants/contractManagement';
 

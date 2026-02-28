@@ -14,20 +14,14 @@ import {
   AlertCircle,
   TrendingUp,
   TrendingDown,
-  Users,
-  Calendar,
   Target,
   FileText,
   Clock,
   Star,
   BarChart3,
-  Activity,
   Award } from
 "lucide-react";
 import {
-  REVIEW_STATUS,
-  REVIEW_TYPES,
-  EVALUATION_METRICS,
   getReviewStatus,
   getReviewType,
   getEvaluationMetric,
@@ -36,7 +30,7 @@ import {
   generateReviewRecommendations } from
 "@/lib/constants/projectReview";
 import { cn } from "../../lib/utils";
-import { formatCurrency as _formatCurrency, formatDate } from "../../lib/utils";
+import { formatDate } from "../../lib/utils";
 
 /**
  * 📊 项目评审概览组件

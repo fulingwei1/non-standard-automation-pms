@@ -2,9 +2,7 @@
  * 方案卡片组件
  */
 
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SOLUTION_TYPES, getScoreColor } from '../../constants';
 import { Trophy, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';

@@ -5,14 +5,13 @@
 
 import { motion } from "framer-motion";
 import {
-  Package,
   Eye,
   Edit3,
   Trash2,
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import { Card, Badge, Button } from "../../ui";
+import { Badge, Button } from "../../ui";
 import { cn } from "../../../lib/utils";
 import {
   ORDER_STATUS,

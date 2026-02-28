@@ -6,8 +6,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
-import { projectReviewApi, projectApi as _projectApi } from "../services/api";
-import { formatDate as _formatDate, formatCurrency as _formatCurrency } from "../lib/utils";
+import { projectReviewApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import {
@@ -15,7 +14,6 @@ import {
   CardContent,
   Button,
   Badge,
-  Progress,
   SkeletonCard,
   Tabs,
   TabsList,
@@ -28,9 +26,8 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui";
-import { Input, InputWithLabel, Textarea } from "../components/ui/input";
+import { Input, Textarea } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Checkbox } from "../components/ui/checkbox";
 import {
   ArrowLeft,
   Edit,
@@ -39,24 +36,12 @@ import {
   Archive,
   Plus,
   FileText,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  DollarSign,
-  Target,
-  AlertCircle,
-  Lightbulb,
-  BookOpen,
-  Users,
-  Calendar } from
+  BookOpen } from
 "lucide-react";
 
 // 导入重构的组件
 import {
   ProjectReviewOverview,
-  REVIEW_STATUS,
-  REVIEW_TYPES,
-  LESSON_TYPES,
   getReviewStatus,
   getReviewType,
   getLessonType } from

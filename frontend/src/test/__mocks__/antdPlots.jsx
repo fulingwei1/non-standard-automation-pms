@@ -2,7 +2,6 @@
  * Mock @ant-design/plots 图表组件
  * 用于测试环境中避免真实图表渲染
  */
-import React from 'react';
 
 // Mock 所有图表组件，返回简单的 div 用于测试
 const createMockChart = (chartType) => {

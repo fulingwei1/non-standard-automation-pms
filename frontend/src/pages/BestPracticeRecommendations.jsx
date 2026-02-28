@@ -22,15 +22,12 @@ import {
   TabsContent,
 } from "../components/ui";
 import {
-  Search,
   Sparkles,
   TrendingUp,
-  CheckCircle2,
   Star,
   ArrowRight,
   Eye,
   Target,
-  Filter,
 } from "lucide-react";
 
 const staggerContainer = {

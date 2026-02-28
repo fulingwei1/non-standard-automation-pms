@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "../ui";
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "../ui";
 import { Award, TrendingUp, DollarSign, Clock } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
 import { projectWorkspaceApi } from "../../services/api";

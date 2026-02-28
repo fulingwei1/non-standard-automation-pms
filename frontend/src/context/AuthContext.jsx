@@ -5,7 +5,7 @@
  * 与 localStorage 同步，提供全局的认证状态访问
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 // 创建上下文
 const AuthContext = createContext(null);

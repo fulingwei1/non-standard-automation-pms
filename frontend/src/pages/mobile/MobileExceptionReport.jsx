@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue } from
 "../../components/ui/select";
-import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 const exceptionTypes = [

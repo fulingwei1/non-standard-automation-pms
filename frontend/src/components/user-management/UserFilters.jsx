@@ -3,7 +3,7 @@
  * 用户筛选组件
  */
 
-import { useState, useEffect as _useEffect } from "react";
+import { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -22,14 +22,8 @@ import {
   DialogTrigger,
   DialogFooter } from
 "../../components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  PopoverHeader,
-  PopoverBody,
-  PopoverFooter } from
-"../../components/ui/popover";
+
+
 import {
   Label } from
 "../../components/ui/label";
@@ -37,12 +31,9 @@ import {
   Search,
   Filter,
   X,
-  Calendar,
   User,
   Building2,
-  Tag,
   Shield,
-  DollarSign,
   CheckCircle,
   Clock,
   Download,
@@ -56,8 +47,7 @@ import {
   userRoleConfigs,
   userSortConfigs,
   getUserStatusConfig,
-  formatUserRole,
-  formatUserStatus as _formatUserStatus } from
+  formatUserRole } from
 "@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
 import { UserX } from "lucide-react";

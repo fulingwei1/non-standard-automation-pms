@@ -5,17 +5,10 @@
 import { useState, useEffect } from "react";
 import {
   Package,
-  Settings,
   Save,
-  RefreshCw,
   Wand2,
   FileDown,
-  Filter,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  ChevronDown,
-  ChevronRight,
   Wrench,
   Zap,
   Cable,
@@ -58,12 +51,8 @@ import {
   DialogTitle,
   DialogFooter } from
 "../components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger } from
-"../components/ui/dropdown-menu";
+
+
 import { Switch } from "../components/ui/switch";
 import { cn } from "../lib/utils";
 import { assemblyKitApi, bomApi, projectApi } from "../services/api";

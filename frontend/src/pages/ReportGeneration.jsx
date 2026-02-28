@@ -1,7 +1,7 @@
 /**
  * 报表生成页面
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Download } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 

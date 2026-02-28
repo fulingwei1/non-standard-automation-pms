@@ -15,12 +15,8 @@ import {
   DialogDescription,
   DialogFooter } from
 "../../components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../../components/ui/tabs";
+
+
 import {
   Select,
   SelectContent,
@@ -41,14 +37,10 @@ import {
   Eye,
   Search,
   Filter,
-  MoreHorizontal,
   RefreshCw } from
 "lucide-react";
 import {
-  reminderTypeConfigs,
-  statusConfigs as _statusConfigs,
-  formatStatus as _formatStatus,
-  getRiskLevelConfig as _getRiskLevelConfig } from
+  reminderTypeConfigs } from
 "@/lib/constants/contractManagement";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 

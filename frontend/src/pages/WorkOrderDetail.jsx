@@ -6,14 +6,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Package,
   Clock,
-  User,
-  TrendingUp,
-  CheckCircle2,
-  AlertTriangle,
   Calendar,
-  FileText,
   RefreshCw } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -40,7 +34,7 @@ import {
   TableHeader,
   TableRow } from
 "../components/ui/table";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },

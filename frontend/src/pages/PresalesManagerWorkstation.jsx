@@ -2,33 +2,22 @@
  * 售前技术部经理工作台
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  LayoutDashboard,
   Users,
   FileText,
   Target,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   Calendar,
   ChevronRight,
   BarChart3,
   Award,
   FileCheck,
-  ClipboardList,
   Building2,
-  Briefcase,
   DollarSign,
   Timer,
-  Zap,
-  Activity,
-  MessageSquare,
-  Lightbulb } from
+  Activity } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
@@ -42,7 +31,7 @@ import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { presaleApi, opportunityApi as _opportunityApi, orgApi as _orgApi, userApi } from "../services/api";
+import { presaleApi, userApi } from "../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../lib/formatters";
 import StatCard from "../components/common/StatCard";
 

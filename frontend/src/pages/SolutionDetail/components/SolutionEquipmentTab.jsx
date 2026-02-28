@@ -1,5 +1,4 @@
-import React from 'react';
-import { Package, Settings, Cpu, Wrench, Box } from "lucide-react";
+import { Package, Settings, Cpu, Wrench } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 
 export function SolutionEquipmentTab({ solution }) {

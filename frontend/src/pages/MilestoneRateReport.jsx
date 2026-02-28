@@ -11,7 +11,6 @@ import {
   Target,
   CheckCircle2,
   AlertTriangle,
-  Clock,
   TrendingUp,
   FileText } from
 "lucide-react";

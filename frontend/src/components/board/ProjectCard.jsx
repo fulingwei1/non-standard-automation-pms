@@ -7,7 +7,6 @@ import {
   User,
   Calendar,
   AlertTriangle,
-  Clock,
   Building2,
   Star,
   ChevronRight,

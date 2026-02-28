@@ -3,10 +3,9 @@
  * 审批概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, List, Avatar, Badge, Timeline, Button } from 'antd';
 import {
-  ClipboardCheck,
   Clock,
   CheckCircle,
   XCircle,
@@ -22,7 +21,6 @@ import {
   APPROVAL_TYPES,
   APPROVAL_STATUS,
   APPROVAL_PRIORITY,
-  WORKFLOW_STEPS,
   CHART_COLORS
 } from
 '@/lib/constants/approval';

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Tag, Progress, Tabs, Table, Empty, Spin, Space } from 'antd';
-import { TrophyOutlined, RiseOutlined, FallOutlined, LineChartOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Card, Row, Col, Statistic, Tag, Progress, Tabs, Empty, Spin, Space } from 'antd';
+import { TrophyOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
 import { Radar, Line } from '@ant-design/plots';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';

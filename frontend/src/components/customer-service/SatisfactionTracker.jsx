@@ -3,7 +3,7 @@
  * 满意度跟踪组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Table, Rate, Typography } from 'antd';
 import { CHART_COLORS } from '../../lib/constants/service';
 

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
-import { projectWorkspaceApi, projectContributionApi as _projectContributionApi } from "../services/api";
+import { projectWorkspaceApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
@@ -31,13 +29,7 @@ import {
   Users,
   DollarSign,
   FileText,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
   TrendingUp,
-  Award,
-  MessageSquare,
-  BookOpen,
   Activity } from
 "lucide-react";
 

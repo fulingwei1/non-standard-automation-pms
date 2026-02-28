@@ -3,8 +3,8 @@
  * 用于确认物料收货，记录收货日期和备注
  */
 
-import { useState as _useState, useEffect } from "react";
-import { Package, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
+import { CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

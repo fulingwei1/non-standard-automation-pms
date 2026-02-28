@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter, Button, Input } from "../../../components/ui";
 
 export function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {

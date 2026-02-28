@@ -2,7 +2,6 @@
  * ECN审批流程标签页组件
  * 用途：展示和管理ECN的审批流程（时间线视图）
  */
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';

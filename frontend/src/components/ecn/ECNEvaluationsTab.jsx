@@ -2,7 +2,6 @@
  * ECN评估管理标签页组件
  * 用途：展示和管理ECN的部门评估信息
  */
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';

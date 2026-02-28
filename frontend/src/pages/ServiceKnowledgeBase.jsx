@@ -16,32 +16,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Eye,
   Edit,
   Trash2,
   BookOpen,
   HelpCircle,
-  FileText,
   Tag,
   Star,
-  TrendingUp,
-  Download,
   RefreshCw,
   XCircle,
-  ChevronRight,
   Save,
-  Copy,
-  Share2,
-  ThumbsUp,
-  ThumbsDown } from
+  ThumbsUp } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";

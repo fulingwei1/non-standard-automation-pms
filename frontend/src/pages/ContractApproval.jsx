@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   FileCheck,
   Search,
@@ -12,19 +12,14 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Eye,
   FileText,
   Building2,
   DollarSign,
   Calendar,
   User,
-  ChevronRight,
   Download,
-  Send,
-  MessageSquare,
   History,
-  Shield,
   Loader2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -32,7 +27,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
   Button,
   Badge,
   Input,

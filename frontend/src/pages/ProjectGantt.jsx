@@ -9,8 +9,6 @@ import {
   Calendar,
   Clock,
   Users,
-  CheckCircle2,
-  Circle,
   AlertTriangle,
   RefreshCw } from
 "lucide-react";
@@ -24,7 +22,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function ProjectGantt() {
   const { id } = useParams();

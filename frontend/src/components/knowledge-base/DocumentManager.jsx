@@ -3,7 +3,7 @@
  * 文档管理组件（占位实现，保证拆分后的导出可用）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Typography } from 'antd';
 import { KNOWLEDGE_TYPES, CATEGORIES, STATUS_OPTIONS, ACCESS_LEVELS, TABLE_CONFIG } from '@/lib/constants/knowledge';
 

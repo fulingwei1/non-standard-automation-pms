@@ -1,9 +1,6 @@
-import { useEffect as _useEffect, useState as _useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
-import { formatCurrency as _formatCurrency, getHealthColor as _getHealthColor, getStageName as _getStageName } from "../lib/utils";
 import {
   DashboardLayout,
   DashboardStatCard,
@@ -14,24 +11,17 @@ import {
   Card,
   CardContent,
   Progress,
-  Badge,
   HealthBadge,
   SkeletonCard } from
 "../components/ui";
 import {
   Briefcase,
   Box,
-  TrendingUp,
   AlertTriangle,
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  Clock,
-  Crown,
-  Zap,
-  GitBranch,
-  ShoppingCart,
-  Hammer } from
+  Clock } from
 "lucide-react";
 
 // Stagger animation variants

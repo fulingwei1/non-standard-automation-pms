@@ -2,13 +2,10 @@
  * Worker Work Overview Component - 工人工作概览组件
  * 显示工人的关键指标和快速操作入口
  */
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { 
   Wrench, 
-  Clock, 
-  CheckCircle2, 
-  TrendingUp, 
-  Calendar,
+  TrendingUp,
   Target,
   Award,
   AlertTriangle
@@ -19,7 +16,6 @@ import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { 
   WORK_ORDER_STATUS, 
-  REPORT_TYPE, 
   SKILL_LEVELS,
   PERFORMANCE_METRICS,
   calculateProgress,

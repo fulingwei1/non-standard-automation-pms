@@ -4,16 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  TrendingDown,
-  BarChart3,
-  Filter } from
-"lucide-react";
+
+
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -23,20 +15,12 @@ import {
   Button,
   Badge,
   Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { informationGapApi } from "../services/api";
-import { formatDate as _formatDate } from "../lib/utils";
 
 export default function InformationGapAnalysis() {
   const [_loading, setLoading] = useState(false);

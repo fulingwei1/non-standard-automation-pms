@@ -3,7 +3,7 @@
  * 调查管理组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Progress, Typography } from 'antd';
 import { SURVEY_STATUS, SURVEY_TYPES, TABLE_CONFIG, CHART_COLORS } from '@/lib/constants/customer';
 

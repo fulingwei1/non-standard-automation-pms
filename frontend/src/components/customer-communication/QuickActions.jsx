@@ -2,12 +2,12 @@
  * Customer Communication Quick Actions Component
  * 客户沟通快速操作组件
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from 'framer-motion';
 import {
   Plus, Send, MessageSquare, Phone, Mail, Video,
-  FileText, Users, Calendar, Clock, AlertCircle,
-  CheckCircle, Search, Filter, MoreHorizontal } from
+  FileText, Users,
+  CheckCircle, Search, MoreHorizontal } from
 "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -20,12 +20,7 @@ import {
 "../ui/dropdown-menu";
 import { cn } from "../../lib/utils";
 import {
-  typeConfigs,
-  priorityConfigs as _priorityConfigs,
-  channelConfigs as _channelConfigs,
-  formatType as _formatType,
-  formatPriority as _formatPriority,
-  formatChannel as _formatChannel } from
+  typeConfigs } from
 "@/lib/constants/customer";
 
 const fadeIn = {

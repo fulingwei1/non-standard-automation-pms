@@ -7,7 +7,6 @@ import Timesheet from "../../pages/Timesheet";
 import TimesheetDashboard from "../../pages/TimesheetDashboard";
 import TimesheetBatchOperations from "../../pages/TimesheetBatchOperations";
 import Settings from "../../pages/Settings";
-import WorkCenter from "../../pages/WorkCenter";
 import UserManagement from "../../pages/UserManagement";
 import RoleManagement from "../../pages/RoleManagement";
 import PermissionManagement from "../../pages/PermissionManagement";

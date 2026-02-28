@@ -8,21 +8,13 @@ import { motion } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Edit,
   Trash2,
-  Eye,
   Upload,
   Download,
   CheckCircle2,
-  XCircle,
-  DollarSign,
-  Package,
-  Calendar,
-  Building2,
   Bell,
   AlertTriangle,
-  Clock,
   Settings } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -56,8 +48,8 @@ import {
   TableHeader,
   TableRow } from
 "../components/ui";
-import { cn as _cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { formatCurrency, formatDate } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
 import { salesTemplateApi, supplierApi } from "../services/api";
 
 export default function PurchaseMaterialCostManagement() {

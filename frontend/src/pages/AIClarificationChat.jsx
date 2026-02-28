@@ -6,7 +6,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Send,
   Bot,
   User,
@@ -20,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Input,
   Textarea,
   Badge } from
 "../components/ui";

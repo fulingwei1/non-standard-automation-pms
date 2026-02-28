@@ -3,20 +3,11 @@
  * 客户满意度调查 - 客服工程师高级功能 (重构版本)
  */
 
-import { useState, useMemo, useEffect, useCallback as _useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Plus,
-  Search,
-  Filter,
   Eye,
-  Send,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  User,
-  CheckCircle2,
   XCircle,
   RefreshCw,
   Download,
@@ -24,43 +15,26 @@ import {
   PieChart,
   FileText,
   Settings,
-  MessageSquare,
-  ThumbsUp,
-  ThumbsDown } from
+  MessageSquare } from
 "lucide-react";
 
 import {
-  Card,
-  Table,
   Button,
   Input,
-  Select,
   DatePicker,
   Rate,
   Progress,
   Tabs,
   Modal,
-  Form,
   Space,
   Tag,
-  Tooltip,
   Row,
   Col,
   Statistic,
-  Divider,
-  List,
-  Avatar,
   Typography,
-  Alert,
-  Badge,
   Dropdown,
   Menu,
-  Switch,
-  Radio,
-  Checkbox,
-  Upload,
-  message,
-  Spin } from
+  message } from
 "antd";
 
 // 导入拆分后的组件
@@ -73,16 +47,10 @@ import {
 '../components/customer-satisfaction';
 
 import {
-  SATISFACTION_LEVELS,
   SURVEY_STATUS,
   SURVEY_TYPES,
-  QUESTION_TYPES,
-  ANALYSIS_PERIODS,
-  FEEDBACK_CATEGORIES,
-  CHART_COLORS,
   EXPORT_FORMATS,
-  DEFAULT_FILTERS,
-  TABLE_CONFIG } from
+  DEFAULT_FILTERS } from
 '@/lib/constants/customer';
 
 import { serviceApi } from '@/services/api/service';

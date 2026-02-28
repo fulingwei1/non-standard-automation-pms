@@ -3,7 +3,7 @@
  * 合同列表组件（用于拆分后的 ContractManagement 页面）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Typography } from 'antd';
 import {
   CONTRACT_TYPES,

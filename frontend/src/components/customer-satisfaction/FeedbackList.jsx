@@ -7,17 +7,11 @@ import { useState, useMemo, useEffect as _useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
-  Filter,
   MessageSquare,
   Star,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
   RefreshCw,
   MoreHorizontal,
   Eye,
-  Edit,
   Trash2,
   User,
   Building,
@@ -40,18 +34,13 @@ import {
   PopoverContent,
   PopoverTrigger } from
 "../../components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger } from
-"../../components/ui/tooltip";
+
+
 import { cn, formatDateTime } from "../../lib/utils";
 import {
   getFeedbackStatusConfig,
   getFeedbackTypeConfig,
   getPriorityConfig,
-  getSatisfactionScoreConfig as _getSatisfactionScoreConfig,
   formatSatisfactionScore,
   satisfactionConstants } from
 "@/lib/constants/customer";

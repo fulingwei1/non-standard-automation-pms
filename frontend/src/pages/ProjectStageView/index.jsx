@@ -24,7 +24,6 @@ import {
   Button,
   Input,
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
   DropdownMenu,

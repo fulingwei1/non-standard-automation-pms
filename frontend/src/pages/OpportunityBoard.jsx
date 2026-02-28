@@ -4,36 +4,17 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Target,
   Search,
-  Filter,
   Plus,
   LayoutGrid,
   List,
-  ChevronRight,
-  Calendar,
-  DollarSign,
-  User,
-  Building2,
-  Clock,
   AlertTriangle,
   Flame,
   TrendingUp,
-  TrendingDown,
   BarChart3,
-  ChevronDown,
-  Edit,
-  Trash2,
-  FileText,
-  Phone,
-  MessageSquare,
-  X,
-  CheckCircle2,
-  XCircle,
-  Lightbulb,
-  CheckCircle } from
+  Trash2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -44,12 +25,10 @@ import {
   Button,
   Badge,
   Input,
-  Progress,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
   Select,
   SelectContent,
@@ -58,7 +37,7 @@ import {
   SelectValue } from
 "../components/ui";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
+import { fadeIn } from "../lib/animations";
 import { OpportunityCard, SalesFunnel } from "../components/sales";
 import { opportunityApi, salesStatisticsApi } from "../services/api";
 

@@ -6,14 +6,9 @@ import { useState, useEffect, useMemo } from "react";
 import {
   AlertTriangle,
   Search,
-  Filter,
   Eye,
   CheckCircle2,
   Package,
-  TrendingUp,
-  Calendar,
-  User,
-  RefreshCw,
   BarChart3,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";

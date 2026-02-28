@@ -36,10 +36,8 @@ import {
 "lucide-react";
 import {
   statusChangeTypeConfigs,
-  fulfillmentStatusConfigs as _fulfillmentStatusConfigs,
   getStatusConfig,
-  formatStatus,
-  canTransition as _canTransition } from
+  formatStatus } from
 "@/lib/constants/contractManagement";
 import { cn, formatDate } from "../../lib/utils";
 

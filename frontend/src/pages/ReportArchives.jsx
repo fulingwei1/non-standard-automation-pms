@@ -1,8 +1,8 @@
 /**
  * 报表归档查询页面
  */
-import React, { useState, useEffect } from 'react';
-import { Download, Search, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Download, Search } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportArchives() {

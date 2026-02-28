@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  Search,
   RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";

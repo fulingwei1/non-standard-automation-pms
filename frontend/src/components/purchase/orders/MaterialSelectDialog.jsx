@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { Search, Plus, Package, X } from "lucide-react";
+import { Search, Plus, Package } from "lucide-react";
 import {
   Dialog,
   DialogContent,

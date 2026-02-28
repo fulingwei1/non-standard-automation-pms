@@ -3,40 +3,34 @@
  * 报价统计概览组件 - 展示报价管理关键指标
  */
 
-import { useState as _useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
   Clock,
   CheckCircle2,
-  XCircle,
   Send,
   TrendingUp,
   TrendingDown,
   DollarSign,
   Target,
   Calendar,
-  AlertTriangle,
   Eye,
   BarChart3,
   Users,
-  Building2,
   Percent } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import {
   DEFAULT_QUOTE_STATS,
-  getQuoteStatusConfig as _getQuoteStatusConfig,
   calculateConversionRate,
   formatCurrency,
   QUOTE_VIEW_MODES } from
 "@/lib/constants/quote";
 import {
-  SimpleBarChart,
   SimpleLineChart,
   SimplePieChart } from
 "../administrative/StatisticsCharts";

@@ -28,9 +28,7 @@ import {
   Edit,
   Plus,
   Search,
-  Filter,
   Users,
-  UserPlus,
   Calendar,
   Mail,
   Phone,
@@ -39,9 +37,7 @@ import {
 "lucide-react";
 import {
   employeeStatusConfigs,
-  employeeTypeConfigs as _employeeTypeConfigs,
   departmentConfigs,
-  positionLevelConfigs as _positionLevelConfigs,
   getEmployeeStatusConfig,
   getDepartmentConfig,
   formatEmployeeStatus,

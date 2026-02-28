@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter } from
 "../../components/ui/dialog";
 import {
@@ -41,24 +40,16 @@ import {
 import {
   Shield,
   Users,
-  Lock,
-  Key,
   AlertTriangle,
-  CheckCircle,
   XCircle,
   Info,
-  Plus,
-  Minus,
   Save,
   RotateCcw,
   Eye,
   EyeOff } from
 "lucide-react";
 import {
-  userRoleConfigs,
-  permissionAuditConfigs as _permissionAuditConfigs,
-  getUserRoleConfig as _getUserRoleConfig,
-  formatUserRole as _formatUserRole } from
+  userRoleConfigs } from
 "@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
 

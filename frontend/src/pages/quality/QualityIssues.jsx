@@ -2,7 +2,7 @@
  * 质量问题列表
  * 调用 GET /issues/ (质量相关的issue)
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {

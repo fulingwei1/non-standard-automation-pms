@@ -6,7 +6,6 @@ import {
   Star,
   Trophy,
   Clock,
-  CheckCircle2,
   Flame,
   Thermometer,
   Snowflake,

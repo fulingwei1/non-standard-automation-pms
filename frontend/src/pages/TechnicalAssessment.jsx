@@ -6,17 +6,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  Clock,
-  User,
-  FileText,
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-  Shield,
   Target,
   Download } from
 "lucide-react";

@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Building2,
   Search,
-  Filter,
   Plus,
   LayoutGrid,
   List,
@@ -35,12 +34,9 @@ import { PageHeader } from "../components/layout"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Button,
   Badge,
   Input,
-  Progress,
   Dialog,
   DialogContent,
   DialogHeader,

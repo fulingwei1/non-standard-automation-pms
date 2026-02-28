@@ -5,18 +5,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle,
   Plus,
   Search,
-  Filter,
   Eye,
   Edit,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  User,
-  Package,
-  TrendingUp } from
+  CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -52,7 +45,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {

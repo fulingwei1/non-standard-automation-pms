@@ -2,46 +2,33 @@
  * 方案管理中心
  * 技术方案列表、筛选、搜索
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   Search,
-  Filter,
   Plus,
   Calendar,
-  Clock,
   Users,
   Building2,
-  Target,
   Eye,
   Edit,
   Copy,
   Archive,
   Trash2,
   MoreHorizontal,
-  ChevronRight,
   LayoutGrid,
   List,
   Briefcase,
-  DollarSign,
-  Tag,
   History,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  FileCheck,
-  Download,
-  Share2 } from
+  Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";

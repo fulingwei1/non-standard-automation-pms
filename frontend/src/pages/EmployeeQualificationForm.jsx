@@ -10,11 +10,7 @@ import {
   ArrowLeft,
   Save,
   X,
-  TrendingUp,
-  Award,
-  User,
-  Calendar,
-  AlertCircle } from
+  TrendingUp } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

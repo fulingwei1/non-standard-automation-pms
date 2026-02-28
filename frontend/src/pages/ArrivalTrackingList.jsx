@@ -5,15 +5,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
   Plus,
   Search,
-  Filter,
   Eye,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

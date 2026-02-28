@@ -12,7 +12,6 @@ import {
   Settings,
   CheckCircle2,
   Clock,
-  AlertTriangle,
 } from "lucide-react";
 
 const rhythmLevelConfig = {

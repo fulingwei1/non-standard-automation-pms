@@ -8,14 +8,12 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   Calendar,
   Download,
   Filter,
   FileText,
   RefreshCw,
-  Settings,
   Shield,
   Activity,
   Eye,
@@ -24,7 +22,6 @@ import {
 
 import {
   Card,
-  Table,
   Button,
   Input,
   Select,
@@ -33,14 +30,8 @@ import {
   Tag,
   Row,
   Col,
-  Statistic,
   Typography,
-  Alert,
-  Spin,
   Tabs,
-  Progress,
-  Badge,
-  Radio,
   Modal,
   Form,
   message } from
@@ -60,15 +51,7 @@ import {
   ALERT_TYPES,
   ALERT_LEVELS,
   ALERT_STATUS,
-  TIME_PERIODS,
-  STATISTICS_METRICS,
-  CHART_TYPES,
-  EXPORT_FORMATS,
-  FILTER_CATEGORIES,
-  TABLE_CONFIG,
-  CHART_COLORS,
-  DEFAULT_FILTERS,
-  DASHBOARD_LAYOUTS } from
+  DEFAULT_FILTERS } from
 '@/lib/constants/alert';
 
 import { alertApi } from '@/services/api/alerts';

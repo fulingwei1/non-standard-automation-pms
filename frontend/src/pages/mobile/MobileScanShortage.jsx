@@ -2,7 +2,7 @@
  * Mobile Scan Shortage - 移动端扫码上报缺料
  * 功能：扫码工单，选择物料，上报缺料
  */
-import { useState, useEffect as _useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -16,7 +16,6 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 export default function MobileScanShortage() {

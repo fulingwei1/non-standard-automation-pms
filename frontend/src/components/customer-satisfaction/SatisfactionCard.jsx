@@ -7,17 +7,12 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Star,
-  MessageSquare,
   TrendingUp,
   TrendingDown,
   Clock,
   CheckCircle2,
-  AlertTriangle,
   Users,
   ThumbsUp,
-  ThumbsDown,
-  AlertCircle,
-  Info,
   ChevronUp,
   ChevronDown,
   RefreshCw } from
@@ -28,11 +23,7 @@ import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
 import {
   getSatisfactionScoreConfig,
-  getFeedbackTypeConfig as _getFeedbackTypeConfig,
-  getPriorityConfig as _getPriorityConfig,
-  getFeedbackStatusConfig as _getFeedbackStatusConfig,
   formatSatisfactionScore,
-  getSatisfactionColor as _getSatisfactionColor,
   satisfactionConstants } from
 "@/lib/constants/customer";import { cn } from "../../lib/utils";
 

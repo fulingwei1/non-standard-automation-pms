@@ -7,11 +7,8 @@ import {
   Target,
   RefreshCw,
   Settings,
-  Calendar,
   BarChart3,
   Map,
-  ChevronDown,
-  TrendingUp,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {

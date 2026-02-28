@@ -2,7 +2,7 @@
  * Service Record Overview Component - 服务记录概览组件
  * 显示服务记录的关键指标和快速操作入口
  */
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { 
   FileText, 
   Clock, 
@@ -11,8 +11,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Star,
-  Users,
-  MapPin
+  Users
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";

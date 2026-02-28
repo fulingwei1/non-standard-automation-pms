@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
-import { formatDate as _formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
+import { formatCurrency } from "../lib/utils";
 import {
   Card,
   CardContent,
@@ -18,11 +16,9 @@ import {
 "../components/ui";
 import {
   ArrowLeft,
-  Calculator,
   DollarSign,
   TrendingUp,
   BarChart3,
-  PieChart,
   Download,
   Users,
   Clock } from

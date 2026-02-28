@@ -3,7 +3,7 @@
  * 客户满意度概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Rate } from 'antd';
 import {
   SmileOutlined,
@@ -16,7 +16,6 @@ import {
 '@ant-design/icons';
 import {
   SATISFACTION_LEVELS,
-  SURVEY_STATUS,
   CHART_COLORS } from
 '@/lib/constants/customer';
 

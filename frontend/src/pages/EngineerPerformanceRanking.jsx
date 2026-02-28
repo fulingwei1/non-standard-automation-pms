@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Table, Select, Input, Tag, Space, Button, Tabs } from 'antd';
 import { SearchOutlined, FilterOutlined, TrophyOutlined } from '@ant-design/icons';
 import axios from 'axios';

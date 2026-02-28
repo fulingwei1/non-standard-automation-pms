@@ -2,15 +2,12 @@
  * 方案卡片组件
  * 用于在列表和网格视图中展示技术方案摘要
  */
-import React from "react";
 import { motion } from "framer-motion";
 import {
-  FileText,
   Calendar,
   Users,
   Building2,
   Briefcase,
-  DollarSign,
   Eye,
   Edit,
   Copy,

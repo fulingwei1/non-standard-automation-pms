@@ -1,4 +1,4 @@
-import { Users, Briefcase, Percent } from "lucide-react";
+import { Percent } from "lucide-react";
 
 /**
  * 权重输入卡片组件

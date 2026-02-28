@@ -4,18 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  AlertTriangle,
-  TrendingDown,
-  BarChart3,
-  PieChart,
-  Calendar,
-  Filter,
-  Download,
-  Bell,
-  Users,
-  Building2 } from
+  Bell } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -37,9 +27,8 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { pipelineAnalysisApi } from "../services/api";
-import { formatAmount as _formatAmount, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 
 export default function PipelineBreakAnalysis() {
   const [_loading, setLoading] = useState(false);

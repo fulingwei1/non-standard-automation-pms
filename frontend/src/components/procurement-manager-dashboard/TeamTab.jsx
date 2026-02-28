@@ -1,4 +1,3 @@
-import { Card, CardContent } from "../../components/ui";
 
 export default function TeamTab() {
   return (

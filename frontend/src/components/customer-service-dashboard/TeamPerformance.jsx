@@ -14,8 +14,7 @@ import {
   SelectValue } from
 "../ui/select";
 import {
-  Progress,
-  ProgressValueLabel } from
+  Progress } from
 "../ui/progress";
 import {
   BarChart3,
@@ -27,12 +26,8 @@ import {
   TrendingUp,
   TrendingDown,
   Target,
-  Calendar,
-  Award,
-  User,
   Award as AwardIcon,
-  RefreshCw,
-  Filter } from
+  RefreshCw } from
 "lucide-react";
 
 export function TeamPerformance({

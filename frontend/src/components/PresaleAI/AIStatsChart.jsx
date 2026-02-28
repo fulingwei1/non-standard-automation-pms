@@ -2,7 +2,6 @@
  * AI统计图表组件
  * Team 10: 售前AI系统集成与前端UI
  */
-import React from 'react';
 import {
   LineChart,
   Line,

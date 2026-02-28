@@ -5,7 +5,6 @@ import {
   FileText,
   Plus,
   Search,
-  Filter,
   Eye,
   Edit3,
   Trash2,
@@ -14,18 +13,13 @@ import {
   XCircle,
   Send,
   Calendar,
-  Building2,
   DollarSign,
-  Package,
-  AlertTriangle } from
+  Package } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
+  CardContent } from
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -49,7 +43,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { purchaseApi, projectApi, materialApi as _materialApi } from "../services/api";
+import { purchaseApi, projectApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { EmptyState } from "../components/common";

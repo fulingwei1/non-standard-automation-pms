@@ -2,7 +2,7 @@
  * 快速扫描按钮组件
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Scan } from 'lucide-react';
 import { triggerScan } from '@/services/api/shortage';

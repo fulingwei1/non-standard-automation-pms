@@ -13,10 +13,8 @@ import {
   Space,
   Typography,
   Tag,
-  List,
   Popconfirm,
   Empty,
-  Collapse,
   Form,
 } from 'antd';
 import {
@@ -24,7 +22,6 @@ import {
   Trash2,
   GitBranch,
   ChevronRight,
-  Edit2,
   Copy,
 } from 'lucide-react';
 

@@ -6,8 +6,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  Search,
-  Filter,
   ClipboardCheck,
   Package,
   Car,
@@ -19,8 +17,7 @@ import {
   XCircle,
   Clock,
   Eye,
-  Download,
-  Loader2 } from
+  Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -39,7 +36,6 @@ import {
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
-  SimpleBarChart,
   MonthlyTrendChart,
   SimplePieChart,
   TrendComparisonCard } from

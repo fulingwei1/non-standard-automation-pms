@@ -9,19 +9,13 @@ import {
   Search,
   Filter,
   DollarSign,
-  Calendar,
   AlertTriangle,
-  CheckCircle2,
   Clock,
-  TrendingUp,
-  Building2,
   FileText,
   CreditCard,
   BarChart3,
   Download,
-  Plus,
-  Eye,
-  Edit } from
+  Eye } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import { PaymentDialog } from "../components/invoice-management/dialogs";
@@ -42,7 +36,7 @@ import {
 "../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { receivableApi, paymentApi, invoiceApi as _invoiceApi } from "../services/api";
+import { receivableApi, paymentApi } from "../services/api";
 
 // 收款状态配置
 const paymentStatusConfig = {

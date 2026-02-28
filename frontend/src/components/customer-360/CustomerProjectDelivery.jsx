@@ -3,7 +3,7 @@
  * 客户项目交付组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Progress } from 'antd';
 import { PROJECT_PHASES, TABLE_CONFIG } from '@/lib/constants/customer360';
 

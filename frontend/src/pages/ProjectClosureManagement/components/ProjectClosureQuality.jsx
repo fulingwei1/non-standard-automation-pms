@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, Progress } from '../../../components/ui';
 
 export function ProjectClosureQuality({ closure }) {

@@ -10,8 +10,7 @@ import {
   FileText,
   CheckCircle2,
   ExternalLink,
-  RefreshCw,
-  Filter } from
+  RefreshCw } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -40,7 +39,6 @@ import {
 "../components/ui/table";
 import { Checkbox } from "../components/ui/checkbox";
 import { ecnApi } from "../services/api";
-import { formatDate as _formatDate } from "../lib/utils";
 
 import { confirmAction } from "@/lib/confirmAction";
 const alertTypeConfigs = {

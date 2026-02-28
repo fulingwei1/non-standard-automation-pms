@@ -3,7 +3,7 @@
  * 告警详情组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Typography } from 'antd';
 import { ALERT_TYPES, ALERT_LEVELS, ALERT_STATUS, TABLE_CONFIG } from '@/lib/constants/alert';
 

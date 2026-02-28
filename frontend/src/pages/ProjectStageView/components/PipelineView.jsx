@@ -11,7 +11,6 @@ import {
   Calendar,
   GitBranch,
   Star,
-  Zap,
   MoreHorizontal,
 } from "lucide-react";
 import {
@@ -33,7 +32,6 @@ import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import {
   STAGE_STATUS,
-  HEALTH_STATUS,
   STAGE_CATEGORIES,
   getStatusConfig,
   getHealthConfig,

@@ -8,7 +8,6 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { Card, CardContent, Badge, SkeletonCard } from "../components/ui";
 import {
   AlertTriangle,
-  TrendingUp,
   Building2,
   Target,
   ArrowRight,

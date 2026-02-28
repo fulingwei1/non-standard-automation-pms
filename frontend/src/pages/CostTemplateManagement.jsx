@@ -9,17 +9,12 @@ import { motion } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
-  Copy,
   Layers,
   FileText,
-  Calendar,
-  User,
-  CheckCircle2,
-  XCircle } from
+  Calendar } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
@@ -52,8 +47,8 @@ import {
   TableHeader,
   TableRow } from
 "../components/ui";
-import { cn as _cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { formatCurrency } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
 import { salesTemplateApi } from "../services/api";
 import { DollarSign } from "lucide-react";
 

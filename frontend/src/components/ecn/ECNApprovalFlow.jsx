@@ -22,8 +22,7 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  MessageSquare,
-  UserPlus } from
+  MessageSquare } from
 "lucide-react";
 import {
   approvalStatusConfigs,

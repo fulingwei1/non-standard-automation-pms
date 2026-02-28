@@ -1,5 +1,4 @@
 import { Route } from "react-router-dom";
-import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
 import CostAccounting from "../../pages/CostAccounting";
 import PaymentApproval from "../../pages/PaymentApproval";

@@ -13,19 +13,11 @@ import {
   DollarSign,
   Receipt,
   Package,
-  CheckCircle2,
   Star,
   MessageSquare,
   TrendingUp,
-  Calendar,
-  User,
-  Phone,
-  Mail,
-  MapPin,
   BarChart3,
   Target,
-  Award,
-  Activity,
   RefreshCw,
   Download,
   Edit,
@@ -35,21 +27,12 @@ import {
 import {
   Card,
   Tabs,
-  Table,
   Button,
   Space,
-  Tag,
-  Row,
-  Col,
-  Statistic,
   Typography,
-  Alert,
   Spin,
   DatePicker,
-  Select,
-  Input,
-  message,
-  Badge } from
+  message } from
 "antd";
 
 // 导入拆分后的组件
@@ -67,17 +50,8 @@ import {
 
 import { customerApi } from '../services/api/crm';
 
-import {
-  CUSTOMER_TYPES,
-  CUSTOMER_STATUS,
-  CUSTOMER_LEVELS,
-  ORDER_STATUS,
-  PAYMENT_STATUS,
-  PROJECT_PHASES,
-  BUSINESS_METRICS,
-  TABLE_CONFIG,
-  CHART_COLORS } from
-'@/lib/constants/customer360';
+
+
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

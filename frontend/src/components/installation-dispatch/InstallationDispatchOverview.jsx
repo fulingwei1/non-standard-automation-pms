@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,6 @@ import {
   DISPATCH_STATUS,
   DISPATCH_STATUS_LABELS,
   DISPATCH_STATUS_COLORS,
-  TECHNICIAN_STATUS,
-  TECHNICIAN_STATUS_COLORS,
   calculateCompletionRate,
   calculateDelayRate,
   getDispatchStatusStats,

@@ -8,14 +8,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Percent,
-  Layers,
-  FileText,
   Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -44,7 +36,7 @@ import {
   TableRow } from
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { quoteApi } from "../services/api";
 import { CostTrendChart } from "../components/cost/CostTrendChart";
 import { CostStructureChart } from "../components/cost/CostStructureChart";

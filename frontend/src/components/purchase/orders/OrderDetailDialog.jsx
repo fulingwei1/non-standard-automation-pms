@@ -3,7 +3,6 @@
  * 显示订单完整信息、采购项目列表、状态变更历史
  */
 
-import { Package, Building2, Calendar, DollarSign } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -3,7 +3,7 @@
  * 线索概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert, Button, Avatar } from 'antd';
 import {
   Target,
@@ -17,7 +17,6 @@ import {
 'lucide-react';
 import {
   LEAD_SOURCES,
-  LEAD_STATUS,
   QUALIFICATION_LEVELS,
   SCORE_COLORS } from
 '@/lib/constants/leadAssessment';

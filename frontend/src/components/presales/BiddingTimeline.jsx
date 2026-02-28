@@ -2,7 +2,6 @@
  * 投标时间线组件
  * 展示投标项目的关键节点和进度
  */
-import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Clock, Flag, AlertTriangle } from "lucide-react";
 import { cn } from "../../lib/utils";

@@ -8,7 +8,6 @@ import {
   Bell,
   Award,
   TrendingUp,
-  Calendar,
   CheckCircle2,
   Clock,
   ArrowRight,

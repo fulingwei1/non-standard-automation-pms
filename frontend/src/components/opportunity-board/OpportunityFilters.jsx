@@ -3,29 +3,18 @@
  * 商机过滤器组件 - 过选和搜索功能
  */
 
-import { useState, useMemo as _useMemo } from "react";
+import { useState } from "react";
 import {
   Search,
   Filter,
   X,
-  Check,
-  Calendar,
-  DollarSign,
-  User,
-  Building,
-  Tag,
-  ChevronDown,
-  ChevronUp,
-  RotateCcw,
-  Download,
-  Eye,
-  EyeOff } from
+  RotateCcw } from
 "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "../../components/ui/collapsible";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { cn } from "../../lib/utils";
 import {

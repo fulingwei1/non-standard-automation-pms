@@ -5,29 +5,18 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Calculator,
   Search,
-  Filter,
   Plus,
   Download,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Briefcase,
-  Calendar,
   BarChart3,
   PieChart,
   FileText,
-  Edit,
-  Trash2,
-  Eye,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
   Package,
   Users,
   Wrench } from
@@ -42,10 +31,6 @@ import {
   Badge,
   Input,
   Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,

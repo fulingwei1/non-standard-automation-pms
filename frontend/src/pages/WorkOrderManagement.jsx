@@ -5,19 +5,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Wrench,
   Plus,
   Search,
-  Filter,
   Eye,
-  Edit,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  User,
-  Calendar,
-  Package,
-  TrendingUp } from
+  User } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -54,7 +45,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },

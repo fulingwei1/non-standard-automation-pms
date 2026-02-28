@@ -9,10 +9,6 @@ import {
   Plus,
   Trash2,
   Save,
-  RefreshCw,
-  DollarSign,
-  Percent,
-  Calculator,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

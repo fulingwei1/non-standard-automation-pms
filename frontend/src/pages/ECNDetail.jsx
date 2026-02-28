@@ -5,7 +5,7 @@
  * Features: ECN完整信息展示、评估管理、审批流程可视化、执行任务看板、影响分析、变更日志
  */
 
-import { useState, useEffect, useMemo as _useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";

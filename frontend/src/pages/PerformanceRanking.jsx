@@ -10,7 +10,6 @@ import {
   TrendingDown,
   Users,
   Building2,
-  Calendar,
   Medal,
   Loader2 } from
 "lucide-react";
@@ -21,8 +20,6 @@ import {
   CardHeader,
   CardTitle } from
 "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import {
   Tabs,
   TabsContent,
@@ -31,7 +28,7 @@ import {
 "../components/ui/tabs";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { performanceApi, pmoApi as _pmoApi } from "../services/api";
+import { performanceApi } from "../services/api";
 
 export default function PerformanceRanking() {
   const [_selectedPeriod, _setSelectedPeriod] = useState("current");

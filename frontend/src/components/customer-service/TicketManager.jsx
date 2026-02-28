@@ -3,7 +3,7 @@
  * 工单管理组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Tag, Space, Button, Typography } from 'antd';
 import { SERVICE_TYPES, TICKET_STATUS, PRIORITY_LEVELS, TABLE_CONFIG } from '../../lib/constants/service';
 

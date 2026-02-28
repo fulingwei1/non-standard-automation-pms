@@ -12,15 +12,8 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Trash2,
-  Search,
-  Filter,
-  Calendar,
-  DollarSign,
-  Users,
-  MapPin,
-  FileText } from
+  Search } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -32,7 +25,6 @@ import {
   Button,
   Badge,
   Input,
-  Label,
   Table,
   TableBody,
   TableCell,
@@ -52,7 +44,7 @@ import {
   DialogFooter } from
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { financialCostApi } from "../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";

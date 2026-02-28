@@ -14,7 +14,6 @@ import {
   PlayCircle,
   PauseCircle,
   AlertTriangle,
-  Flag,
 } from "lucide-react";
 import { Button, Badge } from "../ui";
 import { cn } from "../../lib/utils";

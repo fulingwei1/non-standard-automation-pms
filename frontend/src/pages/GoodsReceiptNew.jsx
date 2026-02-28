@@ -3,12 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Save,
-  Truck,
   Package,
   Plus,
   X,
-  Calendar,
   Search,
   ChevronRight } from
 "lucide-react";
@@ -41,7 +38,7 @@ import {
   TableRow } from
 "../components/ui/table";
 import { Badge } from "../components/ui/badge";
-import { cn as _cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { formatCurrency } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";

@@ -3,12 +3,11 @@
  * 销售统计概览组件 - 展示销售团队关键指标
  */
 
-import { useState as _useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
   Target,
-  TrendingUp,
   DollarSign,
   Activity,
   Award,
@@ -22,7 +21,6 @@ import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import {
   DEFAULT_SALES_TEAM_STATS,
-  calculateSalesCompletionRate as _calculateSalesCompletionRate,
   getPerformanceLevel,
   getSalesPerformanceLevelConfig,
   formatCurrency,

@@ -3,37 +3,24 @@
  * 历史方案、产品知识、工艺知识、竞品情报、模板库 (重构版本)
  */
 
-import React, { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   BookOpen,
   Search,
   Filter,
   Plus,
-  Calendar,
   Eye,
   Download,
   Star,
   StarOff,
   Folder,
   FileText,
-  File,
-  Image,
-  Video,
-  MoreHorizontal,
-  ChevronRight,
-  ChevronDown,
   Clock,
   Users,
-  Building2,
-  Briefcase,
-  Package,
   Upload,
   Edit,
   Trash2,
-  Share,
-  Copy,
-  Settings,
   Grid,
   List,
   TrendingUp } from
@@ -48,37 +35,22 @@ import {
   DatePicker,
   Tabs,
   Modal,
-  Form,
   Space,
   Tag,
-  Tooltip,
   Row,
   Col,
-  Statistic,
-  Divider,
   Avatar,
   Typography,
-  Alert,
-  Badge,
-  Dropdown,
-  Menu,
-  Switch,
   Radio,
-  Checkbox,
-  Upload as AntUpload,
   message,
   Spin,
   Tree,
-  Breadcrumb,
-  Pagination,
-  Empty,
   Rate } from
 "antd";
 
 // 导入拆分后的组件
 import {
   KnowledgeBaseOverview,
-  DocumentManager,
   CategoryManager,
   SearchAndFilter,
   DocumentViewer } from
@@ -89,10 +61,6 @@ import {
   FILE_TYPES,
   ACCESS_LEVELS,
   CATEGORIES,
-  SORT_OPTIONS,
-  SEARCH_FILTERS,
-  VIEW_LAYOUTS,
-  IMPORTANCE_LEVELS,
   STATUS_OPTIONS,
   TABLE_CONFIG,
   DEFAULT_FILTERS } from

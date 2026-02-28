@@ -13,35 +13,19 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   AlertTriangle,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  XCircle,
   Search,
   Eye,
   Settings,
-  Bell,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  User,
-  FileText,
-  RefreshCw,
   Download,
-  CheckSquare,
-  Square,
-  ArrowUpDown,
-  Filter } from
+  ArrowUpDown } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -53,11 +37,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogBody,
-  DialogDescription } from
+  DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { alertApi, projectApi } from "../services/api";
 
@@ -66,17 +47,10 @@ import {
   AlertCenterOverview,
   ALERT_LEVELS,
   ALERT_STATUS,
-  ALERT_TYPES,
-  ALERT_ACTIONS,
   getAlertLevelConfig,
   getAlertStatusConfig,
   getAlertTypeConfig,
-  getAvailableActions,
-  calculateResponseTime as _calculateResponseTime,
-  calculateResolutionTime as _calculateResolutionTime,
-  checkResponseTimeSLA as _checkResponseTimeSLA,
-  requiresEscalation as _requiresEscalation,
-  getAlertSummary as _getAlertSummary } from
+  getAvailableActions } from
 "../components/alert-center";
 
 export default function AlertCenter() {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from "framer-motion";
 import { FileText, Eye, XCircle } from "lucide-react";
 import { Card, CardContent, Button, SkeletonCard, Badge } from "../../../components/ui";

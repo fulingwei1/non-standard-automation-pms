@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Layers,
@@ -29,8 +29,8 @@ import {
 "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
-import { cn, formatDate as _formatDate } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
+import { cn } from "../lib/utils";
 import { salesTemplateApi } from "../services/api";
 
 const tabs = [

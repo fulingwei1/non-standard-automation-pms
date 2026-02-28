@@ -8,11 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Package,
-  AlertTriangle,
   Save,
   X,
-  Search,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

@@ -11,9 +11,9 @@
  * 6. 客户满意度记录
  */
 
-import { useState, useMemo as _useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "../components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -26,13 +26,12 @@ import { ServiceTicketListHeader } from "../components/service/ServiceTicketList
 import { ServiceTicketListTable } from "../components/service/ServiceTicketListTable";
 import { ServiceTicketCreateDialog } from "../components/service/ServiceTicketCreateDialog";
 import { ServiceTicketDetailDialog } from "../components/service/ServiceTicketDetailDialog";
-import { ServiceTicketAssignDialog } from "../components/service/ServiceTicketAssignDialog";
 import { ServiceTicketBatchActions } from "../components/service/ServiceTicketBatchActions";
 
 // Import constants and utilities
 import { urgencyConfigs } from "@/lib/constants/service";
 import { serviceApi } from "../services/api";
-import { Plus, Download, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 
 export default function ServiceTicketManagement() {
   const _navigate = useNavigate();

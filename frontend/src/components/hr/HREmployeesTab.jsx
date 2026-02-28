@@ -1,12 +1,10 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Users, UserPlus, FileText, Search, 
-  Mail, Phone, Calendar, Building 
+  Users, UserPlus, FileText, Search, Calendar 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

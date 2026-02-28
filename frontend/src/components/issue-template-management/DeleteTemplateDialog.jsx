@@ -1,4 +1,3 @@
-import React from "react";
 import DeleteConfirmDialog from "../common/DeleteConfirmDialog";
 
 export default function DeleteTemplateDialog({
