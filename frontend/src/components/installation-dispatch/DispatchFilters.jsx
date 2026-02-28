@@ -26,7 +26,7 @@ export default function DispatchFilters({
   setFilterProject,
   filterTaskType,
   setFilterTaskType,
-  projects,
+  projects = [],
 }) {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-4">
