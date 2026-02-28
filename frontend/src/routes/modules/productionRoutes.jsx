@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 
 import WorkOrderManagement from "../../pages/WorkOrderManagement";
 import WorkOrderDetail from "../../pages/WorkOrderDetail";
@@ -70,6 +70,7 @@ export function ProductionRoutes() {
       <Route path="/arrival-tracking" element={<ArrivalTrackingList />} />
       <Route path="/workload-board" element={<WorkloadBoard />} />
       <Route path="/workshops/:id/task-board" element={<WorkshopTaskBoard />} />
+      <Route path="/production-board" element={<ProductionPlanList />} />
     </>
   );
 }
