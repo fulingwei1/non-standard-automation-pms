@@ -40,21 +40,35 @@ def get_recommended_templates(
     # 按使用次数排序
     templates = query.order_by(desc(ProjectTemplate.usage_count)).limit(limit).all()
 
+    import json as _json
+
     items = []
     for template in templates:
+        config = {}
+        if template.template_config:
+            try:
+                config = _json.loads(template.template_config) if isinstance(template.template_config, str) else template.template_config
+            except Exception:
+                pass
+
         items.append({
             "id": template.id,
+            "template_id": template.id,
             "template_code": template.template_code,
             "template_name": template.template_name,
             "project_type": template.project_type,
+            "product_category": template.product_category,
+            "industry": template.industry,
             "description": template.description,
             "usage_count": template.usage_count or 0,
+            "template_config": _json.dumps(config) if config else None,
+            "milestones_count": len(config.get("milestones", [])),
         })
 
     return ResponseModel(
         code=200,
         message="获取推荐模板成功",
-        data={"templates": items}
+        data={"recommendations": items, "templates": items}
     )
 
 

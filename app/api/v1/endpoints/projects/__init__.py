@@ -80,6 +80,10 @@ router.include_router(project_board_router, tags=["projects-board"])
 # 模板路由（放在最前面，避免与/{project_id}冲突）
 router.include_router(templates.router, tags=["projects-templates"])
 
+# 项目克隆路由
+from .project_clone import router as project_clone_router
+router.include_router(project_clone_router, tags=["projects-clone"])
+
 # 缓存管理路由
 router.include_router(cache.router, tags=["projects-cache"])
 

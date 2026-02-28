@@ -91,11 +91,14 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"CSRF验证异常: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="CSRF验证失败"
-            )
+            # Only catch CSRF-related exceptions, not downstream errors
+            if "CSRF" in str(e) or "csrf" in str(e):
+                logger.error(f"CSRF验证异常: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="CSRF验证失败"
+                )
+            raise
 
     def _is_exempt_path(self, path: str) -> bool:
         """检查路径是否在豁免列表中"""
