@@ -696,6 +696,9 @@ def create_api_router() -> APIRouter:
 
         from app.api.v1.endpoints.cost_variance_analysis import router as cost_variance_router
         api_router.include_router(cost_variance_router, prefix="/cost-variance", tags=["cost-variance"])
+
+        from app.api.v1.endpoints.labor_cost_detail import router as labor_cost_router
+        api_router.include_router(labor_cost_router, prefix="/labor-cost", tags=["labor-cost"])
         print("✓ 资源调度模块加载成功")
     except Exception as e:
         print(f"✗ 资源调度模块加载失败：{e}")

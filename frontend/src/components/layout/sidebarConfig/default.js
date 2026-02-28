@@ -148,7 +148,8 @@ export const defaultNavGroups = [
       { name: "毛利率预测", path: "/margin-prediction", icon: "TrendingUp", permission: "cost:accounting:read", permissionLabel: "毛利率预测" },
       { name: "成本归集", path: "/cost-collection", icon: "ArrowDownToLine", permission: "cost:accounting:read", permissionLabel: "成本归集" },
       { name: "报价对比", path: "/quote-compare", icon: "ArrowLeftRight", permission: "cost:accounting:read", permissionLabel: "报价对比" },
-      { name: "成本偏差", path: "/cost-variance", icon: "AlertTriangle", permission: "cost:accounting:read", permissionLabel: "成本偏差分析" }
+      { name: "成本偏差", path: "/cost-variance", icon: "AlertTriangle", permission: "cost:accounting:read", permissionLabel: "成本偏差分析" },
+      { name: "人工成本", path: "/labor-cost", icon: "Users", permission: "cost:accounting:read", permissionLabel: "人工成本明细" }
     ],
     roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"]
   },

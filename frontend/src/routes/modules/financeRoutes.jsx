@@ -10,6 +10,7 @@ import MarginPrediction from "../../pages/MarginPrediction";
 import CostCollection from "../../pages/CostCollection";
 import QuoteActualCompare from "../../pages/QuoteActualCompare";
 import CostVarianceAnalysis from "../../pages/CostVarianceAnalysis";
+import LaborCostDetail from "../../pages/LaborCostDetail";
 
 export function FinanceRoutes() {
   return (
@@ -22,6 +23,7 @@ export function FinanceRoutes() {
       <Route path="/cost-collection" element={<CostCollection />} />
       <Route path="/quote-compare" element={<QuoteActualCompare />} />
       <Route path="/cost-variance" element={<CostVarianceAnalysis />} />
+      <Route path="/labor-cost" element={<LaborCostDetail />} />
       <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
     </>
   );
