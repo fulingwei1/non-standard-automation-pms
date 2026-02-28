@@ -172,7 +172,7 @@ export default function InstallationDispatchManagement() {
       if (filterTaskType) params.task_type = filterTaskType;
       if (searchQuery) params.search = searchQuery;
 
-      const res = await installationDispatchApi.list(params);
+      const res = await installationDispatchApi.orders.list(params);
       setOrders(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -200,7 +200,7 @@ export default function InstallationDispatchManagement() {
     }
 
     try {
-      await installationDispatchApi.create(createData);
+      await installationDispatchApi.orders.create(createData);
       toast.success("派工单创建成功");
       setShowCreateDialog(false);
       setCreateData({
@@ -229,7 +229,7 @@ export default function InstallationDispatchManagement() {
 
   const handleAssignOrder = async (orderId) => {
     try {
-      await installationDispatchApi.assign(orderId, assignData);
+      await installationDispatchApi.orders.assign(orderId, assignData);
       toast.success("派工成功");
       setShowAssignDialog(false);
       setAssignData({ assigned_to_id: null, remark: "" });
@@ -243,7 +243,7 @@ export default function InstallationDispatchManagement() {
 
   const handleUpdateProgress = async () => {
     try {
-      await installationDispatchApi.updateProgress(
+      await installationDispatchApi.orders.progress(
         selectedOrder.id,
         progressData
       );
@@ -259,7 +259,7 @@ export default function InstallationDispatchManagement() {
 
   const handleCompleteOrder = async () => {
     try {
-      await installationDispatchApi.complete(selectedOrder.id, completeData);
+      await installationDispatchApi.orders.complete(selectedOrder.id, completeData);
       toast.success("派工单完成");
       setShowCompleteDialog(false);
       setCompleteData({
@@ -288,7 +288,7 @@ export default function InstallationDispatchManagement() {
     }
 
     try {
-      await installationDispatchApi.batchAssign({
+      await installationDispatchApi.orders.batchAssign({
         order_ids: Array.from(selectedOrders),
         assigned_to_id: assignData.assigned_to_id,
         remark: assignData.remark,
