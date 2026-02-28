@@ -67,10 +67,7 @@ export function ServiceTicketListHeader({
               <SelectContent>
                 {sortOptions.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      {option.icon && <option.icon className="w-4 h-4" />}
-                      {option.label}
-                    </div>
+                    {option.label}
                 </SelectItem>
                 )}
               </SelectContent>

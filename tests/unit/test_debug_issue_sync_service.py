@@ -71,11 +71,11 @@ class TestSyncTestBugRecord:
         from app.models.issue import Issue
 
         issue = Issue(
-        issue_no="ISS002",
-        category="PROJECT",
-        issue_type="DEFECT"  # 不是BUG,
-        reporter_id=1
-    )
+            issue_no="ISS002",
+            category="PROJECT",
+            issue_type="DEFECT",  # 不是BUG
+            reporter_id=1
+        )
         db_session.add(issue)
         db_session.flush()
 

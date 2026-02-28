@@ -571,9 +571,7 @@ class TestListAlerts(unittest.TestCase):
         self.assertEqual(result["total"], 0)
 
 
-class TestCreateAlertRule(unittest.TestCase,
-        target_type="PROJECT"
-    ):
+class TestCreateAlertRule(unittest.TestCase):
     """测试创建预警规则"""
 
     def setUp(self):

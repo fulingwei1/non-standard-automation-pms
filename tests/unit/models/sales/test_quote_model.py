@@ -17,7 +17,6 @@ class TestQuoteModel:
         """测试创建报价单"""
         quote = Quote(
             quote_code="QUOTE001",
-            quote_code="测试报价单",
             customer_id=sample_customer.id,
             quote_amount=Decimal("150000.00"),
             valid_until=date.today() + timedelta(days=30),
