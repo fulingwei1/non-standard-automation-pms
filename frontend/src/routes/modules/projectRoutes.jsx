@@ -23,6 +23,7 @@ import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
 import EngineerWorkstation from "../../pages/EngineerWorkstation";
 import ProjectStageView from "../../pages/ProjectStageView";
 import ProjectTimelineView from "../../pages/ProjectTimelineView";
+import ResourceOverview from "../../pages/ResourceOverview";
 
 export function ProjectRoutes() {
   return (
@@ -91,6 +92,8 @@ export function ProjectRoutes() {
       <Route path="/reports/delay-reasons" element={<DelayReasonsReport />} />
       <Route path="/wbs-templates" element={<WBSTemplateManagement />} />
       <Route path="/schedule" element={<ScheduleBoard />} />
+      <Route path="/resource-overview" element={<ResourceOverview />} />
+      <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />
       <Route path="/workstation" element={<EngineerWorkstation />} />

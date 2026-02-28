@@ -64,7 +64,8 @@ export const defaultNavGroups = [
       { name: "预算管理", path: "/budgets", icon: "CreditCard", permission: "budget:read", permissionLabel: "预算管理" },
       { name: "项目看板", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目看板" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目结项" },
-      { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" }
+      { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" },
+      { name: "资源全景", path: "/resource-overview", icon: "Users", permission: "project:project:read", permissionLabel: "资源全景" }
     ]
   },
   // 6. 工程技术

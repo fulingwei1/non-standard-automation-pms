@@ -681,6 +681,9 @@ def create_api_router() -> APIRouter:
     try:
         from app.api.v1.endpoints.resource_scheduling import router as resource_scheduling_router
         api_router.include_router(resource_scheduling_router, prefix="/resource-scheduling", tags=["resource-scheduling"])
+
+        from app.api.v1.endpoints.resource_overview import router as resource_overview_router
+        api_router.include_router(resource_overview_router, prefix="/resource-overview", tags=["resource-overview"])
         print("✓ 资源调度模块加载成功")
     except Exception as e:
         print(f"✗ 资源调度模块加载失败：{e}")
