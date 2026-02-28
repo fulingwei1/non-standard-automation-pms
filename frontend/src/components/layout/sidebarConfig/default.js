@@ -65,6 +65,7 @@ export const defaultNavGroups = [
       { name: "项目看板", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目看板" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目结项" },
       { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" },
+      { name: "经验教训", path: "/lessons-learned", icon: "BookOpen", permission: "project:read", permissionLabel: "经验教训" },
       { name: "资源全景", path: "/resource-overview", icon: "Users", permission: "project:project:read", permissionLabel: "资源全景" }
     ]
   },
@@ -145,7 +146,9 @@ export const defaultNavGroups = [
       { name: "项目结算", path: "/settlement", icon: "FileText", permission: "settlement:read", permissionLabel: "项目结算" },
       { name: "财务报表", path: "/financial-reports", icon: "BarChart3", permission: "finance:report:read", permissionLabel: "财务报表" },
       { name: "毛利率预测", path: "/margin-prediction", icon: "TrendingUp", permission: "cost:accounting:read", permissionLabel: "毛利率预测" },
-      { name: "成本归集", path: "/cost-collection", icon: "ArrowDownToLine", permission: "cost:accounting:read", permissionLabel: "成本归集" }
+      { name: "成本归集", path: "/cost-collection", icon: "ArrowDownToLine", permission: "cost:accounting:read", permissionLabel: "成本归集" },
+      { name: "报价对比", path: "/quote-compare", icon: "ArrowLeftRight", permission: "cost:accounting:read", permissionLabel: "报价对比" },
+      { name: "成本偏差", path: "/cost-variance", icon: "AlertTriangle", permission: "cost:accounting:read", permissionLabel: "成本偏差分析" }
     ],
     roles: ["finance", "accounting", "财务", "会计", "admin", "super_admin"]
   },

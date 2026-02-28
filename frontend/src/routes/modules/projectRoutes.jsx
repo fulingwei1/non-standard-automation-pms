@@ -24,6 +24,8 @@ import EngineerWorkstation from "../../pages/EngineerWorkstation";
 import ProjectStageView from "../../pages/ProjectStageView";
 import ProjectTimelineView from "../../pages/ProjectTimelineView";
 import ResourceOverview from "../../pages/ResourceOverview";
+import LessonsLearned from "../../pages/LessonsLearned";
+import AcceptanceManagement from "../../pages/AcceptanceManagement";
 
 export function ProjectRoutes() {
   return (
@@ -97,6 +99,8 @@ export function ProjectRoutes() {
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />
       <Route path="/workstation" element={<EngineerWorkstation />} />
+      <Route path="/lessons-learned" element={<LessonsLearned />} />
+      <Route path="/acceptance" element={<AcceptanceManagement />} />
     </>
   );
 }

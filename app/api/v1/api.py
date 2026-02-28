@@ -175,7 +175,7 @@ def create_api_router() -> APIRouter:
     # ==================== 验收管理 ====================
     try:
         from app.api.v1.endpoints.acceptance import router as acceptance_router
-        api_router.include_router(acceptance_router, tags=["acceptance"])
+        api_router.include_router(acceptance_router, prefix="/acceptance", tags=["acceptance"])
         print("✓ 验收管理模块加载成功")
     except Exception as e:
         print(f"✗ 验收管理模块加载失败: {e}")
@@ -690,9 +690,23 @@ def create_api_router() -> APIRouter:
 
         from app.api.v1.endpoints.cost_collection import router as cost_collection_router
         api_router.include_router(cost_collection_router, prefix="/cost-collection", tags=["cost-collection"])
+
+        from app.api.v1.endpoints.quote_actual_compare import router as quote_compare_router
+        api_router.include_router(quote_compare_router, prefix="/quote-compare", tags=["quote-compare"])
+
+        from app.api.v1.endpoints.cost_variance_analysis import router as cost_variance_router
+        api_router.include_router(cost_variance_router, prefix="/cost-variance", tags=["cost-variance"])
         print("✓ 资源调度模块加载成功")
     except Exception as e:
         print(f"✗ 资源调度模块加载失败：{e}")
+
+    # ==================== 经验教训库 ====================
+    try:
+        from app.api.v1.endpoints.lessons_learned import router as lessons_router
+        api_router.include_router(lessons_router, prefix="/lessons", tags=["lessons-learned"])
+        print("✓ 经验教训库模块加载成功")
+    except Exception as e:
+        print(f"✗ 经验教训库模块加载失败：{e}")
 
     # ==================== 销售区域 ====================
     try:
