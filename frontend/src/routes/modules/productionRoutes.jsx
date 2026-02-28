@@ -5,6 +5,7 @@ import WorkOrderDetail from "../../pages/WorkOrderDetail";
 import DispatchManagement from "../../pages/DispatchManagement";
 import InstallationDispatchManagement from "../../pages/InstallationDispatchManagement";
 import ProductionPlanList from "../../pages/ProductionPlanList";
+import ProductionBoard from "../../pages/ProductionBoard";
 import WorkReportList from "../../pages/WorkReportList";
 import MaterialRequisitionList from "../../pages/MaterialRequisitionList";
 import MaterialRequisitionDetail from "../../pages/MaterialRequisitionDetail";
@@ -70,7 +71,7 @@ export function ProductionRoutes() {
       <Route path="/arrival-tracking" element={<ArrivalTrackingList />} />
       <Route path="/workload-board" element={<WorkloadBoard />} />
       <Route path="/workshops/:id/task-board" element={<WorkshopTaskBoard />} />
-      <Route path="/production-board" element={<Navigate to="/workstation/production" replace />} />
+      <Route path="/production-board" element={<ProductionBoard />} />
     </>
   );
 }
