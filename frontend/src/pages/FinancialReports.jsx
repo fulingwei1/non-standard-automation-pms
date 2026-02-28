@@ -98,7 +98,8 @@ export default function FinancialReports() {
           setMonthlyFinancials(Array.isArray(data) ? data : []);
         }
         if (costRes.status === "fulfilled" && costRes.value.data) {
-          setCostBreakdown(costRes.value.data || {});
+          const cbd = costRes.value.data?.items || costRes.value.data;
+          setCostBreakdown(Array.isArray(cbd) ? cbd : []);
         }
         if (projectRes.status === "fulfilled" && projectRes.value.data) {
           const data = projectRes.value.data;
