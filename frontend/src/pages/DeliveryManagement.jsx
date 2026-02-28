@@ -66,7 +66,7 @@ import {
 '@/lib/constants/service';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// TabPane removed - using items prop instead
 const { RangePicker } = DatePicker;
 
 const normalizeEnumValue = (value, fallbackMap = {}) => {
@@ -522,14 +522,13 @@ const DeliveryManagement = () => {
           activeKey={activeTab}
           onChange={setActiveTab}
           type="card"
-          size="large">
-
-          {tabItems.map((item) =>
-          <TabPane key={item.key} tab={item.tab}>
-              {item.content}
-          </TabPane>
-          )}
-        </Tabs>
+          size="large"
+          items={tabItems.map((item) => ({
+            key: item.key,
+            label: item.tab,
+            children: item.content,
+          }))}
+        />
       </Card>
     </motion.div>);
 
