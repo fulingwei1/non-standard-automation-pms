@@ -24,10 +24,14 @@ import {
 import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { resourceOverviewApi } from "../services/api/resourceOverview";
-
 // ============================================================================
 // Color palette for projects
+
 // ============================================================================
+// Module-level constant for today marker
+const TODAYMS = Date.now();
+
+
 const PROJECT_COLORS = [
   { bg: "bg-blue-500/30", border: "border-blue-500", text: "text-blue-400", hex: "#3b82f6" },
   { bg: "bg-emerald-500/30", border: "border-emerald-500", text: "text-emerald-400", hex: "#10b981" },
@@ -42,9 +46,9 @@ const PROJECT_COLORS = [
 function getProjectColor(index) {
   return PROJECT_COLORS[index % PROJECT_COLORS.length];
 }
-
 // ============================================================================
 // Stats Card
+
 // ============================================================================
 function StatCard({ icon: Icon, label, value, sub, color = "text-white" }) {
   return (
@@ -58,9 +62,9 @@ function StatCard({ icon: Icon, label, value, sub, color = "text-white" }) {
     </div>
   );
 }
-
 // ============================================================================
 // Timeline Bar (single project allocation for one person)
+
 // ============================================================================
 function TimelineBar({ allocation, timeRange, color, onClick }) {
   const { start_date, end_date, project_name, allocation_pct } = allocation;
@@ -94,9 +98,9 @@ function TimelineBar({ allocation, timeRange, color, onClick }) {
     </div>
   );
 }
-
 // ============================================================================
 // Conflict Marker
+
 // ============================================================================
 function ConflictMarker({ conflict, timeRange }) {
   const startMs = new Date(conflict.start_date).getTime();
@@ -121,9 +125,9 @@ function ConflictMarker({ conflict, timeRange }) {
     </div>
   );
 }
-
 // ============================================================================
 // Employee Row
+
 // ============================================================================
 function EmployeeRow({ employee, timeRange, projectColorMap, onSelect, isExpanded, onToggle }) {
   const isOverloaded = employee.current_allocation > 100;
@@ -242,9 +246,9 @@ function EmployeeRow({ employee, timeRange, projectColorMap, onSelect, isExpande
     </div>
   );
 }
-
 // ============================================================================
 // Month markers for timeline header
+
 // ============================================================================
 function TimelineHeader({ timeRange }) {
   const months = [];
@@ -263,8 +267,7 @@ function TimelineHeader({ timeRange }) {
   }
 
   // Today marker
-  const todayMs = Date.now();
-  const todayPct = ((todayMs - timeRange.startMs) / (timeRange.endMs - timeRange.startMs)) * 100;
+  const todayPct = ((TODAYMS - timeRange.startMs) / (timeRange.endMs - timeRange.startMs)) * 100;
 
   return (
     <div className="flex items-center border-b border-white/10">
@@ -294,9 +297,9 @@ function TimelineHeader({ timeRange }) {
     </div>
   );
 }
-
 // ============================================================================
 // Main Page
+
 // ============================================================================
 export default function ResourceOverview() {
   const [data, setData] = useState(null);

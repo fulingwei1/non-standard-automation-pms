@@ -95,10 +95,6 @@ import {
   EXPORT_FORMATS,
   DEFAULT_FILTERS,
   TABLE_CONFIG,
-  satisfactionScoreConfig,
-  getSatisfactionScoreConfig,
-  feedbackStatusConfig,
-  priorityConfig,
 } from "@/lib/constants/customer";
 
 import { serviceApi } from "@/services/api/service";

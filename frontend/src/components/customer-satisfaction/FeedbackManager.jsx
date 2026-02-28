@@ -3,7 +3,6 @@
  * 反馈管理组件
  */
 
-import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Star, RefreshCw } from "lucide-react";
 import {
@@ -29,29 +28,6 @@ const FeedbackManager = ({
   loading = false,
   onRefresh,
 }) => {
-  const getLevelConfig = (level) => {
-    const config = SATISFACTION_LEVELS[level];
-    if (!config)
-      return {
-        icon: "😐",
-        label: "未知",
-        color: "text-slate-400",
-      };
-
-    const colorMap = {
-      "#52c41a": "text-emerald-400",
-      "#1890ff": "text-blue-400",
-      "#faad14": "text-amber-400",
-      "#ff7a45": "text-orange-400",
-      "#ff4d4f": "text-red-400",
-    };
-
-    return {
-      icon: config.icon,
-      label: config.label,
-      color: colorMap[config.color] || "text-slate-400",
-    };
-  };
 
   const getCategoryLabel = (category) => {
     const config = FEEDBACK_CATEGORIES[category?.toUpperCase()];
@@ -135,10 +111,8 @@ const FeedbackManager = ({
                 </thead>
                 <tbody>
                   {responses.map((response) => {
-                    const levelConfig = getLevelConfig(response.satisfactionLevel);
 
-                    return (
-                      <tr
+                      return (<tr
                         key={response.id}
                         className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
                       >

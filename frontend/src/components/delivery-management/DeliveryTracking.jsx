@@ -6,7 +6,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Badge, EmptyState } from "../ui";
 import { MapPin, Truck, PackageSearch } from "lucide-react";
-import { cn } from "../../lib/utils";
 
 import { DELIVERY_STATUS, SHIPPING_METHODS } from "@/lib/constants/service";
 

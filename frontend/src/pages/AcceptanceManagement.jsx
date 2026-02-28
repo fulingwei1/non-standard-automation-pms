@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { motion } from "framer-motion";
 import {
   ClipboardCheck,
@@ -54,7 +54,6 @@ import {
   toast
 } from "../components/ui";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
 import { PageHeader } from "../components/layout";
 
 import { acceptanceApi } from "../services/api/acceptance";
@@ -83,7 +82,6 @@ const RESULT_CONFIG = {
 };
 
 const AcceptanceManagement = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [records, setRecords] = useState([]);
@@ -547,7 +545,7 @@ const AcceptanceManagement = () => {
       />
 
       {/* 统计卡片 */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-4 gap-4 mb-6">
+      <motion.div  initial="hidden" animate="visible" className="grid grid-cols-4 gap-4 mb-6">
         <Card className="bg-surface-100/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">

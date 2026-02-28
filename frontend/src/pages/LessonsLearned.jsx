@@ -114,7 +114,7 @@ export default function LessonsLearned() {
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState([]);
   const [stats, setStats] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [_total, setTotal] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [category, setCategory] = useState("");
   const [lessonType, setLessonType] = useState("");

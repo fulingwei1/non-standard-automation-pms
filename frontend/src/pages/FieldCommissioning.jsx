@@ -51,13 +51,6 @@ const statusConfig = {
   cancelled: { label: "已取消", color: "bg-red-500/20 text-red-400 border-red-500/30" },
 };
 
-// 严重程度配置
-const severityConfig = {
-  low: { label: "低", color: "bg-green-500" },
-  medium: { label: "中", color: "bg-amber-500" },
-  high: { label: "高", color: "bg-orange-500" },
-  critical: { label: "严重", color: "bg-red-500" },
-};
 
 export default function FieldCommissioning() {
   const [loading, setLoading] = useState(true);

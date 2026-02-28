@@ -14,7 +14,6 @@ import {
   Button,
   Badge,
 } from "../ui";
-import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { SURVEY_TYPES } from "@/lib/constants/customer";
 

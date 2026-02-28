@@ -33,10 +33,9 @@ import {
   SATISFACTION_LEVELS,
   SURVEY_STATUS,
   CHART_COLORS,
-  satisfactionScoreConfig,
 } from "@/lib/constants/customer";
 
-const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) => {
+const CustomerSatisfactionOverview = ({ data, loading: _loading, onRefresh: _onRefresh }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState("month");
 
   const overviewStats = useMemo(() => {

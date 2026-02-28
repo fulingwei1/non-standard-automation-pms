@@ -61,8 +61,7 @@ import {
   Progress,
   toast
 } from "../components/ui";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+// import { fadeIn, staggerContainer } from "../lib/animations";
 
 import { businessSupportApi } from "../services/api";
 import { getItemsCompat } from "../utils/apiResponse";
@@ -579,38 +578,6 @@ const DeliveryManagement = () => {
     });
   }, [deliveries, searchText]);
 
-  const tabItems = [
-    {
-      key: 'overview',
-      label: (
-        <span className="flex items-center gap-2">
-          <PackageCheck size={16} />
-          交付概览
-        </span>
-      ),
-      content: <DeliveryOverview data={deliveries} loading={loading} />
-    },
-    {
-      key: 'plan',
-      label: (
-        <span className="flex items-center gap-2">
-          <Calendar size={16} />
-          交付计划 ({(filteredDeliveries || []).filter((d) => d.status === 'pending' || d.status === 'preparing').length})
-        </span>
-      ),
-      content: <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
-    },
-    {
-      key: 'tracking',
-      label: (
-        <span className="flex items-center gap-2">
-          <Truck size={16} />
-          物流跟踪 ({(filteredDeliveries || []).filter((d) => d.status === 'shipped' || d.status === 'in_transit').length})
-        </span>
-      ),
-      content: <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
-    }
-  ];
 
 
   // 子视图渲染

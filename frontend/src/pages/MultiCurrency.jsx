@@ -105,12 +105,12 @@ function CurrencyCard({ currency, rate, change, onEdit }) {
   );
 }
 
-function ConverterCard({ rates }) {
+function ConverterCard({ rates: _rates }) {
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("CNY");
   const [amount, setAmount] = useState(1000);
   const [result, setResult] = useState(null);
-  const [converting, setConverting] = useState(false);
+  const [_converting, setConverting] = useState(false);
 
   const handleConvert = useCallback(async () => {
     try {

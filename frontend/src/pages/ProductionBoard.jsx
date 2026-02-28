@@ -15,7 +15,7 @@ import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 
 const STATUS_CONFIG = {
-  pending: { label: "待开始", color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: Clock },
+  _pending: { label: "待开始", color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: Clock },
   in_progress: { label: "进行中", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Play },
   completed: { label: "已完成", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle2 },
   paused: { label: "已暂停", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: AlertTriangle },
@@ -78,7 +78,7 @@ export default function ProductionBoard() {
   // Stats
   const stats = useMemo(() => {
     const total = workOrders.length;
-    const pending = workOrders.filter(w => w.status === "pending").length;
+    const _pending = workOrders.filter(w => w.status === "_pending").length;
     const inProgress = workOrders.filter(w => w.status === "in_progress").length;
     const completed = workOrders.filter(w => w.status === "completed").length;
     const delayed = workOrders.filter(w => {
@@ -96,14 +96,14 @@ export default function ProductionBoard() {
   // Group work orders by status for kanban
   const kanbanColumns = useMemo(() => {
     const cols = {
-      pending: { label: "待开始", items: [], color: "border-slate-500/30" },
+      _pending: { label: "待开始", items: [], color: "border-slate-500/30" },
       in_progress: { label: "进行中", items: [], color: "border-blue-500/30" },
       completed: { label: "已完成", items: [], color: "border-emerald-500/30" },
     };
     (workOrders || []).forEach(wo => {
-      const status = wo.status || "pending";
+      const status = wo.status || "_pending";
       if (cols[status]) cols[status].items.push(wo);
-      else if (status === "paused") cols.pending.items.push(wo);
+      else if (status === "paused") cols._pending.items.push(wo);
     });
     return cols;
   }, [workOrders]);

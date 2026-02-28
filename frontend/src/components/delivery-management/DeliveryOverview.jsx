@@ -18,7 +18,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
 
 const countBy = (items, predicate) => (items || []).reduce((acc, item) => acc + (predicate(item) ? 1 : 0), 0);
 
-const DeliveryOverview = ({ data, loading }) => {
+const DeliveryOverview = ({ data, _loading }) => {
   const deliveries = Array.isArray(data) ? data : data?.deliveries || [];
 
   const total = deliveries?.length;
@@ -37,7 +37,7 @@ const DeliveryOverview = ({ data, loading }) => {
 
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
 
-  const StatCard = ({ icon: Icon, title, value, iconBgClass, textClass }) => (
+  const StatCard = ({ icon: Icon, title, value, iconBgClass, _textClass }) => (
     <Card className="bg-surface-100/50">
       <CardContent className="p-4 flex items-center gap-4">
         <div className={cn("p-2 rounded-lg", iconBgClass)}>
@@ -60,28 +60,28 @@ const DeliveryOverview = ({ data, loading }) => {
           title="总发货单"
           value={total || 0}
           iconBgClass="bg-blue-500/20"
-          textClass="text-blue-400"
+          _textClass="text-blue-400"
         />
         <StatCard
           icon={Clock}
           title="待处理（待发货/准备中）"
           value={pendingCount + preparingCount}
           iconBgClass="bg-amber-500/20"
-          textClass="text-amber-400"
+          _textClass="text-amber-400"
         />
         <StatCard
           icon={Truck}
           title="在途/已发货"
           value={shippedOrInTransit.length}
           iconBgClass="bg-emerald-500/20"
-          textClass="text-emerald-400"
+          _textClass="text-emerald-400"
         />
         <StatCard
           icon={PackageCheck}
           title="已送达"
           value={deliveredCount}
           iconBgClass="bg-slate-500/20"
-          textClass="text-slate-400"
+          _textClass="text-slate-400"
         />
       </div>
 

@@ -3,7 +3,6 @@
  * 调查管理组件
  */
 
-import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { MoreHorizontal, Eye, FileText, XCircle, Edit } from "lucide-react";
 import {
@@ -26,7 +25,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "../ui";
-import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { SURVEY_STATUS, SURVEY_TYPES } from "@/lib/constants/customer";
 
