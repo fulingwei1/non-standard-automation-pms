@@ -105,7 +105,7 @@ export default function ServiceTicketManagement() {
 
   const loadStatistics = useCallback(async () => {
     try {
-      const response = await serviceApi.tickets.statistics();
+      const response = await serviceApi.tickets.getStatistics();
       setStatistics(response.data || {
         total: 0,
         pending: 0,

@@ -539,11 +539,11 @@ export const problemTypeConfigs = {
 
 // 排序选项配置
 export const sortOptions = [
-  { value: "reported_time", label: "报告时间", icon: "Clock" },
-  { value: "status", label: "状态", icon: "CheckCircle2" },
-  { value: "urgency", label: "紧急程度", icon: "AlertTriangle" },
-  { value: "assigned_time", label: "分配时间", icon: "Calendar" },
-  { value: "closed_time", label: "关闭时间", icon: "CheckCircle2" },
+  { value: "reported_time", label: "报告时间" },
+  { value: "status", label: "状态" },
+  { value: "urgency", label: "紧急程度" },
+  { value: "assigned_time", label: "分配时间" },
+  { value: "closed_time", label: "关闭时间" },
 ];
 
 // 筛选选项配置
