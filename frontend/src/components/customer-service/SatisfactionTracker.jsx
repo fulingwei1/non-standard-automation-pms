@@ -51,7 +51,7 @@ const SatisfactionTracker = ({ tickets = [], loading = false }) => {
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <Card loading={loading}>
-            <Statistic title="平均满意度" value={stats.avg} precision={2} valueStyle={{ color: CHART_COLORS.POSITIVE }} />
+            <Statistic title="平均满意度" value={stats.avg} precision={2} styles={{ content: { color: CHART_COLORS.POSITIVE } }} />
           </Card>
         </Col>
       </Row>

@@ -27,7 +27,7 @@ const AlertPerformance = ({ data, loading = false }) => {
               title={STATISTICS_METRICS.AVG_RESOLUTION_TIME.label}
               value={metrics.avgResolutionTime}
               suffix={STATISTICS_METRICS.AVG_RESOLUTION_TIME.unit}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }}
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }}
             />
           </Card>
         </Col>
@@ -38,7 +38,7 @@ const AlertPerformance = ({ data, loading = false }) => {
               value={metrics.escalationRate}
               suffix={STATISTICS_METRICS.ESCALATION_RATE.unit}
               precision={1}
-              valueStyle={{ color: CHART_COLORS.WARNING }}
+              styles={{ content: { color: CHART_COLORS.WARNING } }}
             />
           </Card>
         </Col>
@@ -49,7 +49,7 @@ const AlertPerformance = ({ data, loading = false }) => {
               value={metrics.falsePositiveRate}
               suffix={STATISTICS_METRICS.FALSE_POSITIVE_RATE.unit}
               precision={1}
-              valueStyle={{ color: CHART_COLORS.ERROR }}
+              styles={{ content: { color: CHART_COLORS.ERROR } }}
             />
           </Card>
         </Col>

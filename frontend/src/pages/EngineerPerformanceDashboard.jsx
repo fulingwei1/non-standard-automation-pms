@@ -163,7 +163,7 @@ const EngineerPerformanceDashboard = () => {
                 title="工程师总数"
                 value={companySummary.total_engineers}
                 prefix={<TeamOutlined />}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content: { color: '#1890ff' } }}
               />
             </Card>
           </Col>
@@ -174,7 +174,7 @@ const EngineerPerformanceDashboard = () => {
                 value={companySummary.avg_score}
                 precision={2}
                 prefix={<RiseOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Card>
           </Col>
@@ -185,7 +185,7 @@ const EngineerPerformanceDashboard = () => {
                 value={companySummary.max_score}
                 precision={2}
                 prefix={<FireOutlined />}
-                valueStyle={{ color: '#faad14' }}
+                styles={{ content: { color: '#faad14' } }}
               />
             </Card>
           </Col>
@@ -197,7 +197,7 @@ const EngineerPerformanceDashboard = () => {
                   (companySummary.level_distribution.S / companySummary.total_engineers * 100).toFixed(1) : 0}
                 suffix="%"
                 prefix={<BulbOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Card>
           </Col>
@@ -244,10 +244,10 @@ const EngineerPerformanceDashboard = () => {
                   title={getLevelName(level)}
                   value={count}
                   suffix={`人 (${(count / companySummary.total_engineers * 100).toFixed(1)}%)`}
-                  valueStyle={{ color: getLevelColor(level) === 'green' ? '#52c41a' :
+                  styles={{ content: { color: getLevelColor(level) === 'green' ? '#52c41a' :
                                getLevelColor(level) === 'blue' ? '#1890ff' :
                                getLevelColor(level) === 'orange' ? '#faad14' :
-                               getLevelColor(level) === 'volcano' ? '#fa8c16' : '#f5222d' }}
+                               getLevelColor(level) === 'volcano' ? '#fa8c16' : '#f5222d' } }}
                 />
               </Col>
             ))}

@@ -45,7 +45,7 @@ const SatisfactionAnalytics = ({ surveys = [], responses = [], loading = false }
               value={stats.avgScore}
               precision={2}
               suffix="/5.0"
-              valueStyle={{ color: CHART_COLORS.PRIMARY }}
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }}
             />
           </Card>
         </Col>

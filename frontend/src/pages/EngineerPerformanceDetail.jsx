@@ -214,7 +214,7 @@ const EngineerPerformanceDetail = () => {
               title="部门排名"
               value={performance.dept_rank || '--'}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -224,7 +224,7 @@ const EngineerPerformanceDetail = () => {
               title="公司排名"
               value={performance.company_rank || '--'}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -235,9 +235,9 @@ const EngineerPerformanceDetail = () => {
               value={comparison ? (performance.total_score - comparison.job_type_avg).toFixed(2) : '--'}
               prefix={comparison && performance.total_score > comparison.job_type_avg ?
                 <RiseOutlined /> : <FallOutlined />}
-              valueStyle={{
+              styles={{ content: {
                 color: comparison && performance.total_score > comparison.job_type_avg ? '#52c41a' : '#f5222d'
-              }}
+              } }}
             />
           </Card>
         </Col>

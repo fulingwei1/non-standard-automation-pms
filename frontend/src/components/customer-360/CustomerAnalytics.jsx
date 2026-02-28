@@ -33,7 +33,7 @@ const CustomerAnalytics = ({ customer, loading = false }) => {
             <Statistic
               title="客户终身价值"
               value={stats?.lifetimeValue}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }}
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }}
               prefix="¥"
             />
           </Card>
@@ -48,7 +48,7 @@ const CustomerAnalytics = ({ customer, loading = false }) => {
             <Statistic
               title="平均订单金额"
               value={stats?.avgOrderValue}
-              valueStyle={{ color: CHART_COLORS.PURPLE }}
+              styles={{ content: { color: CHART_COLORS.PURPLE } }}
               prefix="¥"
             />
           </Card>

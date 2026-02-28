@@ -178,7 +178,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.totalLeads}
               prefix={<Target />}
               suffix={`(${overviewStats.qualifiedLeads} 合格)`}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
               trend={overviewStats.monthlyGrowth} />
 
           </Card>
@@ -191,7 +191,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.conversionRate}
               suffix="%"
               prefix={<TrendingUp />}
-              valueStyle={{ color: '#52c41a' }} />
+              styles={{ content: { color: '#52c41a' } }} />
 
           </Card>
         </Col>
@@ -203,7 +203,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.qualificationRate}
               suffix="%"
               prefix={<Star />}
-              valueStyle={{ color: '#722ed1' }} />
+              styles={{ content: { color: '#722ed1' } }} />
 
           </Card>
         </Col>
@@ -215,7 +215,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.avgScore}
               suffix="/ 100"
               prefix={<Trophy />}
-              valueStyle={{ color: getScoreColor(parseFloat(overviewStats.avgScore)) }} />
+              styles={{ content: { color: getScoreColor(parseFloat(overviewStats.avgScore)) } }} />
 
           </Card>
         </Col>

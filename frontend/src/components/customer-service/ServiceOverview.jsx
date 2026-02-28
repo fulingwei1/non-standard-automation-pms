@@ -225,7 +225,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.totalTickets}
               prefix={<MessageSquare />}
               suffix={`(${overviewStats.openTickets} 待处理)`}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }} />
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }} />
 
           </Card>
         </Col>
@@ -236,7 +236,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
               title="今日解决"
               value={overviewStats.resolvedToday}
               prefix={<CheckCircle2 />}
-              valueStyle={{ color: CHART_COLORS.POSITIVE }} />
+              styles={{ content: { color: CHART_COLORS.POSITIVE } }} />
 
           </Card>
         </Col>
@@ -248,7 +248,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.avgResponseTime}
               suffix="小时"
               prefix={<Clock />}
-              valueStyle={{ color: getMetricColor(overviewStats.avgResponseTime, PERFORMANCE_METRICS.RESPONSE_TIME.target) }} />
+              styles={{ content: { color: getMetricColor(overviewStats.avgResponseTime, PERFORMANCE_METRICS.RESPONSE_TIME.target) } }} />
 
           </Card>
         </Col>
@@ -260,7 +260,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.avgSatisfaction}
               suffix="/ 5.0"
               prefix={<Star />}
-              valueStyle={{ color: getMetricColor(overviewStats.avgSatisfaction, PERFORMANCE_METRICS.CUSTOMER_SATISFACTION.target) }} />
+              styles={{ content: { color: getMetricColor(overviewStats.avgSatisfaction, PERFORMANCE_METRICS.CUSTOMER_SATISFACTION.target) } }} />
 
           </Card>
         </Col>

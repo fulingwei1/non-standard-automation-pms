@@ -354,7 +354,7 @@ const EngineerKnowledge = () => {
                 title="我的贡献数"
                 value={myStats.contribution_count}
                 prefix={<FileTextOutlined />}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content: { color: '#1890ff' } }}
               />
             </Card>
           </Col>
@@ -364,7 +364,7 @@ const EngineerKnowledge = () => {
                 title="总复用次数"
                 value={myStats.total_reuse}
                 prefix={<CodeOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Card>
           </Col>
@@ -374,7 +374,7 @@ const EngineerKnowledge = () => {
                 title="平均评分"
                 value={myStats.avg_rating?.toFixed(2) || '--'}
                 prefix={<StarOutlined />}
-                valueStyle={{ color: '#faad14' }}
+                styles={{ content: { color: '#faad14' } }}
               />
             </Card>
           </Col>
@@ -384,7 +384,7 @@ const EngineerKnowledge = () => {
                 title="我的排名"
                 value={myStats.rank || '--'}
                 prefix={<BulbOutlined />}
-                valueStyle={{ color: '#722ed1' }}
+                styles={{ content: { color: '#722ed1' } }}
               />
             </Card>
           </Col>

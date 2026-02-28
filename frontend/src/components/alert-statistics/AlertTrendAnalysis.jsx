@@ -53,22 +53,22 @@ const AlertTrendAnalysis = ({ alerts = [], loading = false }) => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card loading={loading}>
-            <Statistic title="告警总数" value={stats.total} valueStyle={{ color: CHART_COLORS.PRIMARY }} />
+            <Statistic title="告警总数" value={stats.total} styles={{ content: { color: CHART_COLORS.PRIMARY } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card loading={loading}>
-            <Statistic title="活跃告警" value={stats.active} valueStyle={{ color: CHART_COLORS.ERROR }} />
+            <Statistic title="活跃告警" value={stats.active} styles={{ content: { color: CHART_COLORS.ERROR } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card loading={loading}>
-            <Statistic title="紧急告警" value={stats.critical} valueStyle={{ color: CHART_COLORS.CRITICAL }} />
+            <Statistic title="紧急告警" value={stats.critical} styles={{ content: { color: CHART_COLORS.CRITICAL } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card loading={loading}>
-            <Statistic title="解决率" value={stats.resolvedRate} precision={1} suffix="%" valueStyle={{ color: CHART_COLORS.SUCCESS }} />
+            <Statistic title="解决率" value={stats.resolvedRate} precision={1} suffix="%" styles={{ content: { color: CHART_COLORS.SUCCESS } }} />
           </Card>
         </Col>
       </Row>

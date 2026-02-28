@@ -54,7 +54,7 @@ const PaymentTracker = ({ contracts = [], loading = false }) => {
               title="合同总金额"
               value={stats.total}
               prefix={<DollarSign size={16} />}
-              valueStyle={{ color: CHART_COLORS.POSITIVE }}
+              styles={{ content: { color: CHART_COLORS.POSITIVE } }}
             />
           </Card>
         </Col>

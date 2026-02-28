@@ -106,7 +106,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
           value={value}
           prefix={icon}
           suffix={unit}
-          valueStyle={{ color }}
+          styles={{ content: { color } }}
           trend={trend} />
 
       </Card>);
