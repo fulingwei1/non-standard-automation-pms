@@ -18,7 +18,12 @@ const _fadeIn = {
 /**
  * 绩效概览Tab组件
  */
-export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
+export const OverviewTab = ({ currentPeriod: _cp, latestScore, quarterlyTrend }) => {
+  const currentPeriod = {
+    deptEvaluation: {}, selfEvaluation: {}, peerEvaluation: {},
+    year: '', quarter: '', status: '', submitDate: '',
+    ..._cp,
+  };
   const quarterComparison = React.useMemo(
     () => calculateQuarterComparison(quarterlyTrend),
     [quarterlyTrend]
