@@ -154,7 +154,7 @@ const TimelineStage = ({ stage, idx, total }) => {
           )}>
 
           {config.icon ?
-          (() => { const DynIcon = config.icon; return <DynIcon className="w-5 h-5"  />; })() :
+          <config.icon className="w-5 h-5"  /> :
 
           <CheckCircle2 className="w-5 h-5" />
           }

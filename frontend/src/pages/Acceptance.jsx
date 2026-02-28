@@ -777,7 +777,7 @@ export default function Acceptance() {
                       {stat.value}
                     </p>
                   </div>
-                  {(() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-8 h-8", stat.color)}  />; })()}
+                  <stat.icon className={cn("w-8 h-8", stat.color)}  />
                 </div>
               </CardContent>
             </Card>

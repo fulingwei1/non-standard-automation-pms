@@ -362,7 +362,7 @@ export default function StageTemplateManagement() {
                       </p>
                     </div>
                     <div className={cn("p-3 rounded-xl bg-white/5", stat.color)}>
-                      {(() => { const DynIcon = stat.icon; return <DynIcon className="h-5 w-5"  />; })()}
+                      <stat.icon className="h-5 w-5"  />
                     </div>
                   </div>
                 </CardContent>

@@ -259,7 +259,7 @@ export const QuoteStatsOverview = ({
             onClick={() => onViewModeChange(mode.value)}
             className="text-xs">
 
-                {(() => { const DynIcon = mode.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+                <mode.icon className="w-3 h-3 mr-1"  />
                 {mode.label}
           </Button>
           )}

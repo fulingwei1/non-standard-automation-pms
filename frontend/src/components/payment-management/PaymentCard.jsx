@@ -67,7 +67,7 @@ export default function PaymentCard({ payment, onInvoice, onViewDetail }) {
                   statusInfo.textColor
                 )}
               >
-                {(() => { const DynIcon = statusInfo.icon; return <DynIcon className="w-3 h-3 mr-1"  />; })()}
+                <statusInfo.icon className="w-3 h-3 mr-1"  />
                 {statusInfo.label}
               </Badge>
               {isOverdue && (

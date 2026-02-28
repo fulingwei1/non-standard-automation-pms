@@ -168,7 +168,7 @@ const MyPerformance = () => {
                 "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
               )}>
 
-                {(() => { const DynIcon = tab.icon; return <DynIcon className="h-4 w-4"  />; })()}
+                <tab.icon className="h-4 w-4"  />
                 {tab.label}
             </button>
             )}

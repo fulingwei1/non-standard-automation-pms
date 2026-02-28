@@ -223,9 +223,9 @@ export default function AlertDetail() {
               <div className="flex items-start justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    (() => { const DynIcon = levelConfig.icon; return <DynIcon
+                    <levelConfig.icon
                       className={cn("w-6 h-6", levelConfig.textColor)}
-                     />; })()
+                     />
                     <Badge
                       variant="outline"
                       className={cn(

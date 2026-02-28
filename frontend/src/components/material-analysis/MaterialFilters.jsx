@@ -58,7 +58,7 @@ export default function MaterialFilters({
             {Object.values(MATERIAL_STATUS).map((status) => (
               <SelectItem key={status.key} value={status.key}>
                 <div className="flex items-center gap-2">
-                  {(() => { const DynIcon = status.icon; return <DynIcon className="w-4 h-4"  />; })()}
+                  <status.icon className="w-4 h-4"  />
                   {status.label}
                 </div>
               </SelectItem>

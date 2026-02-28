@@ -279,7 +279,7 @@ export default function RdProjectDetail() {
                   stat.color === "amber" && "bg-amber-500/20",
                 )}
               >
-                (() => { const DynIcon = stat.icon; return <DynIcon
+                <stat.icon
                   className={cn(
                     "h-4 w-4",
                     stat.color === "primary" && "text-primary",
@@ -287,7 +287,7 @@ export default function RdProjectDetail() {
                     stat.color === "indigo" && "text-indigo-400",
                     stat.color === "amber" && "text-amber-400",
                   )}
-                 />; })()
+                 />
               </div>
             </div>
             <p className="text-xs text-slate-400 mb-1">{stat.label}</p>
@@ -308,7 +308,7 @@ export default function RdProjectDetail() {
               value={tab.id}
               className="flex items-center gap-2"
             >
-              {(() => { const DynIcon = tab.icon; return <DynIcon className="h-4 w-4"  />; })()}
+              <tab.icon className="h-4 w-4"  />
               {tab.name}
             </TabsTrigger>
           ))}

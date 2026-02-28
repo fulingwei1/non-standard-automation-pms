@@ -47,7 +47,7 @@ export function WeekSummaryCards({ weeklyTotal, entries }) {
                                 <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
                                 <p className="text-xs text-slate-500 mt-0.5">{stat.desc}</p>
                             </div>
-                            {(() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-8 h-8", stat.color)}  />; })()}
+                            <stat.icon className={cn("w-8 h-8", stat.color)}  />
                         </div>
                     </CardContent>
                 </Card>
