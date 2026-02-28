@@ -32,7 +32,7 @@ class QueryParams(BaseModel):
 
     page: int = Field(default=1, ge=1, description="Current page number")
     page_size: int = Field(
-        default=20, ge=1, le=200, description="Items per page (max 200)"
+        default=20, ge=1, le=10000, description="Items per page (max 10000)"
     )
     filters: Optional[Dict[str, Any]] = Field(
         default=None, description="Structured filter definition"

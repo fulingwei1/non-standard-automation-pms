@@ -32,7 +32,7 @@ class LocationOut(BaseModel):
     class Config: from_attributes = True
 
 @router.get("/locations")
-def list_locations(warehouse_id:Optional[int]=Query(None),zone:Optional[str]=Query(None),keyword:Optional[str]=Query(None),is_active:Optional[bool]=Query(None),page:int=Query(1,ge=1),page_size:int=Query(50,ge=1,le=200),db:Session=Depends(get_db)):
+def list_locations(warehouse_id:Optional[int]=Query(None),zone:Optional[str]=Query(None),keyword:Optional[str]=Query(None),is_active:Optional[bool]=Query(None),page:int=Query(1,ge=1),page_size:int=Query(50,ge=1,le=10000),db:Session=Depends(get_db)):
     q = db.query(WarehouseLocation)
     if warehouse_id: q = q.filter(WarehouseLocation.warehouse_id==warehouse_id)
     if zone: q = q.filter(WarehouseLocation.zone==zone)
