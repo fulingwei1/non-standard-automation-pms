@@ -118,7 +118,7 @@ export default function FinancialReports() {
     fetchData();
   }, [selectedPeriod, dateRange]);
 
-  const currentData = monthlyFinancials[monthlyFinancials.length - 1];
+  const currentData = monthlyFinancials[monthlyFinancials.length - 1] || { cashFlow: 0, revenue: 0, cost: 0, profit: 0 };
   const totalRevenue = monthlyFinancials.reduce((sum, m) => sum + m.revenue, 0);
   const totalCost = monthlyFinancials.reduce((sum, m) => sum + m.cost, 0);
   const totalProfit = monthlyFinancials.reduce((sum, m) => sum + m.profit, 0);
