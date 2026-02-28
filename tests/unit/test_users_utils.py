@@ -284,9 +284,7 @@ class TestEnsureEmployeeUnbound(unittest.TestCase):
         self.assertEqual(context.exception.detail, "该员工已绑定其他账号")
 
 
-class TestPrepareEmployeeForNewUser(unittest.TestCase,
-        password_hash="test_hash_123"
-    ):
+class TestPrepareEmployeeForNewUser(unittest.TestCase):
     """测试准备员工记录"""
 
     def test_prepare_employee_by_id(self):

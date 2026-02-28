@@ -207,9 +207,7 @@ class TestSubmitSingleEcn(unittest.TestCase):
             self.assertEqual(result["status"], "submitted")
 
 
-class TestGetPendingTasksForUser(unittest.TestCase,
-        password_hash="test_hash_123"
-    ):
+class TestGetPendingTasksForUser(unittest.TestCase):
     """测试获取待审批任务"""
 
     def setUp(self):

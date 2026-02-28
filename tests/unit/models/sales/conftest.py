@@ -76,7 +76,6 @@ def sample_quote(db_session, sample_customer, sample_user):
     from app.models.sales.quotes import Quote
     
     quote = Quote(
-        quote_code="QUOTE001",
         quote_code="测试报价单",
         customer_id=sample_customer.id,
         quote_amount=Decimal("150000.00"),

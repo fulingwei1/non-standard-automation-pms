@@ -466,9 +466,7 @@ class TestInvoiceApprovalAdapter(unittest.TestCase):
         mock_task.instance = mock_instance
         
         # Mock user
-        mock_user = User(,
-        password_hash="test_hash_123"
-    )
+        mock_user = User(password_hash="test_hash_123")
         mock_user.id = 10
         mock_user.real_name = "张三"
         
