@@ -4,6 +4,7 @@ Presale AI Solution Generation Service
 """
 import json
 import time
+import logging
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from decimal import Decimal
@@ -23,6 +24,16 @@ from app.schemas.presale_ai_solution import (
 from app.services.ai_client_service import AIClientService
 from app.utils.db_helpers import save_obj
 
+# 语义搜索相关
+try:
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    SEMANTIC_SEARCH_AVAILABLE = True
+except ImportError:
+    SEMANTIC_SEARCH_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
+
 
 class PresaleAIService:
     """售前AI方案生成服务"""
@@ -30,6 +41,24 @@ class PresaleAIService:
     def __init__(self, db: Session):
         self.db = db
         self.ai_client = AIClientService()
+        
+        # 加载语义搜索模型
+        self.embedding_model = None
+        self.use_semantic_search = False
+        
+        if SEMANTIC_SEARCH_AVAILABLE:
+            try:
+                self.embedding_model = SentenceTransformer(
+                    'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+                )
+                self.use_semantic_search = True
+                logger.info("✅ 语义搜索模型加载成功 (paraphrase-multilingual-MiniLM-L12-v2)")
+            except Exception as e:
+                logger.warning(f"⚠️ 语义模型加载失败，使用基础 Jaccard 算法: {e}")
+                self.embedding_model = None
+                self.use_semantic_search = False
+        else:
+            logger.info("ℹ️ sentence-transformers 未安装，使用基础 Jaccard 算法")
     
     # ==================== 模板匹配 ====================
     
@@ -94,12 +123,35 @@ class PresaleAIService:
         return matched_items, search_time_ms
     
     def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """简单的TF-IDF相似度计算"""
-        # 分词
+        """
+        计算文本相似度
+        - 优先使用语义向量相似度（余弦相似度）
+        - Fallback: Jaccard 相似度
+        """
+        if not text1 or not text2:
+            return 0.0
+        
+        # 优先使用语义向量搜索
+        if self.use_semantic_search and self.embedding_model is not None:
+            try:
+                # 生成语义向量
+                emb1 = self.embedding_model.encode(text1, convert_to_numpy=True)
+                emb2 = self.embedding_model.encode(text2, convert_to_numpy=True)
+                
+                # 计算余弦相似度
+                similarity = np.dot(emb1, emb2) / (
+                    np.linalg.norm(emb1) * np.linalg.norm(emb2)
+                )
+                
+                return float(similarity)
+            except Exception as e:
+                logger.error(f"❌ 向量相似度计算失败，回退到 Jaccard: {e}")
+                # Fall through to Jaccard
+        
+        # Fallback: Jaccard 相似度
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
         
-        # Jaccard相似度
         if not words1 or not words2:
             return 0.0
         
