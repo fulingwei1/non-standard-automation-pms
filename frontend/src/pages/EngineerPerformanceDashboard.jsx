@@ -5,8 +5,6 @@ import axios from 'axios';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
-
 const EngineerPerformanceDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [companySummary, setCompanySummary] = useState(null);

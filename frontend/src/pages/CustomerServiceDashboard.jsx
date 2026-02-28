@@ -99,7 +99,6 @@ import {
 import { serviceApi } from '@/services/api/service';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 const { Step } = Steps;
@@ -511,105 +510,107 @@ const CustomerServiceDashboard = () => {
         activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}>
-
-        <TabPane
-          tab={
-          <span>
-              <BarChart3 size={16} />
-              概览分析
-          </span>
-          }
-          key="overview">
-
-          <ServiceOverview
-            data={overviewData}
-            loading={loading}
-            onNavigate={(type) => {
-              if (type === 'urgent') {
-                setFilters({ ...filters, priority: 'critical' });
-                setActiveTab('tickets');
-              } else if (type === 'field-service') {
-                setActiveTab('field-service');
-              } else if (type === 'warranty') {
-                setActiveTab('warranty');
-              } else if (type === 'satisfaction') {
-                setActiveTab('satisfaction');
-              } else if (type === 'create-ticket') {
-                handleCreateTicket();
-              } else if (type === 'activities') {
-                setActiveTab('tickets');
-              } else if (type === 'performance') {
-                setActiveTab('overview');
-              }
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <FileText size={16} />
-              工单管理 ({filteredTickets.length})
-          </span>
-          }
-          key="tickets">
-
-          <TicketManager
-            tickets={filteredTickets}
-            loading={loading}
-            onEdit={handleEditTicket}
-            onResolve={handleResolveTicket}
-            onEscalate={handleEscalateTicket} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Car size={16} />
-              现场服务 ({fieldServices.length})
-          </span>
-          }
-          key="field-service">
-
-          <FieldServiceManager
-            services={fieldServices}
-            loading={loading}
-            onRefresh={loadData} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Shield size={16} />
-              质保管理 ({warrantyProjects.length})
-          </span>
-          }
-          key="warranty">
-
-          <WarrantyManager
-            projects={warrantyProjects}
-            loading={loading} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Star size={16} />
-              满意度跟踪
-          </span>
-          }
-          key="satisfaction">
-
-          <SatisfactionTracker
-            tickets={tickets}
-            loading={loading} />
-
-        </TabPane>
-      </Tabs>
+        style={{ marginBottom: '24px' }}
+        items={[
+          {
+            key: 'overview',
+            label: (
+              <span>
+                <BarChart3 size={16} />
+                概览分析
+              </span>
+            ),
+            children: (
+              <ServiceOverview
+                data={overviewData}
+                loading={loading}
+                onNavigate={(type) => {
+                  if (type === 'urgent') {
+                    setFilters({ ...filters, priority: 'critical' });
+                    setActiveTab('tickets');
+                  } else if (type === 'field-service') {
+                    setActiveTab('field-service');
+                  } else if (type === 'warranty') {
+                    setActiveTab('warranty');
+                  } else if (type === 'satisfaction') {
+                    setActiveTab('satisfaction');
+                  } else if (type === 'create-ticket') {
+                    handleCreateTicket();
+                  } else if (type === 'activities') {
+                    setActiveTab('tickets');
+                  } else if (type === 'performance') {
+                    setActiveTab('overview');
+                  }
+                }}
+              />
+            ),
+          },
+          {
+            key: 'tickets',
+            label: (
+              <span>
+                <FileText size={16} />
+                工单管理 ({filteredTickets.length})
+              </span>
+            ),
+            children: (
+              <TicketManager
+                tickets={filteredTickets}
+                loading={loading}
+                onEdit={handleEditTicket}
+                onResolve={handleResolveTicket}
+                onEscalate={handleEscalateTicket}
+              />
+            ),
+          },
+          {
+            key: 'field-service',
+            label: (
+              <span>
+                <Car size={16} />
+                现场服务 ({fieldServices.length})
+              </span>
+            ),
+            children: (
+              <FieldServiceManager
+                services={fieldServices}
+                loading={loading}
+                onRefresh={loadData}
+              />
+            ),
+          },
+          {
+            key: 'warranty',
+            label: (
+              <span>
+                <Shield size={16} />
+                质保管理 ({warrantyProjects.length})
+              </span>
+            ),
+            children: (
+              <WarrantyManager
+                projects={warrantyProjects}
+                loading={loading}
+              />
+            ),
+          },
+          {
+            key: 'satisfaction',
+            label: (
+              <span>
+                <Star size={16} />
+                满意度跟踪
+              </span>
+            ),
+            children: (
+              <SatisfactionTracker
+                tickets={tickets}
+                loading={loading}
+              />
+            ),
+          },
+        ]}
+      />
 
       {/* 工单创建/编辑模态框 */}
       <Modal

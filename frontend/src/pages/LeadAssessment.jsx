@@ -104,7 +104,6 @@ import {
 '@/lib/constants/leadAssessment';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 const { Step } = Steps;
@@ -586,118 +585,120 @@ const LeadAssessment = () => {
         activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}>
-
-        <TabPane
-          tab={
-          <span>
-              <BarChart3 size={16} />
-              概览分析
-          </span>
-          }
-          key="overview">
-
-          <LeadOverview
-            data={{ leads, followUps, overdueFollowUps, monthlyStats }}
-            loading={loading}
-            onNavigate={(type, _value) => {
-              if (type === 'hot-leads') {
-                setFilters({ ...filters, qualification: 'hot' });
-                setActiveTab('leads');
-              } else if (type === 'follow-ups') {
-                setActiveTab('followups');
-              } else if (type === 'overdue') {
-                setFilters({ ...filters, status: 'overdue' });
-                setActiveTab('leads');
-              }
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Users size={16} />
-              线索列表 ({filteredLeads.length})
-          </span>
-          }
-          key="leads">
-
-          <LeadList
-            leads={filteredLeads}
-            loading={loading}
-            onEdit={handleEditLead}
-            onDelete={handleDeleteLead}
-            onAssess={handleAssessLead}
-            onConvert={handleConvertLead} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Award size={16} />
-              评估表单
-          </span>
-          }
-          key="assessment">
-
-          <AssessmentForm
-            lead={editingLead}
-            onSave={(lead) => {
-              if (lead.id) {
-                setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
-              } else {
-                const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
-                setLeads([...leads, newLead]);
-              }
-              setShowAssessmentModal(false);
-              setEditingLead(null);
-              loadData();
-            }}
-            onCancel={() => {
-              setShowAssessmentModal(false);
-              setEditingLead(null);
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Target size={16} />
-              评分引擎
-          </span>
-          }
-          key="scoring">
-
-          <ScoringEngine
-            leads={leads}
-            criteria={ASSESSMENT_CRITERIA}
-            onReScore={(updatedLeads) => {
-              setLeads(updatedLeads);
-              message.success('重新评分完成');
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <MessageSquare size={16} />
-              跟进管理
-          </span>
-          }
-          key="followups">
-
-          <FollowUpManager
-            followUps={[...followUps, ...overdueFollowUps]}
-            leads={leads}
-            loading={loading}
-            onRefresh={loadData} />
-
-        </TabPane>
-      </Tabs>
+        style={{ marginBottom: '24px' }}
+        items={[
+          {
+            key: 'overview',
+            label: (
+              <span>
+                <BarChart3 size={16} />
+                概览分析
+              </span>
+            ),
+            children: (
+              <LeadOverview
+                data={{ leads, followUps, overdueFollowUps, monthlyStats }}
+                loading={loading}
+                onNavigate={(type, _value) => {
+                  if (type === 'hot-leads') {
+                    setFilters({ ...filters, qualification: 'hot' });
+                    setActiveTab('leads');
+                  } else if (type === 'follow-ups') {
+                    setActiveTab('followups');
+                  } else if (type === 'overdue') {
+                    setFilters({ ...filters, status: 'overdue' });
+                    setActiveTab('leads');
+                  }
+                }}
+              />
+            ),
+          },
+          {
+            key: 'leads',
+            label: (
+              <span>
+                <Users size={16} />
+                线索列表 ({filteredLeads.length})
+              </span>
+            ),
+            children: (
+              <LeadList
+                leads={filteredLeads}
+                loading={loading}
+                onEdit={handleEditLead}
+                onDelete={handleDeleteLead}
+                onAssess={handleAssessLead}
+                onConvert={handleConvertLead}
+              />
+            ),
+          },
+          {
+            key: 'assessment',
+            label: (
+              <span>
+                <Award size={16} />
+                评估表单
+              </span>
+            ),
+            children: (
+              <AssessmentForm
+                lead={editingLead}
+                onSave={(lead) => {
+                  if (lead.id) {
+                    setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
+                  } else {
+                    const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
+                    setLeads([...leads, newLead]);
+                  }
+                  setShowAssessmentModal(false);
+                  setEditingLead(null);
+                  loadData();
+                }}
+                onCancel={() => {
+                  setShowAssessmentModal(false);
+                  setEditingLead(null);
+                }}
+              />
+            ),
+          },
+          {
+            key: 'scoring',
+            label: (
+              <span>
+                <Target size={16} />
+                评分引擎
+              </span>
+            ),
+            children: (
+              <ScoringEngine
+                leads={leads}
+                criteria={ASSESSMENT_CRITERIA}
+                onReScore={(updatedLeads) => {
+                  setLeads(updatedLeads);
+                  message.success('重新评分完成');
+                }}
+              />
+            ),
+          },
+          {
+            key: 'followups',
+            label: (
+              <span>
+                <MessageSquare size={16} />
+                跟进管理
+              </span>
+            ),
+            children: (
+              <FollowUpManager
+                followUps={[...followUps, ...overdueFollowUps]}
+                leads={leads}
+                loading={loading}
+                onRefresh={loadData}
+              />
+            ),
+          },
+        ]}
+      />
 
       {/* 线索评估模态框 */}
       <Modal

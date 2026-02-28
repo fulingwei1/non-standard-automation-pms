@@ -5,8 +5,6 @@ import axios from 'axios';
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
-
 const EngineerCollaboration = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -330,26 +328,37 @@ const EngineerCollaboration = () => {
 
       {/* 评价记录 */}
       <Card>
-        <Tabs defaultActiveKey="received">
-          <TabPane tab={`收到的评价 (${receivedRatings.length})`} key="received">
-            <Table
-              columns={receivedColumns}
-              dataSource={receivedRatings}
-              rowKey="id"
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-            />
-          </TabPane>
-          <TabPane tab={`给出的评价 (${givenRatings.length})`} key="given">
-            <Table
-              columns={givenColumns}
-              dataSource={givenRatings}
-              rowKey="id"
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-            />
-          </TabPane>
-        </Tabs>
+        <Tabs
+          defaultActiveKey="received"
+          items={[
+            {
+              key: 'received',
+              label: `收到的评价 (${receivedRatings.length})`,
+              children: (
+                <Table
+                  columns={receivedColumns}
+                  dataSource={receivedRatings}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={{ pageSize: 10 }}
+                />
+              ),
+            },
+            {
+              key: 'given',
+              label: `给出的评价 (${givenRatings.length})`,
+              children: (
+                <Table
+                  columns={givenColumns}
+                  dataSource={givenRatings}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={{ pageSize: 10 }}
+                />
+              ),
+            },
+          ]}
+        />
       </Card>
 
       {/* 评价弹窗 */}

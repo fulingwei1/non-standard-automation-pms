@@ -5,8 +5,6 @@ import { Radar, Line } from '@ant-design/plots';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 
-const { TabPane } = Tabs;
-
 const EngineerPerformanceDetail = () => {
   const { userId } = useParams();
   const [loading, setLoading] = useState(false);
@@ -283,67 +281,74 @@ const EngineerPerformanceDetail = () => {
 
       {/* 标签页：趋势、对比 */}
       <Card>
-        <Tabs defaultActiveKey="trend">
-          <TabPane tab="历史趋势" key="trend">
-            {trend.length > 0 ? (
-              <Line {...trendConfig} height={300} />
-            ) : (
-              <Empty description="暂无历史数据" />
-            )}
-          </TabPane>
-          <TabPane tab="同岗位对比" key="comparison">
-            {comparison ? (
-              <div className="space-y-4">
-                <Card title="与同岗位平均对比" bordered={false}>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <div className="text-center">
-                        <div className="text-gray-600 mb-2">我的得分</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.total_score?.toFixed(2)}
+        <Tabs
+          defaultActiveKey="trend"
+          items={[
+            {
+              key: 'trend',
+              label: '历史趋势',
+              children: trend.length > 0 ? (
+                <Line {...trendConfig} height={300} />
+              ) : (
+                <Empty description="暂无历史数据" />
+              ),
+            },
+            {
+              key: 'comparison',
+              label: '同岗位对比',
+              children: comparison ? (
+                <div className="space-y-4">
+                  <Card title="与同岗位平均对比" bordered={false}>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <div className="text-center">
+                          <div className="text-gray-600 mb-2">我的得分</div>
+                          <div className="text-3xl font-bold text-blue-600">
+                            {performance.total_score?.toFixed(2)}
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                    <Col span={12}>
-                      <div className="text-center">
-                        <div className="text-gray-600 mb-2">
-                          同岗位平均 ({comparison.job_type_count}人)
+                      </Col>
+                      <Col span={12}>
+                        <div className="text-center">
+                          <div className="text-gray-600 mb-2">
+                            同岗位平均 ({comparison.job_type_count}人)
+                          </div>
+                          <div className="text-3xl font-bold text-gray-600">
+                            {comparison.job_type_avg?.toFixed(2)}
+                          </div>
                         </div>
-                        <div className="text-3xl font-bold text-gray-600">
-                          {comparison.job_type_avg?.toFixed(2)}
+                      </Col>
+                    </Row>
+                  </Card>
+                  <Card title="与同级别平均对比" bordered={false}>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <div className="text-center">
+                          <div className="text-gray-600 mb-2">我的得分</div>
+                          <div className="text-3xl font-bold text-blue-600">
+                            {performance.total_score?.toFixed(2)}
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-                <Card title="与同级别平均对比" bordered={false}>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <div className="text-center">
-                        <div className="text-gray-600 mb-2">我的得分</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.total_score?.toFixed(2)}
+                      </Col>
+                      <Col span={12}>
+                        <div className="text-center">
+                          <div className="text-gray-600 mb-2">
+                            同级别平均 ({comparison.level_count}人)
+                          </div>
+                          <div className="text-3xl font-bold text-gray-600">
+                            {comparison.level_avg?.toFixed(2)}
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                    <Col span={12}>
-                      <div className="text-center">
-                        <div className="text-gray-600 mb-2">
-                          同级别平均 ({comparison.level_count}人)
-                        </div>
-                        <div className="text-3xl font-bold text-gray-600">
-                          {comparison.level_avg?.toFixed(2)}
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-              </div>
-            ) : (
-              <Empty description="暂无对比数据" />
-            )}
-          </TabPane>
-        </Tabs>
+                      </Col>
+                    </Row>
+                  </Card>
+                </div>
+              ) : (
+                <Empty description="暂无对比数据" />
+              ),
+            },
+          ]}
+        />
       </Card>
     </div>
   );

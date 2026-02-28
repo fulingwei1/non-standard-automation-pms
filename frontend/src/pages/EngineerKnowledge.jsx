@@ -5,8 +5,6 @@ import axios from 'axios';
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
-
 const EngineerKnowledge = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);

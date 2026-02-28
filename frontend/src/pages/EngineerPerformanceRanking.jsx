@@ -5,8 +5,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
-const { TabPane } = Tabs;
-
 const EngineerPerformanceRanking = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -248,12 +246,16 @@ const EngineerPerformanceRanking = () => {
         </div>
 
         {/* 标签页 */}
-        <Tabs activeKey={currentTab} onChange={setCurrentTab}>
-          <TabPane tab="全部" key="all" />
-          <TabPane tab="机械工程师" key="mechanical" />
-          <TabPane tab="测试工程师" key="test" />
-          <TabPane tab="电气工程师" key="electrical" />
-        </Tabs>
+        <Tabs
+          activeKey={currentTab}
+          onChange={setCurrentTab}
+          items={[
+            { key: 'all', label: '全部' },
+            { key: 'mechanical', label: '机械工程师' },
+            { key: 'test', label: '测试工程师' },
+            { key: 'electrical', label: '电气工程师' },
+          ]}
+        />
 
         {/* 排名表格 */}
         <Table

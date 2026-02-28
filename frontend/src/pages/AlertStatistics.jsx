@@ -74,7 +74,6 @@ import {
 import { alertApi } from '@/services/api/alerts';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
 const AlertStatistics = () => {
@@ -463,14 +462,13 @@ const AlertStatistics = () => {
           activeKey={activeTab}
           onChange={setActiveTab}
           type="card"
-          size="large">
-
-          {tabItems.map((item) =>
-          <TabPane key={item.key} tab={item.tab}>
-              {item.content}
-          </TabPane>
-          )}
-        </Tabs>
+          size="large"
+          items={tabItems.map((item) => ({
+            key: item.key,
+            label: item.tab,
+            children: item.content,
+          }))}
+        />
       </Card>
 
       {/* 编辑告警规则弹窗 */}

@@ -80,7 +80,6 @@ import {
 '@/lib/constants/customer360';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
 const Customer360 = () => {
@@ -306,14 +305,13 @@ const Customer360 = () => {
           activeKey={activeTab}
           onChange={setActiveTab}
           type="card"
-          size="large">
-
-          {tabItems.map((item) =>
-          <TabPane key={item.key} tab={item.tab}>
-              {item.content}
-          </TabPane>
-          )}
-        </Tabs>
+          size="large"
+          items={tabItems.map((item) => ({
+            key: item.key,
+            label: item.tab,
+            children: item.content,
+          }))}
+        />
       </Card>
     </motion.div>);
 

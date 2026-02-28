@@ -35,7 +35,6 @@ import {
 import { pmoApi } from "../services/api";
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 const { TextArea } = Input;
 
 const MeetingManagement = () => {
