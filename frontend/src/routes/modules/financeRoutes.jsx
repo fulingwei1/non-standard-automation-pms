@@ -8,6 +8,8 @@ import FinancialReports from "../../pages/FinancialReports";
 import ExecutiveDashboard from "../../pages/executive-dashboard";
 import MarginPrediction from "../../pages/MarginPrediction";
 import CostCollection from "../../pages/CostCollection";
+import QuoteActualCompare from "../../pages/QuoteActualCompare";
+import CostVarianceAnalysis from "../../pages/CostVarianceAnalysis";
 
 export function FinanceRoutes() {
   return (
@@ -18,6 +20,8 @@ export function FinanceRoutes() {
       <Route path="/financial-reports" element={<FinancialReports />} />
       <Route path="/margin-prediction" element={<MarginPrediction />} />
       <Route path="/cost-collection" element={<CostCollection />} />
+      <Route path="/quote-compare" element={<QuoteActualCompare />} />
+      <Route path="/cost-variance" element={<CostVarianceAnalysis />} />
       <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
     </>
   );
