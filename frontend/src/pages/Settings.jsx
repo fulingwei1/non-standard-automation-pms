@@ -241,7 +241,7 @@ function NotificationsSection() {
                     className="text-center p-3 text-sm font-medium text-slate-400"
                   >
                     <div className="flex items-center justify-center gap-1">
-                      <channel.icon className="w-4 h-4" />
+                      {(() => { const DynIcon = channel.icon; return <DynIcon className="w-4 h-4"  />; })()}
                       {channel.label}
                     </div>
                   </th>
@@ -549,12 +549,12 @@ function AppearanceSection() {
                     : "border-border bg-surface-2/50 hover:border-border/80",
                 )}
               >
-                <t.icon
+                {(() => { const DynIcon = t.icon; return <DynIcon
                   className={cn(
                     "w-8 h-8 mx-auto mb-2",
                     theme === t.id ? "text-accent" : "text-slate-400",
                   )}
-                />
+                 />; })()}
                 <div
                   className={cn(
                     "text-sm font-medium",
@@ -776,7 +776,7 @@ export default function Settings() {
                           : "text-slate-400 hover:text-white hover:bg-surface-2",
                       )}
                     >
-                      <section.icon className="w-5 h-5" />
+                      {(() => { const DynIcon = section.icon; return <DynIcon className="w-5 h-5"  />; })()}
                       <span className="font-medium">{section.label}</span>
                     </button>
                   ))}

@@ -344,7 +344,7 @@ export default function WorkCenter() {
                       action.color
                     )}>
 
-                      <action.icon className="w-6 h-6 text-white" />
+                      {(() => { const DynIcon = action.icon; return <DynIcon className="w-6 h-6 text-white"  />; })()}
                     </div>
                     <div>
                       <h3 className="font-medium">{action.title}</h3>

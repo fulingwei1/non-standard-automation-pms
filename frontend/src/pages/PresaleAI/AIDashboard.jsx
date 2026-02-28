@@ -123,7 +123,7 @@ const AIDashboard = () => {
                   <p className="text-2xl font-bold">{stat.value}</p>
                 </div>
                 <div className={`${stat.bgColor} p-3 rounded-full`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  {(() => { const DynIcon = stat.icon; return <DynIcon className={`h-6 w-6 ${stat.color}`}  />; })()}
                 </div>
               </div>
             </CardContent>

@@ -154,7 +154,7 @@ export function ReadinessCard({
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <typeConfig.icon className="h-4 w-4" />
+              {(() => { const DynIcon = typeConfig.icon; return <DynIcon className="h-4 w-4"  />; })()}
               <span className="font-medium text-sm">{material.code}</span>
             </div>
             {getUrgencyIcon()}

@@ -437,7 +437,7 @@ export default function AdministrativeExpenses() {
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <item.icon className={cn("h-4 w-4", item.color)} />
+                          {(() => { const DynIcon = item.icon; return <DynIcon className={cn("h-4 w-4", item.color)}  />; })()}
                           <span className="text-sm font-medium text-white">
                             {item.category}
                           </span>

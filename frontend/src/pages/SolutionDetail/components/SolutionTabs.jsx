@@ -16,7 +16,7 @@ export function SolutionTabs({ activeTab, setActiveTab }) {
                         onClick={() => setActiveTab(tab.id)}
                         className="flex items-center gap-2 whitespace-nowrap"
                     >
-                        <tab.icon className="w-4 h-4" />
+                        {(() => { const DynIcon = tab.icon; return <DynIcon className="w-4 h-4"  />; })()}
                         {tab.name}
                     </Button>
                 ))}

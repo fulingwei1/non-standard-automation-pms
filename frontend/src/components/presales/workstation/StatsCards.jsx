@@ -41,7 +41,7 @@ export default function StatsCards({ stats }) {
                   stat.bgColor
                 )}
               >
-                <stat.icon className={cn("w-5 h-5", stat.color)} />
+                {(() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-5 h-5", stat.color)}  />; })()}
               </div>
             </div>
           </CardContent>

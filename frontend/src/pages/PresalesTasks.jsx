@@ -749,11 +749,11 @@ export default function PresalesTasks({ embedded = false } = {}) {
               onClick={() => setSelectedType(type.id)}
               className="flex items-center gap-1.5">
 
-                <type.icon
+                {(() => { const DynIcon = type.icon; return <DynIcon
                 className={cn(
                   "w-3.5 h-3.5",
                   selectedType === type.id ? "" : type.color
-                )} />
+                )}  />; })()}
 
                 {type.name}
             </Button>

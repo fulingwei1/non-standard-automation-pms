@@ -23,7 +23,7 @@ export default function QuickActionsCard({ actions }) {
                 action.color
               )}
             >
-              <action.icon className="w-5 h-5 text-white mb-2" />
+              {(() => { const DynIcon = action.icon; return <DynIcon className="w-5 h-5 text-white mb-2"  />; })()}
               <p className="text-sm font-medium text-white">{action.name}</p>
             </div>
           </Link>

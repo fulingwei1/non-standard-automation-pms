@@ -111,7 +111,7 @@ export default function WorkOrderCard({ order, onAction }) {
             onClick={() => onAction && onAction({ type: action.key, orderId: order.id })}
             className="flex-1">
 
-              <action.icon className="w-4 h-4 mr-1" />
+              {(() => { const DynIcon = action.icon; return <DynIcon className="w-4 h-4 mr-1"  />; })()}
               {action.label}
           </Button>
           )}

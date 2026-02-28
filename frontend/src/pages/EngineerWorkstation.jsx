@@ -766,7 +766,7 @@ export default function EngineerWorkstation() {
                   onClick={() => setViewMode(mode.id)}
                   className="gap-2">
 
-                    <mode.icon className="w-4 h-4" />
+                    {(() => { const DynIcon = mode.icon; return <DynIcon className="w-4 h-4"  />; })()}
                     {mode.label}
                 </Button>
                 )}

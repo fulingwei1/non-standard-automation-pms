@@ -385,7 +385,7 @@ export default function NotificationCenter() {
                         {stat.value}
                       </p>
                     </div>
-                    <stat.icon className={cn("w-8 h-8", stat.color)} />
+                    {(() => { const DynIcon = stat.icon; return <DynIcon className={cn("w-8 h-8", stat.color)}  />; })()}
                   </div>
                 </CardContent>
             </Card>
@@ -411,7 +411,7 @@ export default function NotificationCenter() {
                         "bg-accent text-white hover:bg-accent/90"
                       )}>
 
-                        <type.icon className="w-4 h-4" />
+                        {(() => { const DynIcon = type.icon; return <DynIcon className="w-4 h-4"  />; })()}
                         {type.label}
                     </Button>
                     )}

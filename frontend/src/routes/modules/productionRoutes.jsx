@@ -70,7 +70,7 @@ export function ProductionRoutes() {
       <Route path="/arrival-tracking" element={<ArrivalTrackingList />} />
       <Route path="/workload-board" element={<WorkloadBoard />} />
       <Route path="/workshops/:id/task-board" element={<WorkshopTaskBoard />} />
-      <Route path="/production-board" element={<ProductionPlanList />} />
+      <Route path="/production-board" element={<Navigate to="/workstation/production" replace />} />
     </>
   );
 }

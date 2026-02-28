@@ -109,7 +109,7 @@ function KpiCard({ kpi }) {
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className={cn("p-3 rounded-xl", kpi.bgColor)}>
-            <kpi.icon className={cn("w-6 h-6", kpi.color)} />
+            {(() => { const DynIcon = kpi.icon; return <DynIcon className={cn("w-6 h-6", kpi.color)}  />; })()}
           </div>
           <div
             className={cn(
