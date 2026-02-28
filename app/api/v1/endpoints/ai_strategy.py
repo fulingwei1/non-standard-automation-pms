@@ -521,7 +521,6 @@ async def ai_apply(
     - 写入结果统计
     """
     import sqlite3
-    from datetime import datetime
     
     if type not in ["csf", "kpi", "annual_work", "dept_objective"]:
         raise HTTPException(

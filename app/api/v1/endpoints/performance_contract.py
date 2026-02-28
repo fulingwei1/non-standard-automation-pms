@@ -12,11 +12,11 @@ import sqlite3
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.schemas.common import ResponseModel, PageResponse
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
