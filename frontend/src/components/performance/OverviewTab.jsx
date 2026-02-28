@@ -21,6 +21,7 @@ const _fadeIn = {
 export const OverviewTab = ({ currentPeriod: _cp, latestScore, quarterlyTrend }) => {
   const currentPeriod = {
     deptEvaluation: {}, selfEvaluation: {}, peerEvaluation: {},
+    projectEvaluations: [], dimensions: [], improvementPlan: [],
     year: '', quarter: '', status: '', submitDate: '',
     ..._cp,
   };
