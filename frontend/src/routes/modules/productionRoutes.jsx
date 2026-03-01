@@ -22,6 +22,8 @@ import ShortageReportList from "../../pages/ShortageReportList";
 import ArrivalTrackingList from "../../pages/ArrivalTrackingList";
 import WorkloadBoard from "../../pages/WorkloadBoard";
 import WorkshopTaskBoard from "../../pages/WorkshopTaskBoard";
+import AssemblyTemplateManagement from "../../pages/AssemblyTemplateManagement";
+import ScheduleOptimization from "../../pages/ScheduleOptimization";
 
 export function ProductionRoutes() {
   return (
@@ -72,6 +74,14 @@ export function ProductionRoutes() {
       <Route path="/workload-board" element={<WorkloadBoard />} />
       <Route path="/workshops/:id/task-board" element={<WorkshopTaskBoard />} />
       <Route path="/production-board" element={<ProductionBoard />} />
+      <Route
+        path="/assembly-template-management"
+        element={<AssemblyTemplateManagement />}
+      />
+      <Route
+        path="/projects/:projectId/schedule-optimization"
+        element={<ScheduleOptimization />}
+      />
     </>
   );
 }

@@ -38,6 +38,7 @@ import SubstitutionNew from "../../pages/SubstitutionNew";
 import TransferNew from "../../pages/TransferNew";
 import ArrivalNew from "../../pages/ArrivalNew";
 import SupplierPriceTrend from "../../pages/SupplierPriceTrend";
+import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
 
 export function ProcurementRoutes() {
   return (
@@ -199,6 +200,14 @@ export function ProcurementRoutes() {
         element={
           <ProcurementProtectedRoute>
             <KitRateBoard />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectId/time-based-kit-rate"
+        element={
+          <ProcurementProtectedRoute>
+            <TimeBasedKitRateBoard />
           </ProcurementProtectedRoute>
         }
       />

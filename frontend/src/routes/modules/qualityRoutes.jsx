@@ -11,6 +11,9 @@ import AcceptanceList from "../../pages/quality/AcceptanceList";
 import AcceptanceDetail from "../../pages/quality/AcceptanceDetail";
 import QualityReports from "../../pages/quality/QualityReports";
 import NCManagement from "../../pages/quality/NCManagement";
+import ReportTemplates from "../../pages/ReportTemplates";
+import ReportGeneration from "../../pages/ReportGeneration";
+import ReportArchives from "../../pages/ReportArchives";
 
 export function QualityRoutes() {
   return (
@@ -93,6 +96,30 @@ export function QualityRoutes() {
         element={
           <QualityProtectedRoute>
             <QualityReports />
+          </QualityProtectedRoute>
+        }
+      />
+      <Route
+        path="/quality/reports/templates"
+        element={
+          <QualityProtectedRoute>
+            <ReportTemplates />
+          </QualityProtectedRoute>
+        }
+      />
+      <Route
+        path="/quality/reports/generate"
+        element={
+          <QualityProtectedRoute>
+            <ReportGeneration />
+          </QualityProtectedRoute>
+        }
+      />
+      <Route
+        path="/quality/reports/archives"
+        element={
+          <QualityProtectedRoute>
+            <ReportArchives />
           </QualityProtectedRoute>
         }
       />
