@@ -4,9 +4,11 @@
  * Refactored to shadcn/Tailwind Dark Theme
  */
 
+import { useMemo } from "react";
 import { Card, CardContent, Badge, Progress, EmptyState } from "../ui";
-import { PackageCheck, Truck, Clock, AlertCircle } from "lucide-react";
+import { PackageCheck, Truck, Clock, AlertCircle, BarChart3 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { MonthlyTrendChart } from "../administrative/StatisticsCharts";
 
 import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS } from "@/lib/constants/service";
 
@@ -36,6 +38,25 @@ const DeliveryOverview = ({ data, _loading }) => {
   );
 
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
+
+  // 每月累计发货金额：按 deliveryDate 的 YYYY-MM 聚合
+  const monthlyAmountData = useMemo(() => {
+    const map = new Map();
+    (deliveries || []).forEach((d) => {
+      const amount = d.deliveryAmount != null ? Number(d.deliveryAmount) : 0;
+      if (amount <= 0) return;
+      const raw = d.deliveryDate || d.scheduledDate || d.actualDate;
+      if (!raw) return;
+      const str = typeof raw === "string" ? raw : (raw.toISOString ? raw.toISOString().slice(0, 7) : "");
+      const month = str.slice(0, 7);
+      if (!month || month.length < 7) return;
+      map.set(month, (map.get(month) || 0) + amount);
+    });
+    const list = Array.from(map.entries())
+      .map(([month, value]) => ({ month, value }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+    return list;
+  }, [deliveries]);
 
   const StatCard = ({ icon: Icon, title, value, iconBgClass, _textClass }) => (
     <Card className="bg-surface-100/50">
@@ -129,6 +150,30 @@ const DeliveryOverview = ({ data, _loading }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* 每月累计发货金额 - 柱状图 */}
+      <Card className="bg-surface-100/50">
+        <CardContent className="p-4">
+          <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            每月累计发货金额
+          </h3>
+          {monthlyAmountData.length === 0 ? (
+            <EmptyState
+              icon={BarChart3}
+              title="暂无发货金额数据"
+              message="有发货日期与金额的发货单将在此按月份汇总展示"
+            />
+          ) : (
+            <MonthlyTrendChart
+              data={monthlyAmountData}
+              valueKey="value"
+              labelKey="month"
+              height={220}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Recent Shipments List */}
       <Card className="bg-surface-100/50">

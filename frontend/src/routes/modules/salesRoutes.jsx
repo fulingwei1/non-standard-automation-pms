@@ -48,7 +48,6 @@ import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
 import QuoteManagement from "../../pages/QuoteManagement";
 import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
 import PresalesTasks from "../../pages/PresalesTasks";
-import PresaleAnalytics from "../../pages/PresaleAnalytics";
 
 // AI 销售助手相关组件
 import { default as SalesAIAssistant } from "../../pages/SalesAI";
@@ -70,10 +69,10 @@ import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
 export function SalesRoutes() {
   return (
     <>
-      {/* 销售漏斗与销售分析（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
+      {/* 销售漏斗（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
       <Route path="/sales-funnel" element={<Navigate to="/sales/funnel" replace />} />
       <Route path="/sales/funnel" element={<SalesFunnel />} />
-      <Route path="/sales/sales-analysis" element={<PresaleAnalytics />} />
+      <Route path="/sales/sales-analysis" element={<Navigate to="/presales/presale-analytics" replace />} />
 
       <Route path="/sales-reports" element={<SalesReports />} />
       <Route path="/sales-team" element={<SalesTeam />} />

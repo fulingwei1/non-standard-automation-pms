@@ -171,7 +171,20 @@ const normalizeDelivery = (item = {}) => {
       item.deliveryAddress || item.delivery_address || item.recipient_address,
     itemCount: item.itemCount ?? item.item_count ?? item.total_items,
     totalWeight: item.totalWeight ?? item.total_weight ?? item.weight,
-    notes: item.notes || item.remark || item.remarks
+    notes: item.notes || item.remark || item.remarks,
+    deliveryAmount:
+      item.delivery_amount != null && item.delivery_amount !== ""
+        ? Number(item.delivery_amount)
+        : item.deliveryAmount != null
+          ? Number(item.deliveryAmount)
+          : 0,
+    deliveryDate:
+      item.delivery_date ||
+      item.deliveryDate ||
+      item.scheduled_date ||
+      item.scheduledDate ||
+      item.actual_date ||
+      item.actualDate,
   };
 };
 
@@ -632,7 +645,7 @@ const DeliveryManagement = () => {
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2 mb-1">
               <Truck className="w-6 h-6" />
-              交付管理
+              发货管理
             </h1>
             <p className="text-slate-400">
               PMC 发货管理 - 发货计划、订单列表、在途跟踪

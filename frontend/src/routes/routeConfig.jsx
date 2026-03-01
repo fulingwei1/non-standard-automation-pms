@@ -15,16 +15,14 @@ import {
   QualityRoutes
 } from "./modules";
 import SalesFunnel from "../pages/SalesFunnel";
-import PresaleAnalytics from "../pages/PresaleAnalytics";
 
 export function AppRoutes() {
   return (
     <Routes>
       {/* 根路径重定向到工作台 */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      {/* 销售漏斗与销售分析：显式声明确保优先匹配，避免被 * 或其它路由抢占 */}
+      {/* 销售漏斗：显式声明确保优先匹配 */}
       <Route path="/sales/funnel" element={<SalesFunnel />} />
-      <Route path="/sales/sales-analysis" element={<PresaleAnalytics />} />
       {DashboardRoutes()}
       {ProjectRoutes()}
       {SalesRoutes()}

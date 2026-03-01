@@ -83,8 +83,7 @@ export function ProductionRoutes() {
         path="/projects/:projectId/schedule-optimization"
         element={<ScheduleOptimization />}
       />
+      <Route path="/production/capacity-analysis" element={<CapacityAnalysis />} />
     </>
   );
 }
-
-      <Route path="/production/capacity-analysis" element={<CapacityAnalysis />} />

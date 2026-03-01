@@ -223,8 +223,8 @@ export default function PresaleAnalytics() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="销售漏斗分析"
-        description="围绕转化率、赢单率、资源配置和销售人效，定位售前支持提效机会。"
+        title="售前数据分析"
+        description="围绕售前支持转化率、赢单率、资源配置和售前技术人效，定位售前支持提效机会。"
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

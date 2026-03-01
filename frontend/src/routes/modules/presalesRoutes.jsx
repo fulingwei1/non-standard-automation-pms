@@ -1,6 +1,7 @@
 import { Route, Navigate } from "react-router-dom";
 
 import PresalesWorkstation from "../../pages/PresalesWorkstation";
+import PresaleAnalytics from "../../pages/PresaleAnalytics";
 import PresalesManagerWorkstation from "../../pages/PresalesManagerWorkstation";
 import PresalesReviewCenter from "../../pages/PresalesReviewCenter";
 import PresaleProposals from "../../pages/PresaleProposals";
@@ -20,12 +21,13 @@ export function PresalesRoutes() {
         element={<PresalesManagerWorkstation />}
       />
       <Route path="/presales-tasks" element={<PresalesReviewCenter />} />
-      <Route path="/presale-analytics" element={<Navigate to="/sales/sales-analysis" replace />} />
-      <Route path="/solutions" element={<PresaleProposals />} />
+      <Route path="/presales/presale-analytics" element={<PresaleAnalytics />} />
+      <Route path="/presale-analytics" element={<Navigate to="/presales/presale-analytics" replace />} />
+      <Route path="/presales/solutions" element={<PresaleProposals />} />
       <Route path="/solutions/:id" element={<SolutionDetail />} />
       <Route path="/requirement-survey" element={<RequirementSurvey />} />
       <Route path="/bidding" element={<BiddingCenter />} />
-      <Route path="/presales-bids" element={<PresaleBids />} />
+      <Route path="/presales/bids" element={<PresaleBids />} />
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
       <Route path="/presales/templates" element={<PresaleTemplates />} />
       <Route path="/presale-templates" element={<PresaleTemplates />} />

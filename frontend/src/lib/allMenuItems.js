@@ -212,6 +212,12 @@ export const allMenuGroups = [
         icon: "LayoutDashboard",
       },
       {
+        id: "presales-presale-analytics",
+        name: "售前数据分析",
+        path: "/presales/presale-analytics",
+        icon: "BarChart3",
+      },
+      {
         id: "tech-assessments",
         name: "技术评估",
         path: "/presales/assessments",
@@ -308,6 +314,12 @@ export const allMenuGroups = [
         name: "装配任务",
         path: "/assembly-tasks",
         icon: "Wrench",
+      },
+      {
+        id: "capacity-analysis",
+        name: "产能分析",
+        path: "/production/capacity-analysis",
+        icon: "BarChart3",
       },
     ],
   },

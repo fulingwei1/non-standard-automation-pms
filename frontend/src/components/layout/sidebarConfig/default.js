@@ -45,7 +45,6 @@ export const defaultNavGroups = [
       { name: "销售目标", path: "/sales/targets", icon: "Target", permission: "sales:target:read", permissionLabel: "销售目标" },
       { name: "线索管理", path: "/sales/leads", icon: "Users", permission: "sales:lead:read", permissionLabel: "线索查看" },
       { name: "销售漏斗", path: "/sales/funnel", icon: "TrendingDown", permission: "sales:funnel:read", permissionLabel: "销售漏斗" },
-      { name: "销售漏斗分析", path: "/sales/sales-analysis", icon: "BarChart3", permission: "sales:funnel:read", permissionLabel: "销售漏斗分析" },
       { name: "销售漏斗优化", path: "/sales/funnel-optimization", icon: "TrendingUp", permission: "sales:funnel:read", permissionLabel: "销售漏斗优化" },
       { name: "销售预测仪表盘", path: "/sales/forecast-dashboard", icon: "BarChart3", permission: "sales:funnel:read", permissionLabel: "销售预测仪表盘" },
       { name: "商机管理", path: "/sales/opportunities", icon: "Target", permission: "sales:opportunity:read", permissionLabel: "商机管理" },
@@ -74,6 +73,7 @@ export const defaultNavGroups = [
   {
     label: "售前技术",
     items: [
+      { name: "售前数据分析", path: "/presales/presale-analytics", icon: "BarChart3", permission: "sales:funnel:read", permissionLabel: "售前数据分析" },
       { name: "方案评审", path: "/presales-tasks", icon: "ListTodo", permission: "presales:task:read", permissionLabel: "方案评审" },
       { name: "模板库", path: "/presales/templates", icon: "Layers", permission: "presales:task:read", permissionLabel: "模板库" },
       { name: "项目立项", path: "/pmo/initiations", icon: "FileText", permission: "project:initiation:read", permissionLabel: "立项管理" },
@@ -137,6 +137,7 @@ export const defaultNavGroups = [
     label: "生产管理",
     items: [
       { name: "生产看板", path: "/production-board", icon: "Kanban", permission: "production:board:read", permissionLabel: "生产看板" },
+      { name: "产能分析", path: "/production/capacity-analysis", icon: "BarChart3", permission: "production:board:read", permissionLabel: "产能分析" },
       { name: "工单管理", path: "/work-orders", icon: "ClipboardList", permission: "workorder:read", permissionLabel: "工单管理" },
       { name: "派工管理", path: "/dispatch-management", icon: "Users", permission: "dispatch:read", permissionLabel: "派工管理" },
       { name: "生产计划", path: "/production-plans", icon: "Calendar", permission: "production:plan:read", permissionLabel: "生产计划" },
