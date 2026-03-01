@@ -484,7 +484,6 @@ function KPICard({ kpi, onUpdate, onCollect, color }) {
 export default function KPIList() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [collecting, setCollecting] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState(null);
   const [kpis, setKpis] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -522,7 +521,7 @@ export default function KPIList() {
     setDialogOpen(true);
   };
 
-  const handleEdit = (kpi) => {
+  // const handleEdit = (kpi) => {
     setEditingKpi(kpi);
     setDialogOpen(true);
   };
@@ -548,7 +547,7 @@ export default function KPIList() {
     }
   };
 
-  const handleDelete = async (kpi) => {
+  // const handleDelete = async (kpi) => {
     if (!confirm(`确定要删除 KPI "${kpi.name}" 吗？`)) return;
 
     try {

@@ -329,7 +329,7 @@ export default function PerformanceContract() {
   };
 
   // 渲染统计卡片
-  const renderStatCard = (title, value, icon: Icon, color, subtitle) => (
+  const renderStatCard = (title, value, Icon, color, subtitle) => (
     <motion.div variants={fadeIn} className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 p-6">
       <div className="flex items-center justify-between">
         <div>

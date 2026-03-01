@@ -50,7 +50,7 @@ import {
   DialogFooter,
   Label,
 } from "@/components/ui";
-import { fadeIn, staggerContainer } from "@/lib/animations";
+import { staggerContainer } from "@/lib/animations";
 import { aiStrategyApi, getDimensionLabel, getDimensionColor, getPriorityLabel, getPriorityColor } from "@/services/api/aiStrategy";
 
 // 默认公司信息（金凯博）

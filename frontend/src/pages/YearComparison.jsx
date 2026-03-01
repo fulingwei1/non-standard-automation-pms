@@ -70,7 +70,6 @@ export default function YearComparison() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [previousYear, setPreviousYear] = useState(new Date().getFullYear() - 1);
   const [yoyReport, setYoyReport] = useState(null);
-  const [multiYearTrend, setMultiYearTrend] = useState([]);
   const [kpiAchievement, setKpiAchievement] = useState(null);
 
   // 获取同比报告
