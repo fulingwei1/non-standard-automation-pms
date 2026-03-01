@@ -41,6 +41,13 @@ import PipelineHealthMonitoring from "../../pages/PipelineHealthMonitoring";
 import DelayAnalysis from "../../pages/DelayAnalysis";
 import CostOverrunAnalysis from "../../pages/CostOverrunAnalysis";
 import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
+import LeadDetail from "../../pages/LeadDetail";
+import OpportunityDetail from "../../pages/OpportunityDetail";
+import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
+import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
+import QuoteManagement from "../../pages/QuoteManagement";
+import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
+import PresalesTasks from "../../pages/PresalesTasks";
 
 // AI 销售助手相关组件
 import { default as SalesAIAssistant } from "../../pages/SalesAI";
@@ -56,7 +63,9 @@ export function SalesRoutes() {
       <Route path="/sales/team/ranking" element={<SalesTeam />} />
       <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
+      <Route path="/sales/contracts/approval" element={<ContractApproval />} />
       <Route path="/customers" element={<CustomerList />} />
+      <Route path="/sales/customers" element={<CustomerList />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />
       <Route path="/quotations" element={<QuotationList />} />
@@ -82,7 +91,10 @@ export function SalesRoutes() {
       <Route path="/sales-funnel" element={<SalesFunnel />} />
       <Route path="/bidding/:id" element={<BiddingDetail />} />
       <Route path="/sales/leads" element={<LeadManagement />} />
+      <Route path="/sales/leads/:id" element={<LeadDetail />} />
       <Route path="/sales/opportunities" element={<OpportunityManagement />} />
+      <Route path="/sales/opportunities/:id" element={<OpportunityDetail />} />
+      <Route path="/sales/presales-tasks" element={<PresalesTasks />} />
       <Route
         path="/sales/assessments/:sourceType/:sourceId"
         element={<TechnicalAssessment />}
@@ -109,7 +121,11 @@ export function SalesRoutes() {
       <Route path="/cost-quotes/financial-costs" element={<FinancialCostUpload />} />
       <Route path="/cost-quotes/templates" element={<QuoteManagementCenter />} />
       <Route path="/sales/quotes" element={<QuoteManagementCenter />} />
+      <Route path="/sales/quotes/management" element={<QuoteManagement />} />
+      <Route path="/sales/quotes/create" element={<QuoteCreateEdit />} />
+      <Route path="/sales/quotes/:id/edit" element={<QuoteCreateEdit />} />
       <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
+      <Route path="/sales/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/sales/cost-templates" element={<CostTemplateManagement />} />
       <Route path="/sales/purchase-material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/financial-costs" element={<FinancialCostUpload />} />
@@ -117,6 +133,7 @@ export function SalesRoutes() {
       <Route path="/sales/receivables" element={<ReceivableManagement />} />
       <Route path="/sales/statistics" element={<SalesStatistics />} />
       <Route path="/sales/templates" element={<QuoteManagementCenter />} />
+      <Route path="/sales/templates/center" element={<SalesTemplateCenter />} />
       <Route path="/sales/cpq" element={<CpqConfigurator />} />
       <Route path="/sales/loss-analysis" element={<LossAnalysis />} />
       <Route path="/sales/presale-expenses" element={<PresaleExpenseManagement />} />
