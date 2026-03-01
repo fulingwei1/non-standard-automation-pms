@@ -29,6 +29,7 @@ import AcceptanceManagement from "../../pages/AcceptanceManagement";
 import GanttDependency from "../../pages/GanttDependency";
 import ECNManagement from "../../pages/ECNManagement";
 import FieldCommissioning from "../../pages/FieldCommissioning";
+import ScheduleGeneration from "../../pages/ScheduleGeneration";
 
 export function ProjectRoutes() {
   return (
@@ -101,6 +102,7 @@ export function ProjectRoutes() {
       <Route path="/gantt" element={<GanttDependency />} />
       <Route path="/ecn" element={<ECNManagement />} />
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
+      <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />

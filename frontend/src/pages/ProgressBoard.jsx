@@ -15,7 +15,7 @@ import {
   Activity,
   TrendingUp,
   ShieldAlert,
-  Link2 } from
+  Link2, Zap } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -129,11 +129,32 @@ export default function ProgressBoard() {
             description="多维度进度看板，支持按阶段、状态筛选" />
 
         </div>
-        <Button variant="outline" onClick={fetchDashboardData}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          刷新
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" onClick={() => navigate(`/projects/${id}/schedule-generation`)}>
+            <Zap className="w-4 h-4 mr-2" />
+            AI 智能排计划
+          </Button>
+          <Button variant="outline" onClick={fetchDashboardData}>
+          <Button variant="outline" onClick={fetchDashboardData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            刷新
+          </Button>
+        </div>
+          <Button variant="outline" onClick={fetchDashboardData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            刷新
+          </Button>
+        </div>
+          <Button variant="outline" onClick={fetchDashboardData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            刷新
+          </Button>
+        </div>
+          <Button variant="outline" onClick={fetchDashboardData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            刷新
+          </Button>
+        </div>
       {errorMessage &&
       <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2">
           {errorMessage}
