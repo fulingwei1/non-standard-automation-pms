@@ -95,8 +95,10 @@ def identify_bottlenecks(
             func.sum(WorkOrder.completed_qty).label('total_completed'),
             func.avg(
                 case(
-                    [(WorkOrder.actual_hours > 0, 
-                      WorkOrder.standard_hours * 100.0 / WorkOrder.actual_hours)],
+                    (
+                        WorkOrder.actual_hours > 0,
+                        WorkOrder.standard_hours * 100.0 / WorkOrder.actual_hours,
+                    ),
                     else_=0
                 )
             ).label('avg_efficiency'),

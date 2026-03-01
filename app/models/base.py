@@ -170,6 +170,38 @@ def _ensure_sqlite_schema(engine):
                     text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
                 )
 
+    if "engineer_dimension_config" in tables:
+        columns = {
+            col["name"] for col in inspector.get_columns("engineer_dimension_config")
+        }
+        statements = []
+        if "department_id" not in columns:
+            statements.append(
+                "ALTER TABLE engineer_dimension_config ADD COLUMN department_id INTEGER"
+            )
+        if "is_global" not in columns:
+            statements.append(
+                "ALTER TABLE engineer_dimension_config "
+                "ADD COLUMN is_global BOOLEAN DEFAULT 1"
+            )
+        if "approval_status" not in columns:
+            statements.append(
+                "ALTER TABLE engineer_dimension_config "
+                "ADD COLUMN approval_status VARCHAR(20) DEFAULT 'APPROVED'"
+            )
+        if "approval_reason" not in columns:
+            statements.append(
+                "ALTER TABLE engineer_dimension_config ADD COLUMN approval_reason TEXT"
+            )
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("engineer_dimension_config 列补丁跳过", exc_info=True)
+
 
 class TimestampMixin:
     """时间戳混入类，提供创建时间和更新时间字段"""

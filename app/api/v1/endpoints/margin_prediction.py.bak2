@@ -1,0 +1,422 @@
+# -*- coding: utf-8 -*-
+"""
+毛利率预测 API
+- 基于历史项目数据预测新项目/报价的毛利率
+- 按设备类型、客户行业、合同金额区间分析
+- 成本结构对比和偏差分析
+"""
+
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from app.api import deps
+from app.models.user import User
+
+router = APIRouter()
+
+
+# ============================================================================
+# Schemas
+# ============================================================================
+
+class CostBreakdown(BaseModel):
+    cost_type: str
+    amount: float
+    percentage: float
+
+
+class HistoricalProject(BaseModel):
+    project_id: int
+    project_name: str
+    project_code: str
+    product_category: Optional[str] = None
+    industry: Optional[str] = None
+    contract_amount: float
+    actual_cost: float
+    gross_margin: float  # (contract - cost) / contract * 100
+    cost_breakdown: List[CostBreakdown] = []
+    stage: Optional[str] = None
+
+
+class MarginPrediction(BaseModel):
+    predicted_margin: float  # 预测毛利率 %
+    confidence: float  # 置信度 0-1
+    margin_range: tuple  # (min, max) %
+    similar_projects_count: int
+    avg_margin: float
+    median_margin: float
+    risk_level: str  # low/medium/high
+    cost_structure: List[CostBreakdown]
+    similar_projects: List[HistoricalProject]
+    recommendations: List[str]
+
+
+class MarginAnalysisResponse(BaseModel):
+    historical_summary: dict
+    by_category: List[dict]
+    by_amount_range: List[dict]
+    prediction: Optional[MarginPrediction] = None
+
+
+# ============================================================================
+# API Endpoints
+# ============================================================================
+
+@router.get("/historical", summary="历史毛利率分析")
+def get_historical_margins(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """分析所有已完成/进行中项目的毛利率。"""
+
+    sql = text("""
+        SELECT 
+            p.id, p.project_name, p.project_code,
+            p.product_category, p.industry, p.stage,
+            p.contract_amount, p.actual_cost,
+            CASE WHEN p.contract_amount > 0 
+                THEN ROUND((p.contract_amount - p.actual_cost) * 100.0 / p.contract_amount, 2)
+                ELSE 0 END as gross_margin
+        FROM projects p
+        WHERE p.is_active = 1 AND p.contract_amount > 0
+        ORDER BY p.id
+    """)
+    rows = db.execute(sql).fetchall()
+
+    projects = []
+    total_margin = 0
+    margins = []
+
+    for r in rows:
+        # Get cost breakdown
+        cost_sql = text("""
+            SELECT cost_type, SUM(amount) as total
+            FROM project_costs WHERE project_id = :pid
+            GROUP BY cost_type ORDER BY total DESC
+        """)
+        cost_rows = db.execute(cost_sql, {"pid": r.id}).fetchall()
+        total_cost = sum(c.total for c in cost_rows) if cost_rows else float(r.actual_cost or 0)
+
+        breakdown = []
+        for c in cost_rows:
+            breakdown.append(CostBreakdown(
+                cost_type=c.cost_type,
+                amount=float(c.total),
+                percentage=round(float(c.total) / total_cost * 100, 1) if total_cost > 0 else 0,
+            ))
+
+        margin = float(r.gross_margin)
+        projects.append(HistoricalProject(
+            project_id=r.id,
+            project_name=r.project_name,
+            project_code=r.project_code,
+            product_category=r.product_category,
+            industry=r.industry,
+            contract_amount=float(r.contract_amount),
+            actual_cost=float(r.actual_cost or 0),
+            gross_margin=margin,
+            cost_breakdown=breakdown,
+            stage=r.stage,
+        ))
+        margins.append(margin)
+        total_margin += margin
+
+    # By category
+    cat_map = {}
+    for p in projects:
+        cat = p.product_category or "未分类"
+        if cat not in cat_map:
+            cat_map[cat] = {"margins": [], "count": 0, "total_contract": 0, "total_cost": 0}
+        cat_map[cat]["margins"].append(p.gross_margin)
+        cat_map[cat]["count"] += 1
+        cat_map[cat]["total_contract"] += p.contract_amount
+        cat_map[cat]["total_cost"] += p.actual_cost
+
+    by_category = []
+    for cat, data in cat_map.items():
+        avg_m = sum(data["margins"]) / len(data["margins"]) if data["margins"] else 0
+        by_category.append({
+            "category": cat,
+            "count": data["count"],
+            "avg_margin": round(avg_m, 2),
+            "min_margin": round(min(data["margins"]), 2) if data["margins"] else 0,
+            "max_margin": round(max(data["margins"]), 2) if data["margins"] else 0,
+            "total_contract": data["total_contract"],
+            "total_cost": data["total_cost"],
+        })
+
+    # By amount range
+    ranges = [(0, 2000000, "200万以下"), (2000000, 3500000, "200-350万"), (3500000, 99999999, "350万以上")]
+    by_amount = []
+    for low, high, label in ranges:
+        range_projects = [p for p in projects if low <= p.contract_amount < high]
+        if range_projects:
+            avg_m = sum(p.gross_margin for p in range_projects) / len(range_projects)
+            by_amount.append({
+                "range": label,
+                "count": len(range_projects),
+                "avg_margin": round(avg_m, 2),
+                "min_margin": round(min(p.gross_margin for p in range_projects), 2),
+                "max_margin": round(max(p.gross_margin for p in range_projects), 2),
+            })
+
+    avg_margin = total_margin / len(margins) if margins else 0
+    sorted_margins = sorted(margins)
+    median_margin = sorted_margins[len(sorted_margins) // 2] if sorted_margins else 0
+
+    return {
+        "historical_summary": {
+            "total_projects": len(projects),
+            "avg_margin": round(avg_margin, 2),
+            "median_margin": round(median_margin, 2),
+            "min_margin": round(min(margins), 2) if margins else 0,
+            "max_margin": round(max(margins), 2) if margins else 0,
+            "total_contract_value": sum(p.contract_amount for p in projects),
+            "total_actual_cost": sum(p.actual_cost for p in projects),
+        },
+        "projects": [p.model_dump() for p in projects],
+        "by_category": by_category,
+        "by_amount_range": by_amount,
+    }
+
+
+@router.get("/predict", summary="预测新项目毛利率")
+def predict_margin(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+    product_category: Optional[str] = Query(None, description="产品类型 (ICT/FCT/EOL 等)"),
+    industry: Optional[str] = Query(None, description="客户行业"),
+    contract_amount: float = Query(..., description="预估合同金额"),
+    estimated_material_cost: Optional[float] = Query(None, description="预计物料成本（BOM 成本）"),
+    project_complexity: Optional[str] = Query("MEDIUM", description="项目复杂度 (LOW/MEDIUM/HIGH)"),
+) -> Any:
+    """
+    根据历史数据 + 实际成本构成预测新项目毛利率。
+    
+    算法（结合行业特点）：
+    1. 物料成本：使用用户输入的预计 BOM 成本
+    2. 人工成本：根据项目类型/复杂度，参考历史项目的人工成本占比
+    3. 制造费用：按历史数据分摊
+    4. 行业系数：不同行业有不同的成本结构系数
+    
+    毛利率 = (合同金额 - 总成本) / 合同金额 × 100%
+    总成本 = 物料成本 + 人工成本 + 制造费用
+    """
+    
+    # ========== 行业成本结构系数 ==========
+    INDUSTRY_COEFFICIENTS = {
+        "锂电": {"labor_ratio": 0.25, "overhead_ratio": 0.15, "risk_factor": 1.1},
+        "光伏": {"labor_ratio": 0.22, "overhead_ratio": 0.13, "risk_factor": 1.05},
+        "3C 电子": {"labor_ratio": 0.30, "overhead_ratio": 0.18, "risk_factor": 1.15},
+        "汽车": {"labor_ratio": 0.28, "overhead_ratio": 0.16, "risk_factor": 1.2},
+        "医疗": {"labor_ratio": 0.35, "overhead_ratio": 0.20, "risk_factor": 1.25},
+        "半导体": {"labor_ratio": 0.32, "overhead_ratio": 0.18, "risk_factor": 1.3},
+    }
+    
+    default_coefficient = {"labor_ratio": 0.28, "overhead_ratio": 0.16, "risk_factor": 1.15}
+    industry_coef = INDUSTRY_COEFFICIENTS.get(industry, default_coefficient)
+    
+    # ========== 项目复杂度系数 ==========
+    COMPLEXITY_COEFFICIENTS = {
+        "LOW": {"labor_multiplier": 0.8, "overhead_multiplier": 0.9},
+        "MEDIUM": {"labor_multiplier": 1.0, "overhead_multiplier": 1.0},
+        "HIGH": {"labor_multiplier": 1.3, "overhead_multiplier": 1.2},
+    }
+    complexity_coef = COMPLEXITY_COEFFICIENTS.get(project_complexity, COMPLEXITY_COEFFICIENTS["MEDIUM"])
+    
+    # ========== 1. 物料成本 ==========
+    if estimated_material_cost and estimated_material_cost > 0:
+        material_cost = estimated_material_cost
+    else:
+        material_sql = text("""
+            SELECT AVG(material_ratio) as avg_material_ratio FROM (
+                SELECT pc.amount * 100.0 / NULLIF(p.contract_amount, 0) as material_ratio
+                FROM project_costs pc JOIN projects p ON pc.project_id = p.id
+                WHERE pc.cost_type = '材料' AND p.contract_amount > 0 LIMIT 20
+            )
+        """)
+        material_result = db.execute(material_sql).fetchone()
+        material_ratio = float(material_result.avg_material_ratio or 50.0) / 100.0
+        material_cost = contract_amount * material_ratio
+    
+    # ========== 2. 人工成本 ==========
+    labor_sql = text("""
+        SELECT p.product_category, p.industry,
+            AVG(pc.amount) as avg_labor_cost,
+            AVG(pc.amount * 100.0 / p.contract_amount) as avg_labor_ratio,
+            COUNT(*) as project_count
+        FROM project_costs pc
+        JOIN projects p ON pc.project_id = p.id
+        WHERE pc.cost_type IN ('人工', '工时', '工资') AND p.contract_amount > 0 AND p.is_active = 1
+        GROUP BY p.product_category, p.industry
+    """)
+    labor_rows = db.execute(labor_sql).fetchall()
+    
+    base_labor_ratio = None
+    for row in labor_rows:
+        if row.industry == industry or row.product_category == product_category:
+            base_labor_ratio = float(row.avg_labor_ratio) / 100.0
+            break
+    
+    if base_labor_ratio is None:
+        base_labor_ratio = industry_coef["labor_ratio"]
+    
+    adjusted_labor_ratio = base_labor_ratio * complexity_coef["labor_multiplier"]
+    labor_cost = contract_amount * adjusted_labor_ratio
+    
+    # ========== 3. 制造费用 ==========
+    overhead_sql = text("""
+        SELECT AVG(overhead_ratio) as avg_overhead_ratio FROM (
+            SELECT SUM(pc.amount) * 100.0 / NULLIF(p.contract_amount, 0) as overhead_ratio
+            FROM project_costs pc JOIN projects p ON pc.project_id = p.id
+            WHERE pc.cost_type IN ('制造费用', '折旧', '水电') AND p.contract_amount > 0
+            GROUP BY p.id LIMIT 20
+        )
+    """)
+    overhead_result = db.execute(overhead_sql).fetchone()
+    base_overhead_ratio = float(overhead_result.avg_overhead_ratio or 15.0) / 100.0
+    adjusted_overhead_ratio = base_overhead_ratio * industry_coef["overhead_ratio"] * complexity_coef["overhead_multiplier"]
+    overhead_cost = contract_amount * adjusted_overhead_ratio
+    
+    # ========== 4. 总成本和毛利率 ==========
+    total_cost = material_cost + labor_cost + overhead_cost
+    risk_adjusted_cost = total_cost * industry_coef["risk_factor"]
+    predicted_profit = contract_amount - risk_adjusted_cost
+    predicted_margin = (predicted_profit / contract_amount) * 100 if contract_amount > 0 else 0
+    
+    # ========== 5-10. 置信度/成本结构/风险/建议/相似项目/返回 ==========
+    sample_count = len(labor_rows)
+    data_quality = "充足" if sample_count >= 10 else "一般" if sample_count >= 5 else "不足"
+    confidence = min(0.95, 0.5 + (sample_count / 20.0) * 0.3 + (0.2 if estimated_material_cost else 0))
+    
+    cost_structure = [
+        {"cost_type": "物料成本", "amount": round(material_cost, 0), "percentage": round(material_cost / risk_adjusted_cost * 100, 1) if risk_adjusted_cost > 0 else 0},
+        {"cost_type": "人工成本", "amount": round(labor_cost, 0), "percentage": round(labor_cost / risk_adjusted_cost * 100, 1) if risk_adjusted_cost > 0 else 0},
+        {"cost_type": "制造费用", "amount": round(overhead_cost, 0), "percentage": round(overhead_cost / risk_adjusted_cost * 100, 1) if risk_adjusted_cost > 0 else 0},
+        {"cost_type": "风险准备金", "amount": round(risk_adjusted_cost - total_cost, 0), "percentage": round((risk_adjusted_cost - total_cost) / risk_adjusted_cost * 100, 1) if risk_adjusted_cost > 0 else 0},
+    ]
+    
+    risk_level = "high" if predicted_margin < 15 else "medium" if predicted_margin < 25 else "low"
+    
+    recommendations = []
+    if not estimated_material_cost:
+        recommendations.append("⚠️ 未提供预计物料成本，已根据历史数据估算，建议输入准确 BOM 成本以提高预测精度")
+    if predicted_margin < 20:
+        recommendations.append("⚠️ 预测毛利率偏低，建议：1) 优化设计方案降低成本 2) 与供应商协商价格 3) 提高报价")
+    if industry_coef["risk_factor"] > 1.2:
+        recommendations.append(f"⚡ {industry or '该'}行业风险系数较高 ({industry_coef['risk_factor']}), 建议预留充足风险准备金")
+    if project_complexity == "HIGH":
+        recommendations.append("🔧 高复杂度项目人工成本上浮 30%, 建议合理安排技术资源")
+    if material_cost / contract_amount > 0.6:
+        recommendations.append("💰 物料成本占比过高 (>60%), 建议优化 BOM 或寻找替代方案")
+    if labor_cost / contract_amount > 0.35:
+        recommendations.append("👷 人工成本占比偏高，建议评估自动化方案或外包部分工作")
+    
+    similar_sql = text("""
+        SELECT p.id, p.project_name, p.project_code, p.product_category, p.industry,
+            p.contract_amount, p.actual_cost,
+            (p.contract_amount - p.actual_cost) * 100.0 / p.contract_amount as gross_margin
+        FROM projects p
+        WHERE p.is_active = 1 AND p.contract_amount > 0 AND p.actual_cost > 0
+          AND (:industry IS NULL OR p.industry = :industry)
+        ORDER BY ABS(p.contract_amount - :amount) LIMIT 5
+    """)
+    similar_rows = db.execute(similar_sql, {"industry": industry, "amount": contract_amount}).fetchall()
+    similar_projects = [{"project_id": r.id, "project_name": r.project_name, "project_code": r.project_code,
+        "product_category": r.product_category, "industry": r.industry, "contract_amount": float(r.contract_amount),
+        "actual_cost": float(r.actual_cost), "gross_margin": round(float(r.gross_margin), 2)} for r in similar_rows]
+    
+    return {
+        "prediction": {"predicted_margin": round(predicted_margin, 2), "predicted_cost": round(risk_adjusted_cost, 0),
+            "predicted_profit": round(predicted_profit, 0), "confidence": round(confidence, 2), "data_quality": data_quality,
+            "margin_range": [round(predicted_margin * 0.85, 2), round(predicted_margin * 1.15, 2)],
+            "risk_level": risk_level, "similar_projects_count": len(similar_projects)},
+        "cost_breakdown": {"contract_amount": round(contract_amount, 0), "material_cost": round(material_cost, 0),
+            "labor_cost": round(labor_cost, 0), "overhead_cost": round(overhead_cost, 0),
+            "risk_adjustment": round(risk_adjusted_cost - total_cost, 0), "total_cost": round(risk_adjusted_cost, 0),
+            "profit": round(predicted_profit, 0)},
+        "industry_analysis": {"industry": industry or "未知", "labor_ratio": round(industry_coef["labor_ratio"] * 100, 1),
+            "overhead_ratio": round(industry_coef["overhead_ratio"] * 100, 1), "risk_factor": industry_coef["risk_factor"],
+            "complexity": project_complexity},
+        "cost_structure": cost_structure,
+        "similar_projects": similar_projects,
+        "recommendations": recommendations,
+        "input": {"product_category": product_category, "industry": industry, "contract_amount": contract_amount,
+            "estimated_material_cost": estimated_material_cost, "project_complexity": project_complexity},
+    }
+@router.get("/variance", summary="报价vs实际成本偏差分析")
+def get_cost_variance(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """项目完结后，报价成本 vs 实际成本对比分析。"""
+    sql = text("""
+        SELECT 
+            p.id, p.project_name, p.project_code,
+            p.product_category,
+            p.contract_amount, p.budget_amount, p.actual_cost,
+            CASE WHEN p.contract_amount > 0 
+                THEN ROUND((p.contract_amount - p.actual_cost) * 100.0 / p.contract_amount, 2) 
+                ELSE 0 END as actual_margin,
+            CASE WHEN p.contract_amount > 0 
+                THEN ROUND((p.contract_amount - p.budget_amount) * 100.0 / p.contract_amount, 2) 
+                ELSE 0 END as planned_margin,
+            CASE WHEN p.budget_amount > 0
+                THEN ROUND((p.actual_cost - p.budget_amount) * 100.0 / p.budget_amount, 2)
+                ELSE 0 END as budget_variance_pct
+        FROM projects p
+        WHERE p.is_active = 1 AND p.contract_amount > 0 AND p.budget_amount > 0
+        ORDER BY budget_variance_pct DESC
+    """)
+    rows = db.execute(sql).fetchall()
+
+    projects = []
+    for r in rows:
+        # Cost breakdown variance
+        cost_sql = text("""
+            SELECT cost_type, SUM(amount) as total
+            FROM project_costs WHERE project_id = :pid
+            GROUP BY cost_type
+        """)
+        costs = {c.cost_type: float(c.total) for c in db.execute(cost_sql, {"pid": r.id}).fetchall()}
+
+        projects.append({
+            "project_id": r.id,
+            "project_name": r.project_name,
+            "project_code": r.project_code,
+            "product_category": r.product_category,
+            "contract_amount": float(r.contract_amount),
+            "budget_amount": float(r.budget_amount),
+            "actual_cost": float(r.actual_cost or 0),
+            "planned_margin": float(r.planned_margin),
+            "actual_margin": float(r.actual_margin),
+            "margin_gap": round(float(r.actual_margin) - float(r.planned_margin), 2),
+            "budget_variance_pct": float(r.budget_variance_pct),
+            "overrun": float(r.actual_cost or 0) > float(r.budget_amount),
+            "cost_breakdown": costs,
+        })
+
+    # Summary
+    if projects:
+        avg_variance = sum(p["budget_variance_pct"] for p in projects) / len(projects)
+        overrun_count = sum(1 for p in projects if p["overrun"])
+    else:
+        avg_variance = 0
+        overrun_count = 0
+
+    return {
+        "summary": {
+            "total_projects": len(projects),
+            "avg_budget_variance": round(avg_variance, 2),
+            "overrun_count": overrun_count,
+            "on_budget_count": len(projects) - overrun_count,
+        },
+        "projects": projects,
+    }

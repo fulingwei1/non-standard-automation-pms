@@ -6,6 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
 from typing import Any, Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -120,11 +121,18 @@ def export_payment_invoices(
 
     # 生成文件名
     filename = f"回款记录_{date.today().strftime('%Y%m%d')}.xlsx"
+    encoded_filename = quote(filename)
+    ascii_filename = f"payment_invoices_{date.today().strftime('%Y%m%d')}.xlsx"
 
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename={ascii_filename}; "
+                f"filename*=UTF-8''{encoded_filename}"
+            )
+        },
     )
 
 

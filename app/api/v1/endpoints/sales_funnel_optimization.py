@@ -316,13 +316,13 @@ def get_funnel_health_dashboard(
                 "type": "INFO",
                 "title": "Pipeline 充足",
                 "description": "当前 Pipeline 覆盖月度目标的 126%",
-                "action": null,
+                "action": None,
             },
             {
                 "type": "SUCCESS",
                 "title": "赢单率提升",
                 "description": "本月赢单率 68%，环比提升 5%",
-                "action": null,
+                "action": None,
             },
         ],
         "top_actions": [

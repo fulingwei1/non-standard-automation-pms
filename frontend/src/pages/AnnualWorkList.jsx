@@ -42,7 +42,7 @@ import {
   Slider,
 } from "@/components/ui";
 import { fadeIn, staggerContainer } from "@/lib/animations";
-import { annualWorkApi } from "@/services/api/strategy";
+import { annualWorkApi, strategyApi } from "@/services/api/strategy";
 
 const PRIORITY_CONFIG = {
   HIGH: { label: "高优先级", color: "bg-red-500/20 text-red-400 border-red-500/30" },
@@ -95,11 +95,11 @@ export default function AnnualWorkList() {
 
   const fetchStrategies = async () => {
     try {
-      const { data } = await annualWorkApi.list({});
+      const { data } = await strategyApi.list({});
       // 从返回数据中提取战略信息或使用默认
-      setStrategies(data.strategies || []);
-      if (data.strategies?.length > 0 && !selectedStrategyId) {
-        setSelectedStrategyId(data.strategies[0].id);
+      setStrategies(data.items || []);
+      if (data.items?.length > 0 && !selectedStrategyId) {
+        setSelectedStrategyId(data.items[0].id);
       }
     } catch (error) {
       console.error("获取战略列表失败:", error);

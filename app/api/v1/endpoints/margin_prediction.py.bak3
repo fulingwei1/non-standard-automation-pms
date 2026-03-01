@@ -14,7 +14,6 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.models.user import User
 
 router = APIRouter()
@@ -71,7 +70,7 @@ class MarginAnalysisResponse(BaseModel):
 def get_historical_margins(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
     """分析所有已完成/进行中项目的毛利率。"""
 
@@ -190,7 +189,7 @@ def get_historical_margins(
 def predict_margin(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_user),
     product_category: Optional[str] = Query(None, description="产品类型 (ICT/FCT/EOL 等)"),
     industry: Optional[str] = Query(None, description="客户行业"),
     contract_amount: float = Query(..., description="预估合同金额"),
@@ -458,7 +457,7 @@ def predict_margin(
 def get_cost_variance(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
     """项目完结后，报价成本 vs 实际成本对比分析。"""
     sql = text("""
@@ -523,127 +522,4 @@ def get_cost_variance(
             "on_budget_count": len(projects) - overrun_count,
         },
         "projects": projects,
-    }
-
-
-@router.get("/project/{project_id}/bom-costs", summary="获取项目 BOM 物料成本")
-def get_project_bom_costs(
-    *,
-    db: Session = Depends(deps.get_db),
-    project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    自动获取项目 BOM 物料成本（从 BOM 表 + 采购价格）
-    
-    返回：
-    - BOM 总成本
-    - 分类成本（机械/电气/标准件/外购件）
-    - 已采购/未采购状态
-    - 最新采购价格
-    """
-    from app.models.material import BomHeader, BomItem, Material
-    from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-    
-    # 查询项目 BOM
-    bom_headers = db.query(BomHeader).filter(
-        BomHeader.project_id == project_id,
-        BomHeader.status == 'RELEASED'  # 只统计已发布的 BOM
-    ).all()
-    
-    if not bom_headers:
-        return {
-            "project_id": project_id,
-            "total_cost": 0,
-            "message": "项目暂无已发布 BOM",
-            "items": [],
-        }
-    
-    bom_ids = [bom.id for bom in bom_headers]
-    
-    # 查询 BOM 明细
-    bom_items = db.query(BomItem).filter(BomItem.bom_id.in_(bom_ids)).all()
-    
-    # 查询最新采购价格
-    purchase_prices = {}
-    purchase_orders = db.query(PurchaseOrderItem, PurchaseOrder.order_date)\
-        .join(PurchaseOrder)\
-        .filter(PurchaseOrderItem.material_id.in_([item.material_id for item in bom_items]))\
-        .order_by(PurchaseOrder.order_date.desc())\
-        .all()
-    
-    for po_item, order_date in purchase_orders:
-        if po_item.material_id not in purchase_prices:
-            purchase_prices[po_item.material_id] = {
-                "unit_price": float(po_item.unit_price or 0),
-                "supplier_id": po_item.supplier_id,
-                "order_date": order_date.isoformat() if order_date else None,
-            }
-    
-    # 计算成本
-    total_cost = 0
-    by_category = {}
-    items_detail = []
-    
-    for item in bom_items:
-        material = item.material if item.material_id else None
-        if not material:
-            continue
-        
-        # 优先使用最新采购价，其次使用物料标准价
-        unit_price = 0
-        source = "standard"
-        
-        if item.material_id in purchase_prices:
-            unit_price = purchase_prices[item.material_id]["unit_price"]
-            source = "purchase"
-        elif material.unit_price:
-            unit_price = float(material.unit_price)
-        
-        quantity = float(item.quantity or 0)
-        item_cost = unit_price * quantity
-        total_cost += item_cost
-        
-        # 分类统计
-        category = material.category or "未分类"
-        if category not in by_category:
-            by_category[category] = {"cost": 0, "count": 0}
-        by_category[category]["cost"] += item_cost
-        by_category[category]["count"] += 1
-        
-        # 检查是否已采购
-        is_purchased = item.material_id in purchase_prices
-        
-        items_detail.append({
-            "item_no": item.item_no,
-            "material_id": material.id,
-            "material_code": material.material_code,
-            "material_name": material.material_name,
-            "specification": material.specification,
-            "category": category,
-            "quantity": quantity,
-            "unit": material.unit,
-            "unit_price": unit_price,
-            "total_price": item_cost,
-            "price_source": source,
-            "is_purchased": is_purchased,
-            "supplier_name": purchase_prices.get(item.material_id, {}).get("supplier_id"),
-        })
-    
-    return {
-        "project_id": project_id,
-        "bom_version": bom_headers[0].version if bom_headers else None,
-        "total_cost": round(total_cost, 2),
-        "total_items": len(items_detail),
-        "by_category": {
-            cat: {"cost": round(data["cost"], 2), "count": data["count"]}
-            for cat, data in by_category.items()
-        },
-        "purchased_count": sum(1 for item in items_detail if item["is_purchased"]),
-        "unpurchased_count": sum(1 for item in items_detail if not item["is_purchased"]),
-        "items": items_detail,
-        "purchase_price_update_time": max(
-            [p.get("order_date") for p in purchase_prices.values() if p.get("order_date")],
-            default=None
-        ),
     }

@@ -652,3 +652,278 @@ class AssemblyKitService:
             }
         
         return result
+
+
+def _to_decimal(value: Any) -> Decimal:
+    """将数值安全转换为 Decimal。"""
+    if isinstance(value, Decimal):
+        return value
+    if value is None:
+        return Decimal("0")
+    return Decimal(str(value))
+
+
+def _calc_percent(numerator: int, denominator: int) -> Decimal:
+    """计算百分比，保留两位小数。"""
+    if denominator <= 0:
+        return Decimal("100")
+    percent = (Decimal(numerator) / Decimal(denominator)) * Decimal("100")
+    return percent.quantize(Decimal("0.01"))
+
+
+def validate_analysis_inputs(
+    db: Session,
+    project_id: int,
+    bom_id: int,
+    machine_id: Optional[int] = None,
+) -> Tuple[Project, BomHeader, Optional[Machine]]:
+    """校验齐套分析入参并返回实体对象。"""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+
+    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+    if not bom:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BOM不存在",
+        )
+
+    bom_project_id = getattr(bom, "project_id", None)
+    if isinstance(bom_project_id, str) and bom_project_id.isdigit():
+        bom_project_id = int(bom_project_id)
+    if isinstance(bom_project_id, int) and bom_project_id not in (0, project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="BOM不属于指定项目",
+        )
+
+    machine = None
+    if machine_id is not None:
+        machine = db.query(Machine).filter(Machine.id == machine_id).first()
+        if not machine:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="机台不存在",
+            )
+
+        machine_project_id = getattr(machine, "project_id", None)
+        if isinstance(machine_project_id, str) and machine_project_id.isdigit():
+            machine_project_id = int(machine_project_id)
+        if isinstance(machine_project_id, int) and machine_project_id not in (0, project_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="机台不属于指定项目",
+            )
+
+    return project, bom, machine
+
+
+def initialize_stage_results(stages: List[AssemblyStage]) -> Dict[str, Dict[str, Any]]:
+    """初始化每个阶段的统计容器。"""
+    results: Dict[str, Dict[str, Any]] = {}
+    for stage in stages:
+        results[stage.stage_code] = {
+            "total": 0,
+            "fulfilled": 0,
+            "blocking_total": 0,
+            "blocking_fulfilled": 0,
+            "stage": stage,
+        }
+    return results
+
+
+def get_expected_arrival_date(db: Session, material_id: int) -> Optional[date]:
+    """查询物料预计到货日期（优先承诺交期，其次需求交期）。"""
+    try:
+        from app.models.purchase import PurchaseOrder
+
+        query = db.query(PurchaseOrderItem).join(
+            PurchaseOrder,
+            PurchaseOrderItem.order_id == PurchaseOrder.id,
+        ).filter(
+            PurchaseOrderItem.material_id == material_id,
+            PurchaseOrderItem.status.in_(
+                ["APPROVED", "ORDERED", "PARTIAL_RECEIVED", "approved", "partial_received"]
+            ),
+            or_(
+                PurchaseOrderItem.promised_date.isnot(None),
+                PurchaseOrderItem.required_date.isnot(None),
+            ),
+        ).order_by(
+            PurchaseOrderItem.promised_date.asc(),
+            PurchaseOrderItem.required_date.asc(),
+        )
+        po_item = query.first()
+    except Exception:
+        return None
+
+    if not po_item:
+        return None
+    return po_item.promised_date or po_item.required_date
+
+
+def analyze_bom_item(
+    db: Session,
+    bom_item: BomItem,
+    check_date: date,
+    stage_map: Dict[str, AssemblyStage],
+    stage_results: Dict[str, Dict[str, Any]],
+    calculate_available_qty_func: Any,
+) -> Optional[Dict[str, Any]]:
+    """分析单条 BOM 明细，返回缺料明细（若无缺料则返回 None）。"""
+    material = db.query(Material).filter(Material.id == bom_item.material_id).first()
+    if not material:
+        return None
+
+    attrs = db.query(BomItemAssemblyAttrs).filter(
+        BomItemAssemblyAttrs.bom_item_id == bom_item.id
+    ).first()
+
+    stage_code = attrs.assembly_stage if attrs and attrs.assembly_stage else "MECH"
+    is_blocking = bool(attrs.is_blocking) if attrs else True
+
+    if stage_code not in stage_results:
+        fallback = next(iter(stage_results.keys()), "MECH")
+        stage_code = fallback
+        if stage_code not in stage_results:
+            stage_results[stage_code] = {
+                "total": 0,
+                "fulfilled": 0,
+                "blocking_total": 0,
+                "blocking_fulfilled": 0,
+                "stage": stage_map.get(stage_code),
+            }
+
+    required_qty = _to_decimal(getattr(bom_item, "quantity", None))
+    stock_qty, allocated_qty, in_transit_qty, available_qty = calculate_available_qty_func(
+        db, material.id, check_date
+    )
+    stock_qty = _to_decimal(stock_qty)
+    allocated_qty = _to_decimal(allocated_qty)
+    in_transit_qty = _to_decimal(in_transit_qty)
+    available_qty = _to_decimal(available_qty)
+
+    stage_stat = stage_results[stage_code]
+    stage_stat["total"] += 1
+
+    shortage_qty = max(Decimal("0"), required_qty - available_qty)
+    is_fulfilled = shortage_qty <= 0
+    if is_fulfilled:
+        stage_stat["fulfilled"] += 1
+
+    if is_blocking:
+        stage_stat["blocking_total"] += 1
+        if is_fulfilled:
+            stage_stat["blocking_fulfilled"] += 1
+
+    if is_fulfilled:
+        return None
+
+    shortage_rate = (
+        (shortage_qty / required_qty) * Decimal("100") if required_qty > 0 else Decimal("0")
+    )
+    required_date = getattr(bom_item, "required_date", None)
+    days_to_required = (required_date - check_date).days if required_date else 7
+
+    from app.api.v1.endpoints.assembly_kit.kit_analysis.utils import determine_alert_level
+
+    try:
+        alert_level = determine_alert_level(db, is_blocking, shortage_rate, days_to_required)
+    except Exception:
+        alert_level = "L4"
+
+    return {
+        "bom_item_id": bom_item.id,
+        "material_id": material.id,
+        "material_code": material.material_code,
+        "material_name": material.material_name,
+        "assembly_stage": stage_code,
+        "is_blocking": is_blocking,
+        "required_qty": required_qty,
+        "stock_qty": stock_qty,
+        "allocated_qty": allocated_qty,
+        "in_transit_qty": in_transit_qty,
+        "available_qty": available_qty,
+        "shortage_qty": shortage_qty,
+        "shortage_rate": shortage_rate,
+        "alert_level": alert_level,
+        "expected_arrival": get_expected_arrival_date(db, material.id),
+        "required_date": required_date,
+    }
+
+
+def calculate_stage_kit_rates(
+    stages: List[AssemblyStage],
+    stage_results: Dict[str, Dict[str, Any]],
+    shortage_details: List[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], bool, Optional[str], Optional[str], Dict[str, int], List[Dict[str, Any]]]:
+    """汇总各阶段齐套率并返回开工判断。"""
+    stage_kit_rates: List[Dict[str, Any]] = []
+
+    ordered_stages = sorted(stages, key=lambda s: getattr(s, "stage_order", 0))
+    overall_total = 0
+    overall_fulfilled = 0
+    overall_blocking_total = 0
+    overall_blocking_fulfilled = 0
+
+    first_blocked_stage: Optional[str] = None
+    current_workable_stage: Optional[str] = None
+
+    for stage in ordered_stages:
+        stats = stage_results.get(stage.stage_code, {})
+        total = int(stats.get("total", 0))
+        fulfilled = int(stats.get("fulfilled", 0))
+        blocking_total = int(stats.get("blocking_total", 0))
+        blocking_fulfilled = int(stats.get("blocking_fulfilled", 0))
+
+        overall_total += total
+        overall_fulfilled += fulfilled
+        overall_blocking_total += blocking_total
+        overall_blocking_fulfilled += blocking_fulfilled
+
+        kit_rate = _calc_percent(fulfilled, total)
+        blocking_rate = _calc_percent(blocking_fulfilled, blocking_total)
+        can_start = blocking_fulfilled >= blocking_total
+
+        if first_blocked_stage is None and not can_start:
+            first_blocked_stage = stage.stage_code
+        if first_blocked_stage is None:
+            current_workable_stage = stage.stage_code
+
+        stage_kit_rates.append(
+            {
+                "stage_code": stage.stage_code,
+                "stage_name": stage.stage_name,
+                "stage_order": stage.stage_order,
+                "total_items": total,
+                "fulfilled_items": fulfilled,
+                "kit_rate": kit_rate,
+                "blocking_total": blocking_total,
+                "blocking_fulfilled": blocking_fulfilled,
+                "blocking_rate": blocking_rate,
+                "can_start": can_start,
+                "color_code": getattr(stage, "color_code", "#3B82F6"),
+            }
+        )
+
+    can_proceed = first_blocked_stage is None
+    overall_stats = {
+        "total": overall_total,
+        "fulfilled": overall_fulfilled,
+        "blocking_total": overall_blocking_total,
+        "blocking_fulfilled": overall_blocking_fulfilled,
+    }
+    all_blocking_items = [d for d in shortage_details if d.get("is_blocking")]
+
+    return (
+        stage_kit_rates,
+        can_proceed,
+        first_blocked_stage,
+        current_workable_stage,
+        overall_stats,
+        all_blocking_items,
+    )

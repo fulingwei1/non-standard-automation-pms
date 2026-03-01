@@ -10,6 +10,7 @@ import io
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional
+from urllib.parse import quote
 
 try:
     import openpyxl  # noqa: F401
@@ -324,12 +325,17 @@ def create_excel_response(
         StreamingResponse: FastAPI 流式响应
     """
     from fastapi.responses import StreamingResponse
+    encoded_filename = quote(filename)
+    fallback_filename = filename.encode("ascii", "ignore").decode("ascii").strip() or "export.xlsx"
 
     return StreamingResponse(
         excel_data,
         media_type=media_type,
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
+            "Content-Disposition": (
+                f"attachment; filename={fallback_filename}; "
+                f"filename*=UTF-8''{encoded_filename}"
+            )
         }
     )
 

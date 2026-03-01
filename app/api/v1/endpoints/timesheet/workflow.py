@@ -180,10 +180,11 @@ def get_pending_approval_tasks(
         page=pagination.page,
         page_size=pagination.page_size,
     )
+    tasks = result.get("items", []) if isinstance(result, dict) else result
 
     # 过滤出工时类型的任务
     timesheet_tasks = []
-    for task in result["items"]:
+    for task in tasks:
         instance = task.instance
         if instance and instance.entity_type == "TIMESHEET":
             # 获取工时详情

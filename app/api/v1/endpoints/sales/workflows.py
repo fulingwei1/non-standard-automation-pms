@@ -26,6 +26,32 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+def _get_step_approver_type(step: ApprovalWorkflowStep) -> str:
+    if step.approver_id:
+        return "USER"
+    if step.approver_role:
+        return "ROLE"
+    return "ROLE"
+
+
+def _build_step_response(step: ApprovalWorkflowStep) -> ApprovalWorkflowStepResponse:
+    step_data = {c.name: getattr(step, c.name) for c in step.__table__.columns}
+    step_data["approver_type"] = _get_step_approver_type(step)
+    step_data["approver_name"] = step.approver.real_name if step.approver else None
+    return ApprovalWorkflowStepResponse(**step_data)
+
+
+def _build_workflow_response(workflow: ApprovalWorkflow) -> ApprovalWorkflowResponse:
+    workflow_dict = {
+        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
+        "steps": [
+            _build_step_response(step)
+            for step in sorted(workflow.steps, key=lambda x: x.step_order)
+        ],
+    }
+    return ApprovalWorkflowResponse(**workflow_dict)
+
+
 @router.get("/approval-workflows", response_model=PaginatedResponse[ApprovalWorkflowResponse])
 def list_approval_workflows(
     *,
@@ -53,17 +79,7 @@ def list_approval_workflows(
 
     result = []
     for workflow in workflows:
-        workflow_dict = {
-            **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
-            "steps": [
-                ApprovalWorkflowStepResponse(
-                    **{c.name: getattr(step, c.name) for c in step.__table__.columns},
-                    approver_name=step.approver.real_name if step.approver else None
-                )
-                for step in sorted(workflow.steps, key=lambda x: x.step_order)
-            ]
-        }
-        result.append(ApprovalWorkflowResponse(**workflow_dict))
+        result.append(_build_workflow_response(workflow))
 
     return PaginatedResponse(
         items=result,
@@ -90,29 +106,17 @@ def create_approval_workflow(
     db.flush()
 
     # 创建审批步骤
-    for step_data in workflow_in.steps:
+    for step_data in workflow_in.steps or []:
         step = ApprovalWorkflowStep(
             workflow_id=workflow.id,
-            **step_data.model_dump()
+            **step_data.model_dump(exclude={"approver_type"}),
         )
         db.add(step)
 
     db.commit()
     db.refresh(workflow)
 
-    # 加载步骤
-    workflow_dict = {
-        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
-        "steps": [
-            ApprovalWorkflowStepResponse(
-                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
-                approver_name=step.approver.real_name if step.approver else None
-            )
-            for step in sorted(workflow.steps, key=lambda x: x.step_order)
-        ]
-    }
-
-    return ApprovalWorkflowResponse(**workflow_dict)
+    return _build_workflow_response(workflow)
 
 
 @router.get("/approval-workflows/{workflow_id}", response_model=ApprovalWorkflowResponse)
@@ -132,18 +136,7 @@ def get_approval_workflow(
     if not workflow:
         raise HTTPException(status_code=404, detail="审批工作流不存在")
 
-    workflow_dict = {
-        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
-        "steps": [
-            ApprovalWorkflowStepResponse(
-                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
-                approver_name=step.approver.real_name if step.approver else None
-            )
-            for step in sorted(workflow.steps, key=lambda x: x.step_order)
-        ]
-    }
-
-    return ApprovalWorkflowResponse(**workflow_dict)
+    return _build_workflow_response(workflow)
 
 
 @router.put("/approval-workflows/{workflow_id}", response_model=ApprovalWorkflowResponse)
@@ -160,22 +153,23 @@ def update_approval_workflow(
     workflow = get_or_404(db, ApprovalWorkflow, workflow_id, detail="审批工作流不存在")
 
     update_data = workflow_in.model_dump(exclude_unset=True)
+    steps_data = update_data.pop("steps", None)
+
     for key, value in update_data.items():
         setattr(workflow, key, value)
+
+    if steps_data is not None:
+        workflow.steps.clear()
+        for step_data in steps_data:
+            step_payload = {k: v for k, v in step_data.items() if k != "approver_type"}
+            workflow.steps.append(
+                ApprovalWorkflowStep(
+                    workflow_id=workflow.id,
+                    **step_payload,
+                )
+            )
 
     db.commit()
     db.refresh(workflow)
 
-    # 加载步骤
-    workflow_dict = {
-        **{c.name: getattr(workflow, c.name) for c in workflow.__table__.columns},
-        "steps": [
-            ApprovalWorkflowStepResponse(
-                **{c.name: getattr(step, c.name) for c in step.__table__.columns},
-                approver_name=step.approver.real_name if step.approver else None
-            )
-            for step in sorted(workflow.steps, key=lambda x: x.step_order)
-        ]
-    }
-
-    return ApprovalWorkflowResponse(**workflow_dict)
+    return _build_workflow_response(workflow)

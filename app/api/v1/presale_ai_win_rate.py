@@ -3,6 +3,7 @@
 售前AI赢率预测 - API路由
 """
 import logging
+from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -318,8 +319,9 @@ async def get_model_accuracy(
             overall_accuracy=0.0,
             total_predictions=0,
             correct_predictions=0,
-            avg_prediction_error=0.0,
-            by_result={}
+            average_error=0.0,
+            by_result={},
+            last_updated=datetime.now().isoformat(),
         )
     except Exception as e:
         logger.error(f"获取模型准确度失败: {e}")
