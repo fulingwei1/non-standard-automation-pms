@@ -35,7 +35,8 @@ _noop_decorator = lambda *a, **kw: (lambda f: f)
 _mock_limiter = MagicMock()
 _mock_limiter.limit = _noop_decorator
 _mock_limiter.shared_limit = _noop_decorator
-sys.modules.setdefault("slowapi", MagicMock())
+# Don't mock the entire slowapi module - just patch the limiter instances later
+# sys.modules.setdefault("slowapi", MagicMock())  # This breaks imports!
 # Patch the limiter instances so they don't actually rate-limit
 import importlib
 try:
