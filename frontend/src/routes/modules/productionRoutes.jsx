@@ -87,4 +87,4 @@ export function ProductionRoutes() {
   );
 }
 
-      <Route path="/capacity-analysis" element={<CapacityAnalysis />} />
+      <Route path="/production/capacity-analysis" element={<CapacityAnalysis />} />
