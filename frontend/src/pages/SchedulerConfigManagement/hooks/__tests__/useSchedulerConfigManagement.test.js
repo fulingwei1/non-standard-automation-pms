@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useSchedulerConfigManagement } from '../useSchedulerConfigManagement';
-import { schedulerConfigApi } from '../../../../services/api';
+import { schedulerApi as schedulerConfigApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

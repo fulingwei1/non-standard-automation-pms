@@ -75,7 +75,7 @@ const NODE_TYPE_LABELS = {
   MILESTONE: "里程碑",
 };
 
-function NodeItem({ node, stageId, onToggle, onReorder }) {
+function NodeItem({ node, onToggle, onReorder }) {
   return (
     <Reorder.Item
       value={node}
@@ -412,7 +412,6 @@ export default function TemplateConfigEditor() {
                                 <NodeItem
                                   key={node.id}
                                   node={node}
-                                  stageId={stage.id}
                                   onToggle={(enabled) => toggleNode(stage.id, node.id, enabled)}
                                   onReorder={(newNodes) => handleReorderNodes(stage.id, newNodes)}
                                 />

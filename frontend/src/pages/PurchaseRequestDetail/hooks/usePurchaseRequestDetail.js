@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { purchaseRequestApi } from '../../../services/api';
+import { purchaseApi as purchaseRequestApi } from '../../../services/api';
 
 export function usePurchaseRequestDetail(requestId) {
     const [request, setRequest] = useState(null);

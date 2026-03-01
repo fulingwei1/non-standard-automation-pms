@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useWorkerManagement } from '../useWorkerManagement';
-import { workerApi } from '../../../../services/api';
+import { productionApi as workerApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

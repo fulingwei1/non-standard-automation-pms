@@ -66,7 +66,8 @@ import {
 "../components/ui/dropdown-menu";
 import { Switch } from "../components/ui/switch";
 import { cn } from "../lib/utils";
-import { assemblyKitApi, bomApi, projectApi } from "../services/api";
+import { bomApi, projectApi } from "../services/api";
+import { assemblyKitApi } from "../services/api/production";
 
 // 装配阶段配置
 import { confirmAction } from "@/lib/confirmAction";

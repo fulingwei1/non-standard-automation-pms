@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { biddingApi } from '../../../services/api';
+import { presaleApi as biddingApi } from '../../../services/api';
 
 /**
  * 招投标中心数据 Hook

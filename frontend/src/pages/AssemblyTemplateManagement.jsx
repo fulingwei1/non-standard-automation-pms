@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -69,13 +68,11 @@ const IMPORTANCE_LEVELS = [
 ];
 
 export default function AssemblyTemplateManagement() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [mappings, setMappings] = useState([]);
 
   // 加载模板列表
   const loadTemplates = useCallback(async () => {

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { paymentApprovalApi } from '../../../services/api';
+import { unifiedApprovalApi as paymentApprovalApi } from '../../../services/api';
 
 export function usePaymentApproval() {
     const [approvals, setApprovals] = useState([]);

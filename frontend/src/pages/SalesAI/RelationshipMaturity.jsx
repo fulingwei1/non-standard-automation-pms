@@ -44,7 +44,7 @@ import {
 
 // 关系成熟度评估
 function RelationshipAssessment() {
-  const [assessment, setAssessment] = useState({
+  const [assessment, _setAssessment] = useState({
     customer_name: "宁德时代",
     overall_score: 78,
     maturity_level: "L4",
@@ -195,7 +195,7 @@ function RelationshipAssessment() {
 
 // 客户组合分析
 function PortfolioAnalysis() {
-  const [portfolio, setPortfolio] = useState({
+  const [portfolio, _setPortfolio] = useState({
     total_customers: 45,
     distribution: [
       { level: "L1", name: "初始级", count: 8, percentage: 17.8, win_rate: 15, color: "slate" },

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { biddingApi } from '../../../services/api';
+import { presaleApi as biddingApi } from '../../../services/api';
 
 export function useBiddingDetail(biddingId) {
     const [bidding, setBidding] = useState(null);

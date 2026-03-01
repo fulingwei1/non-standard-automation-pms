@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useContractApproval } from '../useContractApproval';
-import { contractApprovalApi } from '../../../../services/api';
+import { unifiedApprovalApi as contractApprovalApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

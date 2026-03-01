@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { costTemplateApi } from '../../../services/api';
+import { salesTemplateApi as costTemplateApi } from '../../../services/api';
 
 /**
  * 成本模板管理数据 Hook

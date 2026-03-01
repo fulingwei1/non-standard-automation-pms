@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { alertSubscriptionApi } from '../../../services/api';
+import { alertApi as alertSubscriptionApi } from '../../../services/api';
 
 export function useAlertSubscriptionSettings() {
     const [subscriptions, setSubscriptions] = useState([]);

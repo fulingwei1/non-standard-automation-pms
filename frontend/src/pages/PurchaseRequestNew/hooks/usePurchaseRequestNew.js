@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { purchaseRequestApi, projectApi } from '../../../services/api';
+import { purchaseApi as purchaseRequestApi, projectApi } from '../../../services/api';
 
 /**
  * 采购申请新建数据 Hook

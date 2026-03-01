@@ -42,7 +42,7 @@ import {
 
 // 销售角色视图
 function SalesRepView() {
-  const [myData, setMyData] = useState({
+  const [myData, _setMyData] = useState({
     name: "张三",
     team: "华南大区",
     quota: 50000000,
@@ -188,7 +188,7 @@ function SalesRepView() {
 
 // 经理角色视图
 function ManagerView() {
-  const [teamData, setTeamData] = useState({
+  const [teamData, _setTeamData] = useState({
     team_name: "华南大区",
     members: 5,
     quota: 200000000,
@@ -355,7 +355,7 @@ function ManagerView() {
 
 // 领导角色视图
 function ExecutiveView() {
-  const [execData, setExecData] = useState({
+  const [execData, _setExecData] = useState({
     company_quota: 800000000,
     company_achieved: 512000000,
     achievement_rate: 64,

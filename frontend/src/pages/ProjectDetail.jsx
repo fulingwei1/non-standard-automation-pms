@@ -8,6 +8,7 @@ import {
   stageApi,
   milestoneApi,
   memberApi,
+  userApi,
   costApi,
   documentApi,
   financialCostApi as _financialCostApi,
@@ -75,7 +76,7 @@ export default function ProjectDetail() {
   const [members, setMembers] = useState([]);
   const [costs, setCosts] = useState([]);
   const [documents, setDocuments] = useState([]);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [_showEditDialog, setShowEditDialog] = useState(false);
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
   const [newMember, setNewMember] = useState({ user_id: "", role: "member", status: "active" });
   const [addingMember, setAddingMember] = useState(false);
@@ -144,13 +145,6 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleOpenAddMember = () => {
-    setShowAddMemberDialog(true);
-    loadAvailableUsers();
-  };
-
-  const handleAddMember = async () => {
-
   const loadAvailableUsers = async () => {
     setLoadingUsers(true);
     try {
@@ -165,6 +159,13 @@ export default function ProjectDetail() {
       setLoadingUsers(false);
     }
   };
+
+  const handleOpenAddMember = () => {
+    setShowAddMemberDialog(true);
+    loadAvailableUsers();
+  };
+
+  const handleAddMember = async () => {
     if (!newMember.user_id) {
       alert("请选择成员");
       return;
@@ -633,9 +634,9 @@ export default function ProjectDetail() {
                   </Button>
                   <Button
                     onClick={handleAddMember}
-                    disabled={loadingUsers || !newMember.user_id}
+                    disabled={loadingUsers || addingMember || !newMember.user_id}
                   >
-                    添加
+                    {addingMember ? "添加中..." : "添加"}
                   </Button>
                 </div>
               </div>

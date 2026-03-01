@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { acceptanceTemplateApi } from '../../../services/api';
+import { acceptanceApi as acceptanceTemplateApi } from '../../../services/api';
 
 export function useAcceptanceTemplateManagement() {
     const [templates, setTemplates] = useState([]);

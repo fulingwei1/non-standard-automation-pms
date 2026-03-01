@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { purchaseOrderApi } from '../../../services/api';
+import { purchaseApi as purchaseOrderApi } from '../../../services/api';
 
 /**
  * 采购订单数据管理 Hook

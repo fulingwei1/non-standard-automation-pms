@@ -8,7 +8,7 @@
  * 4. 预测准确性
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -50,7 +50,7 @@ import {
 
 // 公司整体预测
 function CompanyOverview() {
-  const [forecast, setForecast] = useState({
+  const [forecast, _setForecast] = useState({
     targets: {
       quarterly_target: 50000000,
       actual_revenue: 28500000,
@@ -196,7 +196,7 @@ function CompanyOverview() {
 
 // 团队分解
 function TeamBreakdown() {
-  const [teams, setTeams] = useState([
+  const [teams, _setTeams] = useState([
     { team_name: "华南大区", manager: "王五", target: 18000000, actual: 10800000, completion: 60.0, predicted: 108.3, risk: "LOW", trend: "up", rank: 1 },
     { team_name: "华东大区", manager: "李四", target: 16000000, actual: 9200000, completion: 57.5, predicted: 107.5, risk: "MEDIUM", trend: "stable", rank: 2 },
     { team_name: "华北大区", manager: "赵六", target: 16000000, actual: 8500000, completion: 53.1, predicted: 98.8, risk: "HIGH", trend: "down", rank: 3 },
@@ -272,7 +272,7 @@ function TeamBreakdown() {
 
 // 个人分解
 function SalesRepBreakdown() {
-  const [reps, setReps] = useState([
+  const [reps, _setReps] = useState([
     { name: "张三", team: "华南大区", target: 10000000, actual: 6500000, completion: 65.0, predicted: 112.0, pipeline: 8500000, rank: 1 },
     { name: "李四", team: "华东大区", target: 10000000, actual: 5800000, completion: 58.0, predicted: 105.0, pipeline: 7200000, rank: 2 },
     { name: "王五", team: "华南大区", target: 10000000, actual: 5200000, completion: 52.0, predicted: 92.0, pipeline: 6500000, rank: 3 },

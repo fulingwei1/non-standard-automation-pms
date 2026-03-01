@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { staffingApi } from '../../../services/api';
+import { staffMatchingApi as staffingApi } from '../../../services/api';
 
 export function useProjectStaffingNeed() {
     const [needs, setNeeds] = useState([]);

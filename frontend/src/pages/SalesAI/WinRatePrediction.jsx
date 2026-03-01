@@ -43,7 +43,7 @@ import {
 
 // 单商机赢单率评估
 function OpportunityAssessment() {
-  const [assessment, setAssessment] = useState({
+  const [assessment, _setAssessment] = useState({
     opportunity_name: "宁德时代 FCT 测试线项目",
     customer: "宁德时代",
     amount: 3500000,
@@ -302,7 +302,7 @@ function OpportunityAssessment() {
 
 // 多商机对比
 function PortfolioComparison() {
-  const [opportunities, setOpportunities] = useState([
+  const [opportunities, _setOpportunities] = useState([
     {
       name: "宁德时代 FCT",
       customer: "宁德时代",

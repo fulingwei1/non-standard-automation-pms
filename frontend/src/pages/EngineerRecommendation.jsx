@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Target,
@@ -45,7 +45,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui";
-import { requirementExtractionApi } from "../services/api";
+import { requirementExtractionApi } from "../services/api/requirement";
 
 // 匹配度等级
 const MATCH_LEVELS = {
@@ -57,7 +57,6 @@ const MATCH_LEVELS = {
 
 export default function EngineerRecommendation() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requirements, setRequirements] = useState(null);
   const [recommendations, setRecommendations] = useState({});
@@ -95,7 +94,7 @@ export default function EngineerRecommendation() {
     loadRequirements();
   }, [loadRequirements]);
 
-  const getMatchLevel = (score) => {
+  const _getMatchLevel = (score) => {
     if (score >= 90) return MATCH_LEVELS.EXCELLENT;
     if (score >= 75) return MATCH_LEVELS.GOOD;
     if (score >= 60) return MATCH_LEVELS.FAIR;

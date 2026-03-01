@@ -47,7 +47,7 @@ function OrgNode({ node, level, onSelect, selectedId }) {
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedId === node.id;
   
-  const getLevelColor = (level) => {
+  const getLevelColor = (_level) => {
     const colors = {
       GM: "border-purple-500 bg-purple-500/10",
       Director: "border-blue-500 bg-blue-500/10",

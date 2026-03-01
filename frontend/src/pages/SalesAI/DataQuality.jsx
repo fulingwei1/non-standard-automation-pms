@@ -44,7 +44,7 @@ import {
 
 // 数据质量排名
 function QualityRanking() {
-  const [rankings, setRankings] = useState([
+  const [rankings, _setRankings] = useState([
     {
       rank: 1,
       name: "张三",

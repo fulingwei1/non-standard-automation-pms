@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAIStaffMatching } from '../useAIStaffMatching';
-import { projectApi, staffApi } from '../../../../services/api';
+import { projectApi, staffMatchingApi as staffApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

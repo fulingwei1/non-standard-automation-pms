@@ -80,14 +80,12 @@ export default function YearComparison() {
   const fetchComparisonData = async () => {
     setLoading(true);
     try {
-      const [reportRes, trendRes, kpiRes] = await Promise.all([
+      const [reportRes, kpiRes] = await Promise.all([
         comparisonApi.getYoYReport(currentYear, previousYear),
-        comparisonApi.getMultiYearTrend(3),
         comparisonApi.getKpiAchievement(currentYear, previousYear),
       ]);
 
       setYoyReport(reportRes.data);
-      setMultiYearTrend(trendRes.data?.trends || trendRes.data || []);
       setKpiAchievement(kpiRes.data);
     } catch (error) {
       console.error("获取对比数据失败:", error);

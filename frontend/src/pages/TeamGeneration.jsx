@@ -60,7 +60,6 @@ export default function TeamGeneration() {
   const [members, setMembers] = useState([]);
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [approvalComments, setApprovalComments] = useState("");
 
   const generateTeam = useCallback(async () => {
     if (!projectId) return;

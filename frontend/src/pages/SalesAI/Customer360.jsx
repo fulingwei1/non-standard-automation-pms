@@ -8,7 +8,7 @@
  * 4. 购买偏好
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -54,7 +54,7 @@ import {
 
 // 交互历史时间线
 function InteractionTimeline() {
-  const [timeline, setTimeline] = useState([
+  const [timeline, _setTimeline] = useState([
     {
       date: "2025-02-28",
       type: "meeting",
@@ -154,7 +154,7 @@ function InteractionTimeline() {
 
 // 决策链分析
 function DecisionChain() {
-  const [decisionChain, setDecisionChain] = useState({
+  const [decisionChain, _setDecisionChain] = useState({
     contacts: [
       { name: "张三", title: "技术总监", role: "TB", role_name: "技术决策人", influence: "HIGH", attitude: "supportive", relationship_strength: 85 },
       { name: "李四", title: "采购经理", role: "PB", role_name: "采购决策人", influence: "MEDIUM", attitude: "neutral", relationship_strength: 60 },
@@ -240,7 +240,7 @@ function DecisionChain() {
 
 // 健康度评分
 function HealthScore() {
-  const [healthData, setHealthData] = useState({
+  const [healthData, _setHealthData] = useState({
     overall_score: 78,
     health_level: "GOOD",
     dimensions: [
@@ -328,7 +328,7 @@ function HealthScore() {
 
 // 购买偏好
 function BuyingPreferences() {
-  const [preferences, setPreferences] = useState({
+  const [preferences, _setPreferences] = useState({
     product_preferences: {
       preferred_categories: [
         { category: "FCT", count: 3, percentage: 60 },
@@ -442,7 +442,7 @@ function BuyingPreferences() {
 
 // 主页面
 export default function Customer360() {
-  const { customerId } = useParams();
+  const { customerId: _customerId } = useParams();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { productionExceptionApi } from '../../../services/api';
+import { exceptionApi as productionExceptionApi } from '../../../services/api';
 
 /**
  * 生产异常列表数据 Hook

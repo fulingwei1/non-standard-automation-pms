@@ -491,6 +491,7 @@ export default function KPIList() {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [editingKpi, setEditingKpi] = useState(null);
   const [updatingKpi, setUpdatingKpi] = useState(null);
+  const [_collecting, setCollecting] = useState(false);
 
   useEffect(() => {
     loadData();

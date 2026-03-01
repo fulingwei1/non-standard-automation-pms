@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { adminApprovalApi } from '../../../services/api';
+import { adminApi as adminApprovalApi } from '../../../services/api';
 
 export function useAdministrativeApprovals() {
     const [approvals, setApprovals] = useState([]);

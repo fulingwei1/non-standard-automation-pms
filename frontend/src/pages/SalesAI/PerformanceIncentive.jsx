@@ -8,7 +8,7 @@
  * 4. 成就系统
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Trophy,
@@ -49,7 +49,7 @@ import {
 
 // 业绩排行榜
 function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState({
+  const [leaderboard, _setLeaderboard] = useState({
     individual_ranking: [
       { rank: 1, sales_name: "张三", department: "华南大区", revenue: 15800000, completion_rate: 158.0, deals_won: 12, trend: "up", rank_change: 0 },
       { rank: 2, sales_name: "李四", department: "华东大区", revenue: 12500000, completion_rate: 125.0, deals_won: 9, trend: "up", rank_change: 1 },
@@ -161,7 +161,7 @@ function Leaderboard() {
 
 // 提成计算
 function CommissionCalculator() {
-  const [commission, setCommission] = useState({
+  const [commission, _setCommission] = useState({
     sales_name: "张三",
     month: "2025-02",
     base_data: {
@@ -275,7 +275,7 @@ function CommissionCalculator() {
 
 // PK 对战
 function PKBattles() {
-  const [battles, setBattles] = useState({
+  const [battles, _setBattles] = useState({
     active_battles: [
       {
         battle_id: 1,
@@ -369,7 +369,7 @@ function PKBattles() {
 
 // 成就系统
 function Achievements() {
-  const [achievements, setAchievements] = useState({
+  const [achievements, _setAchievements] = useState({
     total_achievements: 15,
     total_points: 2850,
     level: 8,

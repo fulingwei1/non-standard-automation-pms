@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -65,7 +65,6 @@ const WORKLOAD_STATUS = {
 
 export default function EngineerWorkloadBoard() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState(null);
   const [warnings, setWarnings] = useState([]);

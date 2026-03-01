@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { cpqApi } from '../../../services/api';
+import { quoteApi as cpqApi } from '../../../services/api';
 
 export function useCpqConfigurator() {
     const [configuration, setConfiguration] = useState({});

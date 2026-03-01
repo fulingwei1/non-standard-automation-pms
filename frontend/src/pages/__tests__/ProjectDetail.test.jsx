@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProjectDetail from '../ProjectDetail';
-import _api, { projectApi, _machineApi, _stageApi, _milestoneApi, _memberApi, _costApi, _documentApi } from '../../services/api';
+import _api, { projectApi, machineApi as _machineApi, stageApi as _stageApi, milestoneApi as _milestoneApi, memberApi as _memberApi, costApi as _costApi, documentApi as _documentApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { leadAssessmentApi } from '../../../services/api';
+import { technicalAssessmentApi as leadAssessmentApi } from '../../../services/api';
 
 export function useLeadAssessment() {
     const [assessments, setAssessments] = useState([]);

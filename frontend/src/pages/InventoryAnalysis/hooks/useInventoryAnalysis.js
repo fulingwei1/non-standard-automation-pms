@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { inventoryApi } from '../../../services/api';
+import { warehouseApi as inventoryApi } from '../../../services/api';
 
 /**
  * 库存分析数据 Hook

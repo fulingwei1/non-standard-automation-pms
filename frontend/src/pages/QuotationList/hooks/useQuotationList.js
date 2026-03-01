@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { quotationApi } from '../../../services/api';
+import { quoteApi as quotationApi } from '../../../services/api';
 
 /**
  * 报价单列表数据 Hook

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { reportApi } from '../../../services/api';
+import { financialReportApi as reportApi } from '../../../services/api';
 
 /**
  * 财务报表数据 Hook

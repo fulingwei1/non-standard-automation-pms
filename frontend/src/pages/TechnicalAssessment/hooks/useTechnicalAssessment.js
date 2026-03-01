@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { assessmentApi } from '../../../services/api';
+import { technicalAssessmentApi as assessmentApi } from '../../../services/api';
 
 /**
  * 技术评估数据 Hook

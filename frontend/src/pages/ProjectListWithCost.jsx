@@ -5,7 +5,6 @@ import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { 
-  _formatCurrency, 
   formatCurrencyWan, 
   formatPercent, 
   getCostStatus,

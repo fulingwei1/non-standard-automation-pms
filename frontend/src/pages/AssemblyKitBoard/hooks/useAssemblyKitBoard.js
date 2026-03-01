@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { assemblyApi } from '../../../services/api';
+import { assemblyKitApi as assemblyApi } from '../../../services/api/production';
 
 /**
  * 齐套分析看板数据 Hook

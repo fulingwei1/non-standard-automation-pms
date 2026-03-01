@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { engineerKnowledgeApi } from '../../../services/api';
+import { lessonsApi as engineerKnowledgeApi } from '../../../services/api';
 
 export function useEngineerKnowledge() {
     const [articles, setArticles] = useState([]);

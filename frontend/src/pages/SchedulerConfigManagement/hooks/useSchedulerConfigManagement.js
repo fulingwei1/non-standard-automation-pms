@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { schedulerConfigApi } from '../../../services/api';
+import { schedulerApi as schedulerConfigApi } from '../../../services/api';
 
 export function useSchedulerConfigManagement() {
     const [configs, setConfigs] = useState([]);

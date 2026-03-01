@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePurchaseOrderData } from '../usePurchaseOrderData';
-import { purchaseOrderApi } from '../../../../services/api';
+import { purchaseApi as purchaseOrderApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

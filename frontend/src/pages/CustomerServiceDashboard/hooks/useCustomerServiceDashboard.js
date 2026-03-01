@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { customerServiceApi } from '../../../services/api';
+import { itrApi as customerServiceApi } from '../../../services/api';
 
 export function useCustomerServiceDashboard() {
     const [data, setData] = useState({ tickets: [], stats: {} });

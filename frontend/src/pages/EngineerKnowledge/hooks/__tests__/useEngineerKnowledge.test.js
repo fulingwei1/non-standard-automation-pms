@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useEngineerKnowledge } from '../useEngineerKnowledge';
-import { engineerKnowledgeApi } from '../../../../services/api';
+import { lessonsApi as engineerKnowledgeApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

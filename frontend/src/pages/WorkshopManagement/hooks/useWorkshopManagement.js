@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { workshopApi } from '../../../services/api';
+import { productionApi as workshopApi } from '../../../services/api';
 
 export function useWorkshopManagement() {
     const [workshops, setWorkshops] = useState([]);

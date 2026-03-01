@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { positionApi } from '../../../services/api';
+import { organizationApi as positionApi } from '../../../services/api';
 
 /**
  * 职位管理数据 Hook

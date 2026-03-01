@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { projectSettlementApi } from '../../../services/api';
+import { settlementApi as projectSettlementApi } from '../../../services/api';
 
 export function useProjectSettlement() {
     const [settlements, setSettlements] = useState([]);

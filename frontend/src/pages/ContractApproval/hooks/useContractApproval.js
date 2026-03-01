@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { contractApprovalApi } from '../../../services/api';
+import { unifiedApprovalApi as contractApprovalApi } from '../../../services/api';
 
 export function useContractApproval() {
     const [approvals, setApprovals] = useState([]);

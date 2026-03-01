@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -41,7 +41,7 @@ import {
   TableRow,
   Progress,
 } from "../components/ui";
-import { assemblyKitApi } from "../services/api";
+import { assemblyKitApi } from "../services/api/production";
 
 // 预警级别配置
 const WARNING_LEVELS = {
@@ -91,7 +91,6 @@ const STAGE_NAMES = {
 
 export default function TimeBasedKitRateBoard() {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [plannedStartDate, setPlannedStartDate] = useState("");

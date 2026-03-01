@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useSalesProjectTrack } from '../useSalesProjectTrack';
-import { salesProjectApi } from '../../../../services/api';
+import { salesApi as salesProjectApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

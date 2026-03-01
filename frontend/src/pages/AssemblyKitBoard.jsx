@@ -60,7 +60,8 @@ import {
 "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
-import { assemblyKitApi, projectApi } from "../services/api";
+import { projectApi } from "../services/api";
+import { assemblyKitApi } from "../services/api/production";
 
 // 阶段图标映射
 const stageIcons = {

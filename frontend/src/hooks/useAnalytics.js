@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { workloadAnalyticsApi, _skillMatrixApi } from '../services/api/analytics';
+import { workloadAnalyticsApi } from '../services/api/analytics';
 import { projectApi } from '../services/api/projects';
 
 // ============================================

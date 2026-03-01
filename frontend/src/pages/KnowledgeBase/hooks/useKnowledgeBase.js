@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { knowledgeBaseApi } from '../../../services/api';
+import { serviceApi as knowledgeBaseApi } from '../../../services/api';
 
 export function useKnowledgeBase() {
     const [articles, setArticles] = useState([]);

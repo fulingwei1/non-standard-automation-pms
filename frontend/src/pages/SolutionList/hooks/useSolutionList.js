@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { solutionApi } from '../../../services/api';
+import { presaleApi as solutionApi } from '../../../services/api';
 
 export function useSolutionList() {
     const [solutions, setSolutions] = useState([]);

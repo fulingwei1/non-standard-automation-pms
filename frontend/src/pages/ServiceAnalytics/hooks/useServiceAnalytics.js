@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { serviceAnalyticsApi } from '../../../services/api';
+import { itrApi as serviceAnalyticsApi } from '../../../services/api';
 
 export function useServiceAnalytics() {
     const [data, setData] = useState({ tickets: [], satisfaction: [], performance: [] });

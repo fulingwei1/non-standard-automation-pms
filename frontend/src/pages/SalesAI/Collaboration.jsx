@@ -46,7 +46,7 @@ import {
 
 // 协作留言
 function CollaborationMessages() {
-  const [messages, setMessages] = useState([
+  const [messages, _setMessages] = useState([
     {
       id: 1,
       author: "张三",
@@ -124,7 +124,7 @@ function CollaborationMessages() {
 
 // 技术支持请求
 function SupportRequests() {
-  const [requests, setRequests] = useState([
+  const [requests, _setRequests] = useState([
     {
       id: 1,
       title: "FCT 测试方案技术咨询",
@@ -209,7 +209,7 @@ function SupportRequests() {
 
 // 知识库
 function KnowledgeBase() {
-  const [articles, setArticles] = useState([
+  const [articles, _setArticles] = useState([
     {
       id: 1,
       title: "宁德时代 FCT 项目成功案例",
@@ -299,7 +299,7 @@ function KnowledgeBase() {
 
 // 经验分享会
 function ShareSessions() {
-  const [sessions, setSessions] = useState([
+  const [sessions, _setSessions] = useState([
     {
       id: 1,
       title: "Q1 大单签约经验分享",

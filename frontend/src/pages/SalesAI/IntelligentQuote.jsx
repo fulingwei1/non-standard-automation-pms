@@ -140,7 +140,7 @@ function HistoricalPrices() {
 
 // 赢单率预测
 function WinRatePrediction() {
-  const [predictions, setPredictions] = useState([
+  const [predictions, _setPredictions] = useState([
     { opportunity_id: 101, opportunity_name: "宁德时代FCT项目", win_rate: 75, risk_level: "LOW" },
     { opportunity_id: 102, opportunity_name: "比亚迪EOL项目", win_rate: 60, risk_level: "MEDIUM" },
     { opportunity_id: 103, opportunity_name: "中创新航ICT项目", win_rate: 45, risk_level: "HIGH" },
@@ -181,7 +181,7 @@ function WinRatePrediction() {
 
 // 最优价格建议
 function OptimalPriceSuggestion() {
-  const [suggestion, setSuggestion] = useState({
+  const [suggestion, _setSuggestion] = useState({
     optimal_price: 3200000,
     optimal_win_rate: 70,
     optimal_margin: 32,

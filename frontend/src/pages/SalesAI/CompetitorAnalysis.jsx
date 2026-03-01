@@ -43,7 +43,7 @@ import {
 
 // 竞争对手总览
 function CompetitorOverview() {
-  const [overview, setOverview] = useState({
+  const [overview, _setOverview] = useState({
     total_opportunities: 156,
     time_range: "2024-01-01 ~ 2026-03-01",
     
@@ -255,7 +255,7 @@ function CompetitorOverview() {
 
 // 竞争策略建议
 function StrategyRecommendations() {
-  const [strategies, setStrategies] = useState([
+  const [strategies, _setStrategies] = useState([
     {
       competitor: "竞品 A（德国知名）",
       win_rate: 71.1,

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { dependencyApi } from '../../../services/api';
+import { progressApi as dependencyApi } from '../../../services/api';
 
 export function useDependencyCheck() {
     const [dependencies, setDependencies] = useState([]);

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { workerApi } from '../../../services/api';
+import { productionApi as workerApi } from '../../../services/api';
 
 export function useWorkerManagement() {
     const [workers, setWorkers] = useState([]);

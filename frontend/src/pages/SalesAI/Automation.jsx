@@ -8,7 +8,7 @@
  * 4. 自动报告
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Zap,
@@ -48,7 +48,7 @@ import {
 
 // 跟进提醒
 function FollowUpReminders() {
-  const [reminders, setReminders] = useState([
+  const [reminders, _setReminders] = useState([
     {
       customer_id: 1,
       customer_name: "宁德时代",
@@ -209,7 +209,7 @@ function AutomationRules() {
 
 // 自动报告
 function AutoReports() {
-  const [schedules, setSchedules] = useState([
+  const [schedules, _setSchedules] = useState([
     { id: 1, report_type: "日报", frequency: "每天", time: "18:00", is_active: true },
     { id: 2, report_type: "周报", frequency: "每周一", time: "09:00", is_active: true },
     { id: 3, report_type: "月报", frequency: "每月1日", time: "09:00", is_active: true },

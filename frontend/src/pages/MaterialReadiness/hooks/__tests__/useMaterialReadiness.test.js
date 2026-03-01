@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useMaterialReadiness } from '../useMaterialReadiness';
-import { materialReadinessApi } from '../../../../services/api';
+import { materialApi as materialReadinessApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

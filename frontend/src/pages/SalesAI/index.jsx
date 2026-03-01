@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -53,7 +52,7 @@ import { aiSalesApi } from "../../services/api";
 
 // 话术推荐组件
 function ScriptRecommendation() {
-  const [customerId, setCustomerId] = useState("1");
+  const [customerId, _setCustomerId] = useState("1");
   const [scenario, setScenario] = useState("初次接触");
   const [loading, setLoading] = useState(false);
   const [scripts, setScripts] = useState([]);
@@ -136,7 +135,7 @@ function ScriptRecommendation() {
 
 // 方案生成组件
 function ProposalGeneration() {
-  const [opportunityId, setOpportunityId] = useState("101");
+  const [opportunityId, _setOpportunityId] = useState("101");
   const [proposalType, setProposalType] = useState("technical");
   const [loading, setLoading] = useState(false);
   const [proposal, setProposal] = useState(null);

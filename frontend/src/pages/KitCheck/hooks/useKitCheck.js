@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { kitApi } from '../../../services/api';
+import { kitCheckApi as kitApi } from '../../../services/api';
 
 export function useKitCheck() {
     const [kits, setKits] = useState([]);

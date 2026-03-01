@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { settingsApi } from '../../../services/api';
+import { adminApi as settingsApi } from '../../../services/api';
 
 /**
  * 系统设置数据 Hook

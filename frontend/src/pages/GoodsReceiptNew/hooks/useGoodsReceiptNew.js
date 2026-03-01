@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { goodsReceiptApi, purchaseOrderApi } from '../../../services/api';
+import { purchaseApi as goodsReceiptApi, purchaseApi as purchaseOrderApi } from '../../../services/api';
 
 export function useGoodsReceiptNew() {
     const [orders, setOrders] = useState([]);

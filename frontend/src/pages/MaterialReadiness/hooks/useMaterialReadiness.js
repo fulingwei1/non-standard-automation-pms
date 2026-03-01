@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { materialReadinessApi } from '../../../services/api';
+import { materialApi as materialReadinessApi } from '../../../services/api';
 
 export function useMaterialReadiness() {
     const [materials, setMaterials] = useState([]);

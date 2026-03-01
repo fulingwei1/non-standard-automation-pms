@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { arrivalApi } from '../../../services/api';
+import { shortageApi as arrivalApi } from '../../../services/api';
 
 export function useArrivalDetail(arrivalId) {
     const [arrival, setArrival] = useState(null);

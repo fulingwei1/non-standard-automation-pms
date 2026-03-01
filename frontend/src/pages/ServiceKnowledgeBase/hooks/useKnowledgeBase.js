@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { knowledgeApi } from '../../../services/api';
+import { serviceApi as knowledgeApi } from '../../../services/api';
 
 /**
  * 服务知识库数据 Hook

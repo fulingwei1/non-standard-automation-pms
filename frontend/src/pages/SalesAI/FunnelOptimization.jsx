@@ -110,7 +110,7 @@ function ConversionRates() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {funnelData.stages.map((stage, idx) => (
+            {funnelData.stages.map((stage) => (
               <div key={stage.stage} className="flex items-center gap-4">
                 <div className="w-32 text-sm font-medium">{stage.stage_name}</div>
                 <div className="flex-1">
@@ -148,7 +148,7 @@ function ConversionRates() {
 
 // 瓶颈识别组件
 function Bottlenecks() {
-  const [bottlenecks, setBottlenecks] = useState([
+  const [bottlenecks, _setBottlenecks] = useState([
     {
       stage: "STAGE4",
       stage_name: "价格谈判",
@@ -237,7 +237,7 @@ function Bottlenecks() {
 
 // 预测准确性组件
 function PredictionAccuracy() {
-  const [accuracyData, setAccuracyData] = useState({
+  const [accuracyData, _setAccuracyData] = useState({
     overall_accuracy: {
       predicted_win_rate: 68.5,
       actual_win_rate: 62.9,

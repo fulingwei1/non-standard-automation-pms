@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useKnowledgeBase } from '../useKnowledgeBase';
-import { knowledgeBaseApi } from '../../../../services/api';
+import { serviceApi as knowledgeBaseApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {

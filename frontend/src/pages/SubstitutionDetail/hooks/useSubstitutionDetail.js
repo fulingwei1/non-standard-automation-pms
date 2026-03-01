@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { substitutionApi } from '../../../services/api';
+import { shortageApi as substitutionApi } from '../../../services/api';
 
 export function useSubstitutionDetail(substitutionId) {
     const [substitution, setSubstitution] = useState(null);

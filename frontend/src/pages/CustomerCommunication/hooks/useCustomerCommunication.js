@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { communicationApi, customerApi } from '../../../services/api';
+import { customerCommunicationApi as communicationApi, customerApi } from '../../../services/api';
 
 /**
  * 客户沟通数据 Hook

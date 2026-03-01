@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAssemblyKitBoard } from '../useAssemblyKitBoard';
-import { assemblyApi } from '../../../../services/api';
+import { assemblyKitApi as assemblyApi } from '../../../../services/api/production';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {
