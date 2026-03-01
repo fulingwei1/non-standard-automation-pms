@@ -87,7 +87,7 @@ const impactConfig = {
 };
 
 const categoryOptions = [
-  { value: "", label: "全部分类" },
+  { value: "__all__", label: "全部分类" },
   { value: "technical", label: "技术" },
   { value: "management", label: "管理" },
   { value: "quality", label: "质量" },
@@ -97,14 +97,14 @@ const categoryOptions = [
 ];
 
 const lessonTypeOptions = [
-  { value: "", label: "全部类型" },
+  { value: "__all__", label: "全部类型" },
   { value: "success", label: "成功经验" },
   { value: "failure", label: "失败教训" },
   { value: "improvement", label: "改进建议" },
 ];
 
 const impactOptions = [
-  { value: "", label: "全部影响" },
+  { value: "__all__", label: "全部影响" },
   { value: "high", label: "高" },
   { value: "medium", label: "中" },
   { value: "low", label: "低" },
@@ -290,7 +290,10 @@ export default function LessonsLearned() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-                <Select value={category || "unknown"} onValueChange={setCategory}>
+                <Select
+                  value={category === "" ? "__all__" : category}
+                  onValueChange={(v) => setCategory(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="分类" />
                   </SelectTrigger>
@@ -302,7 +305,10 @@ export default function LessonsLearned() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={lessonType || "unknown"} onValueChange={setLessonType}>
+                <Select
+                  value={lessonType === "" ? "__all__" : lessonType}
+                  onValueChange={(v) => setLessonType(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="类型" />
                   </SelectTrigger>
@@ -314,7 +320,10 @@ export default function LessonsLearned() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={impactLevel || "unknown"} onValueChange={setImpactLevel}>
+                <Select
+                  value={impactLevel === "" ? "__all__" : impactLevel}
+                  onValueChange={(v) => setImpactLevel(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger className="w-[100px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="影响" />
                   </SelectTrigger>
@@ -460,11 +469,15 @@ export default function LessonsLearned() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-gray-300">分类</Label>
-                <Select value={formData.category} onValueChange={(v) => handleInputChange("category", v)}>
+                <Select
+                  value={formData.category === "" ? "__none__" : formData.category}
+                  onValueChange={(v) => handleInputChange("category", v === "__none__" ? "" : v)}
+                >
                   <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="选择分类" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="__none__" className="text-white">请选择</SelectItem>
                     {categoryOptions.slice(1).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value} className="text-white">
                         {opt.label}
@@ -475,11 +488,15 @@ export default function LessonsLearned() {
               </div>
               <div>
                 <Label className="text-gray-300">类型</Label>
-                <Select value={formData.lesson_type} onValueChange={(v) => handleInputChange("lesson_type", v)}>
+                <Select
+                  value={formData.lesson_type === "" ? "__none__" : formData.lesson_type}
+                  onValueChange={(v) => handleInputChange("lesson_type", v === "__none__" ? "" : v)}
+                >
                   <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="选择类型" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="__none__" className="text-white">请选择</SelectItem>
                     {lessonTypeOptions.slice(1).map((opt) => (
                       <SelectItem key={opt.value} value={opt.value} className="text-white">
                         {opt.label}
@@ -491,11 +508,15 @@ export default function LessonsLearned() {
             </div>
             <div>
               <Label className="text-gray-300">影响程度</Label>
-              <Select value={formData.impact_level} onValueChange={(v) => handleInputChange("impact_level", v)}>
+              <Select
+                value={formData.impact_level === "" ? "__none__" : formData.impact_level}
+                onValueChange={(v) => handleInputChange("impact_level", v === "__none__" ? "" : v)}
+              >
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="选择影响程度" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="__none__" className="text-white">请选择</SelectItem>
                   {impactOptions.slice(1).map((opt) => (
                     <SelectItem key={opt.value} value={opt.value} className="text-white">
                       {opt.label}

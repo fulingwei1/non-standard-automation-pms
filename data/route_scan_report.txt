@@ -1,0 +1,547 @@
+================================================================================
+API路由全面检查报告
+================================================================================
+
+总路由数: 2388
+
+✅ 正常 (2xx): 248 (10.4%)
+🔒 需要权限 (401/403): 0 (0.0%)
+⚠️ 路径参数缺失: 1294 (54.2%)
+⚠️ Query参数缺失: 94 (3.9%)
+❌ 404 Not Found: 1 (0.0%)
+❌ 422 Validation Error: 11 (0.5%)
+❌ 500 Server Error: 0 (0.0%)
+⏭️ 跳过测试: 370 (15.5%)
+❓ 其他错误: 370 (15.5%)
+
+================================================================================
+
+
+✅ 正常 (2xx) (248 个)
+--------------------------------------------------------------------------------
+
+  GET /api/v1/auth/me
+  Tags: auth
+  Status: 200
+
+  GET /api/v1/auth/permissions
+  Tags: auth
+  Status: 200
+
+  GET /api/v1/auth/sessions
+  Tags: sessions
+  Status: 200
+
+  GET /api/v1/users/
+  Tags: users, 用户管理
+  Status: 200
+
+  GET /api/v1/users/import/template
+  Tags: users, 用户批量导入
+  Status: 200
+
+  GET /api/v1/org/departments
+  Tags: organization, 部门管理
+  Status: 200
+
+  GET /api/v1/org/departments/tree
+  Tags: organization, 部门管理
+  Status: 200
+
+  GET /api/v1/org/departments/statistics
+  Tags: organization, 部门管理
+  Status: 200
+
+  GET /api/v1/org/employees
+  Tags: organization, 员工管理
+  Status: 200
+
+  GET /api/v1/org/employees/import/template
+  Tags: organization, 员工导入
+  Status: 200
+
+  GET /api/v1/org/hr-profiles
+  Tags: organization, 人事档案
+  Status: 200
+
+  GET /api/v1/org/hr-profiles/statistics/overview
+  Tags: organization, 人事档案
+  Status: 200
+
+  GET /api/v1/org/units/
+  Tags: organization, 组织单元
+  Status: 200
+
+  GET /api/v1/org/units/tree
+  Tags: organization, 组织单元
+  Status: 200
+
+  GET /api/v1/org/positions/
+  Tags: organization, 岗位管理
+  Status: 200
+
+  GET /api/v1/org/job-levels/
+  Tags: organization, 职级管理
+  Status: 200
+
+  GET /api/v1/org/assignments/
+  Tags: organization, 员工分配
+  Status: 200
+
+  GET /api/v1/roles/
+  Tags: roles, 角色管理
+  Status: 200
+
+  GET /api/v1/roles/permissions
+  Tags: roles, 角色管理
+  Status: 200
+
+  GET /api/v1/roles/templates
+  Tags: roles, 角色管理
+  Status: 200
+
+  ... 还有 228 个类似结果
+
+
+⚠️ 路径参数缺失 (1294 个)
+--------------------------------------------------------------------------------
+
+  GET /api/v1/users/{user_id}
+  Tags: users, 用户管理
+  Reason: 需要路径参数
+
+  PUT /api/v1/users/{user_id}
+  Tags: users, 用户管理
+  Reason: 非GET方法: PUT
+
+  DELETE /api/v1/users/{user_id}
+  Tags: users, 用户管理
+  Reason: 非GET方法: DELETE
+
+  PUT /api/v1/users/{user_id}/roles
+  Tags: users, 用户管理
+  Reason: 非GET方法: PUT
+
+  POST /api/v1/users/create-from-employee/{employee_id}
+  Tags: users, 用户同步
+  Reason: 非GET方法: POST
+
+  PUT /api/v1/users/{user_id}/toggle-active
+  Tags: users, 用户同步
+  Reason: 非GET方法: PUT
+
+  PUT /api/v1/users/{user_id}/reset-password
+  Tags: users, 用户同步
+  Reason: 非GET方法: PUT
+
+  GET /api/v1/users/{user_id}/time-allocation
+  Tags: users, 工时分配
+  Reason: 需要路径参数
+
+  GET /api/v1/org/departments/{dept_id}
+  Tags: organization, 部门管理
+  Reason: 需要路径参数
+
+  PUT /api/v1/org/departments/{dept_id}
+  Tags: organization, 部门管理
+  Reason: 非GET方法: PUT
+
+  GET /api/v1/org/departments/{dept_id}/users
+  Tags: organization, 部门管理
+  Reason: 需要路径参数
+
+  GET /api/v1/org/employees/{emp_id}
+  Tags: organization, 员工管理
+  Reason: 需要路径参数
+
+  PUT /api/v1/org/employees/{emp_id}
+  Tags: organization, 员工管理
+  Reason: 非GET方法: PUT
+
+  GET /api/v1/org/{emp_id}/assignments
+  Tags: organization, 员工管理
+  Reason: 需要路径参数
+
+  GET /api/v1/org/hr-profiles/{emp_id}
+  Tags: organization, 人事档案
+  Reason: 需要路径参数
+
+  PUT /api/v1/org/hr-profiles/{emp_id}
+  Tags: organization, 人事档案
+  Reason: 非GET方法: PUT
+
+  GET /api/v1/org/units/{id}
+  Tags: organization, 组织单元
+  Reason: 需要路径参数
+
+  PUT /api/v1/org/units/{id}
+  Tags: organization, 组织单元
+  Reason: 非GET方法: PUT
+
+  DELETE /api/v1/org/units/{id}
+  Tags: organization, 组织单元
+  Reason: 非GET方法: DELETE
+
+  GET /api/v1/org/units/{id}/employees
+  Tags: organization, 组织单元
+  Reason: 需要路径参数
+
+  ... 还有 1274 个类似结果
+
+
+⚠️ Query参数缺失 (94 个)
+--------------------------------------------------------------------------------
+
+  POST /api/v1/permissions/
+  Tags: permissions, 权限管理, 权限管理
+  Reason: 非GET方法: POST
+
+  GET /api/v1/projects/lessons/search
+  Tags: projects, projects-lessons
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/projects/resources/workload
+  Tags: projects, projects-resources
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  POST /api/v1/projects/submit
+  Tags: projects, projects-approvals, 项目审批-已废弃
+  Reason: 非GET方法: POST
+
+  POST /api/v1/projects/action
+  Tags: projects, projects-approvals, 项目审批-已废弃
+  Reason: 非GET方法: POST
+
+  POST /api/v1/projects/withdraw
+  Tags: projects, projects-approvals, 项目审批-已废弃
+  Reason: 非GET方法: POST
+
+  GET /api/v1/projects/status
+  Tags: projects, projects-approvals, 项目审批-已废弃
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/projects/history
+  Tags: projects, projects-approvals, 项目审批-已废弃
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  POST /api/v1/projects/schedule/predict
+  Tags: projects, projects-schedule-overview
+  Reason: 非GET方法: POST
+
+  GET /api/v1/projects/schedule/alerts
+  Tags: projects, projects-schedule-overview
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  GET /api/v1/projects/schedule/solutions
+  Tags: projects, projects-schedule-overview
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  POST /api/v1/projects/schedule/report
+  Tags: projects, projects-schedule-overview
+  Reason: 非GET方法: POST
+
+  GET /api/v1/projects/schedule/predictions/history
+  Tags: projects, projects-schedule-overview
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  GET /api/v1/production/schedule/preview
+  Tags: production, production-schedule
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  POST /api/v1/production/schedule/confirm
+  Tags: production, production-schedule
+  Reason: 非GET方法: POST
+
+  GET /api/v1/production/schedule/comparison
+  Tags: production, production-schedule
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  GET /api/v1/production/schedule/gantt
+  Tags: production, production-schedule
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}]
+
+  DELETE /api/v1/production/schedule/reset
+  Tags: production, production-schedule
+  Reason: 非GET方法: DELETE
+
+  GET /api/v1/production/quality/trend
+  Tags: production, production-quality-management
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}, {'field': 'query', 'message': 'Field required'}]
+
+  GET /api/v1/production/quality/spc
+  Tags: production, production-quality-management
+  Status: 422
+  Detail: [{'field': 'query', 'message': 'Field required'}, {'field': 'query', 'message': 'Field required'}, {'field': 'query', 'message': 'Field required'}]
+
+  ... 还有 74 个类似结果
+
+
+❌ 404 Not Found (1 个)
+--------------------------------------------------------------------------------
+
+  GET /api/v1/production/material/batch-tracing
+  Tags: production, production-material-tracking
+  Status: 404
+  Detail: 未找到批次记录
+
+
+❌ 422 Validation Error (11 个)
+--------------------------------------------------------------------------------
+
+  GET /api/v1/production/work-reports/my
+  Tags: production, production-work-reports
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/leads/export
+  Tags: sales, sales-leads
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/opportunities/funnel
+  Tags: sales, sales-opportunities
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/opportunities/export
+  Tags: sales, sales-opportunities
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/contracts/export
+  Tags: sales, sales-contracts
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/invoices/export
+  Tags: sales, sales-invoices
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/payments/export
+  Tags: sales, sales-payments
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/sales-teams/ranking
+  Tags: sales, sales-team, sales-teams-ranking
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/purchase-material-costs/reminder
+  Tags: sales, sales-cost-management
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/quotes/statuses
+  Tags: sales, sales-quote-status
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+  GET /api/v1/sales/quotes/templates
+  Tags: sales, sales-quote-templates
+  Status: 422
+  Detail: [{'field': 'path', 'message': 'Input should be a valid integer, unable to parse string as an integer'}]
+
+
+⏭️ 跳过测试 (370 个)
+--------------------------------------------------------------------------------
+
+  POST /api/v1/auth/login
+  Tags: auth
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/logout
+  Tags: auth
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/refresh
+  Tags: auth
+  Reason: 非GET方法: POST
+
+  PUT /api/v1/auth/password
+  Tags: auth
+  Reason: 非GET方法: PUT
+
+  POST /api/v1/auth/sessions/revoke
+  Tags: sessions
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/sessions/revoke-all
+  Tags: sessions
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/login
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/setup
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/enable
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/verify
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/disable
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/auth/2fa/backup-codes/regenerate
+  Tags: 2fa
+  Reason: 非GET方法: POST
+
+  POST /api/v1/users/
+  Tags: users, 用户管理
+  Reason: 非GET方法: POST
+
+  POST /api/v1/users/sync-from-employees
+  Tags: users, 用户同步
+  Reason: 非GET方法: POST
+
+  POST /api/v1/users/batch-toggle-active
+  Tags: users, 用户同步
+  Reason: 非GET方法: POST
+
+  POST /api/v1/users/import
+  Tags: users, 用户批量导入
+  Reason: 非GET方法: POST
+
+  POST /api/v1/users/import/preview
+  Tags: users, 用户批量导入
+  Reason: 非GET方法: POST
+
+  POST /api/v1/org/departments
+  Tags: organization, 部门管理
+  Reason: 非GET方法: POST
+
+  POST /api/v1/org/employees
+  Tags: organization, 员工管理
+  Reason: 非GET方法: POST
+
+  POST /api/v1/org/employees/import
+  Tags: organization, 员工导入
+  Reason: 非GET方法: POST
+
+  ... 还有 350 个类似结果
+
+
+❓ 其他错误 (370 个)
+--------------------------------------------------------------------------------
+
+  GET /api/v1/auth/2fa/backup-codes
+  Tags: 2fa
+  Status: 400
+  Detail: 未启用2FA
+
+  GET /api/v1/suppliers/stats/count
+  Tags: suppliers, suppliers
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/materials/stats/count
+  Tags: materials, 物料管理, materials
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/materials/
+  Tags: materials, 物料管理
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/materials/categories/
+  Tags: materials, 物料分类
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/materials/warehouse/statistics
+  Tags: materials, 仓储统计
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/purchase-orders/requests
+  Tags: purchase, 采购申请
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/purchase-orders/goods-receipts/
+  Tags: purchase, 收货管理
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/purchase-orders/workflow/pending
+  Tags: purchase, 采购审批工作流, 采购审批工作流
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/purchase-orders/workflow/history
+  Tags: purchase, 采购审批工作流, 采购审批工作流
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/purchase-orders/
+  Tags: purchase, 采购订单
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/bom/
+  Tags: bom
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/bom/template/download
+  Tags: bom
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/inventory/stocks
+  Tags: inventory, inventory
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/inventory/count/tasks
+  Tags: inventory, inventory
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/inventory/analysis/turnover
+  Tags: inventory, inventory
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/inventory/analysis/aging
+  Tags: inventory, inventory
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/shortage/smart/alerts
+  Tags: shortage, 智能缺料预警
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/shortage/smart/analysis/trend
+  Tags: shortage, 智能缺料预警
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  GET /api/v1/shortage/smart/analysis/root-cause
+  Tags: shortage, 智能缺料预警
+  Status: 429
+  Detail: 请求过于频繁，请稍后再试
+
+  ... 还有 350 个类似结果

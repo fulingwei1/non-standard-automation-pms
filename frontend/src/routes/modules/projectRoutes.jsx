@@ -40,6 +40,8 @@ import MarginPrediction from "../../pages/MarginPrediction";
 
 import ScheduleOptimization from "../../pages/ScheduleOptimization";
 import ScheduleGeneration from "../../pages/ScheduleGeneration";
+import ScheduleGenerationEntry from "../../pages/ScheduleGenerationEntry";
+import EngineerRecommendationEntry from "../../pages/EngineerRecommendationEntry";
 
 export function ProjectRoutes() {
   return (
@@ -112,10 +114,12 @@ export function ProjectRoutes() {
       <Route path="/gantt" element={<GanttDependency />} />
       <Route path="/ecn" element={<ECNManagement />} />
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
+      <Route path="/schedule-generation" element={<ScheduleGenerationEntry />} />
       <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/project-list-with-cost" element={<ProjectListWithCost />} />
       <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />
+      <Route path="/engineer-recommendation" element={<EngineerRecommendationEntry />} />
       <Route path="/projects/:projectId/engineer-recommendation" element={<EngineerRecommendation />} />
       <Route path="/projects/:projectId/engineer-workload-board" element={<EngineerWorkloadBoard />} />
       <Route path="/assembly-template-management" element={<AssemblyTemplateManagement />} />

@@ -88,21 +88,27 @@ export default function AnnualWorkList() {
 
   // 获取年度重点工作列表
   useEffect(() => {
-    if (selectedStrategyId) {
+    if (selectedStrategyId != null) {
       fetchWorks();
+    } else {
+      setLoading(false);
     }
   }, [selectedStrategyId]);
 
   const fetchStrategies = async () => {
     try {
       const { data } = await strategyApi.list({});
-      // 从返回数据中提取战略信息或使用默认
-      setStrategies(data.items || []);
-      if (data.items?.length > 0 && !selectedStrategyId) {
-        setSelectedStrategyId(data.items[0].id);
+      const list = data?.items ?? data ?? [];
+      setStrategies(Array.isArray(list) ? list : []);
+      const arr = Array.isArray(list) ? list : [];
+      if (arr.length > 0 && !selectedStrategyId) {
+        setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
       console.error("获取战略列表失败:", error);
+      setStrategies([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -233,18 +239,22 @@ export default function AnnualWorkList() {
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Select
-              value={selectedStrategyId?.toString()}
-              onValueChange={(val) => setSelectedStrategyId(parseInt(val))}
+              value={selectedStrategyId != null ? selectedStrategyId.toString() : "__none__"}
+              onValueChange={(val) => val !== "__none__" && setSelectedStrategyId(parseInt(val))}
             >
               <SelectTrigger className="w-[200px] bg-slate-900/50 border-slate-700">
                 <SelectValue placeholder="选择战略" />
               </SelectTrigger>
               <SelectContent>
-                {strategies.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name} ({s.year})
-                  </SelectItem>
-                ))}
+                {strategies.length === 0 ? (
+                  <SelectItem value="__none__">暂无战略，请先创建</SelectItem>
+                ) : (
+                  strategies.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name} ({s.year})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <Button

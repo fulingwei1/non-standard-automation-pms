@@ -81,7 +81,7 @@ export default function Decomposition() {
 
   // 获取分解树
   useEffect(() => {
-    if (selectedStrategyId) {
+    if (selectedStrategyId != null) {
       fetchTree();
     }
   }, [selectedStrategyId]);
@@ -89,22 +89,29 @@ export default function Decomposition() {
   const fetchStrategies = async () => {
     try {
       const { data } = await strategyApi.list();
-      setStrategies(data.items || data || []);
-      if (data.items?.length > 0 && !selectedStrategyId) {
-        setSelectedStrategyId(data.items[0].id);
+      const list = data?.items ?? data ?? [];
+      const arr = Array.isArray(list) ? list : [];
+      setStrategies(arr);
+      if (arr.length > 0 && selectedStrategyId == null) {
+        setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
       console.error("获取战略列表失败:", error);
+      setStrategies([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchTree = async () => {
+    if (selectedStrategyId == null) return;
     setLoading(true);
     try {
       const { data } = await decompositionApi.getTree(selectedStrategyId);
-      setTreeData(data);
+      setTreeData(data ?? null);
     } catch (error) {
       console.error("获取分解树失败:", error);
+      setTreeData(null);
     } finally {
       setLoading(false);
     }
@@ -196,18 +203,22 @@ export default function Decomposition() {
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Select
-              value={selectedStrategyId?.toString()}
-              onValueChange={(val) => setSelectedStrategyId(parseInt(val))}
+              value={selectedStrategyId != null ? selectedStrategyId.toString() : "__none__"}
+              onValueChange={(val) => val !== "__none__" && setSelectedStrategyId(parseInt(val))}
             >
               <SelectTrigger className="w-[200px] bg-slate-900/50 border-slate-700">
                 <SelectValue placeholder="选择战略" />
               </SelectTrigger>
               <SelectContent>
-                {strategies.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name} ({s.year})
-                  </SelectItem>
-                ))}
+                {strategies.length === 0 ? (
+                  <SelectItem value="__none__">暂无战略，请先创建</SelectItem>
+                ) : (
+                  strategies.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name} ({s.year})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>

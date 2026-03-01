@@ -48,7 +48,7 @@ export const allMenuGroups = [
       {
         id: "strategy-analysis",
         name: "战略分析",
-        path: "/strategy-analysis",
+        path: "/strategy/analysis",
         icon: "Target",
       },
     ],
@@ -228,6 +228,12 @@ export const allMenuGroups = [
         name: "方案设计",
         path: "/presales/solutions",
         icon: "Lightbulb",
+      },
+      {
+        id: "presales-templates",
+        name: "模板库",
+        path: "/presales/templates",
+        icon: "Layers",
       },
     ],
   },

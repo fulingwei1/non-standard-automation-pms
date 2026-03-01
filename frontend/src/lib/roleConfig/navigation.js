@@ -19,7 +19,7 @@ export function getNavForRole(role) {
             path: "/chairman-dashboard",
             icon: "LayoutDashboard",
           },
-          { name: "战略分析", path: "/strategy-analysis", icon: "Target" },
+          { name: "战略分析", path: "/strategy/analysis", icon: "Target" },
         ],
       },
       {
@@ -155,7 +155,7 @@ export function getNavForRole(role) {
           { name: "销售统计", path: "/sales/statistics", icon: "BarChart3" },
           { name: "销售漏斗", path: "/sales/funnel", icon: "Target" },
           { name: "CPQ配置报价", path: "/sales/cpq", icon: "Calculator" },
-          { name: "客户管理", path: "/customers", icon: "Building2" },
+          { name: "客户管理", path: "/sales/customers", icon: "Building2" },
           { name: "商机看板", path: "/opportunities", icon: "Target" },
         ],
       },

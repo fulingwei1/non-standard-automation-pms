@@ -108,7 +108,7 @@ describe('StatisticsCard', () => {
 
   describe('Value Formats', () => {
     it('handles numeric values', () => {
-      render(<StatisticsCard title="数字" value={12345 || "unknown"} />);
+      render(<StatisticsCard title="数字" value={12345} />);
       expect(screen.getByText('12345')).toBeInTheDocument();
     });
 
@@ -135,7 +135,7 @@ describe('StatisticsCard', () => {
     });
 
     it('handles zero value', () => {
-      render(<StatisticsCard title="零值" value={0 || "unknown"} />);
+      render(<StatisticsCard title="零值" value={0} />);
       expect(screen.getByText('0')).toBeInTheDocument();
     });
 

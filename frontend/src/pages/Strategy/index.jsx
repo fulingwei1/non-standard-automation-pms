@@ -89,7 +89,7 @@ export default function StrategyDashboard() {
     >
       {/* 页面头部 */}
       <PageHeader
-        title="战略管理中心"
+        title="战略分析"
         description="BEM战略解码 | 战略健康度监控 | BSC四维度管理"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">

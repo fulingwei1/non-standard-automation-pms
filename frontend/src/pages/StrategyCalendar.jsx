@@ -32,6 +32,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui";
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { reviewApi, strategyApi } from "@/services/api/strategy";
@@ -81,24 +82,32 @@ export default function StrategyCalendar() {
 
   // 获取日历事件
   useEffect(() => {
-    if (selectedStrategyId) {
+    if (selectedStrategyId != null) {
       fetchEvents();
+    } else {
+      setLoading(false);
     }
   }, [selectedStrategyId, currentDate]);
 
   const fetchStrategies = async () => {
     try {
       const { data } = await strategyApi.list();
-      setStrategies(data.items || data || []);
-      if (data.items?.length > 0 && !selectedStrategyId) {
-        setSelectedStrategyId(data.items[0].id);
+      const list = data?.items ?? data ?? [];
+      const arr = Array.isArray(list) ? list : [];
+      setStrategies(arr);
+      if (arr.length > 0 && selectedStrategyId == null) {
+        setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
       console.error("获取战略列表失败:", error);
+      setStrategies([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchEvents = async () => {
+    if (selectedStrategyId == null) return;
     setLoading(true);
     try {
       const year = currentDate.getFullYear();
@@ -108,9 +117,11 @@ export default function StrategyCalendar() {
         year,
         month,
       });
-      setEvents(data.items || data || []);
+      const list = data?.items ?? data ?? [];
+      setEvents(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error("获取日历事件失败:", error);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -227,18 +238,22 @@ export default function StrategyCalendar() {
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Select
-              value={selectedStrategyId?.toString()}
-              onValueChange={(val) => setSelectedStrategyId(parseInt(val))}
+              value={selectedStrategyId != null ? selectedStrategyId.toString() : "__none__"}
+              onValueChange={(val) => val !== "__none__" && setSelectedStrategyId(parseInt(val))}
             >
               <SelectTrigger className="w-[200px] bg-slate-900/50 border-slate-700">
                 <SelectValue placeholder="选择战略" />
               </SelectTrigger>
               <SelectContent>
-                {strategies.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.name} ({s.year})
-                  </SelectItem>
-                ))}
+                {strategies.length === 0 ? (
+                  <SelectItem value="__none__">暂无战略，请先创建</SelectItem>
+                ) : (
+                  strategies.map((s) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name} ({s.year})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={handleToday}>

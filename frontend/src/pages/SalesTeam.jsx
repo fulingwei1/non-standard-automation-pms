@@ -178,7 +178,7 @@ export default function SalesTeam() {
   // 导航到CRM页面
   const handleNavigateCRM = (member) => {
     if (!member?.id) {return;}
-    navigate(`/customers?owner_id=${member.id}`);
+    navigate(`/sales/customers?owner_id=${member.id}`);
   };
 
   return (
@@ -226,7 +226,7 @@ export default function SalesTeam() {
             <Button
             variant="outline"
             className="flex items-center gap-2"
-            onClick={() => navigate("/customers")}>
+            onClick={() => navigate("/sales/customers")}>
 
               <Users className="w-4 h-4" />
               CRM

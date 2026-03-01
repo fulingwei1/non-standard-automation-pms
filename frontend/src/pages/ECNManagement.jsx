@@ -68,14 +68,14 @@ const priorityConfig = {
 };
 
 const changeTypeOptions = [
-  { value: "", label: "全部类型" },
+  { value: "__all__", label: "全部类型" },
   { value: "材料替换", label: "材料替换" },
   { value: "设计变更", label: "设计变更" },
   { value: "工艺优化", label: "工艺优化" },
 ];
 
 const statusOptions = [
-  { value: "", label: "全部状态" },
+  { value: "__all__", label: "全部状态" },
   { value: "draft", label: "草稿" },
   { value: "reviewing", label: "审核中" },
   { value: "approved", label: "已批准" },
@@ -246,7 +246,10 @@ export default function ECNManagement() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-                <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
+                <Select
+                  value={statusFilter === "" ? "__all__" : statusFilter}
+                  onValueChange={(v) => setStatusFilter(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
@@ -258,7 +261,10 @@ export default function ECNManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={changeTypeFilter || "unknown"} onValueChange={setChangeTypeFilter}>
+                <Select
+                  value={changeTypeFilter === "" ? "__all__" : changeTypeFilter}
+                  onValueChange={(v) => setChangeTypeFilter(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="变更类型" />
                   </SelectTrigger>

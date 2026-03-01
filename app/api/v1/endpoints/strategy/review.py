@@ -311,6 +311,42 @@ def list_calendar_events(
     )
 
 
+@router.get("/calendar/events/{event_id}", response_model=StrategyCalendarEventResponse)
+def get_calendar_event(
+    event_id: int,
+    db: Session = Depends(deps.get_db),
+):
+    """
+    获取日历事件详情
+    """
+    event = strategy_service.get_calendar_event(db, event_id)
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="事件不存在"
+        )
+
+    return StrategyCalendarEventResponse(
+        id=event.id,
+        strategy_id=event.strategy_id,
+        event_type=event.event_type,
+        title=event.title,
+        description=event.description,
+        event_date=event.event_date,
+        start_time=event.start_time,
+        end_time=event.end_time,
+        is_recurring=event.is_recurring,
+        recurrence_pattern=event.recurrence_pattern,
+        status=event.status,
+        owner_user_id=event.owner_user_id,
+        related_csf_id=event.related_csf_id,
+        related_kpi_id=event.related_kpi_id,
+        is_active=event.is_active,
+        created_at=event.created_at,
+        updated_at=event.updated_at,
+    )
+
+
 @router.get("/calendar/month/{strategy_id}", response_model=CalendarMonthResponse)
 def get_calendar_month(
     strategy_id: int,

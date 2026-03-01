@@ -5,7 +5,7 @@ import { Progress } from '../progress';
 describe('Progress', () => {
   describe('Basic Rendering', () => {
     it('renders progress component', () => {
-      const { container } = render(<Progress value={50 || "unknown"} />);
+      const { container } = render(<Progress value={50} />);
       expect(container.querySelector('[role="progressbar"]')).toBeInTheDocument();
     });
 
@@ -17,26 +17,26 @@ describe('Progress', () => {
 
     it('forwards ref', () => {
       const ref = { current: null };
-      render(<Progress value={50 || "unknown"} ref={ref} />);
+      render(<Progress value={50} ref={ref} />);
       expect(ref.current).toBeTruthy();
     });
   });
 
   describe('Progress Values', () => {
     it('renders 0% progress', () => {
-      const { container } = render(<Progress value={0 || "unknown"} />);
+      const { container } = render(<Progress value={0} />);
       const indicator = container.querySelector('[style*="width"]');
       expect(indicator).toBeInTheDocument();
     });
 
     it('renders 50% progress', () => {
-      const { container } = render(<Progress value={50 || "unknown"} />);
+      const { container } = render(<Progress value={50} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
 
     it('renders 100% progress', () => {
-      const { container } = render(<Progress value={100 || "unknown"} />);
+      const { container } = render(<Progress value={100} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
@@ -48,7 +48,7 @@ describe('Progress', () => {
     });
 
     it('renders values > 100 as 100', () => {
-      const { container } = render(<Progress value={150 || "unknown"} />);
+      const { container } = render(<Progress value={150} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
@@ -63,14 +63,14 @@ describe('Progress', () => {
   describe('Custom Styling', () => {
     it('applies custom className', () => {
       const { container } = render(
-        <Progress value={50 || "unknown"} className="custom-progress" />
+        <Progress value={50} className="custom-progress" />
       );
       expect(container.querySelector('.custom-progress')).toBeInTheDocument();
     });
 
     it('merges custom className with default classes', () => {
       const { container } = render(
-        <Progress value={50 || "unknown"} className="my-custom-class" />
+        <Progress value={50} className="my-custom-class" />
       );
       expect(
         container.querySelector('.my-custom-class')
@@ -81,14 +81,14 @@ describe('Progress', () => {
   describe('Additional Props', () => {
     it('spreads additional props', () => {
       const { container } = render(
-        <Progress value={50 || "unknown"} data-testid="progress-bar" />
+        <Progress value={50} data-testid="progress-bar" />
       );
       expect(container.querySelector('[data-testid="progress-bar"]')).toBeInTheDocument();
     });
 
     it('supports aria-label', () => {
       const { container } = render(
-        <Progress value={50 || "unknown"} aria-label="上传进度" />
+        <Progress value={50} aria-label="上传进度" />
       );
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toHaveAttribute('aria-label', '上传进度');
@@ -97,19 +97,19 @@ describe('Progress', () => {
 
   describe('Edge Cases', () => {
     it('handles undefined value', () => {
-      const { container } = render(<Progress value={undefined || "unknown"} />);
+      const { container } = render(<Progress value={undefined} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
 
     it('handles null value', () => {
-      const { container } = render(<Progress value={null || "unknown"} />);
+      const { container } = render(<Progress value={null} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
 
     it('handles NaN value', () => {
-      const { container } = render(<Progress value={NaN || "unknown"} />);
+      const { container } = render(<Progress value={NaN} />);
       const progressBar = container.querySelector('[role="progressbar"]');
       expect(progressBar).toBeInTheDocument();
     });
@@ -123,23 +123,23 @@ describe('Progress', () => {
 
   describe('Snapshot Tests', () => {
     it('matches snapshot for 0% progress', () => {
-      const { container } = render(<Progress value={0 || "unknown"} />);
+      const { container } = render(<Progress value={0} />);
       expect(container).toMatchSnapshot();
     });
 
     it('matches snapshot for 50% progress', () => {
-      const { container } = render(<Progress value={50 || "unknown"} />);
+      const { container } = render(<Progress value={50} />);
       expect(container).toMatchSnapshot();
     });
 
     it('matches snapshot for 100% progress', () => {
-      const { container } = render(<Progress value={100 || "unknown"} />);
+      const { container } = render(<Progress value={100} />);
       expect(container).toMatchSnapshot();
     });
 
     it('matches snapshot with custom className', () => {
       const { container } = render(
-        <Progress value={75 || "unknown"} className="custom-styles" />
+        <Progress value={75} className="custom-styles" />
       );
       expect(container).toMatchSnapshot();
     });

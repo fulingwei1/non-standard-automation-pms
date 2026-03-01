@@ -258,6 +258,17 @@ def get_batch_tracing(
 
     支持条码/二维码扫描
     """
+    if not any([batch_no, batch_id, barcode]):
+        return create_success_response(
+            data={
+                "batch_info": None,
+                "consumption_trail": [],
+                "projects": [],
+                "work_orders": [],
+                "trace_direction": trace_direction,
+            }
+        )
+
     service = MaterialTrackingService(db)
     data = service.trace_batch(
         batch_no=batch_no,

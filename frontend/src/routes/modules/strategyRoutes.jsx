@@ -1,7 +1,7 @@
 /**
  * 战略管理模块路由配置
  */
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 
 import StrategyDashboard from "../../pages/Strategy";
 import StrategyMap from "../../pages/StrategyMap";
@@ -13,25 +13,31 @@ import StrategyCalendar from "../../pages/StrategyCalendar";
 import YearComparison from "../../pages/YearComparison";
 import AIStrategyAssistant from "../../pages/AIStrategyAssistant";
 import TeamGeneration from "../../pages/TeamGeneration";
+import ExecutiveDashboard from "../../pages/executive-dashboard";
 import { StrategyProtectedRoute } from "../../components/common/ProtectedRoute";
 
 export function StrategyRoutes() {
   return (
     <>
-      {/* 战略仪表板 */}
+      {/* 战略分析（主页面） */}
       <Route
-        path="/strategy"
+        path="/strategy/analysis"
         element={
           <StrategyProtectedRoute>
             <StrategyDashboard />
           </StrategyProtectedRoute>
         }
       />
+      {/* 兼容旧链接：/strategy、/strategy/dashboard 重定向到战略分析 */}
+      <Route path="/strategy" element={<Navigate to="/strategy/analysis" replace />} />
+      <Route path="/strategy/dashboard" element={<Navigate to="/strategy/analysis" replace />} />
+
+      {/* 决策驾驶舱 */}
       <Route
-        path="/strategy/dashboard"
+        path="/strategy/strategy-dashboard"
         element={
           <StrategyProtectedRoute>
-            <StrategyDashboard />
+            <ExecutiveDashboard />
           </StrategyProtectedRoute>
         }
       />

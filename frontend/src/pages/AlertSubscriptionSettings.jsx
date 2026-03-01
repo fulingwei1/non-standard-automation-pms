@@ -52,7 +52,7 @@ import { alertApi, projectApi } from "../services/api";
 // 预警类型选项
 import { confirmAction } from "@/lib/confirmAction";
 const alertTypeOptions = [
-  { value: "", label: "全部类型" },
+  { value: "__all__", label: "全部类型" },
   { value: "SCHEDULE_DELAY", label: "进度延期" },
   { value: "COST_OVERRUN", label: "成本超支" },
   { value: "MILESTONE_DUE", label: "里程碑到期" },
@@ -487,11 +487,11 @@ export default function AlertSubscriptionSettings() {
                 <div className="space-y-2">
                   <Label htmlFor="alert_type">预警类型</Label>
                   <Select
-                    value={formData.alert_type || ""}
+                    value={formData.alert_type === "" || formData.alert_type == null ? "__all__" : formData.alert_type}
                     onValueChange={(val) =>
                       setFormData((prev) => ({
                         ...prev,
-                        alert_type: val || "",
+                        alert_type: val === "__all__" ? "" : val,
                       }))
                     }
                   >

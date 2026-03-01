@@ -324,19 +324,19 @@ export default function EngineerRecommendation() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Progress value={95 || "unknown"} className="w-20 h-2" />
+                            <Progress value={95} className="w-20 h-2" />
                             <span className="text-xs">95%</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Progress value={88 || "unknown"} className="w-20 h-2" />
+                            <Progress value={88} className="w-20 h-2" />
                             <span className="text-xs">88%</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Progress value={75 || "unknown"} className="w-20 h-2" />
+                            <Progress value={75} className="w-20 h-2" />
                             <span className="text-xs">75%</span>
                           </div>
                         </TableCell>

@@ -1,0 +1,1056 @@
+{
+  "summary": {
+    "baseUrl": "http://127.0.0.1:5173",
+    "runAt": "2026-03-01T12:25:19.837Z",
+    "total": 25,
+    "pass": 9,
+    "warn": 16,
+    "fail": 0,
+    "modules": [
+      {
+        "module": "销售模块",
+        "expected": 14,
+        "executed": 14,
+        "pass": 9,
+        "warn": 5,
+        "fail": 0,
+        "avgMs": 2475
+      },
+      {
+        "module": "项目管理",
+        "expected": 6,
+        "executed": 6,
+        "pass": 0,
+        "warn": 6,
+        "fail": 0,
+        "avgMs": 2483
+      },
+      {
+        "module": "售前模块",
+        "expected": 5,
+        "executed": 5,
+        "pass": 0,
+        "warn": 5,
+        "fail": 0,
+        "avgMs": 2451
+      }
+    ]
+  },
+  "topApiErrors": [
+    {
+      "item": "GET /api/v1/projects/ -> 401",
+      "count": 10
+    },
+    {
+      "item": "GET /api/v1/customers/ -> 401",
+      "count": 9
+    },
+    {
+      "item": "GET /api/v1/sales/statistics/funnel -> 401",
+      "count": 4
+    },
+    {
+      "item": "GET /api/v1/users/ -> 401",
+      "count": 4
+    },
+    {
+      "item": "GET /api/v1/notifications/ -> 401",
+      "count": 4
+    },
+    {
+      "item": "GET /api/v1/dashboard/stats/sales -> 401",
+      "count": 4
+    },
+    {
+      "item": "GET /api/v1/node-tasks/my-tasks -> 401",
+      "count": 4
+    },
+    {
+      "item": "GET /api/v1/sales/targets -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/sales/team -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/sales/leads -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/sales/opportunities -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/projects/views/pipeline -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/resource-overview/ -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/dashboard/unified/SUPER_ADMIN -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/presale/tickets -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/presale/proposals/solutions -> 401",
+      "count": 2
+    },
+    {
+      "item": "GET /api/v1/presale/templates -> 401",
+      "count": 2
+    }
+  ],
+  "results": [
+    {
+      "module": "销售模块",
+      "page": "销售目标",
+      "path": "/sales/targets",
+      "finalUrl": "http://127.0.0.1:5173/sales/targets",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2512,
+      "findings": [
+        "控制台错误 16 条",
+        "API异常 4 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/targets -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load targets: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/team -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load team members: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http:",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/team -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load team members: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http:",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/targets -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load targets: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/targets"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/team"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/team"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/targets"
+        }
+      ],
+      "screenshot": "screenshots/01-销售模块-销售目标.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "线索管理",
+      "path": "/sales/leads",
+      "finalUrl": "http://127.0.0.1:5173/sales/leads",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2450,
+      "findings": [
+        "控制台错误 16 条",
+        "API异常 4 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/leads -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载线索列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载客户列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/leads -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载线索列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载客户列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/leads"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/leads"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        }
+      ],
+      "screenshot": "screenshots/02-销售模块-线索管理.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "销售漏斗",
+      "path": "/sales/funnel",
+      "finalUrl": "http://127.0.0.1:5173/sales/funnel",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2450,
+      "findings": [
+        "控制台错误 20 条",
+        "API异常 8 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/statistics/funnel -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load funnel data: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http:/",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /users/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/statistics/funnel -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load funnel data: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http:/",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /users/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/statistics/funnel -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/statistics/funnel"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/users/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/statistics/funnel"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/users/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/statistics/funnel"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/statistics/funnel"
+        }
+      ],
+      "screenshot": "screenshots/03-销售模块-销售漏斗.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "销售分析",
+      "path": "/sales/sales-analysis",
+      "finalUrl": "http://127.0.0.1:5173/sales/sales-analysis",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2443,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/04-销售模块-销售分析.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "商机管理",
+      "path": "/sales/opportunities",
+      "finalUrl": "http://127.0.0.1:5173/sales/opportunities",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2453,
+      "findings": [
+        "控制台错误 20 条",
+        "API异常 6 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/opportunities -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载商机列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载客户列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载客户列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /users/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载负责人列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/n",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /sales/opportunities -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载商机列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/opportunities"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/users/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/sales/opportunities"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/users/"
+        }
+      ],
+      "screenshot": "screenshots/05-销售模块-商机管理.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "客户管理",
+      "path": "/sales/customers",
+      "finalUrl": "http://127.0.0.1:5173/sales/customers",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2454,
+      "findings": [
+        "控制台错误 9 条",
+        "API异常 3 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /customers/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/customers/"
+        }
+      ],
+      "screenshot": "screenshots/06-销售模块-客户管理.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "AI销售助手",
+      "path": "/sales/ai-assistant",
+      "finalUrl": "http://127.0.0.1:5173/sales/ai-assistant",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2457,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/07-销售模块-AI销售助手.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "智能报价",
+      "path": "/sales/intelligent-quote",
+      "finalUrl": "http://127.0.0.1:5173/sales/intelligent-quote",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2453,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/08-销售模块-智能报价.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "客户360",
+      "path": "/sales/customer-360",
+      "finalUrl": "http://127.0.0.1:5173/sales/customer-360",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2482,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/09-销售模块-客户360.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "销售自动化",
+      "path": "/sales/automation",
+      "finalUrl": "http://127.0.0.1:5173/sales/automation",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2472,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/10-销售模块-销售自动化.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "绩效与激励",
+      "path": "/sales/performance-incentive",
+      "finalUrl": "http://127.0.0.1:5173/sales/performance-incentive",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2463,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/11-销售模块-绩效与激励.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "销售协同",
+      "path": "/sales/collaboration",
+      "finalUrl": "http://127.0.0.1:5173/sales/collaboration",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2453,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/12-销售模块-销售协同.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "赢单率预测",
+      "path": "/sales/win-rate-prediction",
+      "finalUrl": "http://127.0.0.1:5173/sales/win-rate-prediction",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2638,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/13-销售模块-赢单率预测.png"
+    },
+    {
+      "module": "销售模块",
+      "page": "竞争对手分析",
+      "path": "/sales/competitor-analysis",
+      "finalUrl": "http://127.0.0.1:5173/sales/competitor-analysis",
+      "title": "项目管理系统 | PMS",
+      "status": "PASS",
+      "durationMs": 2476,
+      "findings": [],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [],
+      "apiErrors": [],
+      "screenshot": "screenshots/14-销售模块-竞争对手分析.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "项目列表",
+      "path": "/projects",
+      "finalUrl": "http://127.0.0.1:5173/projects",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2491,
+      "findings": [
+        "控制台错误 8 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to fetch projects: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://1",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to fetch projects: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://1"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        }
+      ],
+      "screenshot": "screenshots/15-项目管理-项目列表.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "项目看板",
+      "path": "/board",
+      "finalUrl": "http://127.0.0.1:5173/board",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2545,
+      "findings": [
+        "控制台错误 16 条",
+        "API异常 4 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/views/pipeline -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载流水线数据失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/n",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/views/pipeline -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载流水线数据失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/n",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to fetch projects: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://1",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to fetch projects: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://1"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/views/pipeline"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/views/pipeline"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        }
+      ],
+      "screenshot": "screenshots/16-项目管理-项目看板.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "AI智能排计划入口",
+      "path": "/schedule-generation",
+      "finalUrl": "http://127.0.0.1:5173/schedule-generation",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2457,
+      "findings": [
+        "控制台错误 6 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        }
+      ],
+      "screenshot": "screenshots/17-项目管理-AI智能排计划入口.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "工程师调度入口",
+      "path": "/engineer-recommendation",
+      "finalUrl": "http://127.0.0.1:5173/engineer-recommendation",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2493,
+      "findings": [
+        "控制台错误 6 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        }
+      ],
+      "screenshot": "screenshots/18-项目管理-工程师调度入口.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "甘特依赖视图",
+      "path": "/gantt",
+      "finalUrl": "http://127.0.0.1:5173/gantt",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2463,
+      "findings": [
+        "控制台错误 8 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载项目列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /projects/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载项目列表失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/no"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/projects/"
+        }
+      ],
+      "screenshot": "screenshots/19-项目管理-甘特依赖视图.png"
+    },
+    {
+      "module": "项目管理",
+      "page": "资源全景",
+      "path": "/resource-overview",
+      "finalUrl": "http://127.0.0.1:5173/resource-overview",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2450,
+      "findings": [
+        "控制台错误 8 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /resource-overview/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource overview: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /resource-overview/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource overview: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request ("
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/resource-overview/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/resource-overview/"
+        }
+      ],
+      "screenshot": "screenshots/20-项目管理-资源全景.png"
+    },
+    {
+      "module": "售前模块",
+      "page": "售前工作台",
+      "path": "/presales-dashboard",
+      "finalUrl": "http://127.0.0.1:5173/workstation/presales",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2458,
+      "findings": [
+        "控制台错误 20 条",
+        "API异常 7 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/unified/SUPER_ADMIN -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /notifications/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /notifications/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/stats/sales -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /node-tasks/my-tasks -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/stats/sales -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /node-tasks/my-tasks -> 401 application/json"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/unified/SUPER_ADMIN"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/notifications/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/notifications/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/stats/sales"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/node-tasks/my-tasks"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/stats/sales"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/node-tasks/my-tasks"
+        }
+      ],
+      "screenshot": "screenshots/21-售前模块-售前工作台.png"
+    },
+    {
+      "module": "售前模块",
+      "page": "售前经理工作台",
+      "path": "/presales-manager-dashboard",
+      "finalUrl": "http://127.0.0.1:5173/workstation/presales",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2448,
+      "findings": [
+        "控制台错误 20 条",
+        "API异常 7 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/unified/SUPER_ADMIN -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/stats/sales -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /node-tasks/my-tasks -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /notifications/ -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /dashboard/stats/sales -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /node-tasks/my-tasks -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /notifications/ -> 401 application/json"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/unified/SUPER_ADMIN"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/stats/sales"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/node-tasks/my-tasks"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/notifications/"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/dashboard/stats/sales"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/node-tasks/my-tasks"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/notifications/"
+        }
+      ],
+      "screenshot": "screenshots/22-售前模块-售前经理工作台.png"
+    },
+    {
+      "module": "售前模块",
+      "page": "方案评审",
+      "path": "/presales-tasks",
+      "finalUrl": "http://127.0.0.1:5173/presales-tasks",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2448,
+      "findings": [
+        "控制台错误 8 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/tickets -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load tasks: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/tickets -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load tasks: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/tickets"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/tickets"
+        }
+      ],
+      "screenshot": "screenshots/23-售前模块-方案评审.png"
+    },
+    {
+      "module": "售前模块",
+      "page": "方案管理",
+      "path": "/solutions",
+      "finalUrl": "http://127.0.0.1:5173/solutions",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2445,
+      "findings": [
+        "控制台错误 8 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/proposals/solutions -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载方案失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/node",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/proposals/solutions -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "加载方案失败: AxiosError: Request failed with status code 401\n    at settle (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1319:7)\n    at XMLHttpRequest.onloadend (http://127.0.0.1:5173/node_modules/.vite/deps/axios.js?v=26466f60:1682:7)\n    at Axios.request (http://127.0.0.1:5173/node"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/proposals/solutions"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/proposals/solutions"
+        }
+      ],
+      "screenshot": "screenshots/24-售前模块-方案管理.png"
+    },
+    {
+      "module": "售前模块",
+      "page": "售前模板库",
+      "path": "/presales/templates",
+      "finalUrl": "http://127.0.0.1:5173/presales/templates",
+      "title": "项目管理系统 | PMS",
+      "status": "WARN",
+      "durationMs": 2457,
+      "findings": [
+        "控制台错误 6 条",
+        "API异常 2 条"
+      ],
+      "navError": null,
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/templates -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "[API错误] GET /presale/templates -> 401 application/json",
+        "[API错误] 响应数据: {code: 401, message: 未提供认证凭据, error_code: MISSING_TOKEN}"
+      ],
+      "apiErrors": [
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/templates"
+        },
+        {
+          "status": 401,
+          "method": "GET",
+          "path": "/api/v1/presale/templates"
+        }
+      ],
+      "screenshot": "screenshots/25-售前模块-售前模板库.png"
+    }
+  ]
+}

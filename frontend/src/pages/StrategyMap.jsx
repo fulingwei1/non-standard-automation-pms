@@ -277,7 +277,7 @@ export default function StrategyMap() {
         title="战略地图"
         description="BSC 平衡计分卡战略地图可视化 | 财务 → 客户 → 内部流程 → 学习成长"
         breadcrumbs={[
-          { label: "战略管理", href: "/strategy" },
+          { label: "战略管理", href: "/strategy/analysis" },
           { label: "战略地图" },
         ]}
       />

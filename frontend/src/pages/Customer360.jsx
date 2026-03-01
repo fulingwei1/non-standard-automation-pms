@@ -110,7 +110,7 @@ const Customer360 = () => {
   };
 
   const handleBack = () => {
-    navigate('/customers');
+    navigate('/sales/customers');
   };
 
   const handleRefresh = () => {

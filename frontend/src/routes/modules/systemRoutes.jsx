@@ -175,6 +175,7 @@ export function SystemRoutes() {
       <Route path="/rd-cost-entry" element={<RdCostEntry />} />
       <Route path="/rd-cost-summary" element={<RdCostSummary />} />
       <Route path="/rd-cost-reports" element={<RdCostReports />} />
+      <Route path="/rd-cost" element={<Navigate to="/rd-cost-summary" replace />} />
 
       {/* AI Staff Matching */}
       <Route path="/staff-matching/tags" element={<TagManagement />} />
@@ -230,6 +231,7 @@ export function SystemRoutes() {
       {/* Master Data Management */}
       <Route path="/customer-management" element={<CustomerManagement />} />
       <Route path="/customers/:id/360" element={<Customer360 />} />
+      <Route path="/sales/customers/:id/360" element={<Customer360 />} />
       <Route
         path="/supplier-management-data"
         element={<SupplierManagementData />}

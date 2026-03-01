@@ -32,7 +32,7 @@ const typeIcons = {
 const defaultItems = [
   { id: 1, type: 'project', title: 'PJ250101-001 智能检测设备', time: '5分钟前', path: '/projects/PJ250101-001' },
   { id: 2, type: 'document', title: '技术方案v2.0.docx', time: '30分钟前', path: '/documents/123' },
-  { id: 3, type: 'customer', title: '华为技术有限公司', time: '1小时前', path: '/customers/456' },
+  { id: 3, type: 'customer', title: '华为技术有限公司', time: '1小时前', path: '/sales/customers/456' },
   { id: 4, type: 'project', title: 'PJ250101-002 自动组装线', time: '2小时前', path: '/projects/PJ250101-002' },
   { id: 5, type: 'order', title: 'PO250101001 采购订单', time: '昨天', path: '/purchases/PO250101001' },
 ];

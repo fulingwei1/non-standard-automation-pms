@@ -114,14 +114,14 @@ const AlertDashboard = () => {
 
             {/* 预警级别筛选 */}
             <Select
-              value={filters.alert_level}
-              onValueChange={(value) => setFilters({ ...filters, alert_level: value })}
+              value={filters.alert_level === '' ? '__all__' : filters.alert_level}
+              onValueChange={(value) => setFilters({ ...filters, alert_level: value === '__all__' ? '' : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="选择预警级别" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部级别</SelectItem>
+                <SelectItem value="__all__">全部级别</SelectItem>
                 {Object.entries(ALERT_LEVELS).map(([key, config]) => (
                   <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
@@ -132,14 +132,14 @@ const AlertDashboard = () => {
 
             {/* 状态筛选 */}
             <Select
-              value={filters.status}
-              onValueChange={(value) => setFilters({ ...filters, status: value })}
+              value={filters.status === '' ? '__all__' : filters.status}
+              onValueChange={(value) => setFilters({ ...filters, status: value === '__all__' ? '' : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="__all__">全部状态</SelectItem>
                 <SelectItem value="PENDING">待处理</SelectItem>
                 <SelectItem value="PROCESSING">处理中</SelectItem>
                 <SelectItem value="RESOLVED">已解决</SelectItem>

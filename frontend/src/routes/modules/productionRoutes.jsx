@@ -1,4 +1,5 @@
 import { Route, Navigate } from "react-router-dom";
+import CapacityAnalysis from "../../pages/CapacityAnalysis";
 
 import WorkOrderManagement from "../../pages/WorkOrderManagement";
 import WorkOrderDetail from "../../pages/WorkOrderDetail";
@@ -85,3 +86,5 @@ export function ProductionRoutes() {
     </>
   );
 }
+
+      <Route path="/capacity-analysis" element={<CapacityAnalysis />} />

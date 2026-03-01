@@ -34,7 +34,7 @@ const roleActions = {
     { id: 'new-lead', icon: Users, label: '新建线索', path: '/leads/new', color: 'bg-blue-500' },
     { id: 'new-quote', icon: FileText, label: '创建报价', path: '/quotes/new', color: 'bg-green-500' },
     { id: 'timesheet', icon: Clock, label: '填报工时', path: '/timesheet', color: 'bg-purple-500' },
-    { id: 'customers', icon: Users, label: '客户管理', path: '/customers', color: 'bg-orange-500' },
+    { id: 'customers', icon: Users, label: '客户管理', path: '/sales/customers', color: 'bg-orange-500' },
   ],
   engineer: [
     { id: 'timesheet', icon: Clock, label: '填报工时', path: '/timesheet', color: 'bg-blue-500' },

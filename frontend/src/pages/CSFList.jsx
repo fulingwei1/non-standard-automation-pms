@@ -362,7 +362,7 @@ export default function CSFList() {
         title="关键成功因素 (CSF)"
         description="管理 BSC 四个维度的关键成功因素"
         breadcrumbs={[
-          { label: "战略管理", href: "/strategy" },
+          { label: "战略管理", href: "/strategy/analysis" },
           { label: "CSF 管理" },
         ]}
         actions={

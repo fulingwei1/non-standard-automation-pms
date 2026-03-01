@@ -1,11 +1,10 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
 import CostAccounting from "../../pages/CostAccounting";
 import PaymentApproval from "../../pages/PaymentApproval";
 import ProjectSettlement from "../../pages/ProjectSettlement";
 import FinancialReports from "../../pages/FinancialReports";
-import ExecutiveDashboard from "../../pages/executive-dashboard";
 import MarginPrediction from "../../pages/MarginPrediction";
 import CostCollection from "../../pages/CostCollection";
 import QuoteActualCompare from "../../pages/QuoteActualCompare";
@@ -27,7 +26,7 @@ export function FinanceRoutes() {
       <Route path="/cost-variance" element={<CostVarianceAnalysis />} />
       <Route path="/labor-cost" element={<LaborCostDetail />} />
       <Route path="/multi-currency" element={<MultiCurrency />} />
-      <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+      <Route path="/executive-dashboard" element={<Navigate to="/strategy/strategy-dashboard" replace />} />
       <Route path="/finance/analytics-dashboard" element={<AnalyticsDashboard />} />
     </>
   );

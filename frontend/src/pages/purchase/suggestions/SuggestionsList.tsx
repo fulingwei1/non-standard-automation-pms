@@ -63,8 +63,8 @@ const SuggestionsList: React.FC = () => {
   
   // 筛选条件
   const [filters, setFilters] = useState({
-    status: '' as SuggestionStatus | '',
-    urgency_level: '' as UrgencyLevel | '',
+    status: '' as SuggestionStatus | '' | '__all__',
+    urgency_level: '' as UrgencyLevel | '' | '__all__',
     search: '',
   });
 
@@ -75,8 +75,8 @@ const SuggestionsList: React.FC = () => {
     setLoading(true);
     try {
       const params: any = {};
-      if (filters.status) params.status = filters.status;
-      if (filters.urgency_level) params.urgency_level = filters.urgency_level;
+      if (filters.status && filters.status !== '__all__') params.status = filters.status;
+      if (filters.urgency_level && filters.urgency_level !== '__all__') params.urgency_level = filters.urgency_level;
       
       const data = await purchaseService.getSuggestions(params);
       
@@ -222,14 +222,14 @@ const SuggestionsList: React.FC = () => {
             </div>
 
             <Select
-              value={filters.status}
-              onValueChange={(value) => setFilters({ ...filters, status: value as SuggestionStatus })}
+              value={filters.status === '' ? '__all__' : filters.status}
+              onValueChange={(value) => setFilters({ ...filters, status: value === '__all__' ? '' : value as SuggestionStatus })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="__all__">全部状态</SelectItem>
                 <SelectItem value="PENDING">待审批</SelectItem>
                 <SelectItem value="APPROVED">已批准</SelectItem>
                 <SelectItem value="REJECTED">已拒绝</SelectItem>
@@ -238,14 +238,14 @@ const SuggestionsList: React.FC = () => {
             </Select>
 
             <Select
-              value={filters.urgency_level}
-              onValueChange={(value) => setFilters({ ...filters, urgency_level: value as UrgencyLevel })}
+              value={filters.urgency_level === '' ? '__all__' : filters.urgency_level}
+              onValueChange={(value) => setFilters({ ...filters, urgency_level: value === '__all__' ? '' : value as UrgencyLevel })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="紧急程度" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="__all__">全部</SelectItem>
                 <SelectItem value="LOW">低</SelectItem>
                 <SelectItem value="NORMAL">普通</SelectItem>
                 <SelectItem value="HIGH">高</SelectItem>

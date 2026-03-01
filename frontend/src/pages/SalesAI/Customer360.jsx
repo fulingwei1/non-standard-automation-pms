@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -28,6 +28,7 @@ import {
   Star,
   Clock,
   ArrowRight,
+  Building2,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {
@@ -442,7 +443,34 @@ function BuyingPreferences() {
 
 // 主页面
 export default function Customer360() {
-  const { customerId: _customerId } = useParams();
+  const { id: customerId } = useParams();
+  const navigate = useNavigate();
+
+  if (!customerId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="container mx-auto px-4 py-6">
+          <PageHeader
+            title="客户 360°画像"
+            description="全面了解客户，提升销售成功率"
+            icon={<Users className="w-6 h-6 text-cyan-500" />}
+          />
+          <Card className="mt-6 border-slate-700 bg-slate-900/50">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Users className="w-16 h-16 text-slate-500 mb-4" />
+              <p className="text-slate-400 text-center mb-6">
+                请从客户管理中选择客户查看 360° 画像
+              </p>
+              <Button onClick={() => navigate("/sales/customers")}>
+                <Building2 className="w-4 h-4 mr-2" />
+                去客户管理
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

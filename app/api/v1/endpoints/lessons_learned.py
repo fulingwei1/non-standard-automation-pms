@@ -159,6 +159,131 @@ def list_lessons(
     }
 
 
+@router.get("/stats", summary="经验教训统计")
+def get_stats(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    获取经验教训统计数据
+    - 按分类统计
+    - 按类型统计
+    - 按项目统计
+    """
+    _ensure_table(db)
+    total_sql = text("SELECT COUNT(*) as total FROM lessons_learned")
+    total = db.execute(total_sql).fetchone().total
+
+    category_sql = text("""
+        SELECT category, COUNT(*) as count
+        FROM lessons_learned
+        WHERE category IS NOT NULL
+        GROUP BY category
+        ORDER BY count DESC
+    """)
+    by_category = [
+        {"category": r.category, "count": r.count}
+        for r in db.execute(category_sql).fetchall()
+    ]
+
+    type_sql = text("""
+        SELECT lesson_type, COUNT(*) as count
+        FROM lessons_learned
+        WHERE lesson_type IS NOT NULL
+        GROUP BY lesson_type
+        ORDER BY count DESC
+    """)
+    by_type = [
+        {"lesson_type": r.lesson_type, "count": r.count}
+        for r in db.execute(type_sql).fetchall()
+    ]
+
+    project_sql = text("""
+        SELECT p.id, p.project_name, COUNT(ll.id) as count
+        FROM lessons_learned ll
+        JOIN projects p ON ll.project_id = p.id
+        GROUP BY p.id, p.project_name
+        ORDER BY count DESC
+        LIMIT 20
+    """)
+    by_project = [
+        {"project_id": r.id, "project_name": r.project_name, "count": r.count}
+        for r in db.execute(project_sql).fetchall()
+    ]
+
+    impact_sql = text("""
+        SELECT impact_level, COUNT(*) as count
+        FROM lessons_learned
+        WHERE impact_level IS NOT NULL
+        GROUP BY impact_level
+        ORDER BY
+            CASE impact_level
+                WHEN 'high' THEN 1
+                WHEN 'medium' THEN 2
+                WHEN 'low' THEN 3
+                ELSE 4
+            END
+    """)
+    by_impact = [
+        {"impact_level": r.impact_level, "count": r.count}
+        for r in db.execute(impact_sql).fetchall()
+    ]
+
+    return {
+        "total": total,
+        "by_category": by_category,
+        "by_type": by_type,
+        "by_project": by_project,
+        "by_impact": by_impact,
+    }
+
+
+@router.get("/search", summary="搜索经验教训")
+def search_lessons(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+    q: str = Query(..., description="搜索关键词"),
+) -> Any:
+    """
+    搜索经验教训（标题、描述、建议）
+    """
+    _ensure_table(db)
+    keyword = f"%{q}%"
+    sql = text("""
+        SELECT
+            ll.id, ll.project_id, ll.title, ll.category, ll.lesson_type,
+            ll.description, ll.root_cause, ll.action_taken, ll.recommendation,
+            ll.impact_level, ll.applicable_to, ll.tags, ll.submitted_by,
+            ll.reviewed, ll.created_at, ll.updated_at, p.project_name
+        FROM lessons_learned ll
+        LEFT JOIN projects p ON ll.project_id = p.id
+        WHERE ll.title LIKE :keyword
+           OR ll.description LIKE :keyword
+           OR ll.recommendation LIKE :keyword
+        ORDER BY ll.created_at DESC
+        LIMIT 50
+    """)
+    rows = db.execute(sql, {"keyword": keyword}).fetchall()
+    return {
+        "total": len(rows),
+        "keyword": q,
+        "items": [
+            {
+                "id": r.id, "project_id": r.project_id, "project_name": r.project_name,
+                "title": r.title, "category": r.category, "lesson_type": r.lesson_type,
+                "description": r.description, "root_cause": r.root_cause,
+                "action_taken": r.action_taken, "recommendation": r.recommendation,
+                "impact_level": r.impact_level, "applicable_to": r.applicable_to,
+                "tags": r.tags, "submitted_by": r.submitted_by, "reviewed": bool(r.reviewed),
+                "created_at": r.created_at, "updated_at": r.updated_at,
+            }
+            for r in rows
+        ],
+    }
+
+
 @router.get("/{id}", summary="经验教训详情")
 def get_lesson(
     *,
@@ -169,53 +294,28 @@ def get_lesson(
     """
     获取单个经验教训详情
     """
+    _ensure_table(db)
     sql = text("""
-        SELECT 
-            ll.id,
-            ll.project_id,
-            ll.title,
-            ll.category,
-            ll.lesson_type,
-            ll.description,
-            ll.root_cause,
-            ll.action_taken,
-            ll.recommendation,
-            ll.impact_level,
-            ll.applicable_to,
-            ll.tags,
-            ll.submitted_by,
-            ll.reviewed,
-            ll.created_at,
-            ll.updated_at,
-            p.project_name
+        SELECT
+            ll.id, ll.project_id, ll.title, ll.category, ll.lesson_type,
+            ll.description, ll.root_cause, ll.action_taken, ll.recommendation,
+            ll.impact_level, ll.applicable_to, ll.tags, ll.submitted_by,
+            ll.reviewed, ll.created_at, ll.updated_at, p.project_name
         FROM lessons_learned ll
         LEFT JOIN projects p ON ll.project_id = p.id
         WHERE ll.id = :id
     """)
-    
     row = db.execute(sql, {"id": id}).fetchone()
-    
     if not row:
         return {"error": "经验教训不存在"}
-    
     return {
-        "id": row.id,
-        "project_id": row.project_id,
-        "project_name": row.project_name,
-        "title": row.title,
-        "category": row.category,
-        "lesson_type": row.lesson_type,
-        "description": row.description,
-        "root_cause": row.root_cause,
-        "action_taken": row.action_taken,
-        "recommendation": row.recommendation,
-        "impact_level": row.impact_level,
-        "applicable_to": row.applicable_to,
-        "tags": row.tags,
-        "submitted_by": row.submitted_by,
-        "reviewed": bool(row.reviewed),
-        "created_at": row.created_at,
-        "updated_at": row.updated_at,
+        "id": row.id, "project_id": row.project_id, "project_name": row.project_name,
+        "title": row.title, "category": row.category, "lesson_type": row.lesson_type,
+        "description": row.description, "root_cause": row.root_cause,
+        "action_taken": row.action_taken, "recommendation": row.recommendation,
+        "impact_level": row.impact_level, "applicable_to": row.applicable_to,
+        "tags": row.tags, "submitted_by": row.submitted_by, "reviewed": bool(row.reviewed),
+        "created_at": row.created_at, "updated_at": row.updated_at,
     }
 
 
@@ -327,158 +427,4 @@ def update_lesson(
     return {
         "id": id,
         "message": "经验教训更新成功",
-    }
-
-
-@router.get("/stats", summary="经验教训统计")
-def get_stats(
-    *,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-) -> Any:
-    """
-    获取经验教训统计数据
-    - 按分类统计
-    - 按类型统计
-    - 按项目统计
-    """
-    # 总数
-    total_sql = text("SELECT COUNT(*) as total FROM lessons_learned")
-    total = db.execute(total_sql).fetchone().total
-    
-    # 按分类统计
-    category_sql = text("""
-        SELECT category, COUNT(*) as count
-        FROM lessons_learned
-        WHERE category IS NOT NULL
-        GROUP BY category
-        ORDER BY count DESC
-    """)
-    by_category = [
-        {"category": r.category, "count": r.count}
-        for r in db.execute(category_sql).fetchall()
-    ]
-    
-    # 按类型统计
-    type_sql = text("""
-        SELECT lesson_type, COUNT(*) as count
-        FROM lessons_learned
-        WHERE lesson_type IS NOT NULL
-        GROUP BY lesson_type
-        ORDER BY count DESC
-    """)
-    by_type = [
-        {"lesson_type": r.lesson_type, "count": r.count}
-        for r in db.execute(type_sql).fetchall()
-    ]
-    
-    # 按项目统计
-    project_sql = text("""
-        SELECT p.id, p.project_name, COUNT(ll.id) as count
-        FROM lessons_learned ll
-        JOIN projects p ON ll.project_id = p.id
-        GROUP BY p.id, p.project_name
-        ORDER BY count DESC
-        LIMIT 20
-    """)
-    by_project = [
-        {"project_id": r.id, "project_name": r.project_name, "count": r.count}
-        for r in db.execute(project_sql).fetchall()
-    ]
-    
-    # 按影响程度统计
-    impact_sql = text("""
-        SELECT impact_level, COUNT(*) as count
-        FROM lessons_learned
-        WHERE impact_level IS NOT NULL
-        GROUP BY impact_level
-        ORDER BY 
-            CASE impact_level
-                WHEN 'high' THEN 1
-                WHEN 'medium' THEN 2
-                WHEN 'low' THEN 3
-                ELSE 4
-            END
-    """)
-    by_impact = [
-        {"impact_level": r.impact_level, "count": r.count}
-        for r in db.execute(impact_sql).fetchall()
-    ]
-    
-    return {
-        "total": total,
-        "by_category": by_category,
-        "by_type": by_type,
-        "by_project": by_project,
-        "by_impact": by_impact,
-    }
-
-
-@router.get("/search", summary="搜索经验教训")
-def search_lessons(
-    *,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-    q: str = Query(..., description="搜索关键词"),
-) -> Any:
-    """
-    搜索经验教训（标题、描述、建议）
-    """
-    keyword = f"%{q}%"
-    
-    sql = text("""
-        SELECT 
-            ll.id,
-            ll.project_id,
-            ll.title,
-            ll.category,
-            ll.lesson_type,
-            ll.description,
-            ll.root_cause,
-            ll.action_taken,
-            ll.recommendation,
-            ll.impact_level,
-            ll.applicable_to,
-            ll.tags,
-            ll.submitted_by,
-            ll.reviewed,
-            ll.created_at,
-            ll.updated_at,
-            p.project_name
-        FROM lessons_learned ll
-        LEFT JOIN projects p ON ll.project_id = p.id
-        WHERE ll.title LIKE :keyword
-           OR ll.description LIKE :keyword
-           OR ll.recommendation LIKE :keyword
-        ORDER BY ll.created_at DESC
-        LIMIT 50
-    """)
-    
-    rows = db.execute(sql, {"keyword": keyword}).fetchall()
-    
-    return {
-        "total": len(rows),
-        "keyword": q,
-        "items": [
-            {
-                "id": r.id,
-                "project_id": r.project_id,
-                "project_name": r.project_name,
-                "title": r.title,
-                "category": r.category,
-                "lesson_type": r.lesson_type,
-                "description": r.description,
-                "root_cause": r.root_cause,
-                "action_taken": r.action_taken,
-                "recommendation": r.recommendation,
-                "impact_level": r.impact_level,
-                "applicable_to": r.applicable_to,
-                "tags": r.tags,
-                "submitted_by": r.submitted_by,
-                "reviewed": bool(r.reviewed),
-                "created_at": r.created_at,
-                "updated_at": r.updated_at,
-            }
-            for r in rows
-        ],
     }

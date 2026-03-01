@@ -216,13 +216,13 @@ describe('Input', () => {
 
   describe('Edge Cases', () => {
     it('handles undefined value', () => {
-      const { container } = render(<Input value={undefined || "unknown"} />);
+      const { container } = render(<Input value={undefined} />);
       const input = container.querySelector('input');
       expect(input.value).toBe('');
     });
 
     it('handles null value', () => {
-      const { container } = render(<Input value={null || "unknown"} />);
+      const { container } = render(<Input value={null} />);
       const input = container.querySelector('input');
       expect(input.value).toBe('');
     });
@@ -235,7 +235,7 @@ describe('Input', () => {
 
     it('handles long text values', () => {
       const longText = 'A'.repeat(1000);
-      render(<Input value={longText || "unknown"} onChange={() => {}} />);
+      render(<Input value={longText} onChange={() => {}} />);
       const input = screen.getByRole('textbox');
       expect(input.value).toBe(longText);
     });

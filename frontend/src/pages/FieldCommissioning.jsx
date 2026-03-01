@@ -237,12 +237,12 @@ export default function FieldCommissioning() {
           <Card className="bg-gray-900/50 border-gray-800">
             <CardContent className="p-3 md:p-4">
               <div className="flex flex-wrap gap-2 md:gap-3 items-center">
-                <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
+                <Select value={statusFilter === '' ? '__all__' : statusFilter} onValueChange={(v) => setStatusFilter(v === '__all__' ? '' : v)}>
                   <SelectTrigger className="w-full md:w-[140px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="状态筛选" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="" className="text-white">全部状态</SelectItem>
+                    <SelectItem value="__all__" className="text-white">全部状态</SelectItem>
                     <SelectItem value="pending" className="text-white">待开始</SelectItem>
                     <SelectItem value="in_progress" className="text-white">进行中</SelectItem>
                     <SelectItem value="completed" className="text-white">已完成</SelectItem>

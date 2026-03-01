@@ -4,7 +4,6 @@ import { AppProtectedRoute } from "../../components/common/AppProtectedRoute";
 import UnifiedDashboard from "../../pages/UnifiedDashboard";
 import AdminDashboard from "../../pages/AdminDashboard";
 import OperationDashboard from "../../pages/OperationDashboard";
-import StrategyAnalysis from "../../pages/StrategyAnalysis";
 import KeyDecisions from "../../pages/KeyDecisions";
 import ManagementRhythmDashboard from "../../pages/ManagementRhythmDashboard";
 import MeetingMap from "../../pages/MeetingMap";
@@ -166,7 +165,7 @@ export function DashboardRoutes() {
       <Route path="/vehicle-management" element={<VehicleManagement />} />
       <Route path="/fixed-assets-management" element={<FixedAssetsManagement />} />
       <Route path="/operation" element={<OperationDashboard />} />
-      <Route path="/strategy-analysis" element={<StrategyAnalysis />} />
+      <Route path="/strategy-analysis" element={<Navigate to="/strategy/analysis" replace />} />
       <Route path="/key-decisions" element={<KeyDecisions />} />
       <Route
         path="/management-rhythm-dashboard"

@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
 import SalesReports from "../../pages/SalesReports";
@@ -48,6 +48,7 @@ import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
 import QuoteManagement from "../../pages/QuoteManagement";
 import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
 import PresalesTasks from "../../pages/PresalesTasks";
+import PresaleAnalytics from "../../pages/PresaleAnalytics";
 
 // AI 销售助手相关组件
 import { default as SalesAIAssistant } from "../../pages/SalesAI";
@@ -69,6 +70,11 @@ import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
 export function SalesRoutes() {
   return (
     <>
+      {/* 销售漏斗与销售分析（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
+      <Route path="/sales-funnel" element={<Navigate to="/sales/funnel" replace />} />
+      <Route path="/sales/funnel" element={<SalesFunnel />} />
+      <Route path="/sales/sales-analysis" element={<PresaleAnalytics />} />
+
       <Route path="/sales-reports" element={<SalesReports />} />
       <Route path="/sales-team" element={<SalesTeam />} />
       <Route path="/sales/team" element={<SalesTeam />} />
@@ -76,7 +82,7 @@ export function SalesRoutes() {
       <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
       <Route path="/sales/contracts/approval" element={<ContractApproval />} />
-      <Route path="/customers" element={<CustomerList />} />
+      <Route path="/customers" element={<Navigate to="/sales/customers" replace />} />
       <Route path="/sales/customers" element={<CustomerList />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />
@@ -100,7 +106,6 @@ export function SalesRoutes() {
         }
       />
       <Route path="/sales-projects" element={<SalesProjectTrack />} />
-      <Route path="/sales-funnel" element={<SalesFunnel />} />
       <Route path="/bidding/:id" element={<BiddingDetail />} />
       <Route path="/sales/leads" element={<LeadManagement />} />
       <Route path="/sales/leads/:id" element={<LeadDetail />} />
@@ -162,10 +167,12 @@ export function SalesRoutes() {
       <Route path="/sales/automation" element={<SalesAutomation />} />
       <Route path="/sales/forecast-dashboard" element={<ForecastDashboard />} />
       <Route path="/sales/funnel-optimization" element={<FunnelOptimization />} />
+      <Route path="/sales/customer-360" element={<Customer360 />} />
       <Route path="/sales/customer-360/:id" element={<Customer360 />} />
       <Route path="/sales/performance-incentive" element={<PerformanceIncentive />} />
       <Route path="/sales/collaboration" element={<Collaboration />} />
       <Route path="/sales/relationship-maturity" element={<RelationshipMaturity />} />
+      <Route path="/sales/win-rate-prediction" element={<WinRatePrediction />} />
       <Route path="/sales/win-rate-prediction/:id" element={<WinRatePrediction />} />
       <Route path="/sales/competitor-analysis" element={<CompetitorAnalysis />} />
       <Route path="/sales/organization" element={<SalesOrganization />} />

@@ -626,7 +626,7 @@ export default function KPIList() {
         title="KPI 指标管理"
         description="管理关键绩效指标 | 数据采集 | 历史趋势"
         breadcrumbs={[
-          { label: "战略管理", href: "/strategy" },
+          { label: "战略管理", href: "/strategy/analysis" },
           { label: "KPI 管理" },
         ]}
         actions={
