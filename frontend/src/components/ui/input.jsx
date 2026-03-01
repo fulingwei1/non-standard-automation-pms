@@ -3,6 +3,14 @@ import { cn } from "../../lib/utils";
 
 const Input = React.forwardRef(
   ({ className, type, icon: Icon, error, value, ...props }, ref) => {
+    // Avoid passing "unknown" to date/number inputs — browsers reject it
+    const safeValue =
+      value === "unknown" || value == null
+        ? ""
+        : type === "date" && typeof value === "string" && !/^\d{4}-\d{2}-\d{2}$/.test(value)
+          ? ""
+          : value;
+
     return (
       <div className="relative">
         {Icon && (
@@ -12,7 +20,7 @@ const Input = React.forwardRef(
         )}
         <input
           type={type}
-          value={value ?? ""}
+          value={safeValue}
           className={cn(
             // Base styles
             "flex w-full h-11 rounded-xl text-sm",

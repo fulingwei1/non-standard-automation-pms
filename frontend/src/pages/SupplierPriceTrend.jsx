@@ -88,6 +88,24 @@ export default function SupplierPriceTrend() {
   const periods = trendData?.periods || [];
   const trendSeries = trendData?.series || [];
 
+  const volatilityList = useMemo(() => {
+    if (Array.isArray(volatilityData)) return volatilityData;
+    if (volatilityData && typeof volatilityData === "object") {
+      const list = volatilityData.items ?? volatilityData.data ?? volatilityData.list ?? volatilityData.results;
+      return Array.isArray(list) ? list : [];
+    }
+    return [];
+  }, [volatilityData]);
+
+  const comparisonList = useMemo(() => {
+    if (Array.isArray(comparisonData)) return comparisonData;
+    if (comparisonData && typeof comparisonData === "object") {
+      const list = comparisonData.items ?? comparisonData.data ?? comparisonData.list ?? comparisonData.results;
+      return Array.isArray(list) ? list : [];
+    }
+    return [];
+  }, [comparisonData]);
+
   const maxTrendAmount = useMemo(() => {
     let maxValue = 0;
     for (const supplier of trendSeries) {
@@ -102,9 +120,9 @@ export default function SupplierPriceTrend() {
   }, [trendSeries]);
 
   const maxVolatilityAmount = useMemo(() => {
-    const values = volatilityData.map((item) => Number(item.stddev_amount || 0));
+    const values = volatilityList.map((item) => Number(item.stddev_amount || 0));
     return Math.max(...values, 0);
-  }, [volatilityData]);
+  }, [volatilityList]);
 
   const totalPurchaseAmount = useMemo(() => {
     return trendSeries.reduce(
@@ -292,14 +310,14 @@ export default function SupplierPriceTrend() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {comparisonData.length === 0 ? (
+                    {comparisonList.length === 0 ? (
                       <TableRow className="border-slate-800">
                         <TableCell colSpan={5} className="text-center text-slate-400 py-8">
                           暂无对比数据
                         </TableCell>
                       </TableRow>
                     ) : (
-                      comparisonData.map((item) => (
+                      comparisonList.map((item) => (
                         <TableRow key={item.supplier_id} className="border-slate-800">
                           <TableCell className="font-medium text-slate-100">
                             {item.supplier_name}
@@ -332,10 +350,10 @@ export default function SupplierPriceTrend() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {volatilityData.length === 0 ? (
+                  {volatilityList.length === 0 ? (
                     <p className="text-sm text-slate-400">暂无波动数据</p>
                   ) : (
-                    volatilityData.map((item) => {
+                    volatilityList.map((item) => {
                       const meta = getVolatilityMeta(
                         Number(item.stddev_amount || 0),
                         maxVolatilityAmount,

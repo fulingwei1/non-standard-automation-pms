@@ -1,6 +1,6 @@
 /**
  * 我的战略面板组件
- * 展示当前用户负责的 KPI 和年度重点工作
+ * 展示当前用户负责的 KPI 和重点工作
  */
 import { motion } from "framer-motion";
 import {

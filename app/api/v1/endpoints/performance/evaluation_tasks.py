@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-绩效评价任务 API
+绩效评价 API
 提供评价任务列表查询功能
 """
 
@@ -156,7 +156,7 @@ def get_evaluation_tasks(
     if not period:
         period = date.today().strftime("%Y-%m")
 
-    logger.info(f"用户 {current_user.username} 查询绩效评价任务，周期: {period}, 租户: {current_user.tenant_id}")
+    logger.info(f"用户 {current_user.username} 查询绩效评价，周期: {period}, 租户: {current_user.tenant_id}")
 
     tasks: List[EvaluationTaskItem] = []
 

@@ -195,7 +195,7 @@ export function hasProjectReviewAccess(role, isSuperuser = false, permissions = 
 
 /**
  * 检查是否有战略管理模块访问权限
- * 战略管理模块包含：战略仪表板、CSF/KPI管理、战略目标分解、战略审视等
+ * 战略管理模块包含：战略仪表板、CSF/KPI管理、战略分解、战略审视等
  *
  * 访问级别：
  * - 完整访问：高管层、系统管理员

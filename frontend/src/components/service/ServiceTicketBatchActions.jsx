@@ -42,28 +42,28 @@ export function ServiceTicketBatchActions({
     const loadUsers = async () => {
       try {
         setLoadingUsers(true);
-        const response = await fetch('/api/v1/users/', {
-          headers: { 
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          },
-          method: 'POST',
-          body: JSON.stringify({
-            is_active: true,
-            page_size: 100,
-          })
-        });
-        
-        const userList = response.data?.items || response.data?.items || response.data || [];
+        const res = await fetch(
+          '/api/v1/users/?is_active=true&page=1&page_size=100',
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        const userList = data?.items ?? [];
         setUsers(
-          (userList || []).map((u) => ({
+          userList.map((u) => ({
             id: u.id,
             name: u.real_name || u.username,
-            role: u.position || u.roles?.[0] || "工程师",
-          })),
+            role: u.position || u.roles?.[0] || '工程师',
+          }))
         );
       } catch (err) {
-        console.error("Failed to load users:", err);
+        console.error('Failed to load users:', err);
         setUsers([]);
       } finally {
         setLoadingUsers(false);

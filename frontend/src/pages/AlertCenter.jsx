@@ -474,14 +474,15 @@ export default function AlertCenter() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      <PageHeader
-        title="预警中心"
-        subtitle="统一预警管理平台 - 实时监控、智能分析、快速响应"
-        breadcrumbs={[
+      <div className="container mx-auto px-4 pt-6">
+        <PageHeader
+          title="预警中心"
+          subtitle="统一预警管理平台 - 实时监控、智能分析、快速响应"
+          breadcrumbs={[
         { label: "系统管理", href: "/system" },
         { label: "预警中心" }]
         }
-        actions={[
+          actions={[
         {
           label: "新建规则",
           icon: Settings,
@@ -489,7 +490,7 @@ export default function AlertCenter() {
           variant: "default"
         }]
         } />
-
+      </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* 预警概览 */}

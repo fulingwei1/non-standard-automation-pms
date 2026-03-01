@@ -30,7 +30,7 @@ class StrategyReviewCreate(BaseModel):
     findings: Optional[List[str]] = Field(default=None, description="发现的问题")
     achievements: Optional[List[str]] = Field(default=None, description="取得的成果")
     recommendations: Optional[List[str]] = Field(default=None, description="改进建议")
-    decisions: Optional[List[Dict[str, Any]]] = Field(default=None, description="决策事项")
+    decisions: Optional[List[Dict[str, Any]]] = Field(default=None, description="关键决策")
     action_items: Optional[List[Dict[str, Any]]] = Field(default=None, description="行动计划")
     meeting_minutes: Optional[str] = Field(default=None, description="会议纪要")
     attendees: Optional[List[int]] = Field(default=None, description="参会人员ID列表")

@@ -64,7 +64,7 @@ const DEFAULT_COMPANY_INFO = {
 const STEPS = [
   { id: 1, title: "战略分析", icon: Brain, description: "SWOT 分析与战略定位" },
   { id: 2, title: "战略分解", icon: Target, description: "BSC 四维度 CSF+KPI" },
-  { id: 3, title: "年度经营计划", icon: Calendar, description: "年度重点工作规划" },
+  { id: 3, title: "年度经营计划", icon: Calendar, description: "重点工作规划" },
   { id: 4, title: "部门工作分解", icon: Users, description: "部门 OKR 目标" },
 ];
 
@@ -210,7 +210,7 @@ export default function AIStrategyAssistant() {
     setLoading(true);
     try {
       await aiStrategyApi.apply("annual_work", annualPlanResult, null);
-      alert("年度重点工作已成功导入系统！");
+      alert("重点工作已成功导入系统！");
     } catch (error) {
       console.error("导入失败:", error);
       alert("导入失败：" + (error.response?.data?.detail || error.message));
@@ -698,7 +698,7 @@ export default function AIStrategyAssistant() {
       {annualPlanResult && (
         <motion.div {...staggerContainer} className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">年度重点工作（{annualPlanResult.annual_works?.length || 0}项）</h3>
+            <h3 className="text-lg font-semibold text-white">重点工作（{annualPlanResult.annual_works?.length || 0}项）</h3>
             <Button onClick={handleApplyAnnualPlan} size="sm" variant="outline">
               <Upload className="w-4 h-4 mr-2" />
               导入系统

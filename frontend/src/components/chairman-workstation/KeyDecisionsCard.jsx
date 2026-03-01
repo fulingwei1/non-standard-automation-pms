@@ -11,7 +11,7 @@ export const KeyDecisionsCard = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Crown className="h-5 w-5 text-amber-400" />
-              重大决策事项
+              关键决策
             </CardTitle>
             <Badge
               variant="outline"
@@ -24,7 +24,7 @@ export const KeyDecisionsCard = () => {
         <CardContent className="space-y-3">
           {/* Key decisions - 需要从API获取数据 */}
           <div className="text-center py-8 text-slate-500">
-            <p>暂无重大决策事项</p>
+            <p>暂无关键决策</p>
           </div>
         </CardContent>
       </Card>

@@ -45,7 +45,7 @@ class StrategyReview(Base, TimestampMixin):
     findings = Column(Text, comment="发现的问题（JSON数组）")
     achievements = Column(Text, comment="取得的成果（JSON数组）")
     recommendations = Column(Text, comment="改进建议（JSON数组）")
-    decisions = Column(Text, comment="决策事项（JSON数组）")
+    decisions = Column(Text, comment="关键决策（JSON数组）")
     action_items = Column(Text, comment="行动计划（JSON数组）")
 
     # 会议信息

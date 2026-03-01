@@ -28,7 +28,7 @@ router.include_router(csf_router, prefix="/csfs", tags=["战略管理 - CSF"])
 router.include_router(kpi_router, prefix="/kpis", tags=["战略管理 - KPI"])
 
 # 年度重点工作路由
-router.include_router(annual_work_router, prefix="/annual-works", tags=["战略管理 - 年度重点工作"])
+router.include_router(annual_work_router, prefix="/annual-works", tags=["战略管理 - 重点工作"])
 
 # 目标分解路由
 router.include_router(decomposition_router, prefix="/decomposition", tags=["战略管理 - 目标分解"])

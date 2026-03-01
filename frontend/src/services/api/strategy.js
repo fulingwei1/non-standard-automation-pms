@@ -62,7 +62,7 @@ export const kpiApi = {
 };
 
 // ============================================
-// 年度重点工作
+// 重点工作
 // ============================================
 export const annualWorkApi = {
   list: (params) => api.get("/strategy/annual-works", { params }),

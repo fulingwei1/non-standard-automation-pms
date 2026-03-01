@@ -34,7 +34,7 @@ export const aiStrategyApi = {
     }),
 
   /**
-   * AI 年度经营计划 - 生成年度重点工作
+   * AI 年度经营计划 - 生成重点工作
    */
   annualPlan: (data) =>
     api.post("/ai-strategy/annual-plan", null, {

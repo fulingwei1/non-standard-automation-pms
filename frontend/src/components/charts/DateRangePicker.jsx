@@ -153,14 +153,14 @@ export default function DateRangePicker({
             <div className="flex gap-2 mb-3">
               <input
                 type="date"
-                value={customStart || "unknown"}
+                value={customStart ?? ""}
                 onChange={(e) => setCustomStart(e.target.value)}
                 className="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <span className="text-slate-400 self-center">~</span>
               <input
                 type="date"
-                value={customEnd || "unknown"}
+                value={customEnd ?? ""}
                 onChange={(e) => setCustomEnd(e.target.value)}
                 className="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary"
               />

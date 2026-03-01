@@ -104,7 +104,7 @@ export function ExecutionStatusPanel({ executionStats }) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <CheckCircle2 className="w-5 h-5 text-purple-400" />
-                年度重点工作
+                重点工作
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

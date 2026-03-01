@@ -65,11 +65,12 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
         setProjects(projectData.items || []);
 
         // Load users
-        const userResponse = await fetch('/api/v1/users/', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        const userResponse = await fetch(
+          '/api/v1/users/?is_active=true&page=1&page_size=100',
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
         const userData = await userResponse.json();
-        setUsers(userData.items || []);
+        setUsers(userData?.items ?? []);
 
       } catch (error) {
         console.error('Failed to load data:', error);

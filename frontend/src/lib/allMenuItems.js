@@ -396,7 +396,7 @@ export const allMenuGroups = [
       },
       {
         id: "key-decisions",
-        name: "决策事项",
+        name: "关键决策",
         path: "/key-decisions",
         icon: "Crown",
       },

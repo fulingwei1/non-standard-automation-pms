@@ -68,7 +68,7 @@ const EvaluationTaskList = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                绩效评价任务
+                绩效评价
               </h1>
               <p className="text-slate-400">
                 {currentUser.role === "dept_manager" ? "部门成员" : "项目成员"}

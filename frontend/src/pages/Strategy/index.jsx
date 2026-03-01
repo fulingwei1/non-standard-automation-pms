@@ -232,7 +232,7 @@ export default function StrategyDashboard() {
                         <p className="text-3xl font-bold text-white">
                           {overview.annual_work_count || 0}
                         </p>
-                        <p className="text-sm text-slate-400 mt-1">年度重点工作</p>
+                        <p className="text-sm text-slate-400 mt-1">重点工作</p>
                       </div>
                       <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50 text-center">
                         <p className="text-3xl font-bold text-emerald-400">

@@ -438,7 +438,7 @@ async def ai_dept_objectives(
     - 每个目标关联的 KPI 指标
     """
     
-    system_prompt = """你是一位资深 OKR 教练，擅长将战略目标分解为部门 OKR。
+    system_prompt = """你是一位资深 OKR 教练，擅长将战略分解为部门 OKR。
 请为指定部门生成 OKR 目标。
 
 **重要要求**：

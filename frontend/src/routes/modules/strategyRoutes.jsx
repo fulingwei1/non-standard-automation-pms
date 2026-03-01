@@ -72,7 +72,7 @@ export function StrategyRoutes() {
         }
       />
 
-      {/* 年度重点工作管理 */}
+      {/* 重点工作管理 */}
       <Route
         path="/strategy/annual-work"
         element={
@@ -82,7 +82,7 @@ export function StrategyRoutes() {
         }
       />
 
-      {/* 战略目标分解 */}
+      {/* 战略分解 */}
       <Route
         path="/strategy/decomposition"
         element={

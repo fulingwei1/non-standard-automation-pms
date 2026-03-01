@@ -186,7 +186,7 @@ class StrategyReview(Base):
     health_score: int            # 健康度评分 (0-100)
     findings: JSON               # 发现的问题
     recommendations: JSON        # 改进建议
-    decisions: JSON              # 决策事项
+    decisions: JSON              # 关键决策
     next_review_date: date
 ```
 

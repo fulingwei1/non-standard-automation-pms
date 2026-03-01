@@ -348,7 +348,7 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
             ),
             self.create_stat_card(
                 key="annual_work_count",
-                label="年度重点工作",
+                label="重点工作",
                 value=work_count,
                 unit="个",
                 icon="work"

@@ -1,5 +1,5 @@
 /**
- * 战略目标分解页面
+ * 战略分解页面
  * 战略 CSF → 部门目标 (OKR) → 个人 KPI 三层树形结构
  */
 import { useState, useEffect } from "react";
@@ -198,7 +198,7 @@ export default function Decomposition() {
     >
       {/* 页面头部 */}
       <PageHeader
-        title="战略目标分解"
+        title="战略分解"
         description="战略 CSF → 部门 OKR → 个人 KPI 三层分解视图"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">

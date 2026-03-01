@@ -170,7 +170,7 @@ export const KPI_DIRECTIONS = {
   },
 };
 
-// 年度重点工作状态
+// 重点工作状态
 export const ANNUAL_WORK_STATUS = {
   NOT_STARTED: {
     label: "未开始",

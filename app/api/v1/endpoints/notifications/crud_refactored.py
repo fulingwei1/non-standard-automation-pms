@@ -57,9 +57,15 @@ def read_notifications(
     # 分页
     notifications = apply_pagination(query.order_by(desc(Notification.created_at)), pagination.offset, pagination.limit).all()
 
-    # 构建响应数据
+    # 构建响应数据（link_params/extra_data 仅接受 dict，避免 DB 中非 dict 导致校验失败）
     items = []
     for notification in notifications:
+        link_params = notification.link_params
+        if link_params is not None and not isinstance(link_params, dict):
+            link_params = None
+        extra_data = notification.extra_data
+        if extra_data is not None and not isinstance(extra_data, dict):
+            extra_data = None
         items.append(NotificationResponse(
             id=notification.id,
             user_id=notification.user_id,
@@ -69,11 +75,11 @@ def read_notifications(
             title=notification.title,
             content=notification.content,
             link_url=notification.link_url,
-            link_params=notification.extra_data if notification.extra_data else None,
+            link_params=link_params,
             is_read=notification.is_read,
             read_at=notification.read_at,
             priority=notification.priority,
-            extra_data=notification.extra_data,
+            extra_data=extra_data,
             created_at=notification.created_at,
             updated_at=notification.updated_at,
         ))

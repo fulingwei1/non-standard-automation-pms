@@ -278,7 +278,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
             <input
               type="text"
               placeholder="搜索菜单..."
-              value={searchQuery || "unknown"}
+              value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
                 "w-full pl-9 pr-8 py-2 rounded-lg",

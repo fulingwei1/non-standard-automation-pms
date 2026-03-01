@@ -60,9 +60,9 @@ export function EmployeeList({
                     <div className="text-center py-12 text-slate-400">暂无数据</div>
                 ) : (
                     <div className="space-y-3">
-                        {(filteredProfiles || []).map((profile) => (
+                        {(filteredProfiles || []).map((profile, index) => (
                             <motion.div
-                                key={profile.id}
+                                key={profile.employee_id ?? profile.id ?? `profile-${index}`}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"

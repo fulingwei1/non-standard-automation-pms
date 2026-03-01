@@ -131,7 +131,7 @@
 
 ### 16. 战略分析类 (Strategy) - 2个
 - `StrategyAnalysis.jsx` - 战略分析
-- `KeyDecisions.jsx` - 决策事项
+- `KeyDecisions.jsx` - 关键决策
 
 ### 17. 个人中心类 (Personal) - 4个
 - `NotificationCenter.jsx` - 通知中心

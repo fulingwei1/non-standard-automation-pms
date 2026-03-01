@@ -1,5 +1,5 @@
 /**
- * 年度重点工作管理页面
+ * 重点工作管理页面
  * 卡片列表展示、创建/编辑、进度更新
  */
 import { useState, useEffect } from "react";
@@ -86,7 +86,7 @@ export default function AnnualWorkList() {
     fetchStrategies();
   }, []);
 
-  // 获取年度重点工作列表
+  // 获取重点工作列表
   useEffect(() => {
     if (selectedStrategyId != null) {
       fetchWorks();
@@ -118,7 +118,7 @@ export default function AnnualWorkList() {
       const { data } = await annualWorkApi.list({ strategy_id: selectedStrategyId });
       setWorks(data.items || data || []);
     } catch (error) {
-      console.error("获取年度重点工作失败:", error);
+      console.error("获取重点工作失败:", error);
     } finally {
       setLoading(false);
     }
@@ -234,8 +234,8 @@ export default function AnnualWorkList() {
     >
       {/* 页面头部 */}
       <PageHeader
-        title="年度重点工作"
-        description="管理年度重点工作任务、追踪进度、监控成本"
+        title="重点工作"
+        description="管理重点工作任务、追踪进度、监控成本"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Select

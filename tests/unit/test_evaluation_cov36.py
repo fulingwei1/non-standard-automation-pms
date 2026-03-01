@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""绩效评价任务创建单元测试 - 第三十六批"""
+"""绩效评价创建单元测试 - 第三十六批"""
 
 import pytest
 from unittest.mock import MagicMock, patch, call
