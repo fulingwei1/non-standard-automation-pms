@@ -325,81 +325,93 @@ def get_executive_dashboard(
     决策驾驶舱数据
     综合看板数据，包括项目、销售、成本、进度等关键指标
     """
-    today = date.today()
-    month_start = date(today.year, today.month, 1)
-
-    # 项目统计
-    total_projects = db.query(Project).filter(Project.status != "CANCELLED").count()
-    active_projects = db.query(Project).filter(Project.status == "EXECUTING").count()
-    completed_projects = db.query(Project).filter(Project.status == "COMPLETED").count()
-
-    # 健康度分布
-    health_dist = db.query(
-        Project.health,
-        func.count(Project.id).label('count')
-    ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
-    health_distribution = {stat.health or "H4": stat.count for stat in health_dist}
-
-    # 销售统计（本月）- Contract.status 使用小写与模型一致
-    month_contracts = db.query(Contract).filter(
-        func.date(Contract.signing_date) >= month_start,
-        Contract.status.in_(["signed", "executing"])
-    ).all()
-    month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
-
-    # 成本统计
-    total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
-    total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
-
-    # 合同统计 - 状态与模型一致（小写）
-    total_contracts = db.query(Contract).filter(
-        Contract.status.in_(["signed", "executing"])
-    ).count()
-    total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
-        Contract.status.in_(["signed", "executing"])
-    ).scalar() or 0
-
-    # 回款统计：按实际收款金额汇总（ProjectPaymentPlan 状态为 COMPLETED/PARTIAL，无 PAID）
-    total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
-        ProjectPaymentPlan.status.in_(["COMPLETED", "PARTIAL"])
-    ).scalar() or 0
-
-    # 人员统计
-    total_users = db.query(User).filter(User.is_active).count()
-
-    # 工时统计（本月）
+    import traceback
     try:
-        month_timesheets = db.query(Timesheet).filter(
-            Timesheet.work_date >= month_start,
-            Timesheet.status == "APPROVED"
-        ).all()
-        month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
-    except Exception:
-        month_total_hours = 0
+        today = date.today()
+        month_start = date(today.year, today.month, 1)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "summary": {
-                "total_projects": total_projects,
-                "active_projects": active_projects,
-                "completed_projects": completed_projects,
-                "total_contracts": total_contracts,
-                "total_contract_amount": round(float(total_contract_amount), 2),
-                "total_received": round(float(total_received), 2),
-                "total_budget": round(float(total_budget), 2),
-                "total_actual_cost": round(float(total_actual), 2),
-                "total_users": total_users
+        # 项目统计
+        total_projects = db.query(Project).filter(Project.status != "CANCELLED").count()
+        active_projects = db.query(Project).filter(Project.status == "EXECUTING").count()
+        completed_projects = db.query(Project).filter(Project.status == "COMPLETED").count()
+
+        # 健康度分布
+        health_dist = db.query(
+            Project.health,
+            func.count(Project.id).label('count')
+        ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
+        health_distribution = {stat.health or "H4": stat.count for stat in health_dist}
+
+        # 销售统计（本月）- Contract.status 使用小写与模型一致
+        month_contracts = db.query(Contract).filter(
+            func.date(Contract.signing_date) >= month_start,
+            Contract.status.in_(["signed", "executing"])
+        ).all()
+        month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
+
+        # 成本统计
+        total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
+        total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
+
+        # 合同统计 - 状态与模型一致（小写）
+        total_contracts = db.query(Contract).filter(
+            Contract.status.in_(["signed", "executing"])
+        ).count()
+        total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
+            Contract.status.in_(["signed", "executing"])
+        ).scalar() or 0
+
+        # 回款统计：按实际收款金额汇总（ProjectPaymentPlan 状态为 COMPLETED/PARTIAL，无 PAID）
+        total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
+            ProjectPaymentPlan.status.in_(["COMPLETED", "PARTIAL"])
+        ).scalar() or 0
+
+        # 人员统计
+        total_users = db.query(User).filter(User.is_active).count()
+
+        # 工时统计（本月）
+        try:
+            month_timesheets = db.query(Timesheet).filter(
+                Timesheet.work_date >= month_start,
+                Timesheet.status == "APPROVED"
+            ).all()
+            month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
+        except Exception:
+            month_total_hours = 0
+
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "summary": {
+                    "total_projects": total_projects,
+                    "active_projects": active_projects,
+                    "completed_projects": completed_projects,
+                    "total_contracts": total_contracts,
+                    "total_contract_amount": round(float(total_contract_amount), 2),
+                    "total_received": round(float(total_received), 2),
+                    "total_budget": round(float(total_budget), 2),
+                    "total_actual_cost": round(float(total_actual), 2),
+                    "total_users": total_users
+                },
+                "monthly": {
+                    "month": today.strftime("%Y-%m"),
+                    "new_contracts": len(month_contracts),
+                    "contract_amount": round(month_contract_amount, 2),
+                    "total_hours": round(month_total_hours, 2)
+                },
+                "health_distribution": health_distribution,
+                "updated_at": datetime.now().isoformat()
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "code": "INTERNAL_ERROR",
+                "message": "决策驾驶舱数据加载失败",
+                "detail": str(e),
+                "traceback": traceback.format_exc(),
             },
-            "monthly": {
-                "month": today.strftime("%Y-%m"),
-                "new_contracts": len(month_contracts),
-                "contract_amount": round(month_contract_amount, 2),
-                "total_hours": round(month_total_hours, 2)
-            },
-            "health_distribution": health_distribution,
-            "updated_at": datetime.now().isoformat()
-        }
-    )
+        )
 
