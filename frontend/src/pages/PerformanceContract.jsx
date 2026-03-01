@@ -59,7 +59,6 @@ import {
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import {
   performanceContractApi,
-  getContractTypeLabel,
   getStatusConfig,
   getCategoryLabel,
   getScoreColor,
@@ -483,7 +482,7 @@ export default function PerformanceContract() {
             </h4>
             {selectedContract.items?.length > 0 ? (
               <div className="space-y-2">
-                {selectedContract.items.map((item, idx) => (
+                {selectedContract.items.map((item, _idx) => (
                   <div
                     key={item.id}
                     className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50"

@@ -522,10 +522,6 @@ export default function KPIList() {
   };
 
   // const handleEdit = (kpi) => {
-    setEditingKpi(kpi);
-    setDialogOpen(true);
-  };
-
   const handleUpdate = (kpi) => {
     setUpdatingKpi(kpi);
     setUpdateDialogOpen(true);
@@ -547,17 +543,6 @@ export default function KPIList() {
     }
   };
 
-  // const handleDelete = async (kpi) => {
-    if (!confirm(`确定要删除 KPI "${kpi.name}" 吗？`)) return;
-
-    try {
-      await kpiApi.delete(kpi.id);
-      loadData();
-    } catch (error) {
-      console.error("删除 KPI 失败:", error);
-      alert("删除失败，请重试");
-    }
-  };
 
   const handleSubmit = async (data) => {
     try {
