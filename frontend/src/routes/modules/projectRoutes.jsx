@@ -20,15 +20,21 @@ import ProjectTaskList from "../../pages/ProjectTaskList";
 import MachineManagement from "../../pages/MachineManagement";
 import MilestoneManagement from "../../pages/MilestoneManagement";
 import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
+import AssemblyTemplateManagement from "../../pages/AssemblyTemplateManagement";
+import EngineerRecommendation from "../../pages/EngineerRecommendation";
+import EngineerWorkloadBoard from "../../pages/EngineerWorkloadBoard";
 import EngineerWorkstation from "../../pages/EngineerWorkstation";
 import ProjectStageView from "../../pages/ProjectStageView";
 import ProjectTimelineView from "../../pages/ProjectTimelineView";
+import PresalesTasks from "../../pages/PresalesTasks";
+import ProjectListWithCost from "../../pages/ProjectListWithCost";
 import ResourceOverview from "../../pages/ResourceOverview";
 import LessonsLearned from "../../pages/LessonsLearned";
 import AcceptanceManagement from "../../pages/AcceptanceManagement";
 import GanttDependency from "../../pages/GanttDependency";
 import ECNManagement from "../../pages/ECNManagement";
 import FieldCommissioning from "../../pages/FieldCommissioning";
+import ScheduleOptimization from "../../pages/ScheduleOptimization";
 import ScheduleGeneration from "../../pages/ScheduleGeneration";
 
 export function ProjectRoutes() {
@@ -104,6 +110,12 @@ export function ProjectRoutes() {
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
       <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
+      <Route path="/project-list-with-cost" element={<ProjectListWithCost />} />
+      <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />
+      <Route path="/projects/:projectId/engineer-recommendation" element={<EngineerRecommendation />} />
+      <Route path="/projects/:projectId/engineer-workload-board" element={<EngineerWorkloadBoard />} />
+      <Route path="/assembly-template-management" element={<AssemblyTemplateManagement />} />
+      <Route path="/project-presales-tasks" element={<PresalesTasks />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />
       <Route path="/workstation" element={<EngineerWorkstation />} />
