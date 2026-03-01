@@ -13,7 +13,6 @@ export const defaultNavGroups = [
     items: [
       { name: "工作台", path: "/dashboard", icon: "LayoutDashboard", badge: null },
       { name: "运营大屏", path: "/operation", icon: "BarChart3", permission: "operation:dashboard:read", permissionLabel: "运营大屏" },
-      { name: "预警管理", path: "/alerts", icon: "AlertTriangle", badge: "3", permission: "alert:read", permissionLabel: "预警管理" },
       { name: "问题异常", path: "/issues", icon: "AlertCircle", permission: "issue:read", permissionLabel: "问题异常" },
       { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo", permission: "evaluation:task:read", permissionLabel: "绩效评价" },
       { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
