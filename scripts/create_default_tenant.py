@@ -16,7 +16,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from datetime import datetime
-from sqlalchemy import text
 
 from app.models.base import get_db_session, get_engine
 from app.models.tenant import Tenant, TenantStatus, TenantPlan

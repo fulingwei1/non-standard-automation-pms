@@ -57,7 +57,6 @@ def test_software_cost_calculation():
     assert software_cost1 == expected1, f"期望 {expected1}, 实际 {software_cost1}"
     
     # 无人天估算,自动推断
-    requirement = "简短需求"  # <100字
     auto_man_days = 5
     software_cost2 = Decimal(str(auto_man_days)) * Decimal("8") * SOFTWARE_HOURLY_RATE
     print(f"场景2: 自动估算(简短需求)")
@@ -229,9 +228,7 @@ def test_full_estimation_flow():
         {"name": "电机", "unit_price": 3000, "quantity": 4},
     ]
     estimated_man_days = 20
-    installation_difficulty = "medium"
     service_years = 2
-    complexity_level = "medium"
     
     # 1. 硬件成本
     hardware_total = sum(Decimal(str(item["unit_price"])) * Decimal(str(item["quantity"])) 

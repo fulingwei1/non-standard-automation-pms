@@ -18,14 +18,13 @@ import logging
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text, inspect
 from app.models.base import get_db_session, get_engine
-from app.models.tenant import Tenant
 
 logging.basicConfig(
     level=logging.INFO,

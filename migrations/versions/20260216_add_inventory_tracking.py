@@ -8,7 +8,6 @@ Create Date: 2026-02-16 08:30:00
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 # revision identifiers
 revision = '20260216_inventory_tracking'

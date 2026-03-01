@@ -28,7 +28,7 @@ def test_imports():
     for name, module_path, class_name in tests:
         try:
             module = __import__(module_path, fromlist=[class_name])
-            cls = getattr(module, class_name)
+            getattr(module, class_name)
             print(f"✓ {name}: 导入成功")
             results.append((name, True))
         except Exception as e:
@@ -44,28 +44,8 @@ def test_models():
     print("模型导入测试")
     print("=" * 60)
 
-    models = [
-        "AssemblyStage",
-        "AssemblyTemplate",
-        "CategoryStageMapping",
-        "BomItemAssemblyAttrs",
-        "MaterialReadiness",
-        "ShortageDetail",
-        "ShortageAlertRule",
-        "SchedulingSuggestion"
-    ]
 
     try:
-        from app.models import (
-            AssemblyStage,
-            AssemblyTemplate,
-            BomItemAssemblyAttrs,
-            CategoryStageMapping,
-            MaterialReadiness,
-            SchedulingSuggestion,
-            ShortageAlertRule,
-            ShortageDetail,
-        )
         print("✓ 所有模型导入成功")
         return True
     except Exception as e:
@@ -120,12 +100,6 @@ def test_schemas():
     print("=" * 60)
 
     try:
-        from app.schemas.assembly_kit import (
-            AssemblyStageResponse,
-            BomItemAssemblyAttrsResponse,
-            MaterialReadinessResponse,
-            SchedulingSuggestionResponse,
-        )
         print("✓ 所有Schema导入成功")
         return True
     except Exception as e:

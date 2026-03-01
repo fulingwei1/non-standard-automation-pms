@@ -3,13 +3,11 @@
 # 项目文档/图纸版本管理
 # ===========================================
 
-from fastapi import APIRouter, Query, Path, Body, HTTPException, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Query, Path, Body, UploadFile, File, Form
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import date
 from pydantic import BaseModel, Field
 from enum import Enum
-import io
 
 router = APIRouter(prefix="/api/v1/documents", tags=["文档管理"])
 

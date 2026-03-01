@@ -1,13 +1,13 @@
 """
 进度计算服务 - 核心业务逻辑
 """
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models.models import Project, WbsTask, TaskAssignment, TaskLog, Timesheet
+from app.models.models import Project, WbsTask, TaskLog
 
 
 class ProgressService:

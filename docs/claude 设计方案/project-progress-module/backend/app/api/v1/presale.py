@@ -2,7 +2,7 @@
 售前技术支持管理 API
 工单管理、方案管理、知识库、统计分析
 """
-from fastapi import APIRouter, Query, HTTPException, Body, BackgroundTasks
+from fastapi import APIRouter, Query, Body
 from typing import Optional, List, Dict
 from datetime import datetime, date, timedelta
 from pydantic import BaseModel

@@ -4,7 +4,6 @@
 测试项目API端点是否正常
 """
 
-import json
 import os
 import sys
 from typing import Any, Dict

@@ -1,8 +1,7 @@
 """
 BOM管理模块 - API路由
 """
-from typing import Optional, List
-from decimal import Decimal
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,12 +18,12 @@ from app.schemas.bom_schemas import (
     # 版本相关
     BomVersionCreate, BomVersionResponse, BomVersionListResponse,
     # 统计相关
-    BomStatistics, CategoryStatistics, KitRateStatistics,
-    ShortageItem, ShortageListResponse,
+    BomStatistics, KitRateStatistics,
+    ShortageListResponse,
     # 操作相关
-    BomReviewRequest, BomPublishRequest,
+    BomPublishRequest,
     BomCompareRequest, BomCompareResponse,
-    BatchUpdateProcurementStatus, BatchUpdateSupplier, BatchDeleteItems
+    BatchUpdateProcurementStatus, BatchDeleteItems
 )
 from app.services.bom_service import (
     MaterialService, BomService, BomItemService,

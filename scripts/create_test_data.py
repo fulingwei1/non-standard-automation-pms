@@ -13,10 +13,9 @@ from datetime import date, datetime, timedelta
 
 from app.core.security import get_password_hash
 from app.models.base import get_db_session
-from app.models.organization import Department
 from app.models.project import Project, ProjectMember
 from app.models.task_center import TaskUnified
-from app.models.user import Role, User
+from app.models.user import User
 
 
 def create_test_users(db):

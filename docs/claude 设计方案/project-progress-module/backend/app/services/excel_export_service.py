@@ -2,18 +2,14 @@
 # Excel报表导出服务
 # ===========================================
 
-from fastapi import APIRouter, Query, Response, BackgroundTasks
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Query, Response
 from typing import Optional, List, Dict, Any
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from enum import Enum
 import io
-import json
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill, NamedStyle
-from openpyxl.utils import get_column_letter
-from openpyxl.chart import BarChart, LineChart, PieChart, Reference
-from openpyxl.chart.label import DataLabelList
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.chart import BarChart, LineChart, PieChart
 
 router = APIRouter(prefix="/api/v1/export", tags=["报表导出"])
 

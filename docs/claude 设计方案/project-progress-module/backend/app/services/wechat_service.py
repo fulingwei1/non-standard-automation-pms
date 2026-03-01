@@ -1,11 +1,10 @@
 """
 企业微信通知服务
 """
-import json
 import logging
 import requests
 from datetime import datetime
-from typing import List, Dict, Optional, Any
+from typing import List, Optional
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)

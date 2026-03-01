@@ -36,17 +36,6 @@ print()
 
 print("步骤 1: 导入所有模型...")
 try:
-    from app.models.tenant import Tenant
-    from app.models.api_key import APIKey
-    from app.models.two_factor import User2FASecret, User2FABackupCode
-    from app.models.user import User, Role, ApiPermission, RoleApiPermission, UserRole
-    from app.models.permission import (
-        MenuPermission,
-        DataScopeRule,
-        RoleDataScope,
-        RoleMenu,
-        PermissionGroup
-    )
     print("✅ 所有模型导入成功")
 except Exception as e:
     print(f"❌ 模型导入失败: {e}")

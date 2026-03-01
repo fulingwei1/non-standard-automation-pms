@@ -14,9 +14,9 @@
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Any, Optional
 from enum import Enum
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from collections import defaultdict
 import json
 import asyncio
@@ -299,13 +299,13 @@ class WeChatWorkHandler(NotifyChannelHandler):
     async def send(self, message: ReminderMessage) -> bool:
         """发送企业微信消息"""
         try:
-            token = await self.get_access_token()
+            await self.get_access_token()
             
             # 获取用户的企业微信ID
             wechat_user_id = await self._get_wechat_user_id(message.user_id)
             
             # 构建消息体
-            msg_data = {
+            {
                 "touser": wechat_user_id,
                 "msgtype": "textcard",
                 "agentid": self.agent_id,
@@ -352,7 +352,7 @@ class EmailHandler(NotifyChannelHandler):
             email = await self._get_user_email(message.user_id)
             
             # 构建邮件内容（HTML格式）
-            html_content = self._build_html_content(message)
+            self._build_html_content(message)
             
             # 实际发送（这里模拟）
             print(f"[邮件] 发送给 {email}: {message.title}")
@@ -436,7 +436,7 @@ class AppPushHandler(NotifyChannelHandler):
                 return False
             
             # 构建推送内容
-            push_data = {
+            {
                 "platform": ["android", "ios"],
                 "audience": {"registration_id": device_tokens},
                 "notification": {

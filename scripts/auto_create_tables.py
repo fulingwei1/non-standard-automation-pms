@@ -15,7 +15,6 @@ from app.core.config import settings
 
 # 导入所有models以注册到Base.metadata
 print("导入所有models...")
-import app.models  # This triggers all model registrations
 
 print(f"\n数据库URL: {settings.DATABASE_URL or f'sqlite:///{settings.SQLITE_DB_PATH}'}")
 

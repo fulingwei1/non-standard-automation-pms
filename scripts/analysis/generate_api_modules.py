@@ -3,7 +3,6 @@
 自动生成拆分后的API模块文件
 """
 import re
-import json
 from pathlib import Path
 from collections import defaultdict
 

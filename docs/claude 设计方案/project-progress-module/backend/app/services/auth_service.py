@@ -4,7 +4,6 @@
 """
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
-import hashlib
 import secrets
 import jwt
 from passlib.context import CryptContext

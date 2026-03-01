@@ -9,8 +9,7 @@ import os
 import shutil
 
 from app.utils.data_importer import (
-    ExcelTemplateGenerator, ExcelImporter, ImportType,
-    generate_import_template, import_data_from_excel
+    ExcelTemplateGenerator, ExcelImporter, ImportType
 )
 
 router = APIRouter(prefix="/import", tags=["数据导入"])

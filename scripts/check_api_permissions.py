@@ -8,13 +8,12 @@
 - 生成缺失权限报告
 """
 
-import ast
 import os
 import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -55,7 +54,7 @@ class APIPermissionChecker:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     lines = f.readlines()
-                    content = ''.join(lines)
+                    ''.join(lines)
 
                 # 使用正则表达式查找路由装饰器和权限检查
                 # 匹配 @router.get/post/put/delete("path")

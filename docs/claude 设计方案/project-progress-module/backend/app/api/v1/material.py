@@ -3,8 +3,8 @@
 齐套分析、缺料预警、缺料上报、到货跟踪、物料替代
 """
 from fastapi import APIRouter, Query, Body, UploadFile, File
-from typing import Optional, List, Dict
-from datetime import datetime, date, timedelta
+from typing import Optional
+from datetime import datetime, date
 
 router = APIRouter(prefix="/material", tags=["物料保障"])
 

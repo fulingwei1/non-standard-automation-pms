@@ -5,12 +5,10 @@
 统计所有API端点和对应的权限配置
 """
 
-import ast
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -51,7 +49,7 @@ def extract_api_endpoints() -> Dict[str, List[Dict]]:
 
             # 查找函数定义
             func_pattern = rf'def\s+(\w+)\s*\([^)]*\)[^:]*:'
-            func_matches = re.findall(func_pattern, content)
+            re.findall(func_pattern, content)
 
             endpoints[module_name].append({
                 'method': method.upper(),

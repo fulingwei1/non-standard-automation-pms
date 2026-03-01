@@ -67,7 +67,7 @@ class TestCriticalPathAlgorithm:
         }
         
         # 入度计算
-        in_degree = {t: 0 for t in tasks}
+        {t: 0 for t in tasks}
         for t, data in tasks.items():
             for p in data["predecessors"]:
                 pass  # 不增加入度，这里只是示例

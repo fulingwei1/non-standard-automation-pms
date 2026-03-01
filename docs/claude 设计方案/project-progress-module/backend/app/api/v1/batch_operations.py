@@ -3,8 +3,7 @@
 支持批量完成、转办、更新优先级、更新进度、催办、删除
 """
 from fastapi import APIRouter, Query, HTTPException, Body, BackgroundTasks
-from typing import List, Optional
-from datetime import datetime
+from typing import List
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/task-center/batch", tags=["任务批量操作"])
@@ -142,7 +141,7 @@ async def batch_set_priority(
     
     return {
         "code": 200,
-        "message": f"成功将 {success_count} 个任务优先级设为"{priority_labels[data.priority]}"",
+        "message": f"成功将 {success_count} 个任务优先级设为'{priority_labels[data.priority]}'",
         "data": {
             "success_count": success_count,
             "priority": data.priority,

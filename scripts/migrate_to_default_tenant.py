@@ -13,7 +13,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -124,7 +124,7 @@ def migrate_table(db, engine, table_name: str, config: Dict, tenant_id: int, dry
         统计信息字典
     """
     tenant_field = config['tenant_field']
-    id_field = config['id_field']
+    config['id_field']
     
     # 检查表是否存在
     if not check_table_exists(engine, table_name):

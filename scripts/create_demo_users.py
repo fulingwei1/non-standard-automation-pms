@@ -6,18 +6,16 @@
 """
 
 import sys
-import os
 from pathlib import Path
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.models.base import get_db_session, Base, get_engine
+from app.models.base import get_db_session
 from app.models.user import User, Role, UserRole
 from app.models.organization import Employee
 from app.core.security import get_password_hash
-from sqlalchemy import select, exc
 
 # 演示用户配置
 DEMO_USERS = [

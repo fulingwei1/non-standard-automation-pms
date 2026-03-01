@@ -5,7 +5,6 @@
 """
 
 import json
-import os
 from pathlib import Path
 from typing import List, Tuple, Dict
 from collections import defaultdict
@@ -46,7 +45,7 @@ def analyze_zero_coverage_services() -> List[Tuple[str, int, float]]:
         # 只关注零覆盖率且有一定代码量的文件
         if percent == 0 and statements > 0:
             # 提取服务文件名
-            service_name = filepath.replace('app/services/', '').replace('.py', '')
+            filepath.replace('app/services/', '').replace('.py', '')
             zero_coverage_services.append((filepath, statements, percent))
     
     # 按代码行数降序排序（优先处理大文件）

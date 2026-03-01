@@ -4,7 +4,6 @@ Date: 2026-02-15
 Team: Team 4 - AI智能赢率预测模型
 """
 
-import sqlalchemy as sa
 from sqlalchemy import text
 from alembic import op
 

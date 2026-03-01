@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 
 import requests
 import time
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 BASE_URL = "http://127.0.0.1:8000"
 

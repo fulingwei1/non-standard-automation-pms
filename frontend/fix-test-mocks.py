@@ -10,7 +10,6 @@ to use the correct named API with all methods as vi.fn().
 
 import os
 import re
-import json
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 PAGES_DIR = os.path.join(PROJECT_ROOT, 'src/pages')
@@ -407,7 +406,7 @@ def main():
         
         # Check if test imports default api but component uses named apis
         test_imports_default = 'import api from' in test_content
-        has_named_in_test = any(api in test_content for api in comp_apis if api != 'api')
+        any(api in test_content for api in comp_apis if api != 'api')
         
         needs_fix = test_imports_default and comp_apis and not all(a == 'api' for a in comp_apis)
         

@@ -4,7 +4,6 @@
 检查对 presales-project 的依赖情况
 """
 
-import sys
 from pathlib import Path
 
 project_root = Path(__file__).parent.parent

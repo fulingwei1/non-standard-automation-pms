@@ -7,10 +7,8 @@
 
 import ast
 import json
-import re
 from pathlib import Path
-from typing import List, Dict, Set, Optional, Tuple
-import inspect
+from typing import List, Dict
 
 
 def load_zero_coverage_services() -> List[Dict]:

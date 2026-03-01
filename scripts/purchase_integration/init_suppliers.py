@@ -2,7 +2,6 @@
 """
 供应商数据初始化脚本
 """
-from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal

@@ -2,7 +2,6 @@
 """
 拆分 alerts.py 为模块化结构
 """
-import re
 from pathlib import Path
 
 def read_file_lines(file_path):

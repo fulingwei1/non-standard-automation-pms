@@ -12,8 +12,6 @@ from sqlalchemy import text
 
 from app.core import security
 from app.models.base import get_session
-from app.models.organization import Employee
-from app.models.user import User, UserRole
 
 
 def get_or_create_admin_role_id(db):

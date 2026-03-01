@@ -7,7 +7,7 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Dict, Set
+from typing import List, Dict
 
 # 工作目录
 PROJECT_ROOT = Path(__file__).parent.parent

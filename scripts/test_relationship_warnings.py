@@ -7,7 +7,6 @@
 
 import warnings
 import sys
-from io import StringIO
 
 # 捕获所有warnings
 warnings.simplefilter("always")
@@ -40,7 +39,6 @@ print()
 try:
     # 这只是读取定义，不会真正初始化数据库
     from pathlib import Path
-    import importlib.util
     
     # 读取模型文件
     models_dir = Path(__file__).parent.parent / "app" / "models"

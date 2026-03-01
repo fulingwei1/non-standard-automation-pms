@@ -5,7 +5,6 @@
 用于导入历史项目的成本数据,供AI模型学习
 """
 import sys
-import os
 import csv
 import json
 from decimal import Decimal
@@ -15,7 +14,6 @@ from pathlib import Path
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.sales.presale_ai_cost import PresaleCostHistory
 

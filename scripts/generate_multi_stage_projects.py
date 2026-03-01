@@ -9,23 +9,15 @@
 """
 
 import os
-import random
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
-from app.models.material import (
-    BomHeader,
-    BomItem,
-    Material,
-    MaterialCategory,
-    MaterialSupplier,
-)
-from app.models.organization import Department, Employee
+from app.models.organization import Employee
 from app.models.progress import Task
 from app.models.project import (
     Customer,
@@ -34,8 +26,7 @@ from app.models.project import (
     ProjectMilestone,
     ProjectPaymentPlan,
 )
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteItem, QuoteVersion
+from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteVersion
 from app.models.user import User
 
 # 项目阶段配置：S1-S9，每个阶段生成1-2个项目
@@ -313,7 +304,7 @@ def create_project(db, customer, contract, users, stage_config, project_index):
     project_name = f"{customer.short_name}{equipment_type}测试设备项目"
 
     # 根据阶段计算进度和日期
-    days_elapsed = {
+    {
         "S1": 5, "S2": 20, "S3": 45, "S4": 75, "S5": 105,
         "S6": 130, "S7": 145, "S8": 160, "S9": 180
     }.get(stage_config["stage"], 0)

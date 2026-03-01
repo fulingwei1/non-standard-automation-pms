@@ -3,7 +3,6 @@
 Batch fix skip/limit Query params -> get_pagination_query
 """
 import re
-import sys
 
 files = [
     "app/api/v1/endpoints/projects/ext_lessons.py",

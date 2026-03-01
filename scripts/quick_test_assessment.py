@@ -20,7 +20,6 @@ from app.models.sales import (
     ScoringRule,
     TechnicalAssessment,
 )
-from app.models.user import User
 from app.services.technical_assessment_service import TechnicalAssessmentService
 
 

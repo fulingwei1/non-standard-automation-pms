@@ -40,7 +40,6 @@ def fix_file(file_path: Path) -> bool:
         content = re.sub(usememo_pattern, '', content, flags=re.MULTILINE | re.DOTALL)
 
         # 4. 移除错误处理中的Mock回退
-        catch_pattern = r'catch\s*\([^)]*\)\s*\{\s*(?:if\s*\(!?isDemoAccount.*?\)\s*\{[^}]*\}\s*)?(?:if\s*\(\!?isDemoAccount.*?\)\s*\{[^}]*\}\s*)?(?:else\s*\{[^}]*\})?\s*\}'
         # 这里只移除 isDemoAccount 相关，保留其他错误处理
         catch_demo = r'if\s*\(\!?isDemoAccount.*?\)\s*\{[^}]*\}'
         content = re.sub(catch_demo, '', content, flags=re.MULTILINE | re.DOTALL)

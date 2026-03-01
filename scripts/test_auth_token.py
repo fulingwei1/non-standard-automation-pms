@@ -4,8 +4,6 @@
 测试认证token是否有效
 """
 
-import json
-import os
 import sys
 
 import requests

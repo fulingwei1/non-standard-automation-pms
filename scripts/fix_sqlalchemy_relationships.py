@@ -7,7 +7,7 @@ SQLAlchemy Relationship 自动修复脚本
 import json
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict
 import shutil
 from datetime import datetime
 
@@ -68,7 +68,7 @@ class RelationshipFixer:
         relationship_attr = issue['relationship']
         target_model = issue['target_model']
         expected_back_populates = issue['expected_back_populates']
-        file_path = Path(issue['file'])
+        Path(issue['file'])
         
         print(f"🔧 修复 {model}.{relationship_attr} -> {target_model}.{expected_back_populates}")
         

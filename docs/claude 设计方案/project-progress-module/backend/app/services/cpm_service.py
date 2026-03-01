@@ -3,7 +3,7 @@
 """
 from datetime import date, timedelta
 from collections import defaultdict, deque
-from typing import List, Dict, Set, Optional, Tuple
+from typing import List, Dict, Set, Optional
 from sqlalchemy.orm import Session
 
 from app.models.models import WbsTask, TaskDependency, Project

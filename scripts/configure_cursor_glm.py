@@ -7,7 +7,6 @@ Cursor GLM-4.7 模型自动配置脚本
 """
 
 import json
-import os
 from pathlib import Path
 
 # 配置信息

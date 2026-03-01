@@ -27,7 +27,7 @@ def register_chinese_font():
             try:
                 pdfmetrics.registerFont(TTFont("ChineseFont", font_path))
                 return "ChineseFont"
-            except (OSError, RuntimeError, Exception) as e:
+            except (OSError, RuntimeError, Exception):
                 continue
     return "Helvetica"
 
@@ -68,7 +68,7 @@ def create_pdf(output_path):
         textColor=colors.HexColor("#1a1a2e"),
     )
 
-    h2_style = ParagraphStyle(
+    ParagraphStyle(
         "CustomH2",
         parent=styles["Heading2"],
         fontName=font_name,

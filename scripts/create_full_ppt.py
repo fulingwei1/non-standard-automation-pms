@@ -4,14 +4,11 @@
 非标自动化项目管理系统 - 完整85页PPT生成器
 """
 
-import os
 
 from pptx import Presentation
 from pptx.dml.color import RgbColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
-from pptx.oxml import parse_xml
-from pptx.oxml.ns import nsmap
+from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
 # 颜色定义

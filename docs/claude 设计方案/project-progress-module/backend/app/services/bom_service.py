@@ -5,13 +5,13 @@ import json
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy import select, func, and_, or_, update, delete
+from sqlalchemy import select, func, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.bom_models import (
     Material, BomHeader, BomItem, BomVersion,
-    CATEGORY_MAP, get_category_name
+    get_category_name
 )
 from app.schemas.bom_schemas import (
     MaterialCreate, MaterialUpdate,

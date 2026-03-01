@@ -3,7 +3,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional
 from ..services.auth_service import AuthService
 from ..services.permission_service import PermissionService
 

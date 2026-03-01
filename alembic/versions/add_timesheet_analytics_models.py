@@ -7,7 +7,6 @@ Create Date: 2024-01-15 18:45:00.000000
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision = 'timesheet_analytics_v1'

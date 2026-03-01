@@ -3,13 +3,11 @@
 提醒设置、消息通知、站内消息管理
 """
 from fastapi import APIRouter, Query, HTTPException, Body, BackgroundTasks
-from typing import Optional, List, Dict
-from datetime import datetime
+from typing import Optional, Dict
 
 from app.services.reminder_service import (
     get_reminder_service,
     ReminderType,
-    NotifyChannel,
     ReminderScheduler
 )
 

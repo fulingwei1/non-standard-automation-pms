@@ -14,7 +14,6 @@ Author: Team 1 - 智能采购管理系统
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 
 def upgrade():

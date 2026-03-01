@@ -16,15 +16,14 @@
 import os
 import sys
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import func, text
+from sqlalchemy import text
 
-from app.models.base import get_db_session, get_engine
-from app.models.user import Role, UserRole
+from app.models.base import get_db_session
 
 
 def is_chinese_role_code(role_code: str) -> bool:
@@ -350,7 +349,7 @@ def migrate_user_role_assignments(
                     )
 
         return migrated_count
-    except Exception as e:
+    except Exception:
         # 表不存在或查询失败，忽略
         return 0
 
@@ -501,7 +500,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
                                     "to_role_id": role_to_keep["id"],
                                 },
                             )
-                        except Exception as e:
+                        except Exception:
                             pass
 
                         # 最后删除角色本身

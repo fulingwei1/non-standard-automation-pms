@@ -14,11 +14,9 @@
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from enum import Enum
 from datetime import datetime, date, timedelta
-from collections import defaultdict
-import json
 
 
 class TaskType(Enum):

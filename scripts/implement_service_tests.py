@@ -6,9 +6,8 @@
 """
 
 import ast
-import json
 from pathlib import Path
-from typing import List, Dict, Set
+from typing import Dict
 
 
 def analyze_service_methods(service_file: Path) -> Dict:

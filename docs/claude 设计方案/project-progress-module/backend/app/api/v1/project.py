@@ -1,9 +1,9 @@
 """
 项目管理API接口
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional
-from datetime import datetime, date
+from fastapi import APIRouter, Query
+from typing import Optional
+from datetime import date
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/projects", tags=["项目管理"])
