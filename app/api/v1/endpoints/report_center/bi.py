@@ -340,10 +340,10 @@ def get_executive_dashboard(
     ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
     health_distribution = {stat.health or "H4": stat.count for stat in health_dist}
 
-    # 销售统计（本月）
+    # 销售统计（本月）- Contract.status 使用小写与模型一致
     month_contracts = db.query(Contract).filter(
         func.date(Contract.signing_date) >= month_start,
-        Contract.status.in_(["SIGNED", "EXECUTING"])
+        Contract.status.in_(["signed", "executing"])
     ).all()
     month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
 
@@ -351,26 +351,31 @@ def get_executive_dashboard(
     total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
     total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
 
-    # 合同统计
-    total_contracts = db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
+    # 合同统计 - 状态与模型一致（小写）
+    total_contracts = db.query(Contract).filter(
+        Contract.status.in_(["signed", "executing"])
+    ).count()
     total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
-        Contract.status.in_(["SIGNED", "EXECUTING"])
+        Contract.status.in_(["signed", "executing"])
     ).scalar() or 0
 
-    # 回款统计（从项目收款计划）
+    # 回款统计：按实际收款金额汇总（ProjectPaymentPlan 状态为 COMPLETED/PARTIAL，无 PAID）
     total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
-        ProjectPaymentPlan.status == "PAID"
+        ProjectPaymentPlan.status.in_(["COMPLETED", "PARTIAL"])
     ).scalar() or 0
 
     # 人员统计
     total_users = db.query(User).filter(User.is_active).count()
 
     # 工时统计（本月）
-    month_timesheets = db.query(Timesheet).filter(
-        Timesheet.work_date >= month_start,
-        Timesheet.status == "APPROVED"
-    ).all()
-    month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
+    try:
+        month_timesheets = db.query(Timesheet).filter(
+            Timesheet.work_date >= month_start,
+            Timesheet.status == "APPROVED"
+        ).all()
+        month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
+    except Exception:
+        month_total_hours = 0
 
     return ResponseModel(
         code=200,
