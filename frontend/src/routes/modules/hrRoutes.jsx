@@ -15,6 +15,7 @@ import QualificationLevelForm from "../../pages/QualificationLevelForm";
 import CompetencyModelForm from "../../pages/CompetencyModelForm";
 import EmployeeQualificationForm from "../../pages/EmployeeQualificationForm";
 import QualificationAssessmentList from "../../pages/QualificationAssessmentList";
+import AttendanceManagement from "../../pages/AttendanceManagement";
 import EngineerPerformanceDashboard from "../../pages/EngineerPerformanceDashboard";
 import EngineerPerformanceRanking from "../../pages/EngineerPerformanceRanking";
 import EngineerPerformanceDetail from "../../pages/EngineerPerformanceDetail";
@@ -91,6 +92,8 @@ export function HRRoutes() {
         path="/qualifications/assessments"
         element={<QualificationAssessmentList />}
       />
+      <Route path="/attendance-management" element={<AttendanceManagement />} />
+      <Route path="/hr/attendance" element={<AttendanceManagement />} />
       <Route
         path="/engineer-performance"
         element={<EngineerPerformanceDashboard />}

@@ -12,6 +12,7 @@ import Decomposition from "../../pages/Decomposition";
 import StrategyCalendar from "../../pages/StrategyCalendar";
 import YearComparison from "../../pages/YearComparison";
 import AIStrategyAssistant from "../../pages/AIStrategyAssistant";
+import TeamGeneration from "../../pages/TeamGeneration";
 import { StrategyProtectedRoute } from "../../components/common/ProtectedRoute";
 
 export function StrategyRoutes() {
@@ -111,6 +112,16 @@ export function StrategyRoutes() {
         element={
           <StrategyProtectedRoute>
             <AIStrategyAssistant />
+          </StrategyProtectedRoute>
+        }
+      />
+
+      {/* AI自动组队 */}
+      <Route
+        path="/strategy/team-generation/:projectId"
+        element={
+          <StrategyProtectedRoute>
+            <TeamGeneration />
           </StrategyProtectedRoute>
         }
       />

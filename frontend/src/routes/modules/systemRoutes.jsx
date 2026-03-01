@@ -77,6 +77,11 @@ import MobileMaterialRequisition from "../../pages/mobile/MobileMaterialRequisit
 import MobileScanShortage from "../../pages/mobile/MobileScanShortage";
 import MobileShortageReport from "../../pages/mobile/MobileShortageReport";
 import MobileMyShortageReports from "../../pages/mobile/MobileMyShortageReports";
+import ReportGeneration from "../../pages/ReportGeneration";
+import ReportTemplates from "../../pages/ReportTemplates";
+import ReportArchives from "../../pages/ReportArchives";
+import TemplateConfigList from "../../pages/TemplateConfigList";
+import TemplateConfigEditor from "../../pages/TemplateConfigEditor";
 
 export function SystemRoutes() {
   return (
@@ -198,6 +203,15 @@ export function SystemRoutes() {
       {/* System Management */}
       <Route path="/stage-templates" element={<StageTemplateManagement />} />
       <Route path="/stage-templates/:templateId/edit" element={<StageTemplateEditor />} />
+      <Route path="/report-generation" element={<ReportGeneration />} />
+      <Route path="/report-templates" element={<ReportTemplates />} />
+      <Route path="/report-archives" element={<ReportArchives />} />
+      <Route path="/template-configs" element={<TemplateConfigList />} />
+      <Route path="/template-configs/new" element={<TemplateConfigEditor />} />
+      <Route
+        path="/template-configs/edit/:id"
+        element={<TemplateConfigEditor />}
+      />
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/role-management" element={<RoleManagement />} />
       <Route path="/permission-management" element={<PermissionManagement />} />

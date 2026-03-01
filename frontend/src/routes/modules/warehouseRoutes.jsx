@@ -12,6 +12,7 @@ import InventoryList from "../../pages/warehouse/InventoryList";
 import StockAlerts from "../../pages/warehouse/StockAlerts";
 import StockCount from "../../pages/warehouse/StockCount";
 import LocationManagement from "../../pages/warehouse/LocationManagement";
+import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
 
 export function WarehouseRoutes() {
   return (
@@ -114,6 +115,16 @@ export function WarehouseRoutes() {
         element={
           <WarehouseProtectedRoute>
             <LocationManagement />
+          </WarehouseProtectedRoute>
+        }
+      />
+
+      {/* 基于时间的齐套率预警看板 */}
+      <Route
+        path="/warehouse/projects/:projectId/time-based-kit-rate"
+        element={
+          <WarehouseProtectedRoute>
+            <TimeBasedKitRateBoard />
           </WarehouseProtectedRoute>
         }
       />

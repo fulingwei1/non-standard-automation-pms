@@ -12,6 +12,7 @@ import QuoteActualCompare from "../../pages/QuoteActualCompare";
 import CostVarianceAnalysis from "../../pages/CostVarianceAnalysis";
 import LaborCostDetail from "../../pages/LaborCostDetail";
 import MultiCurrency from "../../pages/MultiCurrency";
+import AnalyticsDashboard from "../../pages/AnalyticsDashboard";
 
 export function FinanceRoutes() {
   return (
@@ -27,6 +28,7 @@ export function FinanceRoutes() {
       <Route path="/labor-cost" element={<LaborCostDetail />} />
       <Route path="/multi-currency" element={<MultiCurrency />} />
       <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+      <Route path="/finance/analytics-dashboard" element={<AnalyticsDashboard />} />
     </>
   );
 }

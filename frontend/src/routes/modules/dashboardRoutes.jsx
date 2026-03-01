@@ -16,6 +16,12 @@ import Shipments from "../../pages/Shipments";
 import DeliveryManagement from "../../pages/DeliveryManagement";
 import Documents from "../../pages/Documents";
 import ProductionBoard from "../../pages/ProductionBoard";
+import ChairmanWorkstation from "../../pages/ChairmanWorkstation";
+import AdministrativeApprovals from "../../pages/AdministrativeApprovals";
+import AdministrativeExpenses from "../../pages/AdministrativeExpenses";
+import OfficeSuppliesManagement from "../../pages/OfficeSuppliesManagement";
+import VehicleManagement from "../../pages/VehicleManagement";
+import FixedAssetsManagement from "../../pages/FixedAssetsManagement";
 
 export function DashboardRoutes() {
   return (
@@ -153,6 +159,12 @@ export function DashboardRoutes() {
         不属于工作台系统的独立页面
       */}
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/chairman-workstation" element={<ChairmanWorkstation />} />
+      <Route path="/administrative-approvals" element={<AdministrativeApprovals />} />
+      <Route path="/administrative-expenses" element={<AdministrativeExpenses />} />
+      <Route path="/office-supplies-management" element={<OfficeSuppliesManagement />} />
+      <Route path="/vehicle-management" element={<VehicleManagement />} />
+      <Route path="/fixed-assets-management" element={<FixedAssetsManagement />} />
       <Route path="/operation" element={<OperationDashboard />} />
       <Route path="/strategy-analysis" element={<StrategyAnalysis />} />
       <Route path="/key-decisions" element={<KeyDecisions />} />
