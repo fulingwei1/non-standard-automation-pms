@@ -34,6 +34,10 @@ import AcceptanceManagement from "../../pages/AcceptanceManagement";
 import GanttDependency from "../../pages/GanttDependency";
 import ECNManagement from "../../pages/ECNManagement";
 import FieldCommissioning from "../../pages/FieldCommissioning";
+import AssemblyKitBoard from "../../pages/AssemblyKitBoard";
+import TemplateConfigList from "../../pages/TemplateConfigList";
+import MarginPrediction from "../../pages/MarginPrediction";
+
 import ScheduleOptimization from "../../pages/ScheduleOptimization";
 import ScheduleGeneration from "../../pages/ScheduleGeneration";
 
