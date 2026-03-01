@@ -19,6 +19,7 @@ from .scheduling import router as scheduling_router
 from .shortage_alerts import router as shortage_alerts_router
 from .stages import router as stages_router
 from .templates import router as templates_router
+from .kit_rate import router as kit_rate_router
 from .wechat_config import router as wechat_config_router
 
 router = APIRouter()
@@ -33,6 +34,7 @@ router.include_router(wechat_config_router)
 router.include_router(scheduling_router)
 router.include_router(dashboard_router)
 router.include_router(templates_router)
+router.include_router(kit_rate_router, prefix="/kit-rate", tags=["kit-rate"])
 
 __all__ = [
     "router",

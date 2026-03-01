@@ -31,6 +31,51 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectListResponse])
+
+
+@router.get("/my-projects", response_model=PaginatedResponse[ProjectListResponse])
+def read_my_projects(
+    db: Session = Depends(deps.get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    is_active: Optional[bool] = Query(True, description="是否启用"),
+    current_user: User = Depends(security.require_permission("project:read")),
+) -> Any:
+    """
+    获取我参与的项目列表（基于项目成员关系）
+    """
+    from app.models.project import Project
+    from app.models.project.team import ProjectMember
+    
+    # 查询用户参与的项目 ID
+    member_project_ids = (
+        db.query(ProjectMember.project_id)
+        .filter(ProjectMember.user_id == current_user.id, ProjectMember.is_active == True)
+        .all()
+    )
+    project_ids = [pid[0] for pid in member_project_ids]
+    
+    # 如果没有参与任何项目，返回空列表
+    if not project_ids:
+        return PaginatedResponse(items=[], total=0, page=pagination.page, page_size=pagination.page_size, pages=0)
+    
+    service = ProjectCrudService(db)
+    items, total = service.list_projects(
+        offset=pagination.offset,
+        limit=pagination.limit,
+        keyword=keyword,
+        is_active=is_active,
+        project_ids=project_ids,  # 只返回参与的项目
+    )
+    
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total)
+    )
+
 def read_projects(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),

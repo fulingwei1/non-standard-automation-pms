@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "sales_id": 101,
+    "type": "拜访",
+    "customer_id": 1,
+    "date": "2026-02-28",
+    "duration_hours": 3,
+    "outcome": "技术交流"
+  },
+  {
+    "id": 2,
+    "sales_id": 101,
+    "type": "电话",
+    "customer_id": 3,
+    "date": "2026-02-27",
+    "duration_hours": 1,
+    "outcome": "需求确认"
+  },
+  {
+    "id": 3,
+    "sales_id": 102,
+    "type": "拜访",
+    "customer_id": 2,
+    "date": "2026-02-27",
+    "duration_hours": 4,
+    "outcome": "合同谈判"
+  },
+  {
+    "id": 4,
+    "sales_id": 103,
+    "type": "拜访",
+    "customer_id": 4,
+    "date": "2026-02-26",
+    "duration_hours": 2,
+    "outcome": "商务报价"
+  },
+  {
+    "id": 5,
+    "sales_id": 103,
+    "type": "拜访",
+    "customer_id": 8,
+    "date": "2026-02-28",
+    "duration_hours": 2,
+    "outcome": "合同跟进"
+  },
+  {
+    "id": 6,
+    "sales_id": 104,
+    "type": "电话",
+    "customer_id": 5,
+    "date": "2026-02-15",
+    "duration_hours": 0.5,
+    "outcome": "初步沟通"
+  },
+  {
+    "id": 7,
+    "sales_id": 104,
+    "type": "电话",
+    "customer_id": 6,
+    "date": "2026-02-10",
+    "duration_hours": 0.5,
+    "outcome": "初步接触"
+  },
+  {
+    "id": 8,
+    "sales_id": 105,
+    "type": "拜访",
+    "customer_id": 7,
+    "date": "2026-02-20",
+    "duration_hours": 2,
+    "outcome": "需求调研"
+  }
+]

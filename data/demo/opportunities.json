@@ -1,0 +1,144 @@
+[
+  {
+    "id": 1,
+    "customer_id": 1,
+    "customer_name": "宁德时代",
+    "name": "FCT 测试线项目",
+    "type": "FCT",
+    "stage": "商务谈判",
+    "amount": 3500000,
+    "probability": 75,
+    "expected_close_date": "2026-03-31",
+    "owner_id": 101,
+    "owner_name": "张三",
+    "competitors": [
+      "竞品 A（320 万）",
+      "竞品 B（380 万）"
+    ],
+    "primary_competitor": "竞品 A"
+  },
+  {
+    "id": 2,
+    "customer_id": 2,
+    "customer_name": "比亚迪",
+    "name": "EOL 测试设备项目",
+    "type": "EOL",
+    "stage": "合同审批",
+    "amount": 4200000,
+    "probability": 82,
+    "expected_close_date": "2026-03-25",
+    "owner_id": 102,
+    "owner_name": "李四",
+    "competitors": [
+      "竞品 A（450 万）"
+    ],
+    "primary_competitor": "竞品 A"
+  },
+  {
+    "id": 3,
+    "customer_id": 3,
+    "customer_name": "中创新航",
+    "name": "ICT 在线测试项目",
+    "type": "ICT",
+    "stage": "方案评估",
+    "amount": 2800000,
+    "probability": 58,
+    "expected_close_date": "2026-04-15",
+    "owner_id": 101,
+    "owner_name": "张三",
+    "competitors": [
+      "竞品 A（250 万）",
+      "竞品 B（270 万）",
+      "竞品 C（290 万）"
+    ],
+    "primary_competitor": "竞品 B"
+  },
+  {
+    "id": 4,
+    "customer_id": 4,
+    "customer_name": "亿纬锂能",
+    "name": "烧录设备采购项目",
+    "type": "烧录",
+    "stage": "商务谈判",
+    "amount": 1800000,
+    "probability": 68,
+    "expected_close_date": "2026-04-05",
+    "owner_id": 103,
+    "owner_name": "王五",
+    "competitors": [
+      "竞品 D（160 万）"
+    ],
+    "primary_competitor": "竞品 D"
+  },
+  {
+    "id": 5,
+    "customer_id": 5,
+    "customer_name": "欣旺达",
+    "name": "FCT 功能测试项目",
+    "type": "FCT",
+    "stage": "需求分析",
+    "amount": 3200000,
+    "probability": 35,
+    "expected_close_date": "2026-05-15",
+    "owner_id": 104,
+    "owner_name": "赵六",
+    "competitors": [
+      "竞品 B",
+      "竞品 C"
+    ],
+    "primary_competitor": "竞品 B"
+  },
+  {
+    "id": 6,
+    "customer_id": 6,
+    "customer_name": "蜂巢能源",
+    "name": "EOL 检测设备项目",
+    "type": "EOL",
+    "stage": "初步接触",
+    "amount": 2500000,
+    "probability": 28,
+    "expected_close_date": "2026-06-30",
+    "owner_id": 104,
+    "owner_name": "赵六",
+    "competitors": [
+      "竞品 A",
+      "竞品 B",
+      "竞品 C"
+    ],
+    "primary_competitor": "竞品 A"
+  },
+  {
+    "id": 7,
+    "customer_id": 7,
+    "customer_name": "国轩高科",
+    "name": "ICT 测试设备项目",
+    "type": "ICT",
+    "stage": "线索",
+    "amount": 2000000,
+    "probability": 15,
+    "expected_close_date": "2026-08-31",
+    "owner_id": 105,
+    "owner_name": "钱七",
+    "competitors": [
+      "未知"
+    ],
+    "primary_competitor": "竞品 B"
+  },
+  {
+    "id": 8,
+    "customer_id": 8,
+    "customer_name": "珠海冠宇",
+    "name": "老化测试设备项目",
+    "type": "老化",
+    "stage": "合同审批",
+    "amount": 1500000,
+    "probability": 88,
+    "expected_close_date": "2026-03-20",
+    "owner_id": 103,
+    "owner_name": "王五",
+    "competitors": [
+      "竞品 A（170 万）"
+    ],
+    "primary_competitor": "竞品 A"
+  }
+]

@@ -74,7 +74,7 @@ export function useTimesheet() {
     // Load projects
     const loadProjects = useCallback(async () => {
         try {
-            const response = await projectApi.list({ page_size: 100, is_active: true });
+            const response = await projectApi.myProjects({ page_size: 100, is_active: true });
             const items = response.data?.items || response.data?.data?.items || [];
             setProjects(items);
         } catch (error) {

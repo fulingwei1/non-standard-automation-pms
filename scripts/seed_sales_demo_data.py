@@ -1,833 +1,735 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Seed demo data for the sales module so sales engineers can see quotes & contracts.
-
-Creates/updates:
-  * Customers for重点客户
-  * Opportunities owned by zhang_sales
-  * Quotes + versions + items
-  * Contracts + deliverables linked to the quotes
+销售模块演示数据生成脚本
+生成：客户、商机、关系评估、赢单率预测等演示数据
 """
 
-from __future__ import annotations
-
-import sys
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+import json
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict, Tuple
 
-REPO_ROOT = Path(__file__).resolve().parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+# ========== 1. 客户数据 ==========
 
-from app.models.base import get_db_session
-from app.models.project import Customer
-from app.models.sales import (
-    Contract,
-    ContractDeliverable,
-    Opportunity,
-    Quote,
-    QuoteItem,
-    QuoteVersion,
-)
-from app.models.user import User
-
-
-def d(value: str | float | int) -> Decimal:
-    """Quick helper to keep Decimal precision."""
-    return Decimal(str(value))
-
-
-TODAY = date.today()
-NOW = datetime.now()
-
-
-CUSTOMERS = [
+customers = [
     {
-        "customer_code": "CUS-ROBOTEC",
-        "customer_name": "罗博智能科技",
-        "short_name": "罗博智造",
-        "customer_type": "MANUFACTURING",
-        "industry": "汽车电子",
+        "id": 1,
+        "name": "宁德时代新能源科技股份有限公司",
+        "short_name": "宁德时代",
+        "industry": "锂电池",
+        "location": "福建宁德",
         "scale": "大型",
-        "address": "苏州市工业园区科创大道88号",
-        "contact_person": "李慧",
-        "contact_phone": "13812340987",
-        "contact_email": "lihui@robotec.cn",
-        "legal_person": "陈卫东",
-        "tax_no": "91320594MA1234567Q",
-        "bank_name": "中国银行苏州分行",
-        "bank_account": "445566778899",
-        "credit_level": "A",
-        "credit_limit": d("8000000"),
-        "payment_terms": "NET45",
+        "annual_revenue": 30000000000,
+        "employee_count": 50000,
+        "stage": "战略合作客户",
+        "priority": "A",
+        "owner_id": 101,
+        "owner_name": "张三",
+        "created_at": "2024-06-15",
+        "last_contact": "2026-02-28",
+        "next_followup": "2026-03-05",
+        "tags": ["动力电池", "储能", "头部客户", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "曾毓群", "title": "董事长", "contact": "138****0001", "attitude": "neutral"},
+            "TB": {"name": "吴凯", "title": "首席科学家", "contact": "138****0002", "attitude": "supportive"},
+            "PB": {"name": "李平", "title": "采购总监", "contact": "138****0003", "attitude": "neutral"},
+            "UB": {"name": "赵伟", "title": "生产总监", "contact": "138****0004", "attitude": "supportive"},
+            "Coach": {"name": "钱七", "title": "设备工程师", "contact": "138****0005", "attitude": "supportive"},
+        },
     },
     {
-        "customer_code": "CUS-MEDILAB",
-        "customer_name": "华信医药实验室",
-        "short_name": "华信医药",
-        "customer_type": "PHARMA",
-        "industry": "生物医药",
+        "id": 2,
+        "name": "比亚迪股份有限公司",
+        "short_name": "比亚迪",
+        "industry": "新能源汽车",
+        "location": "广东深圳",
+        "scale": "大型",
+        "annual_revenue": 40000000000,
+        "employee_count": 60000,
+        "stage": "战略合作客户",
+        "priority": "A",
+        "owner_id": 102,
+        "owner_name": "李四",
+        "created_at": "2024-03-20",
+        "last_contact": "2026-02-27",
+        "next_followup": "2026-03-03",
+        "tags": ["新能源汽车", "电池", "整车", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "王传福", "title": "董事长", "contact": "139****0001", "attitude": "supportive"},
+            "TB": {"name": "廉玉波", "title": "副总裁", "contact": "139****0002", "attitude": "supportive"},
+            "PB": {"name": "何志健", "title": "采购总经理", "contact": "139****0003", "attitude": "supportive"},
+            "UB": {"name": "张强", "title": "工厂厂长", "contact": "139****0004", "attitude": "supportive"},
+            "Coach": {"name": "刘工", "title": "设备主管", "contact": "139****0005", "attitude": "supportive"},
+        },
+    },
+    {
+        "id": 3,
+        "name": "中创新航科技股份有限公司",
+        "short_name": "中创新航",
+        "industry": "锂电池",
+        "location": "江苏常州",
         "scale": "中型",
-        "address": "上海市浦东新区张江科创园88号",
-        "contact_person": "周晨",
-        "contact_phone": "13901881234",
-        "contact_email": "zhouchen@huaxinlab.com",
-        "legal_person": "林慕白",
-        "tax_no": "91310115MA1K99876J",
-        "bank_name": "招商银行上海科创支行",
-        "bank_account": "621488778899",
-        "credit_level": "A-",
-        "credit_limit": d("5000000"),
-        "payment_terms": "NET60",
-    },
-    {
-        "customer_code": "CUS-SMARTLINK",
-        "customer_name": "东华智能装备",
-        "short_name": "东华智能",
-        "customer_type": "DISCRETE",
-        "industry": "消费电子",
-        "scale": "大型",
-        "address": "深圳市宝安区智能制造城A8",
-        "contact_person": "陈研",
-        "contact_phone": "13751118866",
-        "contact_email": "chenyan@smartlink.com",
-        "remark": "3C制造头部客户",
-    },
-    {
-        "customer_code": "CUS-PV-BLUE",
-        "customer_name": "蓝晶光伏系统",
-        "short_name": "蓝晶光伏",
-        "customer_type": "ENERGY",
-        "industry": "新能源",
-        "scale": "大型",
-        "address": "杭州市余杭区未来科技城88号",
-        "contact_person": "刘航",
-        "contact_phone": "13671880099",
-        "contact_email": "liuhang@bluepv.com",
-        "remark": "TOP10光伏客户，聚焦海外项目",
-    },
-]
-
-
-SALES_BUNDLES = [
-    {
-        "customer_code": "CUS-ROBOTEC",
-        "opportunity": {
-            "opp_code": "OPP-RBT-2409",
-            "opp_name": "新能源汽车电芯装配与测试线",
-            "project_type": "整线交付",
-            "equipment_type": "Pack测试线",
-            "stage": "NEGOTIATION",
-            "est_amount": d("3850000"),
-            "est_margin": d("23.5"),
-            "budget_range": "300-400万",
-            "decision_chain": "制造副总 + 采购总监 + PMO",
-            "delivery_window": "2024Q4",
-            "acceptance_basis": "整线CT≤18s，CPK≥1.33，安全互锁100%通过",
-            "score": 82,
-            "risk_level": "MEDIUM",
-            "gate_status": "PASS",
-        },
-        "quote": {
-            "quote_code": "Q-RBT-001",
-            "status": "APPROVED",
-            "valid_until_days": 45,
-        },
-        "version": {
-            "version_no": "V1.0",
-            "total_price": d("3850000"),
-            "cost_total": d("2950000"),
-            "gross_margin": d("23.4"),
-            "lead_time_days": 90,
-            "delivery_offset_days": 100,
-            "risk_terms": "含核心供应商交付约束、整线联调窗口、现场改造界面说明。",
-            "cost_breakdown_complete": True,
-            "margin_warning": False,
-            "approved": True,
-        },
-        "items": [
-            {
-                "item_type": "MODULE",
-                "item_name": "Pack装配 & 功能验证段",
-                "qty": d("1"),
-                "unit_price": d("1850000"),
-                "cost": d("1420000"),
-                "lead_time_days": 82,
-                "remark": "含高压测试、安全互锁",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "TEMPLATE",
-                "specification": "4工位并行 + 自动下料",
-                "unit": "套",
-            },
-            {
-                "item_type": "MODULE",
-                "item_name": "Pack耐压 / 绝缘测试段",
-                "qty": d("1"),
-                "unit_price": d("980000"),
-                "cost": d("720000"),
-                "lead_time_days": 75,
-                "remark": "含轨道与快换治具",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "HISTORY",
-                "specification": "耐压 5kV，绝缘 2000MΩ",
-                "unit": "套",
-            },
-            {
-                "item_type": "LABOR",
-                "item_name": "调试与交付保障",
-                "qty": d("280"),
-                "unit_price": d("650"),
-                "cost": d("420"),
-                "lead_time_days": 45,
-                "remark": "调试 + 驻场验收",
-                "cost_category": "LABOR",
-                "cost_source": "MANUAL",
-                "specification": "两班制，含现场培训",
-                "unit": "小时",
-            },
-        ],
-        "contract": {
-            "contract_code": "HT-RBT-001",
-            "status": "SIGNED",
-            "contract_amount": d("3850000"),
-            "signed_offset_days": -7,
-            "payment_terms_summary": "30%预付款 + 60% FAT后 + 10% SAT验收后",
-            "acceptance_summary": "FAT/SAT一次通过，性能指标满足3σ要求。",
-            "project_id": 9,
-            "deliverables": [
-                {
-                    "deliverable_name": "整线设计与SOW定版",
-                    "deliverable_type": "DOCUMENT",
-                    "required_for_payment": True,
-                    "template_ref": "SOW-RBT",
-                },
-                {
-                    "deliverable_name": "整线联调与FAT报告",
-                    "deliverable_type": "REPORT",
-                    "required_for_payment": True,
-                    "template_ref": "FAT-ROBOTEC",
-                },
-            ],
+        "annual_revenue": 15000000000,
+        "employee_count": 20000,
+        "stage": "重点开发客户",
+        "priority": "A",
+        "owner_id": 101,
+        "owner_name": "张三",
+        "created_at": "2025-01-10",
+        "last_contact": "2026-02-25",
+        "next_followup": "2026-03-04",
+        "tags": ["动力电池", "储能", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "刘静瑜", "title": "董事长", "contact": "137****0001", "attitude": "neutral"},
+            "TB": {"name": "陈工", "title": "技术总监", "contact": "137****0002", "attitude": "neutral"},
+            "PB": {"name": "王采购", "title": "采购经理", "contact": "137****0003", "attitude": "neutral"},
+            "UB": {"name": "李生产", "title": "生产经理", "contact": "137****0004", "attitude": "supportive"},
+            "Coach": None,
         },
     },
     {
-        "customer_code": "CUS-MEDILAB",
-        "opportunity": {
-            "opp_code": "OPP-LAB-2410",
-            "opp_name": "细胞制备自动灌装单元",
-            "project_type": "高洁净装备",
-            "equipment_type": "无菌灌装岛",
-            "stage": "PROPOSAL",
-            "est_amount": d("2480000"),
-            "est_margin": d("19.8"),
-            "budget_range": "200-300万",
-            "decision_chain": "运营副总 + 质量主管 + 财务BP",
-            "delivery_window": "2025Q1",
-            "acceptance_basis": "灌装精度 ≤±1%，GMP/FDA 验证通过。",
-            "score": 76,
-            "risk_level": "LOW",
-            "gate_status": "PENDING",
-        },
-        "quote": {
-            "quote_code": "Q-LAB-014",
-            "status": "IN_REVIEW",
-            "valid_until_days": 30,
-        },
-        "version": {
-            "version_no": "V0.9",
-            "total_price": d("2480000"),
-            "cost_total": d("1985000"),
-            "gross_margin": d("20.0"),
-            "lead_time_days": 70,
-            "delivery_offset_days": 85,
-            "risk_terms": "洁净度验证与第三方认证费用由客户承担，关键部件延误触发ECO流程。",
-            "cost_breakdown_complete": True,
-            "margin_warning": False,
-            "approved": False,
-        },
-        "items": [
-            {
-                "item_type": "MODULE",
-                "item_name": "无菌灌装主岛",
-                "qty": d("1"),
-                "unit_price": d("1380000"),
-                "cost": d("1090000"),
-                "lead_time_days": 60,
-                "remark": "含CIP/SIP模块",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "TEMPLATE",
-                "specification": "10ml灌装×4工位",
-                "unit": "套",
-            },
-            {
-                "item_type": "MODULE",
-                "item_name": "隔离器与传递舱",
-                "qty": d("1"),
-                "unit_price": d("620000"),
-                "cost": d("470000"),
-                "lead_time_days": 68,
-                "remark": "RABS + 气闸联锁",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "HISTORY",
-                "specification": "ISO5/7区联动",
-                "unit": "套",
-            },
-            {
-                "item_type": "LABOR",
-                "item_name": "验证与调试服务",
-                "qty": d("220"),
-                "unit_price": d("550"),
-                "cost": d("360"),
-                "lead_time_days": 40,
-                "remark": "含IQ/OQ/PQ文档",
-                "cost_category": "LABOR",
-                "cost_source": "MANUAL",
-                "specification": "项目团队+质量顾问",
-                "unit": "小时",
-            },
-        ],
-        "contract": {
-            "contract_code": "HT-LAB-014",
-            "status": "IN_REVIEW",
-            "contract_amount": d("2480000"),
-            "signed_offset_days": None,
-            "payment_terms_summary": "20%预付款 + 70% 发货前 + 10% PQ验收后",
-            "acceptance_summary": "通过GMP/FDA双体系审核后触发最终回款。",
-            "project_id": None,
-            "deliverables": [
-                {
-                    "deliverable_name": "验证方案与报告",
-                    "deliverable_type": "REPORT",
-                    "required_for_payment": True,
-                    "template_ref": "PQ-TEMPLATE",
-                },
-                {
-                    "deliverable_name": "灌装配方与Batch Record",
-                    "deliverable_type": "DOCUMENT",
-                    "required_for_payment": False,
-                    "template_ref": "BR-SAMPLE",
-                },
-            ],
+        "id": 4,
+        "name": "惠州亿纬锂能股份有限公司",
+        "short_name": "亿纬锂能",
+        "industry": "锂电池",
+        "location": "广东惠州",
+        "scale": "中型",
+        "annual_revenue": 12000000000,
+        "employee_count": 18000,
+        "stage": "合作客户",
+        "priority": "B",
+        "owner_id": 103,
+        "owner_name": "王五",
+        "created_at": "2024-09-05",
+        "last_contact": "2026-02-26",
+        "next_followup": "2026-03-06",
+        "tags": ["消费电池", "动力电池", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "刘金成", "title": "董事长", "contact": "136****0001", "attitude": "supportive"},
+            "TB": {"name": "技术总", "title": "技术总监", "contact": "136****0002", "attitude": "supportive"},
+            "PB": {"name": "采购总", "title": "采购总监", "contact": "136****0003", "attitude": "neutral"},
+            "UB": {"name": "生产总", "title": "生产总监", "contact": "136****0004", "attitude": "supportive"},
+            "Coach": {"name": "内部人", "title": "工程师", "contact": "136****0005", "attitude": "supportive"},
         },
     },
     {
-        "customer_code": "CUS-ROBOTEC",
-        "opportunity": {  # 共享同一个核心商机，演示多版本/多合同
-            "opp_code": "OPP-RBT-2409",
-            "opp_name": "新能源汽车电芯装配与测试线",
-            "project_type": "整线交付",
-            "equipment_type": "Pack测试线",
-            "stage": "NEGOTIATION",
-            "est_amount": d("4100000"),
-            "est_margin": d("24.0"),
-            "budget_range": "300-450万",
-            "decision_chain": "制造副总 + 采购总监 + PMO",
-            "delivery_window": "2025Q1",
-            "acceptance_basis": "整线CT≤18s，CPK≥1.33，安全互锁100%通过",
-            "score": 84,
-            "risk_level": "MEDIUM",
-            "gate_status": "PASS",
-        },
-        "quote": {
-            "quote_code": "Q-DEMO-003",
-            "status": "IN_REVIEW",
-            "valid_until_days": 45,
-        },
-        "version": {
-            "version_no": "V1",
-            "total_price": d("2990000"),
-            "cost_total": d("2150000"),
-            "gross_margin": d("28.0"),
-            "lead_time_days": 85,
-            "delivery_offset_days": 60,
-            "risk_terms": "演示数据 - 快速打样，交付窗口需锁定治具排产。",
-            "cost_breakdown_complete": True,
-            "margin_warning": False,
-            "approved": False,
-        },
-        "items": [
-            {
-                "item_type": "MODULE",
-                "item_name": "演示单元A",
-                "qty": d("1"),
-                "unit_price": d("1200000"),
-                "cost": d("800000"),
-                "lead_time_days": 60,
-                "remark": "含快换治具与视觉检测",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "CUSTOM",
-                "specification": "双工位激光 + 视觉检测",
-                "unit": "套",
-            },
-            {
-                "item_type": "MODULE",
-                "item_name": "Pack全线MES集成",
-                "qty": d("1"),
-                "unit_price": d("650000"),
-                "cost": d("420000"),
-                "lead_time_days": 55,
-                "remark": "含WMS接口/能源看板",
-                "cost_category": "SOFTWARE",
-                "cost_source": "HISTORY",
-                "specification": "MES+WMS+能源监控接口",
-                "unit": "套",
-            },
-            {
-                "item_type": "LABOR",
-                "item_name": "实施与驻场调试",
-                "qty": d("150"),
-                "unit_price": d("550"),
-                "cost": d("360"),
-                "lead_time_days": 30,
-                "remark": "快速联调+培训",
-                "cost_category": "LABOR",
-                "cost_source": "MANUAL",
-                "specification": "项目团队+客户共创",
-                "unit": "小时",
-            },
-        ],
-        "contract": {
-            "contract_code": "HT-DEMO-003",
-            "status": "IN_REVIEW",
-            "contract_amount": d("2990000"),
-            "signed_offset_days": 0,
-            "payment_terms_summary": "40%预付款 + 50% 预验收 + 10% 终验",
-            "acceptance_summary": "演示数据合同，关注治具验收与联调报告。",
-            "project_id": None,
-            "deliverables": [
-                {
-                    "deliverable_name": "工装治具确认",
-                    "deliverable_type": "CHECKLIST",
-                    "required_for_payment": True,
-                    "template_ref": "DEMO-SOW",
-                },
-                {
-                    "deliverable_name": "上线联调报告",
-                    "deliverable_type": "REPORT",
-                    "required_for_payment": True,
-                    "template_ref": "DEMO-FAT",
-                },
-            ],
+        "id": 5,
+        "name": "欣旺达电子股份有限公司",
+        "short_name": "欣旺达",
+        "industry": "锂电池",
+        "location": "广东深圳",
+        "scale": "中型",
+        "annual_revenue": 10000000000,
+        "employee_count": 15000,
+        "stage": "开发中客户",
+        "priority": "B",
+        "owner_id": 104,
+        "owner_name": "赵六",
+        "created_at": "2025-06-20",
+        "last_contact": "2026-02-15",
+        "next_followup": "2026-03-02",
+        "tags": ["消费电池", "动力电池"],
+        "decision_chain": {
+            "EB": {"name": "王威", "title": "总经理", "contact": "135****0001", "attitude": "unknown"},
+            "TB": {"name": "技术总", "title": "技术总监", "contact": "135****0002", "attitude": "neutral"},
+            "PB": None,
+            "UB": None,
+            "Coach": None,
         },
     },
     {
-        "customer_code": "CUS-SMARTLINK",
-        "opportunity": {
-            "opp_code": "OPP-SMT-2501",
-            "opp_name": "高速SMT产线AOI整机升级",
-            "project_type": "线体改造",
-            "equipment_type": "AOI & 测试",
-            "stage": "PROPOSAL",
-            "est_amount": d("1850000"),
-            "est_margin": d("22.0"),
-            "budget_range": "150-200万",
-            "decision_chain": "制造副总 + 设备部 + 财务BP",
-            "delivery_window": "2025Q2",
-            "acceptance_basis": "CT≤0.8s/板，缺陷检出率≥99.5%",
-            "score": 74,
-            "risk_level": "LOW",
-            "gate_status": "PASS",
-        },
-        "quote": {
-            "quote_code": "Q-SMT-005",
-            "status": "DRAFT",
-            "valid_until_days": 35,
-        },
-        "version": {
-            "version_no": "V0.5",
-            "total_price": d("1850000"),
-            "cost_total": d("1440000"),
-            "gross_margin": d("22.1"),
-            "lead_time_days": 65,
-            "delivery_offset_days": 70,
-            "risk_terms": "接口改造需锁定夜间停线窗口；SMEMA协议对接责任界面已标注。",
-            "cost_breakdown_complete": True,
-            "margin_warning": False,
-            "approved": False,
-        },
-        "items": [
-            {
-                "item_type": "MODULE",
-                "item_name": "高速AOI整机",
-                "qty": d("2"),
-                "unit_price": d("520000"),
-                "cost": d("390000"),
-                "lead_time_days": 55,
-                "remark": "含多角度视觉与AI算法",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "SUPPLIER",
-                "specification": "四相机+AI缺陷识别",
-                "unit": "台",
-            },
-            {
-                "item_type": "MODULE",
-                "item_name": "在线测试治具与缓存段",
-                "qty": d("1"),
-                "unit_price": d("420000"),
-                "cost": d("315000"),
-                "lead_time_days": 60,
-                "remark": "含SMEMA接口、缓存轨道",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "TEMPLATE",
-                "specification": "双轨缓存+自动分拣",
-                "unit": "套",
-            },
-            {
-                "item_type": "LABOR",
-                "item_name": "驻场调试与算法训练",
-                "qty": d("200"),
-                "unit_price": d("450"),
-                "cost": d("320"),
-                "lead_time_days": 30,
-                "remark": "算法训练+夜间切线",
-                "cost_category": "LABOR",
-                "cost_source": "MANUAL",
-                "specification": "昼夜两班+远程监控",
-                "unit": "小时",
-            },
-        ],
-        "contract": {
-            "contract_code": "HT-SMT-005",
-            "status": "DRAFT",
-            "contract_amount": d("1850000"),
-            "signed_offset_days": None,
-            "payment_terms_summary": "20%预付款 + 70% 调试完成 + 10% 终验",
-            "acceptance_summary": "AOI良率对比验证+产线节拍测试完成后验收。",
-            "project_id": None,
-            "deliverables": [
-                {
-                    "deliverable_name": "算法训练报告",
-                    "deliverable_type": "REPORT",
-                    "required_for_payment": True,
-                    "template_ref": "AOI-TRAIN",
-                },
-                {
-                    "deliverable_name": "节拍/良率验证记录",
-                    "deliverable_type": "CHECKLIST",
-                    "required_for_payment": True,
-                    "template_ref": "SMT-VERIFY",
-                },
-            ],
+        "id": 6,
+        "name": "蜂巢能源科技有限公司",
+        "short_name": "蜂巢能源",
+        "industry": "锂电池",
+        "location": "江苏常州",
+        "scale": "中型",
+        "annual_revenue": 8000000000,
+        "employee_count": 12000,
+        "stage": "开发中客户",
+        "priority": "B",
+        "owner_id": 104,
+        "owner_name": "赵六",
+        "created_at": "2025-08-15",
+        "last_contact": "2026-02-10",
+        "next_followup": "2026-03-03",
+        "tags": ["动力电池", "储能"],
+        "decision_chain": {
+            "EB": {"name": "杨红新", "title": "董事长", "contact": "134****0001", "attitude": "unknown"},
+            "TB": None,
+            "PB": None,
+            "UB": None,
+            "Coach": None,
         },
     },
     {
-        "customer_code": "CUS-PV-BLUE",
-        "opportunity": {
-            "opp_code": "OPP-PV-2502",
-            "opp_name": "海外储能集装箱EPC",
-            "project_type": "交钥匙工程",
-            "equipment_type": "储能系统",
-            "stage": "NEGOTIATION",
-            "est_amount": d("5280000"),
-            "est_margin": d("18.5"),
-            "budget_range": "500-550万",
-            "decision_chain": "国际事业部总监 + 财务 + 风控",
-            "delivery_window": "2025Q3",
-            "acceptance_basis": "UL9540A认证+整柜FAT/SAT",
-            "score": 78,
-            "risk_level": "MEDIUM",
-            "gate_status": "PASS",
+        "id": 7,
+        "name": "国轩高科股份有限公司",
+        "short_name": "国轩高科",
+        "industry": "锂电池",
+        "location": "安徽合肥",
+        "scale": "中型",
+        "annual_revenue": 9000000000,
+        "employee_count": 14000,
+        "stage": "初步接触",
+        "priority": "C",
+        "owner_id": 105,
+        "owner_name": "钱七",
+        "created_at": "2025-11-01",
+        "last_contact": "2026-02-20",
+        "next_followup": "2026-03-10",
+        "tags": ["动力电池", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "李缜", "title": "董事长", "contact": "133****0001", "attitude": "unknown"},
+            "TB": None,
+            "PB": None,
+            "UB": None,
+            "Coach": None,
         },
-        "quote": {
-            "quote_code": "Q-PV-022",
-            "status": "APPROVED",
-            "valid_until_days": 60,
-        },
-        "version": {
-            "version_no": "V1.2",
-            "total_price": d("5280000"),
-            "cost_total": d("4300000"),
-            "gross_margin": d("18.5"),
-            "lead_time_days": 120,
-            "delivery_offset_days": 140,
-            "risk_terms": "海外港口物流风险由客户承担；火灾抑制选择Novec系统需预付。",
-            "cost_breakdown_complete": True,
-            "margin_warning": True,
-            "approved": True,
-        },
-        "items": [
-            {
-                "item_type": "MODULE",
-                "item_name": "2.5MWh储能集装箱",
-                "qty": d("2"),
-                "unit_price": d("1800000"),
-                "cost": d("1500000"),
-                "lead_time_days": 110,
-                "remark": "含BMS/EMS",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "SUPPLIER",
-                "specification": "液冷+消防一体化",
-                "unit": "套",
-            },
-            {
-                "item_type": "MODULE",
-                "item_name": "消防与监控系统",
-                "qty": d("2"),
-                "unit_price": d("260000"),
-                "cost": d("190000"),
-                "lead_time_days": 75,
-                "remark": "Novec+高清监控",
-                "cost_category": "EQUIPMENT",
-                "cost_source": "HISTORY",
-                "specification": "UL9540A认证",
-                "unit": "套",
-            },
-            {
-                "item_type": "LABOR",
-                "item_name": "海外EPC施工与调试",
-                "qty": d("420"),
-                "unit_price": d("520"),
-                "cost": d("360"),
-                "lead_time_days": 120,
-                "remark": "含境外签证与驻场",
-                "cost_category": "LABOR",
-                "cost_source": "MANUAL",
-                "specification": "驻场EPC团队",
-                "unit": "小时",
-            },
-        ],
-        "contract": {
-            "contract_code": "HT-PV-022",
-            "status": "ACTIVE",
-            "contract_amount": d("5280000"),
-            "signed_offset_days": -20,
-            "payment_terms_summary": "30%预付款 + 50% FAT后 + 20% SAT后",
-            "acceptance_summary": "通过UL9540A+当地电力公司验收后转入运维。",
-            "project_id": 10,
-            "deliverables": [
-                {
-                    "deliverable_name": "国际物流计划",
-                    "deliverable_type": "DOCUMENT",
-                    "required_for_payment": False,
-                    "template_ref": "PV-LOG",
-                },
-                {
-                    "deliverable_name": "海外FAT/SAT报告",
-                    "deliverable_type": "REPORT",
-                    "required_for_payment": True,
-                    "template_ref": "PV-FAT",
-                },
-            ],
+    },
+    {
+        "id": 8,
+        "name": "珠海冠宇电池股份有限公司",
+        "short_name": "珠海冠宇",
+        "industry": "消费电池",
+        "location": "广东珠海",
+        "scale": "中型",
+        "annual_revenue": 7000000000,
+        "employee_count": 10000,
+        "stage": "合作客户",
+        "priority": "B",
+        "owner_id": 103,
+        "owner_name": "王五",
+        "created_at": "2024-12-10",
+        "last_contact": "2026-02-28",
+        "next_followup": "2026-03-07",
+        "tags": ["消费电池", "笔记本电脑", "上市公司"],
+        "decision_chain": {
+            "EB": {"name": "徐延铭", "title": "董事长", "contact": "132****0001", "attitude": "supportive"},
+            "TB": {"name": "技术总", "title": "技术总监", "contact": "132****0002", "attitude": "supportive"},
+            "PB": {"name": "采购总", "title": "采购经理", "contact": "132****0003", "attitude": "neutral"},
+            "UB": {"name": "生产总", "title": "生产经理", "contact": "132****0004", "attitude": "supportive"},
+            "Coach": {"name": "内部人", "title": "工程师", "contact": "132****0005", "attitude": "supportive"},
         },
     },
 ]
 
+# ========== 2. 商机数据 ==========
 
-def ensure_customer(db, owner: User, payload: Dict) -> Tuple[Customer, bool]:
-    customer = (
-        db.query(Customer).filter_by(customer_code=payload["customer_code"]).first()
-    )
-    if customer:
-        print(f"✓ 客户已存在: {customer.customer_code}")
-        return customer, False
+opportunities = [
+    {
+        "id": 1,
+        "customer_id": 1,
+        "customer_name": "宁德时代",
+        "name": "FCT 测试线项目",
+        "type": "FCT",
+        "stage": "商务谈判",
+        "amount": 3500000,
+        "currency": "CNY",
+        "probability": 75,
+        "expected_close_date": "2026-03-31",
+        "created_at": "2025-11-15",
+        "owner_id": 101,
+        "owner_name": "张三",
+        "description": "新建 FCT 测试线 3 条，用于动力电池包测试",
+        "requirements": [
+            "测试电压：0-1000V",
+            "测试电流：0-500A",
+            "测试精度：±0.1%",
+            "节拍：≤30 秒/pcs",
+        ],
+        "competitors": ["竞品 A（报价 320 万）", "竞品 B（报价 380 万）"],
+        "key_events": [
+            {"date": "2025-11-15", "event": "商机创建"},
+            {"date": "2025-12-01", "event": "技术交流"},
+            {"date": "2026-01-10", "event": "方案提交"},
+            {"date": "2026-02-15", "event": "商务报价"},
+            {"date": "2026-03-10", "event": "商务谈判（计划）"},
+        ],
+    },
+    {
+        "id": 2,
+        "customer_id": 2,
+        "customer_name": "比亚迪",
+        "name": "EOL 测试设备项目",
+        "type": "EOL",
+        "stage": "方案确认",
+        "amount": 4200000,
+        "currency": "CNY",
+        "probability": 82,
+        "expected_close_date": "2026-03-25",
+        "created_at": "2025-10-20",
+        "owner_id": 102,
+        "owner_name": "李四",
+        "description": "EOL 终检设备 5 台，用于新能源汽车电池包检测",
+        "requirements": [
+            "绝缘测试：0-5000V",
+            "耐压测试：0-3000V",
+            "功能测试：充放电 + 通讯",
+            "自动化程度：全自动",
+        ],
+        "competitors": ["竞品 A（报价 450 万）"],
+        "key_events": [
+            {"date": "2025-10-20", "event": "商机创建"},
+            {"date": "2025-11-25", "event": "技术交流"},
+            {"date": "2026-01-05", "event": "方案确认"},
+            {"date": "2026-02-20", "event": "商务谈判"},
+            {"date": "2026-03-15", "event": "合同审批（计划）"},
+        ],
+    },
+    {
+        "id": 3,
+        "customer_id": 3,
+        "customer_name": "中创新航",
+        "name": "ICT 在线测试项目",
+        "type": "ICT",
+        "stage": "方案评估",
+        "amount": 2800000,
+        "currency": "CNY",
+        "probability": 58,
+        "expected_close_date": "2026-04-15",
+        "created_at": "2025-12-10",
+        "owner_id": 101,
+        "owner_name": "张三",
+        "description": "ICT 在线测试设备 4 台，用于 PCBA 测试",
+        "requirements": [
+            "测试点数：≥2000 点",
+            "测试速度：≤15 秒/pcs",
+            "支持双面测试",
+        ],
+        "competitors": ["竞品 A（报价 250 万）", "竞品 B（报价 270 万）", "竞品 C（报价 290 万）"],
+        "key_events": [
+            {"date": "2025-12-10", "event": "商机创建"},
+            {"date": "2026-01-15", "event": "技术交流"},
+            {"date": "2026-02-20", "event": "方案提交"},
+            {"date": "2026-03-20", "event": "方案评估（计划）"},
+        ],
+    },
+    {
+        "id": 4,
+        "customer_id": 4,
+        "customer_name": "亿纬锂能",
+        "name": "烧录设备采购项目",
+        "type": "烧录",
+        "stage": "商务谈判",
+        "amount": 1800000,
+        "currency": "CNY",
+        "probability": 68,
+        "expected_close_date": "2026-04-05",
+        "created_at": "2026-01-05",
+        "owner_id": 103,
+        "owner_name": "王五",
+        "description": "MCU 烧录设备 10 台，用于电池管理芯片编程",
+        "requirements": [
+            "支持芯片：STM32/NXP/瑞萨",
+            "烧录速度：≤5 秒/pcs",
+            "同时烧录：8 通道",
+        ],
+        "competitors": ["竞品 A（报价 160 万）"],
+        "key_events": [
+            {"date": "2026-01-05", "event": "商机创建"},
+            {"date": "2026-01-20", "event": "技术交流"},
+            {"date": "2026-02-10", "event": "商务报价"},
+            {"date": "2026-03-05", "event": "商务谈判（计划）"},
+        ],
+    },
+    {
+        "id": 5,
+        "customer_id": 5,
+        "customer_name": "欣旺达",
+        "name": "FCT 功能测试项目",
+        "type": "FCT",
+        "stage": "需求分析",
+        "amount": 3200000,
+        "currency": "CNY",
+        "probability": 35,
+        "expected_close_date": "2026-05-15",
+        "created_at": "2026-01-20",
+        "owner_id": 104,
+        "owner_name": "赵六",
+        "description": "FCT 功能测试线 2 条，用于消费电池测试",
+        "requirements": ["待确认"],
+        "competitors": ["竞品 A", "竞品 B"],
+        "key_events": [
+            {"date": "2026-01-20", "event": "商机创建"},
+            {"date": "2026-02-10", "event": "初步交流"},
+            {"date": "2026-03-10", "event": "需求调研（计划）"},
+        ],
+    },
+    {
+        "id": 6,
+        "customer_id": 6,
+        "customer_name": "蜂巢能源",
+        "name": "EOL 检测设备项目",
+        "type": "EOL",
+        "stage": "初步接触",
+        "amount": 2500000,
+        "currency": "CNY",
+        "probability": 28,
+        "expected_close_date": "2026-06-30",
+        "created_at": "2026-02-01",
+        "owner_id": 104,
+        "owner_name": "赵六",
+        "description": "EOL 检测设备 3 台，用于储能电池包检测",
+        "requirements": ["待确认"],
+        "competitors": ["竞品 A", "竞品 B", "竞品 C"],
+        "key_events": [
+            {"date": "2026-02-01", "event": "商机创建"},
+            {"date": "2026-02-15", "event": "初步接触"},
+            {"date": "2026-03-15", "event": "技术交流（计划）"},
+        ],
+    },
+    {
+        "id": 7,
+        "customer_id": 7,
+        "customer_name": "国轩高科",
+        "name": "ICT 测试设备项目",
+        "type": "ICT",
+        "stage": "线索",
+        "amount": 2000000,
+        "currency": "CNY",
+        "probability": 15,
+        "expected_close_date": "2026-08-31",
+        "created_at": "2026-02-15",
+        "owner_id": 105,
+        "owner_name": "钱七",
+        "description": "ICT 测试设备采购意向",
+        "requirements": ["待确认"],
+        "competitors": ["未知"],
+        "key_events": [
+            {"date": "2026-02-15", "event": "线索创建"},
+            {"date": "2026-03-20", "event": "首次拜访（计划）"},
+        ],
+    },
+    {
+        "id": 8,
+        "customer_id": 8,
+        "customer_name": "珠海冠宇",
+        "name": "老化测试设备项目",
+        "type": "老化",
+        "stage": "合同审批",
+        "amount": 1500000,
+        "currency": "CNY",
+        "probability": 88,
+        "expected_close_date": "2026-03-20",
+        "created_at": "2025-11-01",
+        "owner_id": 103,
+        "owner_name": "王五",
+        "description": "老化测试房 1 间，用于笔记本电脑电池老化测试",
+        "requirements": [
+            "温度范围：室温~60℃",
+            "容量：10000 支电池",
+            "监控：实时监控 + 报警",
+        ],
+        "competitors": ["竞品 A（报价 170 万）"],
+        "key_events": [
+            {"date": "2025-11-01", "event": "商机创建"},
+            {"date": "2025-12-15", "event": "方案确认"},
+            {"date": "2026-01-20", "event": "商务谈判"},
+            {"date": "2026-02-25", "event": "合同审批"},
+            {"date": "2026-03-15", "event": "签约（计划）"},
+        ],
+    },
+]
 
-    customer = Customer(**payload, created_by=owner.id)
-    db.add(customer)
-    db.flush()
-    print(f"＋ 创建客户: {customer.customer_code} - {customer.customer_name}")
-    return customer, True
+# ========== 3. 关系成熟度评估数据 ==========
 
+relationship_assessments = [
+    {
+        "customer_id": 1,
+        "customer_name": "宁德时代",
+        "assessment_date": "2026-03-01",
+        "overall_score": 78,
+        "maturity_level": "L4",
+        "maturity_level_name": "战略级",
+        "dimensions": {
+            "decision_chain": {"score": 16, "max": 20, "details": "EB/TB/PB/UB 已覆盖，Coach 已建立"},
+            "interaction": {"score": 12, "max": 15, "details": "每周 2.8 次，频率良好"},
+            "relationship_depth": {"score": 14, "max": 20, "details": "L4 信任级，客户主动分享信息"},
+            "information": {"score": 13, "max": 15, "details": "预算/流程/时间表清楚"},
+            "support": {"score": 16, "max": 20, "details": "TB/UB支持，EB/PB中立"},
+            "executive": {"score": 7, "max": 10, "details": "VP 级交流，需提升至 CEO"},
+        },
+        "estimated_win_rate": 72,
+        "trend": "improving",
+        "score_change_30d": 5,
+    },
+    {
+        "customer_id": 2,
+        "customer_name": "比亚迪",
+        "assessment_date": "2026-03-01",
+        "overall_score": 85,
+        "maturity_level": "L4",
+        "maturity_level_name": "战略级",
+        "dimensions": {
+            "decision_chain": {"score": 19, "max": 20, "details": "决策链完整，Coach 强力支持"},
+            "interaction": {"score": 14, "max": 15, "details": "每周 3+ 次，频率很高"},
+            "relationship_depth": {"score": 17, "max": 20, "details": "接近 L5 伙伴级"},
+            "information": {"score": 14, "max": 15, "details": "信息高度透明"},
+            "support": {"score": 18, "max": 20, "details": "EB/TB/PB/UB均支持"},
+            "executive": {"score": 8, "max": 10, "details": "CEO 互访过 2 次"},
+        },
+        "estimated_win_rate": 85,
+        "trend": "stable",
+        "score_change_30d": 2,
+    },
+    {
+        "customer_id": 3,
+        "customer_name": "中创新航",
+        "assessment_date": "2026-03-01",
+        "overall_score": 62,
+        "maturity_level": "L3",
+        "maturity_level_name": "成熟级",
+        "dimensions": {
+            "decision_chain": {"score": 12, "max": 20, "details": "EB/TB/PB已识别，关系待深化"},
+            "interaction": {"score": 10, "max": 15, "details": "每周 1-2 次"},
+            "relationship_depth": {"score": 12, "max": 20, "details": "L3 认可级"},
+            "information": {"score": 11, "max": 15, "details": "部分信息获取"},
+            "support": {"score": 12, "max": 20, "details": "UB 支持，其他中立"},
+            "executive": {"score": 4, "max": 10, "details": "仅工作层交流"},
+        },
+        "estimated_win_rate": 52,
+        "trend": "improving",
+        "score_change_30d": 8,
+    },
+    {
+        "customer_id": 4,
+        "customer_name": "亿纬锂能",
+        "assessment_date": "2026-03-01",
+        "overall_score": 72,
+        "maturity_level": "L3",
+        "maturity_level_name": "成熟级",
+        "dimensions": {
+            "decision_chain": {"score": 15, "max": 20, "details": "决策链完整"},
+            "interaction": {"score": 11, "max": 15, "details": "每周 1-2 次"},
+            "relationship_depth": {"score": 14, "max": 20, "details": "L4 信任级"},
+            "information": {"score": 12, "max": 15, "details": "信息较透明"},
+            "support": {"score": 14, "max": 20, "details": "EB/TB/UB支持，PB中立"},
+            "executive": {"score": 6, "max": 10, "details": "总监级交流"},
+        },
+        "estimated_win_rate": 65,
+        "trend": "stable",
+        "score_change_30d": 0,
+    },
+    {
+        "customer_id": 5,
+        "customer_name": "欣旺达",
+        "assessment_date": "2026-03-01",
+        "overall_score": 42,
+        "maturity_level": "L2",
+        "maturity_level_name": "发展级",
+        "dimensions": {
+            "decision_chain": {"score": 8, "max": 20, "details": "仅识别 EB/TB"},
+            "interaction": {"score": 6, "max": 15, "details": "每 2 周 1 次"},
+            "relationship_depth": {"score": 8, "max": 20, "details": "L2 接触级"},
+            "information": {"score": 8, "max": 15, "details": "信息有限"},
+            "support": {"score": 8, "max": 20, "details": "TB 中立，其他未知"},
+            "executive": {"score": 2, "max": 10, "details": "仅工作层"},
+        },
+        "estimated_win_rate": 32,
+        "trend": "declining",
+        "score_change_30d": -3,
+    },
+    {
+        "customer_id": 6,
+        "customer_name": "蜂巢能源",
+        "assessment_date": "2026-03-01",
+        "overall_score": 35,
+        "maturity_level": "L2",
+        "maturity_level_name": "发展级",
+        "dimensions": {
+            "decision_chain": {"score": 5, "max": 20, "details": "仅识别 EB"},
+            "interaction": {"score": 5, "max": 15, "details": "每月 1 次"},
+            "relationship_depth": {"score": 8, "max": 20, "details": "L2 接触级"},
+            "information": {"score": 6, "max": 15, "details": "信息很少"},
+            "support": {"score": 6, "max": 20, "details": "EB 态度未知"},
+            "executive": {"score": 2, "max": 10, "details": "仅工作层"},
+        },
+        "estimated_win_rate": 25,
+        "trend": "stable",
+        "score_change_30d": 0,
+    },
+]
 
-def upsert_opportunity(
-    db, owner: User, customer: Customer, payload: Dict
-) -> Opportunity:
-    opportunity = db.query(Opportunity).filter_by(opp_code=payload["opp_code"]).first()
-    fields = {
-        "customer_id": customer.id,
-        "opp_name": payload["opp_name"],
-        "project_type": payload["project_type"],
-        "equipment_type": payload["equipment_type"],
-        "stage": payload["stage"],
-        "est_amount": payload["est_amount"],
-        "est_margin": payload["est_margin"],
-        "budget_range": payload["budget_range"],
-        "decision_chain": payload["decision_chain"],
-        "delivery_window": payload["delivery_window"],
-        "acceptance_basis": payload["acceptance_basis"],
-        "score": payload["score"],
-        "risk_level": payload["risk_level"],
-        "owner_id": owner.id,
-        "gate_status": payload["gate_status"],
-        "gate_passed_at": NOW if payload["gate_status"] == "PASS" else None,
-    }
+# ========== 4. 赢单率综合评估数据 ==========
 
-    if opportunity:
-        for key, value in fields.items():
-            setattr(opportunity, key, value)
-        print(f"✓ 更新商机: {opportunity.opp_code}")
-        return opportunity
+win_rate_assessments = [
+    {
+        "opportunity_id": 1,
+        "opportunity_name": "宁德时代 FCT 测试线项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 78, "weight": 0.35, "contribution": 27.3},
+            "technical_solution": {"score": 81, "weight": 0.30, "contribution": 24.3},
+            "price_competitiveness": {"score": 66, "weight": 0.25, "contribution": 16.5},
+            "other_factors": {"score": 72, "weight": 0.10, "contribution": 7.2},
+        },
+        "total_win_rate": 75,
+        "confidence": 85,
+        "primary_weakness": "价格竞争力",
+        "improvement_potential": 6,
+    },
+    {
+        "opportunity_id": 2,
+        "opportunity_name": "比亚迪 EOL 测试设备项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 85, "weight": 0.35, "contribution": 29.75},
+            "technical_solution": {"score": 88, "weight": 0.30, "contribution": 26.4},
+            "price_competitiveness": {"score": 75, "weight": 0.25, "contribution": 18.75},
+            "other_factors": {"score": 78, "weight": 0.10, "contribution": 7.8},
+        },
+        "total_win_rate": 83,
+        "confidence": 90,
+        "primary_weakness": "无明显短板",
+        "improvement_potential": 2,
+    },
+    {
+        "opportunity_id": 3,
+        "opportunity_name": "中创新航 ICT 在线测试项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 62, "weight": 0.35, "contribution": 21.7},
+            "technical_solution": {"score": 70, "weight": 0.30, "contribution": 21.0},
+            "price_competitiveness": {"score": 55, "weight": 0.25, "contribution": 13.75},
+            "other_factors": {"score": 58, "weight": 0.10, "contribution": 5.8},
+        },
+        "total_win_rate": 62,
+        "confidence": 75,
+        "primary_weakness": "商务关系",
+        "improvement_potential": 10,
+    },
+    {
+        "opportunity_id": 4,
+        "opportunity_name": "亿纬锂能烧录设备采购项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 72, "weight": 0.35, "contribution": 25.2},
+            "technical_solution": {"score": 75, "weight": 0.30, "contribution": 22.5},
+            "price_competitiveness": {"score": 60, "weight": 0.25, "contribution": 15.0},
+            "other_factors": {"score": 65, "weight": 0.10, "contribution": 6.5},
+        },
+        "total_win_rate": 69,
+        "confidence": 80,
+        "primary_weakness": "价格竞争力",
+        "improvement_potential": 8,
+    },
+    {
+        "opportunity_id": 5,
+        "opportunity_name": "欣旺达 FCT 功能测试项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 42, "weight": 0.35, "contribution": 14.7},
+            "technical_solution": {"score": 50, "weight": 0.30, "contribution": 15.0},
+            "price_competitiveness": {"score": 55, "weight": 0.25, "contribution": 13.75},
+            "other_factors": {"score": 45, "weight": 0.10, "contribution": 4.5},
+        },
+        "total_win_rate": 48,
+        "confidence": 60,
+        "primary_weakness": "商务关系",
+        "improvement_potential": 15,
+    },
+    {
+        "opportunity_id": 6,
+        "opportunity_name": "蜂巢能源 EOL 检测设备项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 35, "weight": 0.35, "contribution": 12.25},
+            "technical_solution": {"score": 45, "weight": 0.30, "contribution": 13.5},
+            "price_competitiveness": {"score": 50, "weight": 0.25, "contribution": 12.5},
+            "other_factors": {"score": 40, "weight": 0.10, "contribution": 4.0},
+        },
+        "total_win_rate": 42,
+        "confidence": 55,
+        "primary_weakness": "商务关系",
+        "improvement_potential": 18,
+    },
+    {
+        "opportunity_id": 7,
+        "opportunity_name": "国轩高科 ICT 测试设备项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 25, "weight": 0.35, "contribution": 8.75},
+            "technical_solution": {"score": 35, "weight": 0.30, "contribution": 10.5},
+            "price_competitiveness": {"score": 50, "weight": 0.25, "contribution": 12.5},
+            "other_factors": {"score": 30, "weight": 0.10, "contribution": 3.0},
+        },
+        "total_win_rate": 35,
+        "confidence": 45,
+        "primary_weakness": "商务关系",
+        "improvement_potential": 20,
+    },
+    {
+        "opportunity_id": 8,
+        "opportunity_name": "珠海冠宇老化测试设备项目",
+        "assessment_date": "2026-03-01",
+        "factors": {
+            "business_relationship": {"score": 82, "weight": 0.35, "contribution": 28.7},
+            "technical_solution": {"score": 85, "weight": 0.30, "contribution": 25.5},
+            "price_competitiveness": {"score": 78, "weight": 0.25, "contribution": 19.5},
+            "other_factors": {"score": 80, "weight": 0.10, "contribution": 8.0},
+        },
+        "total_win_rate": 82,
+        "confidence": 92,
+        "primary_weakness": "无明显短板",
+        "improvement_potential": 3,
+    },
+]
 
-    opportunity = Opportunity(
-        opp_code=payload["opp_code"],
-        **fields,
-    )
-    db.add(opportunity)
-    db.flush()
-    print(f"＋ 创建商机: {opportunity.opp_code} - {opportunity.opp_name}")
-    return opportunity
+# ========== 5. 销售数据 ==========
 
+sales_reps = [
+    {"id": 101, "name": "张三", "team": "华南大区", "territory": "福建/广东", "quota_annual": 50000000},
+    {"id": 102, "name": "李四", "team": "华东大区", "territory": "江苏/浙江", "quota_annual": 45000000},
+    {"id": 103, "name": "王五", "team": "华南大区", "territory": "广东/广西", "quota_annual": 40000000},
+    {"id": 104, "name": "赵六", "team": "华东大区", "territory": "江苏/安徽", "quota_annual": 35000000},
+    {"id": 105, "name": "钱七", "team": "华北大区", "territory": "安徽/湖北", "quota_annual": 30000000},
+]
 
-def upsert_quote_bundle(db, owner: User, bundle: Dict, customer: Customer):
-    opportunity = upsert_opportunity(db, owner, customer, bundle["opportunity"])
+# ========== 输出数据 ==========
 
-    quote = db.query(Quote).filter_by(quote_code=bundle["quote"]["quote_code"]).first()
-    valid_until = TODAY + timedelta(days=bundle["quote"]["valid_until_days"])
-    if quote:
-        quote.opportunity_id = opportunity.id
-        quote.customer_id = customer.id
-        quote.status = bundle["quote"]["status"]
-        quote.valid_until = valid_until
-        quote.owner_id = owner.id
-        print(f"✓ 更新报价: {quote.quote_code}")
-    else:
-        quote = Quote(
-            quote_code=bundle["quote"]["quote_code"],
-            opportunity_id=opportunity.id,
-            customer_id=customer.id,
-            status=bundle["quote"]["status"],
-            valid_until=valid_until,
-            owner_id=owner.id,
-        )
-        db.add(quote)
-        db.flush()
-        print(f"＋ 创建报价: {quote.quote_code}")
+output_dir = Path("/Users/flw/non-standard-automation-pm/data/demo")
+output_dir.mkdir(parents=True, exist_ok=True)
 
-    version_payload = bundle["version"]
-    version = (
-        db.query(QuoteVersion)
-        .filter(
-            QuoteVersion.quote_id == quote.id,
-            QuoteVersion.version_no == version_payload["version_no"],
-        )
-        .first()
-    )
-    delivery_date = TODAY + timedelta(days=version_payload["delivery_offset_days"])
-    version_fields = {
-        "total_price": version_payload["total_price"],
-        "cost_total": version_payload["cost_total"],
-        "gross_margin": version_payload["gross_margin"],
-        "lead_time_days": version_payload["lead_time_days"],
-        "delivery_date": delivery_date,
-        "risk_terms": version_payload["risk_terms"],
-        "cost_breakdown_complete": version_payload.get("cost_breakdown_complete", True),
-        "margin_warning": version_payload.get("margin_warning", False),
-        "created_by": owner.id,
-        "approved_by": 1 if version_payload.get("approved") else None,
-        "approved_at": NOW if version_payload.get("approved") else None,
-    }
+# 保存为 JSON 文件
+files_to_save = [
+    ("customers.json", customers),
+    ("opportunities.json", opportunities),
+    ("relationship_assessments.json", relationship_assessments),
+    ("win_rate_assessments.json", win_rate_assessments),
+    ("sales_reps.json", sales_reps),
+]
 
-    if version:
-        for key, value in version_fields.items():
-            setattr(version, key, value)
-        print(f"  ↻ 更新版本: {quote.quote_code}-{version.version_no}")
-    else:
-        version = QuoteVersion(
-            quote_id=quote.id,
-            version_no=version_payload["version_no"],
-            **version_fields,
-        )
-        db.add(version)
-        db.flush()
-        print(f"  ＋ 创建版本: {quote.quote_code}-{version.version_no}")
+for filename, data in files_to_save:
+    output_path = output_dir / filename
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ 已生成：{output_path}")
 
-    quote.current_version_id = version.id
-
-    # Recreate items each run to ensure demo数据一致
-    for existing in list(version.items):
-        db.delete(existing)
-    db.flush()
-
-    for item_payload in bundle["items"]:
-        item = QuoteItem(
-            quote_version_id=version.id,
-            item_name=item_payload["item_name"],
-            item_type=item_payload["item_type"],
-            qty=item_payload["qty"],
-            unit_price=item_payload["unit_price"],
-            cost=item_payload["cost"],
-            lead_time_days=item_payload["lead_time_days"],
-            remark=item_payload["remark"],
-            cost_category=item_payload["cost_category"],
-            cost_source=item_payload["cost_source"],
-            specification=item_payload["specification"],
-            unit=item_payload["unit"],
-        )
-        db.add(item)
-        print(f"    ＋ 添加明细: {item.item_name}")
-
-    contract_payload = bundle["contract"]
-    contract = (
-        db.query(Contract)
-        .filter_by(contract_code=contract_payload["contract_code"])
-        .first()
-    )
-    signed_date = (
-        TODAY + timedelta(days=contract_payload["signed_offset_days"])
-        if isinstance(contract_payload.get("signed_offset_days"), (int, float))
-        else None
-    )
-    contract_fields = {
-        "opportunity_id": opportunity.id,
-        "quote_version_id": version.id,
-        "customer_id": customer.id,
-        "project_id": contract_payload.get("project_id"),
-        "contract_amount": contract_payload["contract_amount"],
-        "signed_date": signed_date,
-        "status": contract_payload["status"],
-        "payment_terms_summary": contract_payload["payment_terms_summary"],
-        "acceptance_summary": contract_payload["acceptance_summary"],
-        "owner_id": owner.id,
-    }
-
-    if contract:
-        for key, value in contract_fields.items():
-            setattr(contract, key, value)
-        print(f"  ↻ 更新合同: {contract.contract_code}")
-    else:
-        contract = Contract(
-            contract_code=contract_payload["contract_code"],
-            **contract_fields,
-        )
-        db.add(contract)
-        db.flush()
-        print(f"  ＋ 创建合同: {contract.contract_code}")
-
-    deliverable_lookup = {d.deliverable_name: d for d in contract.deliverables}
-    for deliverable in contract_payload["deliverables"]:
-        instance = deliverable_lookup.get(deliverable["deliverable_name"])
-        if instance:
-            instance.deliverable_type = deliverable["deliverable_type"]
-            instance.required_for_payment = deliverable["required_for_payment"]
-            instance.template_ref = deliverable["template_ref"]
-            print(f"    ↻ 更新交付物: {instance.deliverable_name}")
-        else:
-            instance = ContractDeliverable(
-                contract_id=contract.id,
-                **deliverable,
-            )
-            db.add(instance)
-            print(f"    ＋ 添加交付物: {instance.deliverable_name}")
-
-
-def main():
-    with get_db_session() as db:
-        owner = db.query(User).filter_by(username="zhang_sales").first()
-        if not owner:
-            raise SystemExit("用户 zhang_sales 不存在，请先创建销售工程师账户。")
-
-        customer_map: Dict[str, Customer] = {}
-        for payload in CUSTOMERS:
-            customer, _created = ensure_customer(db, owner, payload)
-            customer_map[payload["customer_code"]] = customer
-
-        for bundle in SALES_BUNDLES:
-            customer = customer_map[bundle["customer_code"]]
-            upsert_quote_bundle(db, owner, bundle, customer)
-
-        print("\n✅ 销售演示数据准备完成。")
-
-
-if __name__ == "__main__":
-    main()
+print("")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("📦 演示数据生成完成！")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("")
+print(f"📁 数据位置：{output_dir}")
+print("")
+print("📊 数据概览:")
+print(f"  • 客户数据：{len(customers)} 个")
+print(f"  • 商机数据：{len(opportunities)} 个")
+print(f"  • 关系评估：{len(relationship_assessments)} 个")
+print(f"  • 赢单率评估：{len(win_rate_assessments)} 个")
+print(f"  • 销售代表：{len(sales_reps)} 个")
+print("")
+print("💰 商机金额统计:")
+total_amount = sum(opp["amount"] for opp in opportunities)
+weighted_amount = sum(opp["amount"] * opp["probability"] / 100 for opp in opportunities)
+print(f"  • Pipeline 总额：¥{total_amount / 1000000:.1f}M")
+print(f"  • 加权 Pipeline: ¥{weighted_amount / 1000000:.1f}M")
+print("")
+print("🎯 赢单率分布:")
+win_rates = [assess["total_win_rate"] for assess in win_rate_assessments]
+print(f"  • ≥80%: {sum(1 for r in win_rates if r >= 80)} 个")
+print(f"  • 60-79%: {sum(1 for r in win_rates if 60 <= r < 80)} 个")
+print(f"  • 40-59%: {sum(1 for r in win_rates if 40 <= r < 60)} 个")
+print(f"  • <40%: {sum(1 for r in win_rates if r < 40)} 个")
+print("")

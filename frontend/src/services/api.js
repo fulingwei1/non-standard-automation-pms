@@ -40,3 +40,5 @@ export * from "./api/aiStrategy.js";
 export * from "./api/ecnBom.js";
 export * from "./api/fieldCommissioning.js";
 export * from "./api/multiCurrency.js";
+export * from "./api/aiSales";
+export * from "./api/intelligentQuote";

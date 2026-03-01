@@ -1,0 +1,100 @@
+[
+  {
+    "customer_id": 1,
+    "customer_name": "宁德时代",
+    "assessment_date": "2026-03-01",
+    "overall_score": 78,
+    "maturity_level": "L4",
+    "maturity_level_name": "战略级",
+    "dimensions": {
+      "decision_chain": 16,
+      "interaction": 12,
+      "relationship_depth": 14,
+      "information": 13,
+      "support": 16,
+      "executive": 7
+    },
+    "estimated_win_rate": 72,
+    "trend": "improving"
+  },
+  {
+    "customer_id": 2,
+    "customer_name": "比亚迪",
+    "overall_score": 85,
+    "maturity_level": "L4",
+    "dimensions": {
+      "decision_chain": 19,
+      "interaction": 14,
+      "relationship_depth": 17,
+      "information": 14,
+      "support": 18,
+      "executive": 8
+    },
+    "estimated_win_rate": 85,
+    "trend": "stable"
+  },
+  {
+    "customer_id": 3,
+    "customer_name": "中创新航",
+    "overall_score": 62,
+    "maturity_level": "L3",
+    "dimensions": {
+      "decision_chain": 12,
+      "interaction": 10,
+      "relationship_depth": 12,
+      "information": 11,
+      "support": 12,
+      "executive": 4
+    },
+    "estimated_win_rate": 52,
+    "trend": "improving"
+  },
+  {
+    "customer_id": 4,
+    "customer_name": "亿纬锂能",
+    "overall_score": 72,
+    "maturity_level": "L3",
+    "dimensions": {
+      "decision_chain": 15,
+      "interaction": 11,
+      "relationship_depth": 14,
+      "information": 12,
+      "support": 14,
+      "executive": 6
+    },
+    "estimated_win_rate": 65,
+    "trend": "stable"
+  },
+  {
+    "customer_id": 5,
+    "customer_name": "欣旺达",
+    "overall_score": 42,
+    "maturity_level": "L2",
+    "dimensions": {
+      "decision_chain": 8,
+      "interaction": 6,
+      "relationship_depth": 8,
+      "information": 8,
+      "support": 8,
+      "executive": 2
+    },
+    "estimated_win_rate": 32,
+    "trend": "declining"
+  },
+  {
+    "customer_id": 6,
+    "customer_name": "蜂巢能源",
+    "overall_score": 35,
+    "maturity_level": "L2",
+    "dimensions": {
+      "decision_chain": 5,
+      "interaction": 5,
+      "relationship_depth": 8,
+      "information": 6,
+      "support": 6,
+      "executive": 2
+    },
+    "estimated_win_rate": 25,
+    "trend": "stable"
+  }
+]

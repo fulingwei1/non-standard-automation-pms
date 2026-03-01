@@ -5,3 +5,4 @@ export const marginPredictionApi = {
   predict: (params) => api.get("/margin-prediction/predict", { params }),
   variance: () => api.get("/margin-prediction/variance"),
 };
+

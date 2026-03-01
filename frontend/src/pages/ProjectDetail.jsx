@@ -76,6 +76,11 @@ export default function ProjectDetail() {
   const [costs, setCosts] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [newMember, setNewMember] = useState({ user_id: "", role: "member", status: "active" });
+  const [addingMember, setAddingMember] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     fetchProjectData();
@@ -136,6 +141,51 @@ export default function ProjectDetail() {
       setProject(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenAddMember = () => {
+    setShowAddMemberDialog(true);
+    loadAvailableUsers();
+  };
+
+  const handleAddMember = async () => {
+
+  const loadAvailableUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await userApi.list({ page: 1, page_size: 200, is_active: true });
+      const users = res.data?.items || res.data || [];
+      // 过滤掉已在项目中的成员
+      const memberIds = new Set((members || []).map(m => m.user_id));
+      setAvailableUsers(users.filter(u => !memberIds.has(u.id)));
+    } catch (error) {
+      console.error("加载用户列表失败:", error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+    if (!newMember.user_id) {
+      alert("请选择成员");
+      return;
+    }
+    setAddingMember(true);
+    try {
+      await memberApi.add({
+        project_id: parseInt(id),
+        user_id: parseInt(newMember.user_id),
+        role: newMember.role,
+        status: newMember.status,
+      });
+      setShowAddMemberDialog(false);
+      setNewMember({ user_id: "", role: "member", status: "active" });
+      fetchProjectData();
+      alert("成员添加成功");
+    } catch (error) {
+      console.error("添加成员失败:", error);
+      alert("添加失败：" + (error.response?.data?.message || error.message));
+    } finally {
+      setAddingMember(false);
     }
   };
 
@@ -380,7 +430,7 @@ export default function ProjectDetail() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">团队成员</h3>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleOpenAddMember}>
                   <Plus className="mr-2 h-4 w-4" />
                   添加成员
                 </Button>
@@ -498,7 +548,7 @@ export default function ProjectDetail() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">项目文档</h3>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleOpenAddMember}>
                 <Plus className="mr-2 h-4 w-4" />
                 上传文档
               </Button>
@@ -532,27 +582,67 @@ export default function ProjectDetail() {
       </div>
 
       {/* 编辑对话框 */}
+
+      {/* 添加成员对话框 */}
       <AnimatePresence>
-        {showEditDialog &&
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent className="max-w-2xl">
+        {showAddMemberDialog &&
+        <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
+            <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>编辑项目</DialogTitle>
+                <DialogTitle>添加项目成员</DialogTitle>
                 <DialogDescription>
-                  修改项目基本信息
+                  为项目添加团队成员
                 </DialogDescription>
               </DialogHeader>
-              {/* 编辑表单内容 */}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                  取消
-                </Button>
-                <Button>保存</Button>
-              </DialogFooter>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">选择成员</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    value={newMember.user_id}
+                    onChange={(e) => setNewMember({ ...newMember, user_id: e.target.value })}
+                    disabled={loadingUsers}
+                  >
+                    <option value="">-- 选择用户 --</option>
+                    {(availableUsers || []).map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.real_name || user.username} ({user.username})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">角色</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    value={newMember.role}
+                    onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+                  >
+                    <option value="member">成员</option>
+                    <option value="lead">负责人</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddMemberDialog(false)}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={handleAddMember}
+                    disabled={loadingUsers || !newMember.user_id}
+                  >
+                    添加
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
-        </Dialog>
+          </Dialog>
         }
       </AnimatePresence>
-    </motion.div>);
-
+    </motion.div>
+  );
 }

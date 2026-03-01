@@ -1,0 +1,101 @@
+{
+  "analysis_date": "2026-03-01",
+  "total_opportunities": 156,
+  "time_range": "2024-01-01 ~ 2026-03-01",
+  "competitors": [
+    {
+      "id": 1,
+      "name": "竞品 A",
+      "description": "德国知名自动化公司",
+      "position": "高端市场领导者",
+      "headquarters": "德国",
+      "strengths": [
+        "品牌知名度高",
+        "技术成熟",
+        "全球服务网络"
+      ],
+      "weaknesses": [
+        "价格高",
+        "交付周期长",
+        "定制化能力弱"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "竞品 B",
+      "description": "国内上市公司",
+      "position": "中端市场主要竞争者",
+      "headquarters": "上海",
+      "strengths": [
+        "价格适中",
+        "响应速度快",
+        "本地化好"
+      ],
+      "weaknesses": [
+        "技术积累浅",
+        "案例较少"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "竞品 C",
+      "description": "新兴公司",
+      "position": "低端市场挑战者",
+      "headquarters": "深圳",
+      "strengths": [
+        "价格低",
+        "灵活定制",
+        "服务积极"
+      ],
+      "weaknesses": [
+        "品牌弱",
+        "稳定性待验证"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "竞品 D",
+      "description": "台系厂商",
+      "position": "中端市场细分领域",
+      "headquarters": "台湾",
+      "strengths": [
+        "性价比高",
+        "电子行业经验丰富"
+      ],
+      "weaknesses": [
+        "服务网络弱",
+        "大项目经验少"
+      ]
+    }
+  ],
+  "win_rate_by_competitor": [
+    {
+      "competitor": "竞品 C",
+      "opportunities": 38,
+      "won": 30,
+      "lost": 8,
+      "win_rate": 78.9
+    },
+    {
+      "competitor": "竞品 A",
+      "opportunities": 45,
+      "won": 32,
+      "lost": 13,
+      "win_rate": 71.1
+    },
+    {
+      "competitor": "竞品 B",
+      "opportunities": 52,
+      "won": 28,
+      "lost": 24,
+      "win_rate": 53.8
+    },
+    {
+      "competitor": "竞品 D",
+      "opportunities": 21,
+      "won": 10,
+      "lost": 11,
+      "win_rate": 47.6
+    }
+  ]
+}

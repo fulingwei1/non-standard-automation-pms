@@ -19,6 +19,7 @@ import {
   ArrowDownRight,
   Minus,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
@@ -64,12 +65,39 @@ export default function MarginPrediction() {
   const [variance, setVariance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [predicting, setPredicting] = useState(false);
+  const [importingBom, setImportingBom] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+
+  const handleImportBom = async () => {
+    if (!selectedProjectId) { alert("请选择项目"); return; }
+    setImportingBom(true);
+    try {
+      const res = await marginPredictionApi.getBomCosts(selectedProjectId);
+      const data = res.data || res;
+      if (data.total_cost > 0) {
+        setForm(prev => ({ ...prev, estimated_material_cost: data.total_cost }));
+        alert(`已导入 BOM 物料成本：¥${(data.total_cost/10000).toFixed(2)}万\n共${data.total_items}项物料\n已采购：${data.purchased_count}项\n未采购：${data.unpurchased_count}项`);
+      } else {
+        alert(data.message || "未找到 BOM 数据");
+      }
+    } catch (error) {
+      alert("导入失败：" + error.message);
+    } finally {
+      setImportingBom(false);
+    }
+  };
+
 
   // Prediction form
   const [form, setForm] = useState({
     product_category: "",
     industry: "",
     contract_amount: 3000000,
+    estimated_material_cost: "",
+    estimated_design_change_cost: "",
+    estimated_travel_cost: "",
+    estimated_rd_hours: "",
+    project_complexity: "MEDIUM",
   });
 
   useEffect(() => {
@@ -94,8 +122,12 @@ export default function MarginPrediction() {
   const handlePredict = useCallback(async () => {
     try {
       setPredicting(true);
-      const params = { contract_amount: form.contract_amount };
+      const params = { contract_amount: form.contract_amount, project_complexity: form.project_complexity };
       if (form.product_category) params.product_category = form.product_category;
+      if (form.estimated_material_cost) params.estimated_material_cost = form.estimated_material_cost;
+      if (form.estimated_design_change_cost) params.estimated_design_change_cost = form.estimated_design_change_cost;
+      if (form.estimated_travel_cost) params.estimated_travel_cost = form.estimated_travel_cost;
+      if (form.estimated_rd_hours) params.estimated_rd_hours = form.estimated_rd_hours;
       if (form.industry) params.industry = form.industry;
       const res = await marginPredictionApi.predict(params);
       setPrediction(res.data || res);
@@ -205,6 +237,41 @@ export default function MarginPrediction() {
                       onChange={(e) => setForm({ ...form, contract_amount: (parseFloat(e.target.value) || 0) * 10000 })}
                     />
                   </div>
+                  
+              {/* BOM Import */}
+              <div className="border-t border-white/10 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs text-slate-400">从 BOM 导入物料成本</span>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                  >
+                    <option value="">选择项目...</option>
+                    <option value="1">项目 A - ICT 测试设备</option>
+                    <option value="2">项目 B - FCT 测试线</option>
+                    <option value="3">项目 C - EOL 检测设备</option>
+                  </select>
+                  <button
+                    onClick={handleImportBom}
+                    disabled={importingBom || !selectedProjectId}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 
+                      text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${importingBom ? 'animate-spin' : ''}`} />
+                    {importingBom ? "导入中..." : "导入 BOM"}
+                  </button>
+                </div>
+                {selectedProjectId && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    提示：将自动获取已发布 BOM 的物料成本，优先使用最新采购价格
+                  </p>
+                )}
+              </div>
+
                   <button
                     onClick={handlePredict}
                     disabled={predicting}

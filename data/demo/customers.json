@@ -1,0 +1,159 @@
+[
+  {
+    "id": 1,
+    "name": "宁德时代新能源科技股份有限公司",
+    "short_name": "宁德时代",
+    "industry": "动力电池",
+    "location": "福建宁德",
+    "scale": "大型",
+    "annual_revenue": 30000000000,
+    "employee_count": 50000,
+    "stage": "战略合作客户",
+    "priority": "A",
+    "owner_id": 101,
+    "owner_name": "张三",
+    "created_at": "2024-06-15",
+    "last_contact": "2026-02-28",
+    "next_followup": "2026-03-05",
+    "tags": [
+      "动力电池",
+      "储能",
+      "头部客户",
+      "上市公司"
+    ],
+    "decision_chain": {
+      "EB": {
+        "name": "曾毓群",
+        "title": "董事长",
+        "attitude": "neutral"
+      },
+      "TB": {
+        "name": "吴凯",
+        "title": "首席科学家",
+        "attitude": "supportive"
+      },
+      "PB": {
+        "name": "李平",
+        "title": "采购总监",
+        "attitude": "neutral"
+      },
+      "UB": {
+        "name": "赵伟",
+        "title": "生产总监",
+        "attitude": "supportive"
+      },
+      "Coach": {
+        "name": "钱七",
+        "title": "设备工程师",
+        "attitude": "supportive"
+      }
+    },
+    "relationship_score": 78,
+    "maturity_level": "L4"
+  },
+  {
+    "id": 2,
+    "name": "比亚迪股份有限公司",
+    "short_name": "比亚迪",
+    "industry": "新能源汽车",
+    "location": "广东深圳",
+    "scale": "大型",
+    "annual_revenue": 40000000000,
+    "stage": "战略合作客户",
+    "priority": "A",
+    "owner_id": 102,
+    "owner_name": "李四",
+    "relationship_score": 85,
+    "maturity_level": "L4"
+  },
+  {
+    "id": 3,
+    "name": "中创新航科技股份有限公司",
+    "short_name": "中创新航",
+    "industry": "动力电池",
+    "location": "江苏常州",
+    "scale": "中型",
+    "annual_revenue": 15000000000,
+    "stage": "重点开发客户",
+    "priority": "A",
+    "owner_id": 101,
+    "owner_name": "张三",
+    "relationship_score": 62,
+    "maturity_level": "L3"
+  },
+  {
+    "id": 4,
+    "name": "惠州亿纬锂能股份有限公司",
+    "short_name": "亿纬锂能",
+    "industry": "锂电池",
+    "location": "广东惠州",
+    "scale": "中型",
+    "annual_revenue": 12000000000,
+    "stage": "合作客户",
+    "priority": "B",
+    "owner_id": 103,
+    "owner_name": "王五",
+    "relationship_score": 72,
+    "maturity_level": "L3"
+  },
+  {
+    "id": 5,
+    "name": "欣旺达电子股份有限公司",
+    "short_name": "欣旺达",
+    "industry": "锂电池",
+    "location": "广东深圳",
+    "scale": "中型",
+    "annual_revenue": 10000000000,
+    "stage": "开发中客户",
+    "priority": "B",
+    "owner_id": 104,
+    "owner_name": "赵六",
+    "relationship_score": 42,
+    "maturity_level": "L2"
+  },
+  {
+    "id": 6,
+    "name": "蜂巢能源科技有限公司",
+    "short_name": "蜂巢能源",
+    "industry": "锂电池",
+    "location": "江苏常州",
+    "scale": "中型",
+    "annual_revenue": 8000000000,
+    "stage": "开发中客户",
+    "priority": "B",
+    "owner_id": 104,
+    "owner_name": "赵六",
+    "relationship_score": 35,
+    "maturity_level": "L2"
+  },
+  {
+    "id": 7,
+    "name": "国轩高科股份有限公司",
+    "short_name": "国轩高科",
+    "industry": "动力电池",
+    "location": "安徽合肥",
+    "scale": "中型",
+    "annual_revenue": 9000000000,
+    "stage": "初步接触",
+    "priority": "C",
+    "owner_id": 105,
+    "owner_name": "钱七",
+    "relationship_score": 25,
+    "maturity_level": "L1"
+  },
+  {
+    "id": 8,
+    "name": "珠海冠宇电池股份有限公司",
+    "short_name": "珠海冠宇",
+    "industry": "消费电池",
+    "location": "广东珠海",
+    "scale": "中型",
+    "annual_revenue": 7000000000,
+    "stage": "合作客户",
+    "priority": "B",
+    "owner_id": 103,
+    "owner_name": "王五",
+    "relationship_score": 82,
+    "maturity_level": "L4"
+  }
+]

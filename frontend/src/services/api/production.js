@@ -269,6 +269,8 @@ export const kitCheckApi = {
 };
 
 export const assemblyKitApi = {
+  // 基于时间的齐套率预警
+  getTimeBasedKitRate: (projectId, params) => api.get(`/assembly/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
   // 看板数据
   dashboard: (params) => api.get("/assembly/dashboard", { params }),
 

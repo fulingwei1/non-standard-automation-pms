@@ -486,6 +486,22 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 成套分析模块加载失败：{e}")
 
+    # ==================== AI 功能模块 ====================
+    try:
+        from app.api.v1.endpoints.engineer_scheduling import router as engineer_scheduling_router
+        from app.api.v1.endpoints.requirement_extraction import router as requirement_extraction_router
+        from app.api.v1.endpoints.team_generation import router as team_generation_router
+        from app.api.v1.endpoints.schedule_generation import router as schedule_generation_router
+        from app.api.v1.endpoints.schedule_optimization import router as schedule_optimization_router
+        api_router.include_router(engineer_scheduling_router, prefix="/engineer-scheduling", tags=["engineer-scheduling"])
+        api_router.include_router(requirement_extraction_router, prefix="/requirement-extraction", tags=["requirement-extraction"])
+        api_router.include_router(team_generation_router, prefix="/team-generation", tags=["team-generation"])
+        api_router.include_router(schedule_generation_router, prefix="/schedule-generation", tags=["schedule-generation"])
+        api_router.include_router(schedule_optimization_router, prefix="/schedule-optimization", tags=["schedule-optimization"])
+        print("✓ AI 功能模块加载成功")
+    except Exception as e:
+        print(f"✗ AI 功能模块加载失败：{e}")
+
     # ==================== 预算管理 ====================
     try:
         from app.api.v1.endpoints.budget import router as budget_router

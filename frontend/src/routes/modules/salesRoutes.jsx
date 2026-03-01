@@ -42,6 +42,11 @@ import DelayAnalysis from "../../pages/DelayAnalysis";
 import CostOverrunAnalysis from "../../pages/CostOverrunAnalysis";
 import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
 
+// AI 销售助手相关组件
+import { default as SalesAIAssistant } from "../../pages/SalesAI";
+import IntelligentQuote from "../../pages/SalesAI/IntelligentQuote";
+import SalesAutomation from "../../pages/SalesAI/Automation";
+
 export function SalesRoutes() {
   return (
     <>
@@ -122,6 +127,10 @@ export function SalesRoutes() {
       <Route path="/sales/delay-analysis" element={<DelayAnalysis />} />
       <Route path="/sales/cost-overrun-analysis" element={<CostOverrunAnalysis />} />
       <Route path="/sales/information-gap-analysis" element={<InformationGapAnalysis />} />
+      {/* AI 销售助手相关路由 */}
+      <Route path="/sales/ai-assistant" element={<SalesAIAssistant />} />
+      <Route path="/sales/intelligent-quote" element={<IntelligentQuote />} />
+      <Route path="/sales/automation" element={<SalesAutomation />} />
     </>
   );
 }

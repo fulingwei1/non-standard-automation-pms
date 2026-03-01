@@ -57,7 +57,7 @@ import { cn } from "../lib/utils";
 import { PageHeader } from "../components/layout";
 
 import { acceptanceApi } from "../services/api/acceptance";
-import { projectsApi } from "../services/api/projects";
+import { projectApi } from "../services/api/projects";
 
 // 状态配置
 const STATUS_CONFIG = {
@@ -104,7 +104,7 @@ const AcceptanceManagement = () => {
 
   const loadProjects = async () => {
     try {
-      const res = await projectsApi.list({ page: 1, page_size: 200 });
+      const res = await projectApi.list({ page: 1, page_size: 200 });
       const items = res?.data?.items || res?.data || [];
       setProjects(items);
     } catch (_err) {

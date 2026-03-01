@@ -1,0 +1,42 @@
+[
+  {
+    "id": 101,
+    "name": "张三",
+    "team": "华南大区",
+    "territory": "福建/广东",
+    "quota_annual": 50000000,
+    "quota_q1": 12500000
+  },
+  {
+    "id": 102,
+    "name": "李四",
+    "team": "华东大区",
+    "territory": "江苏/浙江",
+    "quota_annual": 45000000,
+    "quota_q1": 11250000
+  },
+  {
+    "id": 103,
+    "name": "王五",
+    "team": "华南大区",
+    "territory": "广东/广西",
+    "quota_annual": 40000000,
+    "quota_q1": 10000000
+  },
+  {
+    "id": 104,
+    "name": "赵六",
+    "team": "华东大区",
+    "territory": "江苏/安徽",
+    "quota_annual": 35000000,
+    "quota_q1": 8750000
+  },
+  {
+    "id": 105,
+    "name": "钱七",
+    "team": "华北大区",
+    "territory": "安徽/湖北",
+    "quota_annual": 30000000,
+    "quota_q1": 7500000
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "period": "2026-Q1",
+  "company_target": 80000000,
+  "company_achieved": 51200000,
+  "company_pipeline": 45000000,
+  "company_weighted": 28500000,
+  "company_predicted": 79700000,
+  "company_completion_rate": 99.6,
+  "by_team": [
+    {
+      "team": "华南大区",
+      "target": 30000000,
+      "achieved": 19800000,
+      "pipeline": 18000000,
+      "weighted": 12000000,
+      "predicted": 31800000,
+      "completion_rate": 106
+    },
+    {
+      "team": "华东大区",
+      "target": 28000000,
+      "achieved": 17500000,
+      "pipeline": 15000000,
+      "weighted": 9500000,
+      "predicted": 27000000,
+      "completion_rate": 96.4
+    },
+    {
+      "team": "华北大区",
+      "target": 22000000,
+      "achieved": 13900000,
+      "pipeline": 12000000,
+      "weighted": 7000000,
+      "predicted": 20900000,
+      "completion_rate": 95
+    }
+  ]
+}
