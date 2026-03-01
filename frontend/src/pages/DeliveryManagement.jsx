@@ -185,6 +185,9 @@ const normalizeDelivery = (item = {}) => {
       item.scheduledDate ||
       item.actual_date ||
       item.actualDate,
+    approvalStatus: item.approval_status ?? item.approvalStatus,
+    deliveryStatusRaw: item.delivery_status ?? item.deliveryStatus,
+    shipDate: item.ship_date ?? item.shipDate,
   };
 };
 
@@ -549,6 +552,7 @@ const DeliveryManagement = () => {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [deliveries, setDeliveries] = useState([]);
+  const [deliveryStatistics, setDeliveryStatistics] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [searchText, setSearchText] = useState('');
   const [_filters, _setFilters] = useState({});
@@ -561,12 +565,14 @@ const DeliveryManagement = () => {
   const loadData = async () => {
      setLoading(true);
     try {
-      const response = await businessSupportApi.deliveryOrders.list({
-        page: 1,
-        page_size: 200
-      });
-      const items = getItemsCompat(response);
+      const [listRes, statsRes] = await Promise.all([
+        businessSupportApi.deliveryOrders.list({ page: 1, page_size: 200 }),
+        businessSupportApi.deliveryOrders.statistics().catch(() => ({ data: null })),
+      ]);
+      const items = getItemsCompat(listRes);
       setDeliveries(Array.isArray(items) ? items.map(normalizeDelivery) : []);
+      const statsData = statsRes?.data?.data ?? statsRes?.data ?? null;
+      setDeliveryStatistics(statsData);
     } catch (_error) {
       toast({
         title: "错误",
@@ -711,7 +717,7 @@ const DeliveryManagement = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="mt-4">
-            <DeliveryOverview data={deliveries} loading={loading} />
+            <DeliveryOverview data={deliveries} loading={loading} statistics={deliveryStatistics} />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />

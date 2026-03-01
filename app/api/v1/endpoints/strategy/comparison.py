@@ -13,8 +13,8 @@ from app.schemas.common import PageResponse
 from app.schemas.strategy import (
     StrategyComparisonCreate,
     StrategyComparisonResponse,
-    YoYReportResponse,
 )
+from app.schemas.strategy.yoy_report import YoYReportResponse
 from app.services import strategy as strategy_service
 from app.common.pagination import PaginationParams, get_pagination_query
 

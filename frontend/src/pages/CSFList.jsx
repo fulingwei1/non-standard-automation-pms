@@ -262,6 +262,11 @@ export default function CSFList() {
       const strategyRes = await strategyApi.getActive();
       setActiveStrategy(strategyRes.data);
     } catch (error) {
+      // 404 = 当前没有生效的战略，属于正常业务状态，不作为错误处理
+      if (error?.response?.status === 404) {
+        setActiveStrategy(null);
+        return;
+      }
       console.error("加载战略失败:", error);
     } finally {
       setLoading(false);
@@ -350,6 +355,39 @@ export default function CSFList() {
     );
   }
 
+  // 无生效战略时的空状态
+  if (!activeStrategy) {
+    return (
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6"
+      >
+        <PageHeader
+          title="关键成功因素 (CSF)"
+          description="管理 BSC 四个维度的关键成功因素"
+          breadcrumbs={[
+            { label: "战略管理", href: "/strategy/analysis" },
+            { label: "CSF 管理" },
+          ]}
+        />
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardContent className="py-12 text-center">
+            <Target className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+            <p className="text-slate-300 mb-2">当前没有生效的战略</p>
+            <p className="text-sm text-slate-500 mb-6">
+              请先创建战略并发布为「生效」后，再管理 CSF
+            </p>
+            <Button asChild variant="outline">
+              <a href="/strategy/analysis">前往战略管理</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -395,7 +433,7 @@ export default function CSFList() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
-            value={searchQuery || "unknown"}
+            value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索 CSF 名称或描述..."
             className="pl-9 bg-slate-800/50 border-slate-700"
@@ -404,7 +442,7 @@ export default function CSFList() {
       </motion.div>
 
       {/* 维度 Tab */}
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-slate-800/50 border-white/10">
           {DIMENSION_TABS.map((tab) => {
             const config = DIMENSION_CONFIG[tab.value];

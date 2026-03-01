@@ -11,13 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
 from app.models.strategy import CSF, KPI, Strategy, StrategyComparison
-from app.schemas.strategy import (
+from app.schemas.strategy.yoy_report import (
     CSFComparisonItem,
     DimensionComparisonDetail,
     KPIComparisonItem,
-    StrategyComparisonCreate,
     YoYReportResponse,
 )
+from app.schemas.strategy import StrategyComparisonCreate
 
 
 def create_strategy_comparison(

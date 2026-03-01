@@ -21,7 +21,7 @@ from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
 from app.schemas.strategy import (
     ExecutionStatusResponse,
-    MyStrategyResponse,
+    MyStrategyDashboardResponse,
     StrategyOverviewResponse,
 )
 from app.services import strategy as strategy_service
@@ -86,7 +86,7 @@ def get_strategy_overview(
     )
 
 
-@router.get("/my-strategy", response_model=MyStrategyResponse)
+@router.get("/my-strategy", response_model=MyStrategyDashboardResponse)
 def get_my_strategy(
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_user),
@@ -103,7 +103,7 @@ def get_my_strategy(
     # 获取当前生效的战略
     active_strategy = strategy_service.get_active_strategy(db)
     if not active_strategy:
-        return MyStrategyResponse(
+        return MyStrategyDashboardResponse(
             strategy_id=None,
             strategy_name=None,
             my_kpis=[],
@@ -129,16 +129,16 @@ def get_my_strategy(
         AnnualKeyWork.owner_user_id == user_id
     ).all()
 
-    # 获取我的个人 KPI
+    # 获取我的个人 KPI（PersonalKPI 模型字段：id, kpi_name, target_value, actual_value, status，无 code）
     my_personal_kpis, _ = strategy_service.list_personal_kpis(
         db, user_id=user_id, year=active_strategy.year, limit=100
     )
 
-    # 统计完成情况
+    # 统计完成情况（PersonalKPI.status：PENDING/SELF_RATED/MANAGER_RATED/CONFIRMED）
     total_count = len(my_personal_kpis)
-    completed_count = sum(1 for kpi in my_personal_kpis if kpi.status == "COMPLETED")
+    completed_count = sum(1 for kpi in my_personal_kpis if getattr(kpi, "status", None) == "CONFIRMED")
 
-    return MyStrategyResponse(
+    return MyStrategyDashboardResponse(
         strategy_id=active_strategy.id,
         strategy_name=active_strategy.name,
         my_kpis=[
@@ -146,8 +146,8 @@ def get_my_strategy(
                 "id": kpi.id,
                 "code": kpi.code,
                 "name": kpi.name,
-                "target_value": kpi.target_value,
-                "current_value": kpi.current_value,
+                "target_value": float(kpi.target_value) if kpi.target_value is not None else None,
+                "current_value": float(kpi.current_value) if kpi.current_value is not None else None,
                 "completion_rate": strategy_service.calculate_kpi_completion_rate(kpi),
             }
             for kpi in my_kpis
@@ -165,10 +165,10 @@ def get_my_strategy(
         my_personal_kpis=[
             {
                 "id": kpi.id,
-                "code": kpi.code,
-                "name": kpi.name,
-                "target_value": kpi.target_value,
-                "actual_value": kpi.actual_value,
+                "code": f"PKPI-{kpi.id}",
+                "name": kpi.kpi_name or "",
+                "target_value": float(kpi.target_value) if kpi.target_value is not None else None,
+                "actual_value": float(kpi.actual_value) if kpi.actual_value is not None else None,
                 "status": kpi.status,
             }
             for kpi in my_personal_kpis

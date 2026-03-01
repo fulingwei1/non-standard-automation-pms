@@ -11,6 +11,7 @@ import BiddingCenter from "../../pages/BiddingCenter";
 import PresaleBids from "../../pages/PresaleBids";
 import KnowledgeBase from "../../pages/KnowledgeBase";
 import PresaleTemplates from "../../pages/PresaleTemplates";
+import PresaleTicketBoard from "../../pages/PresaleTicketBoard";
 
 export function PresalesRoutes() {
   return (
@@ -30,6 +31,7 @@ export function PresalesRoutes() {
       <Route path="/presales/bids" element={<PresaleBids />} />
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
       <Route path="/presales/templates" element={<PresaleTemplates />} />
+      <Route path="/presales/ticket-board" element={<PresaleTicketBoard />} />
       <Route path="/presale-templates" element={<PresaleTemplates />} />
     </>
   );

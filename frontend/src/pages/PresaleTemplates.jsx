@@ -103,7 +103,7 @@ const MOCK_TEMPLATES = [
     rating: 4.8,
     ratingCount: 19,
     applyCount: 67,
-    owner: "投标管理组",
+    owner: "投标中心组",
     updatedAt: "2026-02-10",
   },
   {

@@ -99,6 +99,7 @@ from .dashboard import (
     KPIComparisonItem,
     MyStrategyItem,
     MyStrategyResponse,
+    MyStrategyDashboardResponse,
     StrategyComparisonCreate,
     StrategyComparisonResponse,
     StrategyOverviewResponse,
@@ -177,6 +178,7 @@ __all__ = [
     "StrategyOverviewResponse",
     "MyStrategyItem",
     "MyStrategyResponse",
+    "MyStrategyDashboardResponse",
     "ExecutionStatusItem",
     "ExecutionStatusResponse",
     # Comparison

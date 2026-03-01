@@ -1,5 +1,5 @@
 /**
- * 销售预测仪表盘 - 领导驾驶舱
+ * 销售预测 - 领导驾驶舱
  * 
  * 功能：
  * 1. 公司整体预测
@@ -455,7 +455,7 @@ export default function ForecastDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6">
         <PageHeader
-          title="销售预测仪表盘"
+          title="销售预测"
           description="AI 驱动的公司整体销售计划完成情况预测"
           icon={<BarChart3 className="w-6 h-6 text-indigo-500" />}
           actions={

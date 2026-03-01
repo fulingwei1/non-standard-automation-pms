@@ -74,19 +74,16 @@ def list_strategies(
     )
 
 
-@router.get("/active", response_model=StrategyResponse)
+@router.get("/active", response_model=Optional[StrategyResponse])
 def get_active_strategy(
     db: Session = Depends(deps.get_db),
 ):
     """
     获取当前生效的战略
+
+    无生效战略时返回 200，body 为 null，便于前端统一处理空状态。
     """
     strategy = strategy_service.get_active_strategy(db)
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="当前没有生效的战略"
-        )
     return strategy
 
 

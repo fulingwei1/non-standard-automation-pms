@@ -106,16 +106,16 @@ def list_personal_kpis(
     query = db.query(PersonalKPI).filter(PersonalKPI.is_active)
 
     if user_id:
-        query = query.filter(PersonalKPI.user_id == user_id)
+        query = query.filter(PersonalKPI.employee_id == user_id)
     if dept_objective_id:
-        query = query.filter(PersonalKPI.dept_objective_id == dept_objective_id)
+        query = query.filter(PersonalKPI.department_objective_id == dept_objective_id)
     if year:
         query = query.filter(PersonalKPI.year == year)
     if period:
-        query = query.filter(PersonalKPI.period == period)
+        query = query.filter(PersonalKPI.quarter == period)
 
     total = query.count()
-    items = apply_pagination(query.order_by(PersonalKPI.code), skip, limit).all()
+    items = apply_pagination(query.order_by(PersonalKPI.id), skip, limit).all()
 
     return items, total
 

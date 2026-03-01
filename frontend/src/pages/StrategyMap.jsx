@@ -13,12 +13,14 @@ import {
   ChevronRight,
   Target,
   Layers,
+  MapIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Skeleton } from "@/components/ui";
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { strategyApi, csfApi } from "@/services/api/strategy";
 import { BSC_DIMENSIONS } from "@/lib/constants/strategy";
+import { Link } from "react-router-dom";
 
 // 维度配置（使用任务指定的颜色）
 const DIMENSION_CONFIG = {
@@ -217,7 +219,7 @@ export default function StrategyMap() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // 获取当前生效战略
+      // 获取当前生效战略（404 表示暂无生效战略，属正常业务状态）
       const strategyRes = await strategyApi.getActive();
       const strategy = strategyRes.data;
       setActiveStrategy(strategy);
@@ -245,7 +247,18 @@ export default function StrategyMap() {
         setDimensionData(grouped);
       }
     } catch (error) {
-      console.error("加载战略地图失败:", error);
+      const isNoActive = error?.response?.status === 404;
+      if (isNoActive) {
+        setActiveStrategy(null);
+        setDimensionData({
+          FINANCIAL: [],
+          CUSTOMER: [],
+          INTERNAL: [],
+          LEARNING: [],
+        });
+      } else {
+        console.error("加载战略地图失败:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -282,6 +295,26 @@ export default function StrategyMap() {
         ]}
       />
 
+      {/* 当前战略信息 */}
+      {!activeStrategy ? (
+        <motion.div variants={fadeIn}>
+          <Card className="border-dashed border-slate-600/50 bg-slate-800/30">
+            <CardContent className="py-16 text-center">
+              <MapIcon className="w-14 h-14 text-slate-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-300 mb-2">
+                当前没有生效的战略
+              </h3>
+              <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
+                请先在战略管理中创建年度战略并发布，发布后的战略将显示在本页面。
+              </p>
+              <Button asChild variant="outline" className="border-slate-500/50">
+                <Link to="/strategy/analysis">前往战略管理</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ) : (
+        <>
       {/* 当前战略信息 */}
       {activeStrategy && (
         <motion.div variants={fadeIn}>
@@ -382,6 +415,8 @@ export default function StrategyMap() {
           </CardContent>
         </Card>
       </motion.div>
+        </>
+      )}
     </motion.div>
   );
 }

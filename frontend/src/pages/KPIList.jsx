@@ -3,6 +3,7 @@
  * 展示 KPI 卡片、进度条、健康状态、历史趋势、数据采集
  */
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -509,8 +510,16 @@ export default function KPIList() {
         // 获取 KPI 列表
         const kpiRes = await kpiApi.list({ strategy_id: strategy.id });
         setKpis(kpiRes.data || []);
+      } else {
+        setKpis([]);
       }
     } catch (error) {
+      // 404 = 当前没有生效的战略，属于正常业务状态，显示空状态
+      if (error?.response?.status === 404) {
+        setActiveStrategy(null);
+        setKpis([]);
+        return;
+      }
       console.error("加载数据失败:", error);
     } finally {
       setLoading(false);
@@ -639,13 +648,35 @@ export default function KPIList() {
               <RefreshCw className="w-4 h-4" />
               刷新
             </Button>
-            <Button onClick={handleCreate} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              新建 KPI
-            </Button>
+            {activeStrategy && (
+              <Button onClick={handleCreate} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                新建 KPI
+              </Button>
+            )}
           </div>
         }
       />
+
+      {/* 无生效战略时的空状态 */}
+      {!activeStrategy && (
+        <motion.div variants={fadeIn}>
+          <Card className="border-dashed border-slate-600/50 bg-slate-800/30">
+            <CardContent className="py-16 text-center">
+              <Target className="w-14 h-14 text-slate-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-300 mb-2">
+                当前没有生效的战略
+              </h3>
+              <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
+                请先在战略管理中创建年度战略并发布，发布后可在此管理 KPI 指标。
+              </p>
+              <Button asChild variant="outline" className="border-slate-500/50">
+                <Link to="/strategy/analysis">前往战略管理</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* 当前战略信息 */}
       {activeStrategy && (
@@ -667,12 +698,15 @@ export default function KPIList() {
         </motion.div>
       )}
 
+      {/* 有生效战略时显示搜索与 KPI 列表 */}
+      {activeStrategy && (
+        <>
       {/* 搜索栏 */}
       <motion.div variants={fadeIn} className="flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
-            value={searchQuery || "unknown"}
+            value={searchQuery || ""}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索 KPI 名称或描述..."
             className="pl-9 bg-slate-800/50 border-slate-700"
@@ -732,6 +766,8 @@ export default function KPIList() {
           );
         })}
       </div>
+        </>
+      )}
 
       {/* 创建/编辑弹窗 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

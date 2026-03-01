@@ -69,6 +69,67 @@ export const allMenuGroups = [
     ],
   },
   {
+    id: "sales",
+    label: "销售管理",
+    items: [
+      {
+        id: "sales-dashboard",
+        name: "销售工作台",
+        path: "/sales-dashboard",
+        icon: "LayoutDashboard",
+      },
+      {
+        id: "sales-director-dashboard",
+        name: "销售总监工作台",
+        path: "/sales-director-dashboard",
+        icon: "LayoutDashboard",
+      },
+      {
+        id: "pmo-initiations",
+        name: "立项管理",
+        path: "/pmo/initiations",
+        icon: "FileText",
+      },
+      { id: "leads", name: "线索管理", path: "/sales/leads", icon: "Target" },
+      {
+        id: "opportunities",
+        name: "商机管理",
+        path: "/sales/opportunities",
+        icon: "TrendingUp",
+      },
+      {
+        id: "customers",
+        name: "客户管理",
+        path: "/sales/customers",
+        icon: "Building2",
+      },
+      {
+        id: "quotes",
+        name: "报价管理",
+        path: "/sales/quotes",
+        icon: "FileText",
+      },
+      {
+        id: "contracts",
+        name: "合同管理",
+        path: "/sales/contracts",
+        icon: "FileText",
+      },
+      {
+        id: "invoices",
+        name: "发票管理",
+        path: "/sales/invoices",
+        icon: "Receipt",
+      },
+      {
+        id: "collections",
+        name: "回款管理",
+        path: "/sales/collections",
+        icon: "DollarSign",
+      },
+    ],
+  },
+  {
     id: "pmo",
     label: "PMO 项目管理部",
     items: [
@@ -77,12 +138,6 @@ export const allMenuGroups = [
         name: "PMO 驾驶舱",
         path: "/pmo/dashboard",
         icon: "LayoutDashboard",
-      },
-      {
-        id: "pmo-initiations",
-        name: "立项管理",
-        path: "/pmo/initiations",
-        icon: "FileText",
       },
       {
         id: "pmo-phases",
@@ -143,61 +198,6 @@ export const allMenuGroups = [
         name: "项目周报",
         path: "/pmo/weekly-report",
         icon: "BarChart3",
-      },
-    ],
-  },
-  {
-    id: "sales",
-    label: "销售管理",
-    items: [
-      {
-        id: "sales-dashboard",
-        name: "销售工作台",
-        path: "/sales-dashboard",
-        icon: "LayoutDashboard",
-      },
-      {
-        id: "sales-director-dashboard",
-        name: "销售总监工作台",
-        path: "/sales-director-dashboard",
-        icon: "LayoutDashboard",
-      },
-      { id: "leads", name: "线索管理", path: "/sales/leads", icon: "Target" },
-      {
-        id: "opportunities",
-        name: "商机管理",
-        path: "/sales/opportunities",
-        icon: "TrendingUp",
-      },
-      {
-        id: "customers",
-        name: "客户管理",
-        path: "/sales/customers",
-        icon: "Building2",
-      },
-      {
-        id: "quotes",
-        name: "报价管理",
-        path: "/sales/quotes",
-        icon: "FileText",
-      },
-      {
-        id: "contracts",
-        name: "合同管理",
-        path: "/sales/contracts",
-        icon: "FileText",
-      },
-      {
-        id: "invoices",
-        name: "发票管理",
-        path: "/sales/invoices",
-        icon: "Receipt",
-      },
-      {
-        id: "collections",
-        name: "回款管理",
-        path: "/sales/collections",
-        icon: "DollarSign",
       },
     ],
   },

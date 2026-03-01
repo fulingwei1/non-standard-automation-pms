@@ -6,7 +6,7 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, Badge, Progress, EmptyState } from "../ui";
-import { PackageCheck, Truck, Clock, AlertCircle, BarChart3 } from "lucide-react";
+import { PackageCheck, Truck, Clock, AlertCircle, BarChart3, AlertTriangle, Percent } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { MonthlyTrendChart } from "../administrative/StatisticsCharts";
 
@@ -20,7 +20,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
 
 const countBy = (items, predicate) => (items || []).reduce((acc, item) => acc + (predicate(item) ? 1 : 0), 0);
 
-const DeliveryOverview = ({ data, _loading }) => {
+const DeliveryOverview = ({ data, _loading, statistics }) => {
   const deliveries = Array.isArray(data) ? data : data?.deliveries || [];
 
   const total = deliveries?.length;
@@ -38,6 +38,39 @@ const DeliveryOverview = ({ data, _loading }) => {
   );
 
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
+
+  // 发货异常统计：审批拒绝、退回、延迟发货（实际发货日晚于计划发货日）
+  const exceptionStats = useMemo(() => {
+    const rejected = countBy(deliveries, (d) => (d.approvalStatus || "").toLowerCase() === "rejected");
+    const returned = countBy(deliveries, (d) => (d.deliveryStatusRaw || "").toLowerCase() === "returned");
+    let delayed = 0;
+    (deliveries || []).forEach((d) => {
+      const plan = d.deliveryDate || d.scheduledDate;
+      const actual = d.shipDate;
+      if (!plan || !actual) return;
+      const planDate = new Date(plan);
+      const actualDate = new Date(actual);
+      if (actualDate > planDate) delayed += 1;
+    });
+    return { rejected, returned, delayed, total: rejected + returned + delayed };
+  }, [deliveries]);
+
+  // 发货及时率：优先用接口 on_time_shipping_rate，否则用列表估算（已发货且实际≤计划的数量/已发货总数）
+  const onTimeRate = useMemo(() => {
+    if (statistics != null && typeof statistics.on_time_shipping_rate === "number") {
+      return Math.round(statistics.on_time_shipping_rate * 10) / 10;
+    }
+    const withShipAndPlan = (deliveries || []).filter(
+      (d) => (d.deliveryStatusRaw === "shipped" || d.deliveryStatusRaw === "received") && d.shipDate && (d.deliveryDate || d.scheduledDate)
+    );
+    if (withShipAndPlan.length === 0) return null;
+    const onTime = withShipAndPlan.filter((d) => {
+      const plan = new Date(d.deliveryDate || d.scheduledDate);
+      const actual = new Date(d.shipDate);
+      return actual <= plan;
+    }).length;
+    return Math.round((onTime / withShipAndPlan.length) * 1000) / 10;
+  }, [deliveries, statistics]);
 
   // 每月累计发货金额：按 deliveryDate 的 YYYY-MM 聚合
   const monthlyAmountData = useMemo(() => {
@@ -104,6 +137,59 @@ const DeliveryOverview = ({ data, _loading }) => {
           iconBgClass="bg-slate-500/20"
           _textClass="text-slate-400"
         />
+      </div>
+
+      {/* 发货异常统计 & 发货及时率统计 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="bg-surface-100/50">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              发货异常统计
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-center">
+                <p className="text-xl font-bold text-red-400">{exceptionStats.rejected}</p>
+                <p className="text-xs text-slate-400">审批拒绝</p>
+              </div>
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 text-center">
+                <p className="text-xl font-bold text-amber-400">{exceptionStats.returned}</p>
+                <p className="text-xs text-slate-400">退回</p>
+              </div>
+              <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-3 text-center">
+                <p className="text-xl font-bold text-orange-400">{exceptionStats.delayed}</p>
+                <p className="text-xs text-slate-400">延迟发货</p>
+              </div>
+            </div>
+            {exceptionStats.total > 0 && (
+              <p className="text-xs text-slate-500 mt-2">合计异常 {exceptionStats.total} 单</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="bg-surface-100/50">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+              <Percent className="w-4 h-4" />
+              发货及时率统计
+            </h3>
+            {onTimeRate != null ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-white">{onTimeRate}%</span>
+                  <span className="text-sm text-slate-400">计划发货日内发货占比</span>
+                </div>
+                <Progress value={Math.min(100, onTimeRate)} className="h-2 mt-3" />
+                <p className="text-xs text-slate-500 mt-2">基于已发货且有计划/实际日期的订单计算</p>
+              </>
+            ) : (
+              <EmptyState
+                icon={Percent}
+                title="暂无及时率数据"
+                message="有已发货且计划发货日、实际发货日的订单后将显示及时率"
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Progress & Risk */}

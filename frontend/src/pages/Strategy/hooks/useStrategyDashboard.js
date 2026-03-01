@@ -51,6 +51,12 @@ export function useStrategyDashboard() {
       setSelectedStrategyId(strategy?.id);
       return strategy;
     } catch (error) {
+      // 404 = 当前没有生效的战略，属于正常业务状态
+      if (error?.response?.status === 404) {
+        setActiveStrategy(null);
+        setSelectedStrategyId(null);
+        return null;
+      }
       console.error("加载生效战略失败:", error);
       return null;
     }

@@ -86,6 +86,47 @@ class MyStrategyResponse(BaseModel):
         from_attributes = True
 
 
+# GET /dashboard/my-strategy 专用响应，与端点返回结构一致
+class MyStrategyKPIItem(BaseModel):
+    """我的战略 - 公司 KPI 项"""
+    id: int
+    code: str
+    name: str
+    target_value: Optional[float] = None
+    current_value: Optional[float] = None
+    completion_rate: Optional[float] = None
+
+
+class MyStrategyAnnualWorkItem(BaseModel):
+    """我的战略 - 年度重点工作项"""
+    id: int
+    code: str
+    name: str
+    status: Optional[str] = None
+    progress_percent: Optional[int] = None
+
+
+class MyStrategyPersonalKPIItem(BaseModel):
+    """我的战略 - 个人 KPI 项"""
+    id: int
+    code: str
+    name: str
+    target_value: Optional[float] = None
+    actual_value: Optional[float] = None
+    status: Optional[str] = None
+
+
+class MyStrategyDashboardResponse(BaseModel):
+    """GET /dashboard/my-strategy 响应"""
+    strategy_id: Optional[int] = None
+    strategy_name: Optional[str] = None
+    my_kpis: List[MyStrategyKPIItem] = []
+    my_annual_works: List[MyStrategyAnnualWorkItem] = []
+    my_personal_kpis: List[MyStrategyPersonalKPIItem] = []
+    total_kpi_count: int = 0
+    completed_kpi_count: int = 0
+
+
 class ExecutionStatusItem(BaseModel):
     """执行状态项"""
     dimension: str

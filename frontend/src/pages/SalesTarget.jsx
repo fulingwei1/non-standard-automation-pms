@@ -292,7 +292,7 @@ export default function SalesTarget() {
     >
       {/* Page Header */}
       <PageHeader
-        title="销售目标管理"
+        title="销售目标"
         description="创建和管理销售目标，跟踪目标完成进度"
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">

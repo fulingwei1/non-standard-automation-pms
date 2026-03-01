@@ -230,7 +230,7 @@ export default function PresaleBids() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6 space-y-6">
         <PageHeader
-          title="售前投标管理"
+          title="售前投标中心"
           description="投标列表、详情追踪、状态流转与中标率统计一体化看板"
           actions={[
             { label: "导出周报", icon: FileSearch, variant: "outline" },
