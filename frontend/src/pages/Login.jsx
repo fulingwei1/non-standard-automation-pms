@@ -500,7 +500,7 @@ export default function Login({ onLoginSuccess }) {
                   </div>
                   <input
                     type="text"
-                    value={username || "unknown"}
+                    value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="请输入用户名"
                     required
@@ -528,7 +528,7 @@ export default function Login({ onLoginSuccess }) {
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
-                    value={password || "unknown"}
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="请输入密码"
                     required
