@@ -53,6 +53,18 @@ import PresalesTasks from "../../pages/PresalesTasks";
 import { default as SalesAIAssistant } from "../../pages/SalesAI";
 import IntelligentQuote from "../../pages/SalesAI/IntelligentQuote";
 import SalesAutomation from "../../pages/SalesAI/Automation";
+import ForecastDashboard from "../../pages/SalesAI/ForecastDashboard";
+import FunnelOptimization from "../../pages/SalesAI/FunnelOptimization";
+import Customer360 from "../../pages/SalesAI/Customer360";
+import PerformanceIncentive from "../../pages/SalesAI/PerformanceIncentive";
+import Collaboration from "../../pages/SalesAI/Collaboration";
+import RelationshipMaturity from "../../pages/SalesAI/RelationshipMaturity";
+import WinRatePrediction from "../../pages/SalesAI/WinRatePrediction";
+import CompetitorAnalysis from "../../pages/SalesAI/CompetitorAnalysis";
+import SalesOrganization from "../../pages/SalesAI/SalesOrganization";
+import DataQuality from "../../pages/SalesAI/DataQuality";
+import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
+
 
 export function SalesRoutes() {
   return (
@@ -148,6 +160,17 @@ export function SalesRoutes() {
       <Route path="/sales/ai-assistant" element={<SalesAIAssistant />} />
       <Route path="/sales/intelligent-quote" element={<IntelligentQuote />} />
       <Route path="/sales/automation" element={<SalesAutomation />} />
+      <Route path="/sales/forecast-dashboard" element={<ForecastDashboard />} />
+      <Route path="/sales/funnel-optimization" element={<FunnelOptimization />} />
+      <Route path="/sales/customer-360/:id" element={<Customer360 />} />
+      <Route path="/sales/performance-incentive" element={<PerformanceIncentive />} />
+      <Route path="/sales/collaboration" element={<Collaboration />} />
+      <Route path="/sales/relationship-maturity" element={<RelationshipMaturity />} />
+      <Route path="/sales/win-rate-prediction/:id" element={<WinRatePrediction />} />
+      <Route path="/sales/competitor-analysis" element={<CompetitorAnalysis />} />
+      <Route path="/sales/organization" element={<SalesOrganization />} />
+      <Route path="/sales/data-quality" element={<DataQuality />} />
+      <Route path="/sales/role-based-view" element={<RoleBasedView />} />
     </>
   );
 }
