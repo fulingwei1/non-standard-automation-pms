@@ -135,26 +135,11 @@ export default function ProgressBoard() {
             AI 智能排计划
           </Button>
           <Button variant="outline" onClick={fetchDashboardData}>
-          <Button variant="outline" onClick={fetchDashboardData}>
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
           </Button>
         </div>
-          <Button variant="outline" onClick={fetchDashboardData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            刷新
-          </Button>
-        </div>
-          <Button variant="outline" onClick={fetchDashboardData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            刷新
-          </Button>
-        </div>
-          <Button variant="outline" onClick={fetchDashboardData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            刷新
-          </Button>
-        </div>
+      </div>
       {errorMessage &&
       <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2">
           {errorMessage}
