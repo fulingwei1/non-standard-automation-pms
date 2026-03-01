@@ -398,7 +398,7 @@ export default function BomAssemblyAttrs() {
             <div>
               <Label className="mb-2 block">选择项目</Label>
               <Select
-                value={selectedProject}
+                value={selectedProject || "unknown"}
                 onValueChange={(v) => {
                   setSelectedProject(v);
                   setSelectedBom("");
@@ -419,7 +419,7 @@ export default function BomAssemblyAttrs() {
             <div>
               <Label className="mb-2 block">选择BOM</Label>
               <Select
-                value={selectedBom}
+                value={selectedBom || "unknown"}
                 onValueChange={setSelectedBom}
                 disabled={!selectedProject}>
 
@@ -437,7 +437,7 @@ export default function BomAssemblyAttrs() {
             </div>
             <div>
               <Label className="mb-2 block">筛选阶段</Label>
-              <Select value={filterStage} onValueChange={setFilterStage}>
+              <Select value={filterStage || "unknown"} onValueChange={setFilterStage}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部阶段" />
                 </SelectTrigger>
@@ -453,7 +453,7 @@ export default function BomAssemblyAttrs() {
             </div>
             <div>
               <Label className="mb-2 block">筛选类型</Label>
-              <Select value={filterBlocking} onValueChange={setFilterBlocking}>
+              <Select value={filterBlocking || "unknown"} onValueChange={setFilterBlocking}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部类型" />
                 </SelectTrigger>
@@ -472,7 +472,7 @@ export default function BomAssemblyAttrs() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="搜索物料编码或名称..."
-                value={searchText}
+                value={searchText || "unknown"}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-10" />
 
@@ -775,7 +775,7 @@ export default function BomAssemblyAttrs() {
             <div>
               <Label className="mb-2 block">选择模板</Label>
               <Select
-                value={selectedTemplate}
+                value={selectedTemplate || "unknown"}
                 onValueChange={setSelectedTemplate}>
 
                 <SelectTrigger>

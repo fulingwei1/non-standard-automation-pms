@@ -132,7 +132,7 @@ export default function InformationGapAnalysis() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={entityType}
+                value={entityType || "unknown"}
                 onChange={(e) => setEntityType(e.target.value)}>
 
                 <option value="LEAD">线索</option>
@@ -147,7 +147,7 @@ export default function InformationGapAnalysis() {
               <Input
                 type="number"
                 placeholder="实体ID"
-                value={entityId}
+                value={entityId || "unknown"}
                 onChange={(e) => setEntityId(e.target.value)} />
 
             </div>
@@ -157,7 +157,7 @@ export default function InformationGapAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -173,7 +173,7 @@ export default function InformationGapAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="missing">信息缺失</TabsTrigger>
           <TabsTrigger value="impact">影响分析</TabsTrigger>

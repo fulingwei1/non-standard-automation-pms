@@ -596,7 +596,7 @@ export default function SubstitutionDetail() {
               <Textarea
                 id="execution_note"
                 placeholder="请输入执行说明..."
-                value={executionNote}
+                value={executionNote || "unknown"}
                 onChange={(e) => setExecutionNote(e.target.value)}
                 rows={4}
               />

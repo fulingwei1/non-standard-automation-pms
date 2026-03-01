@@ -262,7 +262,7 @@ export function AlertTable({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="搜索告警..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-64" />
 
@@ -282,39 +282,39 @@ export function AlertTable({
                     <div>
                       <label className="text-sm font-medium">状态</label>
                       <select
-                      value={statusFilter}
+                      value={statusFilter || "unknown"}
                       onChange={(e) => setStatusFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_STATUS_STATS).map(([key, config]) =>
-                      <option key={key} value={key}>{config.label}</option>
+                      <option key={key} value={key || "unknown"}>{config.label}</option>
                       )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">级别</label>
                       <select
-                      value={levelFilter}
+                      value={levelFilter || "unknown"}
                       onChange={(e) => setLevelFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_LEVEL_STATS).map(([key, config]) =>
-                      <option key={key} value={key}>{config.label}</option>
+                      <option key={key} value={key || "unknown"}>{config.label}</option>
                       )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">类型</label>
                       <select
-                      value={typeFilter}
+                      value={typeFilter || "unknown"}
                       onChange={(e) => setTypeFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_TYPE_STATS).map(([key, config]) =>
-                      <option key={key} value={key}>{config.label}</option>
+                      <option key={key} value={key || "unknown"}>{config.label}</option>
                       )}
                       </select>
                     </div>

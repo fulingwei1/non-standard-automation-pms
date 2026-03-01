@@ -327,13 +327,13 @@ export function TeamAssignment({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
               placeholder="搜索工程师、技能或地点..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10" />
 
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -344,28 +344,28 @@ export function TeamAssignment({
               </SelectContent>
             </Select>
 
-            <Select value={skillFilter} onValueChange={setSkillFilter}>
+            <Select value={skillFilter || "unknown"} onValueChange={setSkillFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有技能</SelectItem>
                 {(uniqueSkills || []).map((skill) =>
-              <SelectItem key={skill} value={skill}>
+              <SelectItem key={skill} value={skill || "unknown"}>
                     {skill}
               </SelectItem>
               )}
               </SelectContent>
             </Select>
 
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <Select value={locationFilter || "unknown"} onValueChange={setLocationFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有地点</SelectItem>
                 {(uniqueLocations || []).map((location) =>
-              <SelectItem key={location} value={location}>
+              <SelectItem key={location} value={location || "unknown"}>
                     {location}
               </SelectItem>
               )}

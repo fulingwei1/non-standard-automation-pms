@@ -270,7 +270,7 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">收入趋势</h3>
-          <Select value={timeRange} onValueChange={(_value) => {}}>
+          <Select value={timeRange || "unknown"} onValueChange={(_value) => {}}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>

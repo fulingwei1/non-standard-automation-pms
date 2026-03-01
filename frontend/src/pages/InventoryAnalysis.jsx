@@ -243,7 +243,7 @@ export default function InventoryAnalysis() {
         </div>
 
         {/* Tab内容 */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
           <TabsList className="bg-slate-800/50">
             <TabsTrigger value="turnover-rate">周转率分析</TabsTrigger>
             <TabsTrigger value="stale-materials">呆滞物料</TabsTrigger>
@@ -400,15 +400,15 @@ export default function InventoryAnalysis() {
               <div className="flex items-center gap-2">
                 <label className="text-sm text-slate-400">库龄阈值:</label>
                 <select
-                  value={staleThreshold}
+                  value={staleThreshold || "unknown"}
                   onChange={(e) => setStaleThreshold(parseInt(e.target.value))}
                   className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm"
                 >
-                  <option value={30}>30天</option>
-                  <option value={60}>60天</option>
-                  <option value={90}>90天</option>
-                  <option value={120}>120天</option>
-                  <option value={180}>180天</option>
+                  <option value={30 || "unknown"}>30天</option>
+                  <option value={60 || "unknown"}>60天</option>
+                  <option value={90 || "unknown"}>90天</option>
+                  <option value={120 || "unknown"}>120天</option>
+                  <option value={180 || "unknown"}>180天</option>
                 </select>
               </div>
             </div>

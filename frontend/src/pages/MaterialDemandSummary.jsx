@@ -219,12 +219,12 @@ export default function MaterialDemandSummary() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索物料编码、名称..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject} onValueChange={setFilterProject}>
+            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -240,13 +240,13 @@ export default function MaterialDemandSummary() {
             <Input
               type="date"
               placeholder="开始日期"
-              value={startDate}
+              value={startDate || "unknown"}
               onChange={(e) => setStartDate(e.target.value)} />
 
             <Input
               type="date"
               placeholder="结束日期"
-              value={endDate}
+              value={endDate || "unknown"}
               onChange={(e) => setEndDate(e.target.value)} />
 
             <Button onClick={() => setShowGenerateDialog(true)}>

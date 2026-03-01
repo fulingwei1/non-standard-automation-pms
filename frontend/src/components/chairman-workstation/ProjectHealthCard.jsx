@@ -81,7 +81,7 @@ export const ProjectHealthCard = ({ projectHealthDistribution }) => {
                     </div>
                   </div>
                   <Progress
-                    value={percentage}
+                    value={percentage || "unknown"}
                     className={cn(
                       "h-2 bg-slate-700/50",
                       color === "emerald" && "bg-emerald-500/20",

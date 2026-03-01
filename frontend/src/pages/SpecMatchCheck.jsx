@@ -115,11 +115,11 @@ export default function SpecMatchCheck() {
               <Input
                 type="number"
                 placeholder="项目ID"
-                value={projectId}
+                value={projectId || "unknown"}
                 onChange={(e) => setProjectId(e.target.value)}
                 className="w-32"
               />
-              <Select value={matchType} onValueChange={setMatchType}>
+              <Select value={matchType || "unknown"} onValueChange={setMatchType}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="匹配类型" />
                 </SelectTrigger>
@@ -129,7 +129,7 @@ export default function SpecMatchCheck() {
                   <SelectItem value="PURCHASE_ORDER">采购订单</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={matchStatus} onValueChange={setMatchStatus}>
+              <Select value={matchStatus || "unknown"} onValueChange={setMatchStatus}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="匹配状态" />
                 </SelectTrigger>

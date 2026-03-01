@@ -472,7 +472,7 @@ export function MaterialStatsOverview({
             </CardTitle>
             <div className="flex items-center gap-2">
               <select
-                value={trendPeriod}
+                value={trendPeriod || "unknown"}
                 onChange={(e) => setTrendPeriod(e.target.value)}
                 className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm">
 

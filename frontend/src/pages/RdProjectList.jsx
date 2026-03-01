@@ -591,13 +591,13 @@ export default function RdProjectList() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="搜索项目名称或编号..."
-                  value={searchQuery}
+                  value={searchQuery || "unknown"}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="项目状态" />
               </SelectTrigger>
@@ -611,7 +611,7 @@ export default function RdProjectList() {
               </SelectContent>
             </Select>
             <Select
-              value={filterCategoryType}
+              value={filterCategoryType || "unknown"}
               onValueChange={setFilterCategoryType}
             >
               <SelectTrigger className="w-[150px]">

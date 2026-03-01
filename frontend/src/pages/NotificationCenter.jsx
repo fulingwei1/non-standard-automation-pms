@@ -423,7 +423,7 @@ export default function NotificationCenter() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         placeholder="搜索通知..."
-                        value={search}
+                        value={search || "unknown"}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9" />
 

@@ -464,19 +464,19 @@ export default function SchedulerMonitoringDashboard() {
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="搜索任务..."
-                      value={searchTerm}
+                      value={searchTerm || "unknown"}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-8 w-64" />
 
                   </div>
                   <select
-                    value={filterCategory}
+                    value={filterCategory || "unknown"}
                     onChange={(e) => setFilterCategory(e.target.value)}
                     className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm">
 
                     <option value="all">所有类别</option>
                     {(categories || []).map((cat) =>
-                    <option key={cat} value={cat}>
+                    <option key={cat} value={cat || "unknown"}>
                         {cat}
                     </option>
                     )}

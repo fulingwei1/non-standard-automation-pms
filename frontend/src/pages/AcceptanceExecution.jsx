@@ -515,7 +515,7 @@ export default function AcceptanceExecution() {
                     <SelectContent>
                       {Object.entries(resultStatusConfigs).map(
                         ([key, config]) => (
-                          <SelectItem key={key} value={key}>
+                          <SelectItem key={key} value={key || "unknown"}>
                             {config.label}
                           </SelectItem>
                         ),
@@ -687,7 +687,7 @@ export default function AcceptanceExecution() {
                   <SelectContent>
                     {Object.entries(overallResultConfigs).map(
                       ([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                        <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                         </SelectItem>
                       ),

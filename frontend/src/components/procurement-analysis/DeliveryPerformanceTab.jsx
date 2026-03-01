@@ -41,7 +41,7 @@ export default function DeliveryPerformanceTab({ data }) {
           />
           <ProcurementStatsCard
             label={STATS_CARD_CONFIGS.deliveryPerformance[3].label}
-            value={null}
+            value={null || "unknown"}
             icon={STATS_CARD_CONFIGS.deliveryPerformance[3].icon}
             color={STATS_CARD_CONFIGS.deliveryPerformance[3].color}
             rating={summary.avg_on_time_rate !== undefined ? (

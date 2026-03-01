@@ -270,7 +270,7 @@ export const QuickActions = ({
                 <input
                   type="text"
                   placeholder="搜索客户、沟通内容或主题..."
-                  value={localSearch}
+                  value={localSearch || "unknown"}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onKeyDown={(e) => {

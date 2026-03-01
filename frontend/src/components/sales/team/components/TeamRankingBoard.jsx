@@ -62,7 +62,7 @@ export default function TeamRankingBoard({
               </div>
               <div className="flex items-center gap-3">
                 <select
-                  value={rankingType}
+                  value={rankingType || "unknown"}
                   onChange={(e) => onRankingTypeChange(e.target.value)}
                   className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >

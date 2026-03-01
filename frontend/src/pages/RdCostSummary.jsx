@@ -196,7 +196,7 @@ export default function RdCostSummary() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">费用概览</TabsTrigger>
           <TabsTrigger value="byType">按类型汇总</TabsTrigger>

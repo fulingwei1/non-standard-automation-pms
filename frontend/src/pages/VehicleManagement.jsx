@@ -247,12 +247,12 @@ export default function VehicleManagement() {
               <div className="flex gap-4">
                 <Input
                   placeholder="搜索车牌号、品牌、驾驶员..."
-                  value={searchText}
+                  value={searchText || "unknown"}
                   onChange={(e) => setSearchText(e.target.value)}
                   className="flex-1" />
 
                 <select
-                  value={statusFilter}
+                  value={statusFilter || "unknown"}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

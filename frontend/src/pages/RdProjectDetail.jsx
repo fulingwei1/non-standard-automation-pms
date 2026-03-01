@@ -300,7 +300,7 @@ export default function RdProjectDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-6">
           {(tabs || []).map((tab) => (
             <TabsTrigger

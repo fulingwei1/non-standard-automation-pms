@@ -286,33 +286,33 @@ export default function FinancialCostUpload() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="搜索项目编号、项目名称、成本项..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10" />
 
               </div>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="成本类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {(costTypes || []).map((type) =>
-                <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type || "unknown"}>
                     {costTypeLabels[type]}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter || "unknown"} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="成本分类" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部分类</SelectItem>
                 {(costCategories || []).map((cat) =>
-                <SelectItem key={cat} value={cat}>
+                <SelectItem key={cat} value={cat || "unknown"}>
                     {cat}
                 </SelectItem>
                 )}
@@ -320,14 +320,14 @@ export default function FinancialCostUpload() {
             </Select>
             <Input
               type="date"
-              value={startDate}
+              value={startDate || "unknown"}
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="开始日期"
               className="w-40" />
 
             <Input
               type="date"
-              value={endDate}
+              value={endDate || "unknown"}
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="结束日期"
               className="w-40" />

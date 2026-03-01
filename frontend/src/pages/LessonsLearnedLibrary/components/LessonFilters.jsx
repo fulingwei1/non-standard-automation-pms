@@ -16,7 +16,7 @@ export function LessonFilters({
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <Input
                         placeholder="搜索标题或描述..."
-                        value={keyword}
+                        value={keyword || "unknown"}
                         onChange={(e) => setKeyword(e.target.value)}
                         icon={Search}
                         className="md:col-span-2"
@@ -38,7 +38,7 @@ export function LessonFilters({
                     >
                         <option value="">全部分类</option>
                         {(categories || []).map((cat) => (
-                            <option key={cat} value={cat}>
+                            <option key={cat} value={cat || "unknown"}>
                                 {cat}
                             </option>
                         ))}

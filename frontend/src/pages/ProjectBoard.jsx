@@ -429,7 +429,7 @@ export default function ProjectBoard() {
         </Card>
 
         {/* 视图切换标签 */}
-        <Tabs value={detailViewMode} onValueChange={handleDetailViewChange}>
+        <Tabs value={detailViewMode || "unknown"} onValueChange={handleDetailViewChange}>
           <TabsList className="bg-surface-1 border border-white/10">
             <TabsTrigger value={VIEW_TYPES.PIPELINE} className="data-[state=active]:bg-blue-500">
               <Layers className="w-4 h-4 mr-2" />

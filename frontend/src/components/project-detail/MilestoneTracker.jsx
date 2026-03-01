@@ -200,7 +200,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                     {stageInfo.description}
                   </p>
 
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={progress || "unknown"} className="h-2" />
                 </div>
 
                 <div className="flex items-center gap-2">

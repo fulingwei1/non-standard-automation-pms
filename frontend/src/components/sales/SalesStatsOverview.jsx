@@ -130,16 +130,16 @@ export const SalesStatsOverview = ({
           <div className="flex items-center gap-3">
             {onAutoRefreshChange &&
           <select
-            value={autoRefreshInterval}
+            value={autoRefreshInterval || "unknown"}
             onChange={(e) => onAutoRefreshChange(Number(e.target.value))}
             className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 
-                <option value={0}>关闭自动刷新</option>
-                <option value={30}>30秒</option>
-                <option value={60}>1分钟</option>
-                <option value={300}>5分钟</option>
-                <option value={600}>10分钟</option>
-                <option value={1800}>30分钟</option>
+                <option value={0 || "unknown"}>关闭自动刷新</option>
+                <option value={30 || "unknown"}>30秒</option>
+                <option value={60 || "unknown"}>1分钟</option>
+                <option value={300 || "unknown"}>5分钟</option>
+                <option value={600 || "unknown"}>10分钟</option>
+                <option value={1800 || "unknown"}>30分钟</option>
           </select>
           }
             

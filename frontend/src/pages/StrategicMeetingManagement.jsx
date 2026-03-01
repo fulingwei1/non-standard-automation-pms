@@ -149,7 +149,7 @@ export default function StrategicMeetingManagement() {
 
                 <option value="">全部</option>
                 {Object.entries(rhythmLevelConfig).map(([key, config]) =>
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                     {config.label}
                 </option>
                 )}
@@ -180,7 +180,7 @@ export default function StrategicMeetingManagement() {
 
                 <option value="">全部</option>
                 {Object.entries(statusConfig).map(([key, config]) =>
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                     {config.label}
                 </option>
                 )}

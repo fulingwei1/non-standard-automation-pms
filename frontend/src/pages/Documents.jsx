@@ -287,7 +287,7 @@ export default function Documents() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       placeholder="搜索文档名称、描述..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-800/50 border-slate-700" />
 
@@ -295,7 +295,7 @@ export default function Documents() {
                 </div>
                 <div className="w-full md:w-64">
                   <Select
-                    value={selectedProject}
+                    value={selectedProject || "unknown"}
                     onValueChange={setSelectedProject}>
 
                     <SelectTrigger className="bg-slate-800/50 border-slate-700">
@@ -427,7 +427,7 @@ export default function Documents() {
                   选择项目
                 </label>
                 <Select
-                  value={uploadProjectId}
+                  value={uploadProjectId || "unknown"}
                   onValueChange={setUploadProjectId}>
 
                   <SelectTrigger>
@@ -478,7 +478,7 @@ export default function Documents() {
                 </label>
                 <Input
                   placeholder="输入文件描述..."
-                  value={uploadDescription}
+                  value={uploadDescription || "unknown"}
                   onChange={(e) => setUploadDescription(e.target.value)} />
 
               </div>

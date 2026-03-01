@@ -268,12 +268,12 @@ export default function FixedAssetsManagement() {
               <div className="flex gap-4">
                 <Input
                   placeholder="搜索资产名称、编号..."
-                  value={searchText}
+                  value={searchText || "unknown"}
                   onChange={(e) => setSearchText(e.target.value)}
                   className="flex-1" />
 
                 <select
-                  value={categoryFilter}
+                  value={categoryFilter || "unknown"}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 
@@ -282,7 +282,7 @@ export default function FixedAssetsManagement() {
                   <option value="办公设备">办公设备</option>
                 </select>
                 <select
-                  value={statusFilter}
+                  value={statusFilter || "unknown"}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

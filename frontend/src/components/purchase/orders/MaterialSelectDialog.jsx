@@ -106,7 +106,7 @@ export default function MaterialSelectDialog({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="搜索物料编码、名称、类别..."
-                value={searchQuery}
+                value={searchQuery || "unknown"}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-slate-900 border-slate-700 text-white placeholder-slate-400"
               />
@@ -191,7 +191,7 @@ export default function MaterialSelectDialog({
                             <Input
                               type="number"
                               min="1"
-                              value={quantity}
+                              value={quantity || "unknown"}
                               onChange={(e) => updateQuantity(material.id, e.target.value)}
                               className="w-20 bg-slate-800 border-slate-600 text-white text-center"
                             />

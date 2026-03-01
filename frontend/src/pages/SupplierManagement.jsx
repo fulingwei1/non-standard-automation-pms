@@ -456,7 +456,7 @@ export default function SupplierManagement() {
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
               <Input
                 placeholder="搜索供应商名称、分类、联系人..."
-                value={searchText}
+                value={searchText || "unknown"}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-10" />
 

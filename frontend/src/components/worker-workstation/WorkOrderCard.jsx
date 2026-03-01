@@ -78,7 +78,7 @@ export default function WorkOrderCard({ order, onAction }) {
             <span className="text-slate-400">完成进度</span>
             <span className="text-white font-medium">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress || "unknown"} className="h-2" />
           <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
             <span>已完成: {order.completed_qty || 0}</span>
             <span>计划: {order.plan_qty || 0}</span>

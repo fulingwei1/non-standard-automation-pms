@@ -48,7 +48,7 @@ export function RoleSwitcher({
         <span className="text-xs">视图</span>
       </Badge>
 
-      <Select value={currentRole} onValueChange={onChange}>
+      <Select value={currentRole || "unknown"} onValueChange={onChange}>
         <SelectTrigger className="w-48 h-9">
           <SelectValue placeholder="选择角色视图">
             {currentRoleName}
@@ -96,7 +96,7 @@ export function RoleSwitcherCompact({
   }
 
   return (
-    <Select value={currentRole} onValueChange={onChange}>
+    <Select value={currentRole || "unknown"} onValueChange={onChange}>
       <SelectTrigger className={`w-32 h-8 text-sm ${className}`}>
         <SelectValue>{currentRoleName}</SelectValue>
       </SelectTrigger>

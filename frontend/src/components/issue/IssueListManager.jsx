@@ -453,7 +453,7 @@ export const IssueListManager = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 placeholder="搜索问题编号、标题、描述..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className="pl-10 bg-slate-800/60 border-slate-700 text-white" />
 
@@ -471,7 +471,7 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
                   {Object.entries(issueStatusConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -486,7 +486,7 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部严重程度</SelectItem>
                   {Object.entries(issueSeverityConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -501,13 +501,13 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
                   {Object.entries(issueCategoryConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
 
               <Select
-                value={sortBy}
+                value={sortBy || "unknown"}
                 onValueChange={onSortChange}>
 
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">

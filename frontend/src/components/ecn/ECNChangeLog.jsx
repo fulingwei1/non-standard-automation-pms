@@ -129,26 +129,26 @@ export function ECNChangeLog({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索日志内容..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10" />
 
               </div>
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="日志类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部类型</SelectItem>
                 {Object.entries(logTypeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterDateRange} onValueChange={setFilterDateRange}>
+            <Select value={filterDateRange || "unknown"} onValueChange={setFilterDateRange}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="时间范围" />
               </SelectTrigger>

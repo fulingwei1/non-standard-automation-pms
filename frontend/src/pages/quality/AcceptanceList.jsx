@@ -109,13 +109,13 @@ export default function AcceptanceList() {
               <input
                 type="text"
                 placeholder="搜索验收单..."
-                value={searchText}
+                value={searchText || "unknown"}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
             </div>
             <select
-              value={status}
+              value={status || "unknown"}
               onChange={(e) => updateFilter("status", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >

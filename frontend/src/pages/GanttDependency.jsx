@@ -390,7 +390,7 @@ export default function GanttDependency() {
                 <GitBranch className="h-5 w-5 text-cyan-300" />
                 <span className="text-sm text-slate-300">项目选择</span>
                 <select
-                  value={selectedProjectId}
+                  value={selectedProjectId || "unknown"}
                   onChange={(event) => setSelectedProjectId(event.target.value)}
                   className="min-w-56 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
                 >

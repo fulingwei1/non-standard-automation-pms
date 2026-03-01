@@ -26,7 +26,7 @@ export default function ProcurementHeader({ timeRange, onTimeRangeChange, onExpo
         <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg px-3 py-2">
           <Calendar className="w-4 h-4 text-slate-400" />
           <select
-            value={timeRange}
+            value={timeRange || "unknown"}
             onChange={(e) => onTimeRangeChange(e.target.value)}
             className="bg-transparent text-sm text-slate-300 outline-none"
           >

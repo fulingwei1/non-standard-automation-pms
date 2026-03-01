@@ -153,7 +153,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                 <span className="text-gray-500">工作负载</span>
                 <span className="font-medium">{workload}%</span>
               </div>
-              <Progress value={workload} className="h-1.5" />
+              <Progress value={workload || "unknown"} className="h-1.5" />
             </div>
 
             {member.assigned_projects && member.assigned_projects?.length > 0 &&

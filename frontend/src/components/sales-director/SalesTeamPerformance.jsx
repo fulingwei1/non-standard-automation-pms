@@ -316,7 +316,7 @@ export default function SalesTeamPerformance({
             <h4 className="font-medium mb-3 text-slate-200">添加指标</h4>
             <div className="flex gap-2">
               <select
-                value={metricToAdd}
+                value={metricToAdd || "unknown"}
                 onChange={(e) => setMetricToAdd(e.target.value)}
                 className="flex-1 px-3 py-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200">
 
@@ -421,14 +421,14 @@ export default function SalesTeamPerformance({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 w-4 h-4" />
             <Input
               placeholder="搜索成员姓名、邮箱或部门..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10" />
 
           </div>
 
           <select
-            value={selectedRegion}
+            value={selectedRegion || "unknown"}
             onChange={(e) => setSelectedRegion(e.target.value)}
             className="px-3 py-2 border border-slate-600 rounded-md text-sm bg-slate-700 text-slate-200">
 
@@ -441,7 +441,7 @@ export default function SalesTeamPerformance({
           </select>
 
           <select
-            value={sortBy}
+            value={sortBy || "unknown"}
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-2 border border-slate-600 rounded-md text-sm bg-slate-700 text-slate-200">
 

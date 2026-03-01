@@ -175,28 +175,28 @@ const EngineerCollaboration = () => {
       dataIndex: 'communication_score',
       key: 'communication_score',
       width: 100,
-      render: (score) => <Rate disabled value={score} count={5} />
+      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
     },
     {
       title: '响应速度',
       dataIndex: 'response_score',
       key: 'response_score',
       width: 100,
-      render: (score) => <Rate disabled value={score} count={5} />
+      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
     },
     {
       title: '交付质量',
       dataIndex: 'delivery_score',
       key: 'delivery_score',
       width: 100,
-      render: (score) => <Rate disabled value={score} count={5} />
+      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
     },
     {
       title: '接口规范',
       dataIndex: 'interface_score',
       key: 'interface_score',
       width: 100,
-      render: (score) => <Rate disabled value={score} count={5} />
+      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
     },
     {
       title: '总分',

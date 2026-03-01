@@ -557,7 +557,7 @@ export default function PurchaseOrderDetail() {
                     {progress.toFixed(0)}%
                   </p>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <Progress value={progress || "unknown"} className="h-2" />
               </div>
               <p className="text-xs text-slate-500">
                 {(po.timeline || []).filter((s) => s.status === "completed").length} /{" "}

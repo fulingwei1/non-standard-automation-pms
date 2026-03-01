@@ -32,7 +32,7 @@ export default function LeadFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="搜索线索编码、客户名称、联系人..."
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
@@ -63,7 +63,7 @@ export default function LeadFilters({
           </DropdownMenu>
           <div className="flex gap-2">
             <select
-              value={sortBy}
+              value={sortBy || "unknown"}
               onChange={(e) => setSortBy(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >

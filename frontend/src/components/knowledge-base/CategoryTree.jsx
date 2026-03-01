@@ -223,7 +223,7 @@ export default function CategoryTree({
             <input
             type="text"
             placeholder="搜索分类..."
-            value={searchTerm}
+            value={searchTerm || "unknown"}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-surface-50 border border-white/10 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20" />
 
@@ -360,7 +360,7 @@ export function CategorySelector({
                 <input
                 type="text"
                 placeholder="搜索分类..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-8 pr-2 py-1 bg-surface-50 border border-white/10 rounded text-xs text-white placeholder-slate-400 focus:outline-none focus:border-primary/30" />
 

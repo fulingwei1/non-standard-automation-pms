@@ -123,7 +123,7 @@ const AlertDashboard = () => {
               <SelectContent>
                 <SelectItem value="">全部级别</SelectItem>
                 {Object.entries(ALERT_LEVELS).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                  <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                   </SelectItem>
                 ))}

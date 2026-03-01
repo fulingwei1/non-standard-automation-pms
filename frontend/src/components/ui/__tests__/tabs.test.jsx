@@ -11,7 +11,7 @@ describe('Tabs Component', () => {
       externalOnChange?.(v);
     };
     return (
-      <Tabs value={value} onValueChange={handleChange}>
+      <Tabs value={value || "unknown"} onValueChange={handleChange}>
         <TabsList>
           <TabsTrigger value="tab1">标签1</TabsTrigger>
           <TabsTrigger value="tab2">标签2</TabsTrigger>
@@ -171,7 +171,7 @@ describe('Tabs Component', () => {
       const ControlledTabs = () => {
         const [value, setValue] = useState('tab1');
         return (
-          <Tabs value={value} onValueChange={setValue}>
+          <Tabs value={value || "unknown"} onValueChange={setValue}>
             <TabsList>
               <TabsTrigger value="tab1">标签1</TabsTrigger>
               <TabsTrigger value="tab2">标签2</TabsTrigger>

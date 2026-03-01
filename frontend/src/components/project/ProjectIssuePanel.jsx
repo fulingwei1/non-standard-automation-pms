@@ -126,7 +126,7 @@ export default function ProjectIssuePanel({ projectId }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all">全部</TabsTrigger>
               <TabsTrigger value="open">待处理</TabsTrigger>
@@ -134,7 +134,7 @@ export default function ProjectIssuePanel({ projectId }) {
               <TabsTrigger value="with-solution">有解决方案</TabsTrigger>
             </TabsList>
 
-            <TabsContent value={activeTab} className="mt-4">
+            <TabsContent value={activeTab || "unknown"} className="mt-4">
               {filteredIssues.length > 0 ? (
                 <div className="space-y-2">
                   {(filteredIssues || []).map((issue) => (

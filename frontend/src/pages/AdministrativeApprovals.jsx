@@ -322,12 +322,12 @@ export default function AdministrativeApprovals() {
               <div className="flex gap-4">
                 <Input
                   placeholder="搜索申请标题、申请人..."
-                  value={searchText}
+                  value={searchText || "unknown"}
                   onChange={(e) => setSearchText(e.target.value)}
                   className="flex-1" />
 
                 <select
-                  value={typeFilter}
+                  value={typeFilter || "unknown"}
                   onChange={(e) => setTypeFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 
@@ -339,7 +339,7 @@ export default function AdministrativeApprovals() {
                   <option value="leave">请假</option>
                 </select>
                 <select
-                  value={priorityFilter}
+                  value={priorityFilter || "unknown"}
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

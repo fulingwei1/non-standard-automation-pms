@@ -148,19 +148,19 @@ export function InteractionTimeline({
             <div className="flex-1 min-w-[200px]">
               <Input
                 placeholder="搜索互动内容..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
 
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger className="w-[160px] bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="互动类型" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(interactionTypeConfigs).map(([type, config]) =>
-                <SelectItem key={type} value={type} className="text-white">
+                <SelectItem key={type} value={type || "unknown"} className="text-white">
                     {config.icon} {config.label}
                 </SelectItem>
                 )}

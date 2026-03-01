@@ -607,7 +607,7 @@ export default function PerformanceContract() {
         {/* 合约类型 Tab */}
         <Card className="bg-slate-800/30 border-slate-700/50 mb-6">
           <CardContent className="p-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
               <TabsList className="bg-slate-900/50">
                 <TabsTrigger value="all" className="data-[state=active]:bg-blue-600">
                   全部

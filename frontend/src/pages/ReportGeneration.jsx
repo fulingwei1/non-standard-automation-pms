@@ -82,7 +82,7 @@ export default function ReportGeneration() {
           <div>
             <label className="block text-sm font-medium mb-2">选择模板</label>
             <select
-              value={selectedTemplate}
+              value={selectedTemplate || "unknown"}
               onChange={(e) => setSelectedTemplate(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
             >
@@ -97,7 +97,7 @@ export default function ReportGeneration() {
             <label className="block text-sm font-medium mb-2">报表周期</label>
             <input
               type="month"
-              value={period}
+              value={period || "unknown"}
               onChange={(e) => setPeriod(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
             />

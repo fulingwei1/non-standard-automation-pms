@@ -363,7 +363,7 @@ export default function CostEstimateForm({ bidding, onSave, onCancel }) {
           成本说明
         </label>
         <textarea
-          value={notes}
+          value={notes || "unknown"}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="成本估算说明、风险提示、特殊要求等..."
           className="w-full h-24 px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"

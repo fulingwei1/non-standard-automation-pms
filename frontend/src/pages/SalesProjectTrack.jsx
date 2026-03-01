@@ -305,31 +305,31 @@ export default function SalesProjectTrack() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索项目..."
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-56" />
 
           </div>
           <select
-            value={selectedStage}
+            value={selectedStage || "unknown"}
             onChange={(e) => setSelectedStage(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
             <option value="all">全部阶段</option>
             {Object.entries(stageConfig).map(([key, val]) =>
-            <option key={key} value={key}>
+            <option key={key} value={key || "unknown"}>
                 {val.label}
             </option>
             )}
           </select>
           <select
-            value={selectedHealth}
+            value={selectedHealth || "unknown"}
             onChange={(e) => setSelectedHealth(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
             <option value="all">全部状态</option>
             {Object.entries(healthConfig).map(([key, val]) =>
-            <option key={key} value={key}>
+            <option key={key} value={key || "unknown"}>
                 {val.label}
             </option>
             )}
@@ -411,7 +411,7 @@ export default function SalesProjectTrack() {
                         {progress}%
                       </span>
                     </div>
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress || "unknown"} className="h-2" />
                   </div>
 
                   {/* Dates */}
@@ -588,7 +588,7 @@ function ProjectDetailPanel({ project, onClose }) {
             <div className="text-2xl font-bold text-white mb-2">
               {progress}%
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress || "unknown"} className="h-2" />
           </div>
           <div className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-xl">
             <div className="text-sm text-slate-400 mb-2">合同金额</div>

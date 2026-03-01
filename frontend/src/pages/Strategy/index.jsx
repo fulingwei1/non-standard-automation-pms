@@ -187,7 +187,7 @@ export default function StrategyDashboard() {
       )}
 
       {/* 主内容区 - 标签页 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-surface-50 border-white/10">
           <TabsTrigger value="overview">战略概览</TabsTrigger>
           <TabsTrigger value="dimensions">BSC维度</TabsTrigger>

@@ -660,7 +660,7 @@ function LanguageSection() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-300">时区</label>
           <select
-            value={timezone}
+            value={timezone || "unknown"}
             onChange={(e) => setTimezone(e.target.value)}
             className="w-full h-10 px-3 rounded-lg bg-surface-2 border border-border text-white focus:border-accent focus:outline-none"
           >
@@ -676,7 +676,7 @@ function LanguageSection() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-300">日期格式</label>
           <select
-            value={dateFormat}
+            value={dateFormat || "unknown"}
             onChange={(e) => setDateFormat(e.target.value)}
             className="w-full h-10 px-3 rounded-lg bg-surface-2 border border-border text-white focus:border-accent focus:outline-none"
           >

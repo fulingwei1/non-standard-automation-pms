@@ -44,7 +44,7 @@ export function ECNListHeader({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索ECN编号、标题、申请人..."
-              value={searchKeyword}
+              value={searchKeyword || "unknown"}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 w-full sm:w-80"
             />

@@ -43,7 +43,7 @@ const InvoiceFilters = ({
   <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
   <Input
    placeholder="搜索发票号、项目名、客户名..."
-   value={searchText}
+   value={searchText || "unknown"}
    onChange={(e) => handleSearchChange(e.target.value)}
    className="pl-10"
   />

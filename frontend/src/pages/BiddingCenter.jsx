@@ -875,7 +875,7 @@ export default function BiddingCenter() {
             <Input
               type="text"
               placeholder="搜索项目名称、客户、编号..."
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full" />
 

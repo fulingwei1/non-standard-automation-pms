@@ -347,7 +347,7 @@ export const AssessmentForm = ({
 
                 {[1, 2, 3, 4, 5].map((rating) =>
               <div key={rating} className="flex items-center space-x-2">
-                    <RadioGroupItem value={rating.toString()} id={`${questionId}_${rating}`} />
+                    <RadioGroupItem value={rating?.toString() || "unknown"} id={`${questionId}_${rating}`} />
                     <Label htmlFor={`${questionId}_${rating}`} className="text-sm flex items-center gap-1">
                       {[...Array(rating)].map((_, i) =>
                   <span key={i} className="text-amber-500">★</span>
@@ -415,7 +415,7 @@ export const AssessmentForm = ({
                   <span className="font-medium">{category.name}</span>
                   <span className="text-slate-600">{score.toFixed(1)}分 ({category.weight}%)</span>
                 </div>
-                <Progress value={score} className="h-2" />
+                <Progress value={score || "unknown"} className="h-2" />
               </div>);
 
           })}
@@ -479,7 +479,7 @@ export const AssessmentForm = ({
           </div>
 
           {/* 表单标签页 */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
               {(tabs || []).map((tab) =>
               <TabsTrigger

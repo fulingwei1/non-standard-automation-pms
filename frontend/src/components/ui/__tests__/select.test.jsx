@@ -6,7 +6,7 @@ const Select = ({ value, onChange, options, placeholder = '请选择', disabled 
   const safeOptions = options || [];
   return (
     <select
-      value={value}
+      value={value || "unknown"}
       onChange={(e) => !disabled && onChange?.(e.target.value)}
       disabled={disabled}
       className="select-component"

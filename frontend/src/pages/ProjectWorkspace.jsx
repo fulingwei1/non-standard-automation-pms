@@ -177,7 +177,7 @@ export default function ProjectWorkspace() {
       </div>
 
       {/* 标签页 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">概览</TabsTrigger>
           <TabsTrigger value="bonus">奖金</TabsTrigger>

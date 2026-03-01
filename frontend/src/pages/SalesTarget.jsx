@@ -318,7 +318,7 @@ export default function SalesTarget() {
               <div className="flex-1 relative">
                 <Input
                   placeholder="搜索目标..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />

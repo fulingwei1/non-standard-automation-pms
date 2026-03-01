@@ -706,7 +706,7 @@ export function MaterialAlerts({
       {/* 过滤器和排序 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Tabs value={filter} onValueChange={(value) => filter = value}>
+          <Tabs value={filter || "unknown"} onValueChange={(value) => filter = value}>
             <TabsList>
               <TabsTrigger value="active">
                 未解决 ({stats.active})
@@ -724,7 +724,7 @@ export function MaterialAlerts({
           <span className="text-sm text-gray-500">排序：</span>
           <select
             className="text-sm border rounded px-2 py-1"
-            value={sort}
+            value={sort || "unknown"}
             onChange={(e) => sort = e.target.value}>
 
             <option value="newest">最新优先</option>

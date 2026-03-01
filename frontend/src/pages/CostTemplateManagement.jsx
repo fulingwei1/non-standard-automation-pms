@@ -329,13 +329,13 @@ export default function CostTemplateManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="搜索模板名称或编码..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10" />
 
               </div>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="模板类型" />
               </SelectTrigger>
@@ -346,14 +346,14 @@ export default function CostTemplateManagement() {
                 <SelectItem value="PROJECT">项目模板</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
+            <Select value={equipmentFilter || "unknown"} onValueChange={setEquipmentFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="设备类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部设备</SelectItem>
                 {(equipmentTypes || []).map((type) =>
-                <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type || "unknown"}>
                     {type}
                 </SelectItem>
                 )}

@@ -509,7 +509,7 @@ export default function AlertCenter() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       placeholder="搜索预警标题、描述、项目..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-800/50 border-slate-700" />
 
@@ -517,31 +517,31 @@ export default function AlertCenter() {
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <select
-                    value={selectedLevel}
+                    value={selectedLevel || "unknown"}
                     onChange={(e) => setSelectedLevel(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
                     <option value="ALL">全部级别</option>
                     {Object.entries(ALERT_LEVELS).map(([key, config]) =>
-                    <option key={key} value={key}>
+                    <option key={key} value={key || "unknown"}>
                         {config.label}
                     </option>
                     )}
                   </select>
                   <select
-                    value={selectedStatus}
+                    value={selectedStatus || "unknown"}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
                     <option value="ALL">全部状态</option>
                     {Object.entries(ALERT_STATUS).map(([key, config]) =>
-                    <option key={key} value={key}>
+                    <option key={key} value={key || "unknown"}>
                         {config.label}
                     </option>
                     )}
                   </select>
                   <select
-                    value={selectedProject}
+                    value={selectedProject || "unknown"}
                     onChange={(e) => setSelectedProject(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -812,7 +812,7 @@ export default function AlertCenter() {
               <div>
                 <label className="text-sm font-medium text-slate-300">解决方案</label>
                 <textarea
-                  value={resolveResult}
+                  value={resolveResult || "unknown"}
                   onChange={(e) => setResolveResult(e.target.value)}
                   className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white"
                   rows={3}

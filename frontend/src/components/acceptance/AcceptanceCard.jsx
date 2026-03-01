@@ -79,7 +79,7 @@ export default function AcceptanceCard({ acceptance, onView }) {
               {passedItems}/{totalItems}
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress || "unknown"} className="h-2" />
           <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-emerald-400" />

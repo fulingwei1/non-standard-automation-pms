@@ -201,7 +201,7 @@ export default function BestPracticeRecommendations() {
       />
 
       <Tabs
-        value={activeTab}
+        value={activeTab || "unknown"}
         onValueChange={setActiveTab}
         className="space-y-6"
       >
@@ -222,7 +222,7 @@ export default function BestPracticeRecommendations() {
                     </label>
                     <Input
                       placeholder="输入项目类型..."
-                      value={projectType}
+                      value={projectType || "unknown"}
                       onChange={(e) => setProjectType(e.target.value)}
                     />
                   </div>
@@ -231,7 +231,7 @@ export default function BestPracticeRecommendations() {
                       当前阶段
                     </label>
                     <select
-                      value={currentStage}
+                      value={currentStage || "unknown"}
                       onChange={(e) => setCurrentStage(e.target.value)}
                       className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
                     >
@@ -253,7 +253,7 @@ export default function BestPracticeRecommendations() {
                     </label>
                     <Input
                       placeholder="输入分类..."
-                      value={category}
+                      value={category || "unknown"}
                       onChange={(e) => setCategory(e.target.value)}
                     />
                   </div>

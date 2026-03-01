@@ -219,7 +219,7 @@ const EngineerKnowledge = () => {
       dataIndex: 'rating_score',
       key: 'rating_score',
       width: 120,
-      render: (score) => score ? <Rate disabled value={score} count={5} allowHalf /> : '-'
+      render: (score) => score ? <Rate disabled value={score || "unknown"} count={5} allowHalf /> : '-'
     },
     {
       title: '提交时间',
@@ -332,7 +332,7 @@ const EngineerKnowledge = () => {
       dataIndex: 'avg_rating',
       key: 'avg_rating',
       width: 120,
-      render: (score) => score ? <Rate disabled value={score} count={5} allowHalf /> : '-'
+      render: (score) => score ? <Rate disabled value={score || "unknown"} count={5} allowHalf /> : '-'
     }
   ];
 

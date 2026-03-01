@@ -314,7 +314,7 @@ export const OpportunityPipeline = ({
             {/* 视图切换 */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Tabs value={selectedView} onValueChange={setSelectedView}>
+                <Tabs value={selectedView || "unknown"} onValueChange={setSelectedView}>
                   <TabsList>
                     <TabsTrigger value="kanban" className="flex items-center gap-1">
                       <Grid className="h-4 w-4" />

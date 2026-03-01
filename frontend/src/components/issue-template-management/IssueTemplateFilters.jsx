@@ -27,25 +27,25 @@ export default function IssueTemplateFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="搜索模板名称、编码..."
-              value={searchKeyword}
+              value={searchKeyword || "unknown"}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-10 bg-surface-100 border-white/10 text-white"
             />
           </div>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
             <SelectTrigger className="bg-surface-100 border-white/10 text-white">
               <SelectValue placeholder="选择分类" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部分类</SelectItem>
               {Object.entries(categoryConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                   {config.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterActive} onValueChange={setFilterActive}>
+          <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
             <SelectTrigger className="bg-surface-100 border-white/10 text-white">
               <SelectValue placeholder="选择状态" />
             </SelectTrigger>

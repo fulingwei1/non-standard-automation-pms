@@ -420,7 +420,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                   <span className="text-slate-400">完成进度</span>
                   <span className="text-white">{progress}%</span>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <Progress value={progress || "unknown"} className="h-2" />
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">工时</span>
@@ -490,17 +490,17 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 type="number"
                 min="0"
                 max="100"
-                value={progress}
+                value={progress || "unknown"}
                 onChange={(e) => setProgress(parseInt(e.target.value) || 0)}
                 className="flex-1" />
 
                 <span className="text-sm text-slate-400">%</span>
               </div>
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress || "unknown"} className="h-2" />
               <Input
               type="text"
               placeholder="进度说明..."
-              value={progressNote}
+              value={progressNote || "unknown"}
               onChange={(e) => setProgressNote(e.target.value)}
               className="w-full" />
 
@@ -519,7 +519,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
               <Input
               type="number"
               min="0"
-              value={actualHours}
+              value={actualHours || "unknown"}
               onChange={(e) =>
               setActualHours(parseFloat(e.target.value) || 0)
               }
@@ -767,13 +767,13 @@ export default function PresalesTasks({ embedded = false } = {}) {
               <Input
                 type="text"
                 placeholder="搜索任务..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 w-64" />
 
             </div>
             <select
-              value={selectedStatus}
+              value={selectedStatus || "unknown"}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 

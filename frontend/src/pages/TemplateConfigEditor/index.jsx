@@ -78,7 +78,7 @@ const NODE_TYPE_LABELS = {
 function NodeItem({ node, onToggle, onReorder }) {
   return (
     <Reorder.Item
-      value={node}
+      value={node || "unknown"}
       id={node.id}
       onDragEnd={onReorder}
       className={`flex items-center justify-between p-3 rounded-lg border ${
@@ -351,7 +351,7 @@ export default function TemplateConfigEditor() {
               {(config.stages || []).map((stage) => {
                 const stageInfo = STAGE_DESCRIPTIONS[stage.stage_code] || {};
                 return (
-                  <Reorder.Item key={stage.id} value={stage} id={stage.id}>
+                  <Reorder.Item key={stage.id} value={stage || "unknown"} id={stage.id}>
                     <Card>
                       <CardHeader>
                         <div className="flex items-center justify-between">

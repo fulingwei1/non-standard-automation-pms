@@ -23,7 +23,7 @@ export const CustomerInfoStep = ({
         </label>
         <div className="space-y-2">
           <Input
-            value={customerSearch}
+            value={customerSearch || "unknown"}
             onChange={(e) => setCustomerSearch(e.target.value)}
             placeholder="搜索客户名称或编码"
             icon={Building2}

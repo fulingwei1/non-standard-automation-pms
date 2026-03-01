@@ -78,7 +78,7 @@ export default function CreateDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(INSTALLATION_TYPE).map(([_key, value]) => (
-                  <SelectItem key={value} value={value}>
+                  <SelectItem key={value} value={value || "unknown"}>
                     {INSTALLATION_TYPE_LABELS[value]}
                   </SelectItem>
                 ))}
@@ -98,7 +98,7 @@ export default function CreateDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(DISPATCH_PRIORITY).map(([_key, value]) => (
-                  <SelectItem key={value} value={value}>
+                  <SelectItem key={value} value={value || "unknown"}>
                     {DISPATCH_PRIORITY_LABELS[value]}
                   </SelectItem>
                 ))}

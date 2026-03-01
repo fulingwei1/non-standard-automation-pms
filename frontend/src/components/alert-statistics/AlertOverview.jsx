@@ -103,7 +103,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
       <Card key={title} loading={loading}>
         <Statistic
           title={title}
-          value={value}
+          value={value || "unknown"}
           prefix={icon}
           suffix={unit}
           styles={{ content: { color } }}

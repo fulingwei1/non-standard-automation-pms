@@ -39,7 +39,7 @@ export default function CreateLeadDialog({
             <div>
               <Label>客户名称 *</Label>
               <select
-                value={selectedCustomerId}
+                value={selectedCustomerId || "unknown"}
                 onChange={(e) => {
                   const customer = (customers || []).find(
                     (item) => String(item.id) === e.target.value
@@ -142,7 +142,7 @@ export default function CreateLeadDialog({
               >
                 {["NEW", "CONTACTED", "QUALIFIED", "LOST", "CONVERTED"].map(
                   (key) => (
-                    <option key={key} value={key}>
+                    <option key={key} value={key || "unknown"}>
                       {statusConfig[key]?.label || key}
                     </option>
                   )

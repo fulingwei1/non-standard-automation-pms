@@ -471,12 +471,12 @@ export default function PermissionManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="搜索权限编码、名称或描述..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterModule} onValueChange={setFilterModule}>
+            <Select value={filterModule || "unknown"} onValueChange={setFilterModule}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="选择模块" />
@@ -484,7 +484,7 @@ export default function PermissionManagement() {
               <SelectContent>
                 <SelectItem value="all">所有模块</SelectItem>
                 {(modules || []).map((module) =>
-                <SelectItem key={module} value={module}>
+                <SelectItem key={module} value={module || "unknown"}>
                     {getModuleLabel(module)}
                 </SelectItem>
                 )}

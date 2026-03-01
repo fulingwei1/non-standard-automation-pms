@@ -253,7 +253,7 @@ export function ECNTaskBoard({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(taskTypeConfigs).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                     </SelectItem>
                     )}

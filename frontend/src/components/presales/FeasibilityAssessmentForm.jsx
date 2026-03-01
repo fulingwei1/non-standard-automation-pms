@@ -373,7 +373,7 @@ export default function FeasibilityAssessmentForm({
               <p className="text-xs text-slate-400">满分100</p>
             </div>
           </div>
-          <Progress value={overallScore} className="h-2" />
+          <Progress value={overallScore || "unknown"} className="h-2" />
           <div className="mt-3 flex items-center gap-2">
             <StatusIcon className={cn("w-4 h-4", feasibilityStatus.color)} />
             <span
@@ -392,7 +392,7 @@ export default function FeasibilityAssessmentForm({
             评估建议
           </label>
           <textarea
-            value={recommendation}
+            value={recommendation || "unknown"}
             onChange={(e) => setRecommendation(e.target.value)}
             placeholder="基于评估结果，给出是否推进的建议及理由..."
             className="w-full h-24 px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
@@ -404,7 +404,7 @@ export default function FeasibilityAssessmentForm({
             风险分析
           </label>
           <textarea
-            value={riskAnalysis}
+            value={riskAnalysis || "unknown"}
             onChange={(e) => setRiskAnalysis(e.target.value)}
             placeholder="识别主要风险点及应对措施..."
             className="w-full h-24 px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
@@ -416,7 +416,7 @@ export default function FeasibilityAssessmentForm({
             技术说明
           </label>
           <textarea
-            value={technicalNotes}
+            value={technicalNotes || "unknown"}
             onChange={(e) => setTechnicalNotes(e.target.value)}
             placeholder="技术方案要点、关键技术难点、技术路线建议等..."
             className="w-full h-32 px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"

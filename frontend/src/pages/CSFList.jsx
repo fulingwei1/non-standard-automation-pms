@@ -395,7 +395,7 @@ export default function CSFList() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
-            value={searchQuery}
+            value={searchQuery || "unknown"}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索 CSF 名称或描述..."
             className="pl-9 bg-slate-800/50 border-slate-700"
@@ -404,7 +404,7 @@ export default function CSFList() {
       </motion.div>
 
       {/* 维度 Tab */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-slate-800/50 border-white/10">
           {DIMENSION_TABS.map((tab) => {
             const config = DIMENSION_CONFIG[tab.value];

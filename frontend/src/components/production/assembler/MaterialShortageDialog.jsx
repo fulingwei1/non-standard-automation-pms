@@ -68,7 +68,7 @@ export default function MaterialShortageDialog({ open, onClose, task, material }
               </Button>
               <Input
                 type="number"
-                value={quantity}
+                value={quantity || "unknown"}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 className="w-24 text-center"
               />
@@ -110,7 +110,7 @@ export default function MaterialShortageDialog({ open, onClose, task, material }
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">备注说明</label>
             <textarea
-              value={description}
+              value={description || "unknown"}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="请描述缺料影响和备选方案..."
               className={cn(

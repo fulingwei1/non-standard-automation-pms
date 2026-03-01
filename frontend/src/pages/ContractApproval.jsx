@@ -331,7 +331,7 @@ export default function ContractApproval() {
             <div className="relative">
               <Input
                 placeholder="搜索合同、客户或提交人..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10" />
 
@@ -345,7 +345,7 @@ export default function ContractApproval() {
       <motion.div variants={fadeIn}>
         <Card>
           <CardHeader>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="pending">
                   待审批 ({pendingApprovals.length})
@@ -357,7 +357,7 @@ export default function ContractApproval() {
             </Tabs>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
               <TabsContent value="pending" className="space-y-4">
                 {(filteredApprovals || []).map((approval) => {
                   const typeInfo = typeConfig[approval.type];
@@ -661,7 +661,7 @@ export default function ContractApproval() {
                 <p className="text-sm text-slate-400 mb-2">审批意见</p>
                 <Textarea
                 placeholder="请输入审批意见..."
-                value={approvalComments}
+                value={approvalComments || "unknown"}
                 onChange={(e) => setApprovalComments(e.target.value)}
                 rows={4} />
 

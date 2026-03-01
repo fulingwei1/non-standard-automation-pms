@@ -364,7 +364,7 @@ export default function ProjectStageView() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* 视图切换标签 */}
               <Tabs
-                value={currentView}
+                value={currentView || "unknown"}
                 onValueChange={(value) => {
                   if (value === VIEW_TYPES.PIPELINE) {
                     handleBackToPipeline();

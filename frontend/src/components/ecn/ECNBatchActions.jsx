@@ -227,7 +227,7 @@ export function ECNBatchActions({
                   操作备注（可选）
                 </label>
                 <Textarea
-                  value={batchComment}
+                  value={batchComment || "unknown"}
                   onChange={(e) => setBatchComment(e.target.value)}
                   placeholder="请输入操作说明或备注..."
                   rows={3}

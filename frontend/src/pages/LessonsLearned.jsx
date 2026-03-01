@@ -282,7 +282,7 @@ export default function LessonsLearned() {
                   <div className="relative">
                     <Input
                       placeholder="搜索标题、描述、建议..."
-                      value={searchKeyword}
+                      value={searchKeyword || "unknown"}
                       onChange={(e) => setSearchKeyword(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                       className="bg-gray-800 border-gray-700 text-white pl-10"
@@ -290,7 +290,7 @@ export default function LessonsLearned() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category || "unknown"} onValueChange={setCategory}>
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="分类" />
                   </SelectTrigger>
@@ -302,7 +302,7 @@ export default function LessonsLearned() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={lessonType} onValueChange={setLessonType}>
+                <Select value={lessonType || "unknown"} onValueChange={setLessonType}>
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="类型" />
                   </SelectTrigger>
@@ -314,7 +314,7 @@ export default function LessonsLearned() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={impactLevel} onValueChange={setImpactLevel}>
+                <Select value={impactLevel || "unknown"} onValueChange={setImpactLevel}>
                   <SelectTrigger className="w-[100px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="影响" />
                   </SelectTrigger>

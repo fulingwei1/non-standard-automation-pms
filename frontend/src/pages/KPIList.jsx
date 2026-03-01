@@ -184,7 +184,7 @@ function KPIForm({ kpi, onSubmit, onCancel, loading }) {
               required
             >
               {Object.entries(BSC_DIMENSIONS).map(([key, config]) => (
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                   {config.name}
                 </option>
               ))}
@@ -204,7 +204,7 @@ function KPIForm({ kpi, onSubmit, onCancel, loading }) {
               required
             >
               {Object.entries(COLLECTION_FREQUENCY).map(([key, config]) => (
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                   {config.label}
                 </option>
               ))}
@@ -259,7 +259,7 @@ function UpdateValueDialog({ kpi, open, onClose, onSubmit, loading }) {
               <Input
                 type="number"
                 step="0.01"
-                value={value}
+                value={value || "unknown"}
                 onChange={(e) => setValue(e.target.value)}
                 className="bg-slate-800/50 border-slate-700 text-lg"
               />
@@ -376,7 +376,7 @@ function KPICard({ kpi, onUpdate, onCollect, color }) {
             </span>
           </div>
           <Progress
-            value={progress}
+            value={progress || "unknown"}
             className="h-2"
             indicatorClassName={
               status === "ON_TRACK"
@@ -672,7 +672,7 @@ export default function KPIList() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
-            value={searchQuery}
+            value={searchQuery || "unknown"}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索 KPI 名称或描述..."
             className="pl-9 bg-slate-800/50 border-slate-700"

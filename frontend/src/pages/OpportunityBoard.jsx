@@ -399,56 +399,56 @@ export default function OpportunityBoard() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                 <Input
                   placeholder="搜索机会名称、客户..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-surface-2 border-border" />
 
               </div>
 
               <div className="flex gap-2 flex-wrap">
-                <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                <Select value={selectedPriority || "unknown"} onValueChange={setSelectedPriority}>
                   <SelectTrigger className="w-32 bg-surface-2 border-border">
                     <SelectValue placeholder="优先级" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-2 border-border">
                     <SelectItem value="all">全部优先级</SelectItem>
                     {Object.entries(OPPORTUNITY_PRIORITY_CONFIGS).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                     </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedSource} onValueChange={setSelectedSource}>
+                <Select value={selectedSource || "unknown"} onValueChange={setSelectedSource}>
                   <SelectTrigger className="w-32 bg-surface-2 border-border">
                     <SelectValue placeholder="来源" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-2 border-border">
                     <SelectItem value="all">全部来源</SelectItem>
                     {Object.entries(SALES_SOURCE_CONFIGS).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                     </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedType} onValueChange={setSelectedType}>
+                <Select value={selectedType || "unknown"} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-32 bg-surface-2 border-border">
                     <SelectValue placeholder="类型" />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-2 border-border">
                     <SelectItem value="all">全部类型</SelectItem>
                     {Object.entries(OPPORTUNITY_TYPE_CONFIGS).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                     </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedOwner} onValueChange={setSelectedOwner}>
+                <Select value={selectedOwner || "unknown"} onValueChange={setSelectedOwner}>
                   <SelectTrigger className="w-32 bg-surface-2 border-border">
                     <SelectValue placeholder="负责人" />
                   </SelectTrigger>
@@ -725,7 +725,7 @@ export default function OpportunityBoard() {
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
                       {Object.entries(OPPORTUNITY_PRIORITY_CONFIGS).map(([key, config]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -743,7 +743,7 @@ export default function OpportunityBoard() {
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
                       {Object.entries(SALES_SOURCE_CONFIGS).map(([key, config]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -761,7 +761,7 @@ export default function OpportunityBoard() {
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
                       {Object.entries(OPPORTUNITY_TYPE_CONFIGS).map(([key, config]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                       </SelectItem>
                       )}

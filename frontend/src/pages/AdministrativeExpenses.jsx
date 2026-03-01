@@ -157,7 +157,7 @@ export default function AdministrativeExpenses() {
               导出报表
             </Button>
             <select
-            value={periodFilter}
+            value={periodFilter || "unknown"}
             onChange={(e) => setPeriodFilter(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

@@ -623,7 +623,7 @@ function OrderSelectionForm({ onSelect }) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           placeholder="搜索订单号、供应商、项目..."
-          value={searchQuery}
+          value={searchQuery || "unknown"}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 bg-slate-900/50 border-slate-700 text-slate-200" />
 

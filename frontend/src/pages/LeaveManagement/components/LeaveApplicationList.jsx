@@ -10,13 +10,13 @@ export function LeaveFilters({ searchText, setSearchText, typeFilter, setTypeFil
                 <div className="flex gap-4">
                     <Input
                         placeholder="搜索员工姓名、部门..."
-                        value={searchText}
+                        value={searchText || "unknown"}
                         onChange={(e) => setSearchText(e.target.value)}
                         className="flex-1"
                     />
 
                     <select
-                        value={typeFilter}
+                        value={typeFilter || "unknown"}
                         onChange={(e) => setTypeFilter(e.target.value)}
                         className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
                     >
@@ -25,7 +25,7 @@ export function LeaveFilters({ searchText, setSearchText, typeFilter, setTypeFil
                         ))}
                     </select>
                     <select
-                        value={statusFilter}
+                        value={statusFilter || "unknown"}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
                     >

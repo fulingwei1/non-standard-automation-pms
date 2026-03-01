@@ -282,7 +282,7 @@ export default function AlertSubscriptionSettings() {
               <div className="flex-1 min-w-[200px]">
                 <Input
                   placeholder="搜索订阅配置..."
-                  value={searchQuery}
+                  value={searchQuery || "unknown"}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-surface-2"
                 />

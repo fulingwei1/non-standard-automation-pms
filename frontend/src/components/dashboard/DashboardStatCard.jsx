@@ -40,7 +40,7 @@ const DashboardStatCard = memo(function DashboardStatCard({
       <UiStatCard
         icon={Icon}
         label={label}
-        value={value}
+        value={value || "unknown"}
         change={change}
         trend={trend}
         description={description}

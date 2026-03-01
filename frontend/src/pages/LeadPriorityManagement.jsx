@@ -227,7 +227,7 @@ export default function LeadPriorityManagement() {
           <CardTitle>优先级排名</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="leads">线索排名</TabsTrigger>
               <TabsTrigger value="opportunities">商机排名</TabsTrigger>

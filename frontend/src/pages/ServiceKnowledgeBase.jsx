@@ -392,7 +392,7 @@ export default function ServiceKnowledgeBase() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       placeholder="搜索文章标题、内容、标签..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-800/50 border-slate-700" />
 
@@ -400,7 +400,7 @@ export default function ServiceKnowledgeBase() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    value={categoryFilter}
+                    value={categoryFilter || "unknown"}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -412,7 +412,7 @@ export default function ServiceKnowledgeBase() {
                     <option value="其他">其他</option>
                   </select>
                   <select
-                    value={faqFilter}
+                    value={faqFilter || "unknown"}
                     onChange={(e) => setFaqFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -743,7 +743,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
               <label className="text-sm text-slate-400 mb-1 block">标签</label>
               <div className="flex gap-2">
                 <Input
-                  value={tagInput}
+                  value={tagInput || "unknown"}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                   placeholder="输入标签后按回车"

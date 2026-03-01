@@ -225,7 +225,7 @@ const EngineerPerformanceRanking = () => {
               placeholder="搜索姓名或部门"
               prefix={<SearchOutlined />}
               style={{ width: 200 }}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
             />
             <Select

@@ -30,7 +30,7 @@ export function TaskFilters({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                     placeholder="搜索任务..."
-                    value={searchQuery}
+                    value={searchQuery || "unknown"}
                     onChange={(e) => onSearchChange(e.target.value)}
                     className="pl-10 bg-surface-1 border-border"
                 />

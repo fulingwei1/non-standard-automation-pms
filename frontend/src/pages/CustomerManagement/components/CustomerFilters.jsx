@@ -25,26 +25,26 @@ export function CustomerFilters({
             <div className="flex items-center space-x-2">
                 <Input
                     placeholder="搜索客户名称/编码..."
-                    value={searchKeyword}
+                    value={searchKeyword || "unknown"}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     className="max-w-sm"
                     icon={Search}
                 />
 
-                <Select value={filterIndustry} onValueChange={setFilterIndustry}>
+                <Select value={filterIndustry || "unknown"} onValueChange={setFilterIndustry}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="筛选行业" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">所有行业</SelectItem>
                         {(industries || []).map((industry) => (
-                            <SelectItem key={industry} value={industry}>
+                            <SelectItem key={industry} value={industry || "unknown"}>
                                 {industry}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder="筛选状态" />
                     </SelectTrigger>

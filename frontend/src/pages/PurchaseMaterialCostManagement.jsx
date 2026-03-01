@@ -437,26 +437,26 @@ export default function PurchaseMaterialCostManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="搜索物料名称、编码或规格..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10" />
 
               </div>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="物料类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {(materialTypes || []).map((type) =>
-                <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type || "unknown"}>
                     {type}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={standardFilter} onValueChange={setStandardFilter}>
+            <Select value={standardFilter || "unknown"} onValueChange={setStandardFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="标准件" />
               </SelectTrigger>
@@ -466,7 +466,7 @@ export default function PurchaseMaterialCostManagement() {
                 <SelectItem value="non-standard">非标准件</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={activeFilter} onValueChange={setActiveFilter}>
+            <Select value={activeFilter || "unknown"} onValueChange={setActiveFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="启用状态" />
               </SelectTrigger>

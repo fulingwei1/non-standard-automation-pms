@@ -184,7 +184,7 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                     {progress === 100 ? '已完成' : '进行中'}
                   </span>
                 </div>
-                <Progress value={progress} className="h-3" />
+                <Progress value={progress || "unknown"} className="h-3" />
                 <div className="text-xs text-gray-500">
                   已完成 {project.stages?.filter((s) => s.status === 'COMPLETED').length || 0} /
                   {PROJECT_STAGES.length} 个阶段

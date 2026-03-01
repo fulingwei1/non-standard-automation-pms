@@ -240,7 +240,7 @@ const EngineerPerformanceDashboard = () => {
               <Col span={4} key={level}>
                 <Statistic
                   title={getLevelName(level)}
-                  value={count}
+                  value={count || "unknown"}
                   suffix={`人 (${(count / companySummary.total_engineers * 100).toFixed(1)}%)`}
                   styles={{ content: { color: getLevelColor(level) === 'green' ? '#52c41a' :
                                getLevelColor(level) === 'blue' ? '#1890ff' :

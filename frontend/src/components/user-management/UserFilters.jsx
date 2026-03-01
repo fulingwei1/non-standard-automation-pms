@@ -320,7 +320,7 @@ export function UserFilters({
               <SelectContent>
                 <SelectItem value="__all__">全部状态</SelectItem>
                 {Object.entries(userStatusConfigs).map(([key, config]) =>
-              <SelectItem key={key} value={key}>
+              <SelectItem key={key} value={key || "unknown"}>
                     <div className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", config.color)} />
                       {config.label}
@@ -341,7 +341,7 @@ export function UserFilters({
               <SelectContent>
                 <SelectItem value="__all__">全部类型</SelectItem>
                 {Object.entries(userTypeConfigs).map(([key, config]) =>
-              <SelectItem key={key} value={key}>
+              <SelectItem key={key} value={key || "unknown"}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}
@@ -362,7 +362,7 @@ export function UserFilters({
               <SelectContent>
                 <SelectItem value="__all__">全部部门</SelectItem>
                 {Object.entries(departmentConfigs).map(([key, config]) =>
-              <SelectItem key={key} value={key}>
+              <SelectItem key={key} value={key || "unknown"}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}
@@ -383,7 +383,7 @@ export function UserFilters({
               <SelectContent>
                 <SelectItem value="__all__">全部角色</SelectItem>
                 {Object.entries(userRoleConfigs).map(([key, config]) =>
-              <SelectItem key={key} value={key}>
+              <SelectItem key={key} value={key || "unknown"}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}

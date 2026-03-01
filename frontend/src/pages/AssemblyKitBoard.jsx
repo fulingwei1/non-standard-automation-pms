@@ -254,7 +254,7 @@ export default function AssemblyKitBoard() {
           description="基于装配工艺路径的智能齐套分析，实现能做到哪一步的精准判断" />
 
         <div className="flex items-center gap-4">
-          <Select value={filterProject} onValueChange={setFilterProject}>
+          <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -935,7 +935,7 @@ export default function AssemblyKitBoard() {
           </DialogHeader>
           <Textarea
             placeholder="请输入拒绝原因..."
-            value={rejectReason}
+            value={rejectReason || "unknown"}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={4} />
 

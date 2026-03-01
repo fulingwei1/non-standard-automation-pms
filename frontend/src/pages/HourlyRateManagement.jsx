@@ -234,7 +234,7 @@ export default function HourlyRateManagement() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>配置类型</Label>
-              <Select value={configType} onValueChange={setConfigType}>
+              <Select value={configType || "unknown"} onValueChange={setConfigType}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>
@@ -253,7 +253,7 @@ export default function HourlyRateManagement() {
               <Input
                 type="number"
                 placeholder="用户ID"
-                value={userId}
+                value={userId || "unknown"}
                 onChange={(e) => setUserId(e.target.value)}
               />
             </div>
@@ -263,7 +263,7 @@ export default function HourlyRateManagement() {
               <Input
                 type="number"
                 placeholder="角色ID"
-                value={roleId}
+                value={roleId || "unknown"}
                 onChange={(e) => setRoleId(e.target.value)}
               />
             </div>
@@ -273,7 +273,7 @@ export default function HourlyRateManagement() {
               <Input
                 type="number"
                 placeholder="部门ID"
-                value={deptId}
+                value={deptId || "unknown"}
                 onChange={(e) => setDeptId(e.target.value)}
               />
             </div>

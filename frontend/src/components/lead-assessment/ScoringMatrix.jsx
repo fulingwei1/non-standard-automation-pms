@@ -461,7 +461,7 @@ export const ScoringMatrix = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={viewMode} onValueChange={setViewMode}>
+          <Select value={viewMode || "unknown"} onValueChange={setViewMode}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -679,7 +679,7 @@ export const ScoringMatrix = ({
                       <div key={source} className="flex items-center justify-between">
                         <span className="text-sm">{sourceConfig?.label || source}</span>
                         <div className="flex items-center gap-2">
-                          <Progress value={percentage} className="w-20 h-2" />
+                          <Progress value={percentage || "unknown"} className="w-20 h-2" />
                           <span className="text-xs text-slate-600 w-10 text-right">
                             {percentage}%
                           </span>
@@ -705,7 +705,7 @@ export const ScoringMatrix = ({
                       <div key={industry} className="flex items-center justify-between">
                         <span className="text-sm">{industryConfig?.label || industry}</span>
                         <div className="flex items-center gap-2">
-                          <Progress value={percentage} className="w-20 h-2" />
+                          <Progress value={percentage || "unknown"} className="w-20 h-2" />
                           <span className="text-xs text-slate-600 w-10 text-right">
                             {percentage}%
                           </span>
@@ -731,7 +731,7 @@ export const ScoringMatrix = ({
                       <div key={budget} className="flex items-center justify-between">
                         <span className="text-sm">{budgetConfig?.label || budget}</span>
                         <div className="flex items-center gap-2">
-                          <Progress value={percentage} className="w-20 h-2" />
+                          <Progress value={percentage || "unknown"} className="w-20 h-2" />
                           <span className="text-xs text-slate-600 w-10 text-right">
                             {percentage}%
                           </span>

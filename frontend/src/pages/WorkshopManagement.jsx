@@ -212,25 +212,25 @@ export default function WorkshopManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索车间编码、名称..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterActive} onValueChange={setFilterActive}>
+            <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
@@ -403,7 +403,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -551,7 +551,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {config.label}
                       </SelectItem>
                       )}

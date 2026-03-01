@@ -295,32 +295,32 @@ export const FeedbackList = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="搜索客户名称、内容或ID..."
-                value={searchQuery}
+                value={searchQuery || "unknown"}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={selectedType} onValueChange={setSelectedType}>
+            <Select value={selectedType || "unknown"} onValueChange={setSelectedType}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="反馈类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(satisfactionConstants.feedbackTypeConfig).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <Select value={selectedStatus || "unknown"} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="处理状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(satisfactionConstants.feedbackStatusConfig).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}

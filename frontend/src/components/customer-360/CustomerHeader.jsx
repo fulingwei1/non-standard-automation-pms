@@ -250,7 +250,7 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                     <div className="text-sm font-semibold text-white">
                       {value}
                     </div>
-                    <Progress value={value} className="mt-1 h-1 bg-slate-700" />
+                    <Progress value={value || "unknown"} className="mt-1 h-1 bg-slate-700" />
                 </div>
                 )}
               </div>

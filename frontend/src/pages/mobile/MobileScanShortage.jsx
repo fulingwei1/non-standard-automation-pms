@@ -122,7 +122,7 @@ export default function MobileScanShortage() {
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    value={scanInput}
+                    value={scanInput || "unknown"}
                     onChange={(e) => setScanInput(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {

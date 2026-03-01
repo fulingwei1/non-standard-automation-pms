@@ -755,7 +755,7 @@ export default function PurchaseRequestNew() {
               <div className="space-y-4">
                 <Input
                   placeholder="搜索物料编码或名称..."
-                  value={materialSearchQuery}
+                  value={materialSearchQuery || "unknown"}
                   onChange={(e) => setMaterialSearchQuery(e.target.value)}
                   icon={Search}
                   className="bg-slate-800 border-slate-700" />

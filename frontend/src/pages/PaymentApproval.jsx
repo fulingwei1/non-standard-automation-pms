@@ -385,25 +385,25 @@ export default function PaymentApproval() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="搜索单号、项目、供应商、申请人..."
-                  value={searchTerm}
+                  value={searchTerm || "unknown"}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10" />
 
               </div>
               <select
-                value={selectedType}
+                value={selectedType || "unknown"}
                 onChange={(e) => setSelectedType(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
                 <option value="all">全部类型</option>
                 {Object.entries(typeConfig).map(([key, val]) =>
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                     {val.label}
                 </option>
                 )}
               </select>
               <select
-                value={selectedPriority}
+                value={selectedPriority || "unknown"}
                 onChange={(e) => setSelectedPriority(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
@@ -583,7 +583,7 @@ export default function PaymentApproval() {
                 }
               </label>
               <textarea
-                value={approvalComment}
+                value={approvalComment || "unknown"}
                 onChange={(e) => setApprovalComment(e.target.value)}
                 placeholder={
                 approvalAction === "approve" ?

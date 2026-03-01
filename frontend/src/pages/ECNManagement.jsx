@@ -246,7 +246,7 @@ export default function ECNManagement() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
@@ -258,7 +258,7 @@ export default function ECNManagement() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={changeTypeFilter} onValueChange={setChangeTypeFilter}>
+                <Select value={changeTypeFilter || "unknown"} onValueChange={setChangeTypeFilter}>
                   <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="变更类型" />
                   </SelectTrigger>
@@ -417,7 +417,7 @@ export default function ECNManagement() {
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
                     {Object.entries(priorityConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key} className="text-white">
+                      <SelectItem key={key} value={key || "unknown"} className="text-white">
                         {config.label}
                       </SelectItem>
                     ))}
@@ -462,7 +462,7 @@ export default function ECNManagement() {
               <Label className="text-gray-300">受影响项目 *</Label>
               <div className="flex gap-2 mb-2">
                 <Input
-                  value={projectInput}
+                  value={projectInput || "unknown"}
                   onChange={(e) => setProjectInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddProject())}
                   className="bg-gray-800 border-gray-700 text-white flex-1"

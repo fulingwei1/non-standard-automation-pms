@@ -193,7 +193,7 @@ function ReworkTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <select
-          value={status}
+          value={status || "unknown"}
           onChange={(e) => {
             const p = new URLSearchParams(searchParams);
             if (e.target.value) p.set("rw_status", e.target.value);

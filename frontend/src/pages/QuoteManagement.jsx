@@ -586,7 +586,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
                 <Badge variant="outline" className="text-xs border-slate-700 text-slate-300">
                   {COST_RANGE_LABELS[costTimeRange]}
                 </Badge>
-                <Select value={costTimeRange} onValueChange={setCostTimeRange}>
+                <Select value={costTimeRange || "unknown"} onValueChange={setCostTimeRange}>
                   <SelectTrigger className="w-[130px] border-slate-700">
                     <SelectValue placeholder="选择周期" />
                   </SelectTrigger>

@@ -255,7 +255,7 @@ export default function ProductionStatsOverview({
             </div>
             
             <div className="space-y-2">
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress || "unknown"} className="h-2" />
               <div className="flex justify-between text-xs text-gray-500">
                 <span>当前: {metric.value}%</span>
                 <span>目标: {metric.target}%</span>

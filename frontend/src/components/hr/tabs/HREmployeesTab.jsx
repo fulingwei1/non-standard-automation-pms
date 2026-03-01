@@ -73,13 +73,13 @@ export default function HREmployeesTab({
           <div className="flex-1">
             <Input
               placeholder="搜索员工姓名、工号、电话..."
-              value={searchKeyword}
+              value={searchKeyword || "unknown"}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="bg-slate-800/40 border-slate-700/50"
             />
           </div>
           <select
-            value={filterDepartment}
+            value={filterDepartment || "unknown"}
             onChange={(e) => setFilterDepartment(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
           >
@@ -91,7 +91,7 @@ export default function HREmployeesTab({
             ))}
           </select>
           <select
-            value={filterStatus}
+            value={filterStatus || "unknown"}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
           >

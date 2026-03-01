@@ -150,7 +150,7 @@ export default function AlertSubscription() {
                   </label>
                   <Input
                     type="time"
-                    value={quietStart}
+                    value={quietStart || "unknown"}
                     onChange={(e) => setQuietStart(e.target.value)}
                     className="bg-slate-800/50 border-slate-700"
                   />
@@ -162,7 +162,7 @@ export default function AlertSubscription() {
                   </label>
                   <Input
                     type="time"
-                    value={quietEnd}
+                    value={quietEnd || "unknown"}
                     onChange={(e) => setQuietEnd(e.target.value)}
                     className="bg-slate-800/50 border-slate-700"
                   />

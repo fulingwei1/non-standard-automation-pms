@@ -247,7 +247,7 @@ export default function MarginPrediction() {
                 <div className="flex gap-2">
                   <select
                     className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-                    value={selectedProjectId}
+                    value={selectedProjectId || "unknown"}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
                   >
                     <option value="">选择项目...</option>

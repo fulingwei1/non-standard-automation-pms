@@ -54,7 +54,7 @@ const StatCard = ({ title, value, icon, color, suffix, loading }) => (
       >
         {icon}
       </div>
-      <Statistic title={title} value={value} suffix={suffix} />
+      <Statistic title={title} value={value || "unknown"} suffix={suffix} />
     </div>
   </Card>
 );

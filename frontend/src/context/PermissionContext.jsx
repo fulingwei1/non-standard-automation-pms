@@ -209,7 +209,7 @@ export function PermissionProvider({ children }) {
   };
 
   return (
-    <PermissionContext.Provider value={contextValue}>
+    <PermissionContext.Provider value={contextValue || "unknown"}>
       {children}
     </PermissionContext.Provider>);
 

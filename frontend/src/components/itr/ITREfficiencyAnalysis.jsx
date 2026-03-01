@@ -145,7 +145,7 @@ export default function ITREfficiencyAnalysis() {
               <Input
                 type="number"
                 placeholder="项目ID（可选）"
-                value={projectId}
+                value={projectId || "unknown"}
                 onChange={(e) => setProjectId(e.target.value)}
                 className="bg-surface-100 border-white/10 text-white"
               />
@@ -156,7 +156,7 @@ export default function ITREfficiencyAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="bg-surface-100 border-white/10 text-white"
               />
@@ -167,7 +167,7 @@ export default function ITREfficiencyAnalysis() {
               </label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="bg-surface-100 border-white/10 text-white"
               />

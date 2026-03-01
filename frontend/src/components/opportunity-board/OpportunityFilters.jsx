@@ -257,7 +257,7 @@ export const OpportunityFilters = ({
         <SelectContent>
           <SelectItem value="__all__">全部</SelectItem>
           {(options || []).map(({ value, label }) =>
-        <SelectItem key={value} value={value}>
+        <SelectItem key={value} value={value || "unknown"}>
               {label}
         </SelectItem>
         )}
@@ -276,7 +276,7 @@ export const OpportunityFilters = ({
         </SelectTrigger>
         <SelectContent>
           {(sortOptionsConfig || []).map(({ value, label }) =>
-        <SelectItem key={value} value={value}>
+        <SelectItem key={value} value={value || "unknown"}>
               {label}
         </SelectItem>
         )}

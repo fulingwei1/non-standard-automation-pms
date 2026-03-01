@@ -77,7 +77,7 @@ const DimensionScores = ({ scores }) => {
             </span>
             <div className="flex-1">
               <Progress
-                value={score}
+                value={score || "unknown"}
                 className="h-2"
                 indicatorClassName={color}
               />

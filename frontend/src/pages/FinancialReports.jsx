@@ -180,7 +180,7 @@ export default function FinancialReports() {
                 </Button>
               </div>
               <select
-                value={dateRange}
+                value={dateRange || "unknown"}
                 onChange={(e) => setDateRange(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
@@ -288,7 +288,7 @@ export default function FinancialReports() {
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardHeader>
-            <Tabs value={selectedReport} onValueChange={setSelectedReport}>
+            <Tabs value={selectedReport || "unknown"} onValueChange={setSelectedReport}>
               <TabsList className="grid w-full grid-cols-5">
                 {(reportTypes || []).map((type) => {
                   const Icon = type.icon;
@@ -442,7 +442,7 @@ export default function FinancialReports() {
                             </div>
                           </div>
                           <Progress
-                            value={percentage}
+                            value={percentage || "unknown"}
                             className="h-2 bg-slate-700/50" />
 
                         </div>);
@@ -535,7 +535,7 @@ export default function FinancialReports() {
                             </div>
                           </div>
                           <Progress
-                            value={percentage}
+                            value={percentage || "unknown"}
                             className={cn(
                               "h-2",
                               item.net > 0 ?
@@ -589,7 +589,7 @@ export default function FinancialReports() {
                           </div>
                           <div className="flex items-center gap-2">
                             <Progress
-                              value={used}
+                              value={used || "unknown"}
                               className={cn(
                                 "flex-1 h-2",
                                 used > 100 ?
@@ -679,7 +679,7 @@ export default function FinancialReports() {
                               </div>
                             </div>
                             <Progress
-                              value={percentage}
+                              value={percentage || "unknown"}
                               className="h-2 bg-slate-700/50" />
 
                           </div>);

@@ -319,11 +319,11 @@ export default function PositionManagement() {
             <div className="flex items-center space-x-2">
               <Input
                 placeholder="搜索岗位名称/编码..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="max-w-sm"
               />
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="筛选类别" />
                 </SelectTrigger>

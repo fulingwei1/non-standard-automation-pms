@@ -143,21 +143,21 @@ export default function PresaleExpenseManagement() {
             <div className="flex items-center gap-2">
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)}
                 placeholder="开始日期"
                 className="w-40" />
 
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)}
                 placeholder="结束日期"
                 className="w-40" />
 
               <Input
                 type="number"
-                value={salespersonId}
+                value={salespersonId || "unknown"}
                 onChange={(e) => setSalespersonId(e.target.value)}
                 placeholder="销售人员ID"
                 className="w-32" />
@@ -284,7 +284,7 @@ export default function PresaleExpenseManagement() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 <select
-                value={groupBy}
+                value={groupBy || "unknown"}
                 onChange={(e) => setGroupBy(e.target.value)}
                 className="px-3 py-1 border rounded">
 

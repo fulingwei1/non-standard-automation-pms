@@ -100,7 +100,7 @@ export default function CreateEditOrderDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
                   {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>
+                  <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                   </SelectItem>
                   )}
@@ -119,7 +119,7 @@ export default function CreateEditOrderDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
                   {Object.entries(SHIPPING_METHODS).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>
+                  <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                   </SelectItem>
                   )}

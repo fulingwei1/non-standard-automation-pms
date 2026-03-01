@@ -523,7 +523,7 @@ export const QuoteListManager = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 placeholder="搜索报价编号、标题、客户..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className="pl-10 bg-slate-800/60 border-slate-700 text-white" />
 
@@ -541,7 +541,7 @@ export const QuoteListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
                   {Object.entries(quoteStatusConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -579,7 +579,7 @@ export const QuoteListManager = ({
               </Select>
 
               <Select
-                value={sortBy}
+                value={sortBy || "unknown"}
                 onValueChange={onSortChange}>
 
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">

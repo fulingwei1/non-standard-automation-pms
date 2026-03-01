@@ -241,7 +241,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Input
-              value={newTestReq}
+              value={newTestReq || "unknown"}
               onChange={(e) => setNewTestReq(e.target.value)}
               placeholder="输入测试项目"
               onKeyPress={(e) =>
@@ -345,7 +345,7 @@ export function SurveyForm({ initialData, onSubmit, onCancel, className }) {
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Input
-              value={newCompetitor}
+              value={newCompetitor || "unknown"}
               onChange={(e) => setNewCompetitor(e.target.value)}
               placeholder="输入竞争对手"
               onKeyPress={(e) =>

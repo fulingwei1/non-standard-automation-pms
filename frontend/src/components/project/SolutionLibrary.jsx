@@ -99,13 +99,13 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="搜索解决方案模板..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9" />
 
           </div>
           <select
-            value={filterType}
+            value={filterType || "unknown"}
             onChange={(e) => setFilterType(e.target.value)}
             className="h-9 px-3 rounded-lg border border-gray-300 text-sm">
 

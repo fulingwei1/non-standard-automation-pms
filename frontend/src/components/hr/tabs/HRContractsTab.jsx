@@ -138,7 +138,7 @@ export default function HRContractsTab() {
                   >
                     <option value="all">全部状态</option>
                     {Object.entries(contractStatusMap).map(([key, config]) => (
-                      <option key={key} value={key}>
+                      <option key={key} value={key || "unknown"}>
                         {config.label}
                       </option>
                     ))}

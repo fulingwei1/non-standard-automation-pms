@@ -458,7 +458,7 @@ export default function MeetingReports() {
                 className="w-full px-3 py-2 border rounded-lg">
 
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) =>
-                <option key={m} value={m}>
+                <option key={m} value={m || "unknown"}>
                       {m}月
                 </option>
                 )}

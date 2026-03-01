@@ -444,12 +444,12 @@ export default function ResourceOverview() {
           <Filter className="w-4 h-4 text-slate-400" />
           <select
             className="bg-surface-1 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={department}
+            value={department || "unknown"}
             onChange={(e) => setDepartment(e.target.value)}
           >
             <option value="">全部部门</option>
             {departments.map((d) => (
-              <option key={d} value={d}>
+              <option key={d} value={d || "unknown"}>
                 {d}
               </option>
             ))}

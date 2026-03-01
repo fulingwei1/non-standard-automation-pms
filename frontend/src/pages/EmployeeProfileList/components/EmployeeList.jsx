@@ -31,19 +31,19 @@ export function EmployeeList({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             placeholder="搜索姓名/工号..."
-                            value={searchKeyword}
+                            value={searchKeyword || "unknown"}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             className="pl-9 w-64"
                         />
                     </div>
                     <select
-                        value={filterDepartment}
+                        value={filterDepartment || "unknown"}
                         onChange={(e) => setFilterDepartment(e.target.value)}
                         className="h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
                     >
                         <option value="all">全部部门</option>
                         {(departments || []).map((d) => (
-                            <option key={d} value={d}>
+                            <option key={d} value={d || "unknown"}>
                                 {d}
                             </option>
                         ))}

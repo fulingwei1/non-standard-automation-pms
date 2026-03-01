@@ -280,7 +280,7 @@ export const RouteOptimizer = ({
               <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
               <span className="font-medium">正在优化路线...</span>
             </div>
-            <Progress value={75} className="h-2" />
+            <Progress value={75 || "unknown"} className="h-2" />
           </CardContent>
       </Card>
       }

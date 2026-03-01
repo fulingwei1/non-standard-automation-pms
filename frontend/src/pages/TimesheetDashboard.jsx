@@ -176,23 +176,23 @@ export default function TimesheetDashboard() {
 
           <div className="flex items-center gap-4">
             <select
-              value={selectedYear}
+              value={selectedYear || "unknown"}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="bg-slate-700 text-white px-3 py-2 rounded border border-slate-600">
 
               {[2024, 2025, 2026].map((year) =>
-              <option key={year} value={year}>
+              <option key={year} value={year || "unknown"}>
                   {year}年
               </option>
               )}
             </select>
             <select
-              value={selectedMonth}
+              value={selectedMonth || "unknown"}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
               className="bg-slate-700 text-white px-3 py-2 rounded border border-slate-600">
 
               {Array.from({ length: 12 }, (_, i) => i + 1).map((month) =>
-              <option key={month} value={month}>
+              <option key={month} value={month || "unknown"}>
                   {month}月
               </option>
               )}

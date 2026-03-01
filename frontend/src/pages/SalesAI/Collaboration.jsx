@@ -102,7 +102,7 @@ function CollaborationMessages() {
         <CardContent className="pt-4">
           <Textarea
             placeholder="输入协作留言，可使用 @ 提及同事..."
-            value={newMessage}
+            value={newMessage || "unknown"}
             onChange={(e) => setNewMessage(e.target.value)}
             className="mb-2"
           />

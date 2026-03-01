@@ -55,7 +55,7 @@ export default function QuoteManagementCenter() {
         description="统一管理报价与报价模板"
       />
 
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab || "unknown"} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2">
           {(tabs || []).map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
@@ -64,11 +64,11 @@ export default function QuoteManagementCenter() {
           ))}
         </TabsList>
 
-        <TabsContent value={TAB_QUOTES} className="space-y-6">
+        <TabsContent value={TAB_QUOTES || "unknown"} className="space-y-6">
           <QuoteManagement embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_TEMPLATES} className="space-y-6">
+        <TabsContent value={TAB_TEMPLATES || "unknown"} className="space-y-6">
           <SalesTemplateCenter embedded />
         </TabsContent>
       </Tabs>

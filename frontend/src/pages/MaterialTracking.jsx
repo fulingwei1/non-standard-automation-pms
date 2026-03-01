@@ -166,7 +166,7 @@ const MaterialRow = ({ material, onView }) => {
                 {arrivalProgress.toFixed(0)}%
               </span>
             </div>
-            <Progress value={arrivalProgress} className="h-1.5" />
+            <Progress value={arrivalProgress || "unknown"} className="h-1.5" />
           </div>
           {material.arrivedQuantity > 0 &&
           <div>
@@ -176,7 +176,7 @@ const MaterialRow = ({ material, onView }) => {
                   {usageProgress.toFixed(0)}%
                 </span>
               </div>
-              <Progress value={usageProgress} className="h-1.5" />
+              <Progress value={usageProgress || "unknown"} className="h-1.5" />
           </div>
           }
         </div>
@@ -551,7 +551,7 @@ export default function MaterialTracking() {
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
               <Input
                 placeholder="搜索物料名、物料码、供应商..."
-                value={searchText}
+                value={searchText || "unknown"}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-10" />
 

@@ -293,7 +293,7 @@ export default function TimesheetBatchOperations() {
                 状态筛选
               </label>
               <select
-                value={filterStatus}
+                value={filterStatus || "unknown"}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full bg-slate-700 text-white px-3 py-2 rounded border border-slate-600">
 
@@ -500,7 +500,7 @@ export default function TimesheetBatchOperations() {
                 审批意见（可选）
               </label>
               <textarea
-                value={approveComment}
+                value={approveComment || "unknown"}
                 onChange={(e) => setApproveComment(e.target.value)}
                 className="w-full bg-slate-700 text-white px-3 py-2 rounded border border-slate-600 min-h-[100px]"
                 placeholder="请输入审批意见..." />

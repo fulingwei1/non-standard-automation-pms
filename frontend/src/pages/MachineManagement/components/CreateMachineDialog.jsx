@@ -71,7 +71,7 @@ export function CreateMachineDialog({ open, onOpenChange, formData, onFormChange
                                 </SelectTrigger>
                                 <SelectContent>
                                     {Object.entries(statusConfigs).map(([key, config]) => (
-                                        <SelectItem key={key} value={key}>
+                                        <SelectItem key={key} value={key || "unknown"}>
                                             {config.label}
                                         </SelectItem>
                                     ))}
@@ -89,7 +89,7 @@ export function CreateMachineDialog({ open, onOpenChange, formData, onFormChange
                                 </SelectTrigger>
                                 <SelectContent>
                                     {Object.entries(healthConfigs).map(([key, config]) => (
-                                        <SelectItem key={key} value={key}>
+                                        <SelectItem key={key} value={key || "unknown"}>
                                             {config.label}
                                         </SelectItem>
                                     ))}

@@ -156,7 +156,7 @@ export const SalesTeamManager = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="搜索销售成员..."
-              value={localSearchTerm}
+              value={localSearchTerm || "unknown"}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 bg-slate-800/60 border-slate-700 text-white placeholder-slate-400"
             />
@@ -241,7 +241,7 @@ export const SalesTeamManager = ({
                   <div className="flex items-center gap-3">
                     {onRankingTypeChange && (
                       <Select
-                        value={rankingType}
+                        value={rankingType || "unknown"}
                         onValueChange={onRankingTypeChange}
                       >
                         <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white text-sm">

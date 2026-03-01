@@ -85,13 +85,13 @@ function ScriptRecommendation() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
-        <Select value={scenario} onValueChange={setScenario}>
+        <Select value={scenario || "unknown"} onValueChange={setScenario}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {scenarios.map((s) => (
-              <SelectItem key={s} value={s}>
+              <SelectItem key={s} value={s || "unknown"}>
                 {s}
               </SelectItem>
             ))}
@@ -155,7 +155,7 @@ function ProposalGeneration() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
-        <Select value={proposalType} onValueChange={setProposalType}>
+        <Select value={proposalType || "unknown"} onValueChange={setProposalType}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
@@ -226,7 +226,7 @@ function CompetitorAnalysis() {
           type="text"
           placeholder="输入竞品公司名称"
           className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2"
-          value={competitorName}
+          value={competitorName || "unknown"}
           onChange={(e) => setCompetitorName(e.target.value)}
         />
         <Button onClick={analyze}>

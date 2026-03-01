@@ -298,7 +298,7 @@ export function ECNEvaluationManager({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(impactTypeConfigs).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.icon} {config.label}
                     </SelectItem>
                     )}

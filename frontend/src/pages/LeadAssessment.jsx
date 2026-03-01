@@ -498,7 +498,7 @@ const LeadAssessment = () => {
               导出数据
             </Button>
             <Radio.Group
-              value={viewLayout}
+              value={viewLayout || "unknown"}
               onChange={(e) => setViewLayout(e.target.value)}
               buttonStyle="solid">
 
@@ -516,7 +516,7 @@ const LeadAssessment = () => {
             <Input
               placeholder="搜索公司名称、联系人、电话..."
               prefix={<Search size={16} />}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

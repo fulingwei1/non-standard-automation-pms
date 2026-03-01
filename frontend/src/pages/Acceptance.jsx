@@ -839,7 +839,7 @@ export default function Acceptance() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       placeholder="搜索验收单..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9"
                     />
@@ -958,7 +958,7 @@ export default function Acceptance() {
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(typeConfigs).map(([key, config]) => (
-                          <SelectItem key={key} value={key}>
+                          <SelectItem key={key} value={key || "unknown"}>
                             {config.label}
                           </SelectItem>
                         ))}

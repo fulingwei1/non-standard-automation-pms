@@ -188,7 +188,7 @@ export default function ProgressReport() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">报告类型</label>
-              <Select value={reportType} onValueChange={setReportType}>
+              <Select value={reportType || "unknown"} onValueChange={setReportType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -202,7 +202,7 @@ export default function ProgressReport() {
               <label className="text-sm font-medium mb-2 block">报告日期</label>
               <Input
                 type="date"
-                value={reportDate}
+                value={reportDate || "unknown"}
                 onChange={(e) => setReportDate(e.target.value)} />
 
             </div>
@@ -265,7 +265,7 @@ export default function ProgressReport() {
                         更新进度
                       </Button>
                     </div>
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress || "unknown"} className="h-2" />
                 </div>);
 
             })}
@@ -286,7 +286,7 @@ export default function ProgressReport() {
               </label>
               <textarea
                 className="w-full min-h-[120px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={reportContent}
+                value={reportContent || "unknown"}
                 onChange={(e) => setReportContent(e.target.value)}
                 placeholder="请填写工作内容、完成情况、遇到的问题等..." />
 
@@ -328,12 +328,12 @@ export default function ProgressReport() {
                     type="number"
                     min="0"
                     max="100"
-                    value={progressValue}
+                    value={progressValue || "unknown"}
                     onChange={(e) =>
                     setProgressValue(parseInt(e.target.value) || 0)
                     } />
 
-                    <Progress value={progressValue} className="h-2" />
+                    <Progress value={progressValue || "unknown"} className="h-2" />
                   </div>
                 </div>
                 <div>
@@ -342,7 +342,7 @@ export default function ProgressReport() {
                   </label>
                   <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={progressNote}
+                  value={progressNote || "unknown"}
                   onChange={(e) => setProgressNote(e.target.value)}
                   placeholder="填写进度说明..." />
 

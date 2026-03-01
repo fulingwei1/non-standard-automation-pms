@@ -433,7 +433,7 @@ export default function ReceivableManagement() {
                                   {percentage.toFixed(1)}%
                                 </span>
                               </div>
-                              <Progress value={percentage} className="h-2" />
+                              <Progress value={percentage || "unknown"} className="h-2" />
                             </div>
                           </div>
                         </CardContent>
@@ -514,7 +514,7 @@ export default function ReceivableManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="搜索发票编码..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10" />
 
@@ -626,7 +626,7 @@ export default function ReceivableManagement() {
                         }
                         </div>
                         <div className="mt-2">
-                          <Progress value={paymentProgress} className="h-2" />
+                          <Progress value={paymentProgress || "unknown"} className="h-2" />
                           <div className="flex items-center justify-between mt-1 text-xs text-slate-400">
                             <span>
                               已收: {formatCurrency(paidAmount)} /{" "}

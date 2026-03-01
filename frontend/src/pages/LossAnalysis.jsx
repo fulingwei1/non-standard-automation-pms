@@ -90,7 +90,7 @@ export default function LossAnalysis() {
               <label className="text-sm text-slate-500 mb-1 block">开始日期</label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -98,7 +98,7 @@ export default function LossAnalysis() {
               <label className="text-sm text-slate-500 mb-1 block">结束日期</label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)} />
 
             </div>
@@ -106,7 +106,7 @@ export default function LossAnalysis() {
               <label className="text-sm text-slate-500 mb-1 block">销售人员ID</label>
               <Input
                 type="number"
-                value={salespersonId}
+                value={salespersonId || "unknown"}
                 onChange={(e) => setSalespersonId(e.target.value)}
                 placeholder="可选" />
 

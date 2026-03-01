@@ -55,7 +55,7 @@ export const ScoringForm = ({
                 type="number"
                 min="60"
                 max="100"
-                value={score}
+                value={score || "unknown"}
                 onChange={(e) => onScoreChange(e.target.value)}
                 placeholder="请输入分数"
                 className="w-32 h-16 px-4 text-center text-3xl font-bold bg-slate-900/50 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
@@ -108,7 +108,7 @@ export const ScoringForm = ({
           </label>
 
           <textarea
-            value={comment}
+            value={comment || "unknown"}
             onChange={(e) => onCommentChange(e.target.value)}
             placeholder="请填写具体的评价意见，包括优点、不足及改进建议..."
             className="w-full h-40 px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"

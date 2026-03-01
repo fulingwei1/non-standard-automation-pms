@@ -29,12 +29,12 @@ export function RuleFilters({
           <div className="flex-1 min-w-[200px]">
             <Input
               placeholder="搜索规则编码或名称..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-surface-2"
             />
           </div>
-          <Select value={selectedType} onValueChange={setSelectedType}>
+          <Select value={selectedType || "unknown"} onValueChange={setSelectedType}>
             <SelectTrigger className="w-[150px] bg-surface-2">
               <SelectValue placeholder="规则类型" />
             </SelectTrigger>
@@ -47,7 +47,7 @@ export function RuleFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+          <Select value={selectedTarget || "unknown"} onValueChange={setSelectedTarget}>
             <SelectTrigger className="w-[150px] bg-surface-2">
               <SelectValue placeholder="监控对象" />
             </SelectTrigger>

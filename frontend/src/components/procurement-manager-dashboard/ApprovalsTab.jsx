@@ -24,13 +24,13 @@ export default function ApprovalsTab({
           <div className="relative">
             <Input
               placeholder="搜索订单号或供应商..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 w-64 bg-surface-100 border-white/10"
             />
           </div>
           <select
-            value={filterStatus}
+            value={filterStatus || "unknown"}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 rounded-lg bg-surface-100 border border-white/10 text-white text-sm"
           >

@@ -461,7 +461,7 @@ export default function TimelineView({ data, loading, stageActions, onRefresh })
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Progress value={overall_progress} className="h-2 bg-gray-700" />
+          <Progress value={overall_progress || "unknown"} className="h-2 bg-gray-700" />
         </CardContent>
       </Card>
 

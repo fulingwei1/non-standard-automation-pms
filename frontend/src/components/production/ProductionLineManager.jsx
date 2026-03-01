@@ -374,7 +374,7 @@ export default function ProductionLineManager({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="搜索生产线名称、编号或负责人..."
-                value={searchQuery}
+                value={searchQuery || "unknown"}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10" />
 
@@ -382,7 +382,7 @@ export default function ProductionLineManager({
             
             <div className="flex gap-2">
               <select
-                value={filterStatus}
+                value={filterStatus || "unknown"}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm">
 
@@ -395,7 +395,7 @@ export default function ProductionLineManager({
               </select>
               
               <select
-                value={selectedShift}
+                value={selectedShift || "unknown"}
                 onChange={(e) => setSelectedShift(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm">
 

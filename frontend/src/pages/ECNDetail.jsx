@@ -328,7 +328,7 @@ export default function ECNDetail() {
 
 
       <div className="max-w-[1600px] mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-8 w-full bg-slate-800/50 border border-slate-700">
             {(tabConfigs || []).map((tab) =>
             <TabsTrigger

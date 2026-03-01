@@ -255,12 +255,12 @@ export default function OfficeSuppliesManagement() {
               <div className="flex gap-4">
                 <Input
                   placeholder="搜索物品名称..."
-                  value={searchText}
+                  value={searchText || "unknown"}
                   onChange={(e) => setSearchText(e.target.value)}
                   className="flex-1" />
 
                 <select
-                  value={categoryFilter}
+                  value={categoryFilter || "unknown"}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 
@@ -269,7 +269,7 @@ export default function OfficeSuppliesManagement() {
                   <option value="办公文具">办公文具</option>
                 </select>
                 <select
-                  value={statusFilter}
+                  value={statusFilter || "unknown"}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

@@ -119,7 +119,7 @@ export default function PipelineBreakAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -129,7 +129,7 @@ export default function PipelineBreakAnalysis() {
               </label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)} />
 
             </div>
@@ -139,7 +139,7 @@ export default function PipelineBreakAnalysis() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={pipelineType}
+                value={pipelineType || "unknown"}
                 onChange={(e) => setPipelineType(e.target.value)}>
 
                 <option value="all">全部</option>
@@ -191,7 +191,7 @@ export default function PipelineBreakAnalysis() {
       </Card>
       }
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">断链概览</TabsTrigger>
           <TabsTrigger value="stages">按环节分析</TabsTrigger>

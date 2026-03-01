@@ -39,7 +39,7 @@ export default function MaterialFilters({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
           <Input
             placeholder="搜索物料编码、名称、规格..."
-            value={searchTerm}
+            value={searchTerm || "unknown"}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             className="pl-10 bg-slate-900 border-slate-700 text-white"
           />

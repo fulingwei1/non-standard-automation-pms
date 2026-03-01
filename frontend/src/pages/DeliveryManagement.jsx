@@ -672,7 +672,7 @@ const DeliveryManagement = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索订单号、客户名称..."
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 bg-surface-100 border-white/10 max-w-md"
             />
@@ -682,7 +682,7 @@ const DeliveryManagement = () => {
 
       {/* 主要内容区域 */}
       <Card className="bg-surface-100/50">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-surface-100">
             <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <PackageCheck size={16} className="mr-2" />

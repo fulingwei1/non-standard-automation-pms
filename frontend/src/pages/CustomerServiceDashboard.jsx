@@ -341,7 +341,7 @@ const CustomerServiceDashboard = () => {
     render: (satisfaction) =>
     satisfaction ?
     <div>
-            <Rate disabled value={satisfaction} style={{ fontSize: 12 }} />
+            <Rate disabled value={satisfaction || "unknown"} style={{ fontSize: 12 }} />
             <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
               {satisfaction}/5.0
             </div>
@@ -454,7 +454,7 @@ const CustomerServiceDashboard = () => {
             <Input
               placeholder="搜索工单标题、客户名称..."
               prefix={<Search size={16} />}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

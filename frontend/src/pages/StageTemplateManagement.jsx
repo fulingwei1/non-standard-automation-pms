@@ -379,12 +379,12 @@ export default function StageTemplateManagement() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="搜索模板名称或编码..."
-                  value={searchKeyword}
+                  value={searchKeyword || "unknown"}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10 bg-white/5 border-white/10"
                 />
               </div>
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterType || "unknown"} onValueChange={setFilterType}>
                 <SelectTrigger className="w-[180px] bg-white/5 border-white/10">
                   <SelectValue placeholder="项目类型" />
                 </SelectTrigger>
@@ -396,7 +396,7 @@ export default function StageTemplateManagement() {
                   <SelectItem value="MAINTENANCE">维保项目</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={filterActive} onValueChange={setFilterActive}>
+              <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
                 <SelectTrigger className="w-[120px] bg-white/5 border-white/10">
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>

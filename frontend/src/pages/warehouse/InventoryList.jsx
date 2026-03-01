@@ -46,10 +46,10 @@ export default function InventoryList() {
         <div className="flex gap-3 items-center flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-            <Input placeholder="搜索物料编码/名称..." value={keyword} onChange={(e) => setKeyword(e.target.value)}
+            <Input placeholder="搜索物料编码/名称..." value={keyword || "unknown"} onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()} className="pl-9" />
           </div>
-          <Select value={warehouseId} onValueChange={(v) => { setWarehouseId(v); setPage(1); }}>
+          <Select value={warehouseId || "unknown"} onValueChange={(v) => { setWarehouseId(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue placeholder="全部仓库" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部仓库</SelectItem>
               {(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>

@@ -230,7 +230,7 @@ const HRTrainingTab = ({
                             <span className="text-slate-400">完成进度</span>
                             <span className="text-blue-400 font-medium">{completionRate}%</span>
                           </div>
-                          <Progress value={completionRate} className="h-1.5" />
+                          <Progress value={completionRate || "unknown"} className="h-1.5" />
                         </div>
                       )}
 

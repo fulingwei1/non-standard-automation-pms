@@ -437,13 +437,13 @@ export default function CustomerCommunication() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="搜索沟通记录..."
-                value={searchQuery}
+                value={searchQuery || "unknown"}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10" />
 
             </div>
             
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
@@ -456,7 +456,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
               <SelectTrigger>
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
@@ -469,7 +469,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger>
                 <SelectValue placeholder="沟通方式" />
               </SelectTrigger>
@@ -482,7 +482,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterTopic} onValueChange={setFilterTopic}>
+            <Select value={filterTopic || "unknown"} onValueChange={setFilterTopic}>
               <SelectTrigger>
                 <SelectValue placeholder="主题" />
               </SelectTrigger>
@@ -495,7 +495,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterCustomer} onValueChange={setFilterCustomer}>
+            <Select value={filterCustomer || "unknown"} onValueChange={setFilterCustomer}>
               <SelectTrigger>
                 <SelectValue placeholder="客户" />
               </SelectTrigger>
@@ -647,7 +647,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
-                  <SelectItem key={value} value={value} className="text-white">
+                  <SelectItem key={value} value={value || "unknown"} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                   </SelectItem>
                   )}
@@ -668,7 +668,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TOPIC).map(([_key, value]) =>
-                  <SelectItem key={value} value={value} className="text-white">
+                  <SelectItem key={value} value={value || "unknown"} className="text-white">
                       {COMMUNICATION_TOPIC_LABELS[value]}
                   </SelectItem>
                   )}
@@ -689,7 +689,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_PRIORITY).map(([_key, value]) =>
-                  <SelectItem key={value} value={value} className="text-white">
+                  <SelectItem key={value} value={value || "unknown"} className="text-white">
                       {COMMUNICATION_PRIORITY_LABELS[value]}
                   </SelectItem>
                   )}
@@ -785,7 +785,7 @@ export default function CustomerCommunication() {
                 <SelectContent className="bg-slate-800 border-slate-600">
                   <SelectItem value="__none__" className="text-white">未评分</SelectItem>
                   {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
-                  <SelectItem key={value} value={value.toString()} className="text-white">
+                  <SelectItem key={value} value={value?.toString() || "unknown"} className="text-white">
                       {CUSTOMER_SATISFACTION_LABELS[value]}
                   </SelectItem>
                   )}
@@ -994,7 +994,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
-                  <SelectItem key={value} value={value} className="text-white">
+                  <SelectItem key={value} value={value || "unknown"} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                   </SelectItem>
                   )}

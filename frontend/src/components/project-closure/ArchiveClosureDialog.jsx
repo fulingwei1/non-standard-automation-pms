@@ -55,7 +55,7 @@ export default function ArchiveClosureDialog({ open, onOpenChange, onSubmit }) {
                 归档路径
               </label>
               <textarea
-                value={pathsText}
+                value={pathsText || "unknown"}
                 onChange={(e) => setPathsText(e.target.value)}
                 placeholder={"/archives/closure/xxx.pdf\n/uploads/xxx.docx"}
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"

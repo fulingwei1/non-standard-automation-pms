@@ -66,7 +66,7 @@ export function AnalyticsDashboard() {
               <DashboardStatCard
                 key={key}
                 label={key}
-                value={value}
+                value={value || "unknown"}
                 icon={Activity}
               />
             ))}

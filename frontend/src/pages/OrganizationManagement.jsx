@@ -443,11 +443,11 @@ export default function OrganizationManagement() {
                 <>
                   <Input
                     placeholder="搜索组织名称/编码..."
-                    value={searchKeyword}
+                    value={searchKeyword || "unknown"}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     className="max-w-sm"
                   />
-                  <Select value={filterType} onValueChange={setFilterType}>
+                  <Select value={filterType || "unknown"} onValueChange={setFilterType}>
                     <SelectTrigger className="w-[150px]">
                       <SelectValue placeholder="筛选类型" />
                     </SelectTrigger>

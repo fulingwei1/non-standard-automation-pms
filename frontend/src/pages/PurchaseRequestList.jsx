@@ -442,13 +442,13 @@ export default function PurchaseRequestList() {
               <div className="flex-1">
                 <Input
                   placeholder="搜索申请单号..."
-                  value={searchQuery}
+                  value={searchQuery || "unknown"}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   icon={Search}
                   className="bg-slate-900/50 border-slate-700" />
 
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px] bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="状态筛选" />
                 </SelectTrigger>
@@ -460,7 +460,7 @@ export default function PurchaseRequestList() {
                   <SelectItem value="REJECTED">已驳回</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <Select value={projectFilter || "unknown"} onValueChange={setProjectFilter}>
                 <SelectTrigger className="w-full md:w-[180px] bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="项目筛选" />
                 </SelectTrigger>

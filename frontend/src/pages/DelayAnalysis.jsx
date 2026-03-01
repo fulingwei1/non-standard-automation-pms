@@ -123,7 +123,7 @@ export default function DelayAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -133,7 +133,7 @@ export default function DelayAnalysis() {
               </label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)} />
 
             </div>
@@ -144,7 +144,7 @@ export default function DelayAnalysis() {
               <Input
                 type="number"
                 placeholder="项目ID"
-                value={projectId}
+                value={projectId || "unknown"}
                 onChange={(e) => setProjectId(e.target.value)} />
 
             </div>
@@ -157,7 +157,7 @@ export default function DelayAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="root-cause">根因分析</TabsTrigger>
           <TabsTrigger value="impact">影响分析</TabsTrigger>

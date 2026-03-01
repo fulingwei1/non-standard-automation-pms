@@ -223,12 +223,12 @@ export default function WorkOrderManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索工单号、任务名称..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject} onValueChange={setFilterProject}>
+            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -241,27 +241,27 @@ export default function WorkOrderManagement() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
               <SelectTrigger>
                 <SelectValue placeholder="选择优先级" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部优先级</SelectItem>
                 {Object.entries(priorityConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -577,7 +577,7 @@ export default function WorkOrderManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(priorityConfigs).map(([key, config]) =>
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                     </SelectItem>
                     )}

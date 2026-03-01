@@ -296,7 +296,7 @@ export const SatisfactionCard = ({
                               <span className="text-sm text-slate-600">{config.label}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <Progress value={percentage} className="h-2 w-24" />
+                              <Progress value={percentage || "unknown"} className="h-2 w-24" />
                               <span className="text-sm text-slate-500 w-12 text-right">
                                 {percentage}%
                               </span>

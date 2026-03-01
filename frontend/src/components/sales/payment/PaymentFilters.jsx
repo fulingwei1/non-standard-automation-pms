@@ -29,7 +29,7 @@ export default function PaymentFilters({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索客户、项目或合同..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className="pl-10 bg-slate-900 border-slate-700 text-white placeholder-slate-400"
               />
@@ -40,13 +40,13 @@ export default function PaymentFilters({
           <div className="flex items-center gap-2">
             {/* 类型筛选 */}
             <select
-              value={selectedType}
+              value={selectedType || "unknown"}
               onChange={(e) => onTypeChange?.(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">全部类型</option>
               {Object.entries(PAYMENT_TYPES).map(([key, type]) => (
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                   {type.label}
                 </option>
               ))}
@@ -54,13 +54,13 @@ export default function PaymentFilters({
 
             {/* 状态筛选 */}
             <select
-              value={selectedStatus}
+              value={selectedStatus || "unknown"}
               onChange={(e) => onStatusChange?.(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">全部状态</option>
               {Object.entries(PAYMENT_STATUS).map(([key, status]) => (
-                <option key={key} value={key}>
+                <option key={key} value={key || "unknown"}>
                   {status.label}
                 </option>
               ))}

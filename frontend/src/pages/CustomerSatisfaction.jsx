@@ -399,7 +399,7 @@ const CustomerSatisfaction = () => {
       />
 
       {/* 主要内容区域 - Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-slate-800/50">
           <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
             <BarChart3 className="w-4 h-4 mr-2" />

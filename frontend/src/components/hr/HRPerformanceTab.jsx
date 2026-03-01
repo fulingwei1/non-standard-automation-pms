@@ -32,7 +32,7 @@ const PerformanceDistributionItem = ({ level, count, percentage, color }) => (
         </span>
       </div>
     </div>
-    <Progress value={percentage} className="h-2" />
+    <Progress value={percentage || "unknown"} className="h-2" />
   </div>
 );
 

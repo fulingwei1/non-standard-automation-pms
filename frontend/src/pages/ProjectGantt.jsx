@@ -178,7 +178,7 @@ export default function ProjectGantt() {
                         <div className="text-xs text-slate-500">完成度</div>
                       </div>
                     </div>
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress || "unknown"} className="h-2" />
                 </div>);
 
             })}

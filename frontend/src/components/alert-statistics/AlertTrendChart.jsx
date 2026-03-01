@@ -445,12 +445,12 @@ export function AlertTrendChart({
 
           <div className="flex items-center space-x-2">
             <TimeRangeSelector
-              value={timeRange}
+              value={timeRange || "unknown"}
               onChange={setTimeRange}
               className="w-32" />
 
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="trends">告警趋势</TabsTrigger>
                 <TabsTrigger value="resolution">解决率</TabsTrigger>

@@ -379,7 +379,7 @@ export default function TreeView({ data, loading, stageActions: _stageActions, o
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Progress value={overall_progress} className="h-2 bg-gray-700 mb-4" />
+          <Progress value={overall_progress || "unknown"} className="h-2 bg-gray-700 mb-4" />
           <StatsSummary data={data} />
         </CardContent>
       </Card>

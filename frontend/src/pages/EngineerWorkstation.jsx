@@ -776,7 +776,7 @@ export default function EngineerWorkstation() {
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Project Filter */}
                 <select
-                  value={projectFilter}
+                  value={projectFilter || "unknown"}
                   onChange={(e) => setProjectFilter(e.target.value)}
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
 
@@ -790,7 +790,7 @@ export default function EngineerWorkstation() {
 
                 {/* Status Filter */}
                 <select
-                  value={statusFilter}
+                  value={statusFilter || "unknown"}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
 
@@ -806,7 +806,7 @@ export default function EngineerWorkstation() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="搜索任务..."
-                    value={searchQuery}
+                    value={searchQuery || "unknown"}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 w-48" />
 

@@ -34,7 +34,7 @@ export function OrdersControls({
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
                             <Input
                                 placeholder="搜索订单编号、供应商..."
-                                value={searchQuery}
+                                value={searchQuery || "unknown"}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 bg-surface-2 border-border"
                             />
@@ -43,21 +43,21 @@ export function OrdersControls({
 
                     {/* Filters */}
                     <div className="flex gap-2">
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
                             <SelectTrigger className="w-40 bg-surface-2 border-border">
                                 <SelectValue placeholder="订单状态" />
                             </SelectTrigger>
                             <SelectContent className="bg-surface-2 border-border">
                                 <SelectItem value="all">全部状态</SelectItem>
                                 {Object.entries(ORDER_STATUS_CONFIGS).map(([key, config]) => (
-                                    <SelectItem key={key} value={key}>
+                                    <SelectItem key={key} value={key || "unknown"}>
                                         {config.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
 
-                        <Select value={sortBy} onValueChange={setSortBy}>
+                        <Select value={sortBy || "unknown"} onValueChange={setSortBy}>
                             <SelectTrigger className="w-32 bg-surface-2 border-border">
                                 <SelectValue />
                             </SelectTrigger>

@@ -751,7 +751,7 @@ export default function RequirementSurvey() {
             <Input
               type="text"
               placeholder="搜索客户、商机、调研编号..."
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full"
             />
@@ -760,7 +760,7 @@ export default function RequirementSurvey() {
           {/* 筛选 */}
           <div className="flex items-center gap-3 flex-wrap">
             <select
-              value={selectedStatus}
+              value={selectedStatus || "unknown"}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -771,7 +771,7 @@ export default function RequirementSurvey() {
               ))}
             </select>
             <select
-              value={selectedMethod}
+              value={selectedMethod || "unknown"}
               onChange={(e) => setSelectedMethod(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >

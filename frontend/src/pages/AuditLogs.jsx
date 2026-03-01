@@ -177,14 +177,14 @@ export default function AuditLogs() {
               <Input
                 type="number"
                 placeholder="操作人ID"
-                value={operatorId}
+                value={operatorId || "unknown"}
                 onChange={(e) => setOperatorId(e.target.value)}
               />
             </div>
 
             <div>
               <Label>目标类型</Label>
-              <Select value={targetType} onValueChange={setTargetType}>
+              <Select value={targetType || "unknown"} onValueChange={setTargetType}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>
@@ -202,7 +202,7 @@ export default function AuditLogs() {
               <Input
                 type="number"
                 placeholder="目标ID"
-                value={targetId}
+                value={targetId || "unknown"}
                 onChange={(e) => setTargetId(e.target.value)}
               />
             </div>
@@ -211,7 +211,7 @@ export default function AuditLogs() {
               <Label>操作类型</Label>
               <Input
                 placeholder="操作类型"
-                value={action}
+                value={action || "unknown"}
                 onChange={(e) => setAction(e.target.value)}
               />
             </div>
@@ -220,7 +220,7 @@ export default function AuditLogs() {
               <Label>开始日期</Label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
@@ -229,7 +229,7 @@ export default function AuditLogs() {
               <Label>结束日期</Label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>

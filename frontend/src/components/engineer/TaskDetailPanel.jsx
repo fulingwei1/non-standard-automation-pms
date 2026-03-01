@@ -351,11 +351,11 @@ export default function TaskDetailPanel({
                   type="range"
                   min="0"
                   max="100"
-                  value={progress}
+                  value={progress || "unknown"}
                   onChange={(e) => setProgress(Number(e.target.value))}
                   className="w-full h-2 bg-surface-2 rounded-lg appearance-none cursor-pointer accent-primary"
                 />
-                <Progress value={progress} className="h-2 mt-2" />
+                <Progress value={progress || "unknown"} className="h-2 mt-2" />
               </div>
 
               {/* Hours Input */}
@@ -366,7 +366,7 @@ export default function TaskDetailPanel({
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
-                    value={hours}
+                    value={hours || "unknown"}
                     onChange={(e) => setHours(Number(e.target.value))}
                     className="w-20"
                     min="0"

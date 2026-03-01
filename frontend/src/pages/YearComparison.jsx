@@ -149,7 +149,7 @@ export default function YearComparison() {
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <Select
-              value={previousYear.toString()}
+              value={previousYear?.toString() || "unknown"}
               onValueChange={(val) => setPreviousYear(parseInt(val))}
             >
               <SelectTrigger className="w-[120px] bg-slate-900/50 border-slate-700">
@@ -157,7 +157,7 @@ export default function YearComparison() {
               </SelectTrigger>
               <SelectContent>
                 {[2022, 2023, 2024, 2025].map((y) => (
-                  <SelectItem key={y} value={y.toString()}>
+                  <SelectItem key={y} value={y?.toString() || "unknown"}>
                     {y}年
                   </SelectItem>
                 ))}
@@ -165,7 +165,7 @@ export default function YearComparison() {
             </Select>
             <span className="flex items-center text-slate-400">→</span>
             <Select
-              value={currentYear.toString()}
+              value={currentYear?.toString() || "unknown"}
               onValueChange={(val) => setCurrentYear(parseInt(val))}
             >
               <SelectTrigger className="w-[120px] bg-slate-900/50 border-slate-700">
@@ -173,7 +173,7 @@ export default function YearComparison() {
               </SelectTrigger>
               <SelectContent>
                 {[2023, 2024, 2025, 2026].map((y) => (
-                  <SelectItem key={y} value={y.toString()}>
+                  <SelectItem key={y} value={y?.toString() || "unknown"}>
                     {y}年
                   </SelectItem>
                 ))}

@@ -178,7 +178,7 @@ export default function SearchPanel({
             <Input
               type="text"
               placeholder={placeholder}
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-10"
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()} />

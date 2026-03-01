@@ -65,10 +65,10 @@ export default function StockCount() {
         actions={<Button onClick={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> 新建盘点单</Button>} />
       <main className="container mx-auto px-4 py-6 space-y-4">
         <div className="flex gap-3 items-center">
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <Select value={statusFilter || "unknown"} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-36"><SelectValue placeholder="全部状态" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部状态</SelectItem>
-              {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+              {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k || "unknown"}>{v.label}</SelectItem>)}</SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={fetchData}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button>
         </div>

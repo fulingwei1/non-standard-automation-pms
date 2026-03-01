@@ -24,7 +24,7 @@ export function ProjectSelectionView({
                     <div className="mb-4">
                         <Input
                             placeholder="搜索项目名称或编码..."
-                            value={projectSearch}
+                            value={projectSearch || "unknown"}
                             onChange={(e) => setProjectSearch(e.target.value)}
                             className="w-full"
                             icon={Search}

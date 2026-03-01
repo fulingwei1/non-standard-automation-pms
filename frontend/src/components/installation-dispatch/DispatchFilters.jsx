@@ -35,14 +35,14 @@ export default function DispatchFilters({
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="搜索派工单..."
-            value={searchQuery}
+            value={searchQuery || "unknown"}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
           <SelectTrigger>
             <SelectValue placeholder="状态" />
           </SelectTrigger>
@@ -54,7 +54,7 @@ export default function DispatchFilters({
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterPriority} onValueChange={setFilterPriority}>
+        <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
           <SelectTrigger>
             <SelectValue placeholder="优先级" />
           </SelectTrigger>
@@ -66,7 +66,7 @@ export default function DispatchFilters({
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterProject} onValueChange={setFilterProject}>
+        <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
           <SelectTrigger>
             <SelectValue placeholder="项目" />
           </SelectTrigger>
@@ -78,13 +78,13 @@ export default function DispatchFilters({
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterTaskType} onValueChange={setFilterTaskType}>
+        <Select value={filterTaskType || "unknown"} onValueChange={setFilterTaskType}>
           <SelectTrigger>
             <SelectValue placeholder="任务类型" />
           </SelectTrigger>
           <SelectContent>
             {Object.entries(INSTALLATION_TYPE).map(([_key, value]) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem key={value} value={value || "unknown"}>
                 {INSTALLATION_TYPE_LABELS[value]}
               </SelectItem>
             ))}

@@ -926,7 +926,7 @@ export default function AIStaffMatching() {
               的原因：
             </p>
             <textarea
-              value={rejectReason}
+              value={rejectReason || "unknown"}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="请输入拒绝原因，如：工作负载过高、技能不匹配等"
               className="w-full h-24 px-3 py-2 rounded-md border border-white/10 bg-white/5 text-sm resize-none" />

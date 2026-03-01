@@ -92,7 +92,7 @@ export default function TaskCompleteDialog({ open, onClose, task, onComplete }) 
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">完工备注</label>
             <textarea
-              value={notes}
+              value={notes || "unknown"}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="记录完工情况、遇到的问题等..."
               className={cn(

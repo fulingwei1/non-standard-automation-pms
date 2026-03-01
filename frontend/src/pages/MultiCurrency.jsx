@@ -149,11 +149,11 @@ function ConverterCard({ rates: _rates }) {
             <label className="text-xs text-slate-400 mb-1 block">从</label>
             <select
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={fromCurrency}
+              value={fromCurrency || "unknown"}
               onChange={(e) => setFromCurrency(e.target.value)}
             >
               {Object.keys(currencyNames).map((c) => (
-                <option key={c} value={c}>{currencyNames[c]} ({c})</option>
+                <option key={c} value={c || "unknown"}>{currencyNames[c]} ({c})</option>
               ))}
             </select>
           </div>
@@ -161,11 +161,11 @@ function ConverterCard({ rates: _rates }) {
             <label className="text-xs text-slate-400 mb-1 block">到</label>
             <select
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={toCurrency}
+              value={toCurrency || "unknown"}
               onChange={(e) => setToCurrency(e.target.value)}
             >
               {Object.keys(currencyNames).map((c) => (
-                <option key={c} value={c}>{currencyNames[c]} ({c})</option>
+                <option key={c} value={c || "unknown"}>{currencyNames[c]} ({c})</option>
               ))}
             </select>
           </div>
@@ -176,7 +176,7 @@ function ConverterCard({ rates: _rates }) {
           <input
             type="number"
             className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-            value={amount}
+            value={amount || "unknown"}
             onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
           />
         </div>
@@ -305,7 +305,7 @@ function UpdateRateForm({ currency, currentRate, onClose, onSuccess }) {
               type="number"
               step="0.0001"
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={rate}
+              value={rate || "unknown"}
               onChange={(e) => setRate(e.target.value)}
               autoFocus
             />
@@ -316,7 +316,7 @@ function UpdateRateForm({ currency, currentRate, onClose, onSuccess }) {
             <input
               type="text"
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={note}
+              value={note || "unknown"}
               onChange={(e) => setNote(e.target.value)}
               placeholder="例如：央行公布新汇率"
             />

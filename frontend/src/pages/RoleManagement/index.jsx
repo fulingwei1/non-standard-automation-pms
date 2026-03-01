@@ -587,7 +587,7 @@ export default function RoleManagement() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(DATA_SCOPE_MAP).map(([key, config]) => (
-                                            <SelectItem key={key} value={key}>
+                                            <SelectItem key={key} value={key || "unknown"}>
                                                 {config.label}
                                             </SelectItem>
                                         ))}
@@ -620,7 +620,7 @@ export default function RoleManagement() {
                         <DialogTitle>编辑角色 - {editForm.role_name}</DialogTitle>
                     </DialogHeader>
                     <DialogBody className="flex-1 overflow-y-auto px-6">
-                        <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="w-full h-full flex flex-col">
+                        <Tabs value={activeEditTab || "unknown"} onValueChange={setActiveEditTab} className="w-full h-full flex flex-col">
                             <TabsList className="grid w-full grid-cols-2 shrink-0">
                                 <TabsTrigger value="basic">基本信息</TabsTrigger>
                                 <TabsTrigger value="permissions">
@@ -676,7 +676,7 @@ export default function RoleManagement() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {Object.entries(DATA_SCOPE_MAP).map(([key, config]) => (
-                                                <SelectItem key={key} value={key}>
+                                                <SelectItem key={key} value={key || "unknown"}>
                                                     {config.label}
                                                 </SelectItem>
                                             ))}
@@ -701,13 +701,13 @@ export default function RoleManagement() {
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <Input
                                                 placeholder="搜索权限编码或名称..."
-                                                value={permissionSearch}
+                                                value={permissionSearch || "unknown"}
                                                 onChange={(e) => setPermissionSearch(e.target.value)}
                                                 className="pl-9 bg-slate-800 border-slate-700"
                                             />
                                         </div>
                                         <Select
-                                            value={permissionModuleFilter}
+                                            value={permissionModuleFilter || "unknown"}
                                             onValueChange={setPermissionModuleFilter}
                                         >
                                             <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
@@ -716,7 +716,7 @@ export default function RoleManagement() {
                                             <SelectContent>
                                                 <SelectItem value="all">全部模块</SelectItem>
                                                 {getAllModules().map(module => (
-                                                    <SelectItem key={module} value={module}>
+                                                    <SelectItem key={module} value={module || "unknown"}>
                                                         {module}
                                                     </SelectItem>
                                                 ))}

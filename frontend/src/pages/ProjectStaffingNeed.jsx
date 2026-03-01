@@ -377,13 +377,13 @@ export default function ProjectStaffingNeed() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="搜索项目/角色..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-9 w-64"
               />
             </div>
             <select
-              value={filterStatus}
+              value={filterStatus || "unknown"}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
             >

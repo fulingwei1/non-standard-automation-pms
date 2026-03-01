@@ -1,23 +1,17 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useRequirementSurvey } from '../useRequirementSurvey';
-import { requirementExtractionApi as surveyApi } from '../../../../services/api/requirement';
+import { surveyApi } from '../../../../services/api/survey';
 
 // Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+vi.mock('../../../../services/api/survey', () => ({
+  surveyApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    submit: vi.fn(),
+  },
+}));
 
 describe('useRequirementSurvey Hook', () => {
   // Setup common mock data

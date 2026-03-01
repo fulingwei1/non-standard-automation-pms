@@ -372,7 +372,7 @@ const ContractManagement = () => {
             <Input
               placeholder="搜索合同标题、客户名称..."
               prefix={<Search size={16} />}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

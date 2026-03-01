@@ -85,7 +85,7 @@ export default function EditLeadDialog({
               >
                 {["NEW", "CONTACTED", "QUALIFIED", "LOST", "CONVERTED"].map(
                   (key) => (
-                    <option key={key} value={key}>
+                    <option key={key} value={key || "unknown"}>
                       {statusConfig[key]?.label || key}
                     </option>
                   )

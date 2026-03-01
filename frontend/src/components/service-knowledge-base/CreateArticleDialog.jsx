@@ -145,7 +145,7 @@ export default function CreateArticleDialog({ onClose, onSubmit }) {
               <label className="text-sm text-slate-400 mb-1 block">标签</label>
               <div className="flex gap-2">
                 <Input
-                  value={tagInput}
+                  value={tagInput || "unknown"}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                   placeholder="输入标签后按回车"

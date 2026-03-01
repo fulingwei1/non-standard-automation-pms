@@ -262,12 +262,12 @@ export default function BudgetManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索项目编码、名称..."
-                  value={searchKeyword}
+                  value={searchKeyword || "unknown"}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10 bg-slate-900/50 border-slate-700" />
 
               </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="预算状态" />
                 </SelectTrigger>
@@ -279,7 +279,7 @@ export default function BudgetManagement() {
                 </SelectContent>
               </Select>
               <Select
-                value={filterUsageRate}
+                value={filterUsageRate || "unknown"}
                 onValueChange={setFilterUsageRate}>
 
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">

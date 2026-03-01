@@ -138,7 +138,7 @@ export default function MobileMyShortageReports() {
 
       {/* 筛选栏 */}
       <div className="px-4 mb-3">
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-full">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="全部状态" />

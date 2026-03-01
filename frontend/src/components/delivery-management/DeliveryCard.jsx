@@ -50,7 +50,7 @@ const DeliveryProgress = ({ stage }) => {
         <span>配送进度</span>
         <span>{Math.round(progress)}%</span>
       </div>
-      <Progress value={progress} className="h-2" />
+      <Progress value={progress || "unknown"} className="h-2" />
       <div className="flex justify-between text-xs text-slate-500">
         {(stages || []).map((s, idx) =>
         <div key={s} className="text-center">

@@ -79,7 +79,7 @@ const DeliveryOverview = ({ data, _loading }) => {
         <StatCard
           icon={PackageCheck}
           title="已送达"
-          value={deliveredCount}
+          value={deliveredCount || "unknown"}
           iconBgClass="bg-slate-500/20"
           _textClass="text-slate-400"
         />
@@ -90,7 +90,7 @@ const DeliveryOverview = ({ data, _loading }) => {
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 space-y-3">
             <h3 className="text-sm font-medium text-slate-400">完成率</h3>
-            <Progress value={completionRate} className="h-2" />
+            <Progress value={completionRate || "unknown"} className="h-2" />
             <p className="text-xs text-slate-500">
               已送达 {deliveredCount} / {total}（取消 {cancelledCount}）
             </p>

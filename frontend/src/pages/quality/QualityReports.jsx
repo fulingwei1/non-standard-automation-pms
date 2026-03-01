@@ -149,7 +149,7 @@ export default function QualityReports() {
                   </div>
                   <h3 className="text-lg font-semibold text-text-primary">质量趋势</h3>
                 </div>
-                <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} className={inputCls}>
+                <select value={groupBy || "unknown"} onChange={(e) => setGroupBy(e.target.value)} className={inputCls}>
                   <option value="day">按日</option>
                   <option value="week">按周</option>
                   <option value="month">按月</option>

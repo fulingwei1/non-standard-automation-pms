@@ -50,7 +50,7 @@ describe('DashboardStatCard', () => {
         <DashboardStatCard
           icon={TrendingUp}
           label="项目数"
-          value={100}
+          value={100 || "unknown"}
         />
       );
       expect(screen.getByText('100')).toBeInTheDocument();
@@ -278,7 +278,7 @@ describe('DashboardStatCard', () => {
         <DashboardStatCard
           icon={TrendingUp}
           label="零值"
-          value={0}
+          value={0 || "unknown"}
         />
       );
       expect(screen.getByText('0')).toBeInTheDocument();
@@ -300,7 +300,7 @@ describe('DashboardStatCard', () => {
         <DashboardStatCard
           icon={TrendingUp}
           label="大数"
-          value={1000000}
+          value={1000000 || "unknown"}
         />
       );
       expect(screen.getByText('1000000')).toBeInTheDocument();

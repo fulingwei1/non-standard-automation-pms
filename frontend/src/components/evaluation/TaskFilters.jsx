@@ -24,7 +24,7 @@ export const TaskFilters = ({
           <input
             type="text"
             placeholder="搜索员工姓名..."
-            value={searchTerm}
+            value={searchTerm || "unknown"}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
           />
@@ -32,12 +32,12 @@ export const TaskFilters = ({
 
         {/* 周期选择 */}
         <select
-          value={periodFilter}
+          value={periodFilter || "unknown"}
           onChange={(e) => setPeriodFilter(e.target.value)}
           className="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >
           {(availablePeriods || []).map((period) => (
-            <option key={period} value={period}>
+            <option key={period} value={period || "unknown"}>
               {period.split("-")[0]}年{period.split("-")[1]}月
             </option>
           ))}
@@ -45,7 +45,7 @@ export const TaskFilters = ({
 
         {/* 状态筛选 */}
         <select
-          value={statusFilter}
+          value={statusFilter || "unknown"}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >
@@ -56,7 +56,7 @@ export const TaskFilters = ({
 
         {/* 类型筛选 */}
         <select
-          value={typeFilter}
+          value={typeFilter || "unknown"}
           onChange={(e) => setTypeFilter(e.target.value)}
           className="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >

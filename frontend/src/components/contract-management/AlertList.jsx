@@ -226,14 +226,14 @@ export function AlertList({
               type="text"
               placeholder="搜索预警..."
               className="px-3 py-1.5 text-sm border border-slate-200 rounded-md w-48"
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)} />
 
           </div>
 
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="状态筛选" />
               </SelectTrigger>
@@ -246,7 +246,7 @@ export function AlertList({
               </SelectContent>
             </Select>
 
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="类型筛选" />
               </SelectTrigger>

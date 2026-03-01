@@ -156,7 +156,7 @@ export default function WorkloadBoard() {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">部门</label>
-              <Select value={selectedDept} onValueChange={setSelectedDept}>
+              <Select value={selectedDept || "unknown"} onValueChange={setSelectedDept}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部部门" />
                 </SelectTrigger>

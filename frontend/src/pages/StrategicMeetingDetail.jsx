@@ -146,7 +146,7 @@ export default function StrategicMeetingDetail() {
       </Card>
 
       {/* 标签页 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="structure">
             <Target className="w-4 h-4 mr-2" />

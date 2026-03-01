@@ -282,14 +282,14 @@ export default function RdProjectDocuments() {
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="文档类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(docTypeMap).map(([key, value]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {value.label}
                 </SelectItem>
                 )}
@@ -460,7 +460,7 @@ export default function RdProjectDocuments() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(docTypeMap).map(([key, value]) =>
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                           {value.label}
                       </SelectItem>
                       )}

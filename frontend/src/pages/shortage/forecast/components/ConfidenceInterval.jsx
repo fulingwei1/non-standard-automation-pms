@@ -51,7 +51,7 @@ const ConfidenceInterval = ({ forecast }) => {
                 {accuracy.toFixed(1)}%
               </span>
             </div>
-            <Progress value={accuracy} className="h-3" />
+            <Progress value={accuracy || "unknown"} className="h-3" />
             <p className="text-xs text-gray-500 mt-2">
               {accuracy >= 90 && '预测精度极高，可信度强'}
               {accuracy >= 75 && accuracy < 90 && '预测精度良好，可作为参考'}

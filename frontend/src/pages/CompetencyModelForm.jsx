@@ -261,7 +261,7 @@ export default function CompetencyModelForm() {
                   岗位类型 <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={positionType}
+                  value={positionType || "unknown"}
                   onValueChange={(value) => {
                     setValue("position_type", value);
                     setValue("position_subtype", "");

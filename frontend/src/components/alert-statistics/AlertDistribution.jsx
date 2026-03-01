@@ -426,7 +426,7 @@ export function AlertDistribution({
           <CardTitle className="text-lg font-semibold">告警分布分析</CardTitle>
 
           <div className="flex items-center space-x-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="level">级别</TabsTrigger>
                 <TabsTrigger value="status">状态</TabsTrigger>

@@ -405,7 +405,7 @@ const AlertStatistics = () => {
             <Input
               placeholder="搜索告警标题、描述..."
               prefix={<Filter size={16} />}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

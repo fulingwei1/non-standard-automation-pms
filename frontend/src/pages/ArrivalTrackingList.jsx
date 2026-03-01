@@ -146,12 +146,12 @@ export default function ArrivalTrackingList() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索到货单号、物料编码..."
-                  value={searchKeyword}
+                  value={searchKeyword || "unknown"}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+              <Select value={filterSupplier || "unknown"} onValueChange={setFilterSupplier}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择供应商" />
                 </SelectTrigger>
@@ -165,7 +165,7 @@ export default function ArrivalTrackingList() {
                     return (
                       <SelectItem
                         key={supplier.id || supplier.supplier_id}
-                        value={supplierId}
+                        value={supplierId || "unknown"}
                       >
                         {supplier.supplier_name ||
                           supplier.name ||
@@ -175,7 +175,7 @@ export default function ArrivalTrackingList() {
                   })}
                 </SelectContent>
               </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
@@ -184,13 +184,13 @@ export default function ArrivalTrackingList() {
                   {Object.entries(statusConfigs)
                     .filter(([key]) => key && key !== "")
                     .map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key || "unknown"}>
                         {config.label}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
-              <Select value={filterDelayed} onValueChange={setFilterDelayed}>
+              <Select value={filterDelayed || "unknown"} onValueChange={setFilterDelayed}>
                 <SelectTrigger>
                   <SelectValue placeholder="延迟状态" />
                 </SelectTrigger>

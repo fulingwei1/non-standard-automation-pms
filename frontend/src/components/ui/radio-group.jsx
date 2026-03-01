@@ -60,7 +60,7 @@ const RadioGroupItem = React.forwardRef(
           id={id}
           type="radio"
           name={ctx.name}
-          value={value}
+          value={value || "unknown"}
           checked={checked}
           disabled={disabled}
           onChange={() => ctx.onValueChange?.(String(value))}

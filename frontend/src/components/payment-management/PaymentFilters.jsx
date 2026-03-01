@@ -37,7 +37,7 @@ export default function PaymentFilters({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索客户、项目或合同..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                 className="pl-10 bg-slate-900 border-slate-700 text-white"
               />
@@ -45,7 +45,7 @@ export default function PaymentFilters({
           </div>
           <div className="flex items-center gap-2">
             <select
-              value={selectedType}
+              value={selectedType || "unknown"}
               onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2"
             >
@@ -57,7 +57,7 @@ export default function PaymentFilters({
               ))}
             </select>
             <select
-              value={selectedStatus}
+              value={selectedStatus || "unknown"}
               onChange={(e) => onStatusChange && onStatusChange(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2"
             >

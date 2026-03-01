@@ -345,7 +345,7 @@ function HierarchyRollup() {
 
   return (
     <div className="space-y-6">
-      <Tabs value={selectedLevel} onValueChange={setSelectedLevel}>
+      <Tabs value={selectedLevel || "unknown"} onValueChange={setSelectedLevel}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="GM">
             <Briefcase className="w-4 h-4 mr-2" />

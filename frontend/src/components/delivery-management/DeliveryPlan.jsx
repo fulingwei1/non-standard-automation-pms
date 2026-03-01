@@ -172,16 +172,16 @@ const DeliveryPlan = ({ deliveries = [], loading }) => {
               </div>
               <div className="flex items-center gap-2">
                 <select
-                  value={pageSize}
+                  value={pageSize || "unknown"}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
                   className="px-3 py-1.5 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value={10}>10 条/页</option>
-                  <option value={20}>20 条/页</option>
-                  <option value={50}>50 条/页</option>
+                  <option value={10 || "unknown"}>10 条/页</option>
+                  <option value={20 || "unknown"}>20 条/页</option>
+                  <option value={50 || "unknown"}>50 条/页</option>
                 </select>
                 <Button
                   variant="outline"

@@ -36,7 +36,7 @@ const AttendanceTrendItem = ({ date, attendanceRate, lateCount, leaveCount }) =>
         </div>
       </div>
     </div>
-    <Progress value={attendanceRate} className="h-2" />
+    <Progress value={attendanceRate || "unknown"} className="h-2" />
 </div>;
 
 

@@ -220,7 +220,7 @@ export default function CpqConfigurator() {
       case "select":
         return (
           <Select
-            value={fieldValue}
+            value={fieldValue || "unknown"}
             onValueChange={(value) => handleSelectionChange(key, value)}>
 
             <SelectTrigger>
@@ -259,7 +259,7 @@ export default function CpqConfigurator() {
             </Button>
             <Input
               type="number"
-              value={fieldValue}
+              value={fieldValue || "unknown"}
               onChange={(e) =>
               handleSelectionChange(key, parseFloat(e.target.value) || 0)
               }
@@ -292,7 +292,7 @@ export default function CpqConfigurator() {
       default:
         return (
           <Input
-            value={fieldValue}
+            value={fieldValue || "unknown"}
             onChange={(e) => handleSelectionChange(key, e.target.value)}
             placeholder={fieldConfig.placeholder || `输入${fieldConfig.label}`} />);
 
@@ -443,7 +443,7 @@ export default function CpqConfigurator() {
                   <Label>手动折扣 (%)</Label>
                   <Input
                   type="number"
-                  value={manualDiscount}
+                  value={manualDiscount || "unknown"}
                   onChange={(e) => setManualDiscount(e.target.value)}
                   placeholder="输入折扣百分比"
                   min={0}
@@ -454,7 +454,7 @@ export default function CpqConfigurator() {
                   <Label>附加费用 (%)</Label>
                   <Input
                   type="number"
-                  value={manualMarkup}
+                  value={manualMarkup || "unknown"}
                   onChange={(e) => setManualMarkup(e.target.value)}
                   placeholder="输入附加费用百分比"
                   min={0} />

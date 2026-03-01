@@ -32,7 +32,7 @@ export const WeightInputCard = ({
             type="number"
             min="0"
             max="100"
-            value={weight}
+            value={weight || "unknown"}
             onChange={(e) => onChange(type, e.target.value)}
             className="w-24 h-12 px-4 text-center text-2xl font-bold bg-slate-900/50 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
           />
@@ -41,7 +41,7 @@ export const WeightInputCard = ({
             type="range"
             min="0"
             max="100"
-            value={weight}
+            value={weight || "unknown"}
             onChange={(e) => onChange(type, e.target.value)}
             className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />

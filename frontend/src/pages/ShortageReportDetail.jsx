@@ -649,7 +649,7 @@ export default function ShortageReportDetail() {
               <Textarea
                 id="reject_reason"
                 placeholder="请详细说明驳回原因..."
-                value={rejectReason}
+                value={rejectReason || "unknown"}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={4}
               />

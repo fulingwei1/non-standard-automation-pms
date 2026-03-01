@@ -67,7 +67,7 @@ const ProgressWithLabel = React.forwardRef(
         <span className="text-slate-400">{label}</span>
         <span className="text-white font-medium">{value}%</span>
       </div>
-      <Progress ref={ref} value={value} {...props} />
+      <Progress ref={ref} value={value || "unknown"} {...props} />
     </div>
   ),
 );

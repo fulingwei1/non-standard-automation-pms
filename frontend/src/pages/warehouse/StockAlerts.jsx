@@ -53,10 +53,10 @@ export default function StockAlerts() {
         <div className="flex gap-3 items-center">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-            <Input placeholder="搜索物料..." value={keyword} onChange={(e) => setKeyword(e.target.value)}
+            <Input placeholder="搜索物料..." value={keyword || "unknown"} onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()} className="pl-9" />
           </div>
-          <Select value={alertType} onValueChange={(v) => { setAlertType(v); setPage(1); }}>
+          <Select value={alertType || "unknown"} onValueChange={(v) => { setAlertType(v); setPage(1); }}>
             <SelectTrigger className="w-36"><SelectValue placeholder="全部类型" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部</SelectItem><SelectItem value="LOW">低库存</SelectItem><SelectItem value="OVERSTOCK">超储</SelectItem></SelectContent>
           </Select>

@@ -276,7 +276,7 @@ export default function ECNStatistics() {
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
             <div className="text-sm font-medium">时间范围：</div>
-            <Select value={timeRange} onValueChange={setTimeRange}>
+            <Select value={timeRange || "unknown"} onValueChange={setTimeRange}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>

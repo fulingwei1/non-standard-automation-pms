@@ -243,7 +243,7 @@ export default function AIClarificationChat() {
                   className="bg-gray-700 border-gray-600 text-white"
                   placeholder="请输入问题，每行一个&#10;例如：&#10;接口协议是否已确定？&#10;节拍要求是否可调整？"
                   rows={6}
-                  value={questions}
+                  value={questions || "unknown"}
                   onChange={(e) => setQuestions(e.target.value)} />
 
               </div>

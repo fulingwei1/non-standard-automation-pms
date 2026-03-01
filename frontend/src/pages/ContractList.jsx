@@ -245,19 +245,19 @@ export default function ContractList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索合同号、名称..."
-              value={searchTerm}
+              value={searchTerm || "unknown"}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-64" />
 
           </div>
           <select
-            value={selectedStatus}
+            value={selectedStatus || "unknown"}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
             <option value="all">全部状态</option>
             {Object.entries(statusConfig).map(([key, val]) =>
-            <option key={key} value={key}>
+            <option key={key} value={key || "unknown"}>
                 {val.label}
             </option>
             )}
@@ -362,7 +362,7 @@ export default function ContractList() {
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <Progress
-                            value={paymentProgress}
+                            value={paymentProgress || "unknown"}
                             className="w-20 h-2" />
 
                           <span className="text-xs text-slate-400">
@@ -557,7 +557,7 @@ function ContractDetailPanel({ contract, onClose }) {
               </div>
             </div>
           </div>
-          <Progress value={paymentProgress} className="h-2" />
+          <Progress value={paymentProgress || "unknown"} className="h-2" />
           <div className="flex justify-between text-xs text-slate-400 mt-2">
             <span>已收: ¥{(contract.paidAmount / 10000).toFixed(1)}万</span>
             <span>

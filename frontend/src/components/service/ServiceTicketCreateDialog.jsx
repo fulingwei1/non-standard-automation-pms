@@ -247,7 +247,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
 
                   <option value="">选择问题类型</option>
                   {Object.entries(problemTypeConfigs).map(([key, config]) =>
-                  <option key={key} value={key}>
+                  <option key={key} value={key || "unknown"}>
                       {config.icon} {config.label}
                   </option>
                   )}
@@ -263,7 +263,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white">
 
                   {Object.entries(urgencyConfigs).map(([key, config]) =>
-                  <option key={key} value={key}>
+                  <option key={key} value={key || "unknown"}>
                       {config.label}
                   </option>
                   )}

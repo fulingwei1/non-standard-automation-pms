@@ -52,7 +52,7 @@ export default function WorkOrderFilters({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
           <Input
             placeholder="搜索工单号、项目名称..."
-            value={searchTerm}
+            value={searchTerm || "unknown"}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             className="pl-10 bg-slate-800/50 border-slate-700/50 text-white"
           />
@@ -60,7 +60,7 @@ export default function WorkOrderFilters({
       </div>
 
       {/* 状态筛选 */}
-      <Select value={filterStatus} onValueChange={onStatusChange}>
+      <Select value={filterStatus || "unknown"} onValueChange={onStatusChange}>
         <SelectTrigger className="w-[180px] bg-slate-800/50 border-slate-700/50 text-white">
           <SelectValue placeholder="筛选状态" />
         </SelectTrigger>

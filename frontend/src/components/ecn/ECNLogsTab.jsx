@@ -133,12 +133,12 @@ export const ECNLogsTab = ({
             <div className="flex-1">
               <Input
                 placeholder="搜索日志内容..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className="max-w-sm"
               />
             </div>
-            <Select value={filterType} onValueChange={onFilterChange}>
+            <Select value={filterType || "unknown"} onValueChange={onFilterChange}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="日志类型" />
               </SelectTrigger>

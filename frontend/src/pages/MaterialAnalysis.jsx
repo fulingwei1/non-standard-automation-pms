@@ -523,7 +523,7 @@ export default function MaterialAnalysis() {
         } />
 
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">统计概览</TabsTrigger>
           <TabsTrigger value="details">项目详情</TabsTrigger>
@@ -548,13 +548,13 @@ export default function MaterialAnalysis() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
                       placeholder="搜索项目名称或编码..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-900 border-slate-700 text-white" />
 
                   </div>
                 </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-full md:w-48">
                     <SelectValue placeholder="过滤状态" />
                   </SelectTrigger>

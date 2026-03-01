@@ -376,7 +376,7 @@ const ApprovalDetailPage = () => {
                   <p className="text-sm text-slate-500 mb-2">审批意见</p>
                   <Textarea
                     placeholder="请输入审批意见（可选）"
-                    value={comment}
+                    value={comment || "unknown"}
                     onChange={(e) => setComment(e.target.value)}
                     className="bg-slate-900/50 border-slate-700 min-h-[100px]"
                   />

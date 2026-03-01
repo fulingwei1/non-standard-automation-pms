@@ -193,7 +193,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
             </span>
           </div>
           <Progress
-            value={progressPct}
+            value={progressPct || "unknown"}
             color={gateCheckResult.passed ? "success" : "warning"}
           />
         </div>

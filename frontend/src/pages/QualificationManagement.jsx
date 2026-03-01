@@ -411,7 +411,7 @@ export default function QualificationManagement() {
         </CardHeader>
         <CardContent>
           <Tabs
-            value={activeTab}
+            value={activeTab || "unknown"}
             onValueChange={setActiveTab}
             className="w-full">
 
@@ -571,7 +571,7 @@ export default function QualificationManagement() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="搜索岗位类型、子类型..."
-                    value={modelSearch}
+                    value={modelSearch || "unknown"}
                     onChange={(e) => setModelSearch(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {

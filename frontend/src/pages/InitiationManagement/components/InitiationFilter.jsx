@@ -10,14 +10,14 @@ export function InitiationFilter({ keyword, setKeyword, statusFilter, setStatusF
                     <div className="flex-1">
                         <Input
                             placeholder="搜索申请编号、项目名称..."
-                            value={keyword}
+                            value={keyword || "unknown"}
                             onChange={(e) => setKeyword(e.target.value)}
                             className="w-full"
                             icon={Search}
                         />
                     </div>
                     <select
-                        value={statusFilter}
+                        value={statusFilter || "unknown"}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >

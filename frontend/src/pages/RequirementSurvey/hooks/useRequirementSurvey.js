@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { requirementExtractionApi as surveyApi } from '../../../services/api/requirement';
+import { surveyApi } from '../../../services/api/survey';
 
 /**
  * 需求调研数据 Hook

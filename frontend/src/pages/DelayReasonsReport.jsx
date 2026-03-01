@@ -169,7 +169,7 @@ export default function DelayReasonsReport() {
                 type="number"
                 min="1"
                 max="50"
-                value={topN}
+                value={topN || "unknown"}
                 onChange={(e) =>
                 setTopN(
                   Math.max(1, Math.min(50, parseInt(e.target.value) || 10))

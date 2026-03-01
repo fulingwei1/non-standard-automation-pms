@@ -370,25 +370,25 @@ export default function SchedulerConfigManagement() {
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="搜索任务名称、ID、分类..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8" />
 
             </div>
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="所有分类" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有分类</SelectItem>
                 {(categories || []).map((cat) =>
-                <SelectItem key={cat} value={cat}>
+                <SelectItem key={cat} value={cat || "unknown"}>
                     {cat}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterEnabled} onValueChange={setFilterEnabled}>
+            <Select value={filterEnabled || "unknown"} onValueChange={setFilterEnabled}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
@@ -562,7 +562,7 @@ export default function SchedulerConfigManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(CRON_PRESETS).map(([key, preset]) =>
-                  <SelectItem key={key} value={key}>
+                  <SelectItem key={key} value={key || "unknown"}>
                         {preset.label}
                   </SelectItem>
                   )}

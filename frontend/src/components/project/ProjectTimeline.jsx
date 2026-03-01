@@ -166,7 +166,7 @@ export default function ProjectTimeline({
             <Input
               icon={Search}
               placeholder="搜索事件..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => setSearchQuery(e.target.value)} />
 
           </div>

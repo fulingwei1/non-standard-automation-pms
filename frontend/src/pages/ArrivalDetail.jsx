@@ -514,7 +514,7 @@ export default function ArrivalDetail() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={receiveQty}
+                  value={receiveQty || "unknown"}
                   onChange={(e) => setReceiveQty(e.target.value)}
                   placeholder="请输入实收数量"
                 />

@@ -122,32 +122,32 @@ export function EmployeeManager({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索员工姓名或工号..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="员工状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部状态</SelectItem>
                 {Object.entries(employeeStatusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <Select value={filterDepartment || "unknown"} onValueChange={setFilterDepartment}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="部门" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部部门</SelectItem>
                 {Object.entries(departmentConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}

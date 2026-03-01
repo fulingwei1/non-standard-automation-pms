@@ -48,7 +48,7 @@ export function ServiceTicketListHeader({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索工单编号、客户、设备、问题描述..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 w-full lg:w-96" />
 
@@ -58,7 +58,7 @@ export function ServiceTicketListHeader({
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500 whitespace-nowrap">排序:</span>
             <Select
-              value={sortBy}
+              value={sortBy || "unknown"}
               onValueChange={onSortChange}>
 
               <SelectTrigger className="w-32">
@@ -156,7 +156,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">工单状态</label>
               <Select
-              value={statusFilter}
+              value={statusFilter || "unknown"}
               onValueChange={onStatusChange}>
 
                 <SelectTrigger>
@@ -176,7 +176,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">紧急程度</label>
               <Select
-              value={urgencyFilter}
+              value={urgencyFilter || "unknown"}
               onValueChange={onUrgencyChange}>
 
                 <SelectTrigger>
@@ -196,7 +196,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">问题类型</label>
               <Select
-              value={problemTypeFilter}
+              value={problemTypeFilter || "unknown"}
               onValueChange={onProblemTypeChange}>
 
                 <SelectTrigger>

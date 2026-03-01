@@ -218,12 +218,12 @@ export default function MaterialList() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索物料编码、名称..."
-                  value={searchKeyword}
+                  value={searchKeyword || "unknown"}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10" />
 
               </div>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择分类" />
                 </SelectTrigger>
@@ -236,7 +236,7 @@ export default function MaterialList() {
                   )}
                 </SelectContent>
               </Select>
-              <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+              <Select value={filterSupplier || "unknown"} onValueChange={setFilterSupplier}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择供应商" />
                 </SelectTrigger>

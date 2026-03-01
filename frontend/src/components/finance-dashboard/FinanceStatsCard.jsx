@@ -223,7 +223,7 @@ const FinancialHealthCard = ({ healthScore, loading }) => {
             <span className="text-slate-400">100分</span>
           </div>
           <Progress
-            value={healthScore}
+            value={healthScore || "unknown"}
             className="h-2"
             style={{
               background: `linear-gradient(to right, #4ade80 0%, #4ade80 ${healthScore}%, rgba(71, 85, 105, 0.3) ${healthScore}%)`

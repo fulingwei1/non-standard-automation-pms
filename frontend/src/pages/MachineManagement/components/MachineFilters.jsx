@@ -41,7 +41,7 @@ export function MachineFilters({ filters, onFiltersChange }) {
                         <SelectContent>
                             <SelectItem value="all">全部状态</SelectItem>
                             {Object.entries(statusConfigs).map(([key, config]) => (
-                                <SelectItem key={key} value={key}>
+                                <SelectItem key={key} value={key || "unknown"}>
                                     {config.label}
                                 </SelectItem>
                             ))}
@@ -57,7 +57,7 @@ export function MachineFilters({ filters, onFiltersChange }) {
                         <SelectContent>
                             <SelectItem value="all">全部健康度</SelectItem>
                             {Object.entries(healthConfigs).map(([key, config]) => (
-                                <SelectItem key={key} value={key}>
+                                <SelectItem key={key} value={key || "unknown"}>
                                     {config.label}
                                 </SelectItem>
                             ))}

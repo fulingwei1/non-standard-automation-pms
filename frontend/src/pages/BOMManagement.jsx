@@ -247,13 +247,13 @@ export default function BOMManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索BOM编号、名称..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
             <Select
-              value={filterProject}
+              value={filterProject || "unknown"}
               onValueChange={(val) => {
                 setFilterProject(val);
                 setFilterMachine("");
@@ -273,7 +273,7 @@ export default function BOMManagement() {
               </SelectContent>
             </Select>
             <Select
-              value={filterMachine}
+              value={filterMachine || "unknown"}
               onValueChange={setFilterMachine}
               disabled={!filterProject}>
 
@@ -289,14 +289,14 @@ export default function BOMManagement() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -748,7 +748,7 @@ export default function BOMManagement() {
                   变更说明
                 </label>
                 <Input
-                  value={releaseNote}
+                  value={releaseNote || "unknown"}
                   onChange={(e) => setReleaseNote(e.target.value)}
                   placeholder="请输入变更说明" />
 

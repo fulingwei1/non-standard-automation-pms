@@ -78,7 +78,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(categoryConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -96,7 +96,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(issueTypeConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -117,7 +117,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(severityConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -135,7 +135,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(priorityConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key || "unknown"}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -184,7 +184,7 @@ export default function TemplateFormDialog({
           <div>
             <Label className="text-slate-300">默认标签（逗号分隔）</Label>
             <Input
-              value={tagInput}
+              value={tagInput || "unknown"}
               onChange={(e) => setTagInput(e.target.value)}
               className="bg-surface-100 border-white/10 text-white"
               placeholder="例如：温度控制,FAT"

@@ -185,32 +185,32 @@ export function PurchaseHistory({
             <div className="flex-1 min-w-[200px]">
               <Input
                 placeholder="搜索项目名称..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
 
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[160px] bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="合同状态" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(contractStatusConfigs).map(([status, config]) =>
-                <SelectItem key={status} value={status} className="text-white">
+                <SelectItem key={status} value={status || "unknown"} className="text-white">
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterYear} onValueChange={setFilterYear}>
+            <Select value={filterYear || "unknown"} onValueChange={setFilterYear}>
               <SelectTrigger className="w-[140px] bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="年份" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部年份</SelectItem>
                 {[...new Set((yearStats || []).map((s) => s.year))].sort((a, b) => b - a).map((year) =>
-                <SelectItem key={year} value={year} className="text-white">
+                <SelectItem key={year} value={year || "unknown"} className="text-white">
                     {year}年
                 </SelectItem>
                 )}

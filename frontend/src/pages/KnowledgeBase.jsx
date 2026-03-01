@@ -494,7 +494,7 @@ const KnowledgeBase = () => {
               上传文档
             </Button>
             <Radio.Group
-              value={viewLayout}
+              value={viewLayout || "unknown"}
               onChange={(e) => setViewLayout(e.target.value)}
               buttonStyle="solid">
 
@@ -512,7 +512,7 @@ const KnowledgeBase = () => {
             <Input
               placeholder="搜索文档标题、内容、标签..."
               prefix={<Search size={16} />}
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

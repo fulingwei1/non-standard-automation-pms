@@ -254,7 +254,7 @@ export default function SalesFunnel() {
                   <label className="text-sm text-slate-400 mb-1 block">
                     时间范围
                   </label>
-                  <Select value={timeRange} onValueChange={setTimeRange}>
+                  <Select value={timeRange || "unknown"} onValueChange={setTimeRange}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -317,7 +317,7 @@ export default function SalesFunnel() {
                   </label>
                   <Input
                     placeholder="输入行业关键词"
-                    value={industry}
+                    value={industry || "unknown"}
                     onChange={(e) => setIndustry(e.target.value)} />
 
                 </div>
@@ -407,7 +407,7 @@ export default function SalesFunnel() {
                       </div>
                       <div className="relative">
                         <Progress
-                          value={width}
+                          value={width || "unknown"}
                           className={cn(`bg-${stageConfig.color}-500/20`)} />
 
                       </div>

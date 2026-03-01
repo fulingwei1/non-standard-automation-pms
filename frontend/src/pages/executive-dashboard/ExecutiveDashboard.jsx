@@ -93,7 +93,7 @@ export default function ExecutiveDashboard() {
         actions={
           <motion.div variants={fadeIn} className="flex gap-2">
             <select
-              value={timeRange}
+              value={timeRange || "unknown"}
               onChange={(e) => setTimeRange(e.target.value)}
               className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -117,7 +117,7 @@ export default function ExecutiveDashboard() {
             </Button>
             <div className="relative inline-block">
               <select
-                value={exportFormat}
+                value={exportFormat || "unknown"}
                 onChange={(e) => handleExport(e.target.value)}
                 disabled={exporting}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer disabled:opacity-50"
@@ -150,7 +150,7 @@ export default function ExecutiveDashboard() {
         ))}
       </motion.div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-5 mb-4">
           <TabsTrigger value="overview">总览</TabsTrigger>
           <TabsTrigger value="projects">项目</TabsTrigger>

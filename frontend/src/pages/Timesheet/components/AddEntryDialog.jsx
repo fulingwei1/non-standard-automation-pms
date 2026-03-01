@@ -86,7 +86,7 @@ export function AddEntryDialog({
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-300">项目</label>
                         <select
-                            value={selectedProjectId}
+                            value={selectedProjectId || "unknown"}
                             onChange={(e) => {
                                 setSelectedProjectId(e.target.value);
                                 setSelectedTaskId("");
@@ -107,7 +107,7 @@ export function AddEntryDialog({
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-300">任务</label>
                         <select
-                            value={selectedTaskId}
+                            value={selectedTaskId || "unknown"}
                             onChange={(e) => setSelectedTaskId(e.target.value)}
                             disabled={!selectedProjectId || loadingTasks}
                             className="w-full h-10 px-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-blue-500 focus:outline-none disabled:opacity-50"

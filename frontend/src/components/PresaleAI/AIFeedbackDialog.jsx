@@ -116,7 +116,7 @@ const AIFeedbackDialog = ({ open, onOpenChange, aiFunction, ticketId = null }) =
             <label className="text-sm font-medium">详细反馈（可选）</label>
             <Textarea
               placeholder="请详细描述您的使用体验、遇到的问题或改进建议..."
-              value={feedbackText}
+              value={feedbackText || "unknown"}
               onChange={(e) => setFeedbackText(e.target.value)}
               rows={5}
               className="resize-none"

@@ -233,7 +233,7 @@ export default function ProjectList() {
           <Input
             icon={Search}
             placeholder="搜索项目名称、编码或客户..."
-            value={searchQuery}
+            value={searchQuery || "unknown"}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>

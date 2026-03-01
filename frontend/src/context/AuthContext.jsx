@@ -130,7 +130,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={contextValue || "unknown"}>
       {children}
     </AuthContext.Provider>
   );

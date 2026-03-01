@@ -624,13 +624,13 @@ export default function MaterialReadiness() {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="搜索物料..."
-                  value={searchQuery}
+                  value={searchQuery || "unknown"}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10" />
 
               </div>
               
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
@@ -643,7 +643,7 @@ export default function MaterialReadiness() {
                 </SelectContent>
               </Select>
 
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterType || "unknown"} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue placeholder="类型" />
                 </SelectTrigger>
@@ -656,7 +656,7 @@ export default function MaterialReadiness() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <Select value={selectedProject || "unknown"} onValueChange={setSelectedProject}>
                 <SelectTrigger>
                   <SelectValue placeholder="项目" />
                 </SelectTrigger>

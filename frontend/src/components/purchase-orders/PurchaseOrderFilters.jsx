@@ -57,7 +57,7 @@ const PurchaseOrderFilters = memo(function PurchaseOrderFilters({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索订单编号、供应商、项目..."
-              value={searchQuery}
+              value={searchQuery || "unknown"}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10"
             />
@@ -73,7 +73,7 @@ const PurchaseOrderFilters = memo(function PurchaseOrderFilters({
         </div>
 
         {/* 状态筛选 */}
-        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+        <Select value={statusFilter || "unknown"} onValueChange={onStatusFilterChange}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="状态" />
           </SelectTrigger>
@@ -87,7 +87,7 @@ const PurchaseOrderFilters = memo(function PurchaseOrderFilters({
         </Select>
 
         {/* 紧急程度筛选 */}
-        <Select value={urgencyFilter} onValueChange={onUrgencyFilterChange}>
+        <Select value={urgencyFilter || "unknown"} onValueChange={onUrgencyFilterChange}>
           <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="紧急程度" />
           </SelectTrigger>

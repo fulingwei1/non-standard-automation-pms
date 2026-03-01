@@ -180,49 +180,49 @@ export function TicketQueue({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索工单标题、描述、客户..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10" />
 
             </div>
           </div>
           <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有状态</SelectItem>
                 {Object.entries(serviceStatusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <Select value={priorityFilter || "unknown"} onValueChange={setPriorityFilter}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有优先级</SelectItem>
                 {Object.entries(servicePriorityConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
 
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有类型</SelectItem>
                 {Object.entries(serviceTypeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key || "unknown"}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}

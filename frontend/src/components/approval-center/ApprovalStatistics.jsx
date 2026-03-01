@@ -19,17 +19,17 @@ const ApprovalStatistics = ({ data, loading }) => {
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card loading={loading}>
-            <Statistic title="平均处理时长" value={avgProcessingTime} suffix="小时" prefix={<Clock size={18} />} />
+            <Statistic title="平均处理时长" value={avgProcessingTime || "unknown"} suffix="小时" prefix={<Clock size={18} />} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
           <Card loading={loading}>
-            <Statistic title="超期率" value={overdueRate} suffix="%" prefix={<AlertCircle size={18} />} />
+            <Statistic title="超期率" value={overdueRate || "unknown"} suffix="%" prefix={<AlertCircle size={18} />} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
           <Card loading={loading}>
-            <Statistic title="满意度" value={satisfactionRate} suffix="%" prefix={<TrendingUp size={18} />} />
+            <Statistic title="满意度" value={satisfactionRate || "unknown"} suffix="%" prefix={<TrendingUp size={18} />} />
           </Card>
         </Col>
       </Row>

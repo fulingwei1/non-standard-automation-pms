@@ -599,13 +599,13 @@ export default function UserManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="搜索用户..."
-            value={searchQuery}
+            value={searchQuery || "unknown"}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
         <div className="flex gap-2">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="状态" />
             </SelectTrigger>
@@ -618,7 +618,7 @@ export default function UserManagement() {
             </SelectContent>
           </Select>
 
-          <Select value={filterRole} onValueChange={setFilterRole}>
+          <Select value={filterRole || "unknown"} onValueChange={setFilterRole}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="角色" />
             </SelectTrigger>
@@ -631,7 +631,7 @@ export default function UserManagement() {
             </SelectContent>
           </Select>
 
-          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+          <Select value={filterDepartment || "unknown"} onValueChange={setFilterDepartment}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="部门" />
             </SelectTrigger>
@@ -876,7 +876,7 @@ export default function UserManagement() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(USER_ROLE).map(([_key, value]) => (
-                            <SelectItem key={value} value={value}>
+                            <SelectItem key={value} value={value || "unknown"}>
                               {USER_ROLE_LABELS[value]}
                             </SelectItem>
                           ))}
@@ -897,7 +897,7 @@ export default function UserManagement() {
                         <SelectContent>
                           {Object.entries(USER_DEPARTMENT).map(
                             ([_key, value]) => (
-                              <SelectItem key={value} value={value}>
+                              <SelectItem key={value} value={value || "unknown"}>
                                 {USER_DEPARTMENT_LABELS[value]}
                               </SelectItem>
                             ),
@@ -918,7 +918,7 @@ export default function UserManagement() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(USER_STATUS).map(([_key, value]) => (
-                            <SelectItem key={value} value={value}>
+                            <SelectItem key={value} value={value || "unknown"}>
                               {USER_STATUS_LABELS[value]}
                             </SelectItem>
                           ))}
@@ -1023,7 +1023,7 @@ export default function UserManagement() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(USER_ROLE).map(([_key, value]) => (
-                            <SelectItem key={value} value={value}>
+                            <SelectItem key={value} value={value || "unknown"}>
                               {USER_ROLE_LABELS[value]}
                             </SelectItem>
                           ))}
@@ -1047,7 +1047,7 @@ export default function UserManagement() {
                         <SelectContent>
                           {Object.entries(USER_DEPARTMENT).map(
                             ([_key, value]) => (
-                              <SelectItem key={value} value={value}>
+                              <SelectItem key={value} value={value || "unknown"}>
                                 {USER_DEPARTMENT_LABELS[value]}
                               </SelectItem>
                             ),
@@ -1068,7 +1068,7 @@ export default function UserManagement() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(USER_STATUS).map(([_key, value]) => (
-                            <SelectItem key={value} value={value}>
+                            <SelectItem key={value} value={value || "unknown"}>
                               {USER_STATUS_LABELS[value]}
                             </SelectItem>
                           ))}

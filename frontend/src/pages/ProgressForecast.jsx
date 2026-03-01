@@ -297,7 +297,7 @@ export default function ProgressForecast({ projectId }) {
                   <label className="text-sm text-slate-700">延迟阈值:</label>
                   <input
                     type="number"
-                    value={delayThreshold}
+                    value={delayThreshold || "unknown"}
                     onChange={(e) => setDelayThreshold(parseInt(e.target.value))}
                     min={1}
                     max={30}

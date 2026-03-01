@@ -242,7 +242,7 @@ export default function ArrivalNew() {
               <div className="space-y-2">
                 <Input
                   placeholder="搜索物料编码或名称..."
-                  value={searchKeyword}
+                  value={searchKeyword || "unknown"}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="mb-2" />
 

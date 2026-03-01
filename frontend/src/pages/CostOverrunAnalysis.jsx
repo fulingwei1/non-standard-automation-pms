@@ -127,7 +127,7 @@ export default function CostOverrunAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -137,7 +137,7 @@ export default function CostOverrunAnalysis() {
               </label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)} />
 
             </div>
@@ -148,7 +148,7 @@ export default function CostOverrunAnalysis() {
               <Input
                 type="number"
                 placeholder="项目ID"
-                value={projectId}
+                value={projectId || "unknown"}
                 onChange={(e) => setProjectId(e.target.value)} />
 
             </div>
@@ -161,7 +161,7 @@ export default function CostOverrunAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="reasons">超支原因</TabsTrigger>
           <TabsTrigger value="accountability">归责分析</TabsTrigger>

@@ -200,7 +200,7 @@ export default function ShortageManagement() {
 
 
       <Tabs
-        value={activeTab}
+        value={activeTab || "unknown"}
         onValueChange={setActiveTab}
         className="space-y-6">
 
@@ -394,11 +394,11 @@ export default function ShortageManagement() {
                     <Input
                       placeholder="搜索上报单号、物料..."
                       className="pl-8 w-64"
-                      value={searchKeyword}
+                      value={searchKeyword || "unknown"}
                       onChange={(e) => setSearchKeyword(e.target.value)} />
 
                   </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="全部状态" />
                     </SelectTrigger>

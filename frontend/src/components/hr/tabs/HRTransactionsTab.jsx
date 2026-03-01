@@ -120,7 +120,7 @@ export default function HRTransactionsTab() {
               >
                 <option value="all">全部类型</option>
                 {Object.entries(transactionTypeMap).map(([key, config]) => (
-                  <option key={key} value={key}>
+                  <option key={key} value={key || "unknown"}>
                     {config.label}
                   </option>
                 ))}
@@ -134,7 +134,7 @@ export default function HRTransactionsTab() {
               >
                 <option value="all">全部状态</option>
                 {Object.entries(statusMap).map(([key, config]) => (
-                  <option key={key} value={key}>
+                  <option key={key} value={key || "unknown"}>
                     {config.label}
                   </option>
                 ))}

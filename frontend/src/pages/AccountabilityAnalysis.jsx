@@ -107,7 +107,7 @@ export default function AccountabilityAnalysis() {
               </label>
               <Input
                 type="date"
-                value={startDate}
+                value={startDate || "unknown"}
                 onChange={(e) => setStartDate(e.target.value)} />
 
             </div>
@@ -117,7 +117,7 @@ export default function AccountabilityAnalysis() {
               </label>
               <Input
                 type="date"
-                value={endDate}
+                value={endDate || "unknown"}
                 onChange={(e) => setEndDate(e.target.value)} />
 
             </div>
@@ -162,7 +162,7 @@ export default function AccountabilityAnalysis() {
       </div>
       }
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="stage">按环节归责</TabsTrigger>
           <TabsTrigger value="person">按人员归责</TabsTrigger>

@@ -133,7 +133,7 @@ export default function ProcurementAnalysis() {
 
 
         {/* Tab内容 */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
           <TabsList className="bg-slate-800/50">
             <TabsTrigger value="cost-trend">成本趋势</TabsTrigger>
             <TabsTrigger value="price-fluctuation">价格波动</TabsTrigger>

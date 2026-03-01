@@ -416,7 +416,7 @@ export default function ServiceRecord() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       placeholder="搜索记录号、项目名称、客户名称、服务地点..."
-                      value={searchQuery}
+                      value={searchQuery || "unknown"}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 bg-slate-800/50 border-slate-700" />
 
@@ -424,7 +424,7 @@ export default function ServiceRecord() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    value={typeFilter}
+                    value={typeFilter || "unknown"}
                     onChange={(e) => setTypeFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -436,7 +436,7 @@ export default function ServiceRecord() {
                     )}
                   </select>
                   <select
-                    value={statusFilter}
+                    value={statusFilter || "unknown"}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -607,7 +607,7 @@ export default function ServiceRecord() {
                 className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white">
 
                 {Object.entries(SERVICE_TYPES).map(([key, type]) =>
-                <option key={key} value={key}>{type.label}</option>
+                <option key={key} value={key || "unknown"}>{type.label}</option>
                 )}
               </select>
             </div>

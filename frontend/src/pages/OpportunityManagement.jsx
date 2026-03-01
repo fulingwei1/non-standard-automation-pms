@@ -583,7 +583,7 @@ export default function OpportunityManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="搜索商机编码、名称..."
-                value={searchTerm}
+                value={searchTerm || "unknown"}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10" />
 
@@ -614,7 +614,7 @@ export default function OpportunityManagement() {
           </DropdownMenu>
           <div className="flex gap-2">
             <select
-              value={customerFilter}
+              value={customerFilter || "unknown"}
               onChange={(e) => setCustomerFilter(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >
@@ -626,7 +626,7 @@ export default function OpportunityManagement() {
               ))}
             </select>
             <select
-              value={ownerFilter}
+              value={ownerFilter || "unknown"}
               onChange={(e) => setOwnerFilter(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >
@@ -695,7 +695,7 @@ export default function OpportunityManagement() {
                           className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-white">
 
                           {Object.entries(stageConfig).map(([key, config]) =>
-                          <option key={key} value={key}>
+                          <option key={key} value={key || "unknown"}>
                               {config.label}
                           </option>
                           )}
@@ -811,7 +811,7 @@ export default function OpportunityManagement() {
                             className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-white"
                           >
                             {Object.entries(stageConfig).map(([key, config]) => (
-                              <option key={key} value={key}>
+                              <option key={key} value={key || "unknown"}>
                                 {config.label}
                               </option>
                             ))}
@@ -972,7 +972,7 @@ export default function OpportunityManagement() {
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
 
                   {Object.entries(stageConfig).map(([key, config]) =>
-                  <option key={key} value={key}>
+                  <option key={key} value={key || "unknown"}>
                       {config.label}
                   </option>
                   )}
@@ -1234,7 +1234,7 @@ export default function OpportunityManagement() {
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
 
                       {Object.entries(stageConfig).map(([key, config]) =>
-                      <option key={key} value={key}>
+                      <option key={key} value={key || "unknown"}>
                           {config.label}
                       </option>
                       )}

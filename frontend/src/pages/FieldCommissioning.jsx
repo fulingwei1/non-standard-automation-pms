@@ -237,7 +237,7 @@ export default function FieldCommissioning() {
           <Card className="bg-gray-900/50 border-gray-800">
             <CardContent className="p-3 md:p-4">
               <div className="flex flex-wrap gap-2 md:gap-3 items-center">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full md:w-[140px] bg-gray-800 border-gray-700 text-white">
                     <SelectValue placeholder="状态筛选" />
                   </SelectTrigger>

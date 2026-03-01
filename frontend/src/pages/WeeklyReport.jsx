@@ -168,7 +168,7 @@ export default function WeeklyReport() {
             </Button>
             <Input
             type="date"
-            value={weekStart}
+            value={weekStart || "unknown"}
             onChange={(e) => setWeekStart(e.target.value)}
             className="w-40" />
 

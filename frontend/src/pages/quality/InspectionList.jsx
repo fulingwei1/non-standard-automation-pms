@@ -137,13 +137,13 @@ export default function InspectionList() {
               <input
                 type="text"
                 placeholder="搜索检验记录..."
-                value={searchText}
+                value={searchText || "unknown"}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
             </div>
             <select
-              value={inspectionType}
+              value={inspectionType || "unknown"}
               onChange={(e) => updateFilter("inspection_type", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >
@@ -152,7 +152,7 @@ export default function InspectionList() {
               ))}
             </select>
             <select
-              value={inspectionResult}
+              value={inspectionResult || "unknown"}
               onChange={(e) => updateFilter("inspection_result", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >

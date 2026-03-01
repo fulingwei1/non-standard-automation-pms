@@ -271,7 +271,7 @@ const ApprovalCenter = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="搜索标题、编号..."
-              value={searchText}
+              value={searchText || "unknown"}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -698,7 +698,7 @@ const ApprovalCenter = () => {
       {renderFilters()}
 
       {/* 标签页 */}
-      <Tabs value={activeTab} onValueChange={switchTab}>
+      <Tabs value={activeTab || "unknown"} onValueChange={switchTab}>
         <TabsList className="bg-slate-800/50 border border-slate-700">
           <TabsTrigger value={APPROVAL_TABS.PENDING} className="data-[state=active]:bg-slate-700">
             <Clock className="h-4 w-4 mr-2" />

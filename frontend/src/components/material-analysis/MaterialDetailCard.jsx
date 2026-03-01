@@ -122,7 +122,7 @@ export default function MaterialDetailCard({ material, onClick }) {
             <span className="text-slate-400">到货进度</span>
             <span className="text-white font-medium">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress || "unknown"} className="h-2" />
           <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
             <div>
               <span className="text-slate-500">计划: </span>

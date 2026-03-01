@@ -148,13 +148,13 @@ export const HREmployeesTab = ({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="搜索员工姓名、工号、电话..."
-                value={searchKeyword}
+                value={searchKeyword || "unknown"}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 className="bg-slate-800/40 border-slate-700/50 pl-10"
               />
             </div>
             <select
-              value={filterDepartment}
+              value={filterDepartment || "unknown"}
               onChange={(e) => onDepartmentChange?.(e.target.value)}
               className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
             >
@@ -166,7 +166,7 @@ export const HREmployeesTab = ({
               ))}
             </select>
             <select
-              value={filterStatus}
+              value={filterStatus || "unknown"}
               onChange={(e) => onStatusChange?.(e.target.value)}
               className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
             >

@@ -114,7 +114,7 @@ export default function QualityFeedbackDialog({ open, onClose, task: _task, mate
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">问题描述</label>
             <textarea
-              value={description}
+              value={description || "unknown"}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="请详细描述质量问题..."
               className={cn(

@@ -196,7 +196,7 @@ const ProjectCard = ({ project }) => {
               {riskScore}/100
             </span>
           </div>
-          <Progress value={riskScore} className="h-2" />
+          <Progress value={riskScore || "unknown"} className="h-2" />
         </div>
 
         {/* 影响指标 */}

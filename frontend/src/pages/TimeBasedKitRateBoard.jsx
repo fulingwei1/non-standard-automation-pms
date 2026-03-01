@@ -152,7 +152,7 @@ export default function TimeBasedKitRateBoard() {
                   <Label className="text-xs text-slate-400">计划开工日期</Label>
                   <Input
                     type="date"
-                    value={plannedStartDate}
+                    value={plannedStartDate || "unknown"}
                     onChange={(e) => setPlannedStartDate(e.target.value)}
                     className="w-40"
                   />
