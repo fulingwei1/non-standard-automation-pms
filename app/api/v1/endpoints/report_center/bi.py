@@ -345,7 +345,7 @@ def get_executive_dashboard(
         func.date(Contract.signing_date) >= month_start,
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).all()
-    month_contract_amount = sum([float(c.contract_amount or 0) for c in month_contracts])
+    month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
 
     # 成本统计
     total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
