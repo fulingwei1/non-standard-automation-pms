@@ -3,7 +3,7 @@
 AI 智能排程 API
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Body, Query
 from sqlalchemy.orm import Session
@@ -106,7 +106,6 @@ def get_schedule_plan(
 ) -> Any:
     """获取计划详情"""
     from app.models.project_schedule import ProjectSchedulePlan, ScheduleTask
-    import json
     
     plan = db.query(ProjectSchedulePlan).filter(
         ProjectSchedulePlan.id == plan_id

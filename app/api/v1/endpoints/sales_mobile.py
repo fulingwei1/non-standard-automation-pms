@@ -6,7 +6,7 @@
 
 from typing import Any, Optional, List
 from datetime import date, datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
+from fastapi import APIRouter, Depends, Query, Body, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.api import deps

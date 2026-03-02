@@ -11,11 +11,9 @@
 
 from typing import Any, Dict, List, Optional
 from datetime import date, timedelta, datetime
-from decimal import Decimal
 from collections import defaultdict
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
 
 from app.models.engineer_capacity import (
     EngineerCapacity,
@@ -24,7 +22,6 @@ from app.models.engineer_capacity import (
 )
 from app.models.user import User
 from app.models.project import Project
-from app.models.progress import Task
 
 
 class EngineerSchedulingService:
@@ -45,7 +42,6 @@ class EngineerSchedulingService:
         3. 质量评分
         4. 按时交付率
         """
-        from sqlalchemy import text
         
         # 1. 查询历史任务分配
         tasks = self.db.query(EngineerTaskAssignment)\
@@ -309,7 +305,6 @@ class EngineerSchedulingService:
         Returns:
             冲突列表
         """
-        from datetime import timedelta
         
         new_start = new_task.get('planned_start_date')
         new_end = new_task.get('planned_end_date')
@@ -459,7 +454,6 @@ class EngineerSchedulingService:
         - 冲突风险提示
         - 排产建议
         """
-        from sqlalchemy import text
         
         # 1. 项目信息
         project = self.db.query(Project).filter(Project.id == project_id).first()
@@ -557,7 +551,6 @@ class EngineerSchedulingService:
         - ADVANCED: 深度使用，能提效 50-100%
         - EXPERT: AI 专家，能提效 100%+ 并指导他人
         """
-        from sqlalchemy import text
         
         # 1. 查询历史任务数据
         tasks = self.db.query(EngineerTaskAssignment)\

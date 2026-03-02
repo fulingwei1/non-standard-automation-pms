@@ -4,9 +4,9 @@
 提供交互历史、决策链分析、健康度评分、购买偏好
 """
 
-from typing import Any, Optional, List
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from typing import Any
+from datetime import date
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps

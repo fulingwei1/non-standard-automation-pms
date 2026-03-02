@@ -5,8 +5,7 @@
 """
 
 from typing import Any, Optional, List
-from datetime import date, datetime
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from fastapi import APIRouter, Depends, Query, Body
 from sqlalchemy.orm import Session
 
 from app.api import deps

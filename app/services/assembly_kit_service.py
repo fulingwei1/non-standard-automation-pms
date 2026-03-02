@@ -10,11 +10,10 @@ from decimal import Decimal
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 
 from app.models.assembly_kit import (
     AssemblyStage,
-    AssemblyTemplate,
     CategoryStageMapping,
     BomItemAssemblyAttrs,
     MaterialReadiness,
@@ -97,7 +96,6 @@ class AssemblyKitService:
             
             # 其次匹配关键词
             if not mapping and item.material.material_name:
-                from sqlalchemy import text
                 mapping = self.db.query(CategoryStageMapping).filter(
                     CategoryStageMapping.keywords.like(f'%{item.material.material_name}%'),
                     CategoryStageMapping.is_active == True
@@ -376,7 +374,6 @@ class AssemblyKitService:
         基于历史采购订单数据计算
         """
         from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-        from datetime import datetime
         
         # 查询历史采购订单
         po_items = self.db.query(PurchaseOrderItem, PurchaseOrder)\

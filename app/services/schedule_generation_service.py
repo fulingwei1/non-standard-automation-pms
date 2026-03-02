@@ -11,12 +11,9 @@ from datetime import date, timedelta
 import json
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
 
 from app.models.project_schedule import ProjectSchedulePlan, ScheduleTask
 from app.models.project import Project
-from app.models.user import User
-from app.models.engineer_capacity import EngineerCapacity
 
 
 class ScheduleGenerationService:
@@ -152,7 +149,6 @@ class ScheduleGenerationService:
     ) -> Dict[str, List[Dict]]:
         """确定项目阶段和任务"""
         
-        product_category = project.product_category or ''
         
         # 基础阶段定义（公司实际 5 个部门环节）
         phases = {

@@ -9,13 +9,12 @@
 4. 智能推荐工程师
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import date, timedelta
+from typing import Any, Dict, List
+from datetime import date
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
-from app.models.project_requirements import ProjectRequirement, EngineerRecommendation
+from app.models.project_requirements import EngineerRecommendation
 from app.models.user import User
 from app.models.project import Project
 from app.models.engineer_capacity import EngineerCapacity
@@ -52,9 +51,6 @@ class RequirementExtractionService:
         }
         
         # 1. 根据项目类型抽取
-        product_category = project.product_category or ''
-        industry = project.industry or ''
-        contract_amount = project.contract_amount or 0
         
         # 2. 分析生产能力需求
         production_req = self._extract_production_requirements(project)

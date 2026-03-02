@@ -5,16 +5,11 @@ AI 智能优化分析服务
 分析哪些环节可以节省时间，自动复用历史项目内容
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import date, timedelta
-import json
+from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from app.models.project import Project
-from app.models.material import BomHeader, BomItem
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 
 
 class ScheduleOptimizationService:

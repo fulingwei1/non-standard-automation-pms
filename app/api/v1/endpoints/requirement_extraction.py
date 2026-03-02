@@ -3,9 +3,9 @@
 项目需求 AI 抽取与工程师推荐 API
 """
 
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -78,7 +78,7 @@ def recommend_engineers(
     recommendations = service.recommend_engineers(req_dict, limit)
     
     # 保存推荐结果
-    saved_recs = service.save_recommendations(requirement_id, recommendations)
+    service.save_recommendations(requirement_id, recommendations)
     
     return {
         'requirement_id': requirement_id,
@@ -120,7 +120,6 @@ def auto_recommend_for_project(
             recs = service.recommend_engineers(req, limit)
             
             # 保存推荐
-            from app.models.project_requirements import ProjectRequirement
             # 这里应该先创建需求记录，简化处理直接返回
             
             type_recommendations.extend(recs)

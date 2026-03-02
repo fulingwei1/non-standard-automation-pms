@@ -4,7 +4,6 @@
 """
 
 from sqlalchemy import (
-    Boolean,
     Column,
     ForeignKey,
     Integer,
@@ -12,7 +11,6 @@ from sqlalchemy import (
     Text,
     Float,
     Date,
-    DateTime,
 )
 from sqlalchemy.orm import relationship
 

@@ -44,7 +44,6 @@ def read_my_projects(
     """
     获取我参与的项目列表（基于项目成员关系）
     """
-    from app.models.project import Project
     from app.models.project.team import ProjectMember
     
     # 查询用户参与的项目 ID

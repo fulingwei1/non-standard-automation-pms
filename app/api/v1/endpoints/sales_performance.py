@@ -4,9 +4,9 @@
 提供实时排行榜、提成计算、PK 对战
 """
 
-from typing import Any, Optional, List
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from typing import Any, Optional
+from datetime import date
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps

@@ -65,7 +65,6 @@ def analyze_workload(
     - 负载状态（过载/正常/空闲）
     - 预警级别
     """
-    from datetime import date
     
     start = date.fromisoformat(start_date) if start_date else None
     end = date.fromisoformat(end_date) if end_date else None

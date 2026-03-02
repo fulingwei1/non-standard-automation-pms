@@ -5,9 +5,8 @@ AI销售助手API
 """
 
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
 
 from app.api import deps
 from app.core import security

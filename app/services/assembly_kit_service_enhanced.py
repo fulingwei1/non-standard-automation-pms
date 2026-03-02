@@ -8,21 +8,11 @@
 """
 
 from typing import Any, Dict, List, Optional
-from datetime import date, timedelta, datetime
-from decimal import Decimal
+from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
 
-from app.models.assembly_kit import (
-    AssemblyStage,
-    AssemblyTemplate,
-    CategoryStageMapping,
-    BomItemAssemblyAttrs,
-    MaterialReadiness,
-)
-from app.models.material import BomHeader, BomItem, Material, MaterialCategory
-from app.models.project import Project, Machine
+from app.models.material import Material
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 
 
@@ -117,7 +107,6 @@ class AssemblyKitServiceEnhanced:
         1. 在途订单的承诺交期
         2. 最近一次采购的实际到货日期推算
         """
-        from app.models.purchase import PurchaseOrder, PurchaseOrderItem
         
         # 1. 查询在途订单的承诺交期
         po_items = self.db.query(PurchaseOrderItem, PurchaseOrder)\
@@ -153,7 +142,6 @@ class AssemblyKitServiceEnhanced:
         if order_date is None:
             order_date = date.today()
         
-        from sqlalchemy import text
         
         # 1. 该物料的历史提前期
         material = self.db.query(Material).filter(Material.id == material_id).first()
@@ -161,7 +149,6 @@ class AssemblyKitServiceEnhanced:
             return None
         
         # 查询该物料历史采购订单
-        from app.models.purchase import PurchaseOrder, PurchaseOrderItem
         po_items = self.db.query(PurchaseOrderItem, PurchaseOrder)\
             .join(PurchaseOrder)\
             .filter(
@@ -205,7 +192,6 @@ class AssemblyKitServiceEnhanced:
         2. 同分类
         3. 同供应商
         """
-        from app.models.purchase import PurchaseOrder, PurchaseOrderItem
         
         lead_times = []
         

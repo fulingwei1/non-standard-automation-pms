@@ -5,12 +5,10 @@ AI 自动组队服务
 根据项目需求自动生成项目组成员方案
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import date, timedelta
+from typing import Any, Dict, List
 import json
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from app.models.project_team import ProjectTeamPlan, ProjectTeamMember
 from app.models.user import User
@@ -53,7 +51,7 @@ class TeamGenerationService:
                 role_assignments[role] = candidates[0]  # 选择最佳匹配
         
         # 4. 检查负载均衡
-        workload_balance = self._check_workload_balance(role_assignments)
+        self._check_workload_balance(role_assignments)
         
         # 5. 生成团队方案
         team_plan = self._create_team_plan(project, role_assignments, requirements)
@@ -162,9 +160,9 @@ class TeamGenerationService:
         project: Project,
     ) -> List[Dict[str, Any]]:
         """为角色匹配工程师"""
-        required_skills = role_info.get('required_skills', [])
-        min_experience = role_info.get('min_experience', 0)
-        min_ai_level = role_info.get('ai_level', 'NONE')
+        role_info.get('required_skills', [])
+        role_info.get('min_experience', 0)
+        role_info.get('ai_level', 'NONE')
         
         # 查询工程师
         engineers = self.db.query(User, EngineerCapacity)\

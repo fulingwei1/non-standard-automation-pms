@@ -4,9 +4,9 @@
 为领导层提供公司整体销售计划完成情况的 AI 预测
 """
 
-from typing import Any, Optional, List, Dict
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Any, Optional
+from datetime import date
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps

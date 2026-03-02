@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.project import Machine, Project, ProjectMilestone
-from app.models.progress import WbsTemplate, WbsTemplateTask
-from app.models.project_template_config import ProjectTemplateConfig, StageConfig, NodeConfig
+from app.models.project import Project, ProjectMilestone
+from app.models.progress import WbsTemplateTask
+from app.models.project_template_config import ProjectTemplateConfig
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404, save_obj
@@ -99,7 +99,7 @@ def create_project_from_config(
             continue  # 跳过禁用的阶段
         
         stage_code = stage_cfg.get("stage_code")
-        stage_name = stage_cfg.get("stage_name", "")
+        stage_cfg.get("stage_name", "")
         estimated_days = stage_cfg.get("custom_estimated_days") or stage_cfg.get("estimated_days", 7)
         
         # 从预置模板找阶段定义

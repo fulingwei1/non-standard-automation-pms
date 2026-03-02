@@ -6,7 +6,7 @@
 
 from typing import Any, Optional, List
 from datetime import datetime, timedelta, date
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from fastapi import APIRouter, Depends, Query, Body
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -34,7 +34,7 @@ def get_follow_up_reminders(
     - 低优先级：新客户 + 短期未联系
     """
     
-    cutoff_date = date.today() - timedelta(days=days)
+    date.today() - timedelta(days=days)
     
     # 模拟需要跟进的客户
     reminders = [

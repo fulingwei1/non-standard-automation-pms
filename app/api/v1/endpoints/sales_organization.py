@@ -4,9 +4,9 @@
 支持 4 层层级：销售 → 销售经理 → 销售总监 → 销售总经理
 """
 
-from typing import Any, Optional, List, Dict
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from typing import Any
+from datetime import date
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps

@@ -542,7 +542,7 @@ def get_project_bom_costs(
     - 已采购/未采购状态
     - 最新采购价格
     """
-    from app.models.material import BomHeader, BomItem, Material
+    from app.models.material import BomHeader, BomItem
     from app.models.purchase import PurchaseOrder, PurchaseOrderItem
     
     # 查询项目 BOM

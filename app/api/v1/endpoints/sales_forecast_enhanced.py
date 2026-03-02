@@ -4,8 +4,8 @@
 考虑多维度因素，提高预测准确性，倒逼数据填写
 """
 
-from typing import Any, Optional, List
-from datetime import date, timedelta
+from typing import Any, Optional
+from datetime import date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 

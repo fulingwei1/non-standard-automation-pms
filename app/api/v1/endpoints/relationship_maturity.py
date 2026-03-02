@@ -4,9 +4,9 @@
 评估关系深度，预测赢单概率
 """
 
-from typing import Any, Optional, List, Dict
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from typing import Any, Optional
+from datetime import date
+from fastapi import APIRouter, Depends, Path, Query, Body
 from sqlalchemy.orm import Session
 
 from app.api import deps

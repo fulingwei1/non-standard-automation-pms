@@ -5,9 +5,8 @@
 """
 
 from typing import Any, Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from fastapi import APIRouter, Depends, Path, Query, Body
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from app.api import deps
 from app.core import security

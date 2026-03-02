@@ -4,11 +4,10 @@
 提供转化率分析、瓶颈识别、预测准确性分析
 """
 
-from typing import Any, Optional, List, Dict
-from datetime import datetime, date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from typing import Any, Optional
+from datetime import date, timedelta
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
 
 from app.api import deps
 from app.core import security
