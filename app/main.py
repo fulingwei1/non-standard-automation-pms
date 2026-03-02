@@ -73,8 +73,11 @@ app.add_middleware(GlobalAuthMiddleware)
 
 # 全局 IP 速率限制中间件（in-memory，无 Redis 依赖）
 # 位于 GlobalAuthMiddleware 之后 → 执行顺序最靠前，优先拒绝高频请求
-from app.core.middleware.rate_limiting import RateLimitMiddleware as InMemoryRateLimitMiddleware  # noqa: E402
-app.add_middleware(InMemoryRateLimitMiddleware)
+# 可通过环境变量 RATE_LIMIT_ENABLED=false 禁用
+import os
+if os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false":
+    from app.core.middleware.rate_limiting import RateLimitMiddleware as InMemoryRateLimitMiddleware  # noqa: E402
+    app.add_middleware(InMemoryRateLimitMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
