@@ -16,6 +16,19 @@ export default mergeConfig(
         web: [/\.[jt]sx?$/],
       },
       exclude: [...configDefaults.exclude, "e2e/**"],
+      // 限制并发，避免状态冲突
+      pool: "forks",
+      poolOptions: {
+        forks: {
+          singleFork: true,
+        },
+      },
+      maxConcurrency: 5,
+      sequence: {
+        shuffle: false,
+      },
+      testTimeout: 10000,
+      hookTimeout: 10000,
       coverage: {
         provider: "v8",
         reporter: ["text", "html", "lcov"],
