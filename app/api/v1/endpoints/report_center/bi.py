@@ -15,6 +15,7 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -156,7 +157,7 @@ def get_utilization(
     query = db.query(Timesheet).filter(
         Timesheet.work_date >= start_date,
         Timesheet.work_date <= end_date,
-        Timesheet.status == "APPROVED"
+        func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED"
     )
 
     if department_id:
@@ -325,7 +326,6 @@ def get_executive_dashboard(
     决策驾驶舱数据
     综合看板数据，包括项目、销售、成本、进度等关键指标
     """
-    import traceback
     try:
         today = date.today()
         month_start = date(today.year, today.month, 1)
@@ -345,20 +345,20 @@ def get_executive_dashboard(
         # 销售统计（本月）- Contract.status 使用小写与模型一致
         month_contracts = db.query(Contract).filter(
             func.date(Contract.signing_date) >= month_start,
-            Contract.status.in_(["signed", "executing"])
+            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
         ).all()
         month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
 
-        # 成本统计
+        # 成本统计（scalar() 可能返回 Decimal，统一转 float）
         total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
         total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
 
         # 合同统计 - 状态与模型一致（小写）
         total_contracts = db.query(Contract).filter(
-            Contract.status.in_(["signed", "executing"])
+            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
         ).count()
         total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
-            Contract.status.in_(["signed", "executing"])
+            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
         ).scalar() or 0
 
         # 回款统计：按实际收款金额汇总（ProjectPaymentPlan 状态为 COMPLETED/PARTIAL，无 PAID）
@@ -373,45 +373,49 @@ def get_executive_dashboard(
         try:
             month_timesheets = db.query(Timesheet).filter(
                 Timesheet.work_date >= month_start,
-                Timesheet.status == "APPROVED"
+                func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED"
             ).all()
             month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
         except Exception:
             month_total_hours = 0
+
+        # 确保所有数值为 Python 原生类型，避免 JSON 序列化时报错（如 Decimal）
+        def _num(v):
+            return round(float(v), 2) if v is not None else 0.0
 
         return ResponseModel(
             code=200,
             message="success",
             data={
                 "summary": {
-                    "total_projects": total_projects,
-                    "active_projects": active_projects,
-                    "completed_projects": completed_projects,
-                    "total_contracts": total_contracts,
-                    "total_contract_amount": round(float(total_contract_amount), 2),
-                    "total_received": round(float(total_received), 2),
-                    "total_budget": round(float(total_budget), 2),
-                    "total_actual_cost": round(float(total_actual), 2),
-                    "total_users": total_users
+                    "total_projects": int(total_projects),
+                    "active_projects": int(active_projects),
+                    "completed_projects": int(completed_projects),
+                    "total_contracts": int(total_contracts),
+                    "total_contract_amount": _num(total_contract_amount),
+                    "total_received": _num(total_received),
+                    "total_budget": _num(total_budget),
+                    "total_actual_cost": _num(total_actual),
+                    "total_users": int(total_users),
                 },
                 "monthly": {
                     "month": today.strftime("%Y-%m"),
                     "new_contracts": len(month_contracts),
-                    "contract_amount": round(month_contract_amount, 2),
-                    "total_hours": round(month_total_hours, 2)
+                    "contract_amount": _num(month_contract_amount),
+                    "total_hours": round(float(month_total_hours), 2),
                 },
-                "health_distribution": health_distribution,
-                "updated_at": datetime.now().isoformat()
-            }
+                "health_distribution": {str(k): int(v) for k, v in health_distribution.items()},
+                "updated_at": datetime.now().isoformat(),
+            },
         )
     except Exception as e:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
-                "code": "INTERNAL_ERROR",
+                "code": 500,
                 "message": "决策驾驶舱数据加载失败",
+                "data": None,
                 "detail": str(e),
-                "traceback": traceback.format_exc(),
             },
         )
 

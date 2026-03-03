@@ -51,8 +51,25 @@ export * from "./api/marginPrediction.js";
 export * from "./api/resourceOverview.js";
 export * from "./api/resourcePlan.js";
 export * from "./api/analytics.js";
-export * from "./api/approval.js";
-export * from "./api/assemblyKit.js";
+export {
+  submitApproval,
+  approveApproval,
+  rejectApproval,
+  delegateApproval,
+  withdrawApproval,
+  getApprovalHistory,
+  getApprovalDetail,
+  getMyApprovalTasks,
+  submitEcnApproval,
+  submitQuoteApproval,
+  submitContractApproval,
+  submitInvoiceApproval,
+  APPROVAL_STATUS,
+  calculateProgress,
+  unifiedApprovalApi,
+  default as approvalApi,
+} from "./api/approval.js";
+export { assemblyKitApi as legacyAssemblyKitApi } from "./api/assemblyKit.js";
 export * from "./api/quality.js";
 export * from "./api/quoteCompare.js";
 export * from "./api/laborCost.js";

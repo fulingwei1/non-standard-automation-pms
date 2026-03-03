@@ -262,11 +262,11 @@ export default function IssueManagement() {
       className="space-y-6">
 
       <PageHeader
-        title="问题管理"
+        title="问题异常"
         subtitle="问题跟踪、状态管理、优先级分配、分析统计"
         breadcrumbs={[
         { label: "项目管理", href: "/projects" },
-        { label: "问题管理", href: "/issues" }]
+        { label: "问题异常", href: "/issues" }]
         }
         actions={
         <div className="flex items-center gap-3">

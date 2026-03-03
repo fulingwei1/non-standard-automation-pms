@@ -4,7 +4,6 @@ import {
   DualAxesChart,
   ProjectHealthChart,
   CostAnalysisChart,
-  DeliveryRateChart,
 } from "../../../components/charts";
 import { formatCurrency } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
@@ -45,28 +44,28 @@ export function OverviewTab({ healthData, deliveryData, trendData, costData }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {deliveryData.length > 0 ? (
-              <DeliveryRateChart
-                data={deliveryData}
-                chartType="trend"
-                height={280}
-                title=""
-              />
-            ) : (
-              <DeliveryRateChart
-                data={[
-                  { month: "7月", rate: 82 },
-                  { month: "8月", rate: 85 },
-                  { month: "9月", rate: 78 },
-                  { month: "10月", rate: 88 },
-                  { month: "11月", rate: 92 },
-                  { month: "12月", rate: 85 },
-                ]}
-                chartType="trend"
-                height={280}
-                title=""
-              />
-            )}
+            <div className="space-y-3">
+              {(deliveryData.length > 0
+                ? deliveryData
+                : [
+                    { month: "7月", rate: 82 },
+                    { month: "8月", rate: 85 },
+                    { month: "9月", rate: 78 },
+                    { month: "10月", rate: 88 },
+                    { month: "11月", rate: 92 },
+                    { month: "12月", rate: 85 },
+                  ]
+              ).map((item, idx) => {
+                const label = item.month || item.date || `阶段${idx + 1}`;
+                const rate = Number(item.rate ?? item.value ?? 0);
+                return (
+                  <div key={`${label}-${idx}`} className="flex items-center justify-between rounded-lg bg-slate-900/40 px-3 py-2">
+                    <span className="text-slate-300 text-sm">{label}</span>
+                    <span className="text-emerald-400 font-semibold">{rate.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       </motion.div>

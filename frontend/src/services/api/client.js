@@ -17,10 +17,13 @@ const PUBLIC_ENDPOINTS = [
   "/openapi.json",
 ];
 
-// 判断是否为公开 API
+// 判断是否为公开 API（精确匹配路径，避免 /report-center/bi/health-distribution 被误判为 /health）
 const isPublicEndpoint = (url) => {
   if (!url) {return false;}
-  return PUBLIC_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+  const cleanUrl = url.split("?")[0] || "";
+  return PUBLIC_ENDPOINTS.some((endpoint) =>
+    cleanUrl === endpoint || cleanUrl.startsWith(`${endpoint}/`)
+  );
 };
 
 // Request interceptor for adding auth token

@@ -89,12 +89,23 @@ export default function DeliveryRateChart({
 
   // 趋势图
   if (chartType === "trend") {
-    const trendData = Array.isArray(data) ? data : [];
+    const rawData = Array.isArray(data) ? data : [];
+    const xField = "month" in (rawData[0] || {}) ? "month" : "date";
+    const yField = "rate" in (rawData[0] || {}) ? "rate" : "value";
+    const trendData = rawData.filter((item) => item && item[xField] != null && item[yField] != null);
+
+    if (trendData.length === 0) {
+      return (
+        <div className="flex items-center justify-center text-slate-400" style={{ height, ...style }}>
+          暂无交付趋势数据
+        </div>
+      );
+    }
 
     const lineConfig = {
       data: trendData,
-      xField: "month" in (trendData[0] || {}) ? "month" : "date",
-      yField: "rate" in (trendData[0] || {}) ? "rate" : "value",
+      xField,
+      yField,
       height,
       smooth: true,
       point: {

@@ -19,14 +19,64 @@ export const schedulerApi = {
 };
 
 export const adminApi = {
-  // 行政审批
+  // 行政审批（兼容统一审批中心 /approvals/*）
   approvals: {
-    list: (params) => api.get("/admin/approvals", { params }),
-    get: (id) => api.get(`/admin/approvals/${id}`),
-    approve: (id, data) => api.put(`/admin/approvals/${id}/approve`, data),
-    reject: (id, data) => api.put(`/admin/approvals/${id}/reject`, data),
-    getStatistics: (params) =>
-      api.get("/admin/approvals/statistics", { params }),
+    list: (params = {}) => {
+      const status = (params.status || "pending").toLowerCase();
+      if (status === "pending") {
+        return api.get("/approvals/pending/mine", { params }).then((res) => ({
+          ...res,
+          data: {
+            ...res.data,
+            items: (res.data?.items || []).map((item) => ({
+              ...item,
+              title: item.instance_title || item.instance_no || `审批任务 #${item.id}`,
+              applicant: item.assignee_name || "",
+              type: "other",
+              priority:
+                item.instance_urgency === "CRITICAL" || item.instance_urgency === "URGENT"
+                  ? "high"
+                  : "normal",
+              submitTime: item.created_at || "",
+            })),
+          },
+        }));
+      }
+
+      const action = status === "approved" ? "APPROVE" : "REJECT";
+      return api.get("/approvals/pending/processed", {
+        params: { ...params, action },
+      }).then((res) => ({
+        ...res,
+        data: {
+          ...res.data,
+          items: (res.data?.items || []).map((item) => ({
+            ...item,
+            title: item.instance_title || item.instance_no || `审批任务 #${item.id}`,
+            applicant: item.assignee_name || "",
+            type: "other",
+            priority:
+              item.instance_urgency === "CRITICAL" || item.instance_urgency === "URGENT"
+                ? "high"
+                : "normal",
+            submitTime: item.created_at || "",
+            approver: item.assignee_name || "",
+            approvedTime: item.completed_at || "",
+            rejectedTime: item.completed_at || "",
+            status,
+          })),
+        },
+      }));
+    },
+    get: (id) => api.get(`/approvals/tasks/${id}`),
+    approve: (id, data) => api.post(`/approvals/tasks/${id}/approve`, {
+      comment: data?.comment || "同意",
+    }),
+    reject: (id, data) => api.post(`/approvals/tasks/${id}/reject`, {
+      comment: data?.reason || data?.comment || "不符合要求",
+      reject_to: "START",
+    }),
+    getStatistics: () => api.get("/approvals/pending/counts"),
   },
 
   // 费用报销

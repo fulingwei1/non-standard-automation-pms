@@ -30,6 +30,7 @@ import {
 
 // Import services
 import { ecnApi } from "../services/api";
+import { approveApproval, rejectApproval } from "../services/api/approval.js";
 
 export default function ECNDetail() {
   const { id } = useParams();
@@ -186,7 +187,6 @@ export default function ECNDetail() {
     try {
       // 使用新的统一审批API
       if (approvals.length > 0 && approvals[0].id) {
-        const { approveApproval } = await import("../services/api/approval.js");
         await approveApproval(approvals[0].id, approvalData.comment || "");
         toast.success("ECN已批准");
         // 刷新ECN数据
@@ -205,7 +205,6 @@ export default function ECNDetail() {
     try {
       // 使用新的统一审批API
       if (approvals.length > 0 && approvals[0].id) {
-        const { rejectApproval } = await import("../services/api/approval.js");
         await rejectApproval(approvals[0].id, rejectionData.comment || "");
         toast.success("ECN已驳回");
         // 刷新ECN数据

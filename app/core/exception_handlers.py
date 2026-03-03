@@ -273,6 +273,37 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     return JSONResponse(status_code=status_code, content=content)
 
 
+async def exception_group_handler(request: Request, exc: Any) -> JSONResponse:
+    """
+    处理 Python 3.11+ ExceptionGroup，返回 JSON 而非 text/plain 堆栈。
+    ExceptionGroup 继承自 BaseException 而非 Exception，故通用处理器无法捕获。
+    """
+    logger.error(
+        "ExceptionGroup (unhandled): %s",
+        exc,
+        exc_info=True,
+    )
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    first_message = str(exc)
+    if hasattr(exc, "exceptions") and exc.exceptions:
+        first_message = str(exc.exceptions[0])
+    if settings.DEBUG:
+        user_friendly_message = f"内部服务器错误: {first_message}"
+        detail = {"type": type(exc).__name__, "message": first_message}
+    else:
+        user_friendly_message = "服务器内部错误，请联系管理员"
+        detail = "Internal server error"
+    content = _build_error_response(
+        status_code=status_code,
+        error_code="INTERNAL_ERROR",
+        detail=detail,
+        user_friendly_message=user_friendly_message,
+        request=request,
+        exc=None,
+    )
+    return JSONResponse(status_code=status_code, content=content)
+
+
 def setup_exception_handlers(app) -> None:
     """
     配置全局异常处理器
@@ -294,5 +325,6 @@ __all__ = [
     "http_exception_handler",
     "validation_exception_handler",
     "general_exception_handler",
+    "exception_group_handler",
     "setup_exception_handlers",
 ]

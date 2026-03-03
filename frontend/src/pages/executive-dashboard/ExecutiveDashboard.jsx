@@ -160,28 +160,30 @@ export default function ExecutiveDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <OverviewTab
-            healthData={healthData}
-            deliveryData={deliveryData}
-            trendData={trendData}
-            costData={costData}
-          />
+          {activeTab === "overview" && (
+            <OverviewTab
+              healthData={healthData}
+              deliveryData={deliveryData}
+              trendData={trendData}
+              costData={costData}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">
-          <ProjectsTab milestoneData={milestoneData} />
+          {activeTab === "projects" && <ProjectsTab milestoneData={milestoneData} />}
         </TabsContent>
 
         <TabsContent value="finance" className="space-y-6">
-          <FinanceTab />
+          {activeTab === "finance" && <FinanceTab />}
         </TabsContent>
 
         <TabsContent value="resources" className="space-y-6">
-          <ResourcesTab utilizationData={utilizationData} />
+          {activeTab === "resources" && <ResourcesTab utilizationData={utilizationData} />}
         </TabsContent>
 
         <TabsContent value="sales" className="space-y-6">
-          <SalesTab salesFunnelData={salesFunnelData} trendData={trendData} />
+          {activeTab === "sales" && <SalesTab salesFunnelData={salesFunnelData} trendData={trendData} />}
         </TabsContent>
       </Tabs>
     </motion.div>

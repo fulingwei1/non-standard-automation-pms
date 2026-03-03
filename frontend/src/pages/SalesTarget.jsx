@@ -85,6 +85,7 @@ export default function SalesTarget() {
     target_period: "",
     status: "",
   });
+  const [aggregationMode, setAggregationMode] = useState("organization");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -96,6 +97,11 @@ export default function SalesTarget() {
     target_period: "MONTHLY",
     period_value: "",
     target_value: "",
+    manager_group: "",
+    director_group: "",
+    industry: "",
+    region: "",
+    target_customer: "",
     description: "",
   });
 
@@ -167,9 +173,100 @@ export default function SalesTarget() {
     }
   }, [formData.target_period]);
 
+
+  const parseMeta = (description) => {
+    if (!description || !description.includes("[meta]")) {return {}; }
+    try {
+      const raw = description.split("[meta]")[1];
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  };
+
+  const buildDescriptionWithMeta = (description, meta) => {
+    const base = (description || "").split("[meta]")[0].trim();
+    const packed = JSON.stringify(meta);
+    return `${base}${base ? " " : ""}[meta]${packed}`;
+  };
+
+  const normalizedTargets = useMemo(() => (targets || []).map((t) => {
+    const meta = parseMeta(t.description);
+    const targetValue = Number(t.target_value || 0);
+    const actualValue = Number(t.actual_value || meta.actual_value || 0);
+    const completionRate = Number(t.completion_rate || (targetValue > 0 ? (actualValue / targetValue) * 100 : 0));
+    return {
+      ...t,
+      meta,
+      actual_value: actualValue,
+      completion_rate: completionRate,
+    };
+  }), [targets]);
+
+  const summaryCards = useMemo(() => {
+    const sum = (arr, key) => arr.reduce((acc, cur) => acc + Number(cur[key] || 0), 0);
+    const pick = (label, fn) => {
+      const list = normalizedTargets.filter(fn);
+      const targetValue = sum(list, "target_value");
+      const actualValue = sum(list, "actual_value");
+      const completion = targetValue > 0 ? (actualValue / targetValue) * 100 : 0;
+      return { label, targetValue, actualValue, completion, count: list.length };
+    };
+    return [
+      pick("个人", (t) => t.target_scope === "PERSONAL"),
+      pick("项目经理组", (t) => (t.meta.manager_group || "") !== ""),
+      pick("总监组", (t) => (t.meta.director_group || "") !== ""),
+      pick("总目标", () => true),
+    ];
+  }, [normalizedTargets]);
+
+  const aggregationRows = useMemo(() => {
+    const grouped = new Map();
+    const getKey = (t) => {
+      if (aggregationMode === "organization") {
+        return t.user_name || t.department_name || t.meta.manager_group || t.meta.director_group || "未分配";
+      }
+      if (aggregationMode === "industry") {return t.meta.industry || "未分类行业";}
+      if (aggregationMode === "region") {return t.meta.region || "未分类大区";}
+      if (aggregationMode === "target_customer") {return t.meta.target_customer || "未分类客户";}
+      return "未分类";
+    };
+
+    normalizedTargets.forEach((t) => {
+      const k = getKey(t);
+      const prev = grouped.get(k) || {
+        key: k,
+        targetValue: 0,
+        actualValue: 0,
+        count: 0,
+      };
+      prev.targetValue += Number(t.target_value || 0);
+      prev.actualValue += Number(t.actual_value || 0);
+      prev.count += 1;
+      grouped.set(k, prev);
+    });
+
+    return Array.from(grouped.values())
+      .map((row) => ({
+        ...row,
+        completion: row.targetValue > 0 ? (row.actualValue / row.targetValue) * 100 : 0,
+      }))
+      .sort((a, b) => b.targetValue - a.targetValue);
+  }, [aggregationMode, normalizedTargets]);
+
   const handleCreate = async () => {
     try {
-      await salesTargetApi.create(formData);
+      const payload = {
+        ...formData,
+        description: buildDescriptionWithMeta(formData.description, {
+          manager_group: formData.manager_group,
+          director_group: formData.director_group,
+          industry: formData.industry,
+          region: formData.region,
+          target_customer: formData.target_customer,
+        }),
+      };
+      await salesTargetApi.create(payload);
       toast.success("创建目标成功");
       setShowCreateDialog(false);
       resetForm();
@@ -210,7 +307,12 @@ export default function SalesTarget() {
       target_period: target.target_period,
       period_value: target.period_value,
       target_value: target.target_value,
-      description: target.description || "",
+      manager_group: parseMeta(target.description).manager_group || "",
+      director_group: parseMeta(target.description).director_group || "",
+      industry: parseMeta(target.description).industry || "",
+      region: parseMeta(target.description).region || "",
+      target_customer: parseMeta(target.description).target_customer || "",
+      description: (target.description || "").split("[meta]")[0].trim(),
       status: target.status,
     });
     setShowEditDialog(true);
@@ -226,12 +328,17 @@ export default function SalesTarget() {
       target_period: "MONTHLY",
       period_value: generatePeriodValue("MONTHLY"),
       target_value: "",
+      manager_group: "",
+      director_group: "",
+      industry: "",
+      region: "",
+      target_customer: "",
       description: "",
     });
   };
 
   const filteredTargets = useMemo(() => {
-    let result = targets;
+    let result = normalizedTargets;
     if (searchTerm) {
       result = (result || []).filter(
         (t) =>
@@ -245,7 +352,7 @@ export default function SalesTarget() {
       );
     }
     return result;
-  }, [targets, searchTerm]);
+  }, [normalizedTargets, searchTerm]);
 
   const getTargetTypeLabel = (type) => {
     const option = (targetTypeOptions || []).find((opt) => opt.value === type);
@@ -318,7 +425,7 @@ export default function SalesTarget() {
               <div className="flex-1 relative">
                 <Input
                   placeholder="搜索目标..."
-                  value={searchTerm || "unknown"}
+                  value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
@@ -397,6 +504,52 @@ export default function SalesTarget() {
         </Card>
       </motion.div>
 
+      <motion.div variants={fadeIn}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {summaryCards.map((card) => (
+            <Card key={card.label}>
+              <CardContent className="p-4 space-y-2">
+                <div className="text-slate-400 text-sm">{card.label}</div>
+                <div className="text-white text-lg font-semibold">{formatCurrency(card.targetValue)}</div>
+                <div className="text-slate-400 text-xs">实际 {formatCurrency(card.actualValue)} · 完成 {card.completion.toFixed(1)}%</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div variants={fadeIn}>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between">
+              <span>目标汇总视图</span>
+              <Select value={aggregationMode} onValueChange={setAggregationMode}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="organization">按组织架构汇总</SelectItem>
+                  <SelectItem value="industry">按行业汇总</SelectItem>
+                  <SelectItem value="region">按大区汇总</SelectItem>
+                  <SelectItem value="target_customer">按目标客户汇总</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {aggregationRows.slice(0, 12).map((row) => (
+              <div key={row.key} className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/50">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-white font-medium">{row.key}</span>
+                  <span className="text-slate-300">{row.completion.toFixed(1)}%</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-1">目标 {formatCurrency(row.targetValue)} · 实际 {formatCurrency(row.actualValue)} · {row.count} 条</div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Targets List */}
       <motion.div variants={fadeIn}>
         <Card>
@@ -416,7 +569,7 @@ export default function SalesTarget() {
             ) : (
               <div className="space-y-4">
                 {(filteredTargets || []).map((target) => {
-                  const completionRate = target.completion_rate || 0;
+                  const completionRate = Number(target.completion_rate || 0);
                   const isCompleted = completionRate >= 100;
                   const isWarning = completionRate < 70;
 
@@ -451,9 +604,12 @@ export default function SalesTarget() {
                               target.department_name && (
                                 <span>部门: {target.department_name}</span>
                               )}
+                            {target.meta?.industry && <span className="ml-4">行业: {target.meta.industry}</span>}
+                            {target.meta?.region && <span className="ml-4">大区: {target.meta.region}</span>}
+                            {target.meta?.target_customer && <span className="ml-4">目标客户: {target.meta.target_customer}</span>}
                             {target.description && (
                               <span className="ml-4">
-                                描述: {target.description}
+                                描述: {(target.description || "").split("[meta]")[0].trim()}
                               </span>
                             )}
                           </div>
@@ -652,6 +808,28 @@ export default function SalesTarget() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>项目经理小组</Label>
+                <Input value={formData.manager_group} onChange={(e)=>setFormData((prev)=>({...prev, manager_group: e.target.value}))} placeholder="如：华南PM一组" />
+              </div>
+              <div>
+                <Label>总监小组</Label>
+                <Input value={formData.director_group} onChange={(e)=>setFormData((prev)=>({...prev, director_group: e.target.value}))} placeholder="如：华南销售总监组" />
+              </div>
+              <div>
+                <Label>行业</Label>
+                <Input value={formData.industry} onChange={(e)=>setFormData((prev)=>({...prev, industry: e.target.value}))} placeholder="如：汽车电子" />
+              </div>
+              <div>
+                <Label>大区</Label>
+                <Input value={formData.region} onChange={(e)=>setFormData((prev)=>({...prev, region: e.target.value}))} placeholder="如：华东" />
+              </div>
+              <div className="md:col-span-2">
+                <Label>目标客户</Label>
+                <Input value={formData.target_customer} onChange={(e)=>setFormData((prev)=>({...prev, target_customer: e.target.value}))} placeholder="如：比亚迪/立讯" />
+              </div>
+            </div>
             <div>
               <Label>描述</Label>
               <Input
@@ -698,6 +876,28 @@ export default function SalesTarget() {
                   }))
                 }
               />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>项目经理小组</Label>
+                <Input value={formData.manager_group} onChange={(e)=>setFormData((prev)=>({...prev, manager_group: e.target.value}))} placeholder="如：华南PM一组" />
+              </div>
+              <div>
+                <Label>总监小组</Label>
+                <Input value={formData.director_group} onChange={(e)=>setFormData((prev)=>({...prev, director_group: e.target.value}))} placeholder="如：华南销售总监组" />
+              </div>
+              <div>
+                <Label>行业</Label>
+                <Input value={formData.industry} onChange={(e)=>setFormData((prev)=>({...prev, industry: e.target.value}))} placeholder="如：汽车电子" />
+              </div>
+              <div>
+                <Label>大区</Label>
+                <Input value={formData.region} onChange={(e)=>setFormData((prev)=>({...prev, region: e.target.value}))} placeholder="如：华东" />
+              </div>
+              <div className="md:col-span-2">
+                <Label>目标客户</Label>
+                <Input value={formData.target_customer} onChange={(e)=>setFormData((prev)=>({...prev, target_customer: e.target.value}))} placeholder="如：比亚迪/立讯" />
+              </div>
             </div>
             <div>
               <Label>描述</Label>

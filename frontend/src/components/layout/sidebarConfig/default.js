@@ -13,8 +13,6 @@ export const defaultNavGroups = [
     items: [
       { name: "工作台", path: "/dashboard", icon: "LayoutDashboard", badge: null },
       { name: "运营大屏", path: "/operation", icon: "BarChart3", permission: "operation:dashboard:read", permissionLabel: "运营大屏" },
-      { name: "问题异常", path: "/issues", icon: "AlertCircle", permission: "issue:read", permissionLabel: "问题异常" },
-      { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo", permission: "evaluation:task:read", permissionLabel: "绩效评价" },
       { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
       { name: "审批中心", path: "/approvals", icon: "ClipboardCheck", badge: "2", permission: "approval:read", permissionLabel: "审批查看" },
       { name: "知识文档", path: "/knowledge-base", icon: "BookOpen", permission: "knowledge:read", permissionLabel: "知识文档" }
@@ -136,6 +134,7 @@ export const defaultNavGroups = [
   {
     label: "生产管理",
     items: [
+      { name: "问题异常", path: "/issues", icon: "AlertCircle", permission: "issue:read", permissionLabel: "问题异常" },
       { name: "生产看板", path: "/production-board", icon: "Kanban", permission: "production:board:read", permissionLabel: "生产看板" },
       { name: "产能分析", path: "/production/capacity-analysis", icon: "BarChart3", permission: "production:board:read", permissionLabel: "产能分析" },
       { name: "工单管理", path: "/work-orders", icon: "ClipboardList", permission: "workorder:read", permissionLabel: "工单管理" },
@@ -206,6 +205,7 @@ export const defaultNavGroups = [
     items: [
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
       { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+      { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo", permission: "evaluation:task:read", permissionLabel: "绩效评价" },
       { name: "工程师绩效", path: "/engineer-performance", icon: "Gauge", permission: "performance:engineer:read", permissionLabel: "工程师绩效" },
       { name: "工程师协作", path: "/engineer-performance/collaboration", icon: "Users", permission: "engineer:collaboration:read", permissionLabel: "工程师协作" },
       { name: "个人设置", path: "/settings", icon: "Settings" }

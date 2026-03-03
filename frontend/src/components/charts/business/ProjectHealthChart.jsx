@@ -78,9 +78,8 @@ export default function ProjectHealthChart({
       innerRadius: chartType === "donut" ? 0.6 : 0,
       color: (chartData || []).map((d) => d.color),
       label: {
-        type: "outer",
         content: ({ percent, type }) =>
-        `${type} ${(percent * 100).toFixed(0)}%`,
+          `${type} ${(percent * 100).toFixed(0)}%`,
         style: {
           fill: "#94a3b8",
           fontSize: 12

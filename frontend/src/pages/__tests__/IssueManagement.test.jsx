@@ -125,7 +125,7 @@ describe.skip('IssueManagement', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/问题管理|Issue Management/i)).toBeInTheDocument();
+        expect(screen.getByText(/问题异常|Issue Management/i)).toBeInTheDocument();
       });
     });
 

@@ -321,6 +321,12 @@ export const allMenuGroups = [
         path: "/production/capacity-analysis",
         icon: "BarChart3",
       },
+      {
+        id: "issues",
+        name: "问题异常",
+        path: "/issues",
+        icon: "AlertCircle",
+      },
     ],
   },
   {
@@ -381,7 +387,6 @@ export const allMenuGroups = [
         path: "/alerts",
         icon: "AlertTriangle",
       },
-      { id: "issues", name: "问题管理", path: "/issues", icon: "AlertCircle" },
       {
         id: "issue-templates",
         name: "问题模板管理",
@@ -571,6 +576,12 @@ export const allMenuGroups = [
         name: "我的绩效",
         path: "/personal/my-performance",
         icon: "Award",
+      },
+      {
+        id: "evaluation-tasks",
+        name: "绩效评价",
+        path: "/evaluation-tasks",
+        icon: "ListTodo",
       },
       {
         id: "my-bonus",

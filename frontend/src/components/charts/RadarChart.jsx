@@ -36,9 +36,14 @@ export default function RadarChart({
   style,
   ...rest
 }) {
+  const safeData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return data.filter((row) => row && row[xField] != null && row[yField] != null);
+  }, [data, xField, yField]);
+
   const config = useMemo(() => {
     const cfg = {
-      data,
+      data: safeData,
       xField,
       yField,
       height,
@@ -119,7 +124,7 @@ export default function RadarChart({
 
     return cfg;
   }, [
-    data,
+    safeData,
     xField,
     yField,
     seriesField,
@@ -130,7 +135,7 @@ export default function RadarChart({
     rest,
   ]);
 
-  if (!data || data?.length === 0) {
+  if (!safeData || safeData.length === 0) {
     return (
       <div
         className="flex items-center justify-center text-slate-400"

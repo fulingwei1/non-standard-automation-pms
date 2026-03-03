@@ -47,6 +47,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
@@ -89,6 +91,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
@@ -131,6 +135,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
@@ -164,7 +170,12 @@ export function getNavForRole(role) {
         items: [
           { name: "审批中心", path: "/approvals", icon: "ClipboardCheck" },
           { name: "预警中心", path: "/alerts", icon: "AlertTriangle" },
-          { name: "问题管理", path: "/issues", icon: "AlertCircle" },
+        ],
+      },
+      {
+        label: "生产管理",
+        items: [
+          { name: "问题异常", path: "/issues", icon: "AlertCircle" },
         ],
       },
       {
@@ -178,6 +189,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           {
             name: "知识管理",
             path: "/knowledge-base",
@@ -238,6 +251,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           {
             name: "知识管理",
             path: "/knowledge-base",
@@ -276,6 +291,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
@@ -298,6 +315,8 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
+          { name: "绩效评价", path: "/evaluation-tasks", icon: "ListTodo" },
           { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],

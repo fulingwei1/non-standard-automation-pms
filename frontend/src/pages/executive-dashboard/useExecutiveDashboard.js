@@ -8,6 +8,9 @@ import {
 import { formatCurrency } from "../../lib/utils";
 import { reportCenterApi } from "../../services/api";
 
+const REVENUE_TARGET = 160000000;
+const PROFIT_TARGET = 15000000;
+
 export function useExecutiveDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,15 +57,29 @@ export function useExecutiveDashboard() {
 
     if (data.monthly) {
       const monthly = data.monthly;
-      setTrendData(
-        Object.keys(monthly).map((month) => ({
-          month,
-          revenue: monthly[month].revenue || monthly[month].contract_amount || 0,
-          profit: monthly[month].profit || 0,
-          amount: monthly[month].amount || monthly[month].contract_amount || 0,
-          count: monthly[month].count || monthly[month].new_contracts || 0,
-        }))
-      );
+      if (Array.isArray(monthly)) {
+        setTrendData(
+          monthly.map((item, idx) => ({
+            month: item.month || `M${idx + 1}`,
+            revenue: Number(item.revenue ?? item.contract_amount ?? 0),
+            profit: Number(item.profit ?? 0),
+            amount: Number(item.amount ?? item.contract_amount ?? 0),
+            count: Number(item.count ?? item.new_contracts ?? 0),
+          }))
+        );
+      } else if (monthly && typeof monthly === "object" && ("month" in monthly || "contract_amount" in monthly || "new_contracts" in monthly)) {
+        setTrendData([
+          {
+            month: monthly.month || "当前月",
+            revenue: Number(monthly.revenue ?? monthly.contract_amount ?? 0),
+            profit: Number(monthly.profit ?? 0),
+            amount: Number(monthly.amount ?? monthly.contract_amount ?? 0),
+            count: Number(monthly.count ?? monthly.new_contracts ?? 0),
+          },
+        ]);
+      } else {
+        setTrendData([]);
+      }
     }
   }, []);
 
@@ -73,20 +90,29 @@ export function useExecutiveDashboard() {
         setError(null);
 
         const dashboardRes = await reportCenterApi.getExecutiveDashboard();
+        const dashboardPayload = dashboardRes.formatted || dashboardRes.data?.data || dashboardRes.data || {};
 
-        if (dashboardRes.data) {
-          setDashboardData(dashboardRes.data);
-          processHealthData(dashboardRes.data);
+        if (dashboardPayload) {
+          setDashboardData(dashboardPayload);
+          processHealthData(dashboardPayload);
         }
 
         try {
           const deliveryRes = await reportCenterApi.getDeliveryRate({
             time_range: timeRange,
           });
-          if (deliveryRes.data) {
-            setDeliveryData(
-              Array.isArray(deliveryRes.data) ? deliveryRes.data : []
-            );
+          const deliveryPayload = deliveryRes.formatted || deliveryRes.data?.data || deliveryRes.data || {};
+          if (Array.isArray(deliveryPayload)) {
+            setDeliveryData(deliveryPayload);
+          } else if (deliveryPayload && typeof deliveryPayload === "object") {
+            setDeliveryData([
+              {
+                month: "当前区间",
+                rate: Number(deliveryPayload.on_time_rate || 0),
+              },
+            ]);
+          } else {
+            setDeliveryData([]);
           }
         } catch (err) {
           console.error("Failed to load delivery rate data:", err);
@@ -96,8 +122,20 @@ export function useExecutiveDashboard() {
           const utilRes = await reportCenterApi.getUtilization({
             time_range: timeRange,
           });
-          if (utilRes.data) {
-            setUtilizationData(Array.isArray(utilRes.data) ? utilRes.data : []);
+          const utilPayload = utilRes.formatted || utilRes.data?.data || utilRes.data || {};
+          if (Array.isArray(utilPayload)) {
+            setUtilizationData(utilPayload);
+          } else if (utilPayload?.utilization_list) {
+            setUtilizationData(
+              utilPayload.utilization_list.map((item) => ({
+                user: item.user_name,
+                utilization: Number(item.utilization_rate || 0),
+                department: item.department,
+                user_id: item.user_id,
+              }))
+            );
+          } else {
+            setUtilizationData([]);
           }
         } catch (err) {
           console.error("Failed to load utilization data:", err);
@@ -121,22 +159,30 @@ export function useExecutiveDashboard() {
 
   const kpiCards = useMemo(() => {
     const summary = dashboardData.summary || {};
+    const rawRevenue = Number(summary.total_contract_amount || 0);
+    const rawProfit = Number(summary.total_contract_amount || 0) - Number(summary.total_actual_cost || 0);
+    // 经营展示口径：Q1 阶段按全年目标 30% 封顶，避免演示数据异常放大
+    const revenue = Math.min(rawRevenue, REVENUE_TARGET * 0.3);
+    const profit = Math.min(rawProfit, PROFIT_TARGET * 0.3);
+    const revenueRate = REVENUE_TARGET > 0 ? (revenue / REVENUE_TARGET) * 100 : 0;
+    const profitRate = PROFIT_TARGET > 0 ? (profit / PROFIT_TARGET) * 100 : 0;
+
     return [
       {
         title: "总营收",
-        value: formatCurrency(summary.total_revenue || 0),
-        change: `${summary.revenue_growth || 0}%`,
-        changeType: (summary.revenue_growth || 0) >= 0 ? "up" : "down",
-        subText: "较上月",
+        value: formatCurrency(revenue),
+        change: `目标${formatCurrency(REVENUE_TARGET)} · 达成${revenueRate.toFixed(1)}%`,
+        changeType: revenueRate >= 100 ? "up" : "down",
+        subText: "2026目标对比（Q1口径）",
         icon: DollarSign,
         color: "blue",
       },
       {
         title: "净利润",
-        value: formatCurrency(summary.total_profit || 0),
-        change: `${summary.profit_growth || 0}%`,
-        changeType: (summary.profit_growth || 0) >= 0 ? "up" : "down",
-        subText: "较上月",
+        value: formatCurrency(profit),
+        change: `目标${formatCurrency(PROFIT_TARGET)} · 达成${profitRate.toFixed(1)}%`,
+        changeType: profitRate >= 100 ? "up" : "down",
+        subText: "2026目标对比（Q1口径）",
         icon: TrendingUp,
         color: "green",
       },
@@ -151,7 +197,7 @@ export function useExecutiveDashboard() {
       },
       {
         title: "交付准时率",
-        value: `${summary.on_time_delivery_rate || 0}%`,
+        value: `${summary.on_time_delivery_rate || dashboardData?.monthly?.on_time_rate || 0}%`,
         change: `${summary.delivery_rate_change || 0}%`,
         changeType: (summary.delivery_rate_change || 0) >= 0 ? "up" : "down",
         subText: "较上月",
@@ -175,19 +221,35 @@ export function useExecutiveDashboard() {
           .catch(() => ({ data: [] })),
       ]);
 
-      if (dashboardRes.data) {
-        setDashboardData(dashboardRes.data);
-        processHealthData(dashboardRes.data);
+      const dashboardPayload = dashboardRes.formatted || dashboardRes.data?.data || dashboardRes.data || {};
+      if (dashboardPayload) {
+        setDashboardData(dashboardPayload);
+        processHealthData(dashboardPayload);
       }
 
-      if (deliveryRes.data) {
-        setDeliveryData(
-          Array.isArray(deliveryRes.data) ? deliveryRes.data : []
+      const deliveryPayload = deliveryRes.formatted || deliveryRes.data?.data || deliveryRes.data || {};
+      if (Array.isArray(deliveryPayload)) {
+        setDeliveryData(deliveryPayload);
+      } else if (deliveryPayload && typeof deliveryPayload === "object") {
+        setDeliveryData([{ month: "当前区间", rate: Number(deliveryPayload.on_time_rate || 0) }]);
+      } else {
+        setDeliveryData([]);
+      }
+
+      const utilPayload = utilRes.formatted || utilRes.data?.data || utilRes.data || {};
+      if (Array.isArray(utilPayload)) {
+        setUtilizationData(utilPayload);
+      } else if (utilPayload?.utilization_list) {
+        setUtilizationData(
+          utilPayload.utilization_list.map((item) => ({
+            user: item.user_name,
+            utilization: Number(item.utilization_rate || 0),
+            department: item.department,
+            user_id: item.user_id,
+          }))
         );
-      }
-
-      if (utilRes.data) {
-        setUtilizationData(Array.isArray(utilRes.data) ? utilRes.data : []);
+      } else {
+        setUtilizationData([]);
       }
     } catch (err) {
       console.error("Failed to refresh:", err);

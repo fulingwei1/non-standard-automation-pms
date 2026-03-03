@@ -39,9 +39,16 @@ export default function BarChart({
   style,
   ...rest
 }) {
+  const safeData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    const xKey = horizontal ? yField : xField;
+    const yKey = horizontal ? xField : yField;
+    return data.filter((row) => row && row[xKey] != null && row[yKey] != null);
+  }, [data, horizontal, xField, yField]);
+
   const config = useMemo(() => {
     const cfg = {
-      data,
+      data: safeData,
       xField: horizontal ? yField : xField,
       yField: horizontal ? xField : yField,
       height,
@@ -128,7 +135,7 @@ export default function BarChart({
 
     return cfg;
   }, [
-    data,
+    safeData,
     xField,
     yField,
     seriesField,
@@ -150,7 +157,7 @@ export default function BarChart({
     }
   };
 
-  if (!data || data?.length === 0) {
+  if (!safeData || safeData.length === 0) {
     return (
       <div
         className="flex items-center justify-center text-slate-400"

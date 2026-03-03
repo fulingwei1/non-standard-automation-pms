@@ -26,7 +26,7 @@ export const MODULE_LABELS = {
  hr: "人力资源",
  hr_management: "人力资源管理",
  installation_dispatch: "安装派遣",
- issue: "问题管理",
+ issue: "问题异常",
  machine: "设备管理",
  material: "物料管理",
   milestone: "里程碑",
